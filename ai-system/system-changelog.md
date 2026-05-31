@@ -2,6 +2,22 @@
 
 Status: Draft
 
+## v0.8.0
+
+### Added
+
+- Added change lifecycle for managed AI Development System changes.
+
+### Updated
+
+- Updated operating model to mark Change Lifecycle as implemented.
+- Updated AI system README to list `change-lifecycle.md`.
+- Updated next-step priorities after Change Lifecycle was added.
+
+### Reason
+
+Defines system change states, operations, verification criteria, rollback rules, closure criteria, approval requirements, AICP relationship and audit history across improvement log, AICP, changelog and git history.
+
 ## v0.7.0
 
 ### Added

@@ -55,6 +55,7 @@ AI Development System
 - `decision-process.md` — decision statuses and ownership.
 - `review-process.md` — review and QA rules.
 - `change-process.md` — controlled evolution of the AI Development System.
+- `change-lifecycle.md` — lifecycle rules for managed system changes.
 - `document-lifecycle.md` — lifecycle rules for source-of-truth documents.
 - `process-lifecycle.md` — lifecycle rules for managed processes.
 - `task-lifecycle.md` — lifecycle rules for managed tasks.
