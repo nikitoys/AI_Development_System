@@ -2,6 +2,23 @@
 
 Status: Draft
 
+## v0.14.2
+
+### Added
+
+- Added visible repository overview sections to the English and Russian root README files.
+- Added text-based AI Development System schemes for roles, documents and process flow.
+
+### Updated
+
+- Updated root `README.md` with At a Glance, How Work Moves and Where to Start sections.
+- Updated root `README.ru.md` with the same reader-facing overview in Russian.
+- Updated AI system README to list `system-schemes.md`.
+
+### Reason
+
+Improves first-time repository onboarding and makes the system understandable at a glance for new readers.
+
 ## v0.14.1
 
 ### Added
