@@ -2,6 +2,22 @@
 
 Status: Draft
 
+## v0.10.0
+
+### Added
+
+- Added QA lifecycle for managed QA flows, test planning, test execution, regression checks and QA approval.
+
+### Updated
+
+- Updated operating model to mark QA Lifecycle as implemented.
+- Updated AI system README to list `qa-lifecycle.md`.
+- Updated next-step priorities after QA Lifecycle was added.
+
+### Reason
+
+Defines QA states, operations, ownership, defect reporting, rework flow, regression checks, QA approval, Human Owner approval requirements and AICP relationship.
+
 ## v0.9.0
 
 ### Added

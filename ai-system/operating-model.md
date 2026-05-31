@@ -412,35 +412,34 @@ Needs improvement:
 
 ## 4.3 QA Lifecycle
 
-Status: Missing
+Status: Implemented
 
-Existing related documents:
-
-```text
-/ai-system/review-process.md
-/ai-system/task-format.md
-```
-
-Current coverage:
-
-- QA role exists;
-- QA checks are mentioned;
-- test cases are part of task format.
-
-Missing:
-
-- QA states;
-- test planning flow;
-- test execution flow;
-- bug reporting flow;
-- regression flow;
-- QA approval rules.
-
-Need to create:
+Existing document:
 
 ```text
 /ai-system/qa-lifecycle.md
 ```
+
+Covers:
+
+- managed QA flow definition;
+- QA source-of-truth documents;
+- QA lifecycle states;
+- Assess QA Need, Plan QA, Draft Test Cases, Review Test Cases, Start QA, Execute Checks, Report Defects, Request Rework, Run Regression, Approve, Reject, Block, Unblock and Archive operations;
+- QA ownership model across Human Owner, ChatGPT Orchestrator, QA Engineer AI, Code Reviewer AI, domain roles and Codex Executor;
+- positive, negative, edge case and regression checks;
+- QA approval requirements;
+- defect reporting and rework flow;
+- relationship to task lifecycle, Codex lifecycle and review process;
+- Human Owner approval rules;
+- AICP relationship;
+- version impact rules;
+- audit and history rules.
+
+Needs improvement:
+
+- add examples for product-specific QA flows when product projects exist;
+- add QA state transition diagram if QA tracking becomes difficult.
 
 ---
 
@@ -560,6 +559,7 @@ Document Lifecycle
 Process Lifecycle
 Task Lifecycle
 Codex Execution Lifecycle
+QA Lifecycle
 Lifecycle Governance
 Language and Localization
 ```
@@ -574,18 +574,17 @@ Improvement Lifecycle
 ## Missing
 
 ```text
-QA Lifecycle
 Knowledge Lifecycle
 Experiment Lifecycle
 ```
 
 ## Highest Priority Next Steps
 
-1. Create `qa-lifecycle.md` because QA approval and regression flow need explicit ownership.
-2. Create `knowledge-lifecycle.md` to define how lessons become glossary terms, rules or templates.
-3. Create `experiment-lifecycle.md` because experiments need hypothesis, success criteria and rollback rules.
-4. Expand `review-process.md` or create `review-lifecycle.md` to define review states, re-review and closure.
-5. Expand `improvement-log.md` or create `improvement-lifecycle.md` to define triage, conversion and closure.
+1. Create `knowledge-lifecycle.md` to define how lessons become glossary terms, rules or templates.
+2. Create `experiment-lifecycle.md` because experiments need hypothesis, success criteria and rollback rules.
+3. Expand `review-process.md` or create `review-lifecycle.md` to define review states, re-review and closure.
+4. Expand `improvement-log.md` or create `improvement-lifecycle.md` to define triage, conversion and closure.
+5. Create `glossary` cross-links for lifecycle terms if terminology drift appears.
 
 ## Main Principle
 
