@@ -516,36 +516,36 @@ Needs improvement:
 
 ## 5.3 Experiment Lifecycle
 
-Status: Missing
+Status: Implemented
 
-Existing related documents:
-
-```text
-/ai-system/change-process.md
-/ai-system/decision-process.md
-```
-
-Current coverage:
-
-- `EXPERIMENT` decision status exists;
-- experimental changes are mentioned in the change process.
-
-Missing:
-
-- experiment proposal format;
-- hypothesis;
-- duration;
-- success criteria;
-- failure criteria;
-- evaluation process;
-- adoption/rejection process;
-- rollback rules.
-
-Need to create:
+Existing document:
 
 ```text
 /ai-system/experiment-lifecycle.md
 ```
+
+Covers:
+
+- managed experiment definition;
+- what counts as an experiment and what does not;
+- experiment source-of-truth documents;
+- experiment lifecycle states;
+- Propose Experiment, Draft Experiment Proposal, Review Experiment, Approve Experiment, Start Experiment, Monitor Experiment, Evaluate Experiment, Adopt Experiment, Reject Experiment, Roll Back Experiment and Archive Experiment operations;
+- ownership model across Human Owner, ChatGPT Orchestrator, AI System Maintainer, Technical Writer AI, Code Reviewer AI, QA Engineer AI, domain roles and Codex Executor;
+- experiment proposal format;
+- hypothesis, scope, duration, success criteria and failure criteria rules;
+- evaluation, adoption, rejection and rollback processes;
+- relationship to decision lifecycle, change lifecycle, knowledge lifecycle, improvement lifecycle and review lifecycle;
+- Human Owner approval rules;
+- AICP relationship;
+- version impact rules;
+- audit and history rules;
+- boundary rules.
+
+Needs improvement:
+
+- add examples for experiment proposal and evaluation records when experiments become frequent;
+- add experiment state transition diagram if experiment tracking becomes difficult.
 
 ---
 
@@ -567,6 +567,7 @@ Codex Execution Lifecycle
 Review Lifecycle
 QA Lifecycle
 Knowledge Lifecycle
+Experiment Lifecycle
 Lifecycle Governance
 Language and Localization
 ```
@@ -580,14 +581,12 @@ Improvement Lifecycle
 ## Missing
 
 ```text
-Experiment Lifecycle
 ```
 
 ## Highest Priority Next Steps
 
-1. Create `experiment-lifecycle.md` because experiments need hypothesis, success criteria and rollback rules.
-2. Expand `improvement-log.md` or create `improvement-lifecycle.md` to define triage, conversion and closure.
-3. Create `glossary` cross-links for lifecycle terms if terminology drift appears.
+1. Expand `improvement-log.md` or create `improvement-lifecycle.md` to define triage, conversion and closure.
+2. Create `glossary` cross-links for lifecycle terms if terminology drift appears.
 
 ## Main Principle
 
