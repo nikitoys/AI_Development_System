@@ -2,6 +2,22 @@
 
 Status: Draft
 
+## v0.12.0
+
+### Added
+
+- Added Knowledge Lifecycle for managed knowledge, lessons learned, validation, promotion, deprecation, removal and archival.
+
+### Updated
+
+- Updated operating model to mark Knowledge Lifecycle as implemented.
+- Updated AI system README to list `knowledge-lifecycle.md`.
+- Updated next-step priorities after Knowledge Lifecycle was added.
+
+### Reason
+
+Enables the AI Development System to learn from reviews, improvements, repeated issues and decisions without turning every observation into an immediate rule.
+
 ## v0.11.0
 
 ### Added
