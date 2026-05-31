@@ -482,36 +482,37 @@ Needs improvement:
 
 ## 5.2 Knowledge Lifecycle
 
-Status: Missing
+Status: Implemented
 
-Existing related documents:
-
-```text
-/ai-system/glossary.md
-/ai-system/system-changelog.md
-/ai-system/improvement-log.md
-```
-
-Current coverage:
-
-- glossary exists;
-- changelog exists;
-- improvement log exists.
-
-Missing:
-
-- what counts as knowledge;
-- how knowledge is captured;
-- how knowledge is validated;
-- how knowledge becomes a rule, glossary term or template;
-- how outdated knowledge is removed;
-- how lessons learned are stored.
-
-Need to create:
+Existing document:
 
 ```text
 /ai-system/knowledge-lifecycle.md
 ```
+
+Covers:
+
+- managed knowledge item definition;
+- what counts as knowledge and what does not;
+- knowledge source-of-truth documents;
+- knowledge lifecycle states;
+- Observe Knowledge, Capture Knowledge, Classify Knowledge, Validate Knowledge, Promote to Glossary, Promote to Rule, Promote to Template, Promote to Prompt, Link to Source, Deprecate Knowledge, Remove Knowledge, Archive Knowledge and Audit Knowledge operations;
+- ownership model across Human Owner, ChatGPT Orchestrator, AI System Maintainer, Technical Writer AI, Code Reviewer AI, QA Engineer AI, domain roles and Codex Executor;
+- knowledge capture, validation and promotion rules;
+- relationship to glossary, rules, prompts, improvement lifecycle, change lifecycle and review lifecycle;
+- stale knowledge detection;
+- deprecation and removal rules;
+- lesson learned storage rules;
+- Human Owner approval rules;
+- AICP relationship;
+- version impact rules;
+- audit and history rules;
+- boundary rules.
+
+Needs improvement:
+
+- add examples for knowledge promotion paths when repeated observations become frequent;
+- add knowledge state transition diagram if knowledge tracking becomes difficult.
 
 ## 5.3 Experiment Lifecycle
 
@@ -565,6 +566,7 @@ Task Lifecycle
 Codex Execution Lifecycle
 Review Lifecycle
 QA Lifecycle
+Knowledge Lifecycle
 Lifecycle Governance
 Language and Localization
 ```
@@ -578,16 +580,14 @@ Improvement Lifecycle
 ## Missing
 
 ```text
-Knowledge Lifecycle
 Experiment Lifecycle
 ```
 
 ## Highest Priority Next Steps
 
-1. Create `knowledge-lifecycle.md` to define how lessons become glossary terms, rules or templates.
-2. Create `experiment-lifecycle.md` because experiments need hypothesis, success criteria and rollback rules.
-3. Expand `improvement-log.md` or create `improvement-lifecycle.md` to define triage, conversion and closure.
-4. Create `glossary` cross-links for lifecycle terms if terminology drift appears.
+1. Create `experiment-lifecycle.md` because experiments need hypothesis, success criteria and rollback rules.
+2. Expand `improvement-log.md` or create `improvement-lifecycle.md` to define triage, conversion and closure.
+3. Create `glossary` cross-links for lifecycle terms if terminology drift appears.
 
 ## Main Principle
 
