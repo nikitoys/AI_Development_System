@@ -58,6 +58,7 @@ AI Development System
 - `review-lifecycle.md` — lifecycle rules for managed reviews and re-review flow.
 - `qa-lifecycle.md` — lifecycle rules for QA work and regression checks.
 - `knowledge-lifecycle.md` — lifecycle rules for managed knowledge and lessons learned.
+- `experiment-lifecycle.md` — lifecycle rules for managed experiments and rollback.
 - `change-process.md` — controlled evolution of the AI Development System.
 - `change-lifecycle.md` — lifecycle rules for managed system changes.
 - `lifecycle-governance.md` — shared governance model for managed lifecycle documents.
