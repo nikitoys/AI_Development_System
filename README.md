@@ -9,6 +9,41 @@ This repository contains an AI Development System: an operating model for develo
 
 It is not a normal application repository. The primary source of truth is `/ai-system`.
 
+## At a Glance
+
+This repository describes a documented AI-assisted development system:
+
+```text
+Human Owner sets direction and approves decisions.
+ChatGPT Orchestrator routes work, prepares prompts and reviews results.
+AI Roles specialize by responsibility.
+Codex Executor changes repository files only inside approved scope.
+Documentation stores rules, decisions, lifecycles and history.
+```
+
+## How Work Moves
+
+```text
+Idea
+-> Clarification
+-> Task or change proposal
+-> Prompt package
+-> Human approval
+-> Codex execution
+-> Review
+-> QA
+-> Human acceptance
+-> Documentation update
+-> Done
+```
+
+## Where to Start
+
+- `/ai-system/README.md` - main AI Development System index.
+- `/ai-system/owner-guide.md` - how the Human Owner works with the system.
+- `/ai-system/operating-model.md` - what is implemented and how the system is organized.
+- `/ai-system/system-schemes.md` - compact text schemes for roles, documents and process flow.
+
 ## Purpose
 
 The system helps the Human Owner work with ChatGPT and Codex through clear roles, modes, prompts, review rules and change governance.
