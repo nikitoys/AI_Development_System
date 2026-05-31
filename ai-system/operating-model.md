@@ -136,35 +136,35 @@ The Governance Layer defines how decisions, changes and lifecycle control are ma
 
 ## 2.1 Decision Lifecycle
 
-Status: Missing
+Status: Implemented
 
-Existing related documents:
+Existing documents:
 
 ```text
 /ai-system/decision-process.md
+/ai-system/decision-lifecycle.md
 /ai-system/owner-guide.md
 ```
 
-Current coverage:
+Covers:
 
-- decision statuses exist;
-- Human Owner approval rule exists;
-- decision process is partially described.
+- managed decision definition;
+- decision source-of-truth locations;
+- decision lifecycle states;
+- Read, Propose, Clarify, Review, Approve, Request Rework, Reject, Defer, Start Experiment, Apply, Supersede, Roll Back and Archive operations;
+- ownership model across Human Owner, ChatGPT Orchestrator, AI System Maintainer, domain roles and Codex Executor;
+- relationship to decision process;
+- relationship between decisions, affected documents, AICP, changelog and git history;
+- Human Owner approval rules;
+- AICP relationship;
+- revision, supersession and archival rules;
+- version impact rules;
+- audit and history rules.
 
-Missing:
+Needs improvement:
 
-- full lifecycle of a decision;
-- decision states;
-- decision ownership;
-- decision revision process;
-- decision archival rules;
-- links between decisions and affected documents.
-
-Need to create:
-
-```text
-/ai-system/decision-lifecycle.md
-```
+- add examples for product, architecture and system evolution decisions when decision records become frequent;
+- add decision state transition diagram if decision tracking becomes difficult.
 
 ## 2.2 Change Lifecycle
 
@@ -554,6 +554,7 @@ Interaction Modes
 System Structure
 Glossary
 Change Lifecycle
+Decision Lifecycle
 Role Lifecycle
 Document Lifecycle
 Process Lifecycle
@@ -573,7 +574,6 @@ Improvement Lifecycle
 ## Missing
 
 ```text
-Decision Lifecycle
 QA Lifecycle
 Knowledge Lifecycle
 Experiment Lifecycle
@@ -581,11 +581,11 @@ Experiment Lifecycle
 
 ## Highest Priority Next Steps
 
-1. Create `decision-lifecycle.md` to define decision states, ownership and archival rules.
-2. Create `qa-lifecycle.md` because QA approval and regression flow need explicit ownership.
-3. Create `knowledge-lifecycle.md` to define how lessons become glossary terms, rules or templates.
-4. Create `experiment-lifecycle.md` because experiments need hypothesis, success criteria and rollback rules.
-5. Expand `review-process.md` or create `review-lifecycle.md` to define review states, re-review and closure.
+1. Create `qa-lifecycle.md` because QA approval and regression flow need explicit ownership.
+2. Create `knowledge-lifecycle.md` to define how lessons become glossary terms, rules or templates.
+3. Create `experiment-lifecycle.md` because experiments need hypothesis, success criteria and rollback rules.
+4. Expand `review-process.md` or create `review-lifecycle.md` to define review states, re-review and closure.
+5. Expand `improvement-log.md` or create `improvement-lifecycle.md` to define triage, conversion and closure.
 
 ## Main Principle
 

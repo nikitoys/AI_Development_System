@@ -53,6 +53,7 @@ AI Development System
 - `rules.md` — global rules and restrictions.
 - `task-format.md` — standard task format for Codex and AI roles.
 - `decision-process.md` — decision statuses and ownership.
+- `decision-lifecycle.md` — lifecycle rules for Human Owner decisions.
 - `review-process.md` — review and QA rules.
 - `change-process.md` — controlled evolution of the AI Development System.
 - `change-lifecycle.md` — lifecycle rules for managed system changes.

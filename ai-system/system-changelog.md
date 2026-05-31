@@ -2,6 +2,22 @@
 
 Status: Draft
 
+## v0.9.0
+
+### Added
+
+- Added decision lifecycle for managed Human Owner decisions.
+
+### Updated
+
+- Updated operating model to mark Decision Lifecycle as implemented.
+- Updated AI system README to list `decision-lifecycle.md`.
+- Updated next-step priorities after Decision Lifecycle was added.
+
+### Reason
+
+Defines decision states, operations, ownership, revision, supersession, archival, Human Owner approval, AICP relationship and traceability across affected documents, changelog and git history.
+
 ## v0.8.0
 
 ### Added
