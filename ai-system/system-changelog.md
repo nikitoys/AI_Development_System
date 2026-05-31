@@ -2,6 +2,22 @@
 
 Status: Draft
 
+## v0.13.0
+
+### Added
+
+- Added Experiment Lifecycle for managed experiments, hypotheses, timeboxes, success and failure criteria, evaluation, adoption, rejection and rollback.
+
+### Updated
+
+- Updated operating model to mark Experiment Lifecycle as implemented.
+- Updated AI system README to list `experiment-lifecycle.md`.
+- Updated next-step priorities after Experiment Lifecycle was added.
+
+### Reason
+
+Experiments need explicit hypotheses, success criteria, evaluation, adoption, rejection and rollback before they can safely affect the AI Development System.
+
 ## v0.12.0
 
 ### Added
