@@ -5,130 +5,203 @@ Version: v0.1.0
 
 ## Purpose
 
-This document defines how to update AI_Development_System inside a project that already adopted it.
+This document defines how to update an existing project that already uses AI_Development_System.
 
-Project system update is a controlled migration of the local project control layer. It is not application implementation.
+A project system update refreshes the local AI control layer and embedded AI system without changing application code.
 
-## Core Principle
+## Governed Entity
 
-Update upstream system files separately from local project control files.
+A project system update is a controlled migration of project AI control files and embedded AI system files.
+
+It applies to projects that already contain one or both of:
 
 ```text
-AI_Development_System/  -> upstream system copy, may be refreshed
-AI_PROJECT/             -> local project control layer, must be merged
-application code        -> out of scope
+AI_Development_System/
+AI_PROJECT/
 ```
 
-## Trigger Commands
-
-Recommended Human Owner commands:
+or legacy root-level control files such as:
 
 ```text
-Обновить AI-систему
-Обновить систему
-Проверить обновление AI-системы
+AGENTS.md
+CODEX_WORKFLOW.md
+CODEX_TASKS.md
 ```
 
-These commands must not start application implementation.
+## Source of Truth
 
-## Standard Update Flow
+Default source documents:
+
+- `AI_Development_System/ai-system/foldered-integration.md`;
+- `AI_Development_System/ai-system/project-control-files.md`;
+- `AI_Development_System/ai-system/project-bootstrap.md`;
+- `AI_Development_System/ai-system/verification-modes.md`;
+- `AI_Development_System/ai-system/templates/foldered/`;
+- project-local `AI_PROJECT/` files;
+- root `AGENTS.md`.
+
+## When to Run
+
+Run a project system update when:
+
+- upstream AI_Development_System changed;
+- a project needs the new foldered architecture;
+- local control files are missing;
+- verification rules, owner plan intake or operator commands changed;
+- project control files drifted or became inconsistent.
+
+Do not use project system update for ordinary product implementation.
+
+## Update Modes
+
+### Embedded System Refresh
+
+Refreshes only:
 
 ```text
-Human Owner asks to update AI system
--> classify as Project System Update
--> read local control files
--> read current AI_Development_System standard and templates
--> compare local project state with current standard
--> produce migration report
--> Human Owner approves or requests rework
--> update control files only
--> update AI_DEV_SYSTEM_VERSION.md
--> run CODE_ONLY_FAST checks only
--> stop
+AI_Development_System/
+```
+
+It must not modify:
+
+```text
+AI_PROJECT/
+<target-app-directory>/
+```
+
+### Local Control Layer Migration
+
+Updates only:
+
+```text
+AGENTS.md
+AI_PROJECT/
+```
+
+It must merge changes and preserve project-specific decisions.
+
+### Legacy Root Control Migration
+
+Moves or copies old root-level control files into:
+
+```text
+AI_PROJECT/
+```
+
+It should preserve root `AGENTS.md` as a thin router.
+
+## Required Process
+
+```text
+1. Read root AGENTS.md.
+2. Read AI_PROJECT/AGENTS.md if present.
+3. Read AI_PROJECT/PROJECT_GOAL.md and AI_PROJECT/docs/verification-policy.md.
+4. Read AI_Development_System/ai-system/foldered-integration.md.
+5. Read latest templates under AI_Development_System/ai-system/templates/foldered/.
+6. Compare existing local control files with templates.
+7. Prepare migration report.
+8. Stop for Human Owner approval when conflicts or replacements are needed.
+9. Apply approved control-layer changes only.
+10. Update AI_PROJECT/AI_DEV_SYSTEM_VERSION.md.
+11. Run CODE_ONLY_FAST checks only.
 ```
 
 ## Merge Rules
 
-Do not overwrite local files blindly.
+Do not blindly overwrite local project files.
 
-When updating an existing project:
+Preserve:
 
-- preserve local project mission, constraints, target app directory and owner plan;
-- preserve local command aliases unless they conflict with system safety;
-- add missing required files;
-- add missing sections where useful;
-- update verification mode and browser or visual QA boundaries when missing;
-- record conflicts instead of silently resolving them;
-- ask Human Owner before replacing any local control file.
+- project mission;
+- target app directory;
+- non-goals;
+- owner plan;
+- current tasks;
+- task history;
+- local verification restrictions;
+- project-specific prompts;
+- known constraints.
 
-## Files That May Be Updated
+Add or update:
 
-In Foldered Control Mode:
+- missing foldered architecture references;
+- `AI_DEV_SYSTEM_VERSION.md`;
+- missing `OWNER_PLAN.md`;
+- missing verification mode policy;
+- new operator commands;
+- new browser/visual QA boundaries;
+- new read order and path conventions.
 
-```text
-AGENTS.md
-AI_PROJECT/AGENTS.md
-AI_PROJECT/PROJECT_GOAL.md
-AI_PROJECT/OWNER_PLAN.md
-AI_PROJECT/CODEX_COMMANDS.md
-AI_PROJECT/CODEX_WORKFLOW.md
-AI_PROJECT/CODEX_PLAN.md
-AI_PROJECT/CODEX_CURRENT.md
-AI_PROJECT/CODEX_TASKS.md
-AI_PROJECT/CODEX_SESSION_LOG.md
-AI_PROJECT/PROMPTS.md
-AI_PROJECT/AI_DEV_SYSTEM_VERSION.md
-AI_PROJECT/docs/verification-policy.md
-```
+## Conflict Handling
 
-In Root Control Mode, equivalent root control files may be updated.
+Report a conflict when:
 
-## Files That Must Not Be Updated
+- local rules allow browser or visual checks by default;
+- local rules conflict with global safety rules;
+- target app directory is missing or ambiguous;
+- root control files and `AI_PROJECT/` files disagree;
+- existing project files would need replacement rather than merge;
+- application code would need changes.
 
-Do not modify application or product code during project system update.
+Conflicts require Human Owner decision.
 
-Exceptions require a separate approved implementation task.
+## Forbidden Actions
 
-## Migration Report Format
+Project system update must not:
 
-Project system update should report:
+- modify application code;
+- refactor product directories;
+- run browser automation;
+- run Playwright or MCP browser sessions;
+- capture screenshots;
+- inspect browser console;
+- run full builds or full test suites unless explicitly approved;
+- delete project-local decisions or history;
+- overwrite `OWNER_PLAN.md`, `PROJECT_GOAL.md`, `CODEX_TASKS.md` or `CODEX_SESSION_LOG.md` without explicit approval.
 
-```text
-Status:
-Current Integration Mode:
-Target Integration Mode:
-Current AI Development System Version:
-Target AI Development System Version:
-Already Compatible:
-Missing Files:
-Files to Merge:
-Conflicts:
-Application Code Modified: yes/no
-Recommended Action:
-Required Human Owner Decision:
-```
+## Verification Mode
 
-## Version Record
-
-Projects should store local adoption metadata in:
-
-```text
-AI_PROJECT/AI_DEV_SYSTEM_VERSION.md
-```
-
-## Verification
-
-Default verification mode for project system update is:
+Default:
 
 ```text
 CODE_ONLY_FAST
 ```
 
-Allowed checks:
+Allowed checks for this process:
 
 ```bash
 git diff --check
 git status --short
 ```
 
-Do not run browser, Playwright, screenshots, application builds or app tests unless the Human Owner explicitly requests them for this update.
+No browser, Playwright, screenshots or visual QA unless the Human Owner explicitly requests them.
+
+## Migration Report Format
+
+```text
+Status:
+Current AI System Version:
+Target AI System Version:
+Detected Integration Mode:
+Target Integration Mode:
+Target App Directory:
+Already Compatible:
+Missing Files:
+Files to Update:
+Preserved Local Rules:
+Conflicts:
+Application Code Modified: yes/no
+Checks:
+Next Human Owner Decision:
+```
+
+## Closure Rules
+
+A project system update can close when:
+
+- local control files match the approved architecture;
+- missing required files are added or explicitly deferred;
+- conflicts are resolved or recorded;
+- `AI_PROJECT/AI_DEV_SYSTEM_VERSION.md` is updated when present;
+- application code was not modified;
+- checks are recorded.
