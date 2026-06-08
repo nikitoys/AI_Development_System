@@ -11,12 +11,14 @@ Status: Draft
 - Added `OWNER_PLAN.md` as a Human Owner-authored plan intake file for concrete projects.
 - Added explicit verification modes: `CODE_ONLY_FAST`, `FAST_VALIDATION`, `BROWSER_SMOKE` and `VISUAL_QA`.
 - Added reusable project control file templates under `/ai-system/templates/project/`.
+- Added root README Quick Start guidance for installing, updating and using AI_Development_System in concrete projects.
 
 ### Updated
 
 - Updated prompt lifecycle guidance to include `Verification Mode:` in Codex prompt packages.
 - Updated global rules and Codex workflow with on-demand browser and visual QA boundaries.
 - Updated operator command documentation with verification mode shortcuts and `Разобрать план`.
+- Updated root `README.md` with install, update, day-to-day usage and verification mode summaries.
 
 ### Reason
 
