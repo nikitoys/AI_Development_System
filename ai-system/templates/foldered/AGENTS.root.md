@@ -1,52 +1,58 @@
 # AGENTS.md — {{PROJECT_NAME}} AI Bootstrap
 
-This project uses AI Development System in Foldered Control Mode.
+This project uses AI_Development_System through the foldered integration model.
 
-## Directory Model
-
-```text
-/AI_Development_System   # reusable upstream AI Development System
-/AI_PROJECT              # local project control files and project state
-{{TARGET_APP_DIRECTORY}} # target application/product code
-```
-
-## Mandatory First Read
+## Start Here
 
 Before repository-affecting work, read:
 
 ```text
-/AI_PROJECT/AGENTS.md
-/AI_PROJECT/PROJECT_GOAL.md
-/AI_PROJECT/docs/verification-policy.md
-/AI_PROJECT/CODEX_WORKFLOW.md
-/AI_PROJECT/CODEX_CURRENT.md
-/AI_PROJECT/CODEX_TASKS.md
-/AI_Development_System/AGENTS.md
-/AI_Development_System/ai-system/rules.md
+AI_PROJECT/AGENTS.md
+AI_PROJECT/PROJECT_GOAL.md
+AI_PROJECT/docs/verification-policy.md
+AI_Development_System/AGENTS.md
+AI_Development_System/ai-system/rules.md
 ```
 
-When doing AI system bootstrap, update or evolution, also read:
+## Repository Boundaries
 
 ```text
-/AI_Development_System/ai-system/project-integration-model.md
-/AI_Development_System/ai-system/project-control-files.md
-/AI_Development_System/ai-system/project-bootstrap.md
-/AI_Development_System/ai-system/project-system-update.md
+AI_Development_System/   # embedded upstream AI Development System
+AI_PROJECT/              # project-local control files and task state
+{{TARGET_APP_DIRECTORY}} # application/product code
 ```
 
-## Boundaries
+Do not modify `AI_Development_System/` unless the task explicitly targets AI system update, synchronization or evolution.
 
-- Application code lives in `{{TARGET_APP_DIRECTORY}}`.
-- Local project control files live in `/AI_PROJECT`.
-- Reusable AI system files live in `/AI_Development_System`.
-- Do not modify `/AI_Development_System` unless the task explicitly targets AI system update, synchronization or evolution.
-- Do not modify application code during AI system bootstrap or system update.
-- Do not treat `AI_PROJECT/OWNER_PLAN.md` as executable scope.
+Do not modify `AI_PROJECT/` unless the task explicitly targets planning, state, prompts, verification policy or project control files.
 
-## Default Verification Mode
+Do not modify `{{TARGET_APP_DIRECTORY}}` during bootstrap or system update.
+
+## Interaction Modes
+
+Use the embedded AI Development System modes:
 
 ```text
-{{DEFAULT_VERIFICATION_MODE}}
+[FREE]
+[SYSTEM]
+[PROMPT]
+[CODEX]
+[REVIEW]
+[EVOLUTION]
+[DRY-RUN]
 ```
+
+## Required Header for Process Work
+
+```text
+Active Role:
+Active Stage:
+Active Document:
+Expected Result:
+```
+
+## Default Verification
+
+Default Verification Mode: `{{DEFAULT_VERIFICATION_MODE}}`
 
 Browser automation, Playwright/MCP browser sessions, screenshots, browser console checks and manual visual QA are on-demand only.
