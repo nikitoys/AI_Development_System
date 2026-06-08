@@ -12,11 +12,13 @@ updates durable state, runs checks, makes at most one commit, and stops.
 - `PROJECT_GOAL.md`: mission, constraints, success criteria, and non-goals.
 - `CODEX_COMMANDS.md`: short operator command cheat sheet.
 - `CODEX_WORKFLOW.md`: full operator workflow.
+- `OWNER_PLAN.md`: Human Owner-authored roadmap and desired work; planning input only.
 - `CODEX_PLAN.md`: current planning snapshot and nearest tasks.
 - `CODEX_CURRENT.md`: current approved/stopped/cancelled/idle task state.
 - `CODEX_SESSION_LOG.md`: short journal of One-Task Loop cycles.
 - `CODEX_TASKS.md`: compact project board.
 - `PROMPTS.md`: reusable prompts.
+- `docs/verification-policy.md`: local verification mode and check policy.
 
 ## Operator Commands
 
@@ -29,6 +31,21 @@ Do not automatically move from `План` to `Выполняй`, and do not auto
 move from one task to the next.
 
 ## Planning Mode
+
+### `Разобрать план`
+
+Codex or ChatGPT Orchestrator must:
+
+- read `OWNER_PLAN.md` if present;
+- read `PROJECT_GOAL.md`, `CODEX_PLAN.md`, `CODEX_TASKS.md`, `CODEX_CURRENT.md` and `CODEX_SESSION_LOG.md`;
+- compare the owner plan with current project state;
+- classify items as `Already Done`, `Partially Done`, `Missing`, `Unclear`, `Out of Scope` or `Recommended Next Tasks`;
+- propose updates to `CODEX_PLAN.md` and `CODEX_TASKS.md`;
+- not modify application code;
+- not start implementation;
+- stop and wait for Human Owner approval.
+
+`OWNER_PLAN.md` is planning input, not executable scope.
 
 ### `План`
 
@@ -137,7 +154,8 @@ Codex must:
 - not change files;
 - check consistency across `AGENTS.md`, `CODEX_COMMANDS.md`,
   `CODEX_WORKFLOW.md`, `CODEX_PLAN.md`, `CODEX_CURRENT.md`,
-  `CODEX_TASKS.md`, `CODEX_SESSION_LOG.md`, and `PROMPTS.md`;
+  `CODEX_TASKS.md`, `CODEX_SESSION_LOG.md`, `OWNER_PLAN.md`,
+  `docs/verification-policy.md`, and `PROMPTS.md`;
 - find contradictions, stale status, bloated backlog, missing checks, or
   unfinished cycles;
 - give a short report and recommendations;
@@ -177,11 +195,28 @@ Stop when:
 
 ## Checks Policy
 
-- Run checks that match the changed files and risk.
-- For documentation-only changes, a scoped diff review may be enough.
-- If a check cannot run, report the exact command and reason.
-- Negative checks should verify the work did not affect excluded paths,
-  behavior, outputs, or contracts.
+Verification mode is authoritative for allowed checks.
+
+Default mode for ordinary code-only work and fast bugfixes:
+
+```text
+CODE_ONLY_FAST
+```
+
+Modes:
+
+- `CODE_ONLY_FAST` — run only fast code/diff checks such as `git diff --check` and `git status --short`; optional `npm run typecheck` only when source files changed and practical.
+- `FAST_VALIDATION` — run standard validation such as `npm run typecheck`, `npm run test:run` and `npm run build`; no browser unless explicitly requested.
+- `BROWSER_SMOKE` — run limited browser/runtime checks only when explicitly requested.
+- `VISUAL_QA` — run screenshots, visual inspection or Playwright visual checks only when explicitly requested or required by acceptance criteria.
+
+Browser automation, Playwright/MCP browser sessions, screenshots, manual visual inspections and browser console checks are on-demand QA only. Do not run them unless the Human Owner explicitly requests them or the current task explicitly lists them in acceptance criteria.
+
+Do not mark a task `PARTIAL` only because browser checks, screenshots, visual inspection or console checks were skipped, unless those checks were explicitly required for that task.
+
+If a check cannot run, report the exact command and reason.
+
+Negative checks should verify the work did not affect excluded paths, behavior, outputs, or contracts.
 
 ## Commit Policy
 
