@@ -2,6 +2,26 @@
 
 Status: Draft
 
+## v0.15.0
+
+### Added
+
+- Added project control file standard for concrete repositories using AI_Development_System.
+- Added project bootstrap workflow for empty and existing repositories.
+- Added `OWNER_PLAN.md` as a Human Owner-authored plan intake file for concrete projects.
+- Added explicit verification modes: `CODE_ONLY_FAST`, `FAST_VALIDATION`, `BROWSER_SMOKE` and `VISUAL_QA`.
+- Added reusable project control file templates under `/ai-system/templates/project/`.
+
+### Updated
+
+- Updated prompt lifecycle guidance to include `Verification Mode:` in Codex prompt packages.
+- Updated global rules and Codex workflow with on-demand browser and visual QA boundaries.
+- Updated operator command documentation with verification mode shortcuts and `Разобрать план`.
+
+### Reason
+
+Concrete project repositories need durable local control files, owner-authored planning input and explicit verification modes so Codex sessions can stay fast, scoped and predictable without running browser, Playwright, screenshot or manual visual QA checks unless explicitly requested.
+
 ## v0.14.2
 
 ### Added
