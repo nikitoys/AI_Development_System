@@ -69,6 +69,9 @@ AI Development System
 - `task-lifecycle.md` — lifecycle rules for managed tasks.
 - `codex-lifecycle.md` — lifecycle rules for Codex execution.
 - `prompt-lifecycle.md` — lifecycle rules for prompts and prompt packages.
+- `project-control-files.md` — standard project-level control files for concrete repositories.
+- `project-bootstrap.md` — workflow for initializing new and existing project repositories.
+- `verification-modes.md` — explicit check modes and on-demand browser/visual QA rules.
 - `aicp-language-policy.md` — approved change proposal for language and localization policy.
 - `document-templates.md` — templates for project documents.
 - `system-changelog.md` — history of changes to the AI Development System.
