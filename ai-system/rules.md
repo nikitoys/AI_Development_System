@@ -50,6 +50,14 @@ Status: Draft
 4. System changes should not be mixed with application implementation tasks.
 5. Experiments must have success criteria and a final decision.
 
+## Verification Rules
+
+1. For ordinary code-only implementation and bugfix tasks, use `CODE_ONLY_FAST` by default.
+2. Browser automation, Playwright/MCP browser sessions, screenshots, manual visual inspections and browser console checks are on-demand QA only.
+3. Do not run browser or visual checks unless the Human Owner explicitly requests them or the current task explicitly lists them in acceptance criteria.
+4. Do not mark a task `PARTIAL` only because browser checks, screenshots, visual inspection or console checks were skipped, unless those checks were explicitly required for that task.
+5. Codex must not silently upgrade verification mode.
+
 ## Codex Rules
 
 Every Codex prompt should include:
@@ -62,7 +70,8 @@ Every Codex prompt should include:
 - out of scope;
 - expected files;
 - acceptance criteria;
-- result format.
+- result format;
+- verification mode.
 
 Codex must report:
 
