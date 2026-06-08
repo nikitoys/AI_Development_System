@@ -70,6 +70,7 @@ AI Development System
 - `codex-lifecycle.md` — lifecycle rules for Codex execution.
 - `prompt-lifecycle.md` — lifecycle rules for prompts and prompt packages.
 - `project-integration-model.md` — foldered and root integration modes for concrete projects.
+- `foldered-integration.md` — recommended foldered architecture for embedding AI_Development_System into concrete projects.
 - `project-control-files.md` — standard project-level control files for concrete repositories.
 - `project-bootstrap.md` — workflow for initializing new and existing project repositories.
 - `project-system-update.md` — workflow for updating already integrated project control layers.
