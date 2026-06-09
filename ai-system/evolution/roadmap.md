@@ -185,7 +185,11 @@ Immediate priorities:
 
 1. `EVOL-019` — completed; runtime decision recorded as `DEFERRED`.
 2. `EVOL-020` — completed; dependency graph parsing improved while keeping `scripts/agent-plan-mvp.py` dry-run/reporting only.
-3. `EVOL-021` — next proposed follow-up: add broader planning fixtures and validation tests.
+3. `EVOL-021` — completed; planning fixtures and validation runner added for dependency-aware dry-run planning.
+4. `EVOL-022` — completed; runtime maturity levels documented.
+5. `EVOL-023` — completed; manual multi-agent orchestration mode documented.
+6. `EVOL-024` — completed; Agent Result Schema hardened.
+7. `EVOL-025` — next proposed follow-up: add CI for specs, templates and golden project.
 
 Runtime maturity target:
 

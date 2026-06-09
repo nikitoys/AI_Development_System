@@ -2,54 +2,197 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/nikitoys/AI_Development_System/spec/agent-result.schema.json",
   "title": "Agent Result",
-  "description": "Minimal machine-checkable contract for agent results derived from ai-system/agent-result-intake.md.",
+  "description": "Machine-checkable contract for agent results derived from ai-system/agent-result-intake.md.",
   "type": "object",
   "additionalProperties": true,
   "required": [
-    "agent_work_package_id",
+    "result_id",
+    "awp_id",
     "status",
-    "changed_files",
     "summary",
-    "checks_performed",
-    "errors",
-    "questions_or_blockers",
-    "diff_or_key_changes",
+    "changed_files",
+    "claims",
+    "verification",
+    "risks",
+    "blockers",
+    "followups",
     "scope_compliance",
-    "allowed_files_compliance",
-    "locked_files_compliance",
-    "forbidden_actions_compliance",
-    "verification_mode_compliance"
+    "safety_boundary_compliance",
+    "produced_artifacts",
+    "owner_review_required",
+    "integration_review_required"
+  ],
+  "anyOf": [
+    { "required": ["agent_id"] },
+    { "required": ["agent_role"] }
   ],
   "properties": {
-    "agent_work_package_id": { "type": "string", "minLength": 1 },
+    "result_id": { "type": "string", "minLength": 1 },
+    "awp_id": { "type": "string", "pattern": "^AWP-[A-Za-z0-9_-]+$" },
+    "agent_id": { "type": "string", "minLength": 1 },
+    "agent_role": { "type": "string", "minLength": 1 },
     "status": {
       "type": "string",
       "enum": [
-        "Submitted",
-        "Intake In Progress",
-        "Incomplete",
-        "Blocked",
-        "Ready for Review",
-        "Ready for QA",
-        "Ready for Integration Review",
-        "Rework Required",
-        "Rejected",
-        "Archived"
+        "completed",
+        "partial",
+        "blocked",
+        "failed",
+        "needs_review",
+        "rejected"
       ]
     },
-    "changed_files": { "type": "array", "items": { "type": "string" } },
-    "summary": { "type": "string" },
-    "checks_performed": { "type": "array", "items": { "type": "string" } },
-    "errors": { "type": "array", "items": { "type": "string" } },
-    "questions_or_blockers": { "type": "array", "items": { "type": "string" } },
-    "diff_or_key_changes": { "type": "array", "items": { "type": "string" } },
+    "summary": { "type": "string", "minLength": 1 },
+    "changed_files": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/changedFile" }
+    },
+    "claims": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/claim" }
+    },
+    "verification": { "$ref": "#/$defs/verification" },
+    "risks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "followups": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/followup" }
+    },
     "scope_compliance": { "$ref": "#/$defs/complianceCheck" },
-    "allowed_files_compliance": { "$ref": "#/$defs/complianceCheck" },
-    "locked_files_compliance": { "$ref": "#/$defs/complianceCheck" },
-    "forbidden_actions_compliance": { "$ref": "#/$defs/complianceCheck" },
-    "verification_mode_compliance": { "$ref": "#/$defs/complianceCheck" }
+    "safety_boundary_compliance": { "$ref": "#/$defs/safetyBoundaryCompliance" },
+    "produced_artifacts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "owner_review_required": { "type": "boolean" },
+    "integration_review_required": { "type": "boolean" },
+    "parent_task": { "type": "string" },
+    "sop": { "type": "string" },
+    "verification_mode": { "type": "string" },
+    "dependency_notes": { "type": "string" },
+    "review_notes": { "type": "string" },
+    "qa_notes": { "type": "string" },
+    "security_privacy_notes": { "type": "string" },
+    "diff_or_key_changes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "recommended_next_state": { "type": "string" }
   },
   "$defs": {
+    "changedFile": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "path",
+        "action",
+        "reason",
+        "within_allowed_files"
+      ],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "action": {
+          "type": "string",
+          "enum": [
+            "created",
+            "modified",
+            "deleted",
+            "inspected",
+            "generated",
+            "none",
+            "unknown"
+          ]
+        },
+        "reason": { "type": "string" },
+        "within_allowed_files": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "string", "enum": ["unknown"] }
+          ]
+        }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "claim",
+        "evidence",
+        "verification_status"
+      ],
+      "properties": {
+        "claim": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "string" },
+        "verification_status": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "partially_verified",
+            "not_verified",
+            "failed",
+            "not_applicable"
+          ]
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "mode",
+        "commands_run",
+        "result",
+        "limitations"
+      ],
+      "properties": {
+        "mode": { "type": "string" },
+        "commands_run": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "passed",
+            "failed",
+            "partial",
+            "not_run",
+            "not_applicable"
+          ]
+        },
+        "limitations": { "type": "string" },
+        "not_run_reason": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "result": { "const": "not_run" } },
+            "required": ["result"]
+          },
+          "then": { "required": ["not_run_reason"] }
+        }
+      ]
+    },
+    "followup": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "reason"
+      ],
+      "properties": {
+        "followup_id": { "type": "string" },
+        "reason": { "type": "string" },
+        "owner_role": { "type": "string" },
+        "scope": { "type": "string" },
+        "required_review_or_qa": { "type": "string" }
+      }
+    },
     "complianceCheck": {
       "type": "object",
       "required": [
@@ -61,15 +204,48 @@
         "status": {
           "type": "string",
           "enum": [
-            "Pass",
-            "Fail",
-            "Blocked",
-            "Not Checked",
-            "Not Applicable"
+            "pass",
+            "fail",
+            "blocked",
+            "unknown",
+            "not_applicable"
           ]
         },
         "notes": { "type": "string" }
       }
+    },
+    "safetyBoundaryCompliance": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "allowed_files_respected",
+        "forbidden_actions_avoided",
+        "automatic_codex_execution_avoided",
+        "automatic_multi_agent_execution_avoided",
+        "branch_worktree_automation_avoided",
+        "automatic_merge_avoided",
+        "automatic_acceptance_avoided",
+        "automatic_qa_review_closure_avoided",
+        "human_owner_approval_required"
+      ],
+      "properties": {
+        "allowed_files_respected": { "$ref": "#/$defs/complianceValue" },
+        "forbidden_actions_avoided": { "$ref": "#/$defs/complianceValue" },
+        "automatic_codex_execution_avoided": { "$ref": "#/$defs/complianceValue" },
+        "automatic_multi_agent_execution_avoided": { "$ref": "#/$defs/complianceValue" },
+        "branch_worktree_automation_avoided": { "$ref": "#/$defs/complianceValue" },
+        "automatic_merge_avoided": { "$ref": "#/$defs/complianceValue" },
+        "automatic_acceptance_avoided": { "$ref": "#/$defs/complianceValue" },
+        "automatic_qa_review_closure_avoided": { "$ref": "#/$defs/complianceValue" },
+        "human_owner_approval_required": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    },
+    "complianceValue": {
+      "oneOf": [
+        { "type": "boolean" },
+        { "type": "string", "enum": ["unknown", "not_applicable"] }
+      ]
     }
   }
 }

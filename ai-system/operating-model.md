@@ -385,6 +385,7 @@ Existing documents:
 Covers:
 
 - agent result governed entity and required result fields;
+- hardened Agent Result schema with structured changed files, claims, verification, risks, blockers, followups, scope compliance, safety boundary compliance and review requirements;
 - result intake states/status values;
 - intake checks for scope, `allowed_files`, `locked_files`, `forbidden_actions`, dependencies and verification mode;
 - error, question, blocker, rework, rejection and archive routing;
@@ -396,7 +397,7 @@ Covers:
 
 Needs improvement:
 
-- add project-local templates after the approved standards are stable;
+- validate hardened Agent Result records through manual orchestration pilots;
 - validate intake and integration review through controlled pilot work.
 
 ## 2.10 Machine-Checkable SOP and Agent Specs
@@ -487,6 +488,62 @@ Needs improvement:
 - extend the golden project with a non-runtime multi-agent example;
 - add richer parsing only after pilot evidence shows it is useful;
 - keep runtime decisions deferred until controlled pilot validation.
+
+## 2.13 Runtime Maturity Levels
+
+Status: Implemented
+
+Existing documents:
+
+```text
+/ai-system/runtime-maturity-levels.md
+/ai-system/evolution/roadmap.md
+/ai-system/evolution/evolution-backlog.md
+```
+
+Covers:
+
+- maturity levels `L0` through `L6`;
+- current level `L2 — Dry-run planning`;
+- next target `L3 — Manual multi-agent orchestration`;
+- L4+ as future/not approved;
+- allowed and forbidden capabilities at each level;
+- required safety gates, evidence and readiness criteria;
+- boundary rule that maturity levels do not authorize runtime behavior by themselves.
+
+Needs improvement:
+
+- define Manual Multi-Agent Orchestration Mode in `EVOL-023`;
+- keep runtime execution deferred until explicit future approval.
+
+## 2.14 Manual Multi-Agent Orchestration Mode
+
+Status: Implemented
+
+Existing documents:
+
+```text
+/ai-system/manual-orchestration.md
+/ai-system/runtime-maturity-levels.md
+/ai-system/agent-work-package.md
+/ai-system/agent-result-intake.md
+/ai-system/integration-review.md
+```
+
+Covers:
+
+- L3 manual-only orchestration purpose and boundaries;
+- allowed manual operations for plan selection, validation, AWP selection, manual assignment, result intake and integration review;
+- forbidden automatic execution, branch/worktree automation, merge, acceptance and QA/review closure;
+- required L3 artifacts;
+- manual orchestration flow;
+- L3 readiness criteria and L4 readiness criteria;
+- boundary rule that L3 is coordination, not runtime.
+
+Needs improvement:
+
+- validate manual orchestration through at least one pilot scenario;
+- use hardened Agent Result records during pilot orchestration.
 
 ---
 

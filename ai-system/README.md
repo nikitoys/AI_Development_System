@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.35.0
+Version: v0.39.0
 
 ## Purpose
 
@@ -103,6 +103,20 @@ Sequential execution remains the default. Parallel execution is opt-in, Human Ow
 
 Intake and integration review do not authorize automatic execution, automatic merge or automatic acceptance.
 
+Agent Result Intake defines the hardened Agent Result schema for manual orchestration, including structured changed files, claims, verification, risks, blockers, followups, scope compliance, safety boundary compliance and review requirements.
+
+## Runtime Maturity Levels
+
+`runtime-maturity-levels.md` defines runtime maturity levels from `L0 — Documentation only` through `L6 — Autonomous runtime`.
+
+The current level is `L2 — Dry-run planning`. The next safe target is `L3 — Manual multi-agent orchestration`. Runtime execution remains `DEFERRED`; `L4+` is future/not approved.
+
+## Manual Multi-Agent Orchestration
+
+`manual-orchestration.md` defines the L3 manual orchestration workflow.
+
+Manual orchestration coordinates Agent Work Packages, result intake and integration review by hand. It does not authorize automatic Codex execution, automatic multi-agent execution, branch/worktree automation, merge automation, automatic acceptance or automatic QA/review closure.
+
 ## AI_PROJECT Agent Planning Templates
 
 Foldered project templates include `AGENT_PLAN.md`, `AGENT_TASKS.md`, `AGENT_LOCKS.md`, `AGENT_RESULTS.md` and `AGENT_METRICS.md`.
@@ -162,6 +176,8 @@ AI Development System
 - `parallel-execution-policy.md` — opt-in policy for Human Owner-approved parallel execution groups.
 - `agent-result-intake.md` — intake process for Agent Work Package and Codex execution results.
 - `integration-review.md` — review process for combined agent result sets before QA handoff and acceptance.
+- `runtime-maturity-levels.md` — runtime maturity levels and progression gates from documentation-only work to future runtime modes.
+- `manual-orchestration.md` — L3 manual-only coordination workflow for Agent Work Packages, result intake and integration review.
 - `rules.md` — global rules and restrictions.
 - `system-schemes.md` — compact text schemes for roles, documents and process flow.
 - `task-format.md` — standard task format for Codex and AI roles.

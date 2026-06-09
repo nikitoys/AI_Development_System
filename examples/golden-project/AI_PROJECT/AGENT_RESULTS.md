@@ -14,24 +14,28 @@ This file does not authorize execution, automatic merge or automatic acceptance.
 
 ## Result Intake Log
 
-| Result ID | Package ID | Status | Changed Files Checked | Verification Mode | Next Review Step |
-|---|---|---|---|---|---|
-| RES-REQ-001 | AWP-REQ-001 | not submitted | no | FAST_VALIDATION | Wait for approved execution. |
-| RES-BE-001 | AWP-BE-001 | not submitted | no | FAST_VALIDATION | Wait for approved execution. |
-| RES-FE-001 | AWP-FE-001 | not submitted | no | FAST_VALIDATION | Wait for approved execution. |
-| RES-QA-001 | AWP-QA-001 | not submitted | no | FAST_VALIDATION | Wait for approved execution. |
+| Result ID | AWP ID | Agent Role | Status | Owner Review Required | Integration Review Required | Next Review Step |
+|---|---|---|---|---|---|---|
+| RES-REQ-001 | AWP-REQ-001 | Business Analyst AI | needs_review | yes | no | Wait for approved execution. |
+| RES-BE-001 | AWP-BE-001 | Backend Developer AI | needs_review | yes | yes | Wait for approved execution. |
+| RES-FE-001 | AWP-FE-001 | Frontend Developer AI | needs_review | yes | yes | Wait for approved execution. |
+| RES-QA-001 | AWP-QA-001 | QA Engineer AI | needs_review | yes | yes | Wait for approved execution. |
 
 ## Intake Checklist Placeholder
 
 Each future result must be checked for:
 
 - scope compliance;
+- safety boundary compliance;
 - `allowed_files` compliance;
 - `locked_files` compliance;
 - `forbidden_actions` compliance;
+- claims and evidence;
 - dependency result status;
-- verification mode compliance;
-- errors, questions and blockers;
+- verification record;
+- risks, blockers and followups;
+- produced artifacts;
+- owner review and integration review requirements;
 - security/privacy notes.
 
 ## Integration Review References
@@ -47,4 +51,3 @@ Integration Review does not replace QA.
 Integration Review does not replace Human Owner final acceptance.
 
 No automatic execution, merge or acceptance is allowed.
-

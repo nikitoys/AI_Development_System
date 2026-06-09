@@ -141,45 +141,105 @@ QA may be required before acceptance when the result affects behavior, user-faci
 
 ## Required Result Fields
 
-Every agent result should include:
+Every agent result must include:
 
 - `result_id` - stable result identifier.
-- `agent_work_package` - related Agent Work Package ID.
+- `awp_id` - related Agent Work Package ID.
+- `agent_id` or `agent_role` - logical agent, external agent or role that produced the result.
+- `status` - result status.
+- `summary` - concise description of what was done.
+- `changed_files` - structured changed-file records.
+- `claims` - structured claims made by the result.
+- `verification` - structured verification record.
+- `risks` - known risks, residual concerns or accepted limitations.
+- `blockers` - blockers preventing review, QA, integration review or acceptance.
+- `followups` - required rework, follow-up Agent Work Packages or later tasks.
+- `scope_compliance` - structured scope compliance statement.
+- `safety_boundary_compliance` - structured safety boundary compliance statement.
+- `produced_artifacts` - files, docs, reports, prompts, notes or other outputs produced.
+- `owner_review_required` - whether Human Owner review is required before acceptance.
+- `integration_review_required` - whether Integration Review is required before QA handoff or parent-task acceptance.
+
+Recommended additional fields:
+
 - `parent_task` - parent task ID or title.
 - `sop` - selected SOP ID.
-- `role` - role or executor context that produced the result.
-- `status` - result status.
-- `changed_files` - files created, modified, deleted or inspected when relevant.
-- `summary` - concise description of what was done.
-- `scope_statement` - statement of how the result stayed inside scope.
-- `checks_performed` - verification commands, inspections or checks.
-- `verification_mode` - verification mode used.
-- `errors` - failures or incomplete work.
-- `questions` - open questions requiring decision.
-- `blockers` - blockers preventing review, QA or acceptance.
-- `diff_or_key_changes` - diff summary or key changes.
+- `verification_mode` - verification mode requested by the package.
 - `dependency_notes` - dependency assumptions and satisfied prerequisites.
 - `review_notes` - review-relevant notes.
 - `qa_notes` - QA-relevant notes or skipped QA rationale.
 - `security_privacy_notes` - sensitive data, secret, sandbox or external tool considerations.
-- `recommended_next_state` - proposed routing such as `Ready for Review`, `Rework Required`, `Rejected` or `Blocked`.
+- `diff_or_key_changes` - diff summary or key changes.
+- `recommended_next_state` - proposed routing such as `needs_review`, `blocked`, `rejected` or `completed`.
 
 ## Result Intake States / Status Values
 
-Agent results should use these status values where applicable:
+Agent results must use these result status values:
 
-- `Submitted` - result was provided for intake.
-- `Intake In Progress` - intake checks are being performed.
-- `Incomplete` - required result fields are missing.
-- `Blocked` - result cannot proceed because a blocker or decision is unresolved.
-- `Ready for Review` - intake passed enough to start review.
-- `Ready for QA` - intake passed enough to start QA where applicable.
-- `Ready for Integration Review` - result can join an integrated result set.
-- `Rework Required` - targeted correction is needed.
-- `Rejected` - result is not acceptable for the parent task or package.
-- `Archived` - retained for history, not active.
+- `completed` - claimed work is complete and ready for intake/review.
+- `partial` - result is incomplete but contains useful reviewed output.
+- `blocked` - result cannot proceed because a blocker or decision is unresolved.
+- `failed` - attempted work failed or could not produce usable output.
+- `needs_review` - result is submitted and awaits review/intake decision.
+- `rejected` - result is not acceptable for the parent task or package.
 
 These states are intake states. They do not mean final parent task acceptance.
+
+Legacy intake routing labels such as `Ready for Review`, `Ready for QA`, `Ready for Integration Review` or `Rework Required` may be recorded in `recommended_next_state`, but the hardened `status` field should use the lowercase values above.
+
+## `changed_files` Format
+
+Each `changed_files` item must include:
+
+- `path` - repository-relative path or planned artifact path.
+- `action` - `created`, `modified`, `deleted`, `inspected`, `generated`, `none` or `unknown`.
+- `reason` - why the file or artifact was touched or inspected.
+- `within_allowed_files` - `true`, `false` or `unknown`.
+
+If no files changed, record an empty list and explain in `summary`, `claims` or `produced_artifacts`.
+
+## `claims` Format
+
+Each `claims` item must include:
+
+- `claim` - statement made by the result.
+- `evidence` - command output, file reference, review note, artifact or rationale supporting the claim.
+- `verification_status` - `verified`, `partially_verified`, `not_verified`, `failed` or `not_applicable`.
+
+Unverified claims must not be treated as accepted facts during intake or integration review.
+
+## `verification` Format
+
+The `verification` object must include:
+
+- `mode` - verification mode requested or used.
+- `commands_run` - commands, checks or inspections performed.
+- `result` - `passed`, `failed`, `partial`, `not_run` or `not_applicable`.
+- `limitations` - known verification limits.
+- `not_run_reason` - required when verification was not performed.
+
+Missing verification blocks acceptance unless the Human Owner explicitly accepts the risk.
+
+## Scope and Safety Compliance
+
+`scope_compliance` must state:
+
+- whether the result stayed within Agent Work Package scope;
+- whether out-of-scope work was avoided;
+- whether parent task boundaries were preserved;
+- evidence or notes supporting the compliance claim.
+
+`safety_boundary_compliance` must state:
+
+- whether `allowed_files` were respected;
+- whether `forbidden_actions` were avoided;
+- whether automatic Codex execution was avoided;
+- whether automatic multi-agent execution was avoided;
+- whether branch/worktree automation was avoided;
+- whether automatic merge was avoided;
+- whether automatic acceptance was avoided;
+- whether automatic QA/review closure was avoided;
+- whether Human Owner approval is required before acceptance.
 
 ## Ownership Model
 
@@ -217,6 +277,50 @@ Agent Result Intake should check:
 - security/privacy notes;
 - errors, questions and blockers;
 - recommended next state.
+
+## Integration Review Handoff
+
+When `integration_review_required` is `true`, Integration Review must inspect:
+
+- `result_id`;
+- `awp_id`;
+- `agent_id` or `agent_role`;
+- `status`;
+- `summary`;
+- `changed_files`;
+- `claims`;
+- `verification`;
+- `risks`;
+- `blockers`;
+- `followups`;
+- `scope_compliance`;
+- `safety_boundary_compliance`;
+- `produced_artifacts`;
+- `owner_review_required`;
+- `integration_review_required`;
+- dependency notes and package order where available;
+- `allowed_files`, `locked_files` and forbidden-action compliance.
+
+Acceptance is blocked when:
+
+- required fields are missing;
+- status is `blocked`, `failed` or `rejected`;
+- changed files are outside `allowed_files` without explicit Human Owner approval;
+- safety boundary compliance is missing or failed;
+- verification failed or was not run without an accepted reason;
+- claims needed for acceptance are unverified;
+- blockers remain unresolved;
+- integration review is required but not performed;
+- Human Owner review is required but not recorded.
+
+Follow-up Agent Work Packages or rework should be recorded in `followups` with enough detail to create a bounded package or task:
+
+- follow-up ID or proposed ID;
+- reason;
+- owner role;
+- scope;
+- blocker or risk addressed;
+- required review or QA.
 
 ## Scope Compliance Checks
 
@@ -376,4 +480,3 @@ Human Owner remains final decision maker.
 - Decide how result IDs should be generated in project-local control files.
 - Decide how intake records should reference external Codex sessions.
 - Decide whether future tooling should compare changed files against `allowed_files` automatically.
-

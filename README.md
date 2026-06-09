@@ -3,7 +3,7 @@
 Languages: [English](README.md) | [Русский](README.ru.md)
 
 Status: Draft
-Version: v0.35.0
+Version: v0.39.0
 
 This repository contains an AI Development System: an operating model for developing projects through AI roles, documentation, lifecycle governance, prompt generation, Codex execution, review and controlled evolution.
 
@@ -44,6 +44,10 @@ Foldered `AI_PROJECT` templates now include agent planning files for plans, pack
 The golden project includes a filled non-runtime multi-agent planning example for Task Tracker under `examples/golden-project/`.
 
 The SOP / optional multi-agent pilot validation record is stored in `/ai-system/evolution/sop-multi-agent-pilot-validation.md`.
+
+Runtime maturity levels are defined in `/ai-system/runtime-maturity-levels.md`. Current level is `L2 — Dry-run planning`; next target is `L3 — Manual multi-agent orchestration`; runtime remains `DEFERRED`.
+
+Manual Multi-Agent Orchestration Mode is defined in `/ai-system/manual-orchestration.md`. L3 is manual-only and does not authorize automatic execution, merge or acceptance.
 
 ## At a Glance
 

@@ -893,7 +893,7 @@ Runtime remains deferred. The helper remains dry-run/reporting only and does not
 
 ## EVOL-021 — Planning Fixtures and Validation Tests
 
-Status: Proposed  
+Status: Done  
 Priority: P2  
 Source: `EVOL-020` readiness criteria  
 Roadmap item: P6 — SOP and Optional Multi-Agent Control Plane  
@@ -929,11 +929,19 @@ Conversion path:
 
 Bounded test/fixture task after `EVOL-020`.
 
+Notes:
+
+Completed by adding and validating dependency-aware planning fixtures under `examples/agent-plan-fixtures/` and the lightweight runner `scripts/validate-agent-plan-fixtures.py`.
+
+The fixtures cover simple linear dependency, simple parallel dependency, diamond dependency, missing dependency, cycle detection, blocked package exclusion and completed prerequisite unlocking a parallel group.
+
+The validation runner executes `scripts/agent-plan-mvp.py` against the fixtures and asserts expected success/failure behavior without executing Codex, creating branches or worktrees, merging changes, modifying application code or accepting results.
+
 ---
 
 ## EVOL-022 — Runtime Maturity Levels
 
-Status: Proposed  
+Status: Done  
 Priority: P2  
 Source: `EVOL-019` readiness criteria  
 Roadmap item: P6 — SOP and Optional Multi-Agent Control Plane  
@@ -976,11 +984,19 @@ Conversion path:
 
 Governance documentation task after or alongside `EVOL-019`.
 
+Notes:
+
+Completed by adding `ai-system/runtime-maturity-levels.md` and indexing it from the operating model and `ai-system/README.md`.
+
+The documented levels are `L0 — Documentation only`, `L1 — Machine-checkable specs`, `L2 — Dry-run planning`, `L3 — Manual multi-agent orchestration`, `L4 — Assisted execution`, `L5 — Controlled runtime` and `L6 — Autonomous runtime`.
+
+Current project level is `L2 — Dry-run planning`. Next safe target is `L3 — Manual multi-agent orchestration`. Runtime execution remains `DEFERRED`, and `L4+` remains future/not approved.
+
 ---
 
 ## EVOL-023 — Manual Multi-Agent Orchestration Mode
 
-Status: Proposed  
+Status: Done  
 Priority: P3  
 Source: `EVOL-022` next target  
 Roadmap item: P6 — SOP and Optional Multi-Agent Control Plane  
@@ -1016,11 +1032,21 @@ Conversion path:
 
 Workflow documentation task after maturity levels are recorded.
 
+Notes:
+
+Completed by adding `ai-system/manual-orchestration.md` and indexing it from `runtime-maturity-levels.md`, `operating-model.md` and `ai-system/README.md`.
+
+Manual Multi-Agent Orchestration Mode defines L3 as manual-only coordination of Agent Work Packages, dependency-aware planning output, manual assignment, manual result intake, manual integration review and Human Owner decisions.
+
+The document records allowed L3 manual operations, forbidden L3 automation, required L3 artifacts, L3 flow, L3 readiness criteria and L4 readiness criteria.
+
+Runtime remains `DEFERRED`. L3 does not authorize automatic Codex execution, automatic multi-agent execution, branch/worktree automation, automatic merge, automatic acceptance or automatic QA/review closure.
+
 ---
 
 ## EVOL-024 — Agent Result Schema Hardening
 
-Status: Proposed  
+Status: Done  
 Priority: P3  
 Source: Pilot validation / future manual orchestration needs  
 Roadmap item: P6 — SOP and Optional Multi-Agent Control Plane  
@@ -1056,6 +1082,18 @@ Acceptance criteria:
 Conversion path:
 
 Bounded schema/documentation hardening task.
+
+Notes:
+
+Completed by hardening `ai-system/agent-result-intake.md`, `spec/agent-result.schema.json`, `ai-system/templates/foldered/AI_PROJECT/AGENT_RESULTS.md` and the golden project result placeholder.
+
+The hardened Agent Result schema defines required fields for `result_id`, `awp_id`, agent identity, status, summary, changed files, claims, verification, risks, blockers, followups, scope compliance, safety boundary compliance, produced artifacts, owner review requirement and integration review requirement.
+
+Integration Review handoff rules now identify which hardened result fields must be inspected and which conditions block acceptance.
+
+Manual orchestration now references the hardened Agent Result schema for L3 manual result intake.
+
+Runtime remains `DEFERRED`. This change does not implement runtime behavior, automatic execution, branch/worktree automation, automatic merge, automatic acceptance or automatic QA/review closure.
 
 ---
 

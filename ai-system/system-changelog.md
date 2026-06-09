@@ -2,6 +2,76 @@
 
 Status: Draft
 
+## v0.39.0
+
+### Updated
+
+- Hardened the Agent Result schema in `ai-system/agent-result-intake.md`.
+- Updated `spec/agent-result.schema.json` to match the hardened Agent Result contract.
+- Updated `ai-system/templates/foldered/AI_PROJECT/AGENT_RESULTS.md` and `examples/golden-project/AI_PROJECT/AGENT_RESULTS.md` with hardened result fields.
+- Updated `ai-system/manual-orchestration.md` so L3 manual result intake uses the hardened Agent Result schema.
+- Updated `ai-system/integration-review.md` with hardened Agent Result handoff checks.
+- Marked `EVOL-024 — Agent Result Schema Hardening` as `Done`.
+- Updated roadmap P6 immediate priorities so `EVOL-024` is completed and `EVOL-025` is the next proposed follow-up.
+- Updated README version mirrors to `v0.39.0`.
+
+### Reason
+
+`EVOL-024` makes agent results more machine-checkable and reviewable for future L3 manual orchestration. Runtime execution remains `DEFERRED`; this change does not add automatic Codex execution, automatic multi-agent execution, branch/worktree automation, automatic file modification by orchestration tooling, automatic merge, automatic acceptance or automatic QA/review closure.
+
+## v0.38.0
+
+### Added
+
+- Added `ai-system/manual-orchestration.md` to define Manual Multi-Agent Orchestration Mode for L3 readiness.
+
+### Updated
+
+- Updated `ai-system/runtime-maturity-levels.md` to reference the L3 manual orchestration source document.
+- Updated `ai-system/README.md` and `ai-system/operating-model.md` to index Manual Multi-Agent Orchestration Mode.
+- Marked `EVOL-023 — Manual Multi-Agent Orchestration Mode` as `Done`.
+- Updated roadmap P6 immediate priorities so `EVOL-023` is completed and `EVOL-024` is the next proposed follow-up.
+- Updated README version mirrors to `v0.38.0`.
+
+### Reason
+
+`EVOL-023` defines L3 as manual-only orchestration after dry-run planning. It allows manual plan validation, manual AWP selection and assignment, manual result intake, manual integration review and Human Owner decisions while forbidding automatic Codex execution, automatic multi-agent execution, branch/worktree automation, automatic merge, automatic acceptance and automatic QA/review closure. Runtime remains `DEFERRED`; L4+ remains future/not approved.
+
+## v0.37.0
+
+### Added
+
+- Added `ai-system/runtime-maturity-levels.md` to define runtime maturity levels `L0` through `L6`.
+
+### Updated
+
+- Marked `EVOL-022 — Runtime Maturity Levels` as `Done`.
+- Updated `ai-system/README.md` and `ai-system/operating-model.md` to index the Runtime Maturity Levels document.
+- Updated roadmap P6 immediate priorities so `EVOL-022` is completed and `EVOL-023` is the next proposed follow-up.
+- Updated README version mirrors to `v0.37.0`.
+
+### Reason
+
+`EVOL-022` separates documentation, specs, dry-run planning, manual orchestration and future runtime modes. The current level is `L2 — Dry-run planning`; the next safe target is `L3 — Manual multi-agent orchestration`. Runtime execution remains `DEFERRED`, and `L4+` remains future/not approved without explicit Human Owner approval.
+
+## v0.36.0
+
+### Added
+
+- Added `scripts/validate-agent-plan-fixtures.py` as a lightweight validation runner for dependency-aware dry-run planning fixtures.
+- Added `simple-linear`, `simple-parallel` and `diamond` planning fixtures under `examples/agent-plan-fixtures/`.
+
+### Updated
+
+- Expanded `examples/agent-plan-fixtures/README.md` with the new fixtures and validation command.
+- Marked `EVOL-021 — Planning Fixtures and Validation Tests` as `Done`.
+- Updated roadmap P6 immediate priorities so `EVOL-021` is completed and `EVOL-022` is the next proposed follow-up.
+- Updated README version mirrors to `v0.36.0`.
+
+### Reason
+
+`EVOL-021` adds repeatable fixture coverage for dependency-aware dry-run planning, including simple linear dependency, simple parallel dependency, diamond dependency, missing dependency, cycle detection, blocked package exclusion and completed prerequisite unlocking a parallel group. The validation runner only executes local dry-run checks and does not authorize runtime behavior, automatic Codex execution, branch/worktree automation, merge automation or automatic acceptance.
+
 ## v0.35.0
 
 ### Added

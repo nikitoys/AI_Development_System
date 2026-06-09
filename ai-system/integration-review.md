@@ -58,14 +58,21 @@ Integration Review starts after relevant individual agent results pass intake or
 Each result should have:
 
 - result ID;
-- package ID;
+- Agent Work Package ID;
+- agent ID or role;
+- result status;
+- summary;
 - parent task;
-- changed files;
+- structured changed files with path, action, reason and `within_allowed_files`;
+- claims with evidence and verification status;
+- verification record;
+- risks, blockers and follow-ups;
 - scope compliance notes;
-- `allowed_files` and `locked_files` compliance notes;
+- safety boundary compliance notes;
 - dependency notes;
-- verification notes;
-- errors, questions or blockers;
+- produced artifacts;
+- owner review requirement;
+- integration review requirement;
 - recommended intake state.
 
 Integration Review should not proceed when required result intake records are missing.
@@ -139,6 +146,26 @@ Integration Review should start with:
 - open questions and blockers.
 
 Missing required inputs should block Integration Review.
+
+For hardened Agent Result records, Integration Review must inspect:
+
+- `result_id`;
+- `awp_id`;
+- `agent_id` or `agent_role`;
+- `status`;
+- `changed_files`;
+- `claims`;
+- `verification`;
+- `risks`;
+- `blockers`;
+- `followups`;
+- `scope_compliance`;
+- `safety_boundary_compliance`;
+- `produced_artifacts`;
+- `owner_review_required`;
+- `integration_review_required`.
+
+Integration Review must block parent-task acceptance when required result fields are missing, safety boundary compliance fails, unresolved blockers remain, required verification is missing without accepted rationale, or Human Owner review is required but not recorded.
 
 ## Integration Review States / Status Values
 
@@ -360,4 +387,3 @@ Human Owner remains final decision maker.
 - Decide how integrated result sets should be recorded in `AI_PROJECT/`.
 - Decide whether future tooling should detect duplicate changed files across results.
 - Decide how pilot validation should measure integration review effectiveness.
-

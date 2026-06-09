@@ -22,9 +22,9 @@ This file does not authorize execution, automatic merge or automatic acceptance.
 
 ## Result Intake Log
 
-| Result ID | Package ID | Status | Changed Files Checked | Verification Mode | Next Review Step |
-|---|---|---|---|---|---|
-| RES-001 | AWP-001 | not submitted | no | {{DEFAULT_VERIFICATION_MODE}} | Not ready. |
+| Result ID | AWP ID | Agent Role | Status | Owner Review Required | Integration Review Required | Next Review Step |
+|---|---|---|---|---|---|---|
+| RES-001 | AWP-001 | TBD | needs_review | yes | unknown | Not ready. |
 
 ## Required Result Fields
 
@@ -32,19 +32,37 @@ Each result should include:
 
 ```text
 result_id:
-agent_work_package:
+awp_id:
+agent_id:
+agent_role:
+status:
+summary:
+changed_files:
+  - path:
+    action:
+    reason:
+    within_allowed_files:
+claims:
+  - claim:
+    evidence:
+    verification_status:
+verification:
+  mode:
+  commands_run:
+  result:
+  limitations:
+  not_run_reason:
+risks:
+blockers:
+followups:
+scope_compliance:
+safety_boundary_compliance:
+produced_artifacts:
+owner_review_required:
+integration_review_required:
 parent_task:
 sop:
-role:
-status:
-changed_files:
-summary:
-scope_statement:
-checks_performed:
 verification_mode:
-errors:
-questions:
-blockers:
 diff_or_key_changes:
 dependency_notes:
 review_notes:
@@ -53,9 +71,19 @@ security_privacy_notes:
 recommended_next_state:
 ```
 
+Allowed result statuses:
+
+```text
+completed
+partial
+blocked
+failed
+needs_review
+rejected
+```
+
 ## Integration Review References
 
 | Parent Task | Result Set | Integration Review Status | QA Handoff Status | Human Owner Acceptance |
 |---|---|---|---|---|
 | TBD | TBD | not started | not ready | not reached |
-
