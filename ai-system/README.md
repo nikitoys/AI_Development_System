@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.29.0
+Version: v0.30.0
 
 ## Purpose
 
@@ -41,6 +41,17 @@ python3 scripts/foldered-control-mvp.py update --project-root /path/to/project
 ```
 
 The helper reports planned control-layer changes, unresolved placeholders and `AI_PROJECT/AI_DEV_SYSTEM_VERSION.md` tracking. Writes require explicit `--apply`.
+
+Run dry-run agent planning checks with:
+
+```bash
+python3 scripts/agent-plan-mvp.py validate --project-root /path/to/project
+python3 scripts/agent-plan-mvp.py check-locks --project-root /path/to/project
+python3 scripts/agent-plan-mvp.py list-parallel-groups --project-root /path/to/project
+python3 scripts/agent-plan-mvp.py generate-prompts --project-root /path/to/project
+```
+
+The helper only reads `AI_PROJECT/AGENT_*` files and prints reports or prompt drafts. It does not execute Codex, create branches, merge changes, accept results or modify application code.
 
 ## Machine-Checkable Specs
 
@@ -181,6 +192,7 @@ AI Development System
 - `improvement-log.md` — observations and problems in the system.
 - `../scripts/check-docs-integrity.py` — documentation integrity check for links, placeholders, indexes and version/status fields.
 - `../scripts/foldered-control-mvp.py` — minimal dry-run bootstrap/update helper for Foldered Control Mode.
+- `../scripts/agent-plan-mvp.py` — minimal dry-run helper for AI_PROJECT agent planning validation, lock checks, candidate parallel group reporting and prompt drafts.
 - `../spec/README.md` — machine-checkable spec layer policy and validation guidance.
 
 ## Evolution Module

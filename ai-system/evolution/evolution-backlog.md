@@ -623,7 +623,7 @@ Updated project control and foldered integration documentation, and added the te
 
 ## EVOL-016 — Add dry-run agent planner MVP script
 
-Status: Proposed  
+Status: Done  
 Priority: P2  
 Source: `sop-multi-agent-implementation-plan.md`  
 Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
@@ -650,6 +650,12 @@ Acceptance criteria:
 Conversion path:
 
 Automation task.
+
+Notes:
+
+Completed with `scripts/agent-plan-mvp.py`. The helper supports `validate`, `check-locks`, `list-parallel-groups` and `generate-prompts` commands.
+
+The helper is dry-run/reporting only. It reads `AI_PROJECT/AGENT_*` files, reports missing or incomplete planning files, recognizes simple Agent Work Package table entries, checks locked-file conflicts when data is available, lists candidate parallel groups as informational only and prints bounded prompt drafts when enough package data exists. It does not execute Codex, create branches or worktrees, merge changes, modify application code or accept results. EVOL-017 remains the next bounded phase and was not started.
 
 ---
 

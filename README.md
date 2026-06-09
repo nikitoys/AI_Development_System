@@ -3,7 +3,7 @@
 Languages: [English](README.md) | [Русский](README.ru.md)
 
 Status: Draft
-Version: v0.29.0
+Version: v0.30.0
 
 This repository contains an AI Development System: an operating model for developing projects through AI roles, documentation, lifecycle governance, prompt generation, Codex execution, review and controlled evolution.
 
@@ -24,6 +24,8 @@ Machine-checkable specs for stable system entities are stored in `/spec`.
 SOP and agent planning specs are derived machine-checkable inventory/contract files. Markdown remains the operational source of truth, and specs do not authorize runtime behavior, automatic execution, merge or acceptance.
 
 Minimal foldered bootstrap/update dry-runs can be run with `scripts/foldered-control-mvp.py`.
+
+Dry-run agent planning checks can be run with `scripts/agent-plan-mvp.py`.
 
 The SOP and optional multi-agent implementation plan is recorded in `/ai-system/evolution/sop-multi-agent-implementation-plan.md`.
 

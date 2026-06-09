@@ -230,6 +230,8 @@ Project control files must not authorize Codex to modify application code during
 
 Agent planning files must not authorize execution, parallel execution, automatic execution, automatic merge or automatic acceptance.
 
+The minimal `scripts/agent-plan-mvp.py` helper may read `AI_PROJECT/AGENT_*` files to report missing files, recognizable Agent Work Packages, locked-file conflicts, informational candidate parallel groups and prompt drafts. It must not modify project files, execute Codex, create branches, merge changes or accept results.
+
 Updating `AI_Development_System/` must not overwrite `AI_PROJECT/`.
 
 Local project rules may restrict global defaults, but they must not weaken safety, approval or lifecycle governance rules.

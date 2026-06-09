@@ -457,6 +457,37 @@ Needs improvement:
 - add dry-run planner validation tooling only in a separate bounded evolution task;
 - validate template usefulness through controlled pilot work.
 
+## 2.12 Dry-Run Agent Planner MVP
+
+Status: Implemented
+
+Existing documents:
+
+```text
+/scripts/agent-plan-mvp.py
+/ai-system/templates/foldered/AI_PROJECT/AGENT_PLAN.md
+/ai-system/templates/foldered/AI_PROJECT/AGENT_TASKS.md
+/ai-system/templates/foldered/AI_PROJECT/AGENT_LOCKS.md
+/ai-system/templates/foldered/AI_PROJECT/AGENT_RESULTS.md
+/ai-system/templates/foldered/AI_PROJECT/AGENT_METRICS.md
+```
+
+Covers:
+
+- dry-run validation of project-local agent planning files;
+- missing `AI_PROJECT/AGENT_*` file reporting;
+- simple Agent Work Package table recognition;
+- locked-file conflict reporting when lock data is available;
+- candidate parallel group reporting as informational only;
+- bounded prompt draft generation for review when enough package data exists;
+- boundary rule that the helper does not execute Codex, create branches or worktrees, merge changes, modify application code or accept results.
+
+Needs improvement:
+
+- extend the golden project with a non-runtime multi-agent example;
+- add richer parsing only after pilot evidence shows it is useful;
+- keep runtime decisions deferred until controlled pilot validation.
+
 ---
 
 # 3. Entity Lifecycle Layer

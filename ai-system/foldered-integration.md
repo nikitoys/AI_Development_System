@@ -159,6 +159,17 @@ python3 scripts/foldered-control-mvp.py update --project-root /path/to/project
 
 See `/ai-system/project-system-update.md`.
 
+The minimal agent planning helper can validate project-local agent planning files in dry-run mode:
+
+```bash
+python3 scripts/agent-plan-mvp.py validate --project-root /path/to/project
+python3 scripts/agent-plan-mvp.py check-locks --project-root /path/to/project
+python3 scripts/agent-plan-mvp.py list-parallel-groups --project-root /path/to/project
+python3 scripts/agent-plan-mvp.py generate-prompts --project-root /path/to/project
+```
+
+This helper only reports planning state and prompt drafts. It does not execute Codex, create branches or worktrees, merge changes, accept results or modify application code.
+
 ## Authority Order
 
 For a foldered project, authority is resolved in this order:

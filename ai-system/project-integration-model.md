@@ -187,6 +187,8 @@ Updating `/AI_Development_System` is not the same as updating `/AI_PROJECT`.
 
 Use `/ai-system/project-system-update.md` for the controlled update process.
 
+Use `scripts/agent-plan-mvp.py` only as a dry-run reporting helper for `AI_PROJECT/AGENT_*` files. It must not execute Codex, create branches or worktrees, merge changes, accept results or modify application code.
+
 ## Boundary Rules
 
 Do not modify `/AI_Development_System` during ordinary product implementation.

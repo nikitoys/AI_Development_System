@@ -2,6 +2,23 @@
 
 Status: Draft
 
+## v0.30.0
+
+### Added
+
+- Added `scripts/agent-plan-mvp.py` as a minimal dry-run helper for `AI_PROJECT/AGENT_*` planning files.
+- Added support for `validate`, `check-locks`, `list-parallel-groups` and `generate-prompts` reporting commands.
+
+### Updated
+
+- Updated README version mirrors to `v0.30.0`.
+- Updated `ai-system/README.md`, `project-control-files.md`, `foldered-integration.md` and `project-integration-model.md` with agent planner MVP usage and safety boundaries.
+- Updated `evolution-backlog.md` to mark `EVOL-016` as completed.
+
+### Reason
+
+`EVOL-016` adds dry-run agent planning validation and reporting. The helper does not execute Codex, create branches or worktrees, merge changes, modify application code, accept results or turn candidate parallel groups into executable groups.
+
 ## v0.29.0
 
 ### Added
