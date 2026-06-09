@@ -27,7 +27,8 @@ AI Development System
 ├── Workflow
 ├── Rules
 ├── Review Process
-└── Evolution Process
+├── Evolution Process
+└── System Evolution Module
 ```
 
 ## Repository Model
@@ -80,6 +81,20 @@ AI Development System
 - `system-changelog.md` — history of changes to the AI Development System.
 - `improvement-log.md` — observations and problems in the system.
 
+## Evolution Module
+
+The `evolution/` directory defines roadmap-driven self-evolution of AI_Development_System.
+
+- `evolution/README.md` — index and operating principle for the system evolution module.
+- `evolution/roadmap.md` — strategic and tactical roadmap for AI_Development_System.
+- `evolution/evolution-loop.md` — observe → diagnose → propose → plan → execute → verify → review → approve → release → learn loop.
+- `evolution/evolution-policy.md` — permissions, boundaries and anti-runaway rules for self-evolution.
+- `evolution/system-health-check.md` — repeatable system health-check checklist.
+- `evolution/evolution-backlog.md` — managed backlog of system evolution items.
+- `evolution/analysis-report-baseline.md` — baseline findings from the analytical repository report.
+- `evolution/templates/system-change-proposal.md` — AI System Change Proposal template.
+- `evolution/templates/evolution-task.md` — bounded system evolution task template.
+
 ## Templates
 
 - `templates/foldered/` — recommended templates for `AGENTS.md`, `AI_Development_System/` and `AI_PROJECT/` integration.
@@ -93,6 +108,7 @@ ChatGPT Orchestrator prepares documents, prompts and reviews
 Codex Executor changes repository files
 Documentation records decisions
 AI Development System controls the process
+System Evolution Module controls roadmap-driven self-improvement
 ```
 
 ## Minimal Rule
@@ -105,3 +121,12 @@ No implementation task should start without:
 - acceptance criteria;
 - expected output;
 - review step.
+
+No system evolution task should start without:
+
+- a roadmap item, backlog item, health-check finding, analytical report finding or Human Owner request;
+- explicit allowed files;
+- verification mode;
+- review requirements;
+- Human Owner approval requirement assessment;
+- changelog impact assessment.

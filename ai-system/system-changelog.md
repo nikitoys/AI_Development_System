@@ -2,6 +2,29 @@
 
 Status: Draft
 
+## v0.16.0
+
+### Added
+
+- Added `ai-system/evolution/` as an internal module for roadmap-driven self-evolution of AI_Development_System.
+- Added `evolution/roadmap.md` to define strategic and tactical development priorities for the system itself.
+- Added `evolution/evolution-loop.md` to define the controlled observe → diagnose → propose → plan → execute → verify → review → approve → release → learn loop.
+- Added `evolution/evolution-policy.md` to define self-evolution boundaries, Human Owner approval requirements and anti-runaway rules.
+- Added `evolution/system-health-check.md` as a repeatable system maturity and drift assessment checklist.
+- Added `evolution/evolution-backlog.md` with initial evolution backlog items derived from owner direction and repository analysis findings.
+- Added `evolution/analysis-report-baseline.md` to preserve the owner-provided analytical report as a roadmap input.
+- Added system change proposal and bounded evolution task templates under `evolution/templates/`.
+
+### Updated
+
+- Updated AI system README to index the system evolution module and its templates.
+- Updated operating model to mark System Evolution Governance as implemented.
+- Updated highest-priority next steps to start from health check, version/status consistency, documentation integrity, security/privacy policy and pilot validation.
+
+### Reason
+
+AI_Development_System needs an explicit internal mechanism for evolving according to its own roadmap while preserving bounded execution, review, verification, changelog discipline and Human Owner approval.
+
 ## v0.15.0
 
 ### Added
