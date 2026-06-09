@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.1.0
+Version: v0.17.1
 
 ## Purpose
 
@@ -14,6 +14,12 @@ This folder does not describe the product itself. It describes the development m
 Documentation is the source of truth.
 
 AI roles do not work from inspiration. They work from approved documents, explicit tasks and defined acceptance criteria.
+
+## Version Source
+
+The current AI_Development_System version is the top version entry in `system-changelog.md`.
+
+Primary README files mirror that changelog version and must be updated whenever the top changelog version changes.
 
 ## System Layers
 
@@ -89,11 +95,14 @@ The `evolution/` directory defines roadmap-driven self-evolution of AI_Developme
 - `evolution/roadmap.md` — strategic and tactical roadmap for AI_Development_System.
 - `evolution/evolution-loop.md` — observe → diagnose → propose → plan → execute → verify → review → approve → release → learn loop.
 - `evolution/evolution-policy.md` — permissions, boundaries and anti-runaway rules for self-evolution.
+- `evolution/owner-evolution-plan.md` — Human Owner-authored intake place for broad system evolution plans.
+- `evolution/owner-plan-intake.md` — workflow for mapping owner plans to roadmap, backlog and one bounded next task.
 - `evolution/system-health-check.md` — repeatable system health-check checklist.
 - `evolution/evolution-backlog.md` — managed backlog of system evolution items.
 - `evolution/analysis-report-baseline.md` — baseline findings from the analytical repository report.
 - `evolution/templates/system-change-proposal.md` — AI System Change Proposal template.
 - `evolution/templates/evolution-task.md` — bounded system evolution task template.
+- `evolution/templates/owner-evolution-plan.md` — reusable owner plan intake template.
 
 ## Templates
 
@@ -125,6 +134,7 @@ No implementation task should start without:
 No system evolution task should start without:
 
 - a roadmap item, backlog item, health-check finding, analytical report finding or Human Owner request;
+- owner plan intake and mapping when the source is a broad Human Owner evolution plan;
 - explicit allowed files;
 - verification mode;
 - review requirements;

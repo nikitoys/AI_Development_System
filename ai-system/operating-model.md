@@ -222,6 +222,8 @@ Existing documents:
 /ai-system/evolution/roadmap.md
 /ai-system/evolution/evolution-loop.md
 /ai-system/evolution/evolution-policy.md
+/ai-system/evolution/owner-evolution-plan.md
+/ai-system/evolution/owner-plan-intake.md
 /ai-system/evolution/system-health-check.md
 /ai-system/evolution/evolution-backlog.md
 /ai-system/evolution/analysis-report-baseline.md
@@ -232,11 +234,12 @@ Covers:
 - roadmap-driven evolution of AI_Development_System itself;
 - controlled observe → diagnose → propose → plan → execute → verify → review → approve → release → learn loop;
 - self-evolution permissions and anti-runaway rules;
+- owner-authored evolution plan recording and intake mapping;
 - Human Owner approval boundary for system changes;
 - health-check dimensions for system maturity;
 - evolution backlog format and initial backlog items;
 - preservation of analytical report findings as a roadmap baseline;
-- relationship between roadmap items, backlog items, AICP, bounded Codex execution, review, approval and changelog.
+- relationship between owner plans, roadmap items, backlog items, AICP, bounded Codex execution, review, approval and changelog.
 
 Needs improvement:
 

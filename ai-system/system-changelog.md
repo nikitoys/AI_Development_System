@@ -2,6 +2,36 @@
 
 Status: Draft
 
+## v0.17.1
+
+### Updated
+
+- Synchronized visible AI_Development_System versions in the root README files and `ai-system/README.md`.
+- Documented `ai-system/system-changelog.md` as the authoritative version source for AI_Development_System.
+- Updated the owner evolution plan and evolution backlog to mark `EVOL-002` as completed and recommend `EVOL-003` as the next bounded phase.
+
+### Reason
+
+Visible version fields had drifted between repository entrypoints and the changelog. `EVOL-002` resolves that drift without changing lifecycle states, approval gates, CI, security/privacy policy, specs, bootstrap tooling or product code.
+
+## v0.17.0
+
+### Added
+
+- Added `evolution/owner-evolution-plan.md` as the Human Owner-authored intake place for high-level AI_Development_System evolution plans.
+- Added `evolution/owner-plan-intake.md` to define how owner plans are recorded, preserved, mapped to roadmap/backlog items and converted into one bounded next task.
+- Added `evolution/templates/owner-evolution-plan.md` as a reusable owner plan template.
+- Recorded the owner plan from GitHub issue #7 as `OWNER-EVOL-001` with roadmap and evolution backlog mappings.
+
+### Updated
+
+- Updated the evolution module README and AI system README to index the owner plan intake workflow and template.
+- Updated the operating model to include owner-authored evolution plan intake in System Evolution Governance.
+
+### Reason
+
+The Human Owner needs a clear place to provide broad system evolution direction while preserving roadmap/backlog discipline, one-task-at-a-time execution and Human Owner approval for behavior-changing system changes.
+
 ## v0.16.0
 
 ### Added

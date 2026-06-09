@@ -71,7 +71,7 @@ Pilot Validation
 
 ## EVOL-001 — Add controlled self-evolution module
 
-Status: In Progress  
+Status: Done  
 Priority: P0  
 Source: Human Owner request and analytical report recommendations  
 Roadmap item: P0 — Self-Evolution Governance  
@@ -123,7 +123,7 @@ This item is the initial bootstrap for future roadmap-driven self-evolution.
 
 ## EVOL-002 — Synchronize versions and document statuses
 
-Status: Proposed  
+Status: Done  
 Priority: P1  
 Source: Analytical report finding  
 Roadmap item: P1 — Consistency and Documentation Integrity  
@@ -148,6 +148,10 @@ Acceptance criteria:
 Conversion path:
 
 AICP if versioning policy changes; otherwise documentation task.
+
+Notes:
+
+Completed as a bounded documentation/status synchronization task. The authoritative version source is the top entry in `ai-system/system-changelog.md`; README files mirror it. No AICP was required because this clarified version mirroring and did not change lifecycle states, approval gates or versioning authority.
 
 ---
 

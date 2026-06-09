@@ -28,11 +28,14 @@ It does not govern product feature work in a target application. Product work re
 - `roadmap.md` — strategic and tactical development plan for AI_Development_System.
 - `evolution-loop.md` — controlled observe → diagnose → propose → plan → execute → verify → review → approve → release → learn loop.
 - `evolution-policy.md` — boundaries, permissions and anti-runaway rules for self-evolution.
+- `owner-evolution-plan.md` — Human Owner-authored intake place for broad system evolution plans.
+- `owner-plan-intake.md` — workflow for recording owner plans, mapping them to roadmap/backlog items and preparing one bounded next task.
 - `system-health-check.md` — repeatable checklist for assessing documentation, lifecycle, version, security, integration and validation health.
 - `evolution-backlog.md` — managed backlog of system evolution items.
 - `analysis-report-baseline.md` — baseline findings from the analytical repository report used as an input to the roadmap.
 - `templates/system-change-proposal.md` — template for AI System Change Proposals.
 - `templates/evolution-task.md` — template for bounded evolution tasks.
+- `templates/owner-evolution-plan.md` — reusable template for owner-authored evolution plans.
 
 ## Operating Principle
 
@@ -47,6 +50,7 @@ System evolution uses existing lifecycle documents instead of bypassing them:
 
 - observations and recurring issues enter `improvement-log.md` and `improvement-lifecycle.md`;
 - approved system changes follow `change-process.md` and `change-lifecycle.md`;
+- owner-authored evolution plans enter through `owner-evolution-plan.md` and are processed by `owner-plan-intake.md`;
 - changes to source-of-truth documents follow `document-lifecycle.md`;
 - Codex execution follows `codex-lifecycle.md`;
 - review and QA follow `review-lifecycle.md` and `qa-lifecycle.md`;
@@ -57,6 +61,7 @@ System evolution uses existing lifecycle documents instead of bypassing them:
 No self-evolution change is valid unless it has:
 
 - a source observation, roadmap item, backlog item or Human Owner request;
+- owner plan mapping when the source is a broad Human Owner plan;
 - explicit scope and out-of-scope;
 - allowed files;
 - acceptance criteria;
