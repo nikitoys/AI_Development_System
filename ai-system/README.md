@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.19.0
+Version: v0.20.0
 
 ## Purpose
 
@@ -30,6 +30,20 @@ python3 scripts/check-docs-integrity.py
 ```
 
 The check covers internal Markdown links, unresolved placeholders outside reusable templates, index completeness for system documents and visible status/version consistency.
+
+## Machine-Checkable Specs
+
+Minimal machine-checkable specs are stored in `../spec/`.
+
+Current spec files:
+
+- `../spec/roles.json` — AI role registry snapshot.
+- `../spec/interaction-modes.json` — explicit interaction modes and markers.
+- `../spec/verification-modes.json` — supported verification modes and execution boundaries.
+- `../spec/lifecycle-states.json` — common managed lifecycle states.
+- `../spec/schemas/system-spec.schema.json` — shared minimal schema for spec files.
+
+Markdown remains the operational source of truth. Specs are derived inventory and contract files unless a later approved evolution task changes the source-of-truth relationship.
 
 ## Security and Privacy Baseline
 
@@ -107,6 +121,7 @@ AI Development System
 - `system-changelog.md` — history of changes to the AI Development System.
 - `improvement-log.md` — observations and problems in the system.
 - `../scripts/check-docs-integrity.py` — documentation integrity check for links, placeholders, indexes and version/status fields.
+- `../spec/README.md` — machine-checkable spec layer policy and validation guidance.
 
 ## Evolution Module
 

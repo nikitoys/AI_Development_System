@@ -2,6 +2,25 @@
 
 Status: Draft
 
+## v0.20.0
+
+### Added
+
+- Added `spec/README.md` to define the first machine-checkable specification layer and the spec-to-Markdown relationship.
+- Added `spec/roles.json`, `spec/interaction-modes.json`, `spec/verification-modes.json` and `spec/lifecycle-states.json` as minimal JSON specs for stable system entities.
+- Added `spec/schemas/system-spec.schema.json` as a shared minimal schema for spec files.
+
+### Updated
+
+- Updated README version mirrors to `v0.20.0`.
+- Updated `ai-system/README.md` and `ai-system/evolution/README.md` to index the spec layer.
+- Updated `evolution-backlog.md` to mark `EVOL-006` as completed.
+- Updated `owner-evolution-plan.md` with the EVOL-006 completion record and post-plan next-task boundary.
+
+### Reason
+
+`EVOL-006` introduces a minimal machine-checkable contract layer for roles, interaction modes, verification modes and lifecycle states while keeping Markdown as the operational source of truth and avoiding Markdown generation, CI schema lint, bootstrap, release or research work.
+
 ## v0.19.0
 
 ### Added

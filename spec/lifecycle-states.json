@@ -1,0 +1,55 @@
+{
+  "spec_id": "ai-system.lifecycle-states",
+  "spec_version": "v0.1.0",
+  "status": "Draft",
+  "markdown_sources": [
+    "ai-system/lifecycle-governance.md"
+  ],
+  "items": [
+    {
+      "id": "proposed",
+      "name": "Proposed",
+      "description": "Suggested but not approved."
+    },
+    {
+      "id": "draft",
+      "name": "Draft",
+      "description": "Created for review, not yet accepted as active truth."
+    },
+    {
+      "id": "active",
+      "name": "Active",
+      "description": "Accepted and currently used."
+    },
+    {
+      "id": "in-review",
+      "name": "In Review",
+      "description": "Being checked before approval or closure."
+    },
+    {
+      "id": "experimental",
+      "name": "Experimental",
+      "description": "Approved temporarily with success criteria."
+    },
+    {
+      "id": "deprecated",
+      "name": "Deprecated",
+      "description": "Still documented but no longer recommended for new use."
+    },
+    {
+      "id": "archived",
+      "name": "Archived",
+      "description": "Retained for history, not active."
+    },
+    {
+      "id": "rejected",
+      "name": "Rejected",
+      "description": "Reviewed and not accepted."
+    },
+    {
+      "id": "removed",
+      "name": "Removed",
+      "description": "Deleted from active documentation after approval and reference cleanup."
+    }
+  ]
+}

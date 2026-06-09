@@ -64,9 +64,9 @@ Plan title: Owner-authored evolution plan intake workflow
 Author: Human Owner
 Date recorded: 2026-06-09
 Status: Partially Planned
-Related roadmap items: P1, P2, P3
-Related backlog items: EVOL-002, EVOL-003, EVOL-004, EVOL-005
-Next bounded task: EVOL-006 - Introduce machine-checkable specification layer
+Related roadmap items: P1, P2, P3, P4
+Related backlog items: EVOL-002, EVOL-003, EVOL-004, EVOL-005, EVOL-006
+Next bounded task: No active OWNER-EVOL-001 task remains; future P5 bootstrap/update tooling requires a separate bounded backlog item and approval.
 ```
 
 ## Owner Goals
@@ -174,22 +174,40 @@ Verification mode: FAST_VALIDATION
 Human Owner approval required: Human Owner reviews local result before commit/push
 ```
 
-## Next Bounded Task Candidate
+## Completed Bounded Task
 
 ```text
 Task title: Introduce machine-checkable specification layer
-Source plan section: P3 completion evidence and next planning need from EVOL-006.
+Source plan section: Follow-up bounded phase after golden example completion.
 Roadmap item: P4 - Machine-Checkable Specification Layer
 Backlog item: EVOL-006 - Introduce machine-checkable specification layer
 Active Role: AI System Maintainer + Technical Writer AI
+Active Stage: System Evolution Release
+Active Document: ai-system/evolution/evolution-backlog.md
+Expected Result: Minimal machine-checkable `spec/` layer exists for roles, interaction modes, verification modes and lifecycle states
+Allowed files: spec/README.md, spec/roles.json, spec/interaction-modes.json, spec/verification-modes.json, spec/lifecycle-states.json, spec/schemas/system-spec.schema.json, README.md, README.ru.md, ai-system/README.md, ai-system/evolution/evolution-backlog.md, ai-system/evolution/owner-evolution-plan.md, ai-system/system-changelog.md
+Out of scope: Markdown regeneration, deleting existing docs, CI schema lint, bootstrap tooling, release packaging, research work
+Acceptance criteria: First spec area selected; schema defined; validation process documented; generated/derived documentation policy defined
+Verification mode: FAST_VALIDATION
+Human Owner approval required: Human Owner reviews local result before commit/push
+```
+
+## Next Bounded Task Candidate
+
+```text
+Task title: Define next approved system evolution backlog item
+Source plan section: Post-OWNER-EVOL-001 continuation.
+Roadmap item: P5 - Bootstrap and Update Tooling or another Human Owner-approved roadmap item
+Backlog item: To be created only after Human Owner approval
+Active Role: AI System Maintainer + Technical Writer AI
 Active Stage: System Evolution Planning
 Active Document: ai-system/evolution/evolution-backlog.md
-Expected Result: Prepare and plan first machine-checkable specification layer task
+Expected Result: Prepare one bounded next evolution item without starting implementation
 Allowed files: To be defined in the bounded task package before execution
-Out of scope: golden example expansion, bootstrap tooling, EVOL-005 rework, existing product implementation
+Out of scope: unapproved bootstrap work, release packaging, research work, product implementation
 Acceptance criteria: To be defined before execution
 Verification mode: CODE_ONLY_FAST unless spec validation requires stronger checks
-Human Owner approval required: Yes before changing governance or lifecycle structures
+Human Owner approval required: Yes before creating or executing the next backlog item
 ```
 
 ## Intake Notes

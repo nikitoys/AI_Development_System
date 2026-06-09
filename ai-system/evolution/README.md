@@ -36,6 +36,7 @@ It does not govern product feature work in a target application. Product work re
 - `templates/system-change-proposal.md` — template for AI System Change Proposals.
 - `templates/evolution-task.md` — template for bounded evolution tasks.
 - `templates/owner-evolution-plan.md` — reusable template for owner-authored evolution plans.
+- `../../spec/README.md` — machine-checkable spec layer introduced by EVOL-006.
 
 ## Operating Principle
 

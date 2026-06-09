@@ -261,7 +261,7 @@ Notes:
 
 ## EVOL-006 — Introduce machine-checkable specification layer
 
-Status: Proposed  
+Status: Done  
 Priority: P2  
 Source: Analytical report finding  
 Roadmap item: P4 — Machine-Checkable Specification Layer  
@@ -286,3 +286,9 @@ Acceptance criteria:
 Conversion path:
 
 AICP required.
+
+Notes:
+
+- Added `spec/` as a minimal JSON-based machine-checkable layer for roles, interaction modes, verification modes and common lifecycle states.
+- Added a shared minimal JSON Schema and validation guidance in `spec/README.md`.
+- Markdown remains the operational source of truth; EVOL-006 does not regenerate Markdown, add CI schema lint, delete existing docs or start bootstrap/release/research work.
