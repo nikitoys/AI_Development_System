@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.26.0
+Version: v0.27.0
 
 ## Purpose
 
@@ -80,6 +80,14 @@ Candidate parallel groups are informational only until a future Parallel Executi
 
 Sequential execution remains the default. Parallel execution is opt-in, Human Owner-approved and requires dependency, file-lock, integration review and QA gates.
 
+## Agent Result Intake and Integration Review
+
+`agent-result-intake.md` defines how individual Agent Work Package results are received and checked before review, QA or integration review.
+
+`integration-review.md` defines how combined agent result sets are checked before QA handoff and Human Owner acceptance.
+
+Intake and integration review do not authorize automatic execution, automatic merge or automatic acceptance.
+
 ## Security and Privacy Baseline
 
 AI-assisted work must follow:
@@ -127,6 +135,8 @@ AI Development System
 - `agent-work-package.md` — standard for bounded Agent Work Packages used in future SOP-guided planning.
 - `multi-agent-planning.md` — planning-only workflow for decomposing parent tasks into Agent Work Packages.
 - `parallel-execution-policy.md` — opt-in policy for Human Owner-approved parallel execution groups.
+- `agent-result-intake.md` — intake process for Agent Work Package and Codex execution results.
+- `integration-review.md` — review process for combined agent result sets before QA handoff and acceptance.
 - `rules.md` — global rules and restrictions.
 - `system-schemes.md` — compact text schemes for roles, documents and process flow.
 - `task-format.md` — standard task format for Codex and AI roles.

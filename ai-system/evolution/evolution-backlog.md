@@ -515,7 +515,7 @@ Parallel execution does not authorize automatic execution, automatic merge or au
 
 ## EVOL-013 — Add Agent Result Intake and Integration Review
 
-Status: Proposed  
+Status: Done  
 Priority: P1  
 Source: `sop-multi-agent-implementation-plan.md`  
 Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
@@ -540,6 +540,14 @@ Acceptance criteria:
 Conversion path:
 
 System change.
+
+Notes:
+
+Completed with `ai-system/agent-result-intake.md` and `ai-system/integration-review.md`. Agent Result Intake defines required result fields, intake states, scope checks, `allowed_files` and `locked_files` compliance checks, forbidden action checks, dependency checks, verification mode checks, blocker handling, rework routing, rejection routing and archive/history rules.
+
+Integration Review defines integrated agent result sets, required inputs, review states, cross-agent consistency checks, merged behavior/contract checks, architecture, API/UX/data, duplicate/conflict, regression, documentation and security/privacy checks, verdicts, QA handoff, rework/rollback expectations and archive/history rules.
+
+Intake and integration review do not authorize automatic execution, automatic merge or automatic acceptance and do not replace Human Owner final acceptance. EVOL-014 remains the next bounded phase and was not started.
 
 ---
 

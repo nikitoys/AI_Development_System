@@ -2,6 +2,25 @@
 
 Status: Draft
 
+## v0.27.0
+
+### Added
+
+- Added `ai-system/agent-result-intake.md` to define controlled intake of Agent Work Package and Codex execution results.
+- Added `ai-system/integration-review.md` to define review of integrated agent result sets before QA handoff and Human Owner acceptance.
+- Added intake checks for scope, `allowed_files`, `locked_files`, `forbidden_actions`, dependencies, verification mode, errors, questions and blockers.
+- Added integration review checks for cross-agent consistency, behavior/contracts, architecture, API/UX/data, conflicts, regression, documentation and security/privacy.
+
+### Updated
+
+- Updated README version mirrors to `v0.27.0`.
+- Updated `ai-system/README.md` and `ai-system/operating-model.md` to index Agent Result Intake and Integration Review.
+- Updated `evolution-backlog.md` to mark `EVOL-013` as completed.
+
+### Reason
+
+`EVOL-013` defines result intake and integration review gates for SOP-guided and optional multi-agent workflows. This change does not implement runtime behavior, branch/worktree/merge automation, scripts, specs, templates, automatic execution, automatic merge or automatic acceptance.
+
 ## v0.26.0
 
 ### Added

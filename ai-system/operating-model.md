@@ -368,6 +368,38 @@ Needs improvement:
 - add machine-checkable parallel policy specs after Markdown source documents exist;
 - validate the policy through controlled pilot work before any runtime decision.
 
+## 2.9 Agent Result Intake and Integration Review
+
+Status: Implemented
+
+Existing documents:
+
+```text
+/ai-system/agent-result-intake.md
+/ai-system/integration-review.md
+/ai-system/parallel-execution-policy.md
+/ai-system/multi-agent-planning.md
+/ai-system/agent-work-package.md
+```
+
+Covers:
+
+- agent result governed entity and required result fields;
+- result intake states/status values;
+- intake checks for scope, `allowed_files`, `locked_files`, `forbidden_actions`, dependencies and verification mode;
+- error, question, blocker, rework, rejection and archive routing;
+- integrated agent result set governed entity;
+- integration review states/status values;
+- cross-agent consistency, behavior/contract, architecture, API/UX/data, duplicate/conflict, regression, documentation and security/privacy checks;
+- QA handoff relationship;
+- boundary rules that intake and integration review do not authorize automatic execution, automatic merge or automatic acceptance and do not replace Human Owner final acceptance.
+
+Needs improvement:
+
+- add machine-checkable result and integration review specs after Markdown source documents exist;
+- add project-local templates after the approved standards are stable;
+- validate intake and integration review through controlled pilot work.
+
 ---
 
 # 3. Entity Lifecycle Layer

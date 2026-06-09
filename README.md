@@ -3,7 +3,7 @@
 Languages: [English](README.md) | [Русский](README.ru.md)
 
 Status: Draft
-Version: v0.26.0
+Version: v0.27.0
 
 This repository contains an AI Development System: an operating model for developing projects through AI roles, documentation, lifecycle governance, prompt generation, Codex execution, review and controlled evolution.
 
@@ -32,6 +32,8 @@ The Agent Work Package standard is defined in `/ai-system/agent-work-package.md`
 The Multi-Agent Planning workflow is defined in `/ai-system/multi-agent-planning.md`. It is planning-only and does not authorize execution or parallel execution.
 
 The Parallel Execution Policy is defined in `/ai-system/parallel-execution-policy.md`. Parallel execution is opt-in, Human Owner-approved and does not authorize automatic execution, merge or acceptance.
+
+Agent Result Intake and Integration Review are defined in `/ai-system/agent-result-intake.md` and `/ai-system/integration-review.md`. They check results before review, QA and Human Owner acceptance without authorizing automatic execution, merge or acceptance.
 
 ## At a Glance
 
