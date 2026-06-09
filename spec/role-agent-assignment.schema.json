@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/nikitoys/AI_Development_System/spec/role-agent-assignment.schema.json",
+  "title": "Role-to-Agent Assignment",
+  "description": "Machine-checkable contract for manual L3 role-to-agent assignments derived from ai-system/role-agent-assignment.md.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "agent_id",
+    "role",
+    "assigned_awp_id",
+    "allowed_awp_types",
+    "allowed_operations",
+    "forbidden_operations",
+    "required_inputs",
+    "required_outputs",
+    "result_intake_required",
+    "integration_review_required",
+    "parallel_eligible",
+    "human_owner_approval_required"
+  ],
+  "properties": {
+    "assignment_id": { "type": "string", "minLength": 1 },
+    "agent_id": { "type": "string", "minLength": 1 },
+    "role": { "type": "string", "minLength": 1 },
+    "assigned_awp_id": { "type": "string", "pattern": "^AWP-[A-Za-z0-9_-]+$" },
+    "parent_task": { "type": "string" },
+    "sop": { "type": "string" },
+    "candidate_group": { "type": "string" },
+    "approval_status": {
+      "type": "string",
+      "enum": [
+        "not_approved",
+        "approved_for_manual_assignment",
+        "approved_for_manual_parallel_work",
+        "blocked",
+        "rework_required",
+        "rejected",
+        "deferred"
+      ]
+    },
+    "allowed_awp_types": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "allowed_operations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "forbidden_operations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "required_inputs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "required_outputs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "result_intake_required": { "type": "boolean" },
+    "integration_review_required": { "type": "boolean" },
+    "parallel_eligible": {
+      "oneOf": [
+        { "type": "boolean" },
+        { "type": "string" }
+      ]
+    },
+    "human_owner_approval_required": { "type": "boolean" },
+    "allowed_files": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "locked_files": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "verification_mode": { "type": "string" },
+    "prompt_package_reference": { "type": "string" },
+    "result_reference": { "type": "string" },
+    "notes": { "type": "string" }
+  }
+}

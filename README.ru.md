@@ -3,7 +3,7 @@
 Языки: [English](README.md) | [Русский](README.ru.md)
 
 Статус: Draft
-Версия: v0.42.0
+Версия: v0.44.0
 
 Этот репозиторий содержит AI Development System: операционную модель для разработки проектов через AI-роли, документацию, lifecycle governance, генерацию промптов, выполнение задач через Codex, review и контролируемую эволюцию системы.
 
@@ -45,7 +45,7 @@ Parallel Execution Policy описан в `/ai-system/parallel-execution-policy.
 
 Agent Result Intake и Integration Review описаны в `/ai-system/agent-result-intake.md` и `/ai-system/integration-review.md`. Они проверяют results перед review, QA и Human Owner acceptance, но не разрешают automatic execution, merge или acceptance.
 
-Foldered `AI_PROJECT` templates теперь включают agent planning files для plans, packages, locks, results и metrics. Это planning records only, они не разрешают execution, parallel execution, merge или acceptance.
+Foldered `AI_PROJECT` templates теперь включают agent planning files для plans, packages, assignments, locks, results и metrics. Это planning и manual coordination records only, они не разрешают execution, parallel execution, merge или acceptance.
 
 Golden project содержит заполненный non-runtime multi-agent planning example для Task Tracker в `examples/golden-project/`.
 
@@ -56,6 +56,10 @@ SOP / optional multi-agent pilot validation record находится в `/ai-sy
 Runtime maturity levels описаны в `/ai-system/runtime-maturity-levels.md`. Текущий уровень: `L3 — Manual multi-agent orchestration`; runtime остаётся `DEFERRED`; `L4+` остаётся future/not approved.
 
 Manual Multi-Agent Orchestration Mode описан в `/ai-system/manual-orchestration.md`. L3 является manual-only и не разрешает automatic execution, merge или acceptance.
+
+Role-to-Agent Assignment описан в `/ai-system/role-agent-assignment.md`. Assignments вручную связывают ready Agent Work Packages с logical agents или external sessions и не разрешают automatic dispatch или runtime execution.
+
+L3 role-assigned parallel runbook описан в `/ai-system/l3-role-assigned-parallel-runbook.md`.
 
 ## Кратко
 

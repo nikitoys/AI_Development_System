@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_TEMPLATE_FILES = [
     "ai-system/templates/foldered/AI_PROJECT/AGENT_PLAN.md",
     "ai-system/templates/foldered/AI_PROJECT/AGENT_TASKS.md",
+    "ai-system/templates/foldered/AI_PROJECT/AGENT_ASSIGNMENTS.md",
     "ai-system/templates/foldered/AI_PROJECT/AGENT_LOCKS.md",
     "ai-system/templates/foldered/AI_PROJECT/AGENT_RESULTS.md",
     "ai-system/templates/foldered/AI_PROJECT/AGENT_METRICS.md",
@@ -27,6 +28,7 @@ REQUIRED_TEMPLATE_FILES = [
 REQUIRED_GOLDEN_PROJECT_FILES = [
     "examples/golden-project/AI_PROJECT/AGENT_PLAN.md",
     "examples/golden-project/AI_PROJECT/AGENT_TASKS.md",
+    "examples/golden-project/AI_PROJECT/AGENT_ASSIGNMENTS.md",
     "examples/golden-project/AI_PROJECT/AGENT_LOCKS.md",
     "examples/golden-project/AI_PROJECT/AGENT_RESULTS.md",
     "examples/golden-project/AI_PROJECT/AGENT_METRICS.md",
@@ -104,6 +106,7 @@ def main() -> int:
                 sys.executable,
                 "-m",
                 "py_compile",
+                "scripts/foldered-control-mvp.py",
                 "scripts/agent-plan-mvp.py",
                 "scripts/validate-agent-plan-fixtures.py",
                 "scripts/validate-system.py",

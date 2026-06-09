@@ -103,6 +103,7 @@ AI_PROJECT/CODEX_SESSION_LOG.md
 AI_PROJECT/PROMPTS.md
 AI_PROJECT/AGENT_PLAN.md
 AI_PROJECT/AGENT_TASKS.md
+AI_PROJECT/AGENT_ASSIGNMENTS.md
 AI_PROJECT/AGENT_LOCKS.md
 AI_PROJECT/AGENT_RESULTS.md
 AI_PROJECT/AGENT_METRICS.md
@@ -110,7 +111,7 @@ AI_PROJECT/AI_DEV_SYSTEM_VERSION.md
 AI_PROJECT/docs/verification-policy.md
 ```
 
-Agent planning files are project-local planning and review records only. They preserve sequential execution as the default, keep candidate parallel groups informational until approved and do not authorize automatic execution, merge or acceptance.
+Agent planning and assignment files are project-local planning, manual coordination and review records only. They preserve sequential execution as the default, keep candidate parallel groups informational until approved and do not authorize automatic execution, automatic dispatch, merge or acceptance.
 
 ## Installation Flow
 
@@ -196,4 +197,4 @@ Application code must not be modified during bootstrap or system update unless t
 
 Codex must not treat `OWNER_PLAN.md` as executable scope. Owner plan items must first be converted into approved tasks with scope, allowed files, verification mode and acceptance criteria.
 
-Codex must not treat `AGENT_PLAN.md`, `AGENT_TASKS.md`, `AGENT_LOCKS.md`, `AGENT_RESULTS.md` or `AGENT_METRICS.md` as execution authority. Agent planning records must first be converted into approved bounded task or prompt packages.
+Codex must not treat `AGENT_PLAN.md`, `AGENT_TASKS.md`, `AGENT_ASSIGNMENTS.md`, `AGENT_LOCKS.md`, `AGENT_RESULTS.md` or `AGENT_METRICS.md` as execution authority. Agent planning and assignment records must first be converted into approved bounded task or prompt packages.

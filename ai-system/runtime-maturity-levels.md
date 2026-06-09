@@ -204,6 +204,7 @@ Allowed capabilities:
 - manually select the next ready Agent Work Package;
 - manually assign an Agent Work Package to a logical or external agent;
 - manually assign or prepare bounded prompt packages;
+- manually record Role-to-Agent Assignment records;
 - manually record submitted agent results;
 - manually run Agent Result Intake;
 - manually run Integration Review;
@@ -425,6 +426,7 @@ Evidence:
 - `scripts/validate-agent-plan-fixtures.py` covers dependency graph behavior, missing dependencies, cycles, blocked packages and accepted-prerequisite unlocking.
 - `scripts/validate-system.py` runs read-only validation for docs, specs, templates, fixtures and the golden project.
 - `manual-orchestration.md` defines L3 manual-only flow, artifacts, allowed operations, forbidden automation and Human Owner gates.
+- `role-agent-assignment.md` defines manual assignment records for ready Agent Work Packages and logical agents.
 - `agent-result-intake.md` defines the hardened Agent Result schema for manual intake.
 - `integration-review.md` defines manual integration review handoff and blocking conditions.
 - `evolution/sop-multi-agent-pilot-validation.md` records expanded pilot evidence across three scenario types.

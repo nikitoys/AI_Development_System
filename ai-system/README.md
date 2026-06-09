@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.42.0
+Version: v0.44.0
 
 ## Purpose
 
@@ -74,6 +74,7 @@ Current spec files:
 - `../spec/sops.json` — SOP inventory for initial SOP Model entries.
 - `../spec/agent-work-package.schema.json` — JSON Schema contract for Agent Work Packages.
 - `../spec/agent-result.schema.json` — JSON Schema contract for Agent Results.
+- `../spec/role-agent-assignment.schema.json` — JSON Schema contract for manual L3 Role-to-Agent Assignments.
 - `../spec/parallel-policy.json` — policy inventory for core parallel execution constraints.
 - `../spec/schemas/system-spec.schema.json` — shared minimal schema for spec files.
 
@@ -125,9 +126,13 @@ The current level is `L3 — Manual multi-agent orchestration`. Runtime executio
 
 Manual orchestration coordinates Agent Work Packages, result intake and integration review by hand. It does not authorize automatic Codex execution, automatic multi-agent execution, branch/worktree automation, merge automation, automatic acceptance or automatic QA/review closure.
 
+`role-agent-assignment.md` defines manual Role-to-Agent Assignments for L3. Assignments map ready Agent Work Packages to logical agents or external sessions and do not authorize automatic dispatch or runtime execution.
+
+`l3-role-assigned-parallel-runbook.md` provides the practical Human Owner / ChatGPT Orchestrator procedure for manual role-assigned parallel orchestration.
+
 ## AI_PROJECT Agent Planning Templates
 
-Foldered project templates include `AGENT_PLAN.md`, `AGENT_TASKS.md`, `AGENT_LOCKS.md`, `AGENT_RESULTS.md` and `AGENT_METRICS.md`.
+Foldered project templates include `AGENT_PLAN.md`, `AGENT_TASKS.md`, `AGENT_ASSIGNMENTS.md`, `AGENT_LOCKS.md`, `AGENT_RESULTS.md` and `AGENT_METRICS.md`.
 
 These files are planning and review records only. They preserve sequential execution as the default and do not authorize execution, parallel execution, automatic merge or automatic acceptance.
 
@@ -186,6 +191,8 @@ AI Development System
 - `integration-review.md` — review process for combined agent result sets before QA handoff and acceptance.
 - `runtime-maturity-levels.md` — runtime maturity levels and progression gates from documentation-only work to future runtime modes.
 - `manual-orchestration.md` — L3 manual-only coordination workflow for Agent Work Packages, result intake and integration review.
+- `role-agent-assignment.md` — L3 manual Role-to-Agent Assignment model for logical agents and external sessions.
+- `l3-role-assigned-parallel-runbook.md` — practical L3 runbook for manual role-assigned parallel orchestration.
 - `rules.md` — global rules and restrictions.
 - `system-schemes.md` — compact text schemes for roles, documents and process flow.
 - `task-format.md` — standard task format for Codex and AI roles.

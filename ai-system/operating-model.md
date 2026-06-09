@@ -524,6 +524,7 @@ Existing documents:
 
 ```text
 /ai-system/manual-orchestration.md
+/ai-system/l3-role-assigned-parallel-runbook.md
 /ai-system/runtime-maturity-levels.md
 /ai-system/agent-work-package.md
 /ai-system/agent-result-intake.md
@@ -534,6 +535,7 @@ Covers:
 
 - L3 manual-only orchestration purpose and boundaries;
 - allowed manual operations for plan selection, validation, AWP selection, manual assignment, result intake and integration review;
+- practical role-assigned parallel runbook for Human Owner / ChatGPT Orchestrator use;
 - forbidden automatic execution, branch/worktree automation, merge, acceptance and QA/review closure;
 - required L3 artifacts;
 - manual orchestration flow;

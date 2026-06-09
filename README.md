@@ -3,7 +3,7 @@
 Languages: [English](README.md) | [Русский](README.ru.md)
 
 Status: Draft
-Version: v0.42.0
+Version: v0.44.0
 
 This repository contains an AI Development System: an operating model for developing projects through AI roles, documentation, lifecycle governance, prompt generation, Codex execution, review and controlled evolution.
 
@@ -45,7 +45,7 @@ The Parallel Execution Policy is defined in `/ai-system/parallel-execution-polic
 
 Agent Result Intake and Integration Review are defined in `/ai-system/agent-result-intake.md` and `/ai-system/integration-review.md`. They check results before review, QA and Human Owner acceptance without authorizing automatic execution, merge or acceptance.
 
-Foldered `AI_PROJECT` templates now include agent planning files for plans, packages, locks, results and metrics. These are planning records only and do not authorize execution, parallel execution, merge or acceptance.
+Foldered `AI_PROJECT` templates now include agent planning files for plans, packages, assignments, locks, results and metrics. These are planning and manual coordination records only and do not authorize execution, parallel execution, merge or acceptance.
 
 The golden project includes a filled non-runtime multi-agent planning example for Task Tracker under `examples/golden-project/`.
 
@@ -56,6 +56,10 @@ Expanded pilot validation evidence covers documentation-only, small tooling/code
 Runtime maturity levels are defined in `/ai-system/runtime-maturity-levels.md`. Current level is `L3 — Manual multi-agent orchestration`; runtime remains `DEFERRED`; `L4+` remains future/not approved.
 
 Manual Multi-Agent Orchestration Mode is defined in `/ai-system/manual-orchestration.md`. L3 is manual-only and does not authorize automatic execution, merge or acceptance.
+
+Role-to-Agent Assignment is defined in `/ai-system/role-agent-assignment.md`. Assignments map ready Agent Work Packages to logical agents or external sessions manually and do not authorize automatic dispatch or runtime execution.
+
+The L3 role-assigned parallel runbook is defined in `/ai-system/l3-role-assigned-parallel-runbook.md`.
 
 ## At a Glance
 

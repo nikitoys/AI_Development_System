@@ -35,6 +35,7 @@ Parallel execution depends on these source-of-truth documents:
 - `prompt-lifecycle.md` for prompt package drafting, review and approval.
 - `codex-lifecycle.md` for Codex execution boundaries and result reporting.
 - `roles.md` and `system-structure.md` for role responsibilities and boundaries.
+- `role-agent-assignment.md` for manual assignment records when approved parallel groups are run as manual work threads.
 - `workflow.md` for the standard development workflow.
 - `review-process.md` and `review-lifecycle.md` for review requirements and review states.
 - `qa-lifecycle.md` for QA planning, checks, defects and approval recommendations.
@@ -132,6 +133,8 @@ Parallel execution does not authorize:
 - automatic result acceptance.
 
 Each execution result must report changed files, summary, checks performed, errors or blockers, questions and diff or key changes.
+
+For L3 manual orchestration, each package in an approved parallel group should also have a Role-to-Agent Assignment record before the manual work thread starts.
 
 ## Relationship to Review and QA
 
@@ -462,4 +465,3 @@ Runtime automation, scripts, templates, specs, worktree management or merge logi
 - Decide whether future tooling should represent `locked_files` as exact paths, globs or structured file-lock records.
 - Decide how to record Human Owner approval for each parallel group in project-local control files.
 - Decide how pilot validation should measure parallel execution benefit versus integration risk.
-

@@ -120,6 +120,7 @@ AI_PROJECT/CODEX_SESSION_LOG.md
 AI_PROJECT/PROMPTS.md
 AI_PROJECT/AGENT_PLAN.md
 AI_PROJECT/AGENT_TASKS.md
+AI_PROJECT/AGENT_ASSIGNMENTS.md
 AI_PROJECT/AGENT_LOCKS.md
 AI_PROJECT/AGENT_RESULTS.md
 AI_PROJECT/AGENT_METRICS.md
@@ -240,6 +241,6 @@ Bootstrap must not start implementation immediately after creating control files
 
 Bootstrap must not treat `OWNER_PLAN.md` as executable scope. Owner plan items must first be converted into approved task records with scope, allowed files, verification mode and acceptance criteria.
 
-Bootstrap must not treat agent planning files as executable scope. Agent planning records must first be converted into approved bounded task or prompt packages.
+Bootstrap must not treat agent planning or assignment files as executable scope. Agent planning and assignment records must first be converted into approved bounded task or prompt packages.
 
 Bootstrap must not mark a project ready for Codex execution until the Human Owner approves the local control layer or approves a specific task.

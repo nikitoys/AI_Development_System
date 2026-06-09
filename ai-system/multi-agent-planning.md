@@ -45,6 +45,7 @@ Multi-Agent Planning depends on these source-of-truth documents:
 - `prompt-lifecycle.md` for prompt package drafting, review and approval.
 - `codex-lifecycle.md` for Codex execution boundaries and result reporting.
 - `roles.md` and `system-structure.md` for role responsibilities and boundaries.
+- `role-agent-assignment.md` for manual L3 assignment after packages are ready.
 - `workflow.md` for the standard development workflow.
 - `review-process.md` and `review-lifecycle.md` for review requirements and review states.
 - `qa-lifecycle.md` for QA planning, checks, defects and approval recommendations.
@@ -178,6 +179,7 @@ A multi-agent plan should produce:
 - package review instructions;
 - candidate sequential order;
 - candidate parallel groups as informational output only;
+- proposed manual Role-to-Agent Assignments when L3 orchestration is being planned;
 - unresolved questions and blockers;
 - Human Owner approval points;
 - metrics or learning outputs when useful.
@@ -424,4 +426,3 @@ Parallel execution policy must be introduced only through a separate bounded evo
 - Add dry-run planner validation tooling in `EVOL-016`.
 - Decide whether future tooling should render dependency graphs or keep them text-only.
 - Decide how local project plans should record accepted, rejected and superseded Agent Work Packages.
-

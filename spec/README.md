@@ -18,6 +18,7 @@ The spec layer represents stable system entities as JSON so tools can inspect, v
 - `sops.json` — SOP inventory for the initial SOP Model entries.
 - `agent-work-package.schema.json` — JSON Schema contract for Agent Work Packages.
 - `agent-result.schema.json` — JSON Schema contract for Agent Results.
+- `role-agent-assignment.schema.json` — JSON Schema contract for manual L3 Role-to-Agent Assignments.
 - `parallel-policy.json` — policy inventory for core parallel execution constraints.
 - `schemas/system-spec.schema.json` — shared minimal JSON Schema for spec files.
 
@@ -40,6 +41,7 @@ Spec files must not silently override Markdown rules. If a spec disagrees with i
 | `sops.json` | `ai-system/sop-model.md` |
 | `agent-work-package.schema.json` | `ai-system/agent-work-package.md` |
 | `agent-result.schema.json` | `ai-system/agent-result-intake.md` |
+| `role-agent-assignment.schema.json` | `ai-system/role-agent-assignment.md` |
 | `parallel-policy.json` | `ai-system/parallel-execution-policy.md` |
 
 ## Generated or Derived Documentation Policy
@@ -75,6 +77,7 @@ python3 -m json.tool spec/lifecycle-states.json >/dev/null
 python3 -m json.tool spec/sops.json >/dev/null
 python3 -m json.tool spec/agent-work-package.schema.json >/dev/null
 python3 -m json.tool spec/agent-result.schema.json >/dev/null
+python3 -m json.tool spec/role-agent-assignment.schema.json >/dev/null
 python3 -m json.tool spec/parallel-policy.json >/dev/null
 ```
 

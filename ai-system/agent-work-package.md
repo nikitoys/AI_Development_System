@@ -43,6 +43,7 @@ Agent Work Packages depend on these source-of-truth documents:
 - `prompt-lifecycle.md` for prompt package creation and approval.
 - `codex-lifecycle.md` for Codex execution boundaries and result reporting.
 - `roles.md` and `system-structure.md` for role responsibilities and boundaries.
+- `role-agent-assignment.md` for manual L3 assignment of ready packages to logical agents or external sessions.
 - `workflow.md` for the standard development workflow.
 - `review-process.md` and `review-lifecycle.md` for review requirements and review states.
 - `qa-lifecycle.md` for QA planning, checks, defects and approval recommendations.
@@ -551,4 +552,3 @@ Adding machine-checkable schemas for Agent Work Packages is future work and must
 - Add project-local Agent Work Package templates in `EVOL-015`.
 - Decide whether `locked_files` should support glob syntax, exact paths only or both.
 - Decide whether future tooling should validate package dependency graphs before prompt generation.
-

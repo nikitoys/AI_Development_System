@@ -22,7 +22,7 @@ jobs:
           python-version: "3.x"
 
       - name: Compile validation scripts
-        run: python3 -m py_compile scripts/agent-plan-mvp.py scripts/validate-agent-plan-fixtures.py scripts/validate-system.py
+        run: python3 -m py_compile scripts/foldered-control-mvp.py scripts/agent-plan-mvp.py scripts/validate-agent-plan-fixtures.py scripts/validate-system.py
 
       - name: Run documentation integrity checks
         run: python3 scripts/check-docs-integrity.py
@@ -47,6 +47,7 @@ jobs:
           required = [
               "ai-system/templates/foldered/AI_PROJECT/AGENT_PLAN.md",
               "ai-system/templates/foldered/AI_PROJECT/AGENT_TASKS.md",
+              "ai-system/templates/foldered/AI_PROJECT/AGENT_ASSIGNMENTS.md",
               "ai-system/templates/foldered/AI_PROJECT/AGENT_LOCKS.md",
               "ai-system/templates/foldered/AI_PROJECT/AGENT_RESULTS.md",
               "ai-system/templates/foldered/AI_PROJECT/AGENT_METRICS.md",

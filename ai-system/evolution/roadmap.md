@@ -169,8 +169,10 @@ Items:
 15. Harden agent result schemas.
 16. Add CI checks for specs, templates and golden project validation.
 17. Expand pilot validation evidence.
-18. Prepare future runtime adapter contracts without enabling runtime.
-19. Consider assisted execution only after the deferred runtime criteria are satisfied.
+18. Add manual Role-to-Agent Assignment for L3 orchestration.
+19. Add a practical L3 role-assigned parallel runbook.
+20. Prepare future runtime adapter contracts without enabling runtime.
+21. Consider assisted execution only after the deferred runtime criteria are satisfied.
 
 Exit criteria:
 
@@ -178,6 +180,7 @@ Exit criteria:
 - Agent Work Packages can be planned without automatic execution;
 - safe parallel groups can be identified only after approval and file-lock checks;
 - agent results can be intaken, reviewed, QA-checked and accepted or rejected by Human Owner;
+- ready Agent Work Packages can be assigned manually to logical agents or external sessions without automatic dispatch;
 - runtime integration is explicitly deferred until readiness criteria are met;
 - manual orchestration is repeatable before assisted or controlled runtime work is reconsidered.
 
@@ -191,7 +194,9 @@ Immediate priorities:
 6. `EVOL-024` — completed; Agent Result Schema hardened.
 7. `EVOL-025` — completed; CI and local validation added for specs, templates, planning fixtures and golden project.
 8. `EVOL-026` — completed; pilot validation evidence expanded across documentation-only, small tooling/code and multi-agent parallel planning cases.
-9. `EVOL-027` — future/deferred: prepare runtime adapter contracts without enabling runtime.
+9. L3 refinement — completed; manual Role-to-Agent Assignment model added without automatic dispatch.
+10. L3 refinement — completed; practical role-assigned parallel runbook added.
+11. `EVOL-027` — future/deferred: prepare runtime adapter contracts without enabling runtime.
 
 Runtime maturity target:
 

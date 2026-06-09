@@ -1204,6 +1204,12 @@ Restrictions:
 
 L3 is manual-only. It does not approve automatic Codex execution, automatic multi-agent execution, branch/worktree automation, automatic file modification by orchestration tooling, automatic merge, automatic acceptance or automatic QA/review closure. `L4+` remains future/not approved.
 
+L3 refinement:
+
+Manual Role-to-Agent Assignment is documented in `ai-system/role-agent-assignment.md`. Ready Agent Work Packages may be assigned manually to logical agents or external agent sessions after dependency-aware planning and Human Owner approval where required. Assignment records do not authorize automatic dispatch, runtime execution, merge or acceptance.
+
+The practical L3 role-assigned parallel runbook is documented in `ai-system/l3-role-assigned-parallel-runbook.md`. The runbook describes the Human Owner / ChatGPT Orchestrator procedure for parent task selection, SOP selection, Agent Plan and AWP preparation, `AGENT_ASSIGNMENTS.md`, validation, candidate group review, bounded prompt handoff, Agent Result Intake, Integration Review, Human Owner decision, status update and recomputing the next ready group. It does not authorize runtime execution or automatic dispatch.
+
 ---
 
 ## EVOL-027 — Runtime Adapter Contracts

@@ -17,6 +17,7 @@ The example demonstrates:
 - selected SOP;
 - Agent Work Package decomposition;
 - dependencies;
+- manual role-to-agent assignments;
 - `allowed_files` and `locked_files`;
 - candidate parallel groups as informational only;
 - Human Owner approval boundary;
@@ -45,4 +46,3 @@ python3 scripts/agent-plan-mvp.py generate-prompts --project-root examples/golde
 ```
 
 The helper only reads planning files and prints reports or prompt drafts. It does not execute Codex, create branches or worktrees, merge changes, accept results or modify application code.
-

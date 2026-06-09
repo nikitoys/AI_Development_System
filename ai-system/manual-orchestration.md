@@ -44,6 +44,8 @@ Manual orchestration depends on:
 - `agent-work-package.md` for Agent Work Package structure and status values.
 - `multi-agent-planning.md` for planning-only decomposition and candidate groups.
 - `parallel-execution-policy.md` for Human Owner-approved parallel group boundaries.
+- `role-agent-assignment.md` for manual assignment of ready packages to logical agents or external agent sessions.
+- `l3-role-assigned-parallel-runbook.md` for the practical manual role-assigned parallel orchestration procedure.
 - `agent-result-intake.md` for manual result intake.
 - `integration-review.md` for manual integration review.
 - `task-format.md`, `task-lifecycle.md`, `prompt-lifecycle.md` and `codex-lifecycle.md` for task and execution boundaries.
@@ -100,6 +102,7 @@ Manual orchestration requires:
 - Agent Plan;
 - Agent Work Packages;
 - dependency-aware planning output;
+- Role-to-Agent Assignment records;
 - Agent Result Intake records using the hardened Agent Result schema in `agent-result-intake.md`;
 - Integration Review record;
 - Human Owner approval record;
@@ -113,6 +116,8 @@ Plan prepared
 -> plan validated
 -> ready Agent Work Package group identified
 -> Human Owner selects next Agent Work Package or approved group
+-> package is assigned manually to a logical agent or external agent session
+-> bounded prompt draft is prepared for that assignment
 -> package is executed manually or externally outside orchestration tooling
 -> result is recorded using the hardened Agent Result schema
 -> Agent Result Intake is performed manually

@@ -2,6 +2,40 @@
 
 Status: Draft
 
+## v0.44.0
+
+### Added
+
+- Added `ai-system/l3-role-assigned-parallel-runbook.md` as the practical L3 runbook for manual role-assigned parallel orchestration.
+
+### Updated
+
+- Updated `ai-system/manual-orchestration.md`, `ai-system/role-agent-assignment.md`, `ai-system/operating-model.md`, `ai-system/evolution/roadmap.md`, `ai-system/evolution/evolution-backlog.md` and README/index references to link the runbook.
+- Updated README version mirrors to `v0.44.0`.
+
+### Reason
+
+L3 now has a practical runbook for Human Owner / ChatGPT Orchestrator operation of manual role-assigned multi-agent work: choose parent task, select SOP, prepare Agent Plan and Agent Work Packages, prepare `AGENT_ASSIGNMENTS.md`, validate, review candidate groups, manually hand bounded prompts to external sessions, collect Agent Results, perform Agent Result Intake, run Integration Review, record Human Owner decisions, update statuses and recompute the next ready group. Runtime remains `DEFERRED`; the runbook does not add automatic Codex execution, automatic agent dispatch, runtime implementation, branch/worktree automation, automatic merge, automatic acceptance or automatic QA/review closure.
+
+## v0.43.0
+
+### Added
+
+- Added `ai-system/role-agent-assignment.md` as the L3 Role-to-Agent Assignment source document.
+- Added `ai-system/templates/foldered/AI_PROJECT/AGENT_ASSIGNMENTS.md` as the project-local manual assignment template.
+- Added `examples/golden-project/AI_PROJECT/AGENT_ASSIGNMENTS.md` as a filled manual assignment example.
+- Added `spec/role-agent-assignment.schema.json` as the machine-checkable assignment contract.
+
+### Updated
+
+- Updated Manual Multi-Agent Orchestration, Runtime Maturity Levels, Agent Work Package, Multi-Agent Planning and Parallel Execution Policy references for L3 assignment records.
+- Updated foldered integration/project control docs, bootstrap planning, CI/local validation and README/index references to include `AGENT_ASSIGNMENTS.md`.
+- Updated README version mirrors to `v0.43.0`.
+
+### Reason
+
+L3 manual orchestration needs an explicit way to assign ready Agent Work Packages to logical agents or external agent sessions without implying runtime dispatch. The assignment model enables manual multi-threaded coordination while preserving Human Owner approval, hardened Agent Result Intake, Integration Review and all deferred-runtime boundaries. Runtime execution remains `DEFERRED`; L4+ remains future/not approved. This change does not add automatic Codex execution, automatic agent dispatch, automatic multi-agent execution, branch/worktree automation, automatic file modification by orchestration tooling, automatic merge, automatic acceptance or automatic QA/review closure.
+
 ## v0.42.0
 
 ### Updated

@@ -54,6 +54,7 @@ AI_PROJECT/CODEX_SESSION_LOG.md
 AI_PROJECT/PROMPTS.md
 AI_PROJECT/AGENT_PLAN.md
 AI_PROJECT/AGENT_TASKS.md
+AI_PROJECT/AGENT_ASSIGNMENTS.md
 AI_PROJECT/AGENT_LOCKS.md
 AI_PROJECT/AGENT_RESULTS.md
 AI_PROJECT/AGENT_METRICS.md
@@ -63,7 +64,7 @@ AI_PROJECT/docs/verification-policy.md
 
 `AI_PROJECT` files are project-specific source of truth after bootstrap. They must not be blindly overwritten by upstream templates.
 
-Agent planning files are optional planning records for SOP-guided and multi-agent workflows. They do not authorize execution, parallel execution, automatic execution, merge or acceptance.
+Agent planning and assignment files are optional planning and manual coordination records for SOP-guided and multi-agent workflows. They do not authorize execution, parallel execution, automatic execution, automatic dispatch, merge or acceptance.
 
 ## Root `AGENTS.md`
 

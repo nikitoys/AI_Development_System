@@ -35,6 +35,7 @@ TEMPLATE_FILES = [
     Path("PROMPTS.md"),
     Path("AGENT_PLAN.md"),
     Path("AGENT_TASKS.md"),
+    Path("AGENT_ASSIGNMENTS.md"),
     Path("AGENT_LOCKS.md"),
     Path("AGENT_RESULTS.md"),
     Path("AGENT_METRICS.md"),

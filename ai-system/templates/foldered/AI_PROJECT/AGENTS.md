@@ -26,8 +26,9 @@ Read in order:
 7. `AI_PROJECT/CODEX_CURRENT.md`
 8. `AI_PROJECT/CODEX_TASKS.md`
 9. `AI_PROJECT/CODEX_PLAN.md`
-10. `AI_PROJECT/CODEX_SESSION_LOG.md` when continuing prior work
-11. `AI_Development_System/AGENTS.md` when system-level rules are needed
+10. `AI_PROJECT/AGENT_ASSIGNMENTS.md` when doing L3 manual orchestration
+11. `AI_PROJECT/CODEX_SESSION_LOG.md` when continuing prior work
+12. `AI_Development_System/AGENTS.md` when system-level rules are needed
 
 ## Core Rules
 
