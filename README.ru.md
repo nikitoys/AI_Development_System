@@ -3,7 +3,7 @@
 Языки: [English](README.md) | [Русский](README.ru.md)
 
 Статус: Draft
-Версия: v0.27.0
+Версия: v0.28.0
 
 Этот репозиторий содержит AI Development System: операционную модель для разработки проектов через AI-роли, документацию, lifecycle governance, генерацию промптов, выполнение задач через Codex, review и контролируемую эволюцию системы.
 
@@ -20,6 +20,8 @@ python3 scripts/check-docs-integrity.py
 Базовые правила безопасности и privacy/data handling описаны в `/ai-system/security-policy.md` и `/ai-system/privacy-data-handling-policy.md`.
 
 Machine-checkable specs для стабильных системных сущностей находятся в `/spec`.
+
+SOP и agent planning specs являются derived machine-checkable inventory/contract files. Markdown остаётся operational source of truth, а specs не разрешают runtime behavior, automatic execution, merge или acceptance.
 
 Минимальный dry-run helper для foldered bootstrap/update находится в `scripts/foldered-control-mvp.py`.
 

@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.27.0
+Version: v0.28.0
 
 ## Purpose
 
@@ -52,9 +52,13 @@ Current spec files:
 - `../spec/interaction-modes.json` — explicit interaction modes and markers.
 - `../spec/verification-modes.json` — supported verification modes and execution boundaries.
 - `../spec/lifecycle-states.json` — common managed lifecycle states.
+- `../spec/sops.json` — SOP inventory for initial SOP Model entries.
+- `../spec/agent-work-package.schema.json` — JSON Schema contract for Agent Work Packages.
+- `../spec/agent-result.schema.json` — JSON Schema contract for Agent Results.
+- `../spec/parallel-policy.json` — policy inventory for core parallel execution constraints.
 - `../spec/schemas/system-spec.schema.json` — shared minimal schema for spec files.
 
-Markdown remains the operational source of truth. Specs are derived inventory and contract files unless a later approved evolution task changes the source-of-truth relationship.
+Markdown remains the operational source of truth. Specs are derived inventory and contract files unless a later approved evolution task changes the source-of-truth relationship. Specs do not authorize runtime behavior, automatic execution, automatic merge or automatic acceptance.
 
 ## SOP Model
 

@@ -553,7 +553,7 @@ Intake and integration review do not authorize automatic execution, automatic me
 
 ## EVOL-014 — Add machine-checkable SOP and Agent Work Package specs
 
-Status: Proposed  
+Status: Done  
 Priority: P2  
 Source: `sop-multi-agent-implementation-plan.md`  
 Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
@@ -577,6 +577,12 @@ Acceptance criteria:
 Conversion path:
 
 System change.
+
+Notes:
+
+Completed with `spec/sops.json`, `spec/agent-work-package.schema.json`, `spec/agent-result.schema.json` and `spec/parallel-policy.json`.
+
+The specs are minimal machine-checkable inventory/contract files derived from Markdown source documents. Markdown remains the operational source of truth. EVOL-014 does not generate Markdown, add schema validation CI, create scripts, modify templates, implement runtime behavior or authorize automatic execution, automatic merge or automatic acceptance. EVOL-015 remains the next bounded phase and was not started.
 
 ---
 

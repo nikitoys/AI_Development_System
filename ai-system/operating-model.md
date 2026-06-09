@@ -396,9 +396,37 @@ Covers:
 
 Needs improvement:
 
-- add machine-checkable result and integration review specs after Markdown source documents exist;
 - add project-local templates after the approved standards are stable;
 - validate intake and integration review through controlled pilot work.
+
+## 2.10 Machine-Checkable SOP and Agent Specs
+
+Status: Implemented
+
+Existing documents:
+
+```text
+/spec/sops.json
+/spec/agent-work-package.schema.json
+/spec/agent-result.schema.json
+/spec/parallel-policy.json
+/spec/README.md
+```
+
+Covers:
+
+- initial SOP inventory derived from `sop-model.md`;
+- JSON Schema contract for Agent Work Packages derived from `agent-work-package.md`;
+- JSON Schema contract for Agent Results derived from `agent-result-intake.md`;
+- policy inventory for core parallel execution constraints derived from `parallel-execution-policy.md`;
+- source-of-truth rule that Markdown remains operational authority;
+- boundary rule that specs do not generate Markdown, implement runtime behavior or authorize automatic execution, merge or acceptance.
+
+Needs improvement:
+
+- add schema validation CI in a separate bounded evolution task if justified;
+- add project-local templates after approved specs and planning documents stabilize;
+- validate specs through controlled pilot work before runtime decisions.
 
 ---
 

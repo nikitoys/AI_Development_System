@@ -2,6 +2,26 @@
 
 Status: Draft
 
+## v0.28.0
+
+### Added
+
+- Added `spec/sops.json` with the initial SOP inventory for `SOP-FEATURE-001`, `SOP-BUGFIX-001` and `SOP-SYSTEM-001`.
+- Added `spec/agent-work-package.schema.json` as a minimal JSON Schema contract for Agent Work Packages.
+- Added `spec/agent-result.schema.json` as a minimal JSON Schema contract for Agent Results.
+- Added `spec/parallel-policy.json` as a policy inventory for core parallel execution constraints.
+
+### Updated
+
+- Updated README version mirrors to `v0.28.0`.
+- Updated `spec/README.md` with new spec files, Markdown source documents, validation guidance and EVOL-014 boundaries.
+- Updated `ai-system/README.md` and `ai-system/operating-model.md` to index the new specs.
+- Updated `evolution-backlog.md` to mark `EVOL-014` as completed.
+
+### Reason
+
+`EVOL-014` adds minimal machine-checkable SOP and agent planning specs derived from Markdown source documents. Markdown remains the operational source of truth. This change does not generate Markdown, add schema validation CI, create scripts, modify templates, implement runtime behavior or authorize automatic execution, automatic merge or automatic acceptance.
+
 ## v0.27.0
 
 ### Added

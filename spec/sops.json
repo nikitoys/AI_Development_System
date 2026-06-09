@@ -1,0 +1,187 @@
+{
+  "spec_id": "sops",
+  "spec_version": "v0.1.0",
+  "status": "Draft",
+  "markdown_sources": [
+    "ai-system/sop-model.md"
+  ],
+  "source_of_truth": "Markdown remains the operational source of truth. This spec is a derived machine-checkable inventory.",
+  "items": [
+    {
+      "id": "SOP-FEATURE-001",
+      "name": "Feature Delivery SOP",
+      "status": "Draft",
+      "description": "Guide a new product feature from Human Owner intent to bounded implementation, review, QA and acceptance.",
+      "trigger": "The Human Owner requests a new product capability, user-facing behavior or MVP feature.",
+      "participating_roles": [
+        "Human Owner",
+        "Product Owner AI",
+        "Business Analyst AI",
+        "System Architect AI",
+        "UX/UI Designer AI",
+        "Project Manager AI",
+        "Codex Executor",
+        "Code Reviewer AI",
+        "QA Engineer AI",
+        "Technical Writer AI"
+      ],
+      "stages_actions": [
+        "Human Owner intent",
+        "product and requirements clarification",
+        "architecture and UX clarification when needed",
+        "bounded task creation",
+        "prompt package preparation",
+        "Human Owner approval",
+        "sequential Codex execution",
+        "result intake",
+        "review",
+        "QA",
+        "Human Owner acceptance",
+        "documentation and changelog update when required",
+        "lessons or improvement notes when useful"
+      ],
+      "input_artifacts": [
+        "Human Owner request or AI_PROJECT/OWNER_PLAN.md",
+        "Product vision, PRD, architecture and UX docs where applicable",
+        "Bounded task or prompt package",
+        "Acceptance criteria and verification mode"
+      ],
+      "output_artifacts": [
+        "Updated task record",
+        "Codex result report",
+        "Review report",
+        "QA report or documented checks",
+        "Documentation or changelog updates when required",
+        "Improvement notes when repeated friction appears"
+      ],
+      "gates": [
+        "feature scope approval",
+        "implementation prompt approval when repository files will change",
+        "review",
+        "QA when required",
+        "Human Owner final acceptance"
+      ],
+      "human_owner_approval_points": [
+        "feature scope approval",
+        "implementation prompt approval when repository files will change",
+        "acceptance of final result",
+        "explicit risk acceptance when review or QA leaves residual risk"
+      ],
+      "review_qa_relationship": "Feature work usually requires code review and QA. Documentation review is required when docs or onboarding guidance change. Security/privacy review is required when sensitive data, external services, auth, secrets or sandbox boundaries are affected.",
+      "default_execution_mode": "sequential"
+    },
+    {
+      "id": "SOP-BUGFIX-001",
+      "name": "Bugfix / Rework SOP",
+      "status": "Draft",
+      "description": "Guide defect fixes, review findings or QA findings into targeted rework without expanding scope.",
+      "trigger": "A bug report, review finding, QA defect, failed check or Human Owner rework request is accepted for correction.",
+      "participating_roles": [
+        "Human Owner",
+        "ChatGPT Orchestrator",
+        "Relevant domain role",
+        "Codex Executor",
+        "Code Reviewer AI",
+        "QA Engineer AI",
+        "Technical Writer AI"
+      ],
+      "stages_actions": [
+        "finding or defect",
+        "severity and scope classification",
+        "Human Owner or reviewer decision",
+        "targeted rework task or prompt",
+        "Human Owner approval when repository changes are needed",
+        "sequential Codex execution",
+        "re-review",
+        "regression check when needed",
+        "Human Owner acceptance or further rework"
+      ],
+      "input_artifacts": [
+        "Review report, QA defect, bug report or Human Owner rework request",
+        "Original task or prompt package",
+        "Affected acceptance criteria",
+        "Allowed files and forbidden actions for the rework"
+      ],
+      "output_artifacts": [
+        "Narrow rework task or prompt",
+        "Codex result report",
+        "Re-review result",
+        "Regression check notes when applicable",
+        "Updated task status"
+      ],
+      "gates": [
+        "severity and scope classification",
+        "Human Owner or reviewer decision",
+        "repository-changing rework approval",
+        "re-review",
+        "regression check when needed",
+        "Human Owner final acceptance"
+      ],
+      "human_owner_approval_points": [
+        "acceptance of risk when a finding is not fixed",
+        "approval before repository-changing rework",
+        "final acceptance after re-review or QA"
+      ],
+      "review_qa_relationship": "Rework must focus on approved findings only. Re-review should check the finding and affected files. Regression checks are required when the fix touches shared behavior, lifecycle rules, user-facing behavior or previously failed areas.",
+      "default_execution_mode": "sequential"
+    },
+    {
+      "id": "SOP-SYSTEM-001",
+      "name": "AI System Evolution SOP",
+      "status": "Draft",
+      "description": "Guide AI_Development_System changes through controlled evolution while preserving Human Owner authority and changelog discipline.",
+      "trigger": "The Human Owner requests AI Development System evolution, an improvement is accepted, a roadmap item becomes active or an evolution backlog item is selected.",
+      "participating_roles": [
+        "Human Owner",
+        "AI System Maintainer",
+        "System Architect AI",
+        "Technical Writer AI",
+        "Code Reviewer AI",
+        "QA Engineer AI",
+        "Codex Executor"
+      ],
+      "stages_actions": [
+        "Human Owner request or roadmap/backlog item",
+        "classify as EVOLUTION or SYSTEM",
+        "read source documents",
+        "confirm scope, out of scope and allowed files",
+        "assess AICP and approval requirement",
+        "execute one bounded evolution task",
+        "update indexes, backlog and changelog when required",
+        "run required checks or report skipped checks",
+        "review for scope control and governance consistency",
+        "Human Owner acceptance",
+        "recommend next bounded phase"
+      ],
+      "input_artifacts": [
+        "Evolution roadmap, backlog item, owner plan, AICP or Human Owner request",
+        "Relevant source-of-truth system documents",
+        "Allowed files, forbidden actions, acceptance criteria and verification mode"
+      ],
+      "output_artifacts": [
+        "Updated system document or bounded documentation set",
+        "Updated evolution backlog status",
+        "Changelog entry and README version mirrors when version changes",
+        "Check results or documented verification limitations",
+        "Next recommended bounded task"
+      ],
+      "gates": [
+        "classification as EVOLUTION or SYSTEM",
+        "source document review",
+        "scope and allowed files confirmation",
+        "AICP and approval requirement assessment",
+        "bounded execution",
+        "verification",
+        "review for governance consistency",
+        "Human Owner final acceptance"
+      ],
+      "human_owner_approval_points": [
+        "approval before behavior-changing system changes",
+        "approval before role, lifecycle, prompt, review, QA, security or source-of-truth changes",
+        "final acceptance of the completed evolution task"
+      ],
+      "review_qa_relationship": "AI system evolution must be reviewed for scope control, source-of-truth consistency, Human Owner approval preservation, changelog/index consistency and absence of unrelated product code changes.",
+      "default_execution_mode": "sequential"
+    }
+  ]
+}

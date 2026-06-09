@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/nikitoys/AI_Development_System/spec/agent-result.schema.json",
+  "title": "Agent Result",
+  "description": "Minimal machine-checkable contract for agent results derived from ai-system/agent-result-intake.md.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "agent_work_package_id",
+    "status",
+    "changed_files",
+    "summary",
+    "checks_performed",
+    "errors",
+    "questions_or_blockers",
+    "diff_or_key_changes",
+    "scope_compliance",
+    "allowed_files_compliance",
+    "locked_files_compliance",
+    "forbidden_actions_compliance",
+    "verification_mode_compliance"
+  ],
+  "properties": {
+    "agent_work_package_id": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Submitted",
+        "Intake In Progress",
+        "Incomplete",
+        "Blocked",
+        "Ready for Review",
+        "Ready for QA",
+        "Ready for Integration Review",
+        "Rework Required",
+        "Rejected",
+        "Archived"
+      ]
+    },
+    "changed_files": { "type": "array", "items": { "type": "string" } },
+    "summary": { "type": "string" },
+    "checks_performed": { "type": "array", "items": { "type": "string" } },
+    "errors": { "type": "array", "items": { "type": "string" } },
+    "questions_or_blockers": { "type": "array", "items": { "type": "string" } },
+    "diff_or_key_changes": { "type": "array", "items": { "type": "string" } },
+    "scope_compliance": { "$ref": "#/$defs/complianceCheck" },
+    "allowed_files_compliance": { "$ref": "#/$defs/complianceCheck" },
+    "locked_files_compliance": { "$ref": "#/$defs/complianceCheck" },
+    "forbidden_actions_compliance": { "$ref": "#/$defs/complianceCheck" },
+    "verification_mode_compliance": { "$ref": "#/$defs/complianceCheck" }
+  },
+  "$defs": {
+    "complianceCheck": {
+      "type": "object",
+      "required": [
+        "status",
+        "notes"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "Pass",
+            "Fail",
+            "Blocked",
+            "Not Checked",
+            "Not Applicable"
+          ]
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

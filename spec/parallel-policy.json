@@ -1,0 +1,60 @@
+{
+  "spec_id": "parallel-policy",
+  "spec_version": "v0.1.0",
+  "status": "Draft",
+  "markdown_sources": [
+    "ai-system/parallel-execution-policy.md"
+  ],
+  "source_of_truth": "Markdown remains the operational source of truth. This spec is a derived machine-checkable policy inventory.",
+  "items": [
+    {
+      "id": "PARALLEL-POLICY-001",
+      "name": "Parallel Execution Policy Constraints",
+      "status": "Draft",
+      "description": "Core policy constraints for managed parallel execution groups.",
+      "default_execution_mode": "sequential",
+      "parallel_execution": {
+        "opt_in_only": true,
+        "human_owner_approval_required": true,
+        "candidate_groups_executable_before_approval": false,
+        "automatic_execution_forbidden": true,
+        "automatic_merge_forbidden": true,
+        "automatic_acceptance_forbidden": true,
+        "human_owner_final_decision_maker": true
+      },
+      "required_checks_before_parallel_execution": [
+        "parent task readiness",
+        "SOP selection",
+        "Agent Work Package completeness",
+        "dependency check",
+        "allowed_files and locked_files conflict check",
+        "security/privacy boundary check",
+        "integration review plan",
+        "QA plan or documented QA decision",
+        "rollback or rework path",
+        "explicit Human Owner approval"
+      ],
+      "forbidden_parallel_execution_conditions": [
+        "unresolved architecture decisions",
+        "unclear acceptance criteria",
+        "missing source documents",
+        "overlapping locked_files",
+        "unsafe shared files",
+        "security/auth/privacy-sensitive changes unless explicitly approved and isolated",
+        "broad refactors",
+        "AI system behavior changes unless handled as controlled evolution with explicit approval",
+        "one package output is required input for another package",
+        "missing rollback or rework path",
+        "missing Human Owner approval",
+        "missing Agent Work Package definitions",
+        "missing dependency checks",
+        "missing allowed_files or locked_files",
+        "unclear role ownership",
+        "unclear verification mode",
+        "unclear review or QA expectations",
+        "unresolved questions or blockers that affect package independence",
+        "broad package scopes that cannot be reviewed independently"
+      ]
+    }
+  ]
+}
