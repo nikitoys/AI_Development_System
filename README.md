@@ -3,7 +3,7 @@
 Languages: [English](README.md) | [Русский](README.ru.md)
 
 Status: Draft
-Version: v0.31.0
+Version: v0.32.0
 
 This repository contains an AI Development System: an operating model for developing projects through AI roles, documentation, lifecycle governance, prompt generation, Codex execution, review and controlled evolution.
 
@@ -42,6 +42,8 @@ Agent Result Intake and Integration Review are defined in `/ai-system/agent-resu
 Foldered `AI_PROJECT` templates now include agent planning files for plans, packages, locks, results and metrics. These are planning records only and do not authorize execution, parallel execution, merge or acceptance.
 
 The golden project includes a filled non-runtime multi-agent planning example for Task Tracker under `examples/golden-project/`.
+
+The SOP / optional multi-agent pilot validation record is stored in `/ai-system/evolution/sop-multi-agent-pilot-validation.md`.
 
 ## At a Glance
 

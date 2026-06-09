@@ -2,6 +2,24 @@
 
 Status: Draft
 
+## v0.32.0
+
+### Added
+
+- Added `ai-system/evolution/sop-multi-agent-pilot-validation.md` to record EVOL-018 pilot validation findings for the SOP / optional multi-agent layer.
+- Added `IMP-002` to track shallow dependency graph parsing in `scripts/agent-plan-mvp.py`.
+- Added proposed follow-up `EVOL-020 — Improve dry-run agent planner dependency parsing`.
+
+### Updated
+
+- Updated README version mirrors to `v0.32.0`.
+- Updated `ai-system/README.md` to index the pilot validation record.
+- Updated `evolution-backlog.md` to mark `EVOL-018` as completed.
+
+### Reason
+
+`EVOL-018` records pilot evidence before the EVOL-019 runtime decision. The pilot confirms that the current SOP / optional multi-agent layer works as governance-first documentation, templates, specs and dry-run reporting, while recording that runtime integration is not justified yet and dependency-aware parallel group reporting needs a future bounded improvement.
+
 ## v0.31.0
 
 ### Added

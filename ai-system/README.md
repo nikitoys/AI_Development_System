@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.31.0
+Version: v0.32.0
 
 ## Purpose
 
@@ -111,6 +111,8 @@ These files are planning and review records only. They preserve sequential execu
 
 The golden project includes a filled multi-agent planning example under `../examples/golden-project/AI_PROJECT/AGENT_*`.
 
+The SOP / optional multi-agent pilot validation record is stored in `evolution/sop-multi-agent-pilot-validation.md`.
+
 ## Security and Privacy Baseline
 
 AI-assisted work must follow:
@@ -204,6 +206,7 @@ The `evolution/` directory defines roadmap-driven self-evolution of AI_Developme
 - `evolution/README.md` — index and operating principle for the system evolution module.
 - `evolution/roadmap.md` — strategic and tactical roadmap for AI_Development_System.
 - `evolution/sop-multi-agent-implementation-plan.md` — master plan for SOP-guided planning and optional multi-agent execution.
+- `evolution/sop-multi-agent-pilot-validation.md` — pilot validation findings for the SOP / optional multi-agent layer.
 - `evolution/evolution-loop.md` — observe → diagnose → propose → plan → execute → verify → review → approve → release → learn loop.
 - `evolution/evolution-policy.md` — permissions, boundaries and anti-runaway rules for self-evolution.
 - `evolution/owner-evolution-plan.md` — Human Owner-authored intake place for broad system evolution plans.

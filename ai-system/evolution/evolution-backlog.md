@@ -699,7 +699,7 @@ The example does not add product runtime code and does not authorize execution, 
 
 ## EVOL-018 — Run pilot validation and record findings
 
-Status: Proposed  
+Status: Done  
 Priority: P2  
 Source: `sop-multi-agent-implementation-plan.md`  
 Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
@@ -724,6 +724,14 @@ Acceptance criteria:
 Conversion path:
 
 Pilot validation task.
+
+Notes:
+
+Completed by recording `sop-multi-agent-pilot-validation.md`.
+
+The pilot ran the golden project dry-run validation, lock check, informational parallel group listing, prompt draft generation and documentation integrity check. It confirmed that the golden project demonstrates SOP selection, Agent Work Packages, dependencies, `allowed_files`, `locked_files`, result intake placeholders, integration review status, QA handoff status, metrics and Human Owner approval boundaries.
+
+The pilot recorded a known limitation: `scripts/agent-plan-mvp.py` does not deeply parse dependency graphs from Markdown and may list an over-broad informational candidate parallel group. This limitation is tracked as `IMP-002` and proposed follow-up `EVOL-020`. EVOL-019 remains the next bounded phase and was not started.
 
 ---
 
@@ -754,3 +762,39 @@ Acceptance criteria:
 Conversion path:
 
 Decision or experiment proposal.
+
+---
+
+## EVOL-020 — Improve dry-run agent planner dependency parsing
+
+Status: Proposed  
+Priority: P2  
+Source: `sop-multi-agent-pilot-validation.md` / `IMP-002`  
+Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
+Owner: AI System Maintainer / DevOps Engineer AI  
+Type: Automation
+
+Problem:
+
+`scripts/agent-plan-mvp.py list-parallel-groups` can report over-broad informational candidate groups because it does not deeply parse Agent Work Package dependencies from Markdown planning files.
+
+Expected outcome:
+
+Improve the dry-run helper so candidate parallel group reporting accounts for explicit dependencies from standard `AI_PROJECT/AGENT_PLAN.md` and `AI_PROJECT/AGENT_TASKS.md` formats.
+
+Acceptance criteria:
+
+- dependency data is parsed from the standard agent planning files where available;
+- packages with unresolved prerequisites are excluded from the same candidate parallel group;
+- lock conflict checks remain dry-run/reporting only;
+- candidate parallel groups remain informational only;
+- no Codex execution, branch/worktree automation, merge automation or result acceptance is introduced;
+- Human Owner approval remains required before any execution.
+
+Conversion path:
+
+Bounded script improvement task after EVOL-019 decision or explicit Human Owner approval.
+
+Notes:
+
+Proposed by EVOL-018 pilot validation. Do not start this item during EVOL-018 or EVOL-019 unless the Human Owner explicitly approves it.
