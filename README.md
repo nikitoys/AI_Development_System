@@ -3,7 +3,7 @@
 Languages: [English](README.md) | [Русский](README.ru.md)
 
 Status: Draft
-Version: v0.30.0
+Version: v0.31.0
 
 This repository contains an AI Development System: an operating model for developing projects through AI roles, documentation, lifecycle governance, prompt generation, Codex execution, review and controlled evolution.
 
@@ -40,6 +40,8 @@ The Parallel Execution Policy is defined in `/ai-system/parallel-execution-polic
 Agent Result Intake and Integration Review are defined in `/ai-system/agent-result-intake.md` and `/ai-system/integration-review.md`. They check results before review, QA and Human Owner acceptance without authorizing automatic execution, merge or acceptance.
 
 Foldered `AI_PROJECT` templates now include agent planning files for plans, packages, locks, results and metrics. These are planning records only and do not authorize execution, parallel execution, merge or acceptance.
+
+The golden project includes a filled non-runtime multi-agent planning example for Task Tracker under `examples/golden-project/`.
 
 ## At a Glance
 

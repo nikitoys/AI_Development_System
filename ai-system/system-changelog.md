@@ -2,6 +2,23 @@
 
 Status: Draft
 
+## v0.31.0
+
+### Added
+
+- Extended `examples/golden-project/` with a filled non-runtime multi-agent planning example for a Task Tracker due-date filter enhancement.
+- Added golden-project `AI_PROJECT/AGENT_PLAN.md`, `AGENT_TASKS.md`, `AGENT_LOCKS.md`, `AGENT_RESULTS.md`, `AGENT_METRICS.md` and a local example README.
+
+### Updated
+
+- Updated README version mirrors to `v0.31.0`.
+- Updated `ai-system/README.md` to note the filled golden-project multi-agent planning example.
+- Updated `evolution-backlog.md` to mark `EVOL-017` as completed.
+
+### Reason
+
+`EVOL-017` validates the SOP and agent planning documentation with a filled golden project example. The example remains non-runtime and does not authorize execution, parallel execution, automatic execution, automatic merge or automatic acceptance.
+
 ## v0.30.0
 
 ### Added

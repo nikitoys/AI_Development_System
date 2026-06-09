@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.30.0
+Version: v0.31.0
 
 ## Purpose
 
@@ -109,6 +109,8 @@ Foldered project templates include `AGENT_PLAN.md`, `AGENT_TASKS.md`, `AGENT_LOC
 
 These files are planning and review records only. They preserve sequential execution as the default and do not authorize execution, parallel execution, automatic merge or automatic acceptance.
 
+The golden project includes a filled multi-agent planning example under `../examples/golden-project/AI_PROJECT/AGENT_*`.
+
 ## Security and Privacy Baseline
 
 AI-assisted work must follow:
@@ -212,7 +214,7 @@ The `evolution/` directory defines roadmap-driven self-evolution of AI_Developme
 - `evolution/templates/system-change-proposal.md` — AI System Change Proposal template.
 - `evolution/templates/evolution-task.md` — bounded system evolution task template.
 - `evolution/templates/owner-evolution-plan.md` — reusable owner plan intake template.
-- `examples/golden-project/` — filled foldered Task Tracker example for onboarding foldered integration.
+- `examples/golden-project/` — filled foldered Task Tracker example for onboarding foldered integration and non-runtime multi-agent planning.
 
 ## Templates
 

@@ -661,7 +661,7 @@ The helper is dry-run/reporting only. It reads `AI_PROJECT/AGENT_*` files, repor
 
 ## EVOL-017 — Extend golden project with multi-agent example
 
-Status: Proposed  
+Status: Done  
 Priority: P2  
 Source: `sop-multi-agent-implementation-plan.md`  
 Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
@@ -686,6 +686,14 @@ Acceptance criteria:
 Conversion path:
 
 Example and pilot-preparation task.
+
+Notes:
+
+Completed by extending `examples/golden-project/` with a filled non-runtime Task Tracker due-date filter planning example.
+
+The example includes `AI_PROJECT/AGENT_PLAN.md`, `AI_PROJECT/AGENT_TASKS.md`, `AI_PROJECT/AGENT_LOCKS.md`, `AI_PROJECT/AGENT_RESULTS.md`, `AI_PROJECT/AGENT_METRICS.md` and a project README. It demonstrates selected SOP, Agent Work Package decomposition, dependencies, `allowed_files`, `locked_files`, candidate parallel groups as informational only, Human Owner approval boundaries, result intake placeholders, integration review status, QA handoff status, metrics and dry-run helper usage.
+
+The example does not add product runtime code and does not authorize execution, parallel execution, automatic execution, automatic merge or automatic acceptance. EVOL-018 remains the next bounded phase and was not started.
 
 ---
 
