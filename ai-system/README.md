@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.1.0
+Version: v0.21.0
 
 ## Purpose
 
@@ -15,6 +15,54 @@ Documentation is the source of truth.
 
 AI roles do not work from inspiration. They work from approved documents, explicit tasks and defined acceptance criteria.
 
+## Version Source
+
+The current AI_Development_System version is the top version entry in `system-changelog.md`.
+
+Primary README files mirror that changelog version and must be updated whenever the top changelog version changes.
+
+## Documentation Integrity Checks
+
+Run the repository documentation integrity checks with:
+
+```bash
+python3 scripts/check-docs-integrity.py
+```
+
+The check covers internal Markdown links, unresolved placeholders outside reusable templates, index completeness for system documents and visible status/version consistency.
+
+## Foldered Bootstrap/Update Helper
+
+Run minimal dry-run planning for Foldered Control Mode with:
+
+```bash
+python3 scripts/foldered-control-mvp.py bootstrap --project-root /path/to/project
+python3 scripts/foldered-control-mvp.py update --project-root /path/to/project
+```
+
+The helper reports planned control-layer changes, unresolved placeholders and `AI_PROJECT/AI_DEV_SYSTEM_VERSION.md` tracking. Writes require explicit `--apply`.
+
+## Machine-Checkable Specs
+
+Minimal machine-checkable specs are stored in `../spec/`.
+
+Current spec files:
+
+- `../spec/roles.json` — AI role registry snapshot.
+- `../spec/interaction-modes.json` — explicit interaction modes and markers.
+- `../spec/verification-modes.json` — supported verification modes and execution boundaries.
+- `../spec/lifecycle-states.json` — common managed lifecycle states.
+- `../spec/schemas/system-spec.schema.json` — shared minimal schema for spec files.
+
+Markdown remains the operational source of truth. Specs are derived inventory and contract files unless a later approved evolution task changes the source-of-truth relationship.
+
+## Security and Privacy Baseline
+
+AI-assisted work must follow:
+
+- `security-policy.md` for secrets, sandbox boundaries, sensitive code and security review;
+- `privacy-data-handling-policy.md` for private data, external LLM sharing and data minimization.
+
 ## System Layers
 
 ```text
@@ -27,7 +75,8 @@ AI Development System
 ├── Workflow
 ├── Rules
 ├── Review Process
-└── Evolution Process
+├── Evolution Process
+└── System Evolution Module
 ```
 
 ## Repository Model
@@ -70,14 +119,39 @@ AI Development System
 - `codex-lifecycle.md` — lifecycle rules for Codex execution.
 - `prompt-lifecycle.md` — lifecycle rules for prompts and prompt packages.
 - `project-integration-model.md` — foldered and root integration modes for concrete projects.
+- `foldered-integration.md` — recommended foldered architecture for embedding AI_Development_System into concrete projects.
 - `project-control-files.md` — standard project-level control files for concrete repositories.
 - `project-bootstrap.md` — workflow for initializing new and existing project repositories.
 - `project-system-update.md` — workflow for updating already integrated project control layers.
 - `verification-modes.md` — explicit check modes and on-demand browser/visual QA rules.
+- `security-policy.md` — security baseline for secrets, sandbox boundaries, sensitive code and automation.
+- `privacy-data-handling-policy.md` — privacy and data-handling rules for private data, external LLMs and generated artifacts.
 - `aicp-language-policy.md` — approved change proposal for language and localization policy.
+- `aicp-security-privacy-policy.md` — approved change proposal for security, privacy and data-handling policy.
 - `document-templates.md` — templates for project documents.
 - `system-changelog.md` — history of changes to the AI Development System.
 - `improvement-log.md` — observations and problems in the system.
+- `../scripts/check-docs-integrity.py` — documentation integrity check for links, placeholders, indexes and version/status fields.
+- `../scripts/foldered-control-mvp.py` — minimal dry-run bootstrap/update helper for Foldered Control Mode.
+- `../spec/README.md` — machine-checkable spec layer policy and validation guidance.
+
+## Evolution Module
+
+The `evolution/` directory defines roadmap-driven self-evolution of AI_Development_System.
+
+- `evolution/README.md` — index and operating principle for the system evolution module.
+- `evolution/roadmap.md` — strategic and tactical roadmap for AI_Development_System.
+- `evolution/evolution-loop.md` — observe → diagnose → propose → plan → execute → verify → review → approve → release → learn loop.
+- `evolution/evolution-policy.md` — permissions, boundaries and anti-runaway rules for self-evolution.
+- `evolution/owner-evolution-plan.md` — Human Owner-authored intake place for broad system evolution plans.
+- `evolution/owner-plan-intake.md` — workflow for mapping owner plans to roadmap, backlog and one bounded next task.
+- `evolution/system-health-check.md` — repeatable system health-check checklist.
+- `evolution/evolution-backlog.md` — managed backlog of system evolution items.
+- `evolution/analysis-report-baseline.md` — baseline findings from the analytical repository report.
+- `evolution/templates/system-change-proposal.md` — AI System Change Proposal template.
+- `evolution/templates/evolution-task.md` — bounded system evolution task template.
+- `evolution/templates/owner-evolution-plan.md` — reusable owner plan intake template.
+- `examples/golden-project/` — filled foldered Task Tracker example for onboarding foldered integration.
 
 ## Templates
 
@@ -92,6 +166,7 @@ ChatGPT Orchestrator prepares documents, prompts and reviews
 Codex Executor changes repository files
 Documentation records decisions
 AI Development System controls the process
+System Evolution Module controls roadmap-driven self-improvement
 ```
 
 ## Minimal Rule
@@ -104,3 +179,13 @@ No implementation task should start without:
 - acceptance criteria;
 - expected output;
 - review step.
+
+No system evolution task should start without:
+
+- a roadmap item, backlog item, health-check finding, analytical report finding or Human Owner request;
+- owner plan intake and mapping when the source is a broad Human Owner evolution plan;
+- explicit allowed files;
+- verification mode;
+- review requirements;
+- Human Owner approval requirement assessment;
+- changelog impact assessment.

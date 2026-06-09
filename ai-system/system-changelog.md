@@ -2,6 +2,150 @@
 
 Status: Draft
 
+## v0.21.0
+
+### Added
+
+- Added `scripts/foldered-control-mvp.py` as a minimal Foldered Control Mode bootstrap/update helper.
+- Added dry-run bootstrap planning for root `AGENTS.md` and `AI_PROJECT/` control files.
+- Added dry-run update reporting for required control files, unresolved placeholders and `AI_PROJECT/AI_DEV_SYSTEM_VERSION.md` tracking.
+
+### Updated
+
+- Updated README version mirrors to `v0.21.0`.
+- Updated bootstrap, project-system-update and foldered-integration docs to reference the helper and its dry-run-first boundary.
+- Updated `ai-system/README.md` and `ai-system/evolution/README.md` indexes.
+- Added and completed `EVOL-007` in `evolution-backlog.md`.
+
+### Reason
+
+`EVOL-007` starts P5 bootstrap/update tooling with a small script-level MVP for dry-run planning, placeholder detection and version tracking while avoiding a large CLI, package, release automation, upstream git management or product-code changes.
+
+## v0.20.0
+
+### Added
+
+- Added `spec/README.md` to define the first machine-checkable specification layer and the spec-to-Markdown relationship.
+- Added `spec/roles.json`, `spec/interaction-modes.json`, `spec/verification-modes.json` and `spec/lifecycle-states.json` as minimal JSON specs for stable system entities.
+- Added `spec/schemas/system-spec.schema.json` as a shared minimal schema for spec files.
+
+### Updated
+
+- Updated README version mirrors to `v0.20.0`.
+- Updated `ai-system/README.md` and `ai-system/evolution/README.md` to index the spec layer.
+- Updated `evolution-backlog.md` to mark `EVOL-006` as completed.
+- Updated `owner-evolution-plan.md` with the EVOL-006 completion record and post-plan next-task boundary.
+
+### Reason
+
+`EVOL-006` introduces a minimal machine-checkable contract layer for roles, interaction modes, verification modes and lifecycle states while keeping Markdown as the operational source of truth and avoiding Markdown generation, CI schema lint, bootstrap, release or research work.
+
+## v0.19.0
+
+### Added
+
+- Added `examples/golden-project/` as a fully filled foldered example for Task Tracker with an explicit Task Tracker mission, owner plan, control file set and verification policy.
+
+### Updated
+
+- Updated `README.md` and `README.ru.md` version to `v0.19.0`.
+- Updated `ai-system/README.md` to index the golden example.
+- Updated `evolution-backlog.md` to mark `EVOL-005` as completed.
+- Updated `owner-evolution-plan.md` with the EVOL-005 completion record and next bounded task recommendation.
+
+### Reason
+
+`EVOL-005` adds one complete, minimal example of foldered integration for onboarding, with no real product code and explicit focus on control-layer files.
+
+## v0.18.0
+
+### Added
+
+- Added `ai-system/aicp-security-privacy-policy.md` for the approved EVOL-004 system change.
+- Added `ai-system/security-policy.md` with secret-handling, automation, sandbox, sensitive-code and incident-handling rules.
+- Added `ai-system/privacy-data-handling-policy.md` with private-data, sensitive-data, external LLM sharing, data minimization and generated-artifact rules.
+
+### Updated
+
+- Updated README version mirrors to `v0.18.0`.
+- Updated `rules.md` and `review-process.md` to reference security and privacy policies.
+- Updated project templates so concrete projects inherit the AI_Development_System security and privacy baseline.
+- Updated the owner evolution plan and evolution backlog to mark `EVOL-004` as completed and recommend `EVOL-005` as the next bounded phase.
+
+### Reason
+
+`EVOL-004` centralizes the minimum security, privacy and data-handling baseline for AI-assisted development without starting golden example work or the machine-checkable specification layer.
+
+## v0.17.2
+
+### Added
+
+- Added `scripts/check-docs-integrity.py` for local documentation integrity validation.
+- Added `.github/workflows/docs-integrity.yml` to run documentation integrity checks on push and pull request.
+
+### Updated
+
+- Updated README version mirrors to `v0.17.2`.
+- Updated the owner evolution plan and evolution backlog to mark `EVOL-003` as completed and recommend `EVOL-004` as the next bounded phase.
+- Documented the documentation integrity check command in the root README files and AI system README.
+
+### Reason
+
+`EVOL-003` adds practical documentation integrity checks for Markdown links, unresolved placeholders, index completeness and status/version consistency without starting security/privacy policy work, golden example work or the machine-checkable specification layer.
+
+## v0.17.1
+
+### Updated
+
+- Synchronized visible AI_Development_System versions in the root README files and `ai-system/README.md`.
+- Documented `ai-system/system-changelog.md` as the authoritative version source for AI_Development_System.
+- Updated the owner evolution plan and evolution backlog to mark `EVOL-002` as completed and recommend `EVOL-003` as the next bounded phase.
+
+### Reason
+
+Visible version fields had drifted between repository entrypoints and the changelog. `EVOL-002` resolves that drift without changing lifecycle states, approval gates, CI, security/privacy policy, specs, bootstrap tooling or product code.
+
+## v0.17.0
+
+### Added
+
+- Added `evolution/owner-evolution-plan.md` as the Human Owner-authored intake place for high-level AI_Development_System evolution plans.
+- Added `evolution/owner-plan-intake.md` to define how owner plans are recorded, preserved, mapped to roadmap/backlog items and converted into one bounded next task.
+- Added `evolution/templates/owner-evolution-plan.md` as a reusable owner plan template.
+- Recorded the owner plan from GitHub issue #7 as `OWNER-EVOL-001` with roadmap and evolution backlog mappings.
+
+### Updated
+
+- Updated the evolution module README and AI system README to index the owner plan intake workflow and template.
+- Updated the operating model to include owner-authored evolution plan intake in System Evolution Governance.
+
+### Reason
+
+The Human Owner needs a clear place to provide broad system evolution direction while preserving roadmap/backlog discipline, one-task-at-a-time execution and Human Owner approval for behavior-changing system changes.
+
+## v0.16.0
+
+### Added
+
+- Added `ai-system/evolution/` as an internal module for roadmap-driven self-evolution of AI_Development_System.
+- Added `evolution/roadmap.md` to define strategic and tactical development priorities for the system itself.
+- Added `evolution/evolution-loop.md` to define the controlled observe → diagnose → propose → plan → execute → verify → review → approve → release → learn loop.
+- Added `evolution/evolution-policy.md` to define self-evolution boundaries, Human Owner approval requirements and anti-runaway rules.
+- Added `evolution/system-health-check.md` as a repeatable system maturity and drift assessment checklist.
+- Added `evolution/evolution-backlog.md` with initial evolution backlog items derived from owner direction and repository analysis findings.
+- Added `evolution/analysis-report-baseline.md` to preserve the owner-provided analytical report as a roadmap input.
+- Added system change proposal and bounded evolution task templates under `evolution/templates/`.
+
+### Updated
+
+- Updated AI system README to index the system evolution module and its templates.
+- Updated operating model to mark System Evolution Governance as implemented.
+- Updated highest-priority next steps to start from health check, version/status consistency, documentation integrity, security/privacy policy and pilot validation.
+
+### Reason
+
+AI_Development_System needs an explicit internal mechanism for evolving according to its own roadmap while preserving bounded execution, review, verification, changelog discipline and Human Owner approval.
+
 ## v0.15.0
 
 ### Added

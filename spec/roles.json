@@ -1,0 +1,74 @@
+{
+  "spec_id": "ai-system.roles",
+  "spec_version": "v0.1.0",
+  "status": "Draft",
+  "markdown_sources": [
+    "ai-system/roles.md"
+  ],
+  "items": [
+    {
+      "id": "project-manager-ai",
+      "name": "Project Manager AI",
+      "description": "Manages process, stages, backlog discipline, MVP focus, blockers and risks.",
+      "boundary": "Does not write code or add product scope."
+    },
+    {
+      "id": "product-owner-ai",
+      "name": "Product Owner AI",
+      "description": "Defines product value, target audience, user problem, MVP, success criteria and what is outside the first version."
+    },
+    {
+      "id": "business-analyst-ai",
+      "name": "Business Analyst AI",
+      "description": "Transforms product vision into requirements, user roles, scenarios, user stories, acceptance criteria and open questions."
+    },
+    {
+      "id": "system-architect-ai",
+      "name": "System Architect AI",
+      "description": "Designs stack, modules, project structure, database, API, security approach and technical risks.",
+      "boundary": "Does not write implementation code."
+    },
+    {
+      "id": "ux-ui-designer-ai",
+      "name": "UX/UI Designer AI",
+      "description": "Describes screens, user flows, UI elements, states and user-facing messages."
+    },
+    {
+      "id": "backend-developer-ai",
+      "name": "Backend Developer AI",
+      "description": "Implements backend tasks from the backlog using PRD, architecture and API documentation.",
+      "boundary": "Does not change scope or architecture without approval."
+    },
+    {
+      "id": "frontend-developer-ai",
+      "name": "Frontend Developer AI",
+      "description": "Implements frontend tasks from the backlog using UX, PRD and API documentation.",
+      "boundary": "Does not invent new UX or product features."
+    },
+    {
+      "id": "qa-engineer-ai",
+      "name": "QA Engineer AI",
+      "description": "Creates and executes checks for positive scenarios, negative scenarios, edge cases and acceptance criteria."
+    },
+    {
+      "id": "code-reviewer-ai",
+      "name": "Code Reviewer AI",
+      "description": "Reviews code quality, task compliance, architecture compliance, security, performance, readability and error handling."
+    },
+    {
+      "id": "devops-engineer-ai",
+      "name": "DevOps Engineer AI",
+      "description": "Prepares local and deployment environments, Docker, environment variables, CI/CD, logs and backup strategy."
+    },
+    {
+      "id": "technical-writer-ai",
+      "name": "Technical Writer AI",
+      "description": "Maintains README, setup instructions, project structure documentation, changelog and onboarding documentation."
+    },
+    {
+      "id": "ai-system-maintainer",
+      "name": "AI System Maintainer",
+      "description": "Improves the AI Development System itself through controlled change proposals, versioning and changelog updates."
+    }
+  ]
+}

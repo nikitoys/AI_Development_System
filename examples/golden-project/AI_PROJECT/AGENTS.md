@@ -1,17 +1,17 @@
-# AI_PROJECT/AGENTS.md — {{PROJECT_NAME}}
+# AI_PROJECT/AGENTS.md — Task Tracker
 
 Status: Draft
 
 ## Purpose
 
-This file defines local AI/Codex instructions for this project.
+This file defines local AI/Codex instructions for the Task Tracker example repository.
 
 ## Project Context
 
-Project: `{{PROJECT_NAME}}`
-Target App Directory: `{{TARGET_APP_DIRECTORY}}`
-Human Owner Language: `{{HUMAN_OWNER_LANGUAGE}}`
-Default Verification Mode: `{{DEFAULT_VERIFICATION_MODE}}`
+Project: `Task Tracker`
+Target App Directory: `task-tracker-app`
+Human Owner Language: `English`
+Default Verification Mode: `FAST_VALIDATION`
 
 ## Start Here
 

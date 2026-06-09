@@ -22,6 +22,20 @@ Checks:
 - error handling;
 - unnecessary scope expansion.
 
+## Security and Privacy Review
+
+Performed by Security Reviewer AI, Code Reviewer AI or AI System Maintainer when the task touches secrets, private data, external services, authentication, authorization, sandboxing or generated artifacts.
+
+Checks:
+
+- compliance with `security-policy.md`;
+- compliance with `privacy-data-handling-policy.md`;
+- secret exposure;
+- sensitive-data exposure;
+- external LLM or tool data-sharing risk;
+- sandbox and execution boundary changes;
+- Human Owner approval requirements.
+
 ## QA Review
 
 Performed by QA Engineer AI.
@@ -45,6 +59,7 @@ Checks:
 - API documentation updates;
 - changelog updates;
 - consistency between code and docs.
+- security/privacy policy links when the task affects sensitive data, external tools or execution boundaries.
 
 ## Severity Levels
 

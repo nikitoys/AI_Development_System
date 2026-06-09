@@ -1,0 +1,67 @@
+{
+  "spec_id": "ai-system.interaction-modes",
+  "spec_version": "v0.1.0",
+  "status": "Draft",
+  "markdown_sources": [
+    "ai-system/interaction-modes.md",
+    "AGENTS.md"
+  ],
+  "items": [
+    {
+      "id": "free",
+      "name": "Free Conversation Mode",
+      "marker": "[FREE]",
+      "description": "Ordinary explanation, discussion, brainstorming or conceptual clarification.",
+      "repository_changes_allowed": false,
+      "requires_process_header": false
+    },
+    {
+      "id": "system",
+      "name": "AI Development System Mode",
+      "marker": "[SYSTEM]",
+      "description": "Repository, documentation, workflow, architecture, system or controlled project work.",
+      "repository_changes_allowed": true,
+      "requires_process_header": true
+    },
+    {
+      "id": "prompt",
+      "name": "Prompt Generation Mode",
+      "marker": "[PROMPT]",
+      "description": "Generate a prompt artifact for review or another AI/Codex session.",
+      "repository_changes_allowed": false,
+      "requires_process_header": true
+    },
+    {
+      "id": "codex",
+      "name": "Codex Execution Package Mode",
+      "marker": "[CODEX]",
+      "description": "Prepare or execute a bounded Codex-ready task package.",
+      "repository_changes_allowed": true,
+      "requires_process_header": true
+    },
+    {
+      "id": "review",
+      "name": "Review Mode",
+      "marker": "[REVIEW]",
+      "description": "Review Codex output, repository changes, acceptance criteria or QA evidence.",
+      "repository_changes_allowed": false,
+      "requires_process_header": true
+    },
+    {
+      "id": "evolution",
+      "name": "System Evolution Mode",
+      "marker": "[EVOLUTION]",
+      "description": "Analyze or change AI_Development_System itself through controlled evolution.",
+      "repository_changes_allowed": true,
+      "requires_process_header": true
+    },
+    {
+      "id": "dry-run",
+      "name": "Dry Run Mode",
+      "marker": "[DRY-RUN]",
+      "description": "Simulate a task, plan or process without applying repository changes.",
+      "repository_changes_allowed": false,
+      "requires_process_header": true
+    }
+  ]
+}

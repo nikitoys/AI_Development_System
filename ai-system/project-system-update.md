@@ -106,6 +106,33 @@ It should preserve root `AGENTS.md` as a thin router.
 11. Run CODE_ONLY_FAST checks only.
 ```
 
+## Minimal Update Helper
+
+AI_Development_System includes a small Foldered Control Mode update helper:
+
+```bash
+python3 scripts/foldered-control-mvp.py update --project-root /path/to/project
+```
+
+Dry-run is the default. The helper reports:
+
+- required foldered control files that exist or are missing;
+- unresolved template placeholders in existing control files;
+- the pending `AI_PROJECT/AI_DEV_SYSTEM_VERSION.md` update.
+
+To refresh `AI_PROJECT/AI_DEV_SYSTEM_VERSION.md` explicitly:
+
+```bash
+python3 scripts/foldered-control-mvp.py update \
+  --project-root /path/to/project \
+  --project-name "My Project" \
+  --target-app-directory app \
+  --update-method vendor-copy \
+  --apply
+```
+
+The helper does not update `AI_Development_System/`, run git subtree/submodule operations, merge local project decisions or modify application code. Conflicts and local control-file migrations still require Human Owner review.
+
 ## Merge Rules
 
 Do not blindly overwrite local project files.

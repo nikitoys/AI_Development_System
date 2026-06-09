@@ -34,6 +34,14 @@ Status: Draft
 5. Do not change API contracts without updating API Documentation.
 6. Do not mix unrelated backend, frontend, infrastructure and documentation work unless the task explicitly allows it.
 
+## Security and Privacy Rules
+
+1. Follow `security-policy.md` before handling secrets, credentials, sensitive code, sandbox boundaries or external services.
+2. Follow `privacy-data-handling-policy.md` before sharing private, personal, customer or confidential project data with external tools or LLMs.
+3. Do not paste secrets into prompts, logs, generated documentation or issue text.
+4. If a possible secret or sensitive-data exposure is found, report the risk without repeating the sensitive value.
+5. Project-local rules may be stricter than the system baseline, but must not weaken it without explicit Human Owner approval.
+
 ## Review Rules
 
 1. Every implementation task must pass review.

@@ -119,6 +119,14 @@ For a new or existing project:
 7. Stop for Human Owner approval.
 ```
 
+The minimal helper can prepare this as a dry-run:
+
+```bash
+python3 scripts/foldered-control-mvp.py bootstrap --project-root /path/to/project
+```
+
+Use `--apply` only after reviewing the planned control-layer changes.
+
 ## Update Flow
 
 Do not overwrite `AI_PROJECT/` during upstream system update.
@@ -134,6 +142,12 @@ Update flow:
 6. Record conflicts.
 7. Update AI_PROJECT/AI_DEV_SYSTEM_VERSION.md.
 8. Stop for Human Owner approval.
+```
+
+The minimal update helper can report missing files, unresolved placeholders and pending version tracking:
+
+```bash
+python3 scripts/foldered-control-mvp.py update --project-root /path/to/project
 ```
 
 See `/ai-system/project-system-update.md`.

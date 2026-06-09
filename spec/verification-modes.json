@@ -1,0 +1,57 @@
+{
+  "spec_id": "ai-system.verification-modes",
+  "spec_version": "v0.1.0",
+  "status": "Draft",
+  "markdown_sources": [
+    "ai-system/verification-modes.md"
+  ],
+  "items": [
+    {
+      "id": "code-only-fast",
+      "name": "CODE_ONLY_FAST",
+      "description": "Default for small code-only changes, documentation changes and fast bugfixes.",
+      "allowed_check_types": [
+        "diff_check",
+        "status_check",
+        "typecheck_when_practical"
+      ],
+      "forbidden_without_explicit_request": [
+        "dev_server",
+        "preview_server",
+        "browser_tabs",
+        "playwright",
+        "mcp_browser_sessions",
+        "screenshots",
+        "manual_visual_qa",
+        "browser_console_inspection",
+        "full_build",
+        "full_test_suite"
+      ]
+    },
+    {
+      "id": "fast-validation",
+      "name": "FAST_VALIDATION",
+      "description": "Standard validation without browser, screenshots, console inspection or manual visual QA unless explicitly requested.",
+      "typical_commands": [
+        "npm run typecheck",
+        "npm run test:run",
+        "npm run build"
+      ],
+      "browser_or_visual_allowed": false
+    },
+    {
+      "id": "browser-smoke",
+      "name": "BROWSER_SMOKE",
+      "description": "Narrow browser/runtime check only by explicit Human Owner request or task acceptance criteria.",
+      "browser_or_visual_allowed": true,
+      "visual_qa_allowed": false
+    },
+    {
+      "id": "visual-qa",
+      "name": "VISUAL_QA",
+      "description": "Screenshots and visual inspection only by explicit Human Owner request or acceptance criteria.",
+      "browser_or_visual_allowed": true,
+      "visual_qa_allowed": true
+    }
+  ]
+}

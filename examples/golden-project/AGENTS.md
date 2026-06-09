@@ -1,4 +1,4 @@
-# AGENTS.md — {{PROJECT_NAME}} AI Bootstrap
+# AGENTS.md — Task Tracker
 
 This project uses AI_Development_System through the foldered integration model.
 
@@ -21,14 +21,14 @@ AI_Development_System/ai-system/rules.md
 ```text
 AI_Development_System/   # embedded upstream AI Development System
 AI_PROJECT/              # project-local control files and task state
-{{TARGET_APP_DIRECTORY}} # application/product code
+task-tracker-app/        # example application directory placeholder
 ```
 
 Do not modify `AI_Development_System/` unless the task explicitly targets AI system update, synchronization or evolution.
 
 Do not modify `AI_PROJECT/` unless the task explicitly targets planning, state, prompts, verification policy or project control files.
 
-Do not modify `{{TARGET_APP_DIRECTORY}}` during bootstrap or system update.
+Do not modify `task-tracker-app/` in this example repository.
 
 ## Interaction Modes
 
@@ -55,7 +55,7 @@ Expected Result:
 
 ## Default Verification
 
-Default Verification Mode: `{{DEFAULT_VERIFICATION_MODE}}`
+Default Verification Mode: `FAST_VALIDATION`
 
 Browser automation, Playwright/MCP browser sessions, screenshots, browser console checks and manual visual QA are on-demand only.
 

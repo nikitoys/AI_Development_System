@@ -1,4 +1,4 @@
-# Codex Workflow — {{PROJECT_NAME}}
+# Codex Workflow — Task Tracker
 
 ## Purpose
 
@@ -39,7 +39,7 @@ Plan intake converts owner plan items into `AI_PROJECT/CODEX_PLAN.md` and `AI_PR
 
 ## Checks Policy
 
-Default Verification Mode: `{{DEFAULT_VERIFICATION_MODE}}`
+Default Verification Mode: `FAST_VALIDATION`
 
 Browser automation, Playwright/MCP browser sessions, screenshots, manual visual inspections and browser console checks are on-demand only.
 
@@ -62,4 +62,4 @@ Project-local rules may be stricter, but must not weaken the inherited baseline 
 
 `AI_PROJECT/` must be merged, not overwritten, when the upstream system changes.
 
-Application code in `{{TARGET_APP_DIRECTORY}}` is out of scope during system update.
+Application code in `task-tracker-app/` is out of scope during system update.

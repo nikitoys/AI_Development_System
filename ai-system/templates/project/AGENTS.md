@@ -9,11 +9,12 @@ Before working in this repository, read:
 1. `PROJECT_GOAL.md`
 2. `OWNER_PLAN.md` when doing plan intake or backlog refresh
 3. `docs/verification-policy.md`
-4. `CODEX_WORKFLOW.md`
-5. `CODEX_CURRENT.md`
-6. `CODEX_TASKS.md`
-7. `CODEX_PLAN.md`
-8. `CODEX_SESSION_LOG.md` when continuing prior work
+4. AI_Development_System security/privacy policies when available
+5. `CODEX_WORKFLOW.md`
+6. `CODEX_CURRENT.md`
+7. `CODEX_TASKS.md`
+8. `CODEX_PLAN.md`
+9. `CODEX_SESSION_LOG.md` when continuing prior work
 
 ## Project Context
 
@@ -30,4 +31,5 @@ Default Verification Mode: `{{DEFAULT_VERIFICATION_MODE}}`
 - Do not implement without an approved task and acceptance criteria.
 - Do not touch files outside approved scope.
 - Follow `docs/verification-policy.md` before running checks.
+- Inherit AI_Development_System security and privacy baselines when the project embeds or references them.
 - Browser, Playwright, screenshots, console checks and visual QA are on-demand only.

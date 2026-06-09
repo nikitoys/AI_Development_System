@@ -1,0 +1,19 @@
+name: Documentation integrity
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - ai-development-system
+
+jobs:
+  docs-integrity:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run documentation integrity checks
+        run: python3 scripts/check-docs-integrity.py

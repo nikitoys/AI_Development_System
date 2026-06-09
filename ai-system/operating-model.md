@@ -211,6 +211,42 @@ Needs improvement:
 - keep synchronized with future lifecycle documents;
 - add examples if repeated lifecycle design mistakes appear.
 
+## 2.4 System Evolution Governance
+
+Status: Implemented
+
+Existing documents:
+
+```text
+/ai-system/evolution/README.md
+/ai-system/evolution/roadmap.md
+/ai-system/evolution/evolution-loop.md
+/ai-system/evolution/evolution-policy.md
+/ai-system/evolution/owner-evolution-plan.md
+/ai-system/evolution/owner-plan-intake.md
+/ai-system/evolution/system-health-check.md
+/ai-system/evolution/evolution-backlog.md
+/ai-system/evolution/analysis-report-baseline.md
+```
+
+Covers:
+
+- roadmap-driven evolution of AI_Development_System itself;
+- controlled observe → diagnose → propose → plan → execute → verify → review → approve → release → learn loop;
+- self-evolution permissions and anti-runaway rules;
+- owner-authored evolution plan recording and intake mapping;
+- Human Owner approval boundary for system changes;
+- health-check dimensions for system maturity;
+- evolution backlog format and initial backlog items;
+- preservation of analytical report findings as a roadmap baseline;
+- relationship between owner plans, roadmap items, backlog items, AICP, bounded Codex execution, review, approval and changelog.
+
+Needs improvement:
+
+- connect future machine-checkable specs to the evolution module;
+- add health-check reports during pilot validation;
+- add examples of completed evolution cycles after first real use.
+
 ---
 
 # 3. Entity Lifecycle Layer
@@ -529,6 +565,7 @@ Experiment Lifecycle
 Improvement Lifecycle
 Lifecycle Governance
 Language and Localization
+System Evolution Governance
 ```
 
 ## Partially Implemented
@@ -543,9 +580,11 @@ Language and Localization
 
 ## Highest Priority Next Steps
 
-1. Add lifecycle examples for common task, review, improvement, experiment and knowledge flows during pilot validation.
-2. Add state transition diagrams for lifecycles that become difficult to track.
-3. Run pilot validation against real repository tasks and record follow-up improvements.
+1. Run the first system health check and record findings in the evolution backlog.
+2. Synchronize visible system versions and document statuses across primary entrypoints.
+3. Add documentation integrity checks for links, placeholders, indexes and status/version fields.
+4. Add security, privacy and data-handling policy.
+5. Run pilot validation against real repository tasks and record follow-up improvements.
 
 ## Main Principle
 
@@ -558,4 +597,12 @@ Every managed entity in the AI Development System should have:
 - approval rules;
 - version impact rules;
 - changelog or history rule.
+
+Every system evolution item should also have:
+- roadmap, backlog, health-check, analytical report or Human Owner source;
+- explicit allowed files;
+- verification mode;
+- review requirement;
+- Human Owner approval requirement assessment;
+- closure outcome.
 ```

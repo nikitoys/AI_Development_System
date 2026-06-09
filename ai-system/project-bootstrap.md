@@ -136,6 +136,37 @@ cp -R AI_Development_System/ai-system/templates/foldered/AI_PROJECT/. AI_PROJECT
 cp AI_Development_System/ai-system/templates/foldered/AGENTS.root.md AGENTS.md
 ```
 
+## Minimal Bootstrap Helper
+
+AI_Development_System includes a small local helper for Foldered Control Mode:
+
+```bash
+python3 scripts/foldered-control-mvp.py bootstrap --project-root /path/to/project
+```
+
+The helper runs in dry-run mode by default. It reports which control files would be created and whether unresolved placeholders remain.
+
+To apply the bootstrap control-layer files explicitly:
+
+```bash
+python3 scripts/foldered-control-mvp.py bootstrap \
+  --project-root /path/to/project \
+  --project-name "My Project" \
+  --target-app-directory app \
+  --owner-language English \
+  --verification-mode CODE_ONLY_FAST \
+  --apply
+```
+
+This helper only creates or reports foldered control files:
+
+```text
+AGENTS.md
+AI_PROJECT/
+```
+
+It does not clone upstream, create packages, manage releases, update git subtree state or modify application code.
+
 Git subtree install:
 
 ```bash

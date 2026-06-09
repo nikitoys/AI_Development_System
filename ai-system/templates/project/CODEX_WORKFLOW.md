@@ -44,3 +44,9 @@ Browser automation, Playwright/MCP browser sessions, screenshots, manual visual 
 Do not run them unless the Human Owner explicitly requests them or acceptance criteria require them.
 
 Do not mark a task `PARTIAL` only because browser or visual checks were skipped unless those checks were explicitly required.
+
+## Security and Privacy Policy
+
+When AI_Development_System policies are available, this project inherits the security and privacy baseline for secrets, private data, external LLM sharing, sandbox boundaries and generated artifacts.
+
+Project-local rules may be stricter, but must not weaken the inherited baseline without explicit Human Owner approval.
