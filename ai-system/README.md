@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.23.0
+Version: v0.24.0
 
 ## Purpose
 
@@ -62,6 +62,12 @@ Markdown remains the operational source of truth. Specs are derived inventory an
 
 Sequential execution remains the default. SOPs do not authorize automatic execution, automatic acceptance or parallel execution.
 
+## Agent Work Package Standard
+
+`agent-work-package.md` defines bounded Agent Work Packages for future SOP-guided planning.
+
+Agent Work Packages do not imply parallel execution and do not authorize automatic execution or automatic acceptance.
+
 ## Security and Privacy Baseline
 
 AI-assisted work must follow:
@@ -106,6 +112,7 @@ AI Development System
 - `language-policy.md` — language and localization rules for responses, prompts and documentation.
 - `workflow.md` — development stages and gates.
 - `sop-model.md` — SOP model for governance-first repeatable procedures.
+- `agent-work-package.md` — standard for bounded Agent Work Packages used in future SOP-guided planning.
 - `rules.md` — global rules and restrictions.
 - `system-schemes.md` — compact text schemes for roles, documents and process flow.
 - `task-format.md` — standard task format for Codex and AI roles.

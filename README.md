@@ -3,7 +3,7 @@
 Languages: [English](README.md) | [Русский](README.ru.md)
 
 Status: Draft
-Version: v0.23.0
+Version: v0.24.0
 
 This repository contains an AI Development System: an operating model for developing projects through AI roles, documentation, lifecycle governance, prompt generation, Codex execution, review and controlled evolution.
 
@@ -26,6 +26,8 @@ Minimal foldered bootstrap/update dry-runs can be run with `scripts/foldered-con
 The SOP and optional multi-agent implementation plan is recorded in `/ai-system/evolution/sop-multi-agent-implementation-plan.md`.
 
 The SOP Model is defined in `/ai-system/sop-model.md`. SOPs are governance procedures only; they do not authorize automatic execution or automatic acceptance.
+
+The Agent Work Package standard is defined in `/ai-system/agent-work-package.md`. Agent Work Packages are bounded planning artifacts and do not imply parallel execution.
 
 ## At a Glance
 

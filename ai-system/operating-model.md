@@ -274,6 +274,35 @@ Needs improvement:
 - add multi-agent planning and parallel execution policy only after approval;
 - add machine-checkable SOP specs after the Markdown source documents exist.
 
+## 2.6 Agent Work Package Standard
+
+Status: Implemented
+
+Existing documents:
+
+```text
+/ai-system/agent-work-package.md
+/ai-system/sop-model.md
+/ai-system/evolution/sop-multi-agent-implementation-plan.md
+```
+
+Covers:
+
+- managed Agent Work Package definition;
+- relationship between parent tasks and child Agent Work Packages;
+- required fields including `allowed_files`, `locked_files`, `dependencies`, verification mode and review instructions;
+- package lifecycle/status values;
+- ownership model and role boundary rules;
+- relationship to SOP Model, task lifecycle, prompt lifecycle, Codex lifecycle, review and QA;
+- default rule that Agent Work Packages do not imply parallel execution;
+- boundary rule that Agent Work Packages do not authorize automatic execution or automatic acceptance.
+
+Needs improvement:
+
+- add Multi-Agent Planning workflow in a separate bounded evolution task;
+- add Parallel Execution Policy only after approval;
+- add machine-checkable Agent Work Package specs after the Markdown source documents exist.
+
 ---
 
 # 3. Entity Lifecycle Layer

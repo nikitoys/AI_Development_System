@@ -2,6 +2,23 @@
 
 Status: Draft
 
+## v0.24.0
+
+### Added
+
+- Added `ai-system/agent-work-package.md` to define bounded Agent Work Packages for future SOP-guided planning.
+- Added Agent Work Package required fields, lifecycle/status values, ownership model and examples for backend, frontend, QA/review and documentation work.
+
+### Updated
+
+- Updated README version mirrors to `v0.24.0`.
+- Updated `ai-system/README.md` and `ai-system/operating-model.md` to index the Agent Work Package standard.
+- Updated `evolution-backlog.md` to mark `EVOL-010` as completed.
+
+### Reason
+
+`EVOL-010` defines the Agent Work Package standard while preserving sequential execution as the default and avoiding Multi-Agent Planning workflow, Parallel Execution Policy, specs, scripts, templates, runtime automation, automatic execution or automatic acceptance.
+
 ## v0.23.0
 
 ### Added

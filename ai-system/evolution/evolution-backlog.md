@@ -407,7 +407,7 @@ Sequential execution remains the default. SOPs do not authorize automatic execut
 
 ## EVOL-010 — Add Agent Work Package standard
 
-Status: Proposed  
+Status: Done  
 Priority: P1  
 Source: `sop-multi-agent-implementation-plan.md`  
 Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
@@ -432,6 +432,12 @@ Acceptance criteria:
 Conversion path:
 
 System change.
+
+Notes:
+
+Completed with `ai-system/agent-work-package.md`. The standard defines managed Agent Work Packages, required fields, lifecycle/status values, ownership, relationship to SOPs, tasks, prompts, Codex execution, review and QA, and examples for backend, frontend, QA/review and documentation work.
+
+Agent Work Packages do not imply parallel execution and do not authorize automatic execution or automatic acceptance. EVOL-011 remains the next bounded phase and was not started.
 
 ---
 
