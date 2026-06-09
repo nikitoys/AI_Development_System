@@ -330,3 +330,369 @@ Notes:
 - Added `scripts/foldered-control-mvp.py` with `bootstrap` and `update` commands, dry-run by default and explicit `--apply` for writes.
 - The MVP creates missing foldered control files from templates during bootstrap and refreshes `AI_PROJECT/AI_DEV_SYSTEM_VERSION.md` during update.
 - Large CLI/package/release automation, upstream clone/subtree management and product-code changes remain out of scope.
+
+---
+
+## EVOL-008 — Record SOP and Multi-Agent Implementation Plan
+
+Status: Done  
+Priority: P1  
+Source: Human Owner request  
+Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
+Owner: AI System Maintainer / Technical Writer AI  
+Type: Documentation
+
+Problem:
+
+The Human Owner wants AI_Development_System to evolve toward SOP-guided planning and optional multi-agent execution, but the direction must be recorded without implementing runtime behavior or replacing the safe one-task loop.
+
+Expected outcome:
+
+Create a master implementation plan and decompose the initiative into future bounded evolution tasks.
+
+Acceptance criteria:
+
+- implementation plan document exists;
+- sequential execution remains the default;
+- parallel execution is opt-in and Human Owner-approved;
+- planning, specs, tooling, templates, pilot and runtime decision phases are separated;
+- future backlog items are added;
+- changelog records the change.
+
+Conversion path:
+
+System documentation task.
+
+Notes:
+
+Recorded in `ai-system/evolution/sop-multi-agent-implementation-plan.md`. No runtime, scripts, specs, templates or execution behavior changes were implemented.
+
+---
+
+## EVOL-009 — Add SOP Model document
+
+Status: Proposed  
+Priority: P1  
+Source: `sop-multi-agent-implementation-plan.md`  
+Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
+Owner: AI System Maintainer / Technical Writer AI  
+Type: Governance
+
+Problem:
+
+The system does not yet define what a SOP is, how SOPs are selected or how SOPs relate to existing workflow and task lifecycle.
+
+Expected outcome:
+
+Add `ai-system/sop-model.md`.
+
+Acceptance criteria:
+
+- SOP definition exists;
+- SOP selection process is documented;
+- relationship to existing workflow, task lifecycle and prompt lifecycle is clear;
+- sequential execution remains default.
+
+Conversion path:
+
+System change or documentation task depending on behavior impact.
+
+---
+
+## EVOL-010 — Add Agent Work Package standard
+
+Status: Proposed  
+Priority: P1  
+Source: `sop-multi-agent-implementation-plan.md`  
+Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
+Owner: AI System Maintainer / Technical Writer AI  
+Type: Governance
+
+Problem:
+
+Agent work must be explicit, bounded and reviewable before any multi-agent planning can be safe.
+
+Expected outcome:
+
+Add `ai-system/agent-work-package.md`.
+
+Acceptance criteria:
+
+- required work package fields are defined;
+- dependencies, `allowed_files`, `locked_files`, verification mode and acceptance criteria are mandatory;
+- result format is defined;
+- Human Owner approval remains required before execution.
+
+Conversion path:
+
+System change.
+
+---
+
+## EVOL-011 — Add Multi-Agent Planning workflow
+
+Status: Proposed  
+Priority: P1  
+Source: `sop-multi-agent-implementation-plan.md`  
+Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
+Owner: AI System Maintainer / Project Manager AI / Technical Writer AI  
+Type: Lifecycle
+
+Problem:
+
+The system needs a planning-only workflow for decomposing owner intent into Agent Work Packages without executing them.
+
+Expected outcome:
+
+Add `ai-system/multi-agent-planning.md`.
+
+Acceptance criteria:
+
+- planning workflow is documented;
+- decomposition stops before execution;
+- Human Owner approval gate is explicit;
+- output can feed existing Codex prompt packages.
+
+Conversion path:
+
+System change.
+
+---
+
+## EVOL-012 — Add Parallel Execution Policy
+
+Status: Proposed  
+Priority: P1  
+Source: `sop-multi-agent-implementation-plan.md`  
+Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
+Owner: AI System Maintainer / Code Reviewer AI / QA Engineer AI  
+Type: Governance
+
+Problem:
+
+Parallel execution can create conflicts unless allowed, denied and approval-required cases are explicit.
+
+Expected outcome:
+
+Add `ai-system/parallel-execution-policy.md`.
+
+Acceptance criteria:
+
+- allowed parallel execution conditions are documented;
+- forbidden cases are documented;
+- file-lock and dependency conflict rules exist;
+- Human Owner approval is required for every parallel group.
+
+Conversion path:
+
+System change.
+
+---
+
+## EVOL-013 — Add Agent Result Intake and Integration Review
+
+Status: Proposed  
+Priority: P1  
+Source: `sop-multi-agent-implementation-plan.md`  
+Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
+Owner: AI System Maintainer / Code Reviewer AI / QA Engineer AI / Technical Writer AI  
+Type: Review
+
+Problem:
+
+The system needs a controlled process for receiving agent outputs, integrating them and deciding whether they pass review and QA.
+
+Expected outcome:
+
+Add `ai-system/agent-result-intake.md` and `ai-system/integration-review.md`.
+
+Acceptance criteria:
+
+- result intake process is documented;
+- integration review process is documented;
+- review, QA, rework and rejection paths are explicit;
+- automatic acceptance is forbidden.
+
+Conversion path:
+
+System change.
+
+---
+
+## EVOL-014 — Add machine-checkable SOP and Agent Work Package specs
+
+Status: Proposed  
+Priority: P2  
+Source: `sop-multi-agent-implementation-plan.md`  
+Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
+Owner: AI System Maintainer / System Architect AI  
+Type: Automation
+
+Problem:
+
+SOPs, Agent Work Packages, result objects and parallel policy need machine-checkable representations after the Markdown source documents exist.
+
+Expected outcome:
+
+Add `spec/sops.json`, `spec/agent-work-package.schema.json`, `spec/agent-result.schema.json` and `spec/parallel-policy.json`.
+
+Acceptance criteria:
+
+- specs map to approved Markdown source documents;
+- schema validation guidance is updated;
+- no Markdown generation is introduced unless separately approved.
+
+Conversion path:
+
+System change.
+
+---
+
+## EVOL-015 — Add AI_PROJECT agent planning templates
+
+Status: Proposed  
+Priority: P2  
+Source: `sop-multi-agent-implementation-plan.md`  
+Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
+Owner: AI System Maintainer / Technical Writer AI  
+Type: Template
+
+Problem:
+
+Concrete projects need local files for agent planning, locks, results and metrics only after the system standards exist.
+
+Expected outcome:
+
+Add templates for `AI_PROJECT/AGENT_PLAN.md`, `AI_PROJECT/AGENT_TASKS.md`, `AI_PROJECT/AGENT_LOCKS.md`, `AI_PROJECT/AGENT_RESULTS.md` and `AI_PROJECT/AGENT_METRICS.md`.
+
+Acceptance criteria:
+
+- templates inherit approved SOP and Agent Work Package rules;
+- templates preserve one-task default behavior;
+- templates do not enable automatic execution.
+
+Conversion path:
+
+System change and template task.
+
+---
+
+## EVOL-016 — Add dry-run agent planner MVP script
+
+Status: Proposed  
+Priority: P2  
+Source: `sop-multi-agent-implementation-plan.md`  
+Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
+Owner: AI System Maintainer / DevOps Engineer AI  
+Type: Automation
+
+Problem:
+
+Agent planning should be validated before runtime execution is considered.
+
+Expected outcome:
+
+Add `scripts/agent-plan-mvp.py` as a dry-run planner and validator.
+
+Acceptance criteria:
+
+- dry-run is default;
+- agent plans can be validated;
+- file-lock conflicts can be detected;
+- safe parallel groups can be listed;
+- bounded prompts can be generated for review;
+- Codex is not executed automatically.
+
+Conversion path:
+
+Automation task.
+
+---
+
+## EVOL-017 — Extend golden project with multi-agent example
+
+Status: Proposed  
+Priority: P2  
+Source: `sop-multi-agent-implementation-plan.md`  
+Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
+Owner: AI System Maintainer / Technical Writer AI  
+Type: Pilot Validation
+
+Problem:
+
+The golden project should demonstrate SOP/multi-agent planning only after documents, templates and planner rules exist.
+
+Expected outcome:
+
+Extend `examples/golden-project/` with a non-runtime multi-agent planning example.
+
+Acceptance criteria:
+
+- example includes agent plan files;
+- example demonstrates dependency and file-lock reasoning;
+- example does not run agents automatically;
+- example preserves Human Owner approval.
+
+Conversion path:
+
+Example and pilot-preparation task.
+
+---
+
+## EVOL-018 — Run pilot validation and record findings
+
+Status: Proposed  
+Priority: P2  
+Source: `sop-multi-agent-implementation-plan.md`  
+Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
+Owner: AI System Maintainer / QA Engineer AI / Technical Writer AI  
+Type: Pilot Validation
+
+Problem:
+
+Runtime decisions should be based on evidence from controlled pilots, not assumptions.
+
+Expected outcome:
+
+Run pilot validation and record findings before deciding whether runtime integration is justified.
+
+Acceptance criteria:
+
+- pilot scope is approved;
+- findings are recorded;
+- repeated issues are converted into backlog items or policy updates;
+- runtime decision remains deferred.
+
+Conversion path:
+
+Pilot validation task.
+
+---
+
+## EVOL-019 — Decide whether runtime integration is justified
+
+Status: Proposed  
+Priority: P3  
+Source: `sop-multi-agent-implementation-plan.md`  
+Roadmap item: P6 — SOP and Optional Multi-Agent Execution Layer  
+Owner: Human Owner / AI System Maintainer  
+Type: Research
+
+Problem:
+
+The system should not become a runtime unless pilot evidence shows the governance-first workflow benefits from it.
+
+Expected outcome:
+
+Decide whether to reject, defer, experiment with or approve runtime integration.
+
+Acceptance criteria:
+
+- pilot evidence is reviewed;
+- risks and benefits are documented;
+- Human Owner decision is recorded;
+- any runtime work requires a new bounded backlog item and approval.
+
+Conversion path:
+
+Decision or experiment proposal.

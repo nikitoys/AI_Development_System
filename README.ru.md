@@ -3,7 +3,7 @@
 Языки: [English](README.md) | [Русский](README.ru.md)
 
 Статус: Draft
-Версия: v0.21.0
+Версия: v0.22.0
 
 Этот репозиторий содержит AI Development System: операционную модель для разработки проектов через AI-роли, документацию, lifecycle governance, генерацию промптов, выполнение задач через Codex, review и контролируемую эволюцию системы.
 
@@ -22,6 +22,8 @@ python3 scripts/check-docs-integrity.py
 Machine-checkable specs для стабильных системных сущностей находятся в `/spec`.
 
 Минимальный dry-run helper для foldered bootstrap/update находится в `scripts/foldered-control-mvp.py`.
+
+План SOP и optional multi-agent implementation зафиксирован в `/ai-system/evolution/sop-multi-agent-implementation-plan.md`.
 
 ## Кратко
 

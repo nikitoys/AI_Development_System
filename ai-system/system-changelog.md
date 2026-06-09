@@ -2,6 +2,24 @@
 
 Status: Draft
 
+## v0.22.0
+
+### Added
+
+- Added `ai-system/evolution/sop-multi-agent-implementation-plan.md` to record the Human Owner's SOP and optional multi-agent implementation plan.
+- Added `EVOL-008` through `EVOL-019` to `evolution-backlog.md` to decompose the initiative into bounded future tasks.
+- Added roadmap priority `P6 — SOP and Optional Multi-Agent Execution Layer`.
+
+### Updated
+
+- Updated README version mirrors to `v0.22.0`.
+- Updated `ai-system/README.md` and `ai-system/evolution/README.md` to index the new plan.
+- Renumbered Research and Benchmarking roadmap priority from P6 to P7 to make room for the SOP / Multi-Agent Layer.
+
+### Reason
+
+The Human Owner wants a governance-first SOP and optional multi-agent execution direction recorded before implementation. This change records the plan and future task decomposition without creating runtime automation, scripts, specs, templates or changes to the existing one-task Codex workflow.
+
 ## v0.21.0
 
 ### Added

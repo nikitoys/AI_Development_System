@@ -26,6 +26,7 @@ It does not govern product feature work in a target application. Product work re
 ## Documents
 
 - `roadmap.md` — strategic and tactical development plan for AI_Development_System.
+- `sop-multi-agent-implementation-plan.md` — recorded Human Owner plan for SOP-guided planning and optional multi-agent execution.
 - `evolution-loop.md` — controlled observe → diagnose → propose → plan → execute → verify → review → approve → release → learn loop.
 - `evolution-policy.md` — boundaries, permissions and anti-runaway rules for self-evolution.
 - `owner-evolution-plan.md` — Human Owner-authored intake place for broad system evolution plans.

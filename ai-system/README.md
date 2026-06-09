@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.21.0
+Version: v0.22.0
 
 ## Purpose
 
@@ -141,6 +141,7 @@ The `evolution/` directory defines roadmap-driven self-evolution of AI_Developme
 
 - `evolution/README.md` — index and operating principle for the system evolution module.
 - `evolution/roadmap.md` — strategic and tactical roadmap for AI_Development_System.
+- `evolution/sop-multi-agent-implementation-plan.md` — master plan for SOP-guided planning and optional multi-agent execution.
 - `evolution/evolution-loop.md` — observe → diagnose → propose → plan → execute → verify → review → approve → release → learn loop.
 - `evolution/evolution-policy.md` — permissions, boundaries and anti-runaway rules for self-evolution.
 - `evolution/owner-evolution-plan.md` — Human Owner-authored intake place for broad system evolution plans.
