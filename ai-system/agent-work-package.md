@@ -37,6 +37,7 @@ An Agent Work Package is not executable code.
 
 Agent Work Packages depend on these source-of-truth documents:
 
+- `work-item-hierarchy.md` for the Goal, Initiative, Epic, Task and Agent Work Package relationship.
 - `sop-model.md` for SOP selection and relationship to governed workflows.
 - `task-format.md` for task fields, Definition of Ready and Definition of Done.
 - `task-lifecycle.md` for managed task states and operations.
@@ -60,6 +61,14 @@ If an Agent Work Package conflicts with a source-of-truth document, the source d
 ## Relationship Between Task and Agent Work Package
 
 A task is the parent unit of approved work.
+
+In the work item hierarchy, Agent Work Packages sit below tasks:
+
+```text
+Goal -> Initiative -> Epic -> Task -> Agent Work Package
+```
+
+Goals, initiatives and epics may provide planning context for the parent task, but they do not authorize Agent Work Package execution.
 
 An Agent Work Package is a child planning unit inside a parent task.
 

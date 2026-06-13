@@ -1271,3 +1271,45 @@ Acceptance criteria:
 Conversion path:
 
 Future experiment. Not executable now.
+
+---
+
+## EVOL-029 — Add Work Item Hierarchy
+
+Status: Done
+Priority: P2
+Source: Human Owner request
+Roadmap item: P1 — Consistency and Documentation Integrity / P6 — SOP and Optional Multi-Agent Control Plane
+Owner: AI System Maintainer / Project Manager AI / Technical Writer AI
+Type: Documentation / Governance
+
+Problem:
+
+AI_Development_System had task lifecycle, roadmap, evolution backlog and Agent Work Packages, but lacked an explicit hierarchy between project goals and executable tasks.
+
+Expected outcome:
+
+Add a planning hierarchy from Goal to Initiative to Epic to Task to Agent Work Package while preserving task execution and Human Owner approval boundaries.
+
+Implementation:
+
+- Added `ai-system/work-item-hierarchy.md` as the source document for the hierarchy.
+- Updated task format and task lifecycle so Initiative and Epic are optional planning fields and do not block Definition of Ready.
+- Updated Agent Work Package guidance so packages remain child planning units under tasks.
+- Updated `CODEX_PLAN.md` and `CODEX_TASKS.md` templates to show Initiative and Epic context.
+- Updated the golden project so `T-003` maps to `INIT-001` / `EPIC-001` and remains the parent task for existing Agent Work Packages.
+- Recorded traceability in `ai-system/aicp-work-item-hierarchy.md` and `ai-system/system-changelog.md`.
+
+Acceptance criteria:
+
+- Initiative and Epic are planning containers only.
+- Task remains the executable unit.
+- Agent Work Package remains a child planning unit under Task.
+- `CODEX_PLAN.md` can show Initiatives and Epics.
+- `CODEX_TASKS.md` can map tasks to Initiative and Epic.
+- Human Owner approval remains required before execution.
+- No runtime behavior, automatic execution, task lifecycle state change or new parallel execution behavior is introduced.
+
+Conversion path:
+
+Closed by EVOL-029 as a bounded documentation and template update.

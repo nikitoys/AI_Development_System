@@ -12,6 +12,17 @@ They do not authorize execution, parallel execution, automatic execution, automa
 
 Human Owner remains the final decision maker.
 
+## Planning Path
+
+```text
+Goal: G-001 Make Task Tracker planning execution-ready
+Initiative: INIT-001 Task list usability planning
+Epic: EPIC-001 Due-date filtering
+Parent Task: T-003 Plan due-date filtering for Task Tracker
+```
+
+The Agent Work Packages below remain child planning units under `T-003`.
+
 ## Agent Work Package Registry
 
 | ID | Status | SOP | Role | Parent Task | Verification Mode | Notes |
@@ -100,4 +111,3 @@ rejected
 deferred
 archived
 ```
-

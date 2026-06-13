@@ -30,6 +30,7 @@ Informal discussion, brainstorming and temporary notes are not managed tasks unl
 
 Default source-of-truth locations for managed tasks are:
 
+- `/ai-system/work-item-hierarchy.md` for the relationship between goals, initiatives, epics, tasks and Agent Work Packages;
 - `/ai-system/task-format.md` for the standard task template, Definition of Ready and Definition of Done;
 - `/docs` for product backlog, requirements and project-specific task records when a product project exists;
 - `/ai-system` for AI Development System evolution tasks;
@@ -78,6 +79,7 @@ A task should include:
 - title or task ID;
 - status;
 - type;
+- optional initiative or epic reference;
 - owner role;
 - context;
 - input documents;
@@ -259,6 +261,23 @@ A task is done when:
 
 Task Lifecycle uses Definition of Done as the gate before `Done`.
 
+## Relationship to Work Item Hierarchy
+
+Task Lifecycle operates at the `Task` level of `/ai-system/work-item-hierarchy.md`.
+
+Goals, initiatives and epics are planning containers above tasks. They may provide context, grouping, priority and sequencing, but they are not executable units and do not own task lifecycle states.
+
+Agent Work Packages are child planning units under tasks. They may decompose task work for one role or executor context, but they do not make the parent task `Approved`, `In Progress`, `In Review` or `Done`.
+
+Rules:
+
+- Initiative and Epic fields are optional task metadata.
+- Missing Initiative or Epic values do not block Definition of Ready.
+- A task remains the executable unit.
+- Agent Work Packages must stay inside parent task scope.
+- Human Owner approval remains required before repository-changing execution.
+- Moving a goal, initiative or epic forward must not bypass task approval, review, QA or acceptance.
+
 ## Relationship to Codex Execution
 
 Codex Executor may execute a task only when execution boundaries are explicit.
@@ -389,3 +408,5 @@ Task lifecycle must not change Codex execution behavior beyond documenting task 
 Task lifecycle must not redesign review process, QA process or workflow unless explicitly approved.
 
 Task lifecycle must not combine unrelated product, implementation, documentation and system evolution work unless the task explicitly allows it.
+
+Task lifecycle must not treat a goal, initiative, epic or Agent Work Package as execution authority unless an approved task or prompt package provides explicit execution boundaries.

@@ -16,6 +16,7 @@ The `AI_PROJECT/AGENT_*` files contain a filled non-runtime example for planning
 
 The example demonstrates:
 
+- Goal, Initiative, Epic, Task and Agent Work Package hierarchy;
 - selected SOP;
 - Agent Work Package decomposition;
 - dependencies;

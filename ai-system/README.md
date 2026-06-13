@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.47.0
+Version: v0.48.0
 
 ## Purpose
 
@@ -98,6 +98,12 @@ Markdown remains the operational source of truth. Specs are derived inventory an
 `spec/verification-checks.json` under this `/ai-system` folder defines machine-readable check metadata for the lightweight verification runner.
 
 It records check IDs, value classes, speed classes, expected durations, timeouts, default modes, tags and command availability. Markdown policy remains the source of truth.
+
+## Work Item Hierarchy
+
+`work-item-hierarchy.md` defines the Goal, Initiative, Epic, Task and Agent Work Package relationship.
+
+Initiatives and epics are planning containers only. Task remains the executable unit, and Agent Work Package remains a child planning unit under Task.
 
 ## SOP Model
 
@@ -210,6 +216,7 @@ AI Development System
 - `human-interaction.md` — how the human works with ChatGPT and Codex.
 - `language-policy.md` — language and localization rules for responses, prompts and documentation.
 - `workflow.md` — development stages and gates.
+- `work-item-hierarchy.md` — planning hierarchy from Goal to Initiative to Epic to Task to Agent Work Package.
 - `sop-model.md` — SOP model for governance-first repeatable procedures.
 - `agent-work-package.md` — standard for bounded Agent Work Packages used in future SOP-guided planning.
 - `multi-agent-planning.md` — planning-only workflow for decomposing parent tasks into Agent Work Packages.
@@ -253,6 +260,7 @@ AI Development System
 - `privacy-data-handling-policy.md` — privacy and data-handling rules for private data, external LLMs and generated artifacts.
 - `aicp-language-policy.md` — approved change proposal for language and localization policy.
 - `aicp-security-privacy-policy.md` — approved change proposal for security, privacy and data-handling policy.
+- `aicp-work-item-hierarchy.md` — approved change proposal for the planning hierarchy.
 - `document-templates.md` — templates for project documents.
 - `system-changelog.md` — history of changes to the AI Development System.
 - `improvement-log.md` — observations and problems in the system.

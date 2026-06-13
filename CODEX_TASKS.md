@@ -12,7 +12,9 @@ Use this file as the compact project board. Keep it short and current.
 
 ## Backlog
 
-- TBD
+| ID | Status | Initiative | Epic | Task | Notes |
+|---|---|---|---|---|---|
+| TBD | proposed | TBD | TBD | TBD | Initiative and Epic are optional planning containers. |
 
 ## Done
 

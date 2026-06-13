@@ -2,6 +2,25 @@
 
 Status: Draft
 
+## v0.48.0
+
+### Added
+
+- Added `ai-system/work-item-hierarchy.md` to define the Goal, Initiative, Epic, Task and Agent Work Package relationship.
+- Added `ai-system/aicp-work-item-hierarchy.md` and `EVOL-029` traceability for the hierarchy change.
+
+### Updated
+
+- Updated task format and task lifecycle documentation so Initiative and Epic are optional planning fields and do not block Definition of Ready.
+- Updated Agent Work Package guidance to reference the hierarchy while preserving the parent-task-only authority model.
+- Updated `CODEX_PLAN.md` and `CODEX_TASKS.md` templates so plans can show initiatives and epics, and task boards can map tasks to them.
+- Updated the golden project so `T-003` maps to `INIT-001` / `EPIC-001` while existing Agent Work Packages remain children of `T-003`.
+- Updated glossary, operating model and README/index references.
+
+### Reason
+
+Planning needed an explicit bridge between broad goals and executable tasks. The new hierarchy adds Goal, Initiative and Epic as planning context while preserving the existing execution model: Task remains the executable unit, Agent Work Package remains a child planning unit under Task, and Human Owner approval remains required before repository-changing execution. This change does not add runtime behavior, automatic execution, new task lifecycle states or new parallel execution behavior.
+
 ## v0.47.0
 
 ### Added

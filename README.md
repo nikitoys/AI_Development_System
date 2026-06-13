@@ -3,7 +3,7 @@
 Languages: [English](README.md) | [Русский](README.ru.md)
 
 Status: Draft
-Version: v0.47.0
+Version: v0.48.0
 
 This repository contains an AI Development System: an operating model for developing projects through AI roles, documentation, lifecycle governance, prompt generation, Codex execution, review and controlled evolution.
 
@@ -38,6 +38,8 @@ Lightweight verification check selection can be run with `scripts/verification/r
 `AI_PROJECT/PROJECT_OPERATION_PROFILE.md` provides surface-level project behavior defaults for language, answer style, verification, permissions, layout and review expectations.
 
 `AI_PROJECT/PROJECT_CONTROL_INDEX.md` provides a compact read-order map so agents can discover project control files by importance without loading every document by default.
+
+The Work Item Hierarchy is defined in `/ai-system/work-item-hierarchy.md`: Goal -> Initiative -> Epic -> Task -> Agent Work Package. Initiative and Epic are planning containers only; Task remains the executable unit.
 
 The SOP and optional multi-agent implementation plan is recorded in `/ai-system/evolution/sop-multi-agent-implementation-plan.md`.
 
@@ -305,6 +307,7 @@ Documentation records decisions.
 - Project control file standard and bootstrap workflow for concrete repositories.
 - Project Control Index for discoverable read order, importance levels and drift reporting in concrete projects.
 - Project Operation Profile for shallow Human Owner-editable AI Dev System behavior defaults.
+- Work Item Hierarchy for connecting goals, initiatives and epics to executable tasks and child Agent Work Packages.
 - Project system update process for refreshing already integrated projects.
 - Owner plan intake through `AI_PROJECT/OWNER_PLAN.md` and `Разобрать план`.
 - Explicit verification modes for fast code work, standard validation, browser smoke checks and visual QA.
@@ -324,6 +327,7 @@ Documentation records decisions.
 - `/ai-system/roles.md` - AI role registry.
 - `/ai-system/rules.md` - global system rules.
 - `/ai-system/prompt-lifecycle.md` - prompt creation, review and execution lifecycle.
+- `/ai-system/work-item-hierarchy.md` - planning hierarchy from Goal to Initiative to Epic to Task to Agent Work Package.
 - `/ai-system/task-format.md` - standard task format.
 - `/ai-system/review-process.md` - review and QA process.
 - `/ai-system/change-process.md` - controlled evolution process.

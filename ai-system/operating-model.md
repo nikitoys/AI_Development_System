@@ -559,6 +559,34 @@ Needs improvement:
 - continue collecting repeatable L3 manual orchestration evidence;
 - use hardened Agent Result records during future manual orchestration pilots.
 
+## 2.15 Work Item Hierarchy
+
+Status: Implemented
+
+Existing documents:
+
+```text
+/ai-system/work-item-hierarchy.md
+/ai-system/task-format.md
+/ai-system/task-lifecycle.md
+/ai-system/agent-work-package.md
+```
+
+Covers:
+
+- Goal, Initiative, Epic, Task and Agent Work Package relationship;
+- Initiative and Epic as planning containers only;
+- Task as the executable unit;
+- Agent Work Package as a child planning unit under Task;
+- optional Initiative and Epic task fields;
+- `CODEX_PLAN.md` and `CODEX_TASKS.md` planning hierarchy usage;
+- boundary rule that the hierarchy does not authorize runtime behavior, automatic execution, new lifecycle states or new parallel execution behavior.
+
+Needs improvement:
+
+- validate hierarchy usefulness during future concrete project planning;
+- add machine-checkable hierarchy metadata only if repeated manual drift appears.
+
 ---
 
 # 3. Entity Lifecycle Layer
@@ -910,6 +938,7 @@ Improvement Lifecycle
 Lifecycle Governance
 Language and Localization
 System Evolution Governance
+Work Item Hierarchy
 ```
 
 ## Partially Implemented

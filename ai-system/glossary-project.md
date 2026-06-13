@@ -32,9 +32,27 @@ The ordered list of work items.
 
 Contains epics, features, tasks, bugs, improvements, priorities, dependencies and statuses.
 
+## Goal
+
+A high-level project or system outcome that explains why work matters.
+
+Goals are planning context. They do not authorize execution by themselves.
+
+## Initiative
+
+A planning container under a goal.
+
+An initiative groups related epics and tasks that contribute to the same outcome.
+
+Initiatives are not executable units.
+
 ## Epic
 
-A large block of work that contains multiple features or tasks.
+A planning container under an initiative.
+
+An epic groups related tasks that together deliver a coherent capability, documentation outcome, governance improvement or technical result.
+
+Epics are not executable units.
 
 ## Feature
 
@@ -43,6 +61,14 @@ A product capability that gives user or business value.
 ## Task
 
 A concrete executable unit of work.
+
+Tasks may optionally reference an initiative and epic, but execution authority still comes from task approval, scope and acceptance criteria.
+
+## Agent Work Package
+
+A child planning unit under a parent task.
+
+An Agent Work Package describes one role or executor contribution, but it does not authorize execution by itself.
 
 ## Scope
 

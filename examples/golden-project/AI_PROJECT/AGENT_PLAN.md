@@ -29,6 +29,9 @@ Source: AI_Development_System/ai-system/sop-model.md
 ## Parent Task
 
 ```text
+Planning Goal: G-001 Make Task Tracker planning execution-ready
+Planning Initiative: INIT-001 Task list usability planning
+Planning Epic: EPIC-001 Due-date filtering
 Parent Task ID: T-003
 Parent Task Status: proposed
 Parent Task Title: Plan due-date filtering for Task Tracker
@@ -36,6 +39,8 @@ Verification Mode: FAST_VALIDATION
 Execution Approved: no
 Parallel Execution Approved: no
 ```
+
+The initiative and epic above are planning containers only. `T-003` remains the parent task for all Agent Work Packages in this example.
 
 ## Decomposition Summary
 
@@ -98,4 +103,3 @@ The helper reports planning state only. It does not execute Codex or approve wor
 - Human Owner must confirm whether due-date filtering is an approved product enhancement.
 - Human Owner must approve any future execution task before product files are changed.
 - Candidate parallel group `CPG-001` is not executable until explicitly approved under the Parallel Execution Policy.
-

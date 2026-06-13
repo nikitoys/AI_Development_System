@@ -17,6 +17,12 @@ Planned / In Progress / Review / Done / Rejected
 ## Type
 Feature / Bug / Refactor / Docs / Infra / Test / System
 
+## Initiative
+Optional initiative ID or title.
+
+## Epic
+Optional epic ID or title.
+
 ## Owner Role
 Backend Developer AI / Frontend Developer AI / QA Engineer AI / etc.
 
@@ -100,6 +106,8 @@ A task is ready when it has:
 - runtime tracking decision;
 - owner role;
 - no blocking ambiguity.
+
+Initiative and Epic are optional planning fields. Missing Initiative or Epic values do not block Definition of Ready when the task is otherwise bounded, approved and executable.
 
 ## Definition of Done
 

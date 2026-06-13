@@ -3,7 +3,7 @@
 Языки: [English](README.md) | [Русский](README.ru.md)
 
 Статус: Draft
-Версия: v0.47.0
+Версия: v0.48.0
 
 Этот репозиторий содержит AI Development System: операционную модель для разработки проектов через AI-роли, документацию, lifecycle governance, генерацию промптов, выполнение задач через Codex, review и контролируемую эволюцию системы.
 
@@ -38,6 +38,8 @@ Lightweight verification selection можно запускать через `scr
 `AI_PROJECT/PROJECT_OPERATION_PROFILE.md` хранит поверхностные настройки поведения AI Dev System для конкретного проекта: язык, стиль ответа, verification defaults, permissions, layout и review defaults.
 
 `AI_PROJECT/PROJECT_CONTROL_INDEX.md` хранит компактную карту read order, чтобы агенты видели project control files по важности и не загружали все документы по умолчанию.
+
+Work Item Hierarchy описан в `/ai-system/work-item-hierarchy.md`: Goal -> Initiative -> Epic -> Task -> Agent Work Package. Initiative и Epic являются planning containers only; Task остаётся executable unit.
 
 План SOP и optional multi-agent implementation зафиксирован в `/ai-system/evolution/sop-multi-agent-implementation-plan.md`.
 
@@ -134,6 +136,7 @@ Documentation records decisions.
 - Ролевая модель для product, design, management, implementation, quality, documentation и system evolution.
 - Project Control Index для discoverable read order, importance levels и drift reporting в concrete projects.
 - Project Operation Profile для поверхностных Human Owner-editable настроек поведения AI Dev System в проекте.
+- Work Item Hierarchy для связи goals, initiatives и epics с executable tasks и child Agent Work Packages.
 - Формат Codex prompt package со scope, allowed files, forbidden actions и acceptance criteria.
 - Verification modes теперь требуют explicit budget, slow-check decision и runtime summary; slow/full/release checks не запускаются по умолчанию.
 - Review process с уровнями severity и decision keywords Human Owner.
@@ -151,6 +154,7 @@ Documentation records decisions.
 - `/ai-system/roles.md` - реестр AI-ролей.
 - `/ai-system/rules.md` - глобальные правила системы.
 - `/ai-system/prompt-lifecycle.md` - lifecycle создания, review и выполнения промптов.
+- `/ai-system/work-item-hierarchy.md` - planning hierarchy от Goal к Initiative, Epic, Task и Agent Work Package.
 - `/ai-system/task-format.md` - стандартный формат задач.
 - `/ai-system/review-process.md` - процесс review и QA.
 - `/ai-system/project-control-connectivity.md` - project-control index, read policies и drift reporting.
