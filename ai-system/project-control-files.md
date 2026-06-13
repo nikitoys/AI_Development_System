@@ -56,6 +56,7 @@ Default source-of-truth documents for project control files are:
 - `/ai-system/project-control-files.md` for the standard file set and authority rules;
 - `/ai-system/project-bootstrap.md` for initialization workflow;
 - `/ai-system/project-system-update.md` for updating already integrated projects;
+- `/ai-system/project-operation-profile.md` for surface-level project behavior defaults;
 - `/ai-system/verification-modes.md` for verification modes;
 - `/ai-system/prompt-lifecycle.md` for prompt package requirements;
 - `/ai-system/task-format.md` for task shape and acceptance criteria;
@@ -68,11 +69,12 @@ For a concrete project in Foldered Control Mode, authority is resolved in this o
 
 1. Explicit Human Owner instruction for the current task.
 2. Current approved task, prompt package or decision record.
-3. `AI_PROJECT/` local control files.
-4. `AI_PROJECT/docs/verification-policy.md`.
-5. Root `AGENTS.md` boundary rules.
-6. Global AI Development System rules in `AI_Development_System/ai-system`.
-7. Templates used only as bootstrap starting points.
+3. `AI_PROJECT/PROJECT_OPERATION_PROFILE.md`.
+4. Specialized `AI_PROJECT/` local control files.
+5. `AI_PROJECT/docs/verification-policy.md`.
+6. Root `AGENTS.md` boundary rules.
+7. Global AI Development System rules in `AI_Development_System/ai-system`.
+8. Templates used only as bootstrap starting points.
 
 For Root Control Mode, root-local control files take the place of `AI_PROJECT/` files.
 
@@ -88,6 +90,7 @@ In Foldered Control Mode, concrete project repositories should contain:
 AGENTS.md
 AI_Development_System/
 AI_PROJECT/AGENTS.md
+AI_PROJECT/PROJECT_OPERATION_PROFILE.md
 AI_PROJECT/PROJECT_GOAL.md
 AI_PROJECT/OWNER_PLAN.md
 AI_PROJECT/CODEX_COMMANDS.md
@@ -111,6 +114,7 @@ In Root Control Mode, equivalent files may live in the repository root:
 
 ```text
 AGENTS.md
+PROJECT_OPERATION_PROFILE.md
 PROJECT_GOAL.md
 CODEX_COMMANDS.md
 CODEX_WORKFLOW.md
@@ -129,6 +133,7 @@ docs/verification-policy.md
 |---|---|---|---|
 | `AGENTS.md` | Root bootstrap/router and repository boundary instructions. | First file for every AI or Codex session in the project. | Human Owner, ChatGPT Orchestrator, AI System Maintainer or Technical Writer AI with approval. |
 | `AI_PROJECT/AGENTS.md` | Local AI instructions, Start Here list and project-specific rules. | After root `AGENTS.md`. | Human Owner, ChatGPT Orchestrator, AI System Maintainer or Technical Writer AI with approval. |
+| `AI_PROJECT/PROJECT_OPERATION_PROFILE.md` | Surface-level AI Dev System behavior defaults for language, verification, permissions, layout and review expectations. | Immediately after `AI_PROJECT/AGENTS.md`, before lower-level project control files. | Human Owner directly; ChatGPT Orchestrator, AI System Maintainer or Technical Writer AI with approval. |
 | `AI_PROJECT/PROJECT_GOAL.md` | Mission, constraints, non-goals, target app directory and success criteria. | Before planning, implementation, review or scope decisions. | Human Owner, Product Manager AI or Technical Writer AI with approval. |
 | `AI_PROJECT/OWNER_PLAN.md` | Human Owner-authored external plan, roadmap, priorities and desired work. Planning input only, not executable scope. | During plan intake, backlog refresh, project audit and task discovery. | Human Owner; ChatGPT Orchestrator or Project Manager AI may summarize or convert into task proposals with approval. |
 | `AI_PROJECT/CODEX_COMMANDS.md` | Short Human Owner command cheat sheet and command-to-workflow mappings. | When interpreting operator commands. | Human Owner, Project Manager AI or AI System Maintainer with approval. |
@@ -167,17 +172,18 @@ A new project session in Foldered Control Mode should read files in this order:
 
 1. `AGENTS.md`
 2. `AI_PROJECT/AGENTS.md`
-3. `AI_PROJECT/PROJECT_GOAL.md`
-4. `AI_PROJECT/OWNER_PLAN.md` when present or when doing plan intake
-5. `AI_PROJECT/docs/verification-policy.md`
-6. `AI_PROJECT/CODEX_WORKFLOW.md`
-7. `AI_PROJECT/CODEX_CURRENT.md`
-8. `AI_PROJECT/CODEX_TASKS.md`
-9. `AI_PROJECT/CODEX_PLAN.md`
-10. `AI_PROJECT/CODEX_COMMANDS.md`
-11. `AI_PROJECT/PROMPTS.md` when reusable prompts are needed
-12. `AI_PROJECT/CODEX_SESSION_LOG.md` when continuing or reviewing prior work
-13. `AI_Development_System/AGENTS.md` and relevant `/AI_Development_System/ai-system` source documents when system rules are needed
+3. `AI_PROJECT/PROJECT_OPERATION_PROFILE.md`
+4. `AI_PROJECT/PROJECT_GOAL.md`
+5. `AI_PROJECT/OWNER_PLAN.md` when present or when doing plan intake
+6. `AI_PROJECT/docs/verification-policy.md`
+7. `AI_PROJECT/CODEX_WORKFLOW.md`
+8. `AI_PROJECT/CODEX_CURRENT.md`
+9. `AI_PROJECT/CODEX_TASKS.md`
+10. `AI_PROJECT/CODEX_PLAN.md`
+11. `AI_PROJECT/CODEX_COMMANDS.md`
+12. `AI_PROJECT/PROMPTS.md` when reusable prompts are needed
+13. `AI_PROJECT/CODEX_SESSION_LOG.md` when continuing or reviewing prior work
+14. `AI_Development_System/AGENTS.md` and relevant `/AI_Development_System/ai-system` source documents when system rules are needed
 
 ## Template Relationship
 
@@ -200,6 +206,7 @@ Templates should use placeholders such as:
 {{PROJECT_NAME}}
 {{TARGET_APP_DIRECTORY}}
 {{DEFAULT_VERIFICATION_MODE}}
+{{DEFAULT_VERIFICATION_BUDGET}}
 {{HUMAN_OWNER_LANGUAGE}}
 {{AI_DEV_SYSTEM_SOURCE_BRANCH}}
 {{AI_DEV_SYSTEM_SOURCE_COMMIT}}

@@ -3,7 +3,7 @@
 Languages: [English](README.md) | [Русский](README.ru.md)
 
 Status: Draft
-Version: v0.45.0
+Version: v0.46.0
 
 This repository contains an AI Development System: an operating model for developing projects through AI roles, documentation, lifecycle governance, prompt generation, Codex execution, review and controlled evolution.
 
@@ -34,6 +34,8 @@ Minimal foldered bootstrap/update dry-runs can be run with `scripts/foldered-con
 Dry-run agent planning checks can be run with `scripts/agent-plan-mvp.py`.
 
 Lightweight verification check selection can be run with `scripts/verification/run_checks.py`. The runner supports dry-run, explicit budgets, per-check timeouts and local JSONL runtime history.
+
+`AI_PROJECT/PROJECT_OPERATION_PROFILE.md` provides surface-level project behavior defaults for language, answer style, verification, permissions, layout and review expectations.
 
 The SOP and optional multi-agent implementation plan is recorded in `/ai-system/evolution/sop-multi-agent-implementation-plan.md`.
 
@@ -127,7 +129,10 @@ Then edit generated files and replace placeholders such as:
 {{PROJECT_NAME}}
 {{TARGET_APP_DIRECTORY}}
 {{DEFAULT_VERIFICATION_MODE}}
+{{DEFAULT_VERIFICATION_BUDGET}}
 {{HUMAN_OWNER_LANGUAGE}}
+{{ANSWER_DETAIL_LEVEL}}
+{{PROMPT_LANGUAGE}}
 {{AI_DEV_SYSTEM_SOURCE_BRANCH}}
 {{AI_DEV_SYSTEM_SOURCE_COMMIT}}
 ```
@@ -138,6 +143,7 @@ A foldered project should have:
 AGENTS.md
 AI_Development_System/
 AI_PROJECT/AGENTS.md
+AI_PROJECT/PROJECT_OPERATION_PROFILE.md
 AI_PROJECT/PROJECT_GOAL.md
 AI_PROJECT/OWNER_PLAN.md
 AI_PROJECT/CODEX_COMMANDS.md
@@ -269,6 +275,7 @@ Idea
 - `/ai-system/system-schemes.md` - compact text schemes for roles, documents and process flow.
 - `/ai-system/project-integration-model.md` - foldered and root integration modes for concrete projects.
 - `/ai-system/foldered-integration.md` - recommended foldered architecture.
+- `/ai-system/project-operation-profile.md` - surface-level project behavior profile for AI Dev System defaults.
 - `/ai-system/project-system-update.md` - how to update already integrated projects.
 - `/spec/README.md` - machine-checkable spec layer for roles, modes, verification modes and lifecycle states.
 
@@ -292,6 +299,7 @@ Documentation records decisions.
 - Role model for product, design, management, implementation, quality, documentation and system evolution.
 - Foldered project integration model with separate `AI_Development_System/`, `AI_PROJECT/` and target app directories.
 - Project control file standard and bootstrap workflow for concrete repositories.
+- Project Operation Profile for shallow Human Owner-editable AI Dev System behavior defaults.
 - Project system update process for refreshing already integrated projects.
 - Owner plan intake through `AI_PROJECT/OWNER_PLAN.md` and `Разобрать план`.
 - Explicit verification modes for fast code work, standard validation, browser smoke checks and visual QA.
@@ -318,6 +326,7 @@ Documentation records decisions.
 - `/ai-system/project-integration-model.md` - foldered and root project integration modes.
 - `/ai-system/foldered-integration.md` - recommended foldered architecture for project repositories.
 - `/ai-system/project-control-files.md` - standard local control files for concrete projects.
+- `/ai-system/project-operation-profile.md` - surface-level project behavior profile.
 - `/ai-system/project-bootstrap.md` - how to initialize empty and existing project repositories.
 - `/ai-system/project-system-update.md` - how to update already integrated project repositories.
 - `/ai-system/verification-modes.md` - explicit verification modes, budgets and browser/visual QA boundaries.

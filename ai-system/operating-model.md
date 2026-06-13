@@ -436,8 +436,11 @@ Status: Implemented
 Existing documents:
 
 ```text
+/ai-system/project-operation-profile.md
+/ai-system/templates/foldered/AI_PROJECT/PROJECT_OPERATION_PROFILE.md
 /ai-system/templates/foldered/AI_PROJECT/AGENT_PLAN.md
 /ai-system/templates/foldered/AI_PROJECT/AGENT_TASKS.md
+/ai-system/templates/foldered/AI_PROJECT/AGENT_ASSIGNMENTS.md
 /ai-system/templates/foldered/AI_PROJECT/AGENT_LOCKS.md
 /ai-system/templates/foldered/AI_PROJECT/AGENT_RESULTS.md
 /ai-system/templates/foldered/AI_PROJECT/AGENT_METRICS.md
@@ -445,8 +448,10 @@ Existing documents:
 
 Covers:
 
+- Human Owner-editable surface-level operating defaults for language, answer style, verification, permissions, layout and review;
 - project-local SOP and agent planning snapshot;
 - Agent Work Package registry;
+- manual Role-to-Agent Assignment registry;
 - file-scope and locked-file planning registry;
 - Agent Result intake and integration review references;
 - planning, execution, review and QA metrics for pilot validation;
@@ -454,6 +459,7 @@ Covers:
 
 Needs improvement:
 
+- add machine-readable profile schema only after the Markdown profile proves stable;
 - extend the golden project with a non-runtime multi-agent example;
 - add dry-run planner validation tooling only in a separate bounded evolution task;
 - validate template usefulness through controlled pilot work.
@@ -468,6 +474,7 @@ Existing documents:
 /scripts/agent-plan-mvp.py
 /ai-system/templates/foldered/AI_PROJECT/AGENT_PLAN.md
 /ai-system/templates/foldered/AI_PROJECT/AGENT_TASKS.md
+/ai-system/templates/foldered/AI_PROJECT/AGENT_ASSIGNMENTS.md
 /ai-system/templates/foldered/AI_PROJECT/AGENT_LOCKS.md
 /ai-system/templates/foldered/AI_PROJECT/AGENT_RESULTS.md
 /ai-system/templates/foldered/AI_PROJECT/AGENT_METRICS.md
@@ -891,6 +898,7 @@ Codex Execution Lifecycle
 Review Lifecycle
 QA Lifecycle
 Verification Cost and Runtime Tracking
+Project Operation Profile
 Knowledge Lifecycle
 Experiment Lifecycle
 Improvement Lifecycle

@@ -7,6 +7,7 @@ This workflow controls one scoped task at a time in Foldered Control Mode.
 ## State Files
 
 - `AI_PROJECT/AGENTS.md`
+- `AI_PROJECT/PROJECT_OPERATION_PROFILE.md`
 - `AI_PROJECT/PROJECT_GOAL.md`
 - `AI_PROJECT/OWNER_PLAN.md`
 - `AI_PROJECT/docs/verification-policy.md`
@@ -22,7 +23,7 @@ This workflow controls one scoped task at a time in Foldered Control Mode.
 ## One-Task Loop
 
 ```text
-1. Read root AGENTS.md and AI_PROJECT control files.
+1. Read root AGENTS.md, `PROJECT_OPERATION_PROFILE.md` and required AI_PROJECT control files.
 2. Confirm approved task and scope.
 3. Implement only allowed changes.
 4. Run checks allowed by verification mode.

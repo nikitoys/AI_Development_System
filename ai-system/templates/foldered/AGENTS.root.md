@@ -8,6 +8,7 @@ Before repository-affecting work, read:
 
 ```text
 AI_PROJECT/AGENTS.md
+AI_PROJECT/PROJECT_OPERATION_PROFILE.md
 AI_PROJECT/PROJECT_GOAL.md
 AI_PROJECT/docs/verification-policy.md
 AI_Development_System/ai-system/security-policy.md

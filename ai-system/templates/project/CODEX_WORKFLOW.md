@@ -7,6 +7,7 @@ This workflow controls one scoped Codex task at a time.
 ## State Files
 
 - `AGENTS.md`
+- `PROJECT_OPERATION_PROFILE.md`
 - `PROJECT_GOAL.md`
 - `docs/verification-policy.md`
 - `CODEX_COMMANDS.md`
@@ -20,7 +21,7 @@ This workflow controls one scoped Codex task at a time.
 ## One-Task Loop
 
 ```text
-1. Read project control files.
+1. Read `PROJECT_OPERATION_PROFILE.md` and required project control files.
 2. Confirm approved task and scope.
 3. Implement only allowed changes.
 4. Run checks allowed by verification mode.

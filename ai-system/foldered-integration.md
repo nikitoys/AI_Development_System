@@ -92,6 +92,7 @@ Default files:
 
 ```text
 AI_PROJECT/AGENTS.md
+AI_PROJECT/PROJECT_OPERATION_PROFILE.md
 AI_PROJECT/PROJECT_GOAL.md
 AI_PROJECT/OWNER_PLAN.md
 AI_PROJECT/CODEX_COMMANDS.md
@@ -123,8 +124,9 @@ For a new or existing project:
 3. Copy AI_Development_System/ai-system/templates/foldered/AGENTS.root.md to /AGENTS.md.
 4. Fill placeholders.
 5. Record target app directory.
-6. Set default verification mode, usually FAST.
-7. Stop for Human Owner approval.
+6. Set project operation defaults in `AI_PROJECT/PROJECT_OPERATION_PROFILE.md`.
+7. Set default verification mode, usually FAST.
+8. Stop for Human Owner approval.
 ```
 
 The minimal helper can prepare this as a dry-run:
@@ -177,11 +179,12 @@ For a foldered project, authority is resolved in this order:
 
 1. Explicit Human Owner instruction for the current task.
 2. Current approved task or prompt package.
-3. `AI_PROJECT/` local control files.
-4. `AI_PROJECT/docs/verification-policy.md`.
-5. Root `AGENTS.md` routing and boundary rules.
-6. `AI_Development_System/ai-system/` global rules.
-7. Templates.
+3. `AI_PROJECT/PROJECT_OPERATION_PROFILE.md`.
+4. Specialized `AI_PROJECT/` local control files.
+5. `AI_PROJECT/docs/verification-policy.md`.
+6. Root `AGENTS.md` routing and boundary rules.
+7. `AI_Development_System/ai-system/` global rules.
+8. Templates.
 
 Local project rules may restrict or specialize global defaults, but they must not weaken safety, approval or lifecycle governance rules.
 

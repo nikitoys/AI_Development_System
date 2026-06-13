@@ -24,6 +24,7 @@ VERSION_RE = re.compile(r"^##\s+(v\d+\.\d+\.\d+)\s*$", re.MULTILINE)
 
 TEMPLATE_FILES = [
     Path("AGENTS.md"),
+    Path("PROJECT_OPERATION_PROFILE.md"),
     Path("PROJECT_GOAL.md"),
     Path("OWNER_PLAN.md"),
     Path("CODEX_COMMANDS.md"),
@@ -68,7 +69,20 @@ def replacements(args: argparse.Namespace) -> dict[str, str]:
         "{{PROJECT_NAME}}": args.project_name,
         "{{TARGET_APP_DIRECTORY}}": args.target_app_directory,
         "{{DEFAULT_VERIFICATION_MODE}}": args.verification_mode,
+        "{{DEFAULT_VERIFICATION_BUDGET}}": args.verification_budget,
+        "{{ALLOWED_SLOW_CHECKS}}": args.allowed_slow_checks,
+        "{{RUNTIME_TRACKING}}": args.runtime_tracking,
+        "{{BROWSER_CHECKS}}": args.browser_checks,
+        "{{VISUAL_QA}}": args.visual_qa,
         "{{HUMAN_OWNER_LANGUAGE}}": args.owner_language,
+        "{{ANSWER_DETAIL_LEVEL}}": args.answer_detail_level,
+        "{{PROMPT_LANGUAGE}}": args.prompt_language,
+        "{{CAN_MODIFY_APPLICATION_CODE}}": args.can_modify_application_code,
+        "{{CAN_MODIFY_AI_PROJECT}}": args.can_modify_ai_project,
+        "{{CAN_MODIFY_AI_DEVELOPMENT_SYSTEM}}": args.can_modify_ai_development_system,
+        "{{CAN_INSTALL_DEPENDENCIES}}": args.can_install_dependencies,
+        "{{CAN_COMMIT}}": args.can_commit,
+        "{{CAN_PUSH_PR}}": args.can_push_pr,
         "{{AI_DEV_SYSTEM_SOURCE_BRANCH}}": args.source_branch,
         "{{AI_DEV_SYSTEM_VERSION}}": args.system_version,
         "{{AI_DEV_SYSTEM_SOURCE_COMMIT}}": args.source_commit,
@@ -171,7 +185,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--project-name", default="Example Project")
     parser.add_argument("--target-app-directory", default="app")
     parser.add_argument("--owner-language", default="English")
+    parser.add_argument("--answer-detail-level", default="Concise by default; expand when asked.")
+    parser.add_argument("--prompt-language", default="English or bilingual when execution clarity benefits.")
     parser.add_argument("--verification-mode", default="FAST")
+    parser.add_argument("--verification-budget", default="120 sec")
+    parser.add_argument("--allowed-slow-checks", default="false")
+    parser.add_argument("--runtime-tracking", default="enabled")
+    parser.add_argument("--browser-checks", default="explicit request only")
+    parser.add_argument("--visual-qa", default="explicit request only")
+    parser.add_argument("--can-modify-application-code", default="only with approved task")
+    parser.add_argument("--can-modify-ai-project", default="planning, state, prompts, verification policy or project control tasks only")
+    parser.add_argument("--can-modify-ai-development-system", default="system update, synchronization or evolution tasks only")
+    parser.add_argument("--can-install-dependencies", default="explicit approval only")
+    parser.add_argument("--can-commit", default="explicit request only")
+    parser.add_argument("--can-push-pr", default="explicit request only")
     parser.add_argument("--update-method", default="vendor-copy")
     parser.add_argument("--source-branch", default="ai-development-system")
     parser.add_argument("--system-version", default=current_version())

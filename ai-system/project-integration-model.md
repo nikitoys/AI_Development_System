@@ -43,6 +43,7 @@ Default files:
 
 ```text
 AI_PROJECT/AGENTS.md
+AI_PROJECT/PROJECT_OPERATION_PROFILE.md
 AI_PROJECT/PROJECT_GOAL.md
 AI_PROJECT/OWNER_PLAN.md
 AI_PROJECT/CODEX_COMMANDS.md
@@ -74,6 +75,7 @@ It should point AI sessions to:
 
 ```text
 /AI_PROJECT/AGENTS.md
+/AI_PROJECT/PROJECT_OPERATION_PROFILE.md
 /AI_PROJECT/PROJECT_GOAL.md
 /AI_PROJECT/docs/verification-policy.md
 /AI_Development_System/AGENTS.md
@@ -105,11 +107,12 @@ For a concrete project in Foldered Control Mode:
 
 1. Explicit Human Owner instruction for the current task.
 2. Current approved task or prompt package.
-3. `AI_PROJECT` local control files.
-4. `AI_PROJECT/docs/verification-policy.md`.
-5. Root `AGENTS.md` boundary rules.
-6. `AI_Development_System/ai-system` global system rules.
-7. `AI_Development_System/ai-system/templates` templates.
+3. `AI_PROJECT/PROJECT_OPERATION_PROFILE.md`.
+4. Specialized `AI_PROJECT` local control files.
+5. `AI_PROJECT/docs/verification-policy.md`.
+6. Root `AGENTS.md` boundary rules.
+7. `AI_Development_System/ai-system` global system rules.
+8. `AI_Development_System/ai-system/templates` templates.
 
 Templates are bootstrap inputs, not ongoing authority after local files are created.
 

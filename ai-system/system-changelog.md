@@ -2,6 +2,24 @@
 
 Status: Draft
 
+## v0.46.0
+
+### Added
+
+- Added `ai-system/project-operation-profile.md` to define the Project Operation Profile as a surface-level behavior profile for concrete projects.
+- Added `ai-system/templates/foldered/AI_PROJECT/PROJECT_OPERATION_PROFILE.md` and `ai-system/templates/project/PROJECT_OPERATION_PROFILE.md` as project templates for Human Owner-editable operating preferences.
+
+### Updated
+
+- Updated project integration, foldered integration, project control and bootstrap documents so `PROJECT_OPERATION_PROFILE.md` is part of the standard local control layer and read order.
+- Updated foldered and root-mode `AGENTS.md` and `CODEX_WORKFLOW.md` templates to read the operation profile before lower-level project workflow files.
+- Updated `scripts/foldered-control-mvp.py` so bootstrap and update dry-runs include `AI_PROJECT/PROJECT_OPERATION_PROFILE.md` without overwriting existing local profiles.
+- Updated README/index references and version mirrors to `v0.46.0`.
+
+### Reason
+
+Concrete projects need a shallow, Human Owner-editable place for operational AI Dev System preferences such as response language, answer detail level, verification defaults, permissions, project layout and review defaults. The profile provides defaults only; it does not authorize execution without an approved task and cannot weaken global safety, approval or lifecycle rules.
+
 ## v0.45.0
 
 ### Added

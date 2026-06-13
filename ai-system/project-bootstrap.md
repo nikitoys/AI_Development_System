@@ -35,6 +35,7 @@ Default source-of-truth documents for bootstrap are:
 
 - `/ai-system/project-integration-model.md`;
 - `/ai-system/project-control-files.md`;
+- `/ai-system/project-operation-profile.md`;
 - `/ai-system/verification-modes.md`;
 - `/ai-system/templates/foldered/`;
 - `/ai-system/templates/project/` for Root Control Mode compatibility;
@@ -62,11 +63,12 @@ Before creating project control files, ask or infer only what is necessary:
 3. Target app directory, or whether the repository root is the application root.
 4. Project mission and non-goals.
 5. Default verification mode.
-6. Integration mode: Foldered Control Mode or Root Control Mode.
-7. Update method for `AI_Development_System/`: vendor copy, git subtree or submodule.
-8. Whether to create `OWNER_PLAN.md` immediately or leave it as an empty owner-input placeholder.
-9. Whether the repository is empty or already contains application code.
-10. Whether local rules should be stricter than the global system defaults.
+6. Default answer style and verification budget, if the Human Owner wants non-default behavior.
+7. Integration mode: Foldered Control Mode or Root Control Mode.
+8. Update method for `AI_Development_System/`: vendor copy, git subtree or submodule.
+9. Whether to create `OWNER_PLAN.md` immediately or leave it as an empty owner-input placeholder.
+10. Whether the repository is empty or already contains application code.
+11. Whether local rules should be stricter than the global system defaults.
 
 If the Human Owner has already provided these answers, do not ask again.
 
@@ -77,14 +79,15 @@ For an empty or new repository in Foldered Control Mode:
 1. Add or copy `AI_Development_System/` from upstream.
 2. Create root `AGENTS.md` from `templates/foldered/AGENTS.root.md`.
 3. Create `AI_PROJECT/` from `templates/foldered/AI_PROJECT/`.
-4. Fill templates with project name, target app directory, language and default verification mode.
-5. Record the first planning state in `AI_PROJECT/CODEX_PLAN.md`.
-6. Set `AI_PROJECT/CODEX_CURRENT.md` to `status: idle` unless a task is explicitly approved.
-7. Initialize `AI_PROJECT/OWNER_PLAN.md` as an owner-input roadmap placeholder unless the Human Owner opts out.
-8. Initialize `AI_PROJECT/CODEX_TASKS.md` with a small backlog or `No tasks approved yet`.
-9. Initialize `AI_PROJECT/CODEX_SESSION_LOG.md` with a bootstrap entry.
-10. Create `AI_PROJECT/AI_DEV_SYSTEM_VERSION.md` with source branch, version, commit when known and update method.
-11. Stop and ask the Human Owner to approve the initialized control layer.
+4. Fill templates with project name, target app directory, language, operation profile defaults and default verification mode.
+5. Initialize `AI_PROJECT/PROJECT_OPERATION_PROFILE.md` with surface-level operating defaults.
+6. Record the first planning state in `AI_PROJECT/CODEX_PLAN.md`.
+7. Set `AI_PROJECT/CODEX_CURRENT.md` to `status: idle` unless a task is explicitly approved.
+8. Initialize `AI_PROJECT/OWNER_PLAN.md` as an owner-input roadmap placeholder unless the Human Owner opts out.
+9. Initialize `AI_PROJECT/CODEX_TASKS.md` with a small backlog or `No tasks approved yet`.
+10. Initialize `AI_PROJECT/CODEX_SESSION_LOG.md` with a bootstrap entry.
+11. Create `AI_PROJECT/AI_DEV_SYSTEM_VERSION.md` with source branch, version, commit when known and update method.
+12. Stop and ask the Human Owner to approve the initialized control layer.
 
 ## Bootstrap for Existing Repositories
 
@@ -99,7 +102,8 @@ For an existing repository with application code:
 7. Preserve existing project-specific instructions unless they conflict with system safety rules.
 8. Record target app directory explicitly in `AI_PROJECT/PROJECT_GOAL.md`.
 9. Record default verification mode in `AI_PROJECT/docs/verification-policy.md`.
-10. Stop before any app implementation work.
+10. Record surface-level operating defaults in `AI_PROJECT/PROJECT_OPERATION_PROFILE.md`.
+11. Stop before any app implementation work.
 
 ## Files to Create
 
@@ -109,6 +113,7 @@ Default Foldered Control Mode bootstrap creates:
 AGENTS.md
 AI_Development_System/
 AI_PROJECT/AGENTS.md
+AI_PROJECT/PROJECT_OPERATION_PROFILE.md
 AI_PROJECT/PROJECT_GOAL.md
 AI_PROJECT/OWNER_PLAN.md
 AI_PROJECT/CODEX_COMMANDS.md
@@ -224,6 +229,7 @@ Created Files:
 Updated Files:
 Target App Directory:
 Default Verification Mode:
+Project Operation Profile:
 Application Code Modified: yes/no
 Open Questions:
 Next Required Human Owner Decision:

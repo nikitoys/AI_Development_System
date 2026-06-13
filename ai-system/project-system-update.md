@@ -95,15 +95,16 @@ It should preserve root `AGENTS.md` as a thin router.
 ```text
 1. Read root AGENTS.md.
 2. Read AI_PROJECT/AGENTS.md if present.
-3. Read AI_PROJECT/PROJECT_GOAL.md and AI_PROJECT/docs/verification-policy.md.
-4. Read AI_Development_System/ai-system/foldered-integration.md.
-5. Read latest templates under AI_Development_System/ai-system/templates/foldered/.
-6. Compare existing local control files with templates.
-7. Prepare migration report.
-8. Stop for Human Owner approval when conflicts or replacements are needed.
-9. Apply approved control-layer changes only.
-10. Update AI_PROJECT/AI_DEV_SYSTEM_VERSION.md.
-11. Run FAST checks only.
+3. Read AI_PROJECT/PROJECT_OPERATION_PROFILE.md if present.
+4. Read AI_PROJECT/PROJECT_GOAL.md and AI_PROJECT/docs/verification-policy.md.
+5. Read AI_Development_System/ai-system/foldered-integration.md.
+6. Read latest templates under AI_Development_System/ai-system/templates/foldered/.
+7. Compare existing local control files with templates.
+8. Prepare migration report.
+9. Stop for Human Owner approval when conflicts or replacements are needed.
+10. Apply approved control-layer changes only.
+11. Update AI_PROJECT/AI_DEV_SYSTEM_VERSION.md.
+12. Run FAST checks only.
 ```
 
 ## Minimal Update Helper
@@ -184,7 +185,7 @@ Project system update must not:
 - inspect browser console;
 - run full builds or full test suites unless explicitly approved;
 - delete project-local decisions or history;
-- overwrite `OWNER_PLAN.md`, `PROJECT_GOAL.md`, `CODEX_TASKS.md` or `CODEX_SESSION_LOG.md` without explicit approval.
+- overwrite `PROJECT_OPERATION_PROFILE.md`, `OWNER_PLAN.md`, `PROJECT_GOAL.md`, `CODEX_TASKS.md` or `CODEX_SESSION_LOG.md` without explicit approval.
 
 ## Verification Mode
 
