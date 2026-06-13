@@ -154,13 +154,33 @@ def update(args: argparse.Namespace) -> tuple[list[str], list[str]]:
     actions: list[str] = []
     placeholders: list[str] = []
 
-    required = [Path("AGENTS.md")] + [Path("AI_PROJECT") / path for path in TEMPLATE_FILES]
-    for relative in required:
-        path = project_root / relative
-        actions.append(("exists" if path.exists() else "missing") + f": {relative.as_posix()}")
+    root_agents = render_root_agents(values)
+    root_agents_path = project_root / "AGENTS.md"
+    if root_agents_path.exists():
+        actions.append("exists: AGENTS.md")
+        for item in unresolved_placeholders(root_agents_path.read_text(encoding="utf-8")):
+            placeholders.append(f"AGENTS.md: {item}")
+    else:
+        placeholders.extend(f"AGENTS.md: {item}" for item in unresolved_placeholders(root_agents))
+        status = write_if_apply(root_agents_path, root_agents, args.apply)
+        actions.append(f"{status}: AGENTS.md")
+
+    for relative in TEMPLATE_FILES:
+        local_relative = Path("AI_PROJECT") / relative
+        path = project_root / local_relative
         if path.exists():
+            actions.append(f"exists: {local_relative.as_posix()}")
             for item in unresolved_placeholders(path.read_text(encoding="utf-8")):
-                placeholders.append(f"{relative.as_posix()}: {item}")
+                placeholders.append(f"{local_relative.as_posix()}: {item}")
+            continue
+
+        content = render_project_file(relative, values)
+        placeholders.extend(
+            f"{local_relative.as_posix()}: {item}"
+            for item in unresolved_placeholders(content)
+        )
+        status = write_if_apply(path, content, args.apply)
+        actions.append(f"{status}: {local_relative.as_posix()}")
 
     version_content = render_project_file(Path("AI_DEV_SYSTEM_VERSION.md"), values)
     placeholders.extend(

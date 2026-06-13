@@ -13,7 +13,7 @@ Status: Draft
 
 - Updated project integration, foldered integration, project control and bootstrap documents so `PROJECT_OPERATION_PROFILE.md` is part of the standard local control layer and read order.
 - Updated foldered and root-mode `AGENTS.md` and `CODEX_WORKFLOW.md` templates to read the operation profile before lower-level project workflow files.
-- Updated `scripts/foldered-control-mvp.py` so bootstrap and update dry-runs include `AI_PROJECT/PROJECT_OPERATION_PROFILE.md` without overwriting existing local profiles.
+- Updated `scripts/foldered-control-mvp.py` so bootstrap and update include `AI_PROJECT/PROJECT_OPERATION_PROFILE.md`, create missing control files on `update --apply` and preserve existing local profiles.
 - Updated README/index references and version mirrors to `v0.46.0`.
 
 ### Reason
