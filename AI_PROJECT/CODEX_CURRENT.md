@@ -1,22 +1,22 @@
 # Codex Current Task - AI Development System
 
 status: review
-verification_mode: FAST
-verification_budget: 120 sec
+verification_mode: STANDARD
+verification_budget: 300 sec
 allowed_slow_checks: false
 runtime_tracking: enabled
 
 ## Current Task
 
-T-L4-000 - Create detailed L4 Assisted SOP Execution implementation plan.
+T-L4-000R - Revise L4 Assisted SOP Execution plan after review findings.
 
 ## Current Task Status
 
-Planning-only result submitted for Human Owner review.
+Planning-only revision prepared for Human Owner review.
 
 This status does not mean L4 implementation has started.
 
-This status does not mark any L4 implementation task as completed.
+This status does not mark any L4 implementation task as completed except the prior review task `T-L4-001`.
 
 ## Active Role
 
@@ -24,7 +24,7 @@ AI System Maintainer + Project Manager AI + Technical Writer AI
 
 ## Active Stage
 
-Create detailed L4 Assisted SOP Execution implementation plan
+Revise L4 Assisted SOP Execution plan after review findings
 
 ## Active Document
 
@@ -34,7 +34,7 @@ Create detailed L4 Assisted SOP Execution implementation plan
 
 ## Expected Result
 
-Create a detailed, repository-aligned plan for reaching future L4 Assisted SOP Execution while preserving the current L3 manual-only runtime maturity boundary.
+Revise the planning records so the L4 roadmap reflects the Human Owner decisions and previous review findings while preserving the current L3 manual-only runtime boundary.
 
 ## Allowed Files For This Planning Task
 
@@ -62,6 +62,8 @@ Create a detailed, repository-aligned plan for reaching future L4 Assisted SOP E
 - `ai-system/verification-modes.md`
 - `spec/**`
 - `scripts/**`
+- `ai-system/templates/**`
+- `examples/**`
 
 ## Current Runtime Boundary
 
@@ -72,41 +74,61 @@ L4 status: Future / Not approved
 L5 status: Future / Not approved
 ```
 
+## Human Owner Decisions Reflected
+
+- `L3.5` is treated only as a transition mode or execution pattern under current L3.
+- Preferred transition pattern name: `Manual Delegated Sequential SOP Run`.
+- `SOP-CODEX-002` is a future planning task and must not authorize automation.
+- Governed entity name: `SOP Run`.
+- `Assisted SOP Run` is reserved for future approved L4 helper participation.
+- `AI_PROJECT/SOP_RUNS.md` is optional and opt-in.
+- Runner MVP is delayed and strictly read-only.
+- Runner MVP must not write files, launch Codex, dispatch agents, run tests, parse git diffs, create commits, push, merge, open PRs, accept results or close review/QA.
+- Documentation-only, small tooling/code and delegated sequential batch pilots are required before any L4 experiment.
+
 ## Acceptance Criteria Snapshot
 
-- Detailed planning-only L4 roadmap exists.
-- No runtime behavior is modified.
-- L4 is not declared approved.
-- Human Owner authority is preserved.
-- Automatic acceptance, merge, push and unbounded execution remain forbidden.
-- L3, proposed L3.5, L4 and L5 are distinguished.
-- Future tasks are bounded and sequentially executable.
-- Each proposed task includes scope, out of scope, allowed files, acceptance criteria, verification, dependencies, risk and stop conditions.
+- Plan is revised according to previous review findings.
+- Human Owner decisions are reflected.
+- L3.5 is not added as a separate maturity level.
+- Current maturity remains L3.
+- L4 remains future/not approved.
+- Runner MVP remains read-only and delayed.
+- SOP Run lifecycle comes before templates/specs/tooling.
+- Documentation-only pilot comes before runner MVP.
+- L4 readiness decision is last.
 - No implementation files are changed.
 - No specs are changed.
-- No lifecycle/source-of-truth documents are changed by this planning task.
+- No source-of-truth runtime/SOP/lifecycle documents are changed by this planning task.
+- No runtime behavior is introduced.
 
-## Review Needed
-
-Recommended next review:
+## Revised Task Sequence
 
 ```text
-T-L4-001 - Review and clarify the L4 Assisted SOP Execution Plan
+T-L4-001: Plan Review
+T-L4-002: Human Owner Decisions + AICP
+T-L4-003: L3 Transition Wording
+T-L4-004: SOP-CODEX-002
+T-L4-005: SOP Run Lifecycle
+T-L4-006: SOP_RUNS Template + Golden Example
+T-L4-007: Assisted Execution Model
+T-L4-008: SOP Run Specs + Fixtures
+T-L4-009: Runner Command Contract
+T-L4-010: Documentation-Only Pilot
+T-L4-011: Read-Only Runner MVP
+T-L4-012: Small Tooling Pilot
+T-L4-013: Delegated Sequential Batch Pilot
+T-L4-014: L4 Readiness Decision
 ```
-
-The review should decide whether the plan is:
-
-- `APPROVED` - safe to use as planning input for the next bounded task;
-- `REWORK` - revise planning files before execution tasks begin;
-- `DEFERRED` - postpone L4/L3.5 planning;
-- `REJECTED` - discard this L4 transition plan.
 
 ## Stop Conditions
 
 - A future task attempts to implement L4 before Human Owner approval.
 - A future task attempts to implement L5 controlled runtime.
 - A future task changes current runtime maturity without explicit approval.
-- A future task enables automatic Codex execution, automatic multi-agent execution, automatic branch/worktree lifecycle, automatic merge, automatic push, automatic acceptance or automatic QA/review closure.
+- A future task adds L3.5 as a separate runtime maturity level.
+- A future task enables automatic Codex execution, automatic multi-agent execution, automatic branch/worktree lifecycle, automatic merge, automatic push, automatic PR creation, automatic acceptance or automatic QA/review closure.
+- A future helper task writes SOP Run state, runs tests, parses git diffs or performs git operations without later explicit approval.
 - A future task expands allowed files beyond its approved prompt.
 - Review or QA gates are skipped without Human Owner risk acceptance.
 
@@ -115,4 +137,3 @@ The review should decide whether the plan is:
 ```text
 Not applicable - this repository is the AI Development System itself.
 ```
-
