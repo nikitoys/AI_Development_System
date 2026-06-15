@@ -1,13 +1,13 @@
 [SYSTEM]
 
-Active Role: AI System Maintainer + Technical Writer AI
-Active Stage: Skills Layer Documentation
-Active Document: ai-system/skills/README.md
-Expected Result: Skills layer roadmap document created, registered in documentation control, generated prompt package written, validation passed, waiting for Human Owner approval.
+Active Role: AI System Maintainer + Prompt/Skill Engineer
+Active Stage: Clarification Gate Skill
+Active Document: .agents/skills/clarification-gate/SKILL.md
+Expected Result: Clarification Gate Skill created; skills README updated if available; validation completed; result remains awaiting Human Owner acceptance.
 
 Repository: current repository
-Task ID: TASK-002
-Task Title: Document Skills Layer Roadmap
+Task ID: TASK-003
+Task Title: Create Clarification Gate Skill
 Task Status: in_review
 Verification Mode: standard
 
@@ -15,59 +15,38 @@ Initiative: INIT-001 — AI Development System Evolution
 Epic: EPIC-002 — Skills Layer
 
 Context:
-Create a controlled skills layer documentation page that records useful project skills/plugins and recommends next skills to create.
+Create a high-priority Clarification Gate Skill for Codex and subagents, defining when to ask the Human Owner versus inspect or proceed with safe assumptions.
 
 Details:
-Create ai-system/skills/README.md as a controlled documentation page for skills/plugins in this repository. Register the document with docctl.py in a non-active lifecycle state and validate project-control outputs.
+Create .agents/skills/clarification-gate/SKILL.md and update the skills README if present. Route project-control state changes through CLI commands only. Do not self-approve the task, document, or skill as accepted or active.
 
 Scope:
-- Create ai-system/skills/README.md.
-- Explain what skills/plugins are for in this project.
-- State that skills/plugins are guidance and routing helpers, not sources of authority.
-- State that Python CLI remains the source of truth.
-- List existing useful skills: Project Control Gateway Skill and CLI Creator Skill.
-- List recommended skills to create: Documentation Control Skill, SOP Authoring Skill, Agent Assignment Skill, Review Gate Skill, QA Evidence Skill, Decision / ADR Skill, Git Safety Skill, Protected Files Skill.
-- For each skill, include purpose, related CLI, priority, allowed actions, and forbidden actions.
-- Include a recommended creation order.
-- Include rules requiring every new skill to be created through a controlled Task and requiring subagents to obey CLI/source-of-truth rules.
+- Create .agents/skills/clarification-gate/SKILL.md with blocker severity, question budget, and subagent guidance.
+- Update ai-system/skills/README.md if it exists to recommend the Clarification Gate Skill as high priority.
+- Use docctl.py registration only if the documentation registry is intended to track .agents/skills files.
+- Run required planctl.py, taskctl.py, docctl.py, smoke, and protected-files validations.
 
 Out of Scope:
-- Do not implement new skills.
-- Do not mark the document active or accepted without Human Owner approval.
-- Do not manually edit AI_PROJECT/state/**.
-- Do not manually edit AI_PROJECT/events/**.
-- Do not manually edit AI_PROJECT/generated/**.
-- Do not change project-control CLI behavior.
+- Manual edits to AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Implementation changes to planctl.py, taskctl.py, docctl.py, or evolutionctl.py unless blocked.
+- Self-approving the task, document, or skill as accepted, approved, done, or active.
 
 Allowed Files:
+- .agents/skills/clarification-gate/SKILL.md
 - ai-system/skills/README.md
-- AI_PROJECT/state/plan.json via planctl.py only
-- AI_PROJECT/events/plan-events.jsonl via planctl.py only
-- AI_PROJECT/generated/CODEX_PLAN.md via planctl.py only
-- AI_PROJECT/state/tasks.json via taskctl.py only
-- AI_PROJECT/events/task-events.jsonl via taskctl.py only
-- AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only
-- AI_PROJECT/generated/CODEX_CURRENT.md via taskctl.py only
-- AI_PROJECT/generated/CODEX_PROMPT.md via taskctl.py only
-- AI_PROJECT/state/docs.json via docctl.py only
-- AI_PROJECT/events/doc-events.jsonl via docctl.py only
-- AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only
-- AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only
 
 Acceptance Criteria:
-- ai-system/skills/README.md exists and covers skills/plugins as guidance and routing helpers, not authoritative source documents.
-- The document clearly states that Python CLIs and registered source documents remain the source of truth.
-- The document lists the two existing useful skills and the eight recommended future skills with purpose, related CLI, priority, allowed actions, and forbidden actions.
-- The document includes a recommended skill creation order.
-- The document states that every new skill must be created through a controlled Task.
-- The document states that subagents may use skills only as guidance and must still obey CLI/source-of-truth rules.
-- The document is registered through docctl.py as draft or review, not active.
-- Plan, task, documentation, smoke doc-control, and protected-files validation commands pass.
+- Skill explains that it prevents premature execution on ambiguous or unsafe requests.
+- Skill states the core rule: inspect first, ask only when blocked.
+- Skill defines when to ask before task creation, during task execution, and when not to ask.
+- Skill includes critical blocker, non-critical ambiguity, and inspectable ambiguity severity model with examples.
+- Skill includes a question budget and forbids using clarification questions to avoid normal inspection.
+- Skills README recommends the Clarification Gate Skill as high priority if the README exists.
+- Required validation commands complete or any blocker is reported.
 
 Review Instructions:
-- Verify that no protected project-control files were edited manually.
-- Verify that no new skills were implemented in this task.
-- Verify that the document remains in draft or review status until Human Owner approval.
+- Review for compliance with Human Owner approval boundaries and protected project-control rules.
+- Do not mark accepted, approved, active, or done without Human Owner decision.
 
 Execution Rules:
 - Do not edit AI_PROJECT/state/*.json manually.
@@ -79,7 +58,7 @@ Execution Rules:
 
 Suggested lifecycle commands:
 ```bash
-python scripts/taskctl.py task transition TASK-002 --to in_progress
-python scripts/taskctl.py task transition TASK-002 --to in_review
+python scripts/taskctl.py task transition TASK-003 --to in_progress
+python scripts/taskctl.py task transition TASK-003 --to in_review
 python scripts/taskctl.py validate
 ```

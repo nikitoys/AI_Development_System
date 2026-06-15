@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 8,
-  "current_task_id": "TASK-002",
+  "revision": 12,
+  "current_task_id": "TASK-003",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-15T21:58:10Z",
+  "updated_at": "2026-06-15T22:13:09Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -144,6 +144,55 @@
       "approval_notes": "",
       "created_at": "2026-06-15T21:56:37Z",
       "updated_at": "2026-06-15T21:58:10Z"
+    },
+    {
+      "id": "TASK-003",
+      "epic_id": "EPIC-002",
+      "title": "Create Clarification Gate Skill",
+      "status": "in_review",
+      "summary": "Create a high-priority Clarification Gate Skill for Codex and subagents, defining when to ask the Human Owner versus inspect or proceed with safe assumptions.",
+      "description": "Create .agents/skills/clarification-gate/SKILL.md and update the skills README if present. Route project-control state changes through CLI commands only. Do not self-approve the task, document, or skill as accepted or active.",
+      "priority": 1,
+      "order": 2,
+      "active_role": "AI System Maintainer + Prompt/Skill Engineer",
+      "active_stage": "Clarification Gate Skill",
+      "active_document": ".agents/skills/clarification-gate/SKILL.md",
+      "expected_result": "Clarification Gate Skill created; skills README updated if available; validation completed; result remains awaiting Human Owner acceptance.",
+      "verification_mode": "standard",
+      "scope": [
+        "Create .agents/skills/clarification-gate/SKILL.md with blocker severity, question budget, and subagent guidance.",
+        "Update ai-system/skills/README.md if it exists to recommend the Clarification Gate Skill as high priority.",
+        "Use docctl.py registration only if the documentation registry is intended to track .agents/skills files.",
+        "Run required planctl.py, taskctl.py, docctl.py, smoke, and protected-files validations."
+      ],
+      "out_of_scope": [
+        "Manual edits to AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.",
+        "Implementation changes to planctl.py, taskctl.py, docctl.py, or evolutionctl.py unless blocked.",
+        "Self-approving the task, document, or skill as accepted, approved, done, or active."
+      ],
+      "allowed_files": [
+        ".agents/skills/clarification-gate/SKILL.md",
+        "ai-system/skills/README.md"
+      ],
+      "acceptance_criteria": [
+        "Skill explains that it prevents premature execution on ambiguous or unsafe requests.",
+        "Skill states the core rule: inspect first, ask only when blocked.",
+        "Skill defines when to ask before task creation, during task execution, and when not to ask.",
+        "Skill includes critical blocker, non-critical ambiguity, and inspectable ambiguity severity model with examples.",
+        "Skill includes a question budget and forbids using clarification questions to avoid normal inspection.",
+        "Skills README recommends the Clarification Gate Skill as high priority if the README exists.",
+        "Required validation commands complete or any blocker is reported."
+      ],
+      "review_instructions": [
+        "Review for compliance with Human Owner approval boundaries and protected project-control rules.",
+        "Do not mark accepted, approved, active, or done without Human Owner decision."
+      ],
+      "notes": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-15T22:09:39Z",
+      "updated_at": "2026-06-15T22:13:09Z"
     }
   ]
 }

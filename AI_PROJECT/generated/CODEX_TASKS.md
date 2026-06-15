@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `8`
-Current task: `TASK-002`
+Revision: `12`
+Current task: `TASK-003`
 
 ## Epic `EPIC-001`
 
@@ -26,7 +26,7 @@ Acceptance criteria:
 
 ## Epic `EPIC-002`
 
-### TASK-002 — Document Skills Layer Roadmap ⭐
+### TASK-002 — Document Skills Layer Roadmap
 
 Status: `in_review`  
 Priority: `1`  
@@ -44,3 +44,21 @@ Acceptance criteria:
 - The document states that subagents may use skills only as guidance and must still obey CLI/source-of-truth rules.
 - The document is registered through docctl.py as draft or review, not active.
 - Plan, task, documentation, smoke doc-control, and protected-files validation commands pass.
+
+### TASK-003 — Create Clarification Gate Skill ⭐
+
+Status: `in_review`  
+Priority: `1`  
+Verification: `standard`  
+
+Create a high-priority Clarification Gate Skill for Codex and subagents, defining when to ask the Human Owner versus inspect or proceed with safe assumptions.
+
+Acceptance criteria:
+
+- Skill explains that it prevents premature execution on ambiguous or unsafe requests.
+- Skill states the core rule: inspect first, ask only when blocked.
+- Skill defines when to ask before task creation, during task execution, and when not to ask.
+- Skill includes critical blocker, non-critical ambiguity, and inspectable ambiguity severity model with examples.
+- Skill includes a question budget and forbids using clarification questions to avoid normal inspection.
+- Skills README recommends the Clarification Gate Skill as high priority if the README exists.
+- Required validation commands complete or any blocker is reported.
