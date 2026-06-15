@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "revision": 2,
+  "project": {
+    "id": "PROJECT-001",
+    "name": "AI Development System",
+    "status": "active",
+    "created_at": "2026-06-15T21:47:25Z",
+    "updated_at": "2026-06-15T21:47:33Z"
+  },
+  "idea": {
+    "text": "",
+    "updated_at": "2026-06-15T21:47:25Z"
+  },
+  "goal": {
+    "text": "",
+    "success_criteria": [],
+    "updated_at": "2026-06-15T21:47:25Z"
+  },
+  "strategy": {
+    "summary": "",
+    "principles": [],
+    "constraints": [],
+    "updated_at": "2026-06-15T21:47:25Z"
+  },
+  "initiatives": [
+    {
+      "id": "INIT-001",
+      "title": "AI Development System Evolution",
+      "status": "active",
+      "summary": "Plan and govern controlled improvements to the AI Development System.",
+      "priority": 1,
+      "order": 1,
+      "created_at": "2026-06-15T21:47:30Z",
+      "updated_at": "2026-06-15T21:47:30Z"
+    }
+  ],
+  "epics": [
+    {
+      "id": "EPIC-001",
+      "title": "Documentation Rails",
+      "status": "active",
+      "summary": "Create practical documentation and registry control for Project Control Gateway usage.",
+      "priority": 1,
+      "order": 1,
+      "created_at": "2026-06-15T21:47:33Z",
+      "updated_at": "2026-06-15T21:47:33Z",
+      "initiative_id": "INIT-001"
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 
 # Documentation Gaps
 
-Revision: `0`
+Revision: `2`
 Open gaps: `8`
 
 - `ai-system/project-control/01-overview.md` (overview, active): active document has no recorded review
@@ -13,4 +13,4 @@ Open gaps: `8`
 - `ai-system/project-control/05-lifecycle-rules.md` (lifecycle, active): active document has no recorded review
 - `ai-system/project-control/06-prompt-package-spec.md` (reference, active): active document has no recorded review
 - `ai-system/project-control/07-validation-and-tests.md` (process, active): active document has no recorded review
-- `ai-system/project-control/08-usage-guide.md` (guide, planned): planned document is not yet active
+- `ai-system/project-control/08-usage-guide.md` (guide, review): document is not active

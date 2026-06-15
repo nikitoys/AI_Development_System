@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 0,
+  "revision": 2,
   "created_at": "2026-06-15T21:36:58Z",
-  "updated_at": "2026-06-15T21:36:58Z",
+  "updated_at": "2026-06-15T21:49:57Z",
   "docs": [
     {
       "id": "DOC-001",
@@ -107,14 +107,14 @@
       "path": "ai-system/project-control/08-usage-guide.md",
       "title": "Project Control Usage Guide",
       "type": "guide",
-      "status": "planned",
+      "status": "review",
       "required": false,
       "owner": "AI System Maintainer",
       "last_reviewed_at": "",
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T21:36:58Z",
-      "updated_at": "2026-06-15T21:36:58Z"
+      "updated_at": "2026-06-15T21:49:57Z"
     }
   ]
 }
