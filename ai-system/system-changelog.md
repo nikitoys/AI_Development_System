@@ -2,6 +2,18 @@
 
 Status: Draft
 
+## v0.48.1
+
+### Updated
+
+- Moved the legacy root-level evolution concept draft to `ai-system/evolution/concept-baseline.md`.
+- Added legacy/source-of-truth notice to the moved concept baseline.
+- Updated README/index references so the archived baseline is discoverable without presenting it as the active evolution plan.
+
+### Reason
+
+The root-level concept draft looked like a current top-level source of truth even though active evolution planning already lives under `ai-system/evolution/`. This documentation-only cleanup preserves historical context while keeping the authoritative evolution model in roadmap, owner plan, intake, backlog and policy documents.
+
 ## v0.48.0
 
 ### Added

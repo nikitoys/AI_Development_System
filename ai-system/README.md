@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.48.0
+Version: v0.48.1
 
 ## Purpose
 
@@ -286,6 +286,7 @@ The `evolution/` directory defines roadmap-driven self-evolution of AI_Developme
 - `evolution/system-health-check.md` — repeatable system health-check checklist.
 - `evolution/evolution-backlog.md` — managed backlog of system evolution items.
 - `evolution/analysis-report-baseline.md` — baseline findings from the analytical repository report.
+- `evolution/concept-baseline.md` — legacy conceptual baseline preserved for historical context; not the current source of truth.
 - `evolution/templates/system-change-proposal.md` — AI System Change Proposal template.
 - `evolution/templates/evolution-task.md` — bounded system evolution task template.
 - `evolution/templates/owner-evolution-plan.md` — reusable owner plan intake template.

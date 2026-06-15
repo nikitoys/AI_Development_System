@@ -1,3 +1,15 @@
+Status: Legacy Concept Baseline
+Version: v0.1.0
+
+This document is a historical/conceptual baseline for AI_Development_System evolution.
+It is not the current source of truth.
+Current authoritative evolution documents live in:
+- ai-system/evolution/roadmap.md
+- ai-system/evolution/owner-evolution-plan.md
+- ai-system/evolution/owner-plan-intake.md
+- ai-system/evolution/evolution-backlog.md
+- ai-system/evolution/evolution-policy.md
+
 # Концепция эволюции AI Development System
 
 Status: Draft  

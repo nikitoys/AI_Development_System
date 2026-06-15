@@ -3,7 +3,7 @@
 Languages: [English](README.md) | [Русский](README.ru.md)
 
 Status: Draft
-Version: v0.48.0
+Version: v0.48.1
 
 This repository contains an AI Development System: an operating model for developing projects through AI roles, documentation, lifecycle governance, prompt generation, Codex execution, review and controlled evolution.
 
@@ -42,6 +42,8 @@ Lightweight verification check selection can be run with `scripts/verification/r
 The Work Item Hierarchy is defined in `/ai-system/work-item-hierarchy.md`: Goal -> Initiative -> Epic -> Task -> Agent Work Package. Initiative and Epic are planning containers only; Task remains the executable unit.
 
 The SOP and optional multi-agent implementation plan is recorded in `/ai-system/evolution/sop-multi-agent-implementation-plan.md`.
+
+The legacy conceptual baseline for early system evolution is archived at `/ai-system/evolution/concept-baseline.md`; it is historical context only and not the current source of truth.
 
 The SOP Model is defined in `/ai-system/sop-model.md`. SOPs are governance procedures only; they do not authorize automatic execution or automatic acceptance.
 
