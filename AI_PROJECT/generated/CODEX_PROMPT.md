@@ -1,45 +1,46 @@
 [SYSTEM]
 
 Active Role: AI System Maintainer + Technical Writer AI
-Active Stage: Project Control Usage Guide
-Active Document: ai-system/project-control/08-usage-guide.md
-Expected Result: Usage guide implemented, validation passed, waiting for Human Owner acceptance.
+Active Stage: Skills Layer Documentation
+Active Document: ai-system/skills/README.md
+Expected Result: Skills layer roadmap document created, registered in documentation control, generated prompt package written, validation passed, waiting for Human Owner approval.
 
 Repository: current repository
-Task ID: TASK-001
-Task Title: Write Project Control Usage Guide
+Task ID: TASK-002
+Task Title: Document Skills Layer Roadmap
 Task Status: in_review
 Verification Mode: standard
 
 Initiative: INIT-001 — AI Development System Evolution
-Epic: EPIC-001 — Documentation Rails
+Epic: EPIC-002 — Skills Layer
 
 Context:
-Write the missing practical usage guide for the Project Control Gateway.
+Create a controlled skills layer documentation page that records useful project skills/plugins and recommends next skills to create.
 
 Details:
-Create ai-system/project-control/08-usage-guide.md and reconcile it through plan, task, prompt and documentation controls.
+Create ai-system/skills/README.md as a controlled documentation page for skills/plugins in this repository. Register the document with docctl.py in a non-active lifecycle state and validate project-control outputs.
 
 Scope:
-- Create ai-system/project-control/08-usage-guide.md.
-- Explain how Human Owner, ChatGPT Orchestrator, Codex Executor, and Python CLIs interact.
-- Explain daily usage of planctl.py, taskctl.py, docctl.py, and evolutionctl.py.
-- Explain when to create Initiative, Epic, and Task records.
-- Explain when to use docctl.py and how CODEX_PROMPT.md fits into execution.
-- Explain protected files and what Codex must never edit manually.
-- Include practical command examples, common flows, troubleshooting, and final validation checklist.
+- Create ai-system/skills/README.md.
+- Explain what skills/plugins are for in this project.
+- State that skills/plugins are guidance and routing helpers, not sources of authority.
+- State that Python CLI remains the source of truth.
+- List existing useful skills: Project Control Gateway Skill and CLI Creator Skill.
+- List recommended skills to create: Documentation Control Skill, SOP Authoring Skill, Agent Assignment Skill, Review Gate Skill, QA Evidence Skill, Decision / ADR Skill, Git Safety Skill, Protected Files Skill.
+- For each skill, include purpose, related CLI, priority, allowed actions, and forbidden actions.
+- Include a recommended creation order.
+- Include rules requiring every new skill to be created through a controlled Task and requiring subagents to obey CLI/source-of-truth rules.
 
 Out of Scope:
-- Do not implement SOP orchestration.
-- Do not implement subagents.
-- Do not refactor evolutionctl.py.
-- Do not add new docctl.py features.
+- Do not implement new skills.
+- Do not mark the document active or accepted without Human Owner approval.
 - Do not manually edit AI_PROJECT/state/**.
 - Do not manually edit AI_PROJECT/events/**.
 - Do not manually edit AI_PROJECT/generated/**.
+- Do not change project-control CLI behavior.
 
 Allowed Files:
-- ai-system/project-control/08-usage-guide.md
+- ai-system/skills/README.md
 - AI_PROJECT/state/plan.json via planctl.py only
 - AI_PROJECT/events/plan-events.jsonl via planctl.py only
 - AI_PROJECT/generated/CODEX_PLAN.md via planctl.py only
@@ -54,16 +55,19 @@ Allowed Files:
 - AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only
 
 Acceptance Criteria:
-- 08-usage-guide.md exists and uses the same practical style as neighboring project-control documents.
-- The guide explains role interactions, CLI responsibilities, daily workflow, documentation workflow, protected-file boundaries, troubleshooting, and validation.
-- Only supported CLI commands are shown as exact command examples.
-- The document is registered through docctl.py and moved no further than review without Human Owner acceptance.
-- Plan, task, documentation, smoke, and protected-files validation commands pass.
+- ai-system/skills/README.md exists and covers skills/plugins as guidance and routing helpers, not authoritative source documents.
+- The document clearly states that Python CLIs and registered source documents remain the source of truth.
+- The document lists the two existing useful skills and the eight recommended future skills with purpose, related CLI, priority, allowed actions, and forbidden actions.
+- The document includes a recommended skill creation order.
+- The document states that every new skill must be created through a controlled Task.
+- The document states that subagents may use skills only as guidance and must still obey CLI/source-of-truth rules.
+- The document is registered through docctl.py as draft or review, not active.
+- Plan, task, documentation, smoke doc-control, and protected-files validation commands pass.
 
 Review Instructions:
 - Verify that no protected project-control files were edited manually.
-- Verify that the task and document are not marked Human-approved or active/accepted.
-- Verify that unsupported commands are not presented as executable examples.
+- Verify that no new skills were implemented in this task.
+- Verify that the document remains in draft or review status until Human Owner approval.
 
 Execution Rules:
 - Do not edit AI_PROJECT/state/*.json manually.
@@ -75,7 +79,7 @@ Execution Rules:
 
 Suggested lifecycle commands:
 ```bash
-python scripts/taskctl.py task transition TASK-001 --to in_progress
-python scripts/taskctl.py task transition TASK-001 --to in_review
+python scripts/taskctl.py task transition TASK-002 --to in_progress
+python scripts/taskctl.py task transition TASK-002 --to in_review
 python scripts/taskctl.py validate
 ```

@@ -3,8 +3,8 @@
 
 # Documentation Index
 
-Revision: `2`
-Documents: `8`
+Revision: `3`
+Documents: `9`
 
 | Path | Title | Type | Status | Required | Last reviewed |
 | --- | --- | --- | --- | --- | --- |
@@ -16,3 +16,4 @@ Documents: `8`
 | `ai-system/project-control/06-prompt-package-spec.md` | Project Control Prompt Package Specification | `reference` | `active` | `true` | - |
 | `ai-system/project-control/07-validation-and-tests.md` | Project Control Validation and Tests | `process` | `active` | `true` | - |
 | `ai-system/project-control/08-usage-guide.md` | Project Control Usage Guide | `guide` | `review` | `false` | - |
+| `ai-system/skills/README.md` | Skills Layer Roadmap | `guide` | `review` | `false` | - |

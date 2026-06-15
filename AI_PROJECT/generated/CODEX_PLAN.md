@@ -5,7 +5,7 @@
 
 Project: **AI Development System**
 Status: `active`
-Revision: `2`
+Revision: `3`
 
 ## Idea
 
@@ -31,3 +31,4 @@ Plan and govern controlled improvements to the AI Development System.
 Epics:
 
 - `EPIC-001` — Documentation Rails (`active`)
+- `EPIC-002` — Skills Layer (`active`)

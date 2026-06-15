@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 4,
-  "current_task_id": "TASK-001",
+  "revision": 8,
+  "current_task_id": "TASK-002",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-15T21:50:12Z",
+  "updated_at": "2026-06-15T21:58:10Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -72,6 +72,78 @@
       "approval_notes": "",
       "created_at": "2026-06-15T21:47:57Z",
       "updated_at": "2026-06-15T21:50:12Z"
+    },
+    {
+      "id": "TASK-002",
+      "epic_id": "EPIC-002",
+      "title": "Document Skills Layer Roadmap",
+      "status": "in_review",
+      "summary": "Create a controlled skills layer documentation page that records useful project skills/plugins and recommends next skills to create.",
+      "description": "Create ai-system/skills/README.md as a controlled documentation page for skills/plugins in this repository. Register the document with docctl.py in a non-active lifecycle state and validate project-control outputs.",
+      "priority": 1,
+      "order": 1,
+      "active_role": "AI System Maintainer + Technical Writer AI",
+      "active_stage": "Skills Layer Documentation",
+      "active_document": "ai-system/skills/README.md",
+      "expected_result": "Skills layer roadmap document created, registered in documentation control, generated prompt package written, validation passed, waiting for Human Owner approval.",
+      "verification_mode": "standard",
+      "scope": [
+        "Create ai-system/skills/README.md.",
+        "Explain what skills/plugins are for in this project.",
+        "State that skills/plugins are guidance and routing helpers, not sources of authority.",
+        "State that Python CLI remains the source of truth.",
+        "List existing useful skills: Project Control Gateway Skill and CLI Creator Skill.",
+        "List recommended skills to create: Documentation Control Skill, SOP Authoring Skill, Agent Assignment Skill, Review Gate Skill, QA Evidence Skill, Decision / ADR Skill, Git Safety Skill, Protected Files Skill.",
+        "For each skill, include purpose, related CLI, priority, allowed actions, and forbidden actions.",
+        "Include a recommended creation order.",
+        "Include rules requiring every new skill to be created through a controlled Task and requiring subagents to obey CLI/source-of-truth rules."
+      ],
+      "out_of_scope": [
+        "Do not implement new skills.",
+        "Do not mark the document active or accepted without Human Owner approval.",
+        "Do not manually edit AI_PROJECT/state/**.",
+        "Do not manually edit AI_PROJECT/events/**.",
+        "Do not manually edit AI_PROJECT/generated/**.",
+        "Do not change project-control CLI behavior."
+      ],
+      "allowed_files": [
+        "ai-system/skills/README.md",
+        "AI_PROJECT/state/plan.json via planctl.py only",
+        "AI_PROJECT/events/plan-events.jsonl via planctl.py only",
+        "AI_PROJECT/generated/CODEX_PLAN.md via planctl.py only",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_CURRENT.md via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_PROMPT.md via taskctl.py only",
+        "AI_PROJECT/state/docs.json via docctl.py only",
+        "AI_PROJECT/events/doc-events.jsonl via docctl.py only",
+        "AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only",
+        "AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only"
+      ],
+      "acceptance_criteria": [
+        "ai-system/skills/README.md exists and covers skills/plugins as guidance and routing helpers, not authoritative source documents.",
+        "The document clearly states that Python CLIs and registered source documents remain the source of truth.",
+        "The document lists the two existing useful skills and the eight recommended future skills with purpose, related CLI, priority, allowed actions, and forbidden actions.",
+        "The document includes a recommended skill creation order.",
+        "The document states that every new skill must be created through a controlled Task.",
+        "The document states that subagents may use skills only as guidance and must still obey CLI/source-of-truth rules.",
+        "The document is registered through docctl.py as draft or review, not active.",
+        "Plan, task, documentation, smoke doc-control, and protected-files validation commands pass."
+      ],
+      "review_instructions": [
+        "Verify that no protected project-control files were edited manually.",
+        "Verify that no new skills were implemented in this task.",
+        "Verify that the document remains in draft or review status until Human Owner approval."
+      ],
+      "notes": [
+        "Human Owner explicitly requested a project-controlled documentation task and allowed completion to review state without self-approval."
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-15T21:56:37Z",
+      "updated_at": "2026-06-15T21:58:10Z"
     }
   ]
 }
