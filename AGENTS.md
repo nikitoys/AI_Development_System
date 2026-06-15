@@ -200,6 +200,34 @@ Allowed project-control commands:
 python scripts/planctl.py ...
 python scripts/taskctl.py ...
 python scripts/evolutionctl.py ...
+python scripts/docctl.py ...
+```
+
+## Documentation Control Rule
+
+Documentation lifecycle state is controlled by `docctl.py`.
+
+Protected documentation-control files:
+
+```text
+AI_PROJECT/state/docs.json
+AI_PROJECT/events/doc-events.jsonl
+AI_PROJECT/generated/DOCS_INDEX.md
+AI_PROJECT/generated/DOCS_GAPS.md
+```
+
+Codex must not modify these files directly. Use:
+
+```bash
+python scripts/docctl.py init
+python scripts/docctl.py doc register ...
+python scripts/docctl.py doc status ...
+python scripts/docctl.py doc mark-reviewed ...
+python scripts/docctl.py scan
+python scripts/docctl.py validate
+python scripts/docctl.py render
+python scripts/docctl.py check-generated
+python scripts/docctl.py audit
 ```
 
 ### Command Routing
@@ -226,6 +254,16 @@ Codex prompt package
 task lifecycle
 task validation
 task generated files
+```
+
+Use `docctl.py` for documentation lifecycle control:
+
+```text
+registered documentation
+documentation status
+documentation review records
+documentation index and gap generated files
+documentation validation
 ```
 
 Use `evolutionctl.py` for changes to the AI Development System itself:
@@ -368,6 +406,14 @@ For evolution changes:
 python scripts/evolutionctl.py validate
 python scripts/evolutionctl.py render
 python scripts/evolutionctl.py check-generated
+```
+
+For documentation changes:
+
+```bash
+python scripts/docctl.py validate
+python scripts/docctl.py render
+python scripts/docctl.py check-generated
 ```
 
 For full protected-files check:

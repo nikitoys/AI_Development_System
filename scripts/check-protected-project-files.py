@@ -69,6 +69,14 @@ except Exception as exc:
 else:
     TASKCTL_IMPORT_ERROR = None
 
+try:
+    import docctl
+except Exception as exc:
+    docctl = None
+    DOCCTL_IMPORT_ERROR = exc
+else:
+    DOCCTL_IMPORT_ERROR = None
+
 REQUIRED_EVENT_FIELDS = {
 "event_id",
 "timestamp",
@@ -476,6 +484,75 @@ def check_prompt(root, args, result, tasks_state, plan, codex_prompt):
         allow_missing=args.allow_missing_generated,
     )
 
+def check_docs(root, args, result):
+    if DOCCTL_IMPORT_ERROR is not None:
+        result.error("DOCCTL_IMPORT_FAILED: {}".format(DOCCTL_IMPORT_ERROR))
+        return None
+
+    docs_path = root / "AI_PROJECT" / "state" / "docs.json"
+    doc_events = root / "AI_PROJECT" / "events" / "doc-events.jsonl"
+    docs_index = root / "AI_PROJECT" / "generated" / "DOCS_INDEX.md"
+    docs_gaps = root / "AI_PROJECT" / "generated" / "DOCS_GAPS.md"
+
+    if not docs_path.exists():
+        if args.allow_uninitialized:
+            result.warn("docs state not initialized: {}".format(rel(root, docs_path)))
+        return None
+
+    docs_state = read_json(docs_path, result)
+
+    if docs_state is None:
+        return None
+
+    errors = docctl.validate_docs(docs_state, root)
+
+    if errors:
+        for error in errors:
+            result.error("DOCS_VALIDATION_FAILED: {}".format(error))
+    else:
+        result.ok("docs state valid: {}".format(rel(root, docs_path)))
+
+    check_event_log(
+        root=root,
+        path=doc_events,
+        expected_revision=docs_state.get("revision"),
+        result=result,
+        required_when_state_exists=True,
+    )
+
+    if not errors:
+        compare_generated(
+            root=root,
+            path=docs_index,
+            expected=docctl.render_index_markdown(docs_state),
+            result=result,
+            allow_missing=args.allow_missing_generated,
+        )
+
+        compare_generated(
+            root=root,
+            path=docs_gaps,
+            expected=docctl.render_gaps_markdown(docs_state, root),
+            result=result,
+            allow_missing=args.allow_missing_generated,
+        )
+
+        check_generated_header(
+            root=root,
+            path=docs_index,
+            result=result,
+            allow_missing=args.allow_missing_generated,
+        )
+
+        check_generated_header(
+            root=root,
+            path=docs_gaps,
+            result=result,
+            allow_missing=args.allow_missing_generated,
+        )
+
+    return docs_state
+
 def check_protected_dirs(root, args, result):
     ai_project = root / "AI_PROJECT"
     state = ai_project / "state"
@@ -509,6 +586,7 @@ def run_checks(args):
 
     plan = check_plan(root, args, result)
     check_tasks(root, args, result, plan)
+    check_docs(root, args, result)
 
     return root, result
 
