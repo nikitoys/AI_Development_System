@@ -3,7 +3,7 @@
 Языки: [English](README.md) | [Русский](README.ru.md)
 
 Статус: Draft
-Версия: v0.48.0
+Версия: v0.48.1
 
 Этот репозиторий содержит AI Development System: операционную модель для разработки проектов через AI-роли, документацию, lifecycle governance, генерацию промптов, выполнение задач через Codex, review и контролируемую эволюцию системы.
 
@@ -42,6 +42,8 @@ Lightweight verification selection можно запускать через `scr
 Work Item Hierarchy описан в `/ai-system/work-item-hierarchy.md`: Goal -> Initiative -> Epic -> Task -> Agent Work Package. Initiative и Epic являются planning containers only; Task остаётся executable unit.
 
 План SOP и optional multi-agent implementation зафиксирован в `/ai-system/evolution/sop-multi-agent-implementation-plan.md`.
+
+Legacy conceptual baseline ранней evolution-модели перенесён в `/ai-system/evolution/concept-baseline.md`; это только исторический контекст, а не текущий source of truth.
 
 SOP Model описан в `/ai-system/sop-model.md`. SOP - это governance procedure, а не разрешение на automatic execution или automatic acceptance.
 

@@ -34,6 +34,7 @@ It does not govern product feature work in a target application. Product work re
 - `system-health-check.md` — repeatable checklist for assessing documentation, lifecycle, version, security, integration and validation health.
 - `evolution-backlog.md` — managed backlog of system evolution items.
 - `analysis-report-baseline.md` — baseline findings from the analytical repository report used as an input to the roadmap.
+- `concept-baseline.md` — legacy conceptual baseline preserved for historical context; not the current source of truth.
 - `templates/system-change-proposal.md` — template for AI System Change Proposals.
 - `templates/evolution-task.md` — template for bounded evolution tasks.
 - `templates/owner-evolution-plan.md` — reusable template for owner-authored evolution plans.
