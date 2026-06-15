@@ -1,4 +1,11 @@
-# Codex Current Task - AI Development System
+# Current Evolution Task - AI Development System
+
+Status: Draft  
+Version: v0.1.0
+
+This is the current system evolution task record for AI_Development_System.
+It is not a project-local `AI_PROJECT` file.
+The root-level `AI_PROJECT` directory is not used by this repository itself.
 
 status: review
 verification_mode: STANDARD
@@ -28,9 +35,9 @@ Revise L4 Assisted SOP Execution plan after review findings
 
 ## Active Document
 
-- `AI_PROJECT/CODEX_PLAN.md`
-- `AI_PROJECT/CODEX_TASKS.md`
-- `AI_PROJECT/CODEX_CURRENT.md`
+- `ai-system/evolution/l4-assisted-sop-execution-plan.md`
+- `ai-system/evolution/l4-assisted-sop-execution-tasks.md`
+- `ai-system/evolution/current-evolution-task.md`
 
 ## Expected Result
 
@@ -38,9 +45,9 @@ Revise the planning records so the L4 roadmap reflects the Human Owner decisions
 
 ## Allowed Files For This Planning Task
 
-- `AI_PROJECT/CODEX_PLAN.md`
-- `AI_PROJECT/CODEX_TASKS.md`
-- `AI_PROJECT/CODEX_CURRENT.md`
+- `ai-system/evolution/l4-assisted-sop-execution-plan.md`
+- `ai-system/evolution/l4-assisted-sop-execution-tasks.md`
+- `ai-system/evolution/current-evolution-task.md`
 
 ## Files Not Modified By This Planning Task
 

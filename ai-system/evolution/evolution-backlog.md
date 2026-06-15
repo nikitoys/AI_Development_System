@@ -1313,3 +1313,39 @@ Acceptance criteria:
 Conversion path:
 
 Closed by EVOL-029 as a bounded documentation and template update.
+
+---
+
+## EVOL-030 — Align L4 Assisted SOP Execution planning with evolution governance
+
+Status: Planned
+Priority: P1
+Source: Human Owner request / AI_PROJECT cleanup / L4 planning review
+Roadmap item: P6 — SOP and Optional Multi-Agent Control Plane
+Owner: AI System Maintainer / Project Manager AI / Technical Writer AI
+Type: Governance / Documentation
+
+Problem:
+
+L4 planning exists in root-level AI_PROJECT files, creating confusion between project-local control files and system evolution governance.
+
+Expected outcome:
+
+Root-level AI_PROJECT is removed from this repository, and L4 planning records are moved under ai-system/evolution.
+
+Acceptance criteria:
+
+- root AI_PROJECT folder is removed;
+- L4 plan exists under ai-system/evolution;
+- L4 task board exists under ai-system/evolution;
+- current evolution task record exists under ai-system/evolution;
+- README/index references are updated;
+- templates and examples using AI_PROJECT remain untouched;
+- current maturity remains L3;
+- runtime remains DEFERRED;
+- L4 remains Future / Not approved;
+- no runtime behavior or automatic execution is introduced.
+
+Conversion path:
+
+Bounded system evolution documentation cleanup requested by the Human Owner.

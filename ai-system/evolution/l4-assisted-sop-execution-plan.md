@@ -1,6 +1,7 @@
-# Codex Plan - AI Development System
+# L4 Assisted SOP Execution Plan - AI Development System
 
 Status: Draft
+Version: v0.1.0
 
 ## Title
 
@@ -8,7 +9,9 @@ Revised L4 Assisted SOP Execution Plan
 
 ## Planning Snapshot
 
-This plan records a planning-only roadmap for preparing a possible future L4 Assisted SOP Execution capability.
+This system evolution planning document records a planning-only roadmap for preparing a possible future L4 Assisted SOP Execution capability.
+
+It lives under `ai-system/evolution/` because L4 planning belongs to system evolution governance. It is not a project-local `AI_PROJECT` file, and it does not approve L4 or any runtime behavior.
 
 Current runtime maturity:
 
@@ -28,7 +31,7 @@ L4 status:
 Future / Not approved
 ```
 
-This plan does not approve L4, implement L4, add runtime behavior, create runner scripts, modify specs, modify lifecycle documents, change current maturity or enable automatic execution.
+This plan does not approve L4, implement L4, add runtime behavior, create runner scripts, modify specs, modify lifecycle documents, change current maturity, enable automatic execution, authorize automatic Codex execution, authorize automatic agent dispatch, authorize automatic merge, authorize automatic PR creation, authorize automatic acceptance or authorize automatic QA/review closure.
 
 ## Revision Basis
 

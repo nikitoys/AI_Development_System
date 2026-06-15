@@ -3,11 +3,13 @@
 Languages: [English](README.md) | [Русский](README.ru.md)
 
 Status: Draft
-Version: v0.48.1
+Version: v0.48.2
 
 This repository contains an AI Development System: an operating model for developing projects through AI roles, documentation, lifecycle governance, prompt generation, Codex execution, review and controlled evolution.
 
 It is not a normal application repository. The primary source of truth is `/ai-system`.
+
+This repository itself does not use a root-level `AI_PROJECT` folder. `AI_PROJECT` remains a template and example concept for concrete external projects only.
 
 Version source: the current AI_Development_System version is the top entry in `/ai-system/system-changelog.md`. README files mirror that version and must not claim a newer or different version.
 
@@ -43,6 +45,8 @@ The Work Item Hierarchy is defined in `/ai-system/work-item-hierarchy.md`: Goal 
 
 The SOP and optional multi-agent implementation plan is recorded in `/ai-system/evolution/sop-multi-agent-implementation-plan.md`.
 
+Current L4 Assisted SOP Execution planning records live under `/ai-system/evolution/current-evolution-task.md`, `/ai-system/evolution/l4-assisted-sop-execution-plan.md` and `/ai-system/evolution/l4-assisted-sop-execution-tasks.md`. They do not approve L4, runtime behavior or automatic execution.
+
 The legacy conceptual baseline for early system evolution is archived at `/ai-system/evolution/concept-baseline.md`; it is historical context only and not the current source of truth.
 
 The SOP Model is defined in `/ai-system/sop-model.md`. SOPs are governance procedures only; they do not authorize automatic execution or automatic acceptance.
@@ -56,6 +60,8 @@ The Parallel Execution Policy is defined in `/ai-system/parallel-execution-polic
 Agent Result Intake and Integration Review are defined in `/ai-system/agent-result-intake.md` and `/ai-system/integration-review.md`. They check results before review, QA and Human Owner acceptance without authorizing automatic execution, merge or acceptance.
 
 Foldered `AI_PROJECT` templates now include agent planning files for plans, packages, assignments, locks, results and metrics. These are planning and manual coordination records only and do not authorize execution, parallel execution, merge or acceptance.
+
+The root-level `AI_PROJECT` folder is not used by AI_Development_System itself.
 
 The golden project includes a filled non-runtime multi-agent planning example for Task Tracker under `examples/golden-project/`.
 

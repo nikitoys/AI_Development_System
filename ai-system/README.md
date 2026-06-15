@@ -1,13 +1,15 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.48.1
+Version: v0.48.2
 
 ## Purpose
 
 `/ai-system` describes how this repository is developed through an AI-assisted development process.
 
 This folder does not describe the product itself. It describes the development mechanism: roles, rules, workflow, human interaction, task format, review process and controlled evolution of the system.
+
+AI_Development_System itself does not use a root-level `AI_PROJECT` folder. `AI_PROJECT` remains a template and example concept for concrete external projects only.
 
 ## Core Principle
 
@@ -157,6 +159,8 @@ Manual orchestration coordinates Agent Work Packages, result intake and integrat
 
 ## AI_PROJECT Control and Agent Planning Templates
 
+The root of this repository does not contain or use `AI_PROJECT`. References in this section describe project templates and concrete external projects that embed AI_Development_System.
+
 Foldered project templates include `PROJECT_CONTROL_INDEX.md`, `PROJECT_OPERATION_PROFILE.md`, `AGENT_PLAN.md`, `AGENT_TASKS.md`, `AGENT_ASSIGNMENTS.md`, `AGENT_LOCKS.md`, `AGENT_RESULTS.md` and `AGENT_METRICS.md`.
 
 These files are planning and review records only. They preserve sequential execution as the default and do not authorize execution, parallel execution, automatic merge or automatic acceptance.
@@ -278,6 +282,9 @@ The `evolution/` directory defines roadmap-driven self-evolution of AI_Developme
 - `evolution/README.md` — index and operating principle for the system evolution module.
 - `evolution/roadmap.md` — strategic and tactical roadmap for AI_Development_System.
 - `evolution/sop-multi-agent-implementation-plan.md` — master plan for SOP-guided planning and optional multi-agent execution.
+- `evolution/current-evolution-task.md` — current system evolution task record; not a project-local `AI_PROJECT` file.
+- `evolution/l4-assisted-sop-execution-plan.md` — planning-only roadmap for possible future L4 Assisted SOP Execution.
+- `evolution/l4-assisted-sop-execution-tasks.md` — child operational task board for the L4 planning campaign.
 - `evolution/sop-multi-agent-pilot-validation.md` — pilot validation findings for the SOP / optional multi-agent layer.
 - `evolution/evolution-loop.md` — observe → diagnose → propose → plan → execute → verify → review → approve → release → learn loop.
 - `evolution/evolution-policy.md` — permissions, boundaries and anti-runaway rules for self-evolution.

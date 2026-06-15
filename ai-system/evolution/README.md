@@ -23,10 +23,15 @@ This module governs evolution of the AI Development System itself, including:
 
 It does not govern product feature work in a target application. Product work remains governed by project-level control files, task lifecycle, Codex lifecycle, review lifecycle and QA lifecycle.
 
+AI_Development_System itself does not use a root-level `AI_PROJECT` folder. `AI_PROJECT` remains a template and example concept for concrete external projects only.
+
 ## Documents
 
 - `roadmap.md` — strategic and tactical development plan for AI_Development_System.
 - `sop-multi-agent-implementation-plan.md` — recorded Human Owner plan for SOP-guided planning and optional multi-agent execution.
+- `current-evolution-task.md` — current system evolution task record; not a project-local `AI_PROJECT` file.
+- `l4-assisted-sop-execution-plan.md` — planning-only roadmap for possible future L4 Assisted SOP Execution.
+- `l4-assisted-sop-execution-tasks.md` — child operational task board for the L4 planning campaign; does not replace `evolution-backlog.md`.
 - `evolution-loop.md` — controlled observe → diagnose → propose → plan → execute → verify → review → approve → release → learn loop.
 - `evolution-policy.md` — boundaries, permissions and anti-runaway rules for self-evolution.
 - `owner-evolution-plan.md` — Human Owner-authored intake place for broad system evolution plans.
