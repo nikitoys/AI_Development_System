@@ -1,4 +1,12 @@
-# Codex Tasks - AI Development System
+# L4 Assisted SOP Execution Tasks - AI Development System
+
+Status: Draft  
+Version: v0.1.0
+
+This is a system evolution task board for L4 Assisted SOP Execution planning.
+It is not a project-local `AI_PROJECT` task board.
+
+These tasks are child operational tasks under a system evolution campaign. They do not replace `ai-system/evolution/evolution-backlog.md`, do not authorize L4 and still require bounded Human Owner approval before execution.
 
 ## Backlog
 
@@ -31,7 +39,7 @@ Purpose:
 
 Scope:
 
-- Review `AI_PROJECT/CODEX_PLAN.md`, `AI_PROJECT/CODEX_TASKS.md` and `AI_PROJECT/CODEX_CURRENT.md`.
+- Review `ai-system/evolution/l4-assisted-sop-execution-plan.md`, `ai-system/evolution/l4-assisted-sop-execution-tasks.md` and `ai-system/evolution/current-evolution-task.md`.
 - Identify unclear L3 bridge, L4 and L5 boundaries.
 - Identify missing source documents, acceptance criteria, risks and stop conditions.
 - Produce a review recommendation.
@@ -95,9 +103,9 @@ Out of Scope:
 
 Allowed Files:
 
-- `AI_PROJECT/CODEX_PLAN.md`
-- `AI_PROJECT/CODEX_TASKS.md`
-- `AI_PROJECT/CODEX_CURRENT.md`
+- `ai-system/evolution/l4-assisted-sop-execution-plan.md`
+- `ai-system/evolution/l4-assisted-sop-execution-tasks.md`
+- `ai-system/evolution/current-evolution-task.md`
 - future approved AICP or decision artifact if the Human Owner requests it
 
 Acceptance Criteria:
@@ -514,9 +522,9 @@ Out of Scope:
 
 Allowed Files:
 
-- `AI_PROJECT/CODEX_PLAN.md`
-- `AI_PROJECT/CODEX_TASKS.md`
-- `AI_PROJECT/CODEX_CURRENT.md`
+- `ai-system/evolution/l4-assisted-sop-execution-plan.md`
+- `ai-system/evolution/l4-assisted-sop-execution-tasks.md`
+- `ai-system/evolution/current-evolution-task.md`
 - optional future design doc if approved: `ai-system/sop-runner-mvp-plan.md`
 
 Acceptance Criteria:
@@ -767,9 +775,9 @@ Out of Scope:
 Allowed Files:
 
 - `AI_PROJECT/SOP_RUNS.md`
-- `AI_PROJECT/CODEX_PLAN.md`
-- `AI_PROJECT/CODEX_TASKS.md`
-- `AI_PROJECT/CODEX_CURRENT.md`
+- `ai-system/evolution/l4-assisted-sop-execution-plan.md`
+- `ai-system/evolution/l4-assisted-sop-execution-tasks.md`
+- `ai-system/evolution/current-evolution-task.md`
 - exact step-specific files approved in each prompt
 
 Acceptance Criteria:

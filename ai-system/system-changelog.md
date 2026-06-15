@@ -2,6 +2,29 @@
 
 Status: Draft
 
+## v0.48.2
+
+### Added
+
+- Added `ai-system/evolution/current-evolution-task.md` as the current system evolution task record.
+- Added `ai-system/evolution/l4-assisted-sop-execution-plan.md` as the L4 Assisted SOP Execution planning record.
+- Added `ai-system/evolution/l4-assisted-sop-execution-tasks.md` as the child task board for the L4 planning campaign.
+- Added `EVOL-030` to track alignment of L4 Assisted SOP Execution planning with evolution governance.
+
+### Updated
+
+- Moved useful L4 planning content out of the root-level `AI_PROJECT` folder and into `ai-system/evolution/`.
+- Updated README and evolution index references so the moved planning records are discoverable.
+- Clarified that this repository itself does not use a root-level `AI_PROJECT` folder.
+
+### Removed
+
+- Removed the root-level `AI_PROJECT` folder from AI_Development_System.
+
+### Reason
+
+System evolution planning belongs under `ai-system/evolution/`, not in root project-control files. This change preserves the L4 planning records, keeps templates and golden examples untouched, and does not introduce runtime behavior, automatic execution, automatic dispatch, automatic merge, automatic PR creation, automatic acceptance or automatic QA/review closure.
+
 ## v0.48.1
 
 ### Updated
