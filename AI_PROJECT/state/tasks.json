@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "revision": 16,
+  "current_task_id": "TASK-004",
+  "created_at": "2026-06-15T21:47:37Z",
+  "updated_at": "2026-06-16T15:25:35Z",
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "epic_id": "EPIC-001",
+      "title": "Write Project Control Usage Guide",
+      "status": "in_review",
+      "summary": "Write the missing practical usage guide for the Project Control Gateway.",
+      "description": "Create ai-system/project-control/08-usage-guide.md and reconcile it through plan, task, prompt and documentation controls.",
+      "priority": 1,
+      "order": 1,
+      "active_role": "AI System Maintainer + Technical Writer AI",
+      "active_stage": "Project Control Usage Guide",
+      "active_document": "ai-system/project-control/08-usage-guide.md",
+      "expected_result": "Usage guide implemented, validation passed, waiting for Human Owner acceptance.",
+      "verification_mode": "standard",
+      "scope": [
+        "Create ai-system/project-control/08-usage-guide.md.",
+        "Explain how Human Owner, ChatGPT Orchestrator, Codex Executor, and Python CLIs interact.",
+        "Explain daily usage of planctl.py, taskctl.py, docctl.py, and evolutionctl.py.",
+        "Explain when to create Initiative, Epic, and Task records.",
+        "Explain when to use docctl.py and how CODEX_PROMPT.md fits into execution.",
+        "Explain protected files and what Codex must never edit manually.",
+        "Include practical command examples, common flows, troubleshooting, and final validation checklist."
+      ],
+      "out_of_scope": [
+        "Do not implement SOP orchestration.",
+        "Do not implement subagents.",
+        "Do not refactor evolutionctl.py.",
+        "Do not add new docctl.py features.",
+        "Do not manually edit AI_PROJECT/state/**.",
+        "Do not manually edit AI_PROJECT/events/**.",
+        "Do not manually edit AI_PROJECT/generated/**."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/08-usage-guide.md",
+        "AI_PROJECT/state/plan.json via planctl.py only",
+        "AI_PROJECT/events/plan-events.jsonl via planctl.py only",
+        "AI_PROJECT/generated/CODEX_PLAN.md via planctl.py only",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_CURRENT.md via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_PROMPT.md via taskctl.py only",
+        "AI_PROJECT/state/docs.json via docctl.py only",
+        "AI_PROJECT/events/doc-events.jsonl via docctl.py only",
+        "AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only",
+        "AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only"
+      ],
+      "acceptance_criteria": [
+        "08-usage-guide.md exists and uses the same practical style as neighboring project-control documents.",
+        "The guide explains role interactions, CLI responsibilities, daily workflow, documentation workflow, protected-file boundaries, troubleshooting, and validation.",
+        "Only supported CLI commands are shown as exact command examples.",
+        "The document is registered through docctl.py and moved no further than review without Human Owner acceptance.",
+        "Plan, task, documentation, smoke, and protected-files validation commands pass."
+      ],
+      "review_instructions": [
+        "Verify that no protected project-control files were edited manually.",
+        "Verify that the task and document are not marked Human-approved or active/accepted.",
+        "Verify that unsupported commands are not presented as executable examples."
+      ],
+      "notes": [
+        "Human Owner requested one-pass execution with final state waiting for owner acceptance."
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-15T21:47:57Z",
+      "updated_at": "2026-06-15T21:50:12Z"
+    },
+    {
+      "id": "TASK-002",
+      "epic_id": "EPIC-002",
+      "title": "Document Skills Layer Roadmap",
+      "status": "in_review",
+      "summary": "Create a controlled skills layer documentation page that records useful project skills/plugins and recommends next skills to create.",
+      "description": "Create ai-system/skills/README.md as a controlled documentation page for skills/plugins in this repository. Register the document with docctl.py in a non-active lifecycle state and validate project-control outputs.",
+      "priority": 1,
+      "order": 1,
+      "active_role": "AI System Maintainer + Technical Writer AI",
+      "active_stage": "Skills Layer Documentation",
+      "active_document": "ai-system/skills/README.md",
+      "expected_result": "Skills layer roadmap document created, registered in documentation control, generated prompt package written, validation passed, waiting for Human Owner approval.",
+      "verification_mode": "standard",
+      "scope": [
+        "Create ai-system/skills/README.md.",
+        "Explain what skills/plugins are for in this project.",
+        "State that skills/plugins are guidance and routing helpers, not sources of authority.",
+        "State that Python CLI remains the source of truth.",
+        "List existing useful skills: Project Control Gateway Skill and CLI Creator Skill.",
+        "List recommended skills to create: Documentation Control Skill, SOP Authoring Skill, Agent Assignment Skill, Review Gate Skill, QA Evidence Skill, Decision / ADR Skill, Git Safety Skill, Protected Files Skill.",
+        "For each skill, include purpose, related CLI, priority, allowed actions, and forbidden actions.",
+        "Include a recommended creation order.",
+        "Include rules requiring every new skill to be created through a controlled Task and requiring subagents to obey CLI/source-of-truth rules."
+      ],
+      "out_of_scope": [
+        "Do not implement new skills.",
+        "Do not mark the document active or accepted without Human Owner approval.",
+        "Do not manually edit AI_PROJECT/state/**.",
+        "Do not manually edit AI_PROJECT/events/**.",
+        "Do not manually edit AI_PROJECT/generated/**.",
+        "Do not change project-control CLI behavior."
+      ],
+      "allowed_files": [
+        "ai-system/skills/README.md",
+        "AI_PROJECT/state/plan.json via planctl.py only",
+        "AI_PROJECT/events/plan-events.jsonl via planctl.py only",
+        "AI_PROJECT/generated/CODEX_PLAN.md via planctl.py only",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_CURRENT.md via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_PROMPT.md via taskctl.py only",
+        "AI_PROJECT/state/docs.json via docctl.py only",
+        "AI_PROJECT/events/doc-events.jsonl via docctl.py only",
+        "AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only",
+        "AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only"
+      ],
+      "acceptance_criteria": [
+        "ai-system/skills/README.md exists and covers skills/plugins as guidance and routing helpers, not authoritative source documents.",
+        "The document clearly states that Python CLIs and registered source documents remain the source of truth.",
+        "The document lists the two existing useful skills and the eight recommended future skills with purpose, related CLI, priority, allowed actions, and forbidden actions.",
+        "The document includes a recommended skill creation order.",
+        "The document states that every new skill must be created through a controlled Task.",
+        "The document states that subagents may use skills only as guidance and must still obey CLI/source-of-truth rules.",
+        "The document is registered through docctl.py as draft or review, not active.",
+        "Plan, task, documentation, smoke doc-control, and protected-files validation commands pass."
+      ],
+      "review_instructions": [
+        "Verify that no protected project-control files were edited manually.",
+        "Verify that no new skills were implemented in this task.",
+        "Verify that the document remains in draft or review status until Human Owner approval."
+      ],
+      "notes": [
+        "Human Owner explicitly requested a project-controlled documentation task and allowed completion to review state without self-approval."
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-15T21:56:37Z",
+      "updated_at": "2026-06-15T21:58:10Z"
+    },
+    {
+      "id": "TASK-003",
+      "epic_id": "EPIC-002",
+      "title": "Create Clarification Gate Skill",
+      "status": "in_review",
+      "summary": "Create a high-priority Clarification Gate Skill for Codex and subagents, defining when to ask the Human Owner versus inspect or proceed with safe assumptions.",
+      "description": "Create .agents/skills/clarification-gate/SKILL.md and update the skills README if present. Route project-control state changes through CLI commands only. Do not self-approve the task, document, or skill as accepted or active.",
+      "priority": 1,
+      "order": 2,
+      "active_role": "AI System Maintainer + Prompt/Skill Engineer",
+      "active_stage": "Clarification Gate Skill",
+      "active_document": ".agents/skills/clarification-gate/SKILL.md",
+      "expected_result": "Clarification Gate Skill created; skills README updated if available; validation completed; result remains awaiting Human Owner acceptance.",
+      "verification_mode": "standard",
+      "scope": [
+        "Create .agents/skills/clarification-gate/SKILL.md with blocker severity, question budget, and subagent guidance.",
+        "Update ai-system/skills/README.md if it exists to recommend the Clarification Gate Skill as high priority.",
+        "Use docctl.py registration only if the documentation registry is intended to track .agents/skills files.",
+        "Run required planctl.py, taskctl.py, docctl.py, smoke, and protected-files validations."
+      ],
+      "out_of_scope": [
+        "Manual edits to AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.",
+        "Implementation changes to planctl.py, taskctl.py, docctl.py, or evolutionctl.py unless blocked.",
+        "Self-approving the task, document, or skill as accepted, approved, done, or active."
+      ],
+      "allowed_files": [
+        ".agents/skills/clarification-gate/SKILL.md",
+        "ai-system/skills/README.md"
+      ],
+      "acceptance_criteria": [
+        "Skill explains that it prevents premature execution on ambiguous or unsafe requests.",
+        "Skill states the core rule: inspect first, ask only when blocked.",
+        "Skill defines when to ask before task creation, during task execution, and when not to ask.",
+        "Skill includes critical blocker, non-critical ambiguity, and inspectable ambiguity severity model with examples.",
+        "Skill includes a question budget and forbids using clarification questions to avoid normal inspection.",
+        "Skills README recommends the Clarification Gate Skill as high priority if the README exists.",
+        "Required validation commands complete or any blocker is reported."
+      ],
+      "review_instructions": [
+        "Review for compliance with Human Owner approval boundaries and protected project-control rules.",
+        "Do not mark accepted, approved, active, or done without Human Owner decision."
+      ],
+      "notes": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-15T22:09:39Z",
+      "updated_at": "2026-06-15T22:13:09Z"
+    },
+    {
+      "id": "TASK-004",
+      "epic_id": "EPIC-001",
+      "title": "Implement codexctl prompt package generator",
+      "status": "in_review",
+      "summary": "Implement approved CHG-001 by adding a dedicated Codex prompt package control CLI.",
+      "description": "Add scripts/codexctl.py with status, build and clear commands for executable Tasks and Evolution Changes, using existing AI_PROJECT state, generated output and event conventions.",
+      "priority": 1,
+      "order": 2,
+      "active_role": "Codex Executor",
+      "active_stage": "Implementation of approved Evolution Change",
+      "active_document": "AI_PROJECT/state/evolution.json / AI_PROJECT/generated/EVOLUTION.md",
+      "expected_result": "Commit-ready implementation of scripts/codexctl.py for CHG-001.",
+      "verification_mode": "standard",
+      "scope": [
+        "Implement scripts/codexctl.py with status, build --task, build --change and clear commands.",
+        "Generate/update CODEX_PROMPT.md and CODEX_STATUS.md through codexctl.py behavior.",
+        "Use existing task/evolution state schemas, generated prompt conventions and audit-style JSONL events."
+      ],
+      "out_of_scope": [
+        "Do not implement multi-agent orchestration, SOP runner, autonomous execution, external API integration or CI.",
+        "Do not modify unrelated AI system documents or product source code."
+      ],
+      "allowed_files": [
+        "scripts/codexctl.py",
+        "AI_PROJECT/state/current_execution.json",
+        "AI_PROJECT/generated/CODEX_PROMPT.md",
+        "AI_PROJECT/generated/CODEX_STATUS.md",
+        "AI_PROJECT/events/codex-events.jsonl"
+      ],
+      "acceptance_criteria": [
+        "scripts/codexctl.py exists and uses only Python standard library.",
+        "status works without crashing and reports READY or BLOCKED state with stable codes.",
+        "build --task can generate CODEX_PROMPT.md for an executable task and fails clearly for invalid task IDs or statuses.",
+        "build --change can generate CODEX_PROMPT.md for approved CHG-001 and fails clearly for invalid change IDs or statuses.",
+        "clear invalidates or removes the current Codex prompt package without modifying source-of-truth task or evolution state.",
+        "Required validation commands from the owner prompt pass or any blocker is reported clearly."
+      ],
+      "review_instructions": [
+        "Review for lifecycle boundary enforcement, prompt completeness, generated artifact consistency and standard-library-only implementation."
+      ],
+      "notes": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-16T15:15:21Z",
+      "updated_at": "2026-06-16T15:25:35Z"
+    }
+  ]
+}

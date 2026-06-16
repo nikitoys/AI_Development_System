@@ -1,0 +1,23 @@
+{
+  "name": "ai-project-control",
+  "version": "0.1.0",
+  "description": "Project Control Gateway plugin for routing AI Development System project operations through controlled CLI commands.",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "AI Project Control",
+    "shortDescription": "Route project plans, tasks, prompts, and system evolution through controlled CLI gateways.",
+    "longDescription": "AI Project Control packages the Project Control Gateway skill for Codex. It directs plan work through planctl.py, task/current/prompt work through taskctl.py, and AI Development System evolution through evolutionctl.py while preserving protected AI_PROJECT/state/**, AI_PROJECT/events/**, and AI_PROJECT/generated/** boundaries.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [
+      "Project planning",
+      "Task control",
+      "Prompt packaging",
+      "System evolution routing"
+    ],
+    "defaultPrompt": "Use Project Control Gateway for this repository task."
+  }
+}

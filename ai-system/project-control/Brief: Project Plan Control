@@ -1,0 +1,161 @@
+# Brief: Project Plan Control
+
+## Цель
+
+Мы хотим управлять планом проекта не через ручное редактирование Markdown и не через свободные рассуждения Codex, а через строгий Python CLI-шлюз.
+
+Главная идея:
+
+```text
+Codex не редактирует план напрямую.
+Codex вызывает разрешённые Python-команды.
+Python валидирует изменения.
+Python пишет историю.
+Python генерирует человекочитаемый Markdown.
+```
+
+## Базовая модель
+
+План разделяется на три слоя:
+
+```text
+AI_PROJECT/state/*.json      — машинное текущее состояние
+AI_PROJECT/events/*.jsonl    — история всех изменений
+AI_PROJECT/generated/*.md    — человекочитаемый вывод
+```
+
+`state` является источником истины.
+`events` фиксирует аудит.
+`generated` можно читать человеку и Codex, но нельзя редактировать вручную.
+
+## Что лежит в plan.json
+
+`plan.json` хранит верхний план проекта:
+
+```text
+Project
+Idea
+Goal
+Strategy
+Initiative[]
+Epic[]
+```
+
+`Task` не хранится внутри `plan.json`, потому что Task — это исполняемая единица. Для задач позже нужен отдельный `tasks.json`.
+
+## Иерархия
+
+```text
+Goal / Idea
+└── Initiative
+    └── Epic
+        └── Task
+```
+
+`Initiative` и `Epic` — это контейнеры планирования.
+`Task` — минимальная единица, которую можно передать Codex на исполнение.
+
+## Первый CLI
+
+Первый скрипт:
+
+```text
+scripts/planctl.py
+```
+
+Он управляет только верхним планом:
+
+```text
+idea
+goal
+strategy
+initiative
+epic
+```
+
+Примеры команд:
+
+```bash
+python scripts/planctl.py init
+python scripts/planctl.py idea set --text "..."
+python scripts/planctl.py goal set --text "..."
+python scripts/planctl.py strategy set-summary --text "..."
+python scripts/planctl.py initiative create --title "..."
+python scripts/planctl.py epic create --initiative INIT-001 --title "..."
+python scripts/planctl.py validate
+python scripts/planctl.py render
+python scripts/planctl.py audit
+```
+
+## Правила изменения
+
+Любое изменение плана должно проходить через CLI.
+
+Запрещено:
+
+```text
+- редактировать AI_PROJECT/state/plan.json вручную
+- редактировать AI_PROJECT/events/plan-events.jsonl вручную
+- редактировать AI_PROJECT/generated/CODEX_PLAN.md вручную
+- менять статусы без команды
+- создавать Epic без Initiative
+- активировать Epic под archived Initiative
+```
+
+## Что делает CLI при изменении
+
+Каждая mutation-команда должна выполнять один и тот же цикл:
+
+```text
+1. Прочитать plan.json
+2. Проверить текущее состояние
+3. Выполнить разрешённое изменение
+4. Увеличить revision
+5. Записать новое state
+6. Добавить событие в events/*.jsonl
+7. Перегенерировать generated/*.md
+8. Провалидировать результат
+```
+
+## Зачем это нужно
+
+Так мы переводим управление проектом из режима:
+
+```text
+LLM думает и редактирует документы
+```
+
+в режим:
+
+```text
+LLM выбирает разрешённую команду
+Python управляет состоянием
+Human Owner принимает решения
+```
+
+Это снижает хаос, защищает план от случайных правок и создаёт основу для будущего Codex plugin / skill.
+
+## Следующий шаг
+
+После `planctl.py` нужно сделать отдельный слой для задач:
+
+```text
+tasks.json
+task-events.jsonl
+CODEX_TASKS.md
+CODEX_CURRENT.md
+```
+
+И команды:
+
+```text
+task create
+task update-summary
+task transition
+task approve
+task archive
+current set
+prompt build
+```
+
+После этого можно подключать Codex skill/plugin, который будет заставлять Codex работать только через эти команды.
