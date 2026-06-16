@@ -1351,3 +1351,51 @@ Acceptance criteria:
 Conversion path:
 
 Bounded system evolution documentation cleanup requested by the Human Owner.
+
+---
+
+## EVOL-031 — Two-Level Delegated Agent Execution
+
+Status: Done
+Priority: P2
+Source: Human Owner request
+Roadmap item: P6 — SOP and Optional Multi-Agent Control Plane
+Owner: AI System Maintainer / System Architect AI / Prompt/Skill Engineer / Technical Writer AI
+Type: Documentation / Template / Skill
+
+Problem:
+
+L3 manual orchestration can assign Agent Work Packages and receive Agent Results, but Controller Codex did not have a dedicated documented mechanism for preparing precise Worker Agent handoff prompts without implying automatic dispatch or runtime behavior.
+
+Expected outcome:
+
+Add a safe two-level manual delegation layer where Controller Codex prepares a Worker Agent Prompt Package, the Human Owner or operator manually starts the Worker Agent session, Worker Agent returns a structured Agent Result and Controller Codex performs intake/review through existing lifecycle and CLI gateways.
+
+Implementation:
+
+- Added `.agents/skills/agent-delegation/SKILL.md` as guidance for Controller Codex handoff prompt preparation.
+- Added `ai-system/agent-delegation.md` as the source document for Two-Level Delegated Agent Execution.
+- Added `ai-system/templates/agent-worker-prompt.md` as a reusable Worker Agent Prompt Package template.
+- Updated skills, system indexes, roadmap, backlog and changelog/version mirrors.
+
+Acceptance criteria:
+
+- Agent Delegation Skill exists.
+- `ai-system/agent-delegation.md` exists.
+- Worker Agent Prompt Package template exists.
+- The mechanism is clearly described as L3 manual delegation.
+- Controller Codex can prepare Worker Agent prompts.
+- Worker Agent prompts include minimal read set, scope, allowed files, forbidden actions and result format.
+- Human Owner/operator manually launches Worker Agent sessions.
+- Controller Codex must not automatically launch agents.
+- Worker Agent must not edit protected `AI_PROJECT` files manually.
+- Worker Agent must not approve, accept, merge, push, open PRs or close QA/review.
+- Documentation Navigation Skill, Agent Result Intake and Integration Review relationships are clear.
+- Current maturity remains L3.
+- Runtime remains DEFERRED.
+- L4+ remains future/not approved.
+- No runtime behavior is introduced.
+
+Conversion path:
+
+Closed by CHG-003 / TASK-006 as a bounded documentation, template and skill update.

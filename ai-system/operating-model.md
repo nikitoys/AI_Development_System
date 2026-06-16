@@ -569,7 +569,39 @@ Needs improvement:
 - continue collecting repeatable L3 manual orchestration evidence;
 - use hardened Agent Result records during future manual orchestration pilots.
 
-## 2.15 Work Item Hierarchy
+## 2.15 Two-Level Delegated Agent Execution
+
+Status: Implemented
+
+Existing documents:
+
+```text
+/ai-system/agent-delegation.md
+/ai-system/templates/agent-worker-prompt.md
+/.agents/skills/agent-delegation/SKILL.md
+/ai-system/manual-orchestration.md
+/ai-system/agent-work-package.md
+/ai-system/agent-result-intake.md
+/ai-system/integration-review.md
+/ai-system/runtime-maturity-levels.md
+```
+
+Covers:
+
+- Controller Codex preparation of precise Worker Agent Prompt Packages;
+- Human Owner or operator manual Worker Agent launch;
+- Worker Agent execution of one bounded task or Agent Work Package;
+- structured Worker Agent Result return;
+- Controller Codex result intake, review routing and CLI-controlled state updates;
+- relationship to Documentation Navigation Skill for minimal read sets;
+- explicit L3 manual-only boundary.
+
+Needs improvement:
+
+- validate Worker Agent prompt quality during future manual orchestration pilots;
+- add machine-checkable handoff metadata only after repeated manual evidence shows it is useful.
+
+## 2.16 Work Item Hierarchy
 
 Status: Implemented
 
@@ -948,6 +980,7 @@ Improvement Lifecycle
 Lifecycle Governance
 Language and Localization
 System Evolution Governance
+Two-Level Delegated Agent Execution
 Work Item Hierarchy
 ```
 

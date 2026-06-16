@@ -3,8 +3,8 @@
 
 # Documentation Index
 
-Revision: `4`
-Documents: `128`
+Revision: `11`
+Documents: `130`
 
 | Path | Title | Type | Status | Required | Last reviewed |
 | --- | --- | --- | --- | --- | --- |
@@ -15,7 +15,9 @@ Documents: `128`
 | `ai-system/project-control/05-lifecycle-rules.md` | Project Control Lifecycle Rules | `lifecycle` | `active` | `true` | - |
 | `ai-system/project-control/06-prompt-package-spec.md` | Project Control Prompt Package Specification | `reference` | `active` | `true` | - |
 | `ai-system/project-control/07-validation-and-tests.md` | Project Control Validation and Tests | `process` | `active` | `true` | - |
+| `ai-system/skills/README.md` | Skills Layer Roadmap | `guide` | `active` | `false` | 2026-06-16T16:17:31Z |
 | `ai-system/README.md` | Readme | `reference` | `draft` | `false` | - |
+| `ai-system/agent-delegation.md` | Agent Delegation | `reference` | `draft` | `false` | 2026-06-16T19:17:48Z |
 | `ai-system/agent-result-intake.md` | Agent Result Intake | `reference` | `draft` | `false` | - |
 | `ai-system/agent-work-package.md` | Agent Work Package | `reference` | `draft` | `false` | - |
 | `ai-system/aicp-language-policy.md` | Aicp Language Policy | `policy` | `draft` | `false` | - |
@@ -93,6 +95,7 @@ Documents: `128`
 | `ai-system/system-structure.md` | System Structure | `reference` | `draft` | `false` | - |
 | `ai-system/task-format.md` | Task Format | `reference` | `draft` | `false` | - |
 | `ai-system/task-lifecycle.md` | Task Lifecycle | `lifecycle` | `draft` | `false` | - |
+| `ai-system/templates/agent-worker-prompt.md` | Worker Agent Prompt Package Template | `template` | `draft` | `false` | 2026-06-16T19:17:53Z |
 | `ai-system/templates/foldered/AGENTS.root.md` | Agents.Root | `template` | `draft` | `false` | - |
 | `ai-system/templates/foldered/AI_PROJECT/AGENTS.md` | Agents | `template` | `draft` | `false` | - |
 | `ai-system/templates/foldered/AI_PROJECT/AGENT_ASSIGNMENTS.md` | Agent Assignments | `template` | `draft` | `false` | - |
@@ -135,4 +138,3 @@ Documents: `128`
 | `ai-system/work-item-hierarchy.md` | Work Item Hierarchy | `reference` | `draft` | `false` | - |
 | `ai-system/workflow.md` | Workflow | `reference` | `draft` | `false` | - |
 | `ai-system/project-control/08-usage-guide.md` | Project Control Usage Guide | `guide` | `review` | `false` | - |
-| `ai-system/skills/README.md` | Skills Layer Roadmap | `guide` | `review` | `false` | - |

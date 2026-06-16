@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 18,
+  "revision": 30,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-16T15:38:13Z",
+  "updated_at": "2026-06-16T19:18:23Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -241,6 +241,137 @@
       "approval_notes": "Reviewed and accepted",
       "created_at": "2026-06-16T15:15:21Z",
       "updated_at": "2026-06-16T15:38:13Z"
+    },
+    {
+      "id": "TASK-005",
+      "epic_id": "EPIC-002",
+      "title": "Create Documentation Navigation Skill",
+      "status": "done",
+      "summary": "Create a guidance-only Documentation Navigation Skill that routes agents to minimal source documents for AI_Development_System work.",
+      "description": "Add .agents/skills/documentation-navigation/SKILL.md and update ai-system/skills/README.md so Codex and subagents can find the correct read set without treating generated/template/example files as authority.",
+      "priority": 1,
+      "order": 3,
+      "active_role": "AI System Maintainer + Prompt/Skill Engineer + Technical Writer AI",
+      "active_stage": "Create Documentation Navigation Skill with owner-approved closure",
+      "active_document": ".agents/skills/documentation-navigation/SKILL.md / ai-system/skills/README.md",
+      "expected_result": "Documentation Navigation Skill created, indexed, validated and closed through project-control CLI if all checks pass.",
+      "verification_mode": "standard",
+      "scope": [
+        "Create .agents/skills/documentation-navigation/SKILL.md as a guidance-only routing helper.",
+        "Update ai-system/skills/README.md to list the Documentation Navigation Skill with purpose, priority, allowed actions and forbidden actions.",
+        "Explain source-of-truth hierarchy across /ai-system, root /AI_PROJECT, templates and golden project.",
+        "Include minimal read-set routing for next-step, documentation change, task execution, Project Control Gateway, system evolution, SOP/multi-agent planning and review/QA requests.",
+        "Reference codexctl.py for Codex prompt package state because scripts/codexctl.py exists.",
+        "Use project-control CLIs for protected AI_PROJECT state, event and generated changes."
+      ],
+      "out_of_scope": [
+        "Do not implement subagents, SOP runner, L4 or runtime behavior.",
+        "Do not change runtime maturity, CLI behavior, lifecycle rules, protected-file policy or command catalogs.",
+        "Do not add automatic execution, automatic dispatch, automatic merge, automatic PR creation, automatic acceptance or automatic review/QA closure.",
+        "Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/** or AI_PROJECT/generated/**."
+      ],
+      "allowed_files": [
+        ".agents/skills/documentation-navigation/SKILL.md",
+        "ai-system/skills/README.md",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_CURRENT.md via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_PROMPT.md via taskctl.py/codexctl.py only",
+        "AI_PROJECT/generated/CODEX_STATUS.md via codexctl.py only",
+        "AI_PROJECT/state/evolution.json via evolutionctl.py only",
+        "AI_PROJECT/events/evolution-events.jsonl via evolutionctl.py only",
+        "AI_PROJECT/generated/EVOLUTION.md via evolutionctl.py only",
+        "AI_PROJECT/state/current_execution.json via codexctl.py only",
+        "AI_PROJECT/events/codex-events.jsonl via codexctl.py only"
+      ],
+      "acceptance_criteria": [
+        ".agents/skills/documentation-navigation/SKILL.md exists.",
+        "The skill clearly explains source-of-truth hierarchy and distinguishes /ai-system, root /AI_PROJECT, templates and golden example.",
+        "The skill provides minimal read sets by request type and says to read minimal first, expanding only when needed.",
+        "The skill says generated Markdown is readable output, not editable source, and protected AI_PROJECT files are CLI-controlled only.",
+        "The skill references codexctl.py for Codex prompt package state.",
+        "ai-system/skills/README.md lists the new skill with purpose, priority, allowed actions and forbidden actions.",
+        "The skill does not authorize runtime behavior; current maturity remains L3, runtime remains DEFERRED and L4+ remains future/not approved.",
+        "No protected AI_PROJECT files are manually edited and required validation commands pass."
+      ],
+      "review_instructions": [
+        "Verify skill authority boundary against AGENTS.md, /ai-system source documents and project-control CLI state.",
+        "Verify that no wording implies generated files are authoritative editable state, templates are active state, golden example is active state, L4 is approved, or runtime is enabled.",
+        "Verify that protected AI_PROJECT changes were produced only by CLI commands."
+      ],
+      "notes": [
+        "Human Owner approval is embedded in the attached CODEX prompt and delegates task/change closure if all acceptance criteria pass."
+      ],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-16T16:17:39Z",
+      "approval_notes": "Approved in attached CODEX prompt; validation passed before closure.",
+      "created_at": "2026-06-16T16:13:42Z",
+      "updated_at": "2026-06-16T16:17:44Z"
+    },
+    {
+      "id": "TASK-006",
+      "epic_id": "EPIC-002",
+      "title": "Add Two-Level Delegated Agent Execution",
+      "status": "done",
+      "summary": "Create L3 manual-only Controller Codex to Worker Agent delegation guidance, source documentation and reusable worker prompt template.",
+      "description": "Add the Agent Delegation Skill, source-of-truth delegation document, Worker Agent Prompt Package template and required indexes/version history while preserving the L3 manual orchestration boundary.",
+      "priority": 1,
+      "order": 4,
+      "active_role": "AI System Maintainer + System Architect AI + Prompt/Skill Engineer + Technical Writer AI",
+      "active_stage": "Add Two-Level Agent Delegation Layer",
+      "active_document": ".agents/skills/agent-delegation/SKILL.md; ai-system/agent-delegation.md; ai-system/templates/agent-worker-prompt.md",
+      "expected_result": "A documented L3 two-level delegation mechanism exists for precise manual Worker Agent handoff prompts, without automatic dispatch or result approval.",
+      "verification_mode": "standard",
+      "scope": [
+        "Create Agent Delegation Skill.",
+        "Create ai-system source document for Two-Level Delegated Agent Execution.",
+        "Create reusable Worker Agent Prompt Package template.",
+        "Update skill index, system indexes, roadmap/backlog and changelog/version mirrors as required."
+      ],
+      "out_of_scope": [
+        "Do not implement agenthandoffctl.py, SOP runner, runtime adapters or automatic Worker Agent launch.",
+        "Do not enable automatic Codex execution, branch/worktree automation, merge/push/PR automation, L4 approval or runtime maturity changes.",
+        "Do not manually edit protected AI_PROJECT files."
+      ],
+      "allowed_files": [
+        ".agents/skills/agent-delegation/SKILL.md",
+        "ai-system/agent-delegation.md",
+        "ai-system/templates/agent-worker-prompt.md",
+        "ai-system/skills/README.md",
+        "ai-system/README.md",
+        "ai-system/operating-model.md",
+        "ai-system/evolution/roadmap.md",
+        "ai-system/evolution/evolution-backlog.md",
+        "ai-system/system-changelog.md",
+        "README.md",
+        "README.ru.md",
+        "AI_PROJECT/state/** via CLI only",
+        "AI_PROJECT/events/** via CLI only",
+        "AI_PROJECT/generated/** via CLI only"
+      ],
+      "acceptance_criteria": [
+        "Agent Delegation Skill exists and states it is guidance only.",
+        "ai-system/agent-delegation.md exists and defines Two-Level Delegated Agent Execution as L3 manual delegation only.",
+        "Worker Agent Prompt Package template exists and includes minimal read set, scope, allowed files, forbidden actions, verification, result format and return instructions.",
+        "Documentation states Human Owner/operator manually launches Worker Agent sessions and Controller Codex does not automatically launch agents.",
+        "Documentation states Worker Agent must not edit protected AI_PROJECT files manually or approve, accept, merge, push, open PRs or close QA/review.",
+        "Documentation Navigation Skill, Agent Result Intake and Integration Review relationships are clear.",
+        "Current maturity remains L3, runtime remains DEFERRED and L4+ remains future/not approved.",
+        "Required validation commands pass and no protected AI_PROJECT files are manually edited."
+      ],
+      "review_instructions": [
+        "Review for scope compliance, L3 manual-only boundary, generated documentation freshness, changelog/version mirror consistency and unsafe wording."
+      ],
+      "notes": [
+        "Linked evolution change: CHG-003.",
+        "Human Owner approval supplied in attached CODEX request."
+      ],
+      "approved_by": "Human Owner",
+      "approved_at": "2026-06-16T19:18:19Z",
+      "approval_notes": "Approved in attached CODEX request; acceptance criteria satisfied and required verification checks passed.",
+      "created_at": "2026-06-16T19:00:57Z",
+      "updated_at": "2026-06-16T19:18:23Z"
     }
   ]
 }

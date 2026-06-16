@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 19,
+  "revision": 55,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-16T15:38:14Z",
+  "updated_at": "2026-06-16T19:18:37Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -50,6 +50,97 @@
       "order": 1,
       "created_at": "2026-06-16T15:08:29Z",
       "updated_at": "2026-06-16T15:38:14Z"
+    },
+    {
+      "id": "CHG-002",
+      "title": "Create Documentation Navigation Skill",
+      "status": "accepted",
+      "change_type": "plugin",
+      "rationale": "The skill reduces over-reading and authority confusion while preserving AGENTS.md, /ai-system documents and CLI-controlled /AI_PROJECT state as source of truth.",
+      "problem": "Agents need a compact routing skill that helps them choose the minimal correct documentation set before planning, editing, reviewing or executing AI_Development_System work.",
+      "proposal": "Add .agents/skills/documentation-navigation/SKILL.md and index it in ai-system/skills/README.md as a guidance-only documentation navigation helper.",
+      "affected_areas": [
+        "Skills guidance and documentation navigation"
+      ],
+      "affected_files": [
+        ".agents/skills/documentation-navigation/SKILL.md",
+        "ai-system/skills/README.md"
+      ],
+      "risks": [
+        "Agents could over-treat the skill as authority unless the skill explicitly defers to AGENTS.md, /ai-system source documents and CLI-controlled project state.",
+        "Navigation guidance could accidentally imply runtime, L4, automatic dispatch or acceptance behavior if boundaries are not explicit."
+      ],
+      "impact": [
+        "Adds a local skill that routes Codex and subagents to minimal relevant documentation sets by request type.",
+        "Indexes the skill in the Skills Layer Roadmap with purpose, priority, allowed actions and forbidden actions."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-005"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-16T16:12:38Z",
+      "approval_notes": "Approved in attached CODEX prompt for Documentation Navigation Skill.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-16T16:17:53Z",
+      "acceptance_notes": "Documentation Navigation Skill accepted after validation under attached owner-approved CODEX prompt.",
+      "notes": [],
+      "priority": 1,
+      "order": 2,
+      "created_at": "2026-06-16T16:11:50Z",
+      "updated_at": "2026-06-16T16:17:53Z"
+    },
+    {
+      "id": "CHG-003",
+      "title": "Add Two-Level Delegated Agent Execution",
+      "status": "accepted",
+      "change_type": "plugin",
+      "rationale": "The Human Owner approved a bounded documentation/skill/template task to improve Worker Agent handoff quality without enabling automatic dispatch or runtime behavior.",
+      "problem": "L3 manual orchestration can coordinate Agent Work Packages, but Controller Codex lacks a dedicated documented skill, source document and worker prompt template for precise manual Worker Agent handoffs.",
+      "proposal": "Add a guidance skill, source-of-truth delegation document and reusable Worker Agent Prompt Package template that preserve L3 manual-only boundaries.",
+      "affected_areas": [],
+      "affected_files": [
+        ".agents/skills/agent-delegation/SKILL.md",
+        "ai-system/agent-delegation.md",
+        "ai-system/templates/agent-worker-prompt.md",
+        "ai-system/skills/README.md",
+        "ai-system/README.md",
+        "ai-system/operating-model.md",
+        "ai-system/evolution/roadmap.md",
+        "ai-system/evolution/evolution-backlog.md",
+        "ai-system/system-changelog.md",
+        "README.md",
+        "README.ru.md"
+      ],
+      "risks": [
+        "Delegation wording could be misread as approval for automatic agent dispatch, L4 assisted execution or runtime behavior unless every source clearly states the L3 manual-only boundary."
+      ],
+      "impact": [
+        "Controller Codex can prepare precise Worker Agent Prompt Packages for manual handoff, and Worker Agent Results have clearer intake expectations; current maturity remains L3 and runtime remains DEFERRED."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-006"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "Human Owner",
+      "owner_approved_at": "2026-06-16T19:00:36Z",
+      "approval_notes": "Approved in attached CODEX request for bounded documentation/skill/template task.",
+      "accepted_by": "Human Owner",
+      "accepted_at": "2026-06-16T19:18:37Z",
+      "acceptance_notes": "Accepted under attached CODEX request after TASK-006 completed and validation checks passed.",
+      "notes": [],
+      "priority": 1,
+      "order": 3,
+      "created_at": "2026-06-16T18:55:55Z",
+      "updated_at": "2026-06-16T19:18:37Z"
     }
   ]
 }
