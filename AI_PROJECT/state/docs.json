@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 7,
+  "revision": 11,
   "created_at": "2026-06-15T21:36:58Z",
-  "updated_at": "2026-06-16T18:35:17Z",
+  "updated_at": "2026-06-16T19:17:53Z",
   "docs": [
     {
       "id": "DOC-001",
@@ -1798,6 +1798,40 @@
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
       "updated_at": "2026-06-15T22:10:52Z"
+    },
+    {
+      "id": "DOC-129",
+      "path": "ai-system/agent-delegation.md",
+      "title": "Agent Delegation",
+      "type": "reference",
+      "status": "draft",
+      "required": false,
+      "owner": "AI System Maintainer",
+      "last_reviewed_at": "2026-06-16T19:17:48Z",
+      "last_reviewed_by": "codex",
+      "notes": [
+        "Registered by TASK-006 for Two-Level Delegated Agent Execution.",
+        "Reviewed during TASK-006 for L3 manual-only delegation boundaries and source-document consistency."
+      ],
+      "created_at": "2026-06-16T19:14:21Z",
+      "updated_at": "2026-06-16T19:17:48Z"
+    },
+    {
+      "id": "DOC-130",
+      "path": "ai-system/templates/agent-worker-prompt.md",
+      "title": "Worker Agent Prompt Package Template",
+      "type": "template",
+      "status": "draft",
+      "required": false,
+      "owner": "AI System Maintainer",
+      "last_reviewed_at": "2026-06-16T19:17:53Z",
+      "last_reviewed_by": "codex",
+      "notes": [
+        "Registered by TASK-006 as reusable manual Worker Agent handoff template.",
+        "Reviewed during TASK-006 for required Worker Agent prompt fields and forbidden-action boundaries."
+      ],
+      "created_at": "2026-06-16T19:14:26Z",
+      "updated_at": "2026-06-16T19:17:53Z"
     }
   ]
 }

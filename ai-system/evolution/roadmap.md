@@ -174,8 +174,9 @@ Items:
 17. Expand pilot validation evidence.
 18. Add manual Role-to-Agent Assignment for L3 orchestration.
 19. Add a practical L3 role-assigned parallel runbook.
-20. Prepare future runtime adapter contracts without enabling runtime.
-21. Consider assisted execution only after the deferred runtime criteria are satisfied.
+20. Add Two-Level Delegated Agent Execution for precise manual Worker Agent handoffs.
+21. Prepare future runtime adapter contracts without enabling runtime.
+22. Consider assisted execution only after the deferred runtime criteria are satisfied.
 
 Exit criteria:
 
@@ -199,7 +200,8 @@ Immediate priorities:
 8. `EVOL-026` — completed; pilot validation evidence expanded across documentation-only, small tooling/code and multi-agent parallel planning cases.
 9. L3 refinement — completed; manual Role-to-Agent Assignment model added without automatic dispatch.
 10. L3 refinement — completed; practical role-assigned parallel runbook added.
-11. `EVOL-027` — future/deferred: prepare runtime adapter contracts without enabling runtime.
+11. `EVOL-031` — completed; Two-Level Delegated Agent Execution added for manual Worker Agent prompt handoffs without automatic dispatch.
+12. `EVOL-027` — future/deferred: prepare runtime adapter contracts without enabling runtime.
 
 Runtime maturity target:
 

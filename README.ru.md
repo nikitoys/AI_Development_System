@@ -3,7 +3,7 @@
 Языки: [English](README.md) | [Русский](README.ru.md)
 
 Статус: Draft
-Версия: v0.49.0
+Версия: v0.50.0
 
 Этот репозиторий содержит AI Development System: операционную модель для разработки проектов через AI-роли, документацию, lifecycle governance, генерацию промптов, выполнение задач через Codex, review и контролируемую эволюцию системы.
 
@@ -78,6 +78,8 @@ Runtime maturity levels описаны в `/ai-system/runtime-maturity-levels.md
 Manual Multi-Agent Orchestration Mode описан в `/ai-system/manual-orchestration.md`. L3 является manual-only и не разрешает automatic execution, merge или acceptance.
 
 Role-to-Agent Assignment описан в `/ai-system/role-agent-assignment.md`. Assignments вручную связывают ready Agent Work Packages с logical agents или external sessions и не разрешают automatic dispatch или runtime execution.
+
+Agent Delegation описан в `/ai-system/agent-delegation.md`. Controller Codex может готовить precise Worker Agent Prompt Packages для manual handoff, но Human Owner или operator вручную запускает Worker Agent sessions, а результаты всё равно проходят intake, review и Human Owner control.
 
 L3 role-assigned parallel runbook описан в `/ai-system/l3-role-assigned-parallel-runbook.md`.
 

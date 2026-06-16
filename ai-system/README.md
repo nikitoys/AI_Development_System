@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.49.0
+Version: v0.50.0
 
 ## Purpose
 
@@ -176,6 +176,8 @@ Manual orchestration coordinates Agent Work Packages, result intake and integrat
 
 `l3-role-assigned-parallel-runbook.md` provides the practical Human Owner / ChatGPT Orchestrator procedure for manual role-assigned parallel orchestration.
 
+`agent-delegation.md` defines Two-Level Delegated Agent Execution for L3 manual handoffs. Controller Codex may prepare precise Worker Agent Prompt Packages, but the Human Owner or operator manually launches Worker Agent sessions, and Worker Agent Results still require intake, review and Human Owner control.
+
 ## AI_PROJECT Control and Agent Planning Templates
 
 This repository has a root `/AI_PROJECT` self-hosted control layer for its own evolution. References to `templates/**/AI_PROJECT` in this section describe reusable templates for concrete external projects that embed AI_Development_System.
@@ -250,6 +252,7 @@ AI Development System
 - `manual-orchestration.md` — L3 manual-only coordination workflow for Agent Work Packages, result intake and integration review.
 - `role-agent-assignment.md` — L3 manual Role-to-Agent Assignment model for logical agents and external sessions.
 - `l3-role-assigned-parallel-runbook.md` — practical L3 runbook for manual role-assigned parallel orchestration.
+- `agent-delegation.md` — Two-Level Delegated Agent Execution for precise manual Worker Agent handoff prompts.
 - `rules.md` — global rules and restrictions.
 - `system-schemes.md` — compact text schemes for roles, documents and process flow.
 - `task-format.md` — standard task format for Codex and AI roles.
@@ -322,6 +325,7 @@ The `evolution/` directory defines roadmap-driven self-evolution of AI_Developme
 
 - `templates/foldered/` — recommended templates for `AGENTS.md`, `AI_Development_System/` and `AI_PROJECT/` integration.
 - `templates/project/` — root-mode templates for simple or legacy projects.
+- `templates/agent-worker-prompt.md` — reusable Worker Agent Prompt Package template for manual delegation.
 
 ## Operating Model
 

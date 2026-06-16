@@ -3,8 +3,8 @@
 
 # Documentation Gaps
 
-Revision: `7`
-Open gaps: `127`
+Revision: `11`
+Open gaps: `129`
 
 - `ai-system/project-control/01-overview.md` (overview, active): active document has no recorded review
 - `ai-system/project-control/02-domain-model.md` (reference, active): active document has no recorded review
@@ -14,6 +14,7 @@ Open gaps: `127`
 - `ai-system/project-control/06-prompt-package-spec.md` (reference, active): active document has no recorded review
 - `ai-system/project-control/07-validation-and-tests.md` (process, active): active document has no recorded review
 - `ai-system/README.md` (reference, draft): document is not active
+- `ai-system/agent-delegation.md` (reference, draft): document is not active
 - `ai-system/agent-result-intake.md` (reference, draft): document is not active
 - `ai-system/agent-work-package.md` (reference, draft): document is not active
 - `ai-system/aicp-language-policy.md` (policy, draft): document is not active
@@ -91,6 +92,7 @@ Open gaps: `127`
 - `ai-system/system-structure.md` (reference, draft): document is not active
 - `ai-system/task-format.md` (reference, draft): document is not active
 - `ai-system/task-lifecycle.md` (lifecycle, draft): document is not active
+- `ai-system/templates/agent-worker-prompt.md` (template, draft): document is not active
 - `ai-system/templates/foldered/AGENTS.root.md` (template, draft): document is not active
 - `ai-system/templates/foldered/AI_PROJECT/AGENTS.md` (template, draft): document is not active
 - `ai-system/templates/foldered/AI_PROJECT/AGENT_ASSIGNMENTS.md` (template, draft): document is not active

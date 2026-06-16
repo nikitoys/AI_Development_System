@@ -2,6 +2,23 @@
 
 Status: Draft
 
+## v0.50.0
+
+### Added
+
+- Added `ai-system/agent-delegation.md` to define Two-Level Delegated Agent Execution as an L3 manual delegation mechanism.
+- Added `ai-system/templates/agent-worker-prompt.md` as a reusable Worker Agent Prompt Package template.
+- Added `.agents/skills/agent-delegation/SKILL.md` to help Controller Codex prepare precise Worker Agent handoff prompts.
+- Added `EVOL-031` traceability for the L3 manual delegation refinement.
+
+### Updated
+
+- Updated skills, README/index, operating model, roadmap and version mirrors to reference the new delegation layer.
+
+### Reason
+
+Controller Codex needed a precise, repeatable way to prepare bounded Worker Agent handoff prompts without implying runtime automation. This change keeps current maturity at `L3 — Manual multi-agent orchestration`, keeps runtime `DEFERRED`, and keeps `L4+` future/not approved. Human Owner or operator manually launches Worker Agent sessions; Controller Codex does not automatically dispatch agents, and Worker Agent Results still require intake, review and Human Owner control.
+
 ## v0.49.0
 
 ### Updated

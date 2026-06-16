@@ -3,7 +3,7 @@
 Languages: [English](README.md) | [Русский](README.ru.md)
 
 Status: Draft
-Version: v0.49.0
+Version: v0.50.0
 
 This repository contains an AI Development System: an operating model for developing projects through AI roles, documentation, lifecycle governance, prompt generation, Codex execution, review and controlled evolution.
 
@@ -78,6 +78,8 @@ Runtime maturity levels are defined in `/ai-system/runtime-maturity-levels.md`. 
 Manual Multi-Agent Orchestration Mode is defined in `/ai-system/manual-orchestration.md`. L3 is manual-only and does not authorize automatic execution, merge or acceptance.
 
 Role-to-Agent Assignment is defined in `/ai-system/role-agent-assignment.md`. Assignments map ready Agent Work Packages to logical agents or external sessions manually and do not authorize automatic dispatch or runtime execution.
+
+Agent Delegation is defined in `/ai-system/agent-delegation.md`. Controller Codex may prepare precise Worker Agent Prompt Packages for manual handoff, but the Human Owner or operator manually launches Worker Agent sessions and results still go through intake, review and Human Owner control.
 
 The L3 role-assigned parallel runbook is defined in `/ai-system/l3-role-assigned-parallel-runbook.md`.
 
