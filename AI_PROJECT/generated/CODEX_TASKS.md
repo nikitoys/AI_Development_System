@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `18`
+Revision: `24`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -79,3 +79,22 @@ Acceptance criteria:
 - Skill includes a question budget and forbids using clarification questions to avoid normal inspection.
 - Skills README recommends the Clarification Gate Skill as high priority if the README exists.
 - Required validation commands complete or any blocker is reported.
+
+### TASK-005 — Create Documentation Navigation Skill
+
+Status: `done`  
+Priority: `1`  
+Verification: `standard`  
+
+Create a guidance-only Documentation Navigation Skill that routes agents to minimal source documents for AI_Development_System work.
+
+Acceptance criteria:
+
+- .agents/skills/documentation-navigation/SKILL.md exists.
+- The skill clearly explains source-of-truth hierarchy and distinguishes /ai-system, root /AI_PROJECT, templates and golden example.
+- The skill provides minimal read sets by request type and says to read minimal first, expanding only when needed.
+- The skill says generated Markdown is readable output, not editable source, and protected AI_PROJECT files are CLI-controlled only.
+- The skill references codexctl.py for Codex prompt package state.
+- ai-system/skills/README.md lists the new skill with purpose, priority, allowed actions and forbidden actions.
+- The skill does not authorize runtime behavior; current maturity remains L3, runtime remains DEFERRED and L4+ remains future/not approved.
+- No protected AI_PROJECT files are manually edited and required validation commands pass.

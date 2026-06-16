@@ -37,6 +37,7 @@ If a skill suggests a project-control state change, the change must still go thr
 | --- | --- | --- | --- | --- | --- |
 | Project Control Gateway Skill | Route plan, task, documentation and evolution work through the controlled CLI gateway instead of manual state edits. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Inspect state through CLI, choose allowed commands, run validation and render commands, report unsupported operations. | Manually edit `AI_PROJECT/state/**`, `AI_PROJECT/events/**` or `AI_PROJECT/generated/**`; invent lifecycle states or commands; execute Initiative or Epic directly. |
 | Clarification Gate Skill | Teach Codex and subagents when to inspect first, proceed with safe assumptions, or stop for Human Owner blocker questions. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Classify blockers, group owner questions, identify safe defaults, preserve task and approval boundaries. | Use questions to avoid normal inspection; ask for approval after every small step; self-approve accepted, approved, active or done states. |
+| Documentation Navigation Skill | Route Codex and subagents to the minimal correct documentation and project-control read set before planning, editing, reviewing or executing AI_Development_System work. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py`, `codexctl.py` | P0 | Choose minimal read sets by request type, distinguish source documents from generated views, identify when to expand context or ask the Human Owner. | Treat generated Markdown, templates or golden examples as active authority; edit protected `AI_PROJECT` files manually; authorize runtime behavior or acceptance decisions. |
 | CLI Creator Skill | Help design or update controlled Python CLI surfaces for project-control operations. | `scripts/*ctl.py`, validation and smoke scripts | P1 | Draft CLI command shape, map commands to state/events/generated outputs, add tests when a controlled Task allows it. | Add or change CLI behavior without a controlled Task and required owner approval; bypass protected files; make generated Markdown authoritative. |
 
 ## Recommended Skills To Create
@@ -55,14 +56,15 @@ If a skill suggests a project-control state change, the change must still go thr
 ## Recommended Creation Order
 
 1. Clarification Gate Skill.
-2. Documentation Control Skill.
-3. Protected Files Skill.
-4. Review Gate Skill.
-5. QA Evidence Skill.
-6. SOP Authoring Skill.
-7. Agent Assignment Skill.
-8. Decision / ADR Skill.
-9. Git Safety Skill.
+2. Documentation Navigation Skill.
+3. Documentation Control Skill.
+4. Protected Files Skill.
+5. Review Gate Skill.
+6. QA Evidence Skill.
+7. SOP Authoring Skill.
+8. Agent Assignment Skill.
+9. Decision / ADR Skill.
+10. Git Safety Skill.
 
 This order strengthens the control boundary first, then improves review and evidence quality, then adds higher-level planning and collaboration guidance.
 

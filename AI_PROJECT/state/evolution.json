@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 19,
+  "revision": 34,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-16T15:38:14Z",
+  "updated_at": "2026-06-16T16:17:53Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -50,6 +50,49 @@
       "order": 1,
       "created_at": "2026-06-16T15:08:29Z",
       "updated_at": "2026-06-16T15:38:14Z"
+    },
+    {
+      "id": "CHG-002",
+      "title": "Create Documentation Navigation Skill",
+      "status": "accepted",
+      "change_type": "plugin",
+      "rationale": "The skill reduces over-reading and authority confusion while preserving AGENTS.md, /ai-system documents and CLI-controlled /AI_PROJECT state as source of truth.",
+      "problem": "Agents need a compact routing skill that helps them choose the minimal correct documentation set before planning, editing, reviewing or executing AI_Development_System work.",
+      "proposal": "Add .agents/skills/documentation-navigation/SKILL.md and index it in ai-system/skills/README.md as a guidance-only documentation navigation helper.",
+      "affected_areas": [
+        "Skills guidance and documentation navigation"
+      ],
+      "affected_files": [
+        ".agents/skills/documentation-navigation/SKILL.md",
+        "ai-system/skills/README.md"
+      ],
+      "risks": [
+        "Agents could over-treat the skill as authority unless the skill explicitly defers to AGENTS.md, /ai-system source documents and CLI-controlled project state.",
+        "Navigation guidance could accidentally imply runtime, L4, automatic dispatch or acceptance behavior if boundaries are not explicit."
+      ],
+      "impact": [
+        "Adds a local skill that routes Codex and subagents to minimal relevant documentation sets by request type.",
+        "Indexes the skill in the Skills Layer Roadmap with purpose, priority, allowed actions and forbidden actions."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-005"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-16T16:12:38Z",
+      "approval_notes": "Approved in attached CODEX prompt for Documentation Navigation Skill.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-16T16:17:53Z",
+      "acceptance_notes": "Documentation Navigation Skill accepted after validation under attached owner-approved CODEX prompt.",
+      "notes": [],
+      "priority": 1,
+      "order": 2,
+      "created_at": "2026-06-16T16:11:50Z",
+      "updated_at": "2026-06-16T16:17:53Z"
     }
   ]
 }

@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `19`
-Changes: `1`
+Revision: `34`
+Changes: `2`
 
 ## Summary
 
-- `accepted`: 1
+- `accepted`: 2
 
 ## Changes
 
@@ -64,3 +64,52 @@ Impact:
 Linked tasks:
 
 - TASK-004
+
+### CHG-002 — Create Documentation Navigation Skill
+
+Status: `accepted`  
+Type: `plugin`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+Agents need a compact routing skill that helps them choose the minimal correct documentation set before planning, editing, reviewing or executing AI_Development_System work.
+
+Proposal:
+
+Add .agents/skills/documentation-navigation/SKILL.md and index it in ai-system/skills/README.md as a guidance-only documentation navigation helper.
+
+Rationale:
+
+The skill reduces over-reading and authority confusion while preserving AGENTS.md, /ai-system documents and CLI-controlled /AI_PROJECT state as source of truth.
+
+Approved by: `human_owner` at `2026-06-16T16:12:38Z`  
+Approval notes: Approved in attached CODEX prompt for Documentation Navigation Skill.  
+
+Accepted by: `human_owner` at `2026-06-16T16:17:53Z`  
+Acceptance notes: Documentation Navigation Skill accepted after validation under attached owner-approved CODEX prompt.  
+
+Affected areas:
+
+- Skills guidance and documentation navigation
+
+Affected files:
+
+- .agents/skills/documentation-navigation/SKILL.md
+- ai-system/skills/README.md
+
+Risks:
+
+- Agents could over-treat the skill as authority unless the skill explicitly defers to AGENTS.md, /ai-system source documents and CLI-controlled project state.
+- Navigation guidance could accidentally imply runtime, L4, automatic dispatch or acceptance behavior if boundaries are not explicit.
+
+Impact:
+
+- Adds a local skill that routes Codex and subagents to minimal relevant documentation sets by request type.
+- Indexes the skill in the Skills Layer Roadmap with purpose, priority, allowed actions and forbidden actions.
+
+Linked tasks:
+
+- TASK-005
