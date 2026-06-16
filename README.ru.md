@@ -3,13 +3,19 @@
 Языки: [English](README.md) | [Русский](README.ru.md)
 
 Статус: Draft
-Версия: v0.48.2
+Версия: v0.49.0
 
 Этот репозиторий содержит AI Development System: операционную модель для разработки проектов через AI-роли, документацию, lifecycle governance, генерацию промптов, выполнение задач через Codex, review и контролируемую эволюцию системы.
 
-Это не обычный application repository. Основной источник истины находится в `/ai-system`.
+Это не обычный application repository. Основной источник истины для поведения системы находится в `/ai-system`.
 
-Сам этот репозиторий не использует root-level `AI_PROJECT`. `AI_PROJECT` остаётся template/example concept только для конкретных внешних проектов.
+Этот репозиторий теперь намеренно использует root-level `/AI_PROJECT` как self-hosted Project Control Layer. Он хранит machine-readable state, append-only audit events и generated readable outputs для controlled evolution самой AI_Development_System. Protected files в `/AI_PROJECT/state/**`, `/AI_PROJECT/events/**` и `/AI_PROJECT/generated/**` можно менять только через project-control CLI gateways.
+
+`AI_PROJECT` встречается в трёх разных контекстах:
+
+- `/AI_PROJECT` — self-hosted project-control layer для этого репозитория.
+- `/ai-system/templates/**/AI_PROJECT` — reusable project-control templates для внешних проектов.
+- `/examples/golden-project/AI_PROJECT` — non-runtime reference example для onboarding и validation.
 
 Источник версии: текущая версия AI_Development_System определяется верхней записью в `/ai-system/system-changelog.md`. README-файлы только отражают эту версию и не должны указывать более новую или отличающуюся версию.
 
@@ -59,9 +65,7 @@ Parallel Execution Policy описан в `/ai-system/parallel-execution-policy.
 
 Agent Result Intake и Integration Review описаны в `/ai-system/agent-result-intake.md` и `/ai-system/integration-review.md`. Они проверяют results перед review, QA и Human Owner acceptance, но не разрешают automatic execution, merge или acceptance.
 
-Foldered `AI_PROJECT` templates теперь включают agent planning files для plans, packages, assignments, locks, results и metrics. Это planning и manual coordination records only, они не разрешают execution, parallel execution, merge или acceptance.
-
-Root-level `AI_PROJECT` не используется самой AI_Development_System.
+Foldered `AI_PROJECT` templates теперь включают agent planning files для plans, packages, assignments, locks, results и metrics. Это planning и manual coordination records only, они не разрешают execution, parallel execution, merge или acceptance. Эти templates отделены от root `/AI_PROJECT`, который используется этим репозиторием как self-hosted control state.
 
 Golden project содержит заполненный non-runtime multi-agent planning example для Task Tracker в `examples/golden-project/`.
 

@@ -52,6 +52,22 @@ python scripts/projectctl.py state rebuild-from-events
 
 But this is out of scope for the first implementation.
 
+## Self-Hosted State In AI_Development_System
+
+This repository now dogfoods the state model through root-level `/AI_PROJECT`.
+
+The self-hosted layer stores:
+
+```text id="self-hosted-layout"
+/AI_PROJECT/state/**      current machine state for this repository's project control
+/AI_PROJECT/events/**     append-only audit events for project-control mutations
+/AI_PROJECT/generated/**  generated readable views and prompt/status outputs
+```
+
+Generated Markdown is readable output only. If generated output drifts, rebuild it through the owning CLI. Do not edit it by hand.
+
+The root self-hosted state is distinct from reusable templates under `/ai-system/templates/**/AI_PROJECT` and the non-runtime golden example under `/examples/golden-project/AI_PROJECT`.
+
 ---
 
 # 1. Directory Layout

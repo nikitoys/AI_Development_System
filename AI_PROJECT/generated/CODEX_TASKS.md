@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `16`
-Current task: `TASK-004`
+Revision: `18`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -24,9 +24,9 @@ Acceptance criteria:
 - The document is registered through docctl.py and moved no further than review without Human Owner acceptance.
 - Plan, task, documentation, smoke, and protected-files validation commands pass.
 
-### TASK-004 — Implement codexctl prompt package generator ⭐
+### TASK-004 — Implement codexctl prompt package generator
 
-Status: `in_review`  
+Status: `done`  
 Priority: `1`  
 Verification: `standard`  
 

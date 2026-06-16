@@ -1316,31 +1316,33 @@ Closed by EVOL-029 as a bounded documentation and template update.
 
 ---
 
-## EVOL-030 — Align L4 Assisted SOP Execution planning with evolution governance
+## EVOL-030 — Reconcile self-hosted AI_PROJECT documentation with evolution governance
 
 Status: Planned
 Priority: P1
-Source: Human Owner request / AI_PROJECT cleanup / L4 planning review
+Source: Human Owner request / self-hosted AI_PROJECT decision / L4 planning review
 Roadmap item: P6 — SOP and Optional Multi-Agent Control Plane
 Owner: AI System Maintainer / Project Manager AI / Technical Writer AI
 Type: Governance / Documentation
 
 Problem:
 
-L4 planning exists in root-level AI_PROJECT files, creating confusion between project-local control files and system evolution governance.
+Documentation still reflects the earlier cleanup decision that free-form root-level project-control files were removed from active use. The Human Owner chose Option A: root `/AI_PROJECT` is now intentionally used as this repository's self-hosted Project Control Layer, while source evolution documents remain under `ai-system/evolution`.
 
 Expected outcome:
 
-Root-level AI_PROJECT is removed from this repository, and L4 planning records are moved under ai-system/evolution.
+Primary documentation consistently distinguishes root `/AI_PROJECT`, reusable `AI_PROJECT` templates and the golden project example.
 
 Acceptance criteria:
 
-- root AI_PROJECT folder is removed;
-- L4 plan exists under ai-system/evolution;
-- L4 task board exists under ai-system/evolution;
-- current evolution task record exists under ai-system/evolution;
+- root `/AI_PROJECT` is described as the self-hosted project-control layer for this repository;
+- `/ai-system` remains the source-of-truth document tree for system behavior;
+- L4 plan source records remain under `ai-system/evolution`;
+- current evolution task source record remains under `ai-system/evolution`;
 - README/index references are updated;
-- templates and examples using AI_PROJECT remain untouched;
+- reusable templates under `ai-system/templates/**/AI_PROJECT` remain distinct from root `/AI_PROJECT`;
+- `examples/golden-project/AI_PROJECT` remains a non-runtime reference example;
+- protected-file rules for `/AI_PROJECT/state/**`, `/AI_PROJECT/events/**` and `/AI_PROJECT/generated/**` remain strict;
 - current maturity remains L3;
 - runtime remains DEFERRED;
 - L4 remains Future / Not approved;

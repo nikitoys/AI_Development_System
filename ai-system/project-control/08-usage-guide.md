@@ -26,6 +26,8 @@ Project Control Gateway separates source documents from controlled project state
 
 Source documents may be edited directly only when the Task allows it.
 
+In AI_Development_System itself, root `/AI_PROJECT` is the self-hosted Project Control Layer. It stores machine-readable state, append-only audit events and generated readable outputs for this repository's own controlled evolution.
+
 Protected project-control files must not be edited directly:
 
 ```text
@@ -44,6 +46,19 @@ evolutionctl.py AI Development System change proposals
 ```
 
 If a requested operation has no supported command, stop and report the missing command. Do not patch protected state by hand.
+
+Keep these `AI_PROJECT` contexts separate:
+
+```text
+/AI_PROJECT
+  Self-hosted project-control layer for this repository.
+
+/ai-system/templates/**/AI_PROJECT
+  Reusable templates for external projects.
+
+/examples/golden-project/AI_PROJECT
+  Non-runtime reference example for onboarding and validation.
+```
 
 ## Role Interaction
 

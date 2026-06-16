@@ -61,6 +61,21 @@ Release
 
 These will be added later as separate controlled domains.
 
+## Self-Hosted Command Boundary
+
+AI_Development_System now uses root `/AI_PROJECT` as its own self-hosted Project Control Layer. All protected state, event and generated files in that directory must be changed only through approved CLI gateways.
+
+Current domain commands include:
+
+```bash
+python scripts/planctl.py ...
+python scripts/taskctl.py ...
+python scripts/docctl.py ...
+python scripts/evolutionctl.py ...
+```
+
+The command catalog boundary applies to this repository's root `/AI_PROJECT` state. Reusable templates under `/ai-system/templates/**/AI_PROJECT` and the golden project under `/examples/golden-project/AI_PROJECT` are separate documentation/template fixtures unless a bounded task explicitly edits them.
+
 ---
 
 # 1. Command Boundary

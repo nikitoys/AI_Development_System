@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.48.2
+Version: v0.49.0
 
 ## Purpose
 
@@ -9,7 +9,7 @@ Version: v0.48.2
 
 This folder does not describe the product itself. It describes the development mechanism: roles, rules, workflow, human interaction, task format, review process and controlled evolution of the system.
 
-AI_Development_System itself does not use a root-level `AI_PROJECT` folder. `AI_PROJECT` remains a template and example concept for concrete external projects only.
+AI_Development_System now dogfoods Project Control Gateway through root-level `/AI_PROJECT`. That directory is the repository's self-hosted project-control layer for machine state, audit events and generated readable outputs. `/ai-system` remains the source-of-truth documentation for system behavior.
 
 ## Core Principle
 
@@ -22,6 +22,25 @@ AI roles do not work from inspiration. They work from approved documents, explic
 The current AI_Development_System version is the top version entry in `system-changelog.md`.
 
 Primary README files mirror that changelog version and must be updated whenever the top changelog version changes.
+
+## Relationship Between `/ai-system` And `/AI_PROJECT`
+
+`/ai-system` stores source documents: roles, rules, lifecycle policy, operating model, evolution guidance and project-control specifications.
+
+`/AI_PROJECT` stores this repository's self-hosted project-control state:
+
+```text
+/AI_PROJECT/state/**      machine-readable current state
+/AI_PROJECT/events/**     append-only audit history
+/AI_PROJECT/generated/**  generated readable views
+```
+
+Protected files under `/AI_PROJECT/state/**`, `/AI_PROJECT/events/**` and `/AI_PROJECT/generated/**` must not be edited manually. Use `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` or later approved gateway commands.
+
+The reusable project templates remain separate:
+
+- `/ai-system/templates/**/AI_PROJECT` — templates for external projects.
+- `../examples/golden-project/AI_PROJECT` — non-runtime reference example for onboarding and validation.
 
 ## Documentation Integrity Checks
 
@@ -159,7 +178,7 @@ Manual orchestration coordinates Agent Work Packages, result intake and integrat
 
 ## AI_PROJECT Control and Agent Planning Templates
 
-The root of this repository does not contain or use `AI_PROJECT`. References in this section describe project templates and concrete external projects that embed AI_Development_System.
+This repository has a root `/AI_PROJECT` self-hosted control layer for its own evolution. References to `templates/**/AI_PROJECT` in this section describe reusable templates for concrete external projects that embed AI_Development_System.
 
 Foldered project templates include `PROJECT_CONTROL_INDEX.md`, `PROJECT_OPERATION_PROFILE.md`, `AGENT_PLAN.md`, `AGENT_TASKS.md`, `AGENT_ASSIGNMENTS.md`, `AGENT_LOCKS.md`, `AGENT_RESULTS.md` and `AGENT_METRICS.md`.
 

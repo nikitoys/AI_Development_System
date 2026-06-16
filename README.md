@@ -3,13 +3,19 @@
 Languages: [English](README.md) | [Русский](README.ru.md)
 
 Status: Draft
-Version: v0.48.2
+Version: v0.49.0
 
 This repository contains an AI Development System: an operating model for developing projects through AI roles, documentation, lifecycle governance, prompt generation, Codex execution, review and controlled evolution.
 
-It is not a normal application repository. The primary source of truth is `/ai-system`.
+It is not a normal application repository. The primary source of truth for system behavior is `/ai-system`.
 
-This repository itself does not use a root-level `AI_PROJECT` folder. `AI_PROJECT` remains a template and example concept for concrete external projects only.
+This repository now intentionally uses root-level `/AI_PROJECT` as its self-hosted Project Control Layer. It stores machine-readable state, append-only audit events and generated readable outputs for AI_Development_System's own controlled evolution. Protected files under `/AI_PROJECT/state/**`, `/AI_PROJECT/events/**` and `/AI_PROJECT/generated/**` must be changed only through the project-control CLI gateways.
+
+`AI_PROJECT` appears in three distinct contexts:
+
+- `/AI_PROJECT` — the self-hosted project-control layer for this repository itself.
+- `/ai-system/templates/**/AI_PROJECT` — reusable project-control templates for external projects.
+- `/examples/golden-project/AI_PROJECT` — a non-runtime reference example for onboarding and validation.
 
 Version source: the current AI_Development_System version is the top entry in `/ai-system/system-changelog.md`. README files mirror that version and must not claim a newer or different version.
 
@@ -59,9 +65,7 @@ The Parallel Execution Policy is defined in `/ai-system/parallel-execution-polic
 
 Agent Result Intake and Integration Review are defined in `/ai-system/agent-result-intake.md` and `/ai-system/integration-review.md`. They check results before review, QA and Human Owner acceptance without authorizing automatic execution, merge or acceptance.
 
-Foldered `AI_PROJECT` templates now include agent planning files for plans, packages, assignments, locks, results and metrics. These are planning and manual coordination records only and do not authorize execution, parallel execution, merge or acceptance.
-
-The root-level `AI_PROJECT` folder is not used by AI_Development_System itself.
+Foldered `AI_PROJECT` templates now include agent planning files for plans, packages, assignments, locks, results and metrics. These are planning and manual coordination records only and do not authorize execution, parallel execution, merge or acceptance. They are reusable templates, distinct from this repository's root `/AI_PROJECT` self-hosted control state.
 
 The golden project includes a filled non-runtime multi-agent planning example for Task Tracker under `examples/golden-project/`.
 
@@ -223,7 +227,7 @@ read local AI_PROJECT control files
 
 Do not re-run bootstrap blindly for a project that already has local control files.
 
-Templates are not authority after bootstrap. Local `AI_PROJECT/` files are the project source of truth, unless they conflict with global safety, approval or lifecycle rules.
+Templates are not authority after bootstrap. In external projects, local `AI_PROJECT/` files become that project's control layer, unless they conflict with global safety, approval or lifecycle rules.
 
 Project system updates must not modify application code.
 

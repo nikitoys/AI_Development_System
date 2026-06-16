@@ -37,6 +37,27 @@ Typical risks:
 
 Project Control Gateway solves this by introducing a narrow, deterministic command interface.
 
+## Self-Hosted Use In This Repository
+
+AI_Development_System now uses root-level `/AI_PROJECT` as its own self-hosted Project Control Layer.
+
+In this repository:
+
+```text
+/AI_PROJECT/state/**      machine-readable current state
+/AI_PROJECT/events/**     append-only audit history
+/AI_PROJECT/generated/**  generated readable output
+```
+
+The source documents for AI Development System behavior remain under `/ai-system`. Root `/AI_PROJECT` records controlled project state for this repository's own evolution and generated context for Human Owner, ChatGPT Orchestrator and Codex Executor.
+
+This self-hosted layer is distinct from:
+
+```text
+/ai-system/templates/**/AI_PROJECT      reusable templates for external projects
+/examples/golden-project/AI_PROJECT     non-runtime reference example
+```
+
 ## Core Idea
 
 The project is managed as structured state, not as manually edited text.
@@ -75,10 +96,13 @@ Allowed mutation path:
 python scripts/projectctl.py <domain> <command>
 ```
 
-For the first MVP, the entry point may be narrower:
+Current repository gateways are domain-specific:
 
 ```bash
 python scripts/planctl.py <command>
+python scripts/taskctl.py <command>
+python scripts/docctl.py <command>
+python scripts/evolutionctl.py <command>
 ```
 
 Manual edits to protected files are considered a project control bypass.
