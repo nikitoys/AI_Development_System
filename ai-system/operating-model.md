@@ -429,13 +429,18 @@ Needs improvement:
 - add project-local templates after approved specs and planning documents stabilize;
 - validate specs through controlled pilot work before runtime decisions.
 
-## 2.11 AI_PROJECT Control and Agent Planning Templates
+## 2.11 Self-Hosted Project Control Layer and Agent Planning Templates
 
 Status: Implemented
 
 Existing documents:
 
 ```text
+/ai-system/project-control/01-overview.md
+/ai-system/project-control/02-domain-model.md
+/ai-system/project-control/03-state-model.md
+/ai-system/project-control/04-command-catalog.md
+/ai-system/project-control/08-usage-guide.md
 /ai-system/project-control-connectivity.md
 /ai-system/project-operation-profile.md
 /ai-system/templates/foldered/AI_PROJECT/PROJECT_CONTROL_INDEX.md
@@ -450,10 +455,15 @@ Existing documents:
 
 Covers:
 
+- root `/AI_PROJECT` as the self-hosted Project Control Layer for AI_Development_System itself;
+- strict separation between `/ai-system` source documents and `/AI_PROJECT` controlled state, audit events and generated readable outputs;
+- protected-file rules for `/AI_PROJECT/state/**`, `/AI_PROJECT/events/**` and `/AI_PROJECT/generated/**`;
+- Project Control Gateway dogfooding through `planctl.py`, `taskctl.py`, `docctl.py` and `evolutionctl.py`;
 - compact project-control read order with importance levels and read policies;
 - drift reporting when root or local read order does not lead agents to standard control files;
 - Human Owner-editable surface-level operating defaults for language, answer style, verification, permissions, layout and review;
 - project-local SOP and agent planning snapshot;
+- explicit distinction between root `/AI_PROJECT`, reusable `AI_PROJECT` templates and `examples/golden-project/AI_PROJECT`;
 - Agent Work Package registry;
 - manual Role-to-Agent Assignment registry;
 - file-scope and locked-file planning registry;

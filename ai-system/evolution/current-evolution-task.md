@@ -4,8 +4,8 @@ Status: Draft
 Version: v0.1.0
 
 This is the current system evolution task record for AI_Development_System.
-It is not a project-local `AI_PROJECT` file.
-The root-level `AI_PROJECT` directory is not used by this repository itself.
+It is a source document under `/ai-system/evolution`.
+Related self-hosted project-control state for this repository may live under root `/AI_PROJECT` and must be changed only through the approved CLI gateways.
 
 status: review
 verification_mode: STANDARD

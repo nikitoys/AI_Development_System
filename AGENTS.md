@@ -182,6 +182,10 @@ Do not silently change system behavior.
 
 This repository uses a strict Project Control Gateway.
 
+Root-level `/AI_PROJECT` is the self-hosted project-control layer for this repository itself. It stores machine state, audit events and generated readable outputs for AI_Development_System evolution.
+
+Do not confuse it with reusable templates under `/ai-system/templates/**/AI_PROJECT` or the non-runtime golden example under `/examples/golden-project/AI_PROJECT`.
+
 Project control state must not be edited manually.
 
 Protected paths:

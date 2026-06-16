@@ -27,6 +27,7 @@ Focus: make system evolution explicit, bounded, reviewable and owner-approved
 - Keep Human Owner approval as the final authority for system evolution.
 - Keep Markdown readable, but gradually introduce machine-checkable specifications where they reduce drift.
 - Treat real project pilots as the main evidence source for maturity.
+- Dogfood Project Control Gateway through root `/AI_PROJECT` while keeping `/ai-system/templates/**/AI_PROJECT` templates and the golden project example distinct.
 
 ## Priority Roadmap
 
@@ -147,6 +148,8 @@ Goal: increase implementation speed and quality through SOP-guided planning, opt
 Current position:
 
 AI_Development_System is currently a SOP-driven AI development control plane with dry-run planning support.
+
+AI_Development_System now uses root `/AI_PROJECT` as a self-hosted Project Control Layer for its own controlled evolution.
 
 It is not a real runtime. It does not provide agent execution orchestration, automatic Codex execution, automatic branch/worktree lifecycle, automatic merge or automatic acceptance.
 

@@ -2,6 +2,20 @@
 
 Status: Draft
 
+## v0.49.0
+
+### Updated
+
+- Reconciled primary documentation with the Human Owner decision to use root `/AI_PROJECT` as AI_Development_System's self-hosted Project Control Layer.
+- Updated README mirrors, `ai-system/README.md`, evolution documentation, operating model and Project Control Gateway docs to distinguish root `/AI_PROJECT`, reusable `AI_PROJECT` templates and the golden project example.
+- Clarified that `/ai-system` remains the source-of-truth document tree for system behavior, while root `/AI_PROJECT` stores protected state, audit events and generated readable outputs.
+- Reaffirmed that `/AI_PROJECT/state/**`, `/AI_PROJECT/events/**` and `/AI_PROJECT/generated/**` must be changed only through project-control CLI gateways.
+- Updated README version mirrors to `v0.49.0`.
+
+### Reason
+
+The Human Owner chose Option A: AI_Development_System intentionally dogfoods Project Control Gateway through root `/AI_PROJECT` for its own controlled evolution. This documentation-only reconciliation does not implement L4, approve assisted execution, add runtime behavior, add a SOP runner, weaken protected-file rules, or change the current maturity boundary: current maturity remains `L3`, runtime remains `DEFERRED`, and `L4+` remains future/not approved.
+
 ## v0.48.2
 
 ### Added
@@ -15,15 +29,15 @@ Status: Draft
 
 - Moved useful L4 planning content out of the root-level `AI_PROJECT` folder and into `ai-system/evolution/`.
 - Updated README and evolution index references so the moved planning records are discoverable.
-- Clarified that this repository itself does not use a root-level `AI_PROJECT` folder.
+- Recorded the then-current cleanup decision that free-form root-level L4 planning records should not replace source evolution documents under `ai-system/evolution/`.
 
 ### Removed
 
-- Removed the root-level `AI_PROJECT` folder from AI_Development_System.
+- Removed the then-existing free-form root-level `AI_PROJECT` planning folder from AI_Development_System.
 
 ### Reason
 
-System evolution planning belongs under `ai-system/evolution/`, not in root project-control files. This change preserves the L4 planning records, keeps templates and golden examples untouched, and does not introduce runtime behavior, automatic execution, automatic dispatch, automatic merge, automatic PR creation, automatic acceptance or automatic QA/review closure.
+System evolution planning source documents belong under `ai-system/evolution/`, not in free-form root project-control files. This change preserved the L4 planning records, kept templates and golden examples untouched, and did not introduce runtime behavior, automatic execution, automatic dispatch, automatic merge, automatic PR creation, automatic acceptance or automatic QA/review closure.
 
 ## v0.48.1
 

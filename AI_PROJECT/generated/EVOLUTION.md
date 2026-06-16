@@ -3,18 +3,18 @@
 
 # AI Development System Evolution
 
-Revision: `18`
+Revision: `19`
 Changes: `1`
 
 ## Summary
 
-- `in_review`: 1
+- `accepted`: 1
 
 ## Changes
 
 ### CHG-001 — Implement Codex prompt package generator
 
-Status: `in_review`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `compatible`  
@@ -34,6 +34,9 @@ A dedicated Codex execution rail keeps prompt generation explicit, auditable and
 
 Approved by: `human_owner` at `2026-06-16T15:13:17Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-16T15:38:14Z`  
+Acceptance notes: codexctl prompt package generator accepted  
 
 Affected areas:
 

@@ -57,6 +57,21 @@ The first MVP implements only the Planning Layer through `planctl.py`.
 
 Later versions should add Task, Prompt, Execution, Review, QA, Decision and Change control.
 
+## Self-Hosted Project Scope
+
+When this model is applied to AI_Development_System itself, the controlled project is this repository.
+
+Root `/AI_PROJECT` stores the self-hosted project-control state for repository evolution. `/ai-system` remains the source document tree for roles, rules, lifecycle documents, operating model, project-control specifications and evolution records.
+
+The same `AI_PROJECT` name also appears in reusable contexts:
+
+```text
+/ai-system/templates/**/AI_PROJECT      templates copied into external projects
+/examples/golden-project/AI_PROJECT     non-runtime onboarding and validation example
+```
+
+These reusable contexts are not this repository's live project-control state.
+
 ---
 
 # 1. Project
