@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `12`
-Current task: `TASK-003`
+Revision: `16`
+Current task: `TASK-004`
 
 ## Epic `EPIC-001`
 
@@ -23,6 +23,23 @@ Acceptance criteria:
 - Only supported CLI commands are shown as exact command examples.
 - The document is registered through docctl.py and moved no further than review without Human Owner acceptance.
 - Plan, task, documentation, smoke, and protected-files validation commands pass.
+
+### TASK-004 — Implement codexctl prompt package generator ⭐
+
+Status: `in_review`  
+Priority: `1`  
+Verification: `standard`  
+
+Implement approved CHG-001 by adding a dedicated Codex prompt package control CLI.
+
+Acceptance criteria:
+
+- scripts/codexctl.py exists and uses only Python standard library.
+- status works without crashing and reports READY or BLOCKED state with stable codes.
+- build --task can generate CODEX_PROMPT.md for an executable task and fails clearly for invalid task IDs or statuses.
+- build --change can generate CODEX_PROMPT.md for approved CHG-001 and fails clearly for invalid change IDs or statuses.
+- clear invalidates or removes the current Codex prompt package without modifying source-of-truth task or evolution state.
+- Required validation commands from the owner prompt pass or any blocker is reported clearly.
 
 ## Epic `EPIC-002`
 
@@ -45,7 +62,7 @@ Acceptance criteria:
 - The document is registered through docctl.py as draft or review, not active.
 - Plan, task, documentation, smoke doc-control, and protected-files validation commands pass.
 
-### TASK-003 — Create Clarification Gate Skill ⭐
+### TASK-003 — Create Clarification Gate Skill
 
 Status: `in_review`  
 Priority: `1`  

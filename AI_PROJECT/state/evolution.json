@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "revision": 18,
+  "created_at": "2026-06-16T15:08:23Z",
+  "updated_at": "2026-06-16T15:25:39Z",
+  "changes": [
+    {
+      "id": "CHG-001",
+      "title": "Implement Codex prompt package generator",
+      "status": "in_review",
+      "change_type": "tooling",
+      "rationale": "A dedicated Codex execution rail keeps prompt generation explicit, auditable and bounded by project-control validation.",
+      "problem": "Codex prompt package generation is still tied to task-only behavior and does not provide a dedicated command rail for executable Tasks or Evolution Changes.",
+      "proposal": "Add scripts/codexctl.py to generate, report and clear Codex prompt packages from ready or approved Tasks and Evolution Changes using existing project-control state, generated files and audit conventions.",
+      "affected_areas": [
+        "Project Control Gateway command rail",
+        "Codex prompt package generation and execution readiness status"
+      ],
+      "affected_files": [
+        "scripts/codexctl.py",
+        "AI_PROJECT/state/current_execution.json",
+        "AI_PROJECT/generated/CODEX_PROMPT.md",
+        "AI_PROJECT/generated/CODEX_STATUS.md",
+        "AI_PROJECT/events/codex-events.jsonl"
+      ],
+      "risks": [
+        "Prompt generation could bypass lifecycle boundaries if executable statuses or required fields are mapped too loosely.",
+        "Generated Codex artifacts could drift from source state if status and prompt files are not updated consistently."
+      ],
+      "impact": [
+        "Adds a dedicated standard-library CLI for Codex prompt package status, build and clear operations.",
+        "Allows future approved Tasks or Evolution Changes to produce pasteable Codex prompt packages with auditable status."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-004"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-16T15:13:17Z",
+      "approval_notes": "Approved",
+      "accepted_by": "",
+      "accepted_at": "",
+      "acceptance_notes": "",
+      "notes": [],
+      "priority": 1,
+      "order": 1,
+      "created_at": "2026-06-16T15:08:29Z",
+      "updated_at": "2026-06-16T15:25:39Z"
+    }
+  ]
+}

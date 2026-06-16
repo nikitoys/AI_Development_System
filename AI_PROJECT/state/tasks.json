@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 12,
-  "current_task_id": "TASK-003",
+  "revision": 16,
+  "current_task_id": "TASK-004",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-15T22:13:09Z",
+  "updated_at": "2026-06-16T15:25:35Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -193,6 +193,54 @@
       "approval_notes": "",
       "created_at": "2026-06-15T22:09:39Z",
       "updated_at": "2026-06-15T22:13:09Z"
+    },
+    {
+      "id": "TASK-004",
+      "epic_id": "EPIC-001",
+      "title": "Implement codexctl prompt package generator",
+      "status": "in_review",
+      "summary": "Implement approved CHG-001 by adding a dedicated Codex prompt package control CLI.",
+      "description": "Add scripts/codexctl.py with status, build and clear commands for executable Tasks and Evolution Changes, using existing AI_PROJECT state, generated output and event conventions.",
+      "priority": 1,
+      "order": 2,
+      "active_role": "Codex Executor",
+      "active_stage": "Implementation of approved Evolution Change",
+      "active_document": "AI_PROJECT/state/evolution.json / AI_PROJECT/generated/EVOLUTION.md",
+      "expected_result": "Commit-ready implementation of scripts/codexctl.py for CHG-001.",
+      "verification_mode": "standard",
+      "scope": [
+        "Implement scripts/codexctl.py with status, build --task, build --change and clear commands.",
+        "Generate/update CODEX_PROMPT.md and CODEX_STATUS.md through codexctl.py behavior.",
+        "Use existing task/evolution state schemas, generated prompt conventions and audit-style JSONL events."
+      ],
+      "out_of_scope": [
+        "Do not implement multi-agent orchestration, SOP runner, autonomous execution, external API integration or CI.",
+        "Do not modify unrelated AI system documents or product source code."
+      ],
+      "allowed_files": [
+        "scripts/codexctl.py",
+        "AI_PROJECT/state/current_execution.json",
+        "AI_PROJECT/generated/CODEX_PROMPT.md",
+        "AI_PROJECT/generated/CODEX_STATUS.md",
+        "AI_PROJECT/events/codex-events.jsonl"
+      ],
+      "acceptance_criteria": [
+        "scripts/codexctl.py exists and uses only Python standard library.",
+        "status works without crashing and reports READY or BLOCKED state with stable codes.",
+        "build --task can generate CODEX_PROMPT.md for an executable task and fails clearly for invalid task IDs or statuses.",
+        "build --change can generate CODEX_PROMPT.md for approved CHG-001 and fails clearly for invalid change IDs or statuses.",
+        "clear invalidates or removes the current Codex prompt package without modifying source-of-truth task or evolution state.",
+        "Required validation commands from the owner prompt pass or any blocker is reported clearly."
+      ],
+      "review_instructions": [
+        "Review for lifecycle boundary enforcement, prompt completeness, generated artifact consistency and standard-library-only implementation."
+      ],
+      "notes": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-16T15:15:21Z",
+      "updated_at": "2026-06-16T15:25:35Z"
     }
   ]
 }

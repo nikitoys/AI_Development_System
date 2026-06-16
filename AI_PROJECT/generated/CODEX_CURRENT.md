@@ -3,67 +3,66 @@
 
 # Current Codex Task
 
-Revision: `12`
+Revision: `16`
 
-Task: `TASK-003` — **Create Clarification Gate Skill**
-Epic: `EPIC-002`
+Task: `TASK-004` — **Implement codexctl prompt package generator**
+Epic: `EPIC-001`
 Status: `in_review`
 Verification: `standard`
 
 ## Prompt Control Fields
 
-Active Role: `AI System Maintainer + Prompt/Skill Engineer`
-Active Stage: `Clarification Gate Skill`
-Active Document: `.agents/skills/clarification-gate/SKILL.md`
-Expected Result: `Clarification Gate Skill created; skills README updated if available; validation completed; result remains awaiting Human Owner acceptance.`
+Active Role: `Codex Executor`
+Active Stage: `Implementation of approved Evolution Change`
+Active Document: `AI_PROJECT/state/evolution.json / AI_PROJECT/generated/EVOLUTION.md`
+Expected Result: `Commit-ready implementation of scripts/codexctl.py for CHG-001.`
 
 ## Summary
 
-Create a high-priority Clarification Gate Skill for Codex and subagents, defining when to ask the Human Owner versus inspect or proceed with safe assumptions.
+Implement approved CHG-001 by adding a dedicated Codex prompt package control CLI.
 
 ## Description
 
-Create .agents/skills/clarification-gate/SKILL.md and update the skills README if present. Route project-control state changes through CLI commands only. Do not self-approve the task, document, or skill as accepted or active.
+Add scripts/codexctl.py with status, build and clear commands for executable Tasks and Evolution Changes, using existing AI_PROJECT state, generated output and event conventions.
 
 ## Scope
 
-- Create .agents/skills/clarification-gate/SKILL.md with blocker severity, question budget, and subagent guidance.
-- Update ai-system/skills/README.md if it exists to recommend the Clarification Gate Skill as high priority.
-- Use docctl.py registration only if the documentation registry is intended to track .agents/skills files.
-- Run required planctl.py, taskctl.py, docctl.py, smoke, and protected-files validations.
+- Implement scripts/codexctl.py with status, build --task, build --change and clear commands.
+- Generate/update CODEX_PROMPT.md and CODEX_STATUS.md through codexctl.py behavior.
+- Use existing task/evolution state schemas, generated prompt conventions and audit-style JSONL events.
 
 ## Out of Scope
 
-- Manual edits to AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
-- Implementation changes to planctl.py, taskctl.py, docctl.py, or evolutionctl.py unless blocked.
-- Self-approving the task, document, or skill as accepted, approved, done, or active.
+- Do not implement multi-agent orchestration, SOP runner, autonomous execution, external API integration or CI.
+- Do not modify unrelated AI system documents or product source code.
 
 ## Allowed Files
 
-- .agents/skills/clarification-gate/SKILL.md
-- ai-system/skills/README.md
+- scripts/codexctl.py
+- AI_PROJECT/state/current_execution.json
+- AI_PROJECT/generated/CODEX_PROMPT.md
+- AI_PROJECT/generated/CODEX_STATUS.md
+- AI_PROJECT/events/codex-events.jsonl
 
 ## Acceptance Criteria
 
-- Skill explains that it prevents premature execution on ambiguous or unsafe requests.
-- Skill states the core rule: inspect first, ask only when blocked.
-- Skill defines when to ask before task creation, during task execution, and when not to ask.
-- Skill includes critical blocker, non-critical ambiguity, and inspectable ambiguity severity model with examples.
-- Skill includes a question budget and forbids using clarification questions to avoid normal inspection.
-- Skills README recommends the Clarification Gate Skill as high priority if the README exists.
-- Required validation commands complete or any blocker is reported.
+- scripts/codexctl.py exists and uses only Python standard library.
+- status works without crashing and reports READY or BLOCKED state with stable codes.
+- build --task can generate CODEX_PROMPT.md for an executable task and fails clearly for invalid task IDs or statuses.
+- build --change can generate CODEX_PROMPT.md for approved CHG-001 and fails clearly for invalid change IDs or statuses.
+- clear invalidates or removes the current Codex prompt package without modifying source-of-truth task or evolution state.
+- Required validation commands from the owner prompt pass or any blocker is reported clearly.
 
 ## Review Instructions
 
-- Review for compliance with Human Owner approval boundaries and protected project-control rules.
-- Do not mark accepted, approved, active, or done without Human Owner decision.
+- Review for lifecycle boundary enforcement, prompt completeness, generated artifact consistency and standard-library-only implementation.
 
 ## Useful CLI
 
 ```bash
-python scripts/taskctl.py task transition TASK-003 --to in_progress
-python scripts/taskctl.py task transition TASK-003 --to in_review
-python scripts/taskctl.py task approve TASK-003 --notes "..."
-python scripts/taskctl.py task transition TASK-003 --to done
+python scripts/taskctl.py task transition TASK-004 --to in_progress
+python scripts/taskctl.py task transition TASK-004 --to in_review
+python scripts/taskctl.py task approve TASK-004 --notes "..."
+python scripts/taskctl.py task transition TASK-004 --to done
 python scripts/taskctl.py prompt build --write
 ```
