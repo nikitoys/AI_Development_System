@@ -2,6 +2,22 @@
 
 Status: Draft
 
+## v0.51.0
+
+### Added
+
+- Added `ai-system/l4-role-agent-runtime.md` as the source-of-truth architecture document for L4 Role-Agent Runtime.
+- Added `EVOL-032` traceability for the Human Owner decision that L4 Role-Agent Runtime is an approved bounded implementation target.
+
+### Updated
+
+- Updated README/index, operating model, roadmap and evolution backlog references to distinguish current `L3 — Manual multi-agent orchestration`, next approved target `L4 — Role-Agent Runtime` and future/not approved `L5+`.
+- Updated version mirrors to `v0.51.0`.
+
+### Reason
+
+The Human Owner approved CHG-004 to record L4 Role-Agent Runtime as the next bounded implementation target. The architecture keeps Python as the strict API/control kernel, Controller Codex as planner/router/delegator/integrator, Codex role subagents as bounded executors of the existing role model and Human Owner as final acceptance authority. This change does not implement `scripts/agentctl.py`, does not approve L5 and does not add automatic merge, push, pull request creation, task acceptance or QA/review closure.
+
 ## v0.50.0
 
 ### Added

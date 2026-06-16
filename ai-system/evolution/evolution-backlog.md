@@ -1399,3 +1399,46 @@ Acceptance criteria:
 Conversion path:
 
 Closed by CHG-003 / TASK-006 as a bounded documentation, template and skill update.
+
+---
+
+## EVOL-032 — Record L4 Role-Agent Runtime Architecture
+
+Status: Done
+Priority: P1
+Source: Human Owner approved CHG-004
+Roadmap item: P6 — SOP and Optional Multi-Agent Control Plane
+Owner: AI System Maintainer / System Architect AI / Technical Writer AI
+Type: Documentation / Architecture / Governance
+
+Problem:
+
+AI_Development_System still presented L4 role-agent execution primarily as future or deferred even after the Human Owner approved L4 as a bounded implementation target.
+
+Expected outcome:
+
+Add a source-of-truth L4 architecture document that defines Python as the strict API/control kernel, Controller Codex as planner/router/delegator/integrator and Codex role subagents as concrete executors of the existing role model.
+
+Implementation:
+
+- Added `ai-system/l4-role-agent-runtime.md`.
+- Updated README/index, operating model, roadmap, backlog and changelog references.
+- Recorded that current implementation maturity remains `L3 — Manual multi-agent orchestration`.
+- Recorded that next approved implementation target is `L4 — Role-Agent Runtime`.
+- Recorded that `L5+` remains future/not approved.
+
+Acceptance criteria:
+
+- `ai-system/l4-role-agent-runtime.md` exists.
+- The document states L4 is an approved bounded implementation target.
+- The document defines Python as strict API/control kernel.
+- The document defines Controller Codex as planner/router/delegator/integrator.
+- The document maps existing role layers to concrete role-agent IDs.
+- The document defines execution flow from approved Task to Human Owner acceptance.
+- The document defines conceptual `scripts/agentctl.py` commands without implementing them.
+- The document forbids automatic merge, push, pull request creation, final acceptance and QA/review closure.
+- Operating model, roadmap, backlog, changelog and README/index references are updated.
+
+Conversion path:
+
+Closed by CHG-004 / TASK-007 as a bounded source documentation update.

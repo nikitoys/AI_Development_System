@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `30`
-Current task: `none`
+Revision: `34`
+Current task: `TASK-007`
 
 ## Epic `EPIC-001`
 
@@ -40,6 +40,24 @@ Acceptance criteria:
 - build --change can generate CODEX_PROMPT.md for approved CHG-001 and fails clearly for invalid change IDs or statuses.
 - clear invalidates or removes the current Codex prompt package without modifying source-of-truth task or evolution state.
 - Required validation commands from the owner prompt pass or any blocker is reported clearly.
+
+### TASK-007 — Record L4 Role-Agent Runtime Architecture ⭐
+
+Status: `in_review`  
+Priority: `1`  
+Verification: `standard`  
+
+Implement approved CHG-004 by creating the L4 Role-Agent Runtime Architecture source document and updating required README, operating model, roadmap, backlog and changelog references.
+
+Acceptance criteria:
+
+- ai-system/l4-role-agent-runtime.md exists and states L4 is an approved bounded implementation target.
+- Document defines Python as strict API/control kernel, Controller Codex as planner/router/delegator/integrator and Codex role subagents as bounded role executors.
+- Document maps existing role layers to concrete role-agent IDs.
+- Document defines L4 execution flow from approved Task to Human Owner acceptance and conceptual scripts/agentctl.py API surface without implementing it.
+- Document distinguishes L3, L4 and L5 and forbids automatic merge, push, PR creation, final acceptance and QA/review closure.
+- Operating model, roadmap, backlog, changelog and README/index references are updated.
+- Required validation passes and protected AI_PROJECT files are not manually edited.
 
 ## Epic `EPIC-002`
 

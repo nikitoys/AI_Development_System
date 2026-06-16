@@ -3,7 +3,7 @@
 Languages: [English](README.md) | [Русский](README.ru.md)
 
 Status: Draft
-Version: v0.50.0
+Version: v0.51.0
 
 This repository contains an AI Development System: an operating model for developing projects through AI roles, documentation, lifecycle governance, prompt generation, Codex execution, review and controlled evolution.
 
@@ -51,7 +51,9 @@ The Work Item Hierarchy is defined in `/ai-system/work-item-hierarchy.md`: Goal 
 
 The SOP and optional multi-agent implementation plan is recorded in `/ai-system/evolution/sop-multi-agent-implementation-plan.md`.
 
-Current L4 Assisted SOP Execution planning records live under `/ai-system/evolution/current-evolution-task.md`, `/ai-system/evolution/l4-assisted-sop-execution-plan.md` and `/ai-system/evolution/l4-assisted-sop-execution-tasks.md`. They do not approve L4, runtime behavior or automatic execution.
+Earlier L4 Assisted SOP Execution planning records live under `/ai-system/evolution/current-evolution-task.md`, `/ai-system/evolution/l4-assisted-sop-execution-plan.md` and `/ai-system/evolution/l4-assisted-sop-execution-tasks.md`. The approved L4 target architecture is now `/ai-system/l4-role-agent-runtime.md`.
+
+L4 Role-Agent Runtime is an approved bounded implementation target. It keeps Python as the strict API/control kernel, Controller Codex as planner/router/delegator/integrator, Codex role subagents as bounded executors of existing AI roles and Human Owner as final acceptance authority. It does not implement `scripts/agentctl.py`, approve L5, or authorize automatic merge, push, pull request creation, task acceptance or QA/review closure.
 
 The legacy conceptual baseline for early system evolution is archived at `/ai-system/evolution/concept-baseline.md`; it is historical context only and not the current source of truth.
 
@@ -73,7 +75,7 @@ The SOP / optional multi-agent pilot validation record is stored in `/ai-system/
 
 Expanded pilot validation evidence covers documentation-only, small tooling/code and multi-agent parallel planning scenarios while preserving dry-run boundaries.
 
-Runtime maturity levels are defined in `/ai-system/runtime-maturity-levels.md`. Current level is `L3 — Manual multi-agent orchestration`; runtime remains `DEFERRED`; `L4+` remains future/not approved.
+Runtime maturity levels are defined in `/ai-system/runtime-maturity-levels.md`. Current implementation maturity is `L3 — Manual multi-agent orchestration`; next approved implementation target is `L4 — Role-Agent Runtime`; `L5+` remains future/not approved.
 
 Manual Multi-Agent Orchestration Mode is defined in `/ai-system/manual-orchestration.md`. L3 is manual-only and does not authorize automatic execution, merge or acceptance.
 

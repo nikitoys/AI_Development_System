@@ -201,13 +201,16 @@ Immediate priorities:
 9. L3 refinement — completed; manual Role-to-Agent Assignment model added without automatic dispatch.
 10. L3 refinement — completed; practical role-assigned parallel runbook added.
 11. `EVOL-031` — completed; Two-Level Delegated Agent Execution added for manual Worker Agent prompt handoffs without automatic dispatch.
-12. `EVOL-027` — future/deferred: prepare runtime adapter contracts without enabling runtime.
+12. `EVOL-032` — completed; L4 Role-Agent Runtime architecture recorded as the next approved bounded implementation target.
+13. `EVOL-027` — future/deferred: prepare runtime adapter contracts without enabling runtime.
 
 Runtime maturity target:
 
-Current level: `L3 — Manual multi-agent orchestration`.
+Current implementation maturity: `L3 — Manual multi-agent orchestration`.
 
-Next possible target: `L4 — Assisted execution`, future/not approved.
+Next approved implementation target: `L4 — Role-Agent Runtime`.
+
+L4 implementation requires bounded Tasks and must preserve Python control, Controller Codex delegation boundaries, role-scoped Codex subagents, review/QA gates and Human Owner final acceptance. `L5+` remains future/not approved.
 
 ### P7 — Research and Benchmarking
 

@@ -1,7 +1,7 @@
 # AI Development System
 
 Status: Draft  
-Version: v0.50.0
+Version: v0.51.0
 
 ## Purpose
 
@@ -164,7 +164,15 @@ Agent Result Intake defines the hardened Agent Result schema for manual orchestr
 
 `runtime-maturity-levels.md` defines runtime maturity levels from `L0 — Documentation only` through `L6 — Autonomous runtime`.
 
-The current level is `L3 — Manual multi-agent orchestration`. Runtime execution remains `DEFERRED`; `L4+` is future/not approved.
+The current implementation maturity is `L3 — Manual multi-agent orchestration`. The next approved implementation target is `L4 — Role-Agent Runtime`, defined in `l4-role-agent-runtime.md`. L4 implementation requires bounded Tasks and must preserve Python control, review/QA gates and Human Owner final acceptance. `L5+` remains future/not approved.
+
+## L4 Role-Agent Runtime
+
+`l4-role-agent-runtime.md` defines the approved bounded L4 target architecture.
+
+L4 uses Python as the strict API/control kernel, Controller Codex as planner/router/delegator/integrator and Codex role subagents as concrete executors of the existing role model.
+
+The document does not implement `scripts/agentctl.py`, does not approve L5 and does not authorize automatic merge, push, pull request creation, final acceptance or QA/review closure.
 
 ## Manual Multi-Agent Orchestration
 
@@ -320,6 +328,10 @@ The `evolution/` directory defines roadmap-driven self-evolution of AI_Developme
 - `evolution/templates/evolution-task.md` — bounded system evolution task template.
 - `evolution/templates/owner-evolution-plan.md` — reusable owner plan intake template.
 - `examples/golden-project/` — filled foldered Task Tracker example for onboarding foldered integration and non-runtime multi-agent planning.
+
+Related source document:
+
+- `l4-role-agent-runtime.md` — approved bounded L4 Role-Agent Runtime architecture; does not implement `agentctl.py` or approve L5.
 
 ## Templates
 
