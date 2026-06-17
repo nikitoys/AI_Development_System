@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `90`
-Current task: `TASK-012`
+Revision: `97`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -216,9 +216,9 @@ Acceptance criteria:
 
 ## Epic `EPIC-004`
 
-### TASK-012 — TIG-01 Document task identity and execution graph design ⭐
+### TASK-012 — TIG-01 Document task identity and execution graph design
 
-Status: `in_review`  
+Status: `done`  
 Priority: `1`  
 Verification: `standard`  
 

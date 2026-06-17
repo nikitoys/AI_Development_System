@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 90,
-  "current_task_id": "TASK-012",
+  "revision": 97,
+  "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-17T22:57:08Z",
+  "updated_at": "2026-06-17T23:12:39Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -681,7 +681,7 @@
       "id": "TASK-012",
       "epic_id": "EPIC-004",
       "title": "TIG-01 Document task identity and execution graph design",
-      "status": "in_review",
+      "status": "done",
       "summary": "Define the target model for task uid, human ref, legacy aliases, epic keys, dependency graph, executable queue, and migration rules before implementation.",
       "description": "",
       "priority": 1,
@@ -727,13 +727,15 @@
       ],
       "review_instructions": [],
       "notes": [
-        "Logical label: TIG-01"
+        "Logical label: TIG-01",
+        "Add explicit Human Owner decisions for dependency satisfaction, reparenting, epic.key immutability and legacy TASK-XXX visibility.",
+        "Human Owner design decisions: hard dependencies are satisfied only by done; task reparenting is forbidden in MVP; epic.key is immutable after task refs exist; locks/resources are postponed unless required by TIG-05; legacy TASK-XXX remains resolvable during compatibility period."
       ],
-      "approved_by": "",
-      "approved_at": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-17T23:12:33Z",
       "approval_notes": "",
       "created_at": "2026-06-17T22:44:58Z",
-      "updated_at": "2026-06-17T22:57:08Z"
+      "updated_at": "2026-06-17T23:12:39Z"
     },
     {
       "id": "TASK-013",
