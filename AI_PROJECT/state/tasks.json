@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 69,
-  "current_task_id": null,
+  "revision": 90,
+  "current_task_id": "TASK-012",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-17T22:38:54Z",
+  "updated_at": "2026-06-17T22:57:08Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -676,6 +676,265 @@
       "approval_notes": "",
       "created_at": "2026-06-17T21:26:56Z",
       "updated_at": "2026-06-17T21:26:56Z"
+    },
+    {
+      "id": "TASK-012",
+      "epic_id": "EPIC-004",
+      "title": "TIG-01 Document task identity and execution graph design",
+      "status": "in_review",
+      "summary": "Define the target model for task uid, human ref, legacy aliases, epic keys, dependency graph, executable queue, and migration rules before implementation.",
+      "description": "",
+      "priority": 1,
+      "order": 1,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Create or update a source design document for task identity and execution graph.",
+        "Define uid/ref/legacy_id/aliases/local_seq semantics.",
+        "Define human ref format <EPIC_KEY>-<LOCAL_SEQ>.",
+        "Define ready vs executable.",
+        "Define cross-epic depends_on behavior.",
+        "Define migration/backward compatibility rules for existing TASK-XXX records."
+      ],
+      "out_of_scope": [
+        "Do not implement schema migration.",
+        "Do not change taskctl.py behavior yet except if required to create the task records."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/09-task-identity-and-execution-graph.md",
+        "ai-system/project-control/README.md if it exists and needs an index/reference update",
+        "ai-system/README.md if it clearly maintains a project-control document index",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_CURRENT.md via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_PROMPT.md via taskctl.py/codexctl.py only",
+        "AI_PROJECT/state/docs.json via docctl.py only if the documentation registry is used",
+        "AI_PROJECT/events/doc-events.jsonl via docctl.py only if the documentation registry is used",
+        "AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only if the documentation registry is used",
+        "AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only if the documentation registry is used"
+      ],
+      "acceptance_criteria": [
+        "A clear source-of-truth design exists.",
+        "The design states that task IDs do not imply execution order.",
+        "The design states that epics may execute in parallel by default.",
+        "The design defines explicit dependencies as the only cross-epic ordering mechanism.",
+        "The design includes migration rules for existing TASK-XXX tasks.",
+        "Generated project-control files are refreshed through CLI."
+      ],
+      "review_instructions": [],
+      "notes": [
+        "Logical label: TIG-01"
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-17T22:44:58Z",
+      "updated_at": "2026-06-17T22:57:08Z"
+    },
+    {
+      "id": "TASK-013",
+      "epic_id": "EPIC-004",
+      "title": "TIG-02 Add epic keys to plan model",
+      "status": "planned",
+      "summary": "Add stable short epic keys to the plan model so task refs can use readable prefixes such as TIG-01 or ACP-02.",
+      "description": "",
+      "priority": 1,
+      "order": 2,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Add epic.key support to plan schema.",
+        "Validate epic.key uniqueness.",
+        "Add --key support to epic creation if appropriate.",
+        "Update plan rendering to show epic keys.",
+        "Preserve compatibility with existing EPIC-XXX IDs."
+      ],
+      "out_of_scope": [
+        "Do not migrate task refs in this task."
+      ],
+      "allowed_files": [],
+      "acceptance_criteria": [
+        "Existing plan validation still passes.",
+        "Existing epics without keys are handled safely or migrated according to the design.",
+        "New epics can have unique keys.",
+        "Duplicate keys are rejected."
+      ],
+      "review_instructions": [],
+      "notes": [
+        "Logical label: TIG-02"
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-17T22:45:06Z",
+      "updated_at": "2026-06-17T22:45:06Z"
+    },
+    {
+      "id": "TASK-014",
+      "epic_id": "EPIC-004",
+      "title": "TIG-03 Add task uid ref local sequence and aliases",
+      "status": "planned",
+      "summary": "Extend task state with stable uid, human-readable ref, local sequence inside epic, and aliases for backward compatibility.",
+      "description": "",
+      "priority": 1,
+      "order": 3,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Add uid/ref/local_seq/aliases fields to task schema.",
+        "Generate refs from epic key and local sequence.",
+        "Preserve legacy TASK-XXX compatibility.",
+        "Update validation and rendering."
+      ],
+      "out_of_scope": [
+        "Do not implement dependency graph in this task."
+      ],
+      "allowed_files": [],
+      "acceptance_criteria": [
+        "Existing tasks can be migrated or read without losing history.",
+        "New tasks receive readable refs.",
+        "Legacy TASK-XXX references remain resolvable."
+      ],
+      "review_instructions": [],
+      "notes": [
+        "Logical label: TIG-03"
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-17T22:45:11Z",
+      "updated_at": "2026-06-17T22:45:11Z"
+    },
+    {
+      "id": "TASK-015",
+      "epic_id": "EPIC-004",
+      "title": "TIG-04 Add task reference resolver",
+      "status": "planned",
+      "summary": "Allow taskctl and prompt generation to resolve tasks by new ref, uid, or legacy TASK-XXX alias.",
+      "description": "",
+      "priority": 1,
+      "order": 4,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Add a central task reference resolver.",
+        "Use resolver in show, transition, approve, archive, current set, prompt build and list mutation commands.",
+        "Reject ambiguous references."
+      ],
+      "out_of_scope": [
+        "Do not add dependency scheduling in this task."
+      ],
+      "allowed_files": [],
+      "acceptance_criteria": [
+        "Existing CLI commands keep working with legacy TASK-XXX.",
+        "New refs work where task_id was previously required.",
+        "Ambiguous references produce a clear error."
+      ],
+      "review_instructions": [],
+      "notes": [
+        "Logical label: TIG-04"
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-17T22:45:17Z",
+      "updated_at": "2026-06-17T22:45:17Z"
+    },
+    {
+      "id": "TASK-016",
+      "epic_id": "EPIC-004",
+      "title": "TIG-05 Add task dependencies and executable queue",
+      "status": "planned",
+      "summary": "Add explicit cross-epic task dependencies and a deterministic executable queue so parallel epics can be scheduled safely.",
+      "description": "",
+      "priority": 1,
+      "order": 5,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Add depends_on field to tasks.",
+        "Add dependency validation.",
+        "Detect missing dependencies and cycles.",
+        "Add commands to add/list/remove dependencies.",
+        "Add task executable or task next command.",
+        "Define executable as ready plus dependencies satisfied plus no current conflict."
+      ],
+      "out_of_scope": [
+        "Do not implement automatic agent dispatch.",
+        "Do not implement autonomous execution."
+      ],
+      "allowed_files": [],
+      "acceptance_criteria": [
+        "Ready tasks blocked by dependencies are not reported as executable.",
+        "Cross-epic dependencies are supported.",
+        "Cycles are rejected.",
+        "Executable queue output is deterministic."
+      ],
+      "review_instructions": [],
+      "notes": [
+        "Logical label: TIG-05"
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-17T22:45:24Z",
+      "updated_at": "2026-06-17T22:45:24Z"
+    },
+    {
+      "id": "TASK-017",
+      "epic_id": "EPIC-004",
+      "title": "TIG-06 Add migration and generated output update",
+      "status": "planned",
+      "summary": "Provide safe migration/backward compatibility for existing plan and task state and update generated outputs to display readable refs.",
+      "description": "",
+      "priority": 1,
+      "order": 6,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Add migration path for existing tasks and epics.",
+        "Preserve auditability and legacy aliases.",
+        "Update CODEX_TASKS.md, CODEX_CURRENT.md and CODEX_PROMPT.md rendering.",
+        "Update validation and generated checks."
+      ],
+      "out_of_scope": [
+        "Do not remove legacy TASK-XXX compatibility yet."
+      ],
+      "allowed_files": [],
+      "acceptance_criteria": [
+        "Existing AI_PROJECT/state can be validated after migration.",
+        "Generated files display readable refs and legacy IDs where useful.",
+        "Prompt packages still contain enough identity data for Codex execution.",
+        "Validation and generated checks pass."
+      ],
+      "review_instructions": [],
+      "notes": [
+        "Logical label: TIG-06"
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-17T22:45:31Z",
+      "updated_at": "2026-06-17T22:45:31Z"
     }
   ]
 }

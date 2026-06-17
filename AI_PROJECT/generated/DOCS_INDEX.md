@@ -3,8 +3,8 @@
 
 # Documentation Index
 
-Revision: `18`
-Documents: `139`
+Revision: `19`
+Documents: `140`
 
 | Path | Title | Type | Status | Declared | Required | Content hash | Last reviewed | Reviewed hash |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -12,10 +12,10 @@ Documents: `139`
 | `ai-system/l4-role-agent-runtime.md` | L4 Role-Agent Runtime Architecture | `reference` | `active` | `review` | `true` | `9d5efa6f1a9a` | 2026-06-17T21:28:33Z | `-` |
 | `ai-system/project-control/01-overview.md` | Project Control Gateway Overview | `overview` | `active` | `draft` | `true` | `a6b78d2c0560` | - | `-` |
 | `ai-system/project-control/02-domain-model.md` | Project Control Domain Model | `reference` | `active` | `draft` | `true` | `92cd36c1cb69` | - | `-` |
-| `ai-system/project-control/03-state-model.md` | Project Control State Model | `reference` | `active` | `draft` | `true` | `116b1e4e645f` | - | `-` |
-| `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog | `reference` | `active` | `draft` | `true` | `d58301b3567b` | - | `-` |
+| `ai-system/project-control/03-state-model.md` | Project Control State Model | `reference` | `active` | `draft` | `true` | `b69e6c6ad9ac` | - | `-` |
+| `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog | `reference` | `active` | `draft` | `true` | `a1985ca2f321` | - | `-` |
 | `ai-system/project-control/05-lifecycle-rules.md` | Project Control Lifecycle Rules | `lifecycle` | `active` | `draft` | `true` | `7ac00bfde39d` | - | `-` |
-| `ai-system/project-control/06-prompt-package-spec.md` | Project Control Prompt Package Specification | `reference` | `active` | `draft` | `true` | `1f48376f54a2` | - | `-` |
+| `ai-system/project-control/06-prompt-package-spec.md` | Project Control Prompt Package Specification | `reference` | `active` | `draft` | `true` | `9304e03cf1dd` | - | `-` |
 | `ai-system/project-control/07-validation-and-tests.md` | Project Control Validation and Tests | `process` | `active` | `draft` | `true` | `035f37bb15d8` | - | `-` |
 | `ai-system/skills/README.md` | Skills Layer Roadmap | `guide` | `active` | `draft` | `false` | `dbf637225bec` | 2026-06-16T16:17:31Z | `-` |
 | `ai-system/templates/agent-worker-prompt.md` | Worker Agent Prompt Package Template | `template` | `active` | - | `false` | `f00861055a4f` | 2026-06-16T19:17:53Z | `-` |
@@ -83,6 +83,7 @@ Documents: `139`
 | `ai-system/project-bootstrap.md` | Project Bootstrap | `reference` | `draft` | `draft` | `false` | `d169627438cf` | - | `-` |
 | `ai-system/project-control-connectivity.md` | Project Control Connectivity | `reference` | `draft` | `draft` | `false` | `3b6e938568b2` | - | `-` |
 | `ai-system/project-control-files.md` | Project Control Files | `reference` | `draft` | `draft` | `false` | `c3ab0549e8bb` | - | `-` |
+| `ai-system/project-control/09-task-identity-and-execution-graph.md` | Task Identity and Execution Graph | `reference` | `draft` | `draft` | `false` | `3a96c2455435` | - | `-` |
 | `ai-system/project-integration-model.md` | Project Integration Model | `reference` | `draft` | `draft` | `false` | `4146b7a5d3a9` | - | `-` |
 | `ai-system/project-operation-profile.md` | Project Operation Profile | `reference` | `draft` | `draft` | `false` | `a3492e3d2c12` | - | `-` |
 | `ai-system/project-system-update.md` | Project System Update | `reference` | `draft` | `draft` | `false` | `8edf3f9585e9` | - | `-` |
@@ -146,4 +147,4 @@ Documents: `139`
 | `ai-system/work-item-hierarchy.md` | Work Item Hierarchy | `reference` | `draft` | `draft` | `false` | `1ff8ca9832b1` | - | `-` |
 | `ai-system/workflow.md` | Workflow | `reference` | `draft` | `draft` | `false` | `6b18b7d5f515` | - | `-` |
 | `plugins/ai-project-control/skills/project-control-gateway/SKILL.md` | Skill | `guide` | `draft` | - | `false` | `880e4a5b6b09` | - | `-` |
-| `ai-system/project-control/08-usage-guide.md` | Project Control Usage Guide | `guide` | `review` | `draft` | `false` | `fb16fdfc513f` | - | `-` |
+| `ai-system/project-control/08-usage-guide.md` | Project Control Usage Guide | `guide` | `review` | `draft` | `false` | `7daf2c94787f` | - | `-` |

@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `69`
-Current task: `none`
+Revision: `90`
+Current task: `TASK-012`
 
 ## Epic `EPIC-001`
 
@@ -213,3 +213,95 @@ Acceptance criteria:
 - Vector backend is documented as derived cache, not source of truth.
 - Validation passes in environments without vector dependencies.
 - Required smoke checks pass or blockers are reported.
+
+## Epic `EPIC-004`
+
+### TASK-012 — TIG-01 Document task identity and execution graph design ⭐
+
+Status: `in_review`  
+Priority: `1`  
+Verification: `standard`  
+
+Define the target model for task uid, human ref, legacy aliases, epic keys, dependency graph, executable queue, and migration rules before implementation.
+
+Acceptance criteria:
+
+- A clear source-of-truth design exists.
+- The design states that task IDs do not imply execution order.
+- The design states that epics may execute in parallel by default.
+- The design defines explicit dependencies as the only cross-epic ordering mechanism.
+- The design includes migration rules for existing TASK-XXX tasks.
+- Generated project-control files are refreshed through CLI.
+
+### TASK-013 — TIG-02 Add epic keys to plan model
+
+Status: `planned`  
+Priority: `1`  
+Verification: `standard`  
+
+Add stable short epic keys to the plan model so task refs can use readable prefixes such as TIG-01 or ACP-02.
+
+Acceptance criteria:
+
+- Existing plan validation still passes.
+- Existing epics without keys are handled safely or migrated according to the design.
+- New epics can have unique keys.
+- Duplicate keys are rejected.
+
+### TASK-014 — TIG-03 Add task uid ref local sequence and aliases
+
+Status: `planned`  
+Priority: `1`  
+Verification: `standard`  
+
+Extend task state with stable uid, human-readable ref, local sequence inside epic, and aliases for backward compatibility.
+
+Acceptance criteria:
+
+- Existing tasks can be migrated or read without losing history.
+- New tasks receive readable refs.
+- Legacy TASK-XXX references remain resolvable.
+
+### TASK-015 — TIG-04 Add task reference resolver
+
+Status: `planned`  
+Priority: `1`  
+Verification: `standard`  
+
+Allow taskctl and prompt generation to resolve tasks by new ref, uid, or legacy TASK-XXX alias.
+
+Acceptance criteria:
+
+- Existing CLI commands keep working with legacy TASK-XXX.
+- New refs work where task_id was previously required.
+- Ambiguous references produce a clear error.
+
+### TASK-016 — TIG-05 Add task dependencies and executable queue
+
+Status: `planned`  
+Priority: `1`  
+Verification: `standard`  
+
+Add explicit cross-epic task dependencies and a deterministic executable queue so parallel epics can be scheduled safely.
+
+Acceptance criteria:
+
+- Ready tasks blocked by dependencies are not reported as executable.
+- Cross-epic dependencies are supported.
+- Cycles are rejected.
+- Executable queue output is deterministic.
+
+### TASK-017 — TIG-06 Add migration and generated output update
+
+Status: `planned`  
+Priority: `1`  
+Verification: `standard`  
+
+Provide safe migration/backward compatibility for existing plan and task state and update generated outputs to display readable refs.
+
+Acceptance criteria:
+
+- Existing AI_PROJECT/state can be validated after migration.
+- Generated files display readable refs and legacy IDs where useful.
+- Prompt packages still contain enough identity data for Codex execution.
+- Validation and generated checks pass.
