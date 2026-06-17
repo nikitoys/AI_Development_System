@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `45`
+Revision: `47`
 Current task: `TASK-008`
 
 ## Epic `EPIC-001`
@@ -140,7 +140,7 @@ Acceptance criteria:
 
 ### TASK-008 — P0 Strengthen docctl metadata and documentation gaps ⭐
 
-Status: `ready`  
+Status: `in_review`  
 Priority: `1`  
 Verification: `standard`  
 

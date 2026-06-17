@@ -68,6 +68,39 @@ Generated Markdown is readable output only. If generated output drifts, rebuild 
 
 The root self-hosted state is distinct from reusable templates under `/ai-system/templates/**/AI_PROJECT` and the non-runtime golden example under `/examples/golden-project/AI_PROJECT`.
 
+## Documentation Control State
+
+Documentation control uses the same state/events/generated model:
+
+```text
+AI_PROJECT/state/docs.json
+AI_PROJECT/events/doc-events.jsonl
+AI_PROJECT/generated/DOCS_INDEX.md
+AI_PROJECT/generated/DOCS_GAPS.md
+```
+
+`docs.json` is the authoritative registry for managed documentation. Each registered document stores lifecycle metadata plus derived retrieval metadata:
+
+```text
+path
+title
+type
+status
+required
+owner
+content_hash
+last_reviewed_at
+last_reviewed_by
+last_reviewed_content_hash
+declared_status
+declared_status_raw
+declared_status_source
+```
+
+`content_hash` is the current SHA-256 hash recorded by `docctl.py`. `last_reviewed_content_hash` is the SHA-256 hash reviewed by `docctl.py doc mark-reviewed`. Declared status fields are derived from document frontmatter, `Status:` metadata lines or a `## Status` section when present.
+
+`DOCS_GAPS.md` is generated from `docs.json` and current source files. It groups actionable gaps such as missing files, status mismatch, stale reviews, unresolved placeholders, broken local links and stale content hash metadata.
+
 ---
 
 # 1. Directory Layout

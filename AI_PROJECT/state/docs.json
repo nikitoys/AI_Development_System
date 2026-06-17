@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 17,
+  "revision": 18,
   "created_at": "2026-06-15T21:36:58Z",
-  "updated_at": "2026-06-17T21:28:33Z",
+  "updated_at": "2026-06-17T21:50:00Z",
   "docs": [
     {
       "id": "DOC-001",
@@ -16,7 +16,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T21:36:58Z",
-      "updated_at": "2026-06-15T21:36:58Z"
+      "updated_at": "2026-06-15T21:36:58Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "a6b78d2c0560a3547887dcd49c319da9d03373dc55d11d32477022507e5ab222",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_section"
     },
     {
       "id": "DOC-002",
@@ -30,7 +35,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T21:36:58Z",
-      "updated_at": "2026-06-15T21:36:58Z"
+      "updated_at": "2026-06-15T21:36:58Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "92cd36c1cb694abefec0e16517df049f6e3933953a06d86a7863ef1b0a78ee30",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_section"
     },
     {
       "id": "DOC-003",
@@ -44,7 +54,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T21:36:58Z",
-      "updated_at": "2026-06-15T21:36:58Z"
+      "updated_at": "2026-06-15T21:36:58Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "116b1e4e645fd2d95cee7958f1ca326365388eefa472f00911b09293540ff908",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_section"
     },
     {
       "id": "DOC-004",
@@ -58,7 +73,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T21:36:58Z",
-      "updated_at": "2026-06-15T21:36:58Z"
+      "updated_at": "2026-06-15T21:36:58Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "d58301b3567b90db81b52eb4e737247976e82fae4f77754eaacd99c439a50f82",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_section"
     },
     {
       "id": "DOC-005",
@@ -72,7 +92,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T21:36:58Z",
-      "updated_at": "2026-06-15T21:36:58Z"
+      "updated_at": "2026-06-15T21:36:58Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "7ac00bfde39da4bc9527f11ad1dc984b993d860fd4bb664498242a32a8b986e3",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_section"
     },
     {
       "id": "DOC-006",
@@ -86,7 +111,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T21:36:58Z",
-      "updated_at": "2026-06-15T21:36:58Z"
+      "updated_at": "2026-06-15T21:36:58Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "1f48376f54a220b6d8adcf8441cc4ae82ac940a278b58e539661d3141b7a162c",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_section"
     },
     {
       "id": "DOC-007",
@@ -100,7 +130,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T21:36:58Z",
-      "updated_at": "2026-06-15T21:36:58Z"
+      "updated_at": "2026-06-15T21:36:58Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "035f37bb15d8f601aff97abc4f3378961d0524d7a96fae5f03239239e9aee12c",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_section"
     },
     {
       "id": "DOC-008",
@@ -114,7 +149,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T21:36:58Z",
-      "updated_at": "2026-06-15T21:49:57Z"
+      "updated_at": "2026-06-15T21:49:57Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "fb16fdfc513f6257ca6def0bc6a8b8861c9e500075a817f4e5aa1bd3426b301a",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_section"
     },
     {
       "id": "DOC-009",
@@ -131,7 +171,12 @@
         "Reviewed during TASK-005 Documentation Navigation Skill update; document remains in review status."
       ],
       "created_at": "2026-06-15T21:57:54Z",
-      "updated_at": "2026-06-16T18:35:17Z"
+      "updated_at": "2026-06-16T18:35:17Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-010",
@@ -145,7 +190,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "088eb0b5b89bb06b80886193a0813e6225783d5f417f45e473b4ff4b3736ce26",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-011",
@@ -159,7 +209,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "380fdf66798edf178bae6835448da34e9b3b6afc088c9134c0c0607fb7a17a31",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-012",
@@ -173,7 +228,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "554ccec86cc8b9641a1371d719a9572ecd82310d4c26221172a991b675293b17",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-013",
@@ -187,7 +247,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "6dbcc70a21118b988613d505fa098c940298a21f18174394834ceee28a755fe9",
+      "declared_status": "",
+      "declared_status_raw": "Applied",
+      "declared_status_source": "status_section"
     },
     {
       "id": "DOC-014",
@@ -201,7 +266,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "6b63df747b18e0c170b72a2421eef0820e1796856b1e3707c3c86add8210969e",
+      "declared_status": "",
+      "declared_status_raw": "Applied",
+      "declared_status_source": "status_section"
     },
     {
       "id": "DOC-015",
@@ -215,7 +285,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "9720cb93dd73ecfae8232f663e9d99b99e0892dd2520a0e2644ec346b73bc784",
+      "declared_status": "",
+      "declared_status_raw": "Applied",
+      "declared_status_source": "status_section"
     },
     {
       "id": "DOC-016",
@@ -229,7 +304,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "c63bab25690a17d2b4b0f3640a332ba332171ea99419fbee2d709df1ba75d334",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-017",
@@ -243,7 +323,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "a4a9b782c8187942ce8cc5845034bd685b7ea21b3ab2a07965b90ea0d036faf2",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-018",
@@ -257,7 +342,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "23f995a22062711176d2fc4aead9a8c181e8e596711a5c05d152014c3c360e64",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-019",
@@ -271,7 +361,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "ea92d4f53eb79c2d1aef8c9436028df7b9680f91bfbbd773bfe1e96a5ee4887f",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-020",
@@ -285,7 +380,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "407c355a45560c91510b37894eda430421964a974df602eb602e9df7d0229be6",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-021",
@@ -299,7 +399,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "507bfc04199e90dc947672271f72d09845af8210736904a0300a934b34e7c25f",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-022",
@@ -313,7 +418,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "72fe8adceaf9d2b56972ff30ad197a386a0ab4eac2e8145ff05d8a4741534f31",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-023",
@@ -327,7 +437,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "2d262d74dcd6270c5f85ca52c1bc5fdc8cd886d68ad8e8083615b170a4f5187b",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-024",
@@ -341,7 +456,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "974f70aab8a11b242cc891a4976ccbe306cd3a1c2e9029d4325fe680b38ed3f5",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-025",
@@ -355,7 +475,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "ecd63042a86f943e2ee6d6a4c1a8708fb2a1f0edf4e2a81f121664b2f103af3b",
+      "declared_status": "",
+      "declared_status_raw": "Legacy Concept Baseline",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-026",
@@ -369,7 +494,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "befa737b2707cf5a094ed96d69e48544a505a077181922a34b1965b7393f0311",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-027",
@@ -383,7 +513,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "626f94d3ff121064b0c5fdcdb73446afda3852af801a263cb98c83a0aed8ae28",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-028",
@@ -397,7 +532,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "8e122049b5b90aaad3f0dab54b747c65ad8516bab26c78df08434f36dca1c5ed",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-029",
@@ -411,7 +551,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "2eff3ac6315d2451785cded781dc4be90270a3e07a9a0d6796a4ce6c220c9a2b",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-030",
@@ -425,7 +570,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "74f38d88fac0b5cacabc194cb189542eddcd4bea7474713c711c372fc5ec8aab",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-031",
@@ -439,7 +589,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "1bf17f881ef4c4348f7994d8fe16e46c66e6d6cf3d2d704abd403ceb3a481033",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-032",
@@ -453,7 +608,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "19567595388858d40122b1405ab189fd96eb4ddb26e2808610d11a75fe75ebf6",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-033",
@@ -467,7 +627,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "1ec3b35b38efd591665ffb6ff30b8dbd8335459eb6e407b9d6545461ece7342e",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-034",
@@ -481,7 +646,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "14e681cfc8af52b1247cc9c022c9d3a2d811101019724cd8fc8b89e557693c2f",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-035",
@@ -495,7 +665,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "0bf50f8a5e585d227fa269a7095ba94c99d3fe330ba352802715d7e32f41f0df",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-036",
@@ -509,7 +684,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "94610d2cdebb9d444f5212bc83bbd6810d710b50e67763057fb57b1500c6e53f",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-037",
@@ -523,7 +703,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "9c9fd9c8bdbe6fc44d33bca4edd1d23fc363b2ba7107767bd8155c49d285d8ee",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-038",
@@ -537,7 +722,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "6b90faa5299f4d4fa55fc8ab1b96cbdce3cc99d8e407a3cac09f09ad6da6e7b0",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-039",
@@ -551,7 +741,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "67cbfc8cdba78608c86f460423b8dbec7a21dfd51fa6e70f1201605c3bf318eb",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-040",
@@ -565,7 +760,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "27fa9447f2e698b5a09e9816ab059b93db9458104b135a36ebbc8a0e9fff074d",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-041",
@@ -579,7 +779,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "50f74bd1d05a50a98f3e33edccb0583e9ebd7b180b9920157229c70074713324",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-042",
@@ -593,7 +798,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "d7cd84e2ffec339c47f84b0b98048c45e2f6f7199963f4c43d6faaa0d0ddcf6a",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-043",
@@ -607,7 +817,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "f6b88844ebfa5960ee093d5e7576d260995bb705e38f76f9d7260a4fa8c44d6e",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-044",
@@ -621,7 +836,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "d6b589dbf2780a5c89544ed3feed415167ad490e5b528aef9a2f022a4f44836b",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-045",
@@ -635,7 +855,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "c5d9a03f3a900152f515ffd13995d49b8d809dc665141b53e05be8f7d7e29fdc",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-046",
@@ -649,7 +874,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "2f03117c5315007c9a799dfa6d2b9596549cae56f324d73fce622189978f4633",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-047",
@@ -663,7 +893,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "246a54fcc2db5c3a20238203972c06e572c5f4920b1b7106b1b3c1da7fd87982",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-048",
@@ -677,7 +912,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "98aa2eb3b2b4092acc5114dfec96c2ea2b60ad28d91937d4443d4ce444327492",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-049",
@@ -691,7 +931,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "1c19429675a941c68c338d7349ea54a69022bd8dddd16240c6abf5a5fbfbae58",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-050",
@@ -705,7 +950,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "a160518caf535f77c04de5c8389802aa10eff69074ea7fb28ef31cba8a3b29a3",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-051",
@@ -719,7 +969,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "40da34287a9e3246e07377139dc5ddbdef42851e138a135477e914fbf6d04516",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-052",
@@ -733,7 +988,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "499b8dce5c43892e3125a45e0ad65ab22a529c6131ce921f37d8965783f9b6b6",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-053",
@@ -747,7 +1007,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "af49ccf799c3c112fb5c33489687ac0158ac6caef478e0d20262986a90b2ef12",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-054",
@@ -761,7 +1026,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "cfbde33a708c604f5c343f549c3e67c567639f9403915d4c826a90df7ebb598f",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-055",
@@ -775,7 +1045,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "c764451881e6fe9028db1f6ce4a2225932e993b021e6caa8a02032ca54877bdb",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-056",
@@ -789,7 +1064,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "aacdbacb7dcebdf7b512221d2804e2b9ba46b9f74bbecd9d07ac230f035e620f",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-057",
@@ -803,7 +1083,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "8050a19bd1361bcac340859784bec4cf41e64c5ffa2df57fa8fad4e50483fb34",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-058",
@@ -817,7 +1102,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "19e837026978b04ddd10ce437c016c950b78337e93c11febff0e4525dbeed517",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-059",
@@ -831,7 +1121,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "8ab3a2acd4a28890bad02b5219ed70465b7a1b3ebaf3741636a393949c29dd7c",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-060",
@@ -845,7 +1140,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "895901618c3631aa6e5843700870a21c6ebeca5e443f60c16a6fc1009540ad4c",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-061",
@@ -859,7 +1159,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "6b294a8d383efefdaa4ca70373409edbaa66bee32465f39a93db9e77afcf29bb",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-062",
@@ -873,7 +1178,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "20c2e24bf6210dd9181e2d049a026b3768aadae8064336188808ed13ebaaf173",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-063",
@@ -887,7 +1197,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "8802e994c685ff7605235a5608c25f3c35e561cb0a93ca2267f4642d4ee3c0f9",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-064",
@@ -901,7 +1216,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "d169627438cfae3c48226a198b2d45aac7df881750fcc1b05d1032b57037d984",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-065",
@@ -915,7 +1235,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "3b6e938568b29432148b5f70a1944dc1afef4046af3e3a4a99b31f5790f0b0ac",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-066",
@@ -929,7 +1254,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "c3ab0549e8bb8120d91db41e02ce1e81ec7aac677aff70fd9f8aab7f076710df",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-067",
@@ -943,7 +1273,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "4146b7a5d3a9b56d7bbbb18804cdf44bfdd2cbd44ce124d884b964cbf58d7c55",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-068",
@@ -957,7 +1292,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "a3492e3d2c122e5753ab889ccb594f7b2bbe8e3ed6521011330530d264e63817",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-069",
@@ -971,7 +1311,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "8edf3f9585e99ae30f60d6214f6918bf1c26ce2cf1923185e5d4835e72b60aa2",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-070",
@@ -985,7 +1330,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "6791bc9a883c752b9a4d53934779457441a12922113e494f0e2b91a7188ec3be",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-071",
@@ -999,7 +1349,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "0173d2db689cf6247aacf217f381d8f3483a2ab2f9340ad8613f5a74657d8523",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-072",
@@ -1013,7 +1368,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "126e0230c8e0dd7cfb41628df54fd2b445c17cfa05ce8097d0bebbf9e3c1732c",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-073",
@@ -1027,7 +1387,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "a4141107dda0940c4763ae9024db3cc5450dcece7fa90de431905b0594920950",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-074",
@@ -1041,7 +1406,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "487562b186a999bfa18a62be9119b7bf9168dfa52691b233d0042473ad2d05ac",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-075",
@@ -1055,7 +1425,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "e565e7ad69dcbfe5c4baeb377bedf889e148860a596c477e2095e6d849267d67",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-076",
@@ -1069,7 +1444,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "911aa59b5359585fc16610690980b0f9673fff903294e63e69f6adf4a0485011",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-077",
@@ -1083,7 +1463,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "e6e5e9c5f0ab2c283f5ee1f316a3428ed92f56df9a832b3c918036bd254e6c28",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-078",
@@ -1097,7 +1482,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "803f8b613f76e808889158392a4a1a78ce95704b1835f7d32d541307bef9022f",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-079",
@@ -1111,7 +1501,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "22c43b3691b9d8b16372619fe62508721f6fe151faf6f8ceeb4173b9fda4a3ed",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-080",
@@ -1125,7 +1520,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "2e4a589f3726a05863cee79456d8b6bb6cf6ebce24c7aebfef16dc3c39ad2330",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-081",
@@ -1139,7 +1539,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "c7d00634f7878211da839fdf7920dcdf703cceb48b374db167bd2dd5a3b405be",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-082",
@@ -1153,7 +1558,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "7f599ddf3d0a7b3ed26df65e37dea67dca2362eeefc10302048822dc706ef4c5",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-083",
@@ -1167,7 +1577,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "763e8f888731f85dbb1595f9a793a7c4c75b37a6f67fd4499d491ac6b36247b6",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-084",
@@ -1181,7 +1596,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "57d21a5936368069435463e5f327521349f967e158a2f269cb0debe87494e50a",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-085",
@@ -1195,7 +1615,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "1cff0f0b2cefa77b2e87013eafcc2c637786adccab6f4a7260ac74a6a8226429",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-086",
@@ -1209,7 +1634,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "991b17c094f3eb657c1ce6404560a3a295fb06f86a6f231128fcd06d7ce37e93",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-087",
@@ -1223,7 +1653,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "ecf967c4a1be519fcc83759714eed6e6c2cab11c8e3c1d737e6e372f244f77f4",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-088",
@@ -1237,7 +1672,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "be21e76d8a07fc10e945f47a91c59b44da611afd504ff2daf99adf3edf336cd5",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": ""
     },
     {
       "id": "DOC-089",
@@ -1251,7 +1691,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "51af5173740b92a075fc97a780011836272726dae104228075c84febd6af5357",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-090",
@@ -1265,7 +1710,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "8fa4954f7547664a2c6daefd37f374f5a9107bc245ec7854ff8675242128ccf8",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-091",
@@ -1279,7 +1729,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "72c23fd109e3c059e50bf02069c8cb674da74cd8a3d7e060a9d1fc0d340f68b8",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-092",
@@ -1293,7 +1748,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "0b592815c6bdae35bb85f68035f39f2623be02cef5b66c51df29b47b4a6cd5f7",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-093",
@@ -1307,7 +1767,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "513825cc983de46a4f39ac4dc82d50d51dd682fc16a983c8460faef9c7fc5717",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-094",
@@ -1321,7 +1786,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "f636f054cccd4da44285d916e30283653ec33e5f704a5b200c05f281364cb554",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-095",
@@ -1335,7 +1805,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "cd4aa0d6a12f628513e1c9e80a4bd5f07be04fe0f766e825535f55a28190f595",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-096",
@@ -1349,7 +1824,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "caff5b95d1d3ac40adc4ad66550bf818316fa51b3abdb369869ebc561460c79b",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-097",
@@ -1363,7 +1843,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "1e4d5ab14e1f041f3a740d685e0215a3cde65d6aa05e2ad9a4f813772754e588",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": ""
     },
     {
       "id": "DOC-098",
@@ -1377,7 +1862,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "1a54918da13adf80cf48dbed2026ab293969c230fa43be7b76135f591057a6e3",
+      "declared_status": "",
+      "declared_status_raw": "idle",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-099",
@@ -1391,7 +1881,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "5e89aeae724f384f67d871a6006224b2302d699174f11e165e0563b558bc5ecd",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-100",
@@ -1405,7 +1900,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "d8b9185fdbe0786c99f43295fad515b923be0b1e920d2390af1bae870ba89b00",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": ""
     },
     {
       "id": "DOC-101",
@@ -1419,7 +1919,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "e66f9a96aa3f5c8d77c75be7168ac08dadac3d811aeeadea95628076c52be83c",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": ""
     },
     {
       "id": "DOC-102",
@@ -1433,7 +1938,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "858d4871b8578c233fdeab1cc6abbd7e0e299f3deffb4d41962727f8e27cf0e1",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": ""
     },
     {
       "id": "DOC-103",
@@ -1447,7 +1957,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "dc9acde76e281a095b39ed2588ac057216c1736e8f320c2a2e5060d4de72d98e",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-104",
@@ -1461,7 +1976,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "486a081dddb4a30c3bef0725074850dd974a279dd487cdc4dc0e21f3e07af2d9",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-105",
@@ -1475,7 +1995,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "c205e56880ea1786c7df67df8de4e2539793a7c328e1997b2163be846cabf6ce",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-106",
@@ -1489,7 +2014,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "12ff0948048ec515e589bcfc9bb6691294fbfa26a3c7f1bd76b21fd97ad9b2cf",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-107",
@@ -1503,7 +2033,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "3af95c00ade9b678d95a3d67186142271b6cfd16293f9e0a43c68ba7f464fdb0",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": ""
     },
     {
       "id": "DOC-108",
@@ -1517,7 +2052,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "9fac460cfdbc8b97f0bf08d62e4cc2c24d158b61e2e44d9f7261930b5a413d1f",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-109",
@@ -1531,7 +2071,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "2518f30402f80bb2bdb1a9e029d6a6fa6474f7c4ffd352a77eb826289ad93cc1",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": ""
     },
     {
       "id": "DOC-110",
@@ -1545,7 +2090,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "993288d8833757498c75fa31a90bfd14defb70ed86aa5b67ec73a934b7b14f75",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-111",
@@ -1559,7 +2109,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "75fb81de1badf1b6f25e237f9a11b74c431dd435ef3170218472eab8859073cc",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-112",
@@ -1573,7 +2128,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "9b6977b2be87dd7b84612599c6b219f4a7bc8e214057853c36597e48fd214458",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": ""
     },
     {
       "id": "DOC-113",
@@ -1587,7 +2147,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "bb2d764db01971c922d6766efba628ce2383c7636e48ebd8f14b7fab86cb3d70",
+      "declared_status": "",
+      "declared_status_raw": "idle",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-114",
@@ -1601,7 +2166,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "ab9a97da9c2b635d6c4041ab1f7889b34d0e973013e1c12207b6733321141a13",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-115",
@@ -1615,7 +2185,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "9682a4c8b50541e22f75b39249c9438f227c59cefa1a153af4bd1e844301ffe2",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": ""
     },
     {
       "id": "DOC-116",
@@ -1629,7 +2204,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "a4e043bbb027d8f85d9169145d009a1072842229af7c013c15a5c8744063d94f",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": ""
     },
     {
       "id": "DOC-117",
@@ -1643,7 +2223,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "4ae7439618fe0f23904bedfa72371b75dd14d9190b646520e18ff17e620c31a0",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": ""
     },
     {
       "id": "DOC-118",
@@ -1657,7 +2242,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "f4c50805ab026df03f1b6e46ae71e71d1136584b1dd8c5feb7267d35f9a04d05",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-119",
@@ -1671,7 +2261,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "48296a03d23508e51874c5919000f6a9cf70d11cf3dd77278b7955ab61252a5c",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-120",
@@ -1685,7 +2280,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "57f62318474efa8dd5b9316e0109342b65a5241f1b020cd82df8eb5e4f50d955",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-121",
@@ -1699,7 +2299,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "c485e72ef5e9f37878bdbffefed3df1c92d6af9edc5d7e2bbe9f570565d992fd",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-122",
@@ -1713,7 +2318,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "f10b4eb316b05748af677897df35799c2ae385eff9bee240bc4e483b396bc653",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": ""
     },
     {
       "id": "DOC-123",
@@ -1727,7 +2337,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "6138383bd6cd533e0eb10876975d36cda735cc4f97fd4c3ba02f416085ac4964",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-124",
@@ -1741,7 +2356,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "685d05955bda239954ee5eeac7ff2db315a341239e792a4ce27d92ed42dae9dd",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-125",
@@ -1755,7 +2375,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "78168901e1490a6693613f0a0ffc82e45d77a896eda94ee6045159bccd95da17",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-126",
@@ -1769,7 +2394,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "cd56c944824a7078c6305bf5cfda386e0fa91ef707190ed0914c4805012575e1",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-127",
@@ -1783,7 +2413,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "1ff8ca9832b1253027ede0fe623b75e7b0c1d727fe6c32d884335b8438a22367",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-128",
@@ -1797,7 +2432,12 @@
       "last_reviewed_by": "",
       "notes": [],
       "created_at": "2026-06-15T22:10:52Z",
-      "updated_at": "2026-06-15T22:10:52Z"
+      "updated_at": "2026-06-15T22:10:52Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "6b18b7d5f515250e4f6bd8d208867baa5953fefe4166d0795650eab1ce372700",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-129",
@@ -1814,7 +2454,12 @@
         "Reviewed during TASK-006 for L3 manual-only delegation boundaries and source-document consistency."
       ],
       "created_at": "2026-06-16T19:14:21Z",
-      "updated_at": "2026-06-16T19:25:22Z"
+      "updated_at": "2026-06-16T19:25:22Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "32bd223e6d3cdc201f8f6ec84470fd443185ed819cbd3def36af2d50e78caf67",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field"
     },
     {
       "id": "DOC-130",
@@ -1831,7 +2476,12 @@
         "Reviewed during TASK-006 for required Worker Agent prompt fields and forbidden-action boundaries."
       ],
       "created_at": "2026-06-16T19:14:26Z",
-      "updated_at": "2026-06-16T19:25:22Z"
+      "updated_at": "2026-06-16T19:25:22Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "f00861055a4f4d5186450036bb6cde2e2f018a000ecb6416a5e3663879140481",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": ""
     },
     {
       "id": "DOC-131",
@@ -1848,7 +2498,164 @@
         "Human Owner reviewed and accepted L4 Role-Agent Runtime Architecture."
       ],
       "created_at": "2026-06-16T20:44:00Z",
-      "updated_at": "2026-06-17T21:28:33Z"
+      "updated_at": "2026-06-17T21:28:33Z",
+      "last_reviewed_content_hash": "",
+      "content_hash": "9d5efa6f1a9aafd6f3e9a822c51bc7c1d53cc342298e219b4b85f4b514f46339",
+      "declared_status": "review",
+      "declared_status_raw": "Review",
+      "declared_status_source": "status_field"
+    },
+    {
+      "id": "DOC-132",
+      "path": ".agents/skills/agent-delegation/SKILL.md",
+      "title": "Skill",
+      "type": "guide",
+      "status": "draft",
+      "required": false,
+      "owner": "AI System Maintainer",
+      "last_reviewed_at": "",
+      "last_reviewed_by": "",
+      "content_hash": "5c432d691644b4e1331366e06454feb0de76fe0b1b8119863dcb0644fb216464",
+      "last_reviewed_content_hash": "",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": "",
+      "notes": [],
+      "created_at": "2026-06-17T21:50:00Z",
+      "updated_at": "2026-06-17T21:50:00Z"
+    },
+    {
+      "id": "DOC-133",
+      "path": ".agents/skills/clarification-gate/SKILL.md",
+      "title": "Skill",
+      "type": "guide",
+      "status": "draft",
+      "required": false,
+      "owner": "AI System Maintainer",
+      "last_reviewed_at": "",
+      "last_reviewed_by": "",
+      "content_hash": "3a4bc7fb0e58a6e08885a0ac139dd025a01f5a551539e95b0a4debe21f68e85b",
+      "last_reviewed_content_hash": "",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": "",
+      "notes": [],
+      "created_at": "2026-06-17T21:50:00Z",
+      "updated_at": "2026-06-17T21:50:00Z"
+    },
+    {
+      "id": "DOC-134",
+      "path": ".agents/skills/documentation-navigation/SKILL.md",
+      "title": "Skill",
+      "type": "guide",
+      "status": "draft",
+      "required": false,
+      "owner": "AI System Maintainer",
+      "last_reviewed_at": "",
+      "last_reviewed_by": "",
+      "content_hash": "64ca93923e7da385ad44bb7e9f1249b9743354ef567d83850a3eb0299172b6f9",
+      "last_reviewed_content_hash": "",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": "",
+      "notes": [],
+      "created_at": "2026-06-17T21:50:00Z",
+      "updated_at": "2026-06-17T21:50:00Z"
+    },
+    {
+      "id": "DOC-135",
+      "path": ".agents/skills/project-control-gateway/SKILL.md",
+      "title": "Skill",
+      "type": "guide",
+      "status": "draft",
+      "required": false,
+      "owner": "AI System Maintainer",
+      "last_reviewed_at": "",
+      "last_reviewed_by": "",
+      "content_hash": "880e4a5b6b09893587e6aba4678e1f98f3906784ec812fba76fa17c955f3e87f",
+      "last_reviewed_content_hash": "",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": "",
+      "notes": [],
+      "created_at": "2026-06-17T21:50:00Z",
+      "updated_at": "2026-06-17T21:50:00Z"
+    },
+    {
+      "id": "DOC-136",
+      "path": "AGENTS.md",
+      "title": "Agents",
+      "type": "reference",
+      "status": "draft",
+      "required": false,
+      "owner": "AI System Maintainer",
+      "last_reviewed_at": "",
+      "last_reviewed_by": "",
+      "content_hash": "62a62b2a8cdd383afb3ca17ae46a56ef40162fc4a8d6cd8668c3588045757737",
+      "last_reviewed_content_hash": "",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field",
+      "notes": [],
+      "created_at": "2026-06-17T21:50:00Z",
+      "updated_at": "2026-06-17T21:50:00Z"
+    },
+    {
+      "id": "DOC-137",
+      "path": "README.md",
+      "title": "Readme",
+      "type": "reference",
+      "status": "draft",
+      "required": false,
+      "owner": "AI System Maintainer",
+      "last_reviewed_at": "",
+      "last_reviewed_by": "",
+      "content_hash": "9840bad8f5e44cf09b9a0557bddc4e8f32d3fc5f121ef1ad816b1095f14bdc0d",
+      "last_reviewed_content_hash": "",
+      "declared_status": "draft",
+      "declared_status_raw": "Draft",
+      "declared_status_source": "status_field",
+      "notes": [],
+      "created_at": "2026-06-17T21:50:00Z",
+      "updated_at": "2026-06-17T21:50:00Z"
+    },
+    {
+      "id": "DOC-138",
+      "path": "README.ru.md",
+      "title": "Readme.Ru",
+      "type": "reference",
+      "status": "draft",
+      "required": false,
+      "owner": "AI System Maintainer",
+      "last_reviewed_at": "",
+      "last_reviewed_by": "",
+      "content_hash": "06ef242455e36fca6ff663905c5692a8bc772b7df7f46d51f7335ff24a5d6744",
+      "last_reviewed_content_hash": "",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": "",
+      "notes": [],
+      "created_at": "2026-06-17T21:50:00Z",
+      "updated_at": "2026-06-17T21:50:00Z"
+    },
+    {
+      "id": "DOC-139",
+      "path": "plugins/ai-project-control/skills/project-control-gateway/SKILL.md",
+      "title": "Skill",
+      "type": "guide",
+      "status": "draft",
+      "required": false,
+      "owner": "AI System Maintainer",
+      "last_reviewed_at": "",
+      "last_reviewed_by": "",
+      "content_hash": "880e4a5b6b09893587e6aba4678e1f98f3906784ec812fba76fa17c955f3e87f",
+      "last_reviewed_content_hash": "",
+      "declared_status": "",
+      "declared_status_raw": "",
+      "declared_status_source": "",
+      "notes": [],
+      "created_at": "2026-06-17T21:50:00Z",
+      "updated_at": "2026-06-17T21:50:00Z"
     }
   ]
 }

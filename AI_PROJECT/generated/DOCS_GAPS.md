@@ -3,8 +3,35 @@
 
 # Documentation Gaps
 
-Revision: `17`
-Open gaps: `127`
+Revision: `18`
+Open gaps: `156`
+Tracked categories: `Missing File`, `Status Mismatch`, `Active Not Reviewed`, `Active Review Stale`, `Unresolved Placeholder`, `Broken Local Link`, `Stale Content Hash`, `Not Active`
+
+## Missing File
+
+_No gaps._
+
+## Status Mismatch
+
+- `ai-system/agent-delegation.md` (reference, active): registry status `active` differs from declared status `draft` from status_field
+- `ai-system/l4-role-agent-runtime.md` (reference, active): registry status `active` differs from declared status `review` from status_field
+- `ai-system/project-control/01-overview.md` (overview, active): registry status `active` differs from declared status `draft` from status_section
+- `ai-system/project-control/02-domain-model.md` (reference, active): registry status `active` differs from declared status `draft` from status_section
+- `ai-system/project-control/03-state-model.md` (reference, active): registry status `active` differs from declared status `draft` from status_section
+- `ai-system/project-control/04-command-catalog.md` (reference, active): registry status `active` differs from declared status `draft` from status_section
+- `ai-system/project-control/05-lifecycle-rules.md` (lifecycle, active): registry status `active` differs from declared status `draft` from status_section
+- `ai-system/project-control/06-prompt-package-spec.md` (reference, active): registry status `active` differs from declared status `draft` from status_section
+- `ai-system/project-control/07-validation-and-tests.md` (process, active): registry status `active` differs from declared status `draft` from status_section
+- `ai-system/skills/README.md` (guide, active): registry status `active` differs from declared status `draft` from status_field
+- `ai-system/aicp-language-policy.md` (policy, draft): declared status `Applied` from status_section is not supported by docctl
+- `ai-system/aicp-security-privacy-policy.md` (policy, draft): declared status `Applied` from status_section is not supported by docctl
+- `ai-system/aicp-work-item-hierarchy.md` (reference, draft): declared status `Applied` from status_section is not supported by docctl
+- `ai-system/evolution/concept-baseline.md` (reference, draft): declared status `Legacy Concept Baseline` from status_field is not supported by docctl
+- `ai-system/templates/foldered/AI_PROJECT/CODEX_CURRENT.md` (template, draft): declared status `idle` from status_field is not supported by docctl
+- `ai-system/templates/project/CODEX_CURRENT.md` (template, draft): declared status `idle` from status_field is not supported by docctl
+- `ai-system/project-control/08-usage-guide.md` (guide, review): registry status `review` differs from declared status `draft` from status_section
+
+## Active Not Reviewed
 
 - `ai-system/project-control/01-overview.md` (overview, active): active document has no recorded review
 - `ai-system/project-control/02-domain-model.md` (reference, active): active document has no recorded review
@@ -13,6 +40,35 @@ Open gaps: `127`
 - `ai-system/project-control/05-lifecycle-rules.md` (lifecycle, active): active document has no recorded review
 - `ai-system/project-control/06-prompt-package-spec.md` (reference, active): active document has no recorded review
 - `ai-system/project-control/07-validation-and-tests.md` (process, active): active document has no recorded review
+
+## Active Review Stale
+
+- `ai-system/agent-delegation.md` (reference, active): active review does not match current content hash
+- `ai-system/l4-role-agent-runtime.md` (reference, active): active review does not match current content hash
+- `ai-system/skills/README.md` (guide, active): active review does not match current content hash
+- `ai-system/templates/agent-worker-prompt.md` (template, active): active review does not match current content hash
+
+## Unresolved Placeholder
+
+_No gaps._
+
+## Broken Local Link
+
+_No gaps._
+
+## Stale Content Hash
+
+_No gaps._
+
+## Not Active
+
+- `.agents/skills/agent-delegation/SKILL.md` (guide, draft): document is not active
+- `.agents/skills/clarification-gate/SKILL.md` (guide, draft): document is not active
+- `.agents/skills/documentation-navigation/SKILL.md` (guide, draft): document is not active
+- `.agents/skills/project-control-gateway/SKILL.md` (guide, draft): document is not active
+- `AGENTS.md` (reference, draft): document is not active
+- `README.md` (reference, draft): document is not active
+- `README.ru.md` (reference, draft): document is not active
 - `ai-system/README.md` (reference, draft): document is not active
 - `ai-system/agent-result-intake.md` (reference, draft): document is not active
 - `ai-system/agent-work-package.md` (reference, draft): document is not active
@@ -132,4 +188,6 @@ Open gaps: `127`
 - `ai-system/verification-modes.md` (reference, draft): document is not active
 - `ai-system/work-item-hierarchy.md` (reference, draft): document is not active
 - `ai-system/workflow.md` (reference, draft): document is not active
+- `plugins/ai-project-control/skills/project-control-gateway/SKILL.md` (guide, draft): document is not active
 - `ai-system/project-control/08-usage-guide.md` (guide, review): document is not active
+

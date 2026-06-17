@@ -3,11 +3,11 @@
 
 # Current Codex Task
 
-Revision: `45`
+Revision: `47`
 
 Task: `TASK-008` — **P0 Strengthen docctl metadata and documentation gaps**
 Epic: `EPIC-003`
-Status: `ready`
+Status: `in_review`
 Verification: `standard`
 
 ## Prompt Control Fields

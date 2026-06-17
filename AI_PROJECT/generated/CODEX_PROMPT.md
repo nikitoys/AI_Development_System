@@ -1,35 +1,23 @@
-# Codex Prompt Package
-
-Generated: 2026-06-17T21:39:29Z
-Source Type: task
-Source ID: TASK-008
-Source Status: ready
-
 [SYSTEM]
 
-Active Role:
-Codex Executor
+Active Role: Codex Executor
+Active Stage: Documentation-control implementation
+Active Document: scripts/docctl.py / AI_PROJECT/generated/DOCS_INDEX.md / AI_PROJECT/generated/DOCS_GAPS.md
+Expected Result: docctl metadata and gap detection are strengthened for future context retrieval.
 
-Active Stage:
-Documentation-control implementation
+Repository: current repository
+Task ID: TASK-008
+Task Title: P0 Strengthen docctl metadata and documentation gaps
+Task Status: in_review
+Verification Mode: standard
 
-Active Document:
-scripts/docctl.py / AI_PROJECT/generated/DOCS_INDEX.md / AI_PROJECT/generated/DOCS_GAPS.md
+Initiative: INIT-001 — AI Development System Evolution
+Epic: EPIC-003 — Prompt Context Retrieval Layer
 
-Expected Result:
-docctl metadata and gap detection are strengthened for future context retrieval.
-
-Repository Context:
-This repository is an AI Development System governance control plane.
-Project-control state is managed through Python CLI gateways; generated Markdown is derived output.
-
-Source:
-Source Task: TASK-008
-Task Status: ready
-Title: P0 Strengthen docctl metadata and documentation gaps
-
+Context:
 Improve docctl.py so registered documentation becomes a reliable source for future context retrieval.
 
+Details:
 Add stricter documentation-control capabilities before implementing retrieval. The documentation registry must be able to detect status drift, content changes after review, stale indexes and root-level documentation coverage gaps.
 
 Scope:
@@ -61,14 +49,6 @@ Allowed Files:
 - AI_PROJECT/generated/DOCS_INDEX.md only through docctl.py
 - AI_PROJECT/generated/DOCS_GAPS.md only through docctl.py
 
-Implementation Instructions:
-- Inspect current files before editing.
-- Stay within allowed files.
-- Preserve existing conventions.
-- Prefer minimal, commit-ready changes.
-- Do not perform unrelated refactors.
-- Do not edit AI_PROJECT/state/**, AI_PROJECT/events/** or AI_PROJECT/generated/** manually.
-
 Acceptance Criteria:
 - docctl validation detects mismatch between registry status and declared document status/frontmatter when such status is present.
 - docctl tracks current document content hash.
@@ -79,16 +59,20 @@ Acceptance Criteria:
 - Existing plan/task/documentation validation passes or blockers are reported clearly.
 - No protected project-control files are edited manually.
 
-Verification:
-- Use verification mode `standard`.
-- Run the validation commands required by the task and report results.
-
-Result Format:
-- Summary
-- Changed files
-- Commands run
-- Verification result
-- Blockers or risks
-
-Review / Result Format Notes:
+Review Instructions:
 - Report changed files, commands run, validation results, generated files updated and any remaining documentation-control risks.
+
+Execution Rules:
+- Do not edit AI_PROJECT/state/*.json manually.
+- Do not edit AI_PROJECT/events/*.jsonl manually.
+- Do not edit AI_PROJECT/generated/*.md manually unless explicitly instructed; prefer CLI render/build commands.
+- Stay within Allowed Files and Scope.
+- If task state must change, report the required taskctl command instead of editing state by hand.
+- At the end, report changed files, checks run, result, and any unresolved risks.
+
+Suggested lifecycle commands:
+```bash
+python scripts/taskctl.py task transition TASK-008 --to in_progress
+python scripts/taskctl.py task transition TASK-008 --to in_review
+python scripts/taskctl.py validate
+```

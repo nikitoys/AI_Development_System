@@ -74,6 +74,25 @@ python scripts/docctl.py ...
 python scripts/evolutionctl.py ...
 ```
 
+Current documentation-control commands include:
+
+```bash
+python scripts/docctl.py init
+python scripts/docctl.py scan --scope ai-system
+python scripts/docctl.py scan --scope root
+python scripts/docctl.py scan --scope skills
+python scripts/docctl.py scan --scope all
+python scripts/docctl.py doc register --path <path> --title <title> --type <type> --status <status>
+python scripts/docctl.py doc status <path> --to <status>
+python scripts/docctl.py doc mark-reviewed <path> --note <text>
+python scripts/docctl.py validate
+python scripts/docctl.py render
+python scripts/docctl.py check-generated
+python scripts/docctl.py audit --last 20
+```
+
+`docctl.py` owns `AI_PROJECT/state/docs.json`, `AI_PROJECT/events/doc-events.jsonl`, `AI_PROJECT/generated/DOCS_INDEX.md` and `AI_PROJECT/generated/DOCS_GAPS.md`. It records current document content hashes, reviewed content hashes and declared-status metadata. Generated documentation gaps must be repaired through source documents or `docctl.py`, not by editing generated Markdown.
+
 The command catalog boundary applies to this repository's root `/AI_PROJECT` state. Reusable templates under `/ai-system/templates/**/AI_PROJECT` and the golden project under `/examples/golden-project/AI_PROJECT` are separate documentation/template fixtures unless a bounded task explicitly edits them.
 
 ---

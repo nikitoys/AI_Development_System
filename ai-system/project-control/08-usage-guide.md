@@ -149,6 +149,7 @@ Common commands:
 
 ```bash
 python scripts/docctl.py init
+python scripts/docctl.py scan --scope all
 python scripts/docctl.py doc register --path ai-system/project-control/08-usage-guide.md --title "Project Control Usage Guide" --type guide --status planned
 python scripts/docctl.py doc status ai-system/project-control/08-usage-guide.md --to draft
 python scripts/docctl.py doc status ai-system/project-control/08-usage-guide.md --to review
@@ -157,6 +158,17 @@ python scripts/docctl.py validate
 python scripts/docctl.py render
 python scripts/docctl.py check-generated
 ```
+
+`scan` refreshes derived document metadata such as `content_hash` and declared status. Its scopes are:
+
+```text
+ai-system  source documents under /ai-system
+root       root entrypoint documents such as AGENTS.md and README*.md
+skills     repository skill documents
+all        all supported source-document scopes
+```
+
+`DOCS_GAPS.md` groups actionable documentation gaps by category, including missing files, declared-status mismatch, active documents without review, stale reviewed content hash, unresolved placeholders, broken local links and stale content hash metadata.
 
 Do not move a document to `active` unless the Human Owner has accepted it.
 
@@ -312,6 +324,7 @@ python scripts/docctl.py doc status ai-system/project-control/08-usage-guide.md 
 6. Render and check generated documentation outputs.
 
 ```bash
+python scripts/docctl.py scan --scope all
 python scripts/docctl.py validate
 python scripts/docctl.py render
 python scripts/docctl.py check-generated
