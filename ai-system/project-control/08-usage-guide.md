@@ -41,6 +41,7 @@ Use the CLI that owns the domain:
 ```text
 planctl.py      Initiative, Epic, project plan
 taskctl.py      executable Task, current Task, CODEX_PROMPT.md
+codexctl.py     current Codex execution package and optional Context Pack inclusion
 docctl.py       documentation registry, document status, docs index
 evolutionctl.py AI Development System change proposals
 contextctl.py   deterministic Context Packs from registered docs and Task state
@@ -135,6 +136,33 @@ python scripts/taskctl.py check-generated
 ```
 
 Do not use `task approve` or transition to `done` unless the Human Owner or approved review process has accepted the result.
+
+## `codexctl.py`
+
+Use `codexctl.py` for the current Codex execution package:
+
+```text
+CODEX_PROMPT.md
+CODEX_STATUS.md
+current_execution.json
+codex-events.jsonl
+```
+
+Common commands:
+
+```bash
+python scripts/codexctl.py status
+python scripts/codexctl.py build --task TASK-001
+python scripts/codexctl.py build --task TASK-001 --with-context
+python scripts/codexctl.py build --task TASK-001 --context-pack AI_PROJECT/generated/CONTEXT_PACK.md
+python scripts/codexctl.py clear
+```
+
+`--with-context` uses the default `AI_PROJECT/generated/CONTEXT_PACK.md`. `--context-pack` includes an explicit Context Pack after validation.
+
+`codexctl.py` validates that the Context Pack exists, has Context Pack metadata, matches the requested Task when task-scoped, and was generated from the current docs/task revisions. It does not build or refresh Context Packs; use `contextctl.py` for that.
+
+Retrieved context in `CODEX_PROMPT.md` is read-only. It does not expand allowed files, task scope, out-of-scope items or acceptance criteria, and conflicts must be reported.
 
 ## `docctl.py`
 
@@ -385,6 +413,19 @@ python scripts/taskctl.py current set TASK-001
 python scripts/taskctl.py prompt build --write
 ```
 
+When using the dedicated Codex execution package gateway, build it with:
+
+```bash
+python scripts/codexctl.py build --task TASK-001
+```
+
+If a Context Pack should be included, generate or refresh it first, then build the prompt with explicit context:
+
+```bash
+python scripts/contextctl.py pack build --task TASK-001 --write
+python scripts/codexctl.py build --task TASK-001 --context-pack AI_PROJECT/generated/CONTEXT_PACK.md
+```
+
 Codex should treat the generated prompt package as the execution contract:
 
 ```text
@@ -396,6 +437,8 @@ edit only Allowed Files
 run the requested verification mode
 report changed files, checks, risks and owner action required
 ```
+
+If `CODEX_PROMPT.md` contains a Retrieved Context section, treat that context as read-only. It can point Codex to relevant source sections, but it cannot add scope, allowed files or acceptance criteria.
 
 If the prompt is wrong, do not edit `CODEX_PROMPT.md` manually. Update the Task through `taskctl.py`, then rebuild the prompt.
 

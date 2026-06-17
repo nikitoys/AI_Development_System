@@ -8,6 +8,7 @@ Runs contextctl.py against a temporary project root and verifies:
 - deterministic index/search behavior;
 - default exclusion of inactive/template/example/deprecated/generated docs;
 - Context Pack and Context Status generation;
+- codexctl.py prompt generation with and without Context Pack;
 - check-generated drift detection and render repair;
 - context audit events.
 """
@@ -22,10 +23,11 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
 CONTEXTCTL = REPO_ROOT / "scripts" / "contextctl.py"
+CODEXCTL = REPO_ROOT / "scripts" / "codexctl.py"
 
 
-def run(root, *args, expect_success=True, must_contain=None):
-    command = [sys.executable, str(CONTEXTCTL), "--root", str(root), "--actor", "smoke_test", *args]
+def run_tool(tool, root, *args, expect_success=True, must_contain=None):
+    command = [sys.executable, str(tool), "--root", str(root), "--actor", "smoke_test", *args]
     result = subprocess.run(command, cwd=str(REPO_ROOT), text=True, capture_output=True, check=False)
     output = (result.stdout or "") + (result.stderr or "")
 
@@ -41,6 +43,14 @@ def run(root, *args, expect_success=True, must_contain=None):
                 raise SystemExit("expected output to contain {!r}\ncommand: {}\noutput:\n{}".format(item, command, output))
 
     return output
+
+
+def run(root, *args, expect_success=True, must_contain=None):
+    return run_tool(CONTEXTCTL, root, *args, expect_success=expect_success, must_contain=must_contain)
+
+
+def run_codex(root, *args, expect_success=True, must_contain=None):
+    return run_tool(CODEXCTL, root, *args, expect_success=expect_success, must_contain=must_contain)
 
 
 def write_json(path, data):
@@ -201,6 +211,7 @@ def main():
         pack_path = root / "AI_PROJECT" / "generated" / "CONTEXT_PACK.md"
         status_path = root / "AI_PROJECT" / "generated" / "CONTEXT_STATUS.md"
         audit_path = root / "AI_PROJECT" / "events" / "context-events.jsonl"
+        codex_audit_path = root / "AI_PROJECT" / "events" / "codex-events.jsonl"
 
         pack = read_text(pack_path)
         status = read_text(status_path)
@@ -218,6 +229,73 @@ def main():
         run(root, "validate", must_contain="OK: context control files are valid")
         run(root, "check-generated", must_contain="OK: generated context files are up to date")
 
+        run_codex(
+            root,
+            "build",
+            "--task",
+            "TASK-001",
+            must_contain=["OK: CODEX_READY", "Source: task TASK-001"],
+        )
+        prompt_path = root / "AI_PROJECT" / "generated" / "CODEX_PROMPT.md"
+        plain_prompt = read_text(prompt_path)
+        assert_not_contains(plain_prompt, "Retrieved Context:", "plain CODEX_PROMPT.md")
+
+        run_codex(
+            root,
+            "build",
+            "--task",
+            "TASK-001",
+            "--context-pack",
+            "AI_PROJECT/generated/CONTEXT_PACK.md",
+            must_contain=["OK: CODEX_READY", "Context Pack: AI_PROJECT/generated/CONTEXT_PACK.md"],
+        )
+        context_prompt = read_text(prompt_path)
+        assert_contains(context_prompt, "Retrieved Context:", "context CODEX_PROMPT.md")
+        assert_contains(context_prompt, "Context Pack SHA-256:", "context CODEX_PROMPT.md")
+        assert_contains(context_prompt, "Retrieved context is read-only.", "context CODEX_PROMPT.md")
+        assert_contains(context_prompt, "Retrieved context does not expand Allowed Files.", "context CODEX_PROMPT.md")
+        assert_contains(context_prompt, "ai-system/project-control/context-source.md", "context CODEX_PROMPT.md")
+
+        run_codex(
+            root,
+            "build",
+            "--task",
+            "TASK-001",
+            "--context-pack",
+            "AI_PROJECT/generated/MISSING_CONTEXT_PACK.md",
+            expect_success=False,
+            must_contain="CODEX_CONTEXT_PACK_MISSING",
+        )
+
+        invalid_pack_path = root / "AI_PROJECT" / "generated" / "INVALID_CONTEXT_PACK.md"
+        invalid_pack_path.write_text("# Not a generated context pack\n", encoding="utf-8")
+        run_codex(
+            root,
+            "build",
+            "--task",
+            "TASK-001",
+            "--context-pack",
+            "AI_PROJECT/generated/INVALID_CONTEXT_PACK.md",
+            expect_success=False,
+            must_contain="CODEX_CONTEXT_PACK_INVALID",
+        )
+
+        tasks_state = json.loads(read_text(root / "AI_PROJECT" / "state" / "tasks.json"))
+        tasks_state["revision"] = 3
+        write_json(root / "AI_PROJECT" / "state" / "tasks.json", tasks_state)
+        run_codex(
+            root,
+            "build",
+            "--task",
+            "TASK-001",
+            "--context-pack",
+            "AI_PROJECT/generated/CONTEXT_PACK.md",
+            expect_success=False,
+            must_contain="CODEX_CONTEXT_PACK_STALE",
+        )
+        run(root, "render", must_contain="OK: rendered context outputs")
+        run(root, "check-generated", must_contain="OK: generated context files are up to date")
+
         with pack_path.open("a", encoding="utf-8", newline="\n") as f:
             f.write("\nmanual drift\n")
 
@@ -228,6 +306,9 @@ def main():
         audit = read_text(audit_path)
         assert_contains(audit, "context.pack.build", "context-events.jsonl")
         assert_contains(audit, "context.render", "context-events.jsonl")
+        codex_audit = read_text(codex_audit_path)
+        assert_contains(codex_audit, "codex.prompt.build", "codex-events.jsonl")
+        assert_contains(codex_audit, "codex.prompt.blocked", "codex-events.jsonl")
 
     print("OK: context control smoke test passed")
 

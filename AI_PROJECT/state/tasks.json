@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
-  "revision": 57,
-  "current_task_id": "TASK-010",
+  "revision": 69,
+  "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-17T22:12:41Z",
+  "updated_at": "2026-06-17T22:38:54Z",
   "tasks": [
     {
       "id": "TASK-001",
       "epic_id": "EPIC-001",
       "title": "Write Project Control Usage Guide",
-      "status": "in_review",
+      "status": "done",
       "summary": "Write the missing practical usage guide for the Project Control Gateway.",
       "description": "Create ai-system/project-control/08-usage-guide.md and reconcile it through plan, task, prompt and documentation controls.",
       "priority": 1,
@@ -67,17 +67,17 @@
       "notes": [
         "Human Owner requested one-pass execution with final state waiting for owner acceptance."
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-17T22:19:18Z",
+      "approval_notes": "Accepted by Human Owner after review.",
       "created_at": "2026-06-15T21:47:57Z",
-      "updated_at": "2026-06-15T21:50:12Z"
+      "updated_at": "2026-06-17T22:20:45Z"
     },
     {
       "id": "TASK-002",
       "epic_id": "EPIC-002",
       "title": "Document Skills Layer Roadmap",
-      "status": "in_review",
+      "status": "done",
       "summary": "Create a controlled skills layer documentation page that records useful project skills/plugins and recommends next skills to create.",
       "description": "Create ai-system/skills/README.md as a controlled documentation page for skills/plugins in this repository. Register the document with docctl.py in a non-active lifecycle state and validate project-control outputs.",
       "priority": 1,
@@ -139,17 +139,17 @@
       "notes": [
         "Human Owner explicitly requested a project-controlled documentation task and allowed completion to review state without self-approval."
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-17T22:19:18Z",
+      "approval_notes": "Accepted by Human Owner after review.",
       "created_at": "2026-06-15T21:56:37Z",
-      "updated_at": "2026-06-15T21:58:10Z"
+      "updated_at": "2026-06-17T22:20:51Z"
     },
     {
       "id": "TASK-003",
       "epic_id": "EPIC-002",
       "title": "Create Clarification Gate Skill",
-      "status": "in_review",
+      "status": "done",
       "summary": "Create a high-priority Clarification Gate Skill for Codex and subagents, defining when to ask the Human Owner versus inspect or proceed with safe assumptions.",
       "description": "Create .agents/skills/clarification-gate/SKILL.md and update the skills README if present. Route project-control state changes through CLI commands only. Do not self-approve the task, document, or skill as accepted or active.",
       "priority": 1,
@@ -188,11 +188,11 @@
         "Do not mark accepted, approved, active, or done without Human Owner decision."
       ],
       "notes": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-17T22:19:18Z",
+      "approval_notes": "Accepted by Human Owner after review.",
       "created_at": "2026-06-15T22:09:39Z",
-      "updated_at": "2026-06-15T22:13:09Z"
+      "updated_at": "2026-06-17T22:20:52Z"
     },
     {
       "id": "TASK-004",
@@ -377,7 +377,7 @@
       "id": "TASK-007",
       "epic_id": "EPIC-001",
       "title": "Record L4 Role-Agent Runtime Architecture",
-      "status": "in_review",
+      "status": "done",
       "summary": "Implement approved CHG-004 by creating the L4 Role-Agent Runtime Architecture source document and updating required README, operating model, roadmap, backlog and changelog references.",
       "description": "Create ai-system/l4-role-agent-runtime.md and update approved source documentation so L4 is documented as an approved bounded implementation target while current implementation maturity remains L3 until future implementation tasks complete. Preserve Python control-kernel boundaries, Controller Codex delegation responsibilities, Codex role-subagent limits, Human Owner final acceptance and L5 prohibitions.",
       "priority": 1,
@@ -420,11 +420,11 @@
         "Verify source docs do not imply L5 approval or automatic acceptance, merge, push, PR creation, QA closure or review closure."
       ],
       "notes": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-17T22:19:32Z",
+      "approval_notes": "Accepted after confirming prior requested changes were resolved.",
       "created_at": "2026-06-16T20:41:22Z",
-      "updated_at": "2026-06-17T21:37:19Z"
+      "updated_at": "2026-06-17T22:20:49Z"
     },
     {
       "id": "TASK-008",
@@ -559,7 +559,7 @@
       "id": "TASK-010",
       "epic_id": "EPIC-003",
       "title": "P2 Integrate Context Pack into codexctl prompt generation",
-      "status": "ready",
+      "status": "done",
       "summary": "Allow codexctl.py to include a validated Context Pack in generated Codex prompt packages.",
       "description": "Extend codexctl.py so CODEX_PROMPT.md can include a read-only retrieved context section produced by contextctl.py. The Context Pack must help Codex read the right source documents but must not expand task scope, allowed files or acceptance criteria.",
       "priority": 1,
@@ -611,11 +611,11 @@
         "Report new codexctl options, failure modes, generated prompt changes and compatibility with existing prompt generation."
       ],
       "notes": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-17T22:38:53Z",
+      "approval_notes": "Reviewed and accepted by Human Owner",
       "created_at": "2026-06-17T21:26:47Z",
-      "updated_at": "2026-06-17T22:12:41Z"
+      "updated_at": "2026-06-17T22:38:54Z"
     },
     {
       "id": "TASK-011",

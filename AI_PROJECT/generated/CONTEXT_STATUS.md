@@ -9,7 +9,7 @@ Mode: `task`
 Task ID: `TASK-010`
 Limit: `8`
 Docs revision: `18`
-Tasks revision: `57`
+Tasks revision: `67`
 Indexed source documents: `10`
 Indexed chunks: `890`
 Selected chunks: `8`
@@ -20,7 +20,6 @@ Excluded registered sources: `129`
 - ai-system/project-control/03-state-model.md
 - ai-system/project-control/04-command-catalog.md
 - ai-system/project-control/06-prompt-package-spec.md
-- ai-system/project-control/07-validation-and-tests.md
 - ai-system/skills/README.md
 
 ## Exclusion Reasons

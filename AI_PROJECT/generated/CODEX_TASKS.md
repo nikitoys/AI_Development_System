@@ -3,14 +3,14 @@
 
 # Project Tasks
 
-Revision: `57`
-Current task: `TASK-010`
+Revision: `69`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
 ### TASK-001 — Write Project Control Usage Guide
 
-Status: `in_review`  
+Status: `done`  
 Priority: `1`  
 Verification: `standard`  
 
@@ -43,7 +43,7 @@ Acceptance criteria:
 
 ### TASK-007 — Record L4 Role-Agent Runtime Architecture
 
-Status: `in_review`  
+Status: `done`  
 Priority: `1`  
 Verification: `standard`  
 
@@ -63,7 +63,7 @@ Acceptance criteria:
 
 ### TASK-002 — Document Skills Layer Roadmap
 
-Status: `in_review`  
+Status: `done`  
 Priority: `1`  
 Verification: `standard`  
 
@@ -82,7 +82,7 @@ Acceptance criteria:
 
 ### TASK-003 — Create Clarification Gate Skill
 
-Status: `in_review`  
+Status: `done`  
 Priority: `1`  
 Verification: `standard`  
 
@@ -177,9 +177,9 @@ Acceptance criteria:
 - check-generated or equivalent detects stale generated context output.
 - Validation/smoke commands pass or blockers are reported.
 
-### TASK-010 — P2 Integrate Context Pack into codexctl prompt generation ⭐
+### TASK-010 — P2 Integrate Context Pack into codexctl prompt generation
 
-Status: `ready`  
+Status: `done`  
 Priority: `1`  
 Verification: `standard`  
 

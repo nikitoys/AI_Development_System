@@ -43,6 +43,7 @@ python scripts/check-protected-project-files.py --skip-plan-check
 """
 
 import argparse
+from datetime import datetime
 import json
 import sys
 from pathlib import Path
@@ -68,6 +69,14 @@ except Exception as exc:
     TASKCTL_IMPORT_ERROR = exc
 else:
     TASKCTL_IMPORT_ERROR = None
+
+try:
+    import codexctl
+except Exception as exc:
+    codexctl = None
+    CODEXCTL_IMPORT_ERROR = exc
+else:
+    CODEXCTL_IMPORT_ERROR = None
 
 try:
     import docctl
@@ -163,6 +172,94 @@ def compare_generated(root, path, expected, result, allow_missing=False):
         return
 
     result.ok("generated up to date: {}".format(rel(root, path)))
+
+def normalize_codex_prompt_generated_line(text):
+    lines = text.splitlines()
+
+    if len(lines) < 3:
+        return None
+
+    if lines[0] != "# Codex Prompt Package" or lines[1] != "":
+        return None
+
+    prefix = "Generated: "
+
+    if not lines[2].startswith(prefix):
+        return None
+
+    timestamp = lines[2][len(prefix):].strip()
+
+    try:
+        datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+    lines[2] = "Generated: <normalized>"
+    normalized = "\n".join(lines)
+
+    if text.endswith("\n"):
+        normalized += "\n"
+
+    return normalized
+
+def compare_generated_variants(root, path, variants, result, allow_missing=False):
+    if not path.exists():
+        message = "MISSING_GENERATED_FILE: {}".format(rel(root, path))
+
+        if allow_missing:
+            result.warn(message)
+        else:
+            result.error(message)
+
+        return False
+
+    actual = read_text(path, result)
+
+    if actual is None:
+        return False
+
+    labels = []
+
+    for variant in variants:
+        label = variant["label"]
+        expected = variant["expected"]
+        normalizer = variant.get("normalizer")
+        labels.append(label)
+
+        if normalizer is None:
+            if actual == expected:
+                result.ok(
+                    "generated up to date: {} ({})".format(
+                        rel(root, path),
+                        label,
+                    )
+                )
+                return True
+            continue
+
+        normalized_actual = normalizer(actual)
+        normalized_expected = normalizer(expected)
+
+        if normalized_actual is not None and normalized_actual == normalized_expected:
+            result.ok(
+                "generated up to date: {} ({})".format(
+                    rel(root, path),
+                    label,
+                )
+            )
+            return True
+
+    if labels:
+        result.error(
+            "OUTDATED_GENERATED_FILE: {} (expected one of: {})".format(
+                rel(root, path),
+                ", ".join(labels),
+            )
+        )
+    else:
+        result.error("PROMPT_RENDER_FAILED: no supported prompt renderer output available")
+
+    return False
 
 def check_generated_header(root, path, result, allow_missing=False):
     if not path.exists():
@@ -470,19 +567,109 @@ def check_prompt(root, args, result, tasks_state, plan, codex_prompt):
         result.error("CURRENT_TASK_NOT_FOUND_FOR_PROMPT: {}".format(current_task_id))
         return
 
-    try:
-        expected_prompt = taskctl.build_prompt_text(tasks_state, task, plan=plan)
-    except Exception as exc:
-        result.error("PROMPT_RENDER_FAILED: {}".format(exc))
-        return
+    variants = []
+    render_errors = []
 
-    compare_generated(
+    try:
+        variants.append(
+            {
+                "label": "taskctl prompt build",
+                "expected": taskctl.build_prompt_text(tasks_state, task, plan=plan),
+            }
+        )
+    except Exception as exc:
+        render_errors.append("TASKCTL_PROMPT_RENDER_FAILED: {}".format(exc))
+
+    if CODEXCTL_IMPORT_ERROR is not None:
+        render_errors.append("CODEXCTL_IMPORT_FAILED: {}".format(CODEXCTL_IMPORT_ERROR))
+    else:
+        try:
+            execution_state = codexctl.load_current_execution(root)
+        except codexctl.CodexError as exc:
+            execution_state = None
+            render_errors.append("CODEX_EXECUTION_STATE_INVALID: {}".format(exc.message))
+
+        if execution_state:
+            state_is_current_task = (
+                execution_state.get("status") == codexctl.READY_STATUS
+                and execution_state.get("code") == codexctl.CODEX_READY
+                and execution_state.get("source_type") == "task"
+                and execution_state.get("source_id") == current_task_id
+            )
+
+            if state_is_current_task:
+                try:
+                    codex_model = codexctl.build_from_task(root, current_task_id)
+                    context_state = execution_state.get("context_pack") or {}
+
+                    if context_state:
+                        context_pack = codexctl.validate_context_pack(
+                            root,
+                            context_state.get("path") or context_state.get("relative_path"),
+                            current_task_id,
+                        )
+                        context_mismatches = []
+
+                        for key in [
+                            "relative_path",
+                            "sha256",
+                            "mode",
+                            "task_id",
+                            "docs_revision",
+                            "tasks_revision",
+                        ]:
+                            if context_state.get(key) != context_pack.get(key):
+                                context_mismatches.append(
+                                    "{} {} != {}".format(
+                                        key,
+                                        context_state.get(key),
+                                        context_pack.get(key),
+                                    )
+                                )
+
+                        if context_mismatches:
+                            render_errors.append(
+                                "CODEX_EXECUTION_CONTEXT_MISMATCH: {}".format(
+                                    "; ".join(context_mismatches)
+                                )
+                            )
+                        else:
+                            codex_model = dict(codex_model)
+                            codex_model["context_pack"] = context_pack
+                            variants.append(
+                                {
+                                    "label": "codexctl build --task {} --context-pack {}".format(
+                                        current_task_id,
+                                        context_pack["relative_path"],
+                                    ),
+                                    "expected": codexctl.render_prompt(codex_model),
+                                    "normalizer": normalize_codex_prompt_generated_line,
+                                }
+                            )
+                    else:
+                        variants.append(
+                            {
+                                "label": "codexctl build --task {}".format(current_task_id),
+                                "expected": codexctl.render_prompt(codex_model),
+                                "normalizer": normalize_codex_prompt_generated_line,
+                            }
+                        )
+                except codexctl.CodexError as exc:
+                    render_errors.append("CODEX_PROMPT_RENDER_FAILED: {}".format(exc.message))
+                except Exception as exc:
+                    render_errors.append("CODEX_PROMPT_RENDER_FAILED: {}".format(exc))
+
+    matched = compare_generated_variants(
         root=root,
         path=codex_prompt,
-        expected=expected_prompt,
+        variants=variants,
         result=result,
         allow_missing=args.allow_missing_generated,
     )
+
+    if not matched:
+        for error in render_errors:
+            result.error(error)
 
 def check_docs(root, args, result):
     if DOCCTL_IMPORT_ERROR is not None:
