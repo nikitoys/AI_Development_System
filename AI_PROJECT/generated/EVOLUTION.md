@@ -3,12 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `55`
-Changes: `3`
+Revision: `77`
+Changes: `4`
 
 ## Summary
 
 - `accepted`: 3
+- `approved`: 1
 
 ## Changes
 
@@ -165,3 +166,59 @@ Impact:
 Linked tasks:
 
 - TASK-006
+
+### CHG-004 — Record L4 Role-Agent Runtime Architecture
+
+Status: `approved`  
+Type: `process`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+AI_Development_System still presents L4 role-agent runtime as future or deferred even though the Human Owner has approved L4 as a bounded implementation target.
+
+Proposal:
+
+Add ai-system/l4-role-agent-runtime.md and update source documentation, roadmap references and changelog so L4 is documented as the next approved bounded implementation target while preserving Python control, Controller Codex delegation boundaries, Human Owner acceptance and L5 prohibitions.
+
+Rationale:
+
+A source-of-truth architecture document is needed before implementation work on agentctl.py or assisted role-agent execution can be safely decomposed into bounded tasks.
+
+Approved by: `Human Owner` at `2026-06-16T20:37:03Z`  
+Approval notes: Approved  
+
+Affected areas:
+
+- L4 role-agent runtime architecture
+- Operating model and evolution roadmap references
+- Role-to-agent execution boundaries
+
+Affected files:
+
+- ai-system/l4-role-agent-runtime.md
+- ai-system/README.md
+- ai-system/operating-model.md
+- ai-system/evolution/roadmap.md
+- ai-system/evolution/evolution-backlog.md
+- ai-system/system-changelog.md
+- README.md
+- README.ru.md
+
+Risks:
+
+- L4 wording could be misread as approval for L5 autonomous queues, automatic merge, push, PR creation, QA closure, review closure or final task acceptance unless boundaries are explicit.
+- Role-agent documentation could conflict with existing L3 manual orchestration docs if the distinction between current maturity and next approved target is not stated clearly.
+- Future implementation could bypass Python project-control validation unless this architecture requires Controller Codex and subagents to stay inside CLI/API gates.
+
+Impact:
+
+- Records the Human Owner direction that L4 Role-Agent Runtime is an approved bounded implementation target, while current implementation maturity remains L3 until later tasks are completed.
+- Creates the architecture basis for future bounded tasks such as scripts/agentctl.py, dispatch/intake records and role-scoped Codex worker prompts.
+- Updates system documentation so operating model, roadmap and changelog can distinguish L3 current maturity, L4 approved target and L5 not approved.
+
+Linked tasks:
+
+- TASK-007

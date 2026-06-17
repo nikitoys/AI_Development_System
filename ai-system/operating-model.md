@@ -527,16 +527,17 @@ Covers:
 
 - maturity levels `L0` through `L6`;
 - current level `L3 — Manual multi-agent orchestration`;
-- next possible target `L4 — Assisted execution`, future/not approved;
-- L4+ as future/not approved;
+- next approved implementation target `L4 — Role-Agent Runtime`;
+- L4 requirement that Python acts as strict API/control kernel and Controller Codex delegates only within approved boundaries;
+- L5+ as future/not approved;
 - allowed and forbidden capabilities at each level;
 - required safety gates, evidence and readiness criteria;
 - boundary rule that maturity levels do not authorize runtime behavior by themselves.
 
 Needs improvement:
 
-- keep runtime execution deferred until explicit future approval;
-- do not propose L4 assisted execution without a separate Human Owner-approved evolution task.
+- implement L4 only through bounded Tasks after approved architecture and project-control boundaries are in place;
+- keep L5 and autonomous runtime behavior unapproved until a separate Human Owner decision.
 
 ## 2.14 Manual Multi-Agent Orchestration Mode
 
@@ -601,7 +602,38 @@ Needs improvement:
 - validate Worker Agent prompt quality during future manual orchestration pilots;
 - add machine-checkable handoff metadata only after repeated manual evidence shows it is useful.
 
-## 2.16 Work Item Hierarchy
+## 2.16 L4 Role-Agent Runtime
+
+Status: Partially Implemented
+
+Existing documents:
+
+```text
+/ai-system/l4-role-agent-runtime.md
+/ai-system/runtime-maturity-levels.md
+/ai-system/agent-delegation.md
+/ai-system/agent-result-intake.md
+/ai-system/integration-review.md
+```
+
+Covers:
+
+- L4 as the approved bounded implementation target;
+- Python Control API as strict control kernel;
+- Controller Codex as planner, router, delegator and integrator;
+- Codex role subagents as concrete executors of the existing role model;
+- role-layer to role-agent mapping;
+- conceptual `scripts/agentctl.py` API surface without implementation;
+- L3, L4 and L5 distinction;
+- prohibition on L5 behavior, automatic merge, push, pull request creation, final acceptance and QA/review closure.
+
+Needs improvement:
+
+- implement `scripts/agentctl.py` only through later bounded Tasks;
+- add execution/result records only after the control model is approved in implementation scope;
+- keep Human Owner final acceptance required.
+
+## 2.17 Work Item Hierarchy
 
 Status: Implemented
 

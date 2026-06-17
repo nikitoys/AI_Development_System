@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 30,
-  "current_task_id": null,
+  "revision": 34,
+  "current_task_id": "TASK-007",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-16T19:18:23Z",
+  "updated_at": "2026-06-16T20:45:16Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -372,6 +372,59 @@
       "approval_notes": "Approved in attached CODEX request; acceptance criteria satisfied and required verification checks passed.",
       "created_at": "2026-06-16T19:00:57Z",
       "updated_at": "2026-06-16T19:18:23Z"
+    },
+    {
+      "id": "TASK-007",
+      "epic_id": "EPIC-001",
+      "title": "Record L4 Role-Agent Runtime Architecture",
+      "status": "in_review",
+      "summary": "Implement approved CHG-004 by creating the L4 Role-Agent Runtime Architecture source document and updating required README, operating model, roadmap, backlog and changelog references.",
+      "description": "Create ai-system/l4-role-agent-runtime.md and update approved source documentation so L4 is documented as an approved bounded implementation target while current implementation maturity remains L3 until future implementation tasks complete. Preserve Python control-kernel boundaries, Controller Codex delegation responsibilities, Codex role-subagent limits, Human Owner final acceptance and L5 prohibitions.",
+      "priority": 1,
+      "order": 3,
+      "active_role": "AI System Maintainer + System Architect AI + Technical Writer AI",
+      "active_stage": "Implement approved CHG-004",
+      "active_document": "CHG-004 / ai-system/l4-role-agent-runtime.md",
+      "expected_result": "Documentation update ready for review and Human Owner acceptance",
+      "verification_mode": "standard",
+      "scope": [
+        "Create ai-system/l4-role-agent-runtime.md defining L4 Role-Agent Runtime Architecture.",
+        "Update approved index, roadmap, operating-model, backlog, changelog and README references.",
+        "Keep L4 bounded by Python control APIs, Controller Codex routing/integration and Human Owner final acceptance."
+      ],
+      "out_of_scope": [
+        "Do not implement scripts/agentctl.py or any runner/runtime adapter.",
+        "Do not approve L5, autonomous queues, automatic merge, push, PR creation, task acceptance or QA/review closure."
+      ],
+      "allowed_files": [
+        "ai-system/l4-role-agent-runtime.md",
+        "ai-system/README.md",
+        "ai-system/operating-model.md",
+        "ai-system/evolution/roadmap.md",
+        "ai-system/evolution/evolution-backlog.md",
+        "ai-system/system-changelog.md",
+        "README.md",
+        "README.ru.md"
+      ],
+      "acceptance_criteria": [
+        "ai-system/l4-role-agent-runtime.md exists and states L4 is an approved bounded implementation target.",
+        "Document defines Python as strict API/control kernel, Controller Codex as planner/router/delegator/integrator and Codex role subagents as bounded role executors.",
+        "Document maps existing role layers to concrete role-agent IDs.",
+        "Document defines L4 execution flow from approved Task to Human Owner acceptance and conceptual scripts/agentctl.py API surface without implementing it.",
+        "Document distinguishes L3, L4 and L5 and forbids automatic merge, push, PR creation, final acceptance and QA/review closure.",
+        "Operating model, roadmap, backlog, changelog and README/index references are updated.",
+        "Required validation passes and protected AI_PROJECT files are not manually edited."
+      ],
+      "review_instructions": [
+        "Review against CHG-004 scope, allowed files, L3/L4/L5 boundaries and protected-file handling.",
+        "Verify source docs do not imply L5 approval or automatic acceptance, merge, push, PR creation, QA closure or review closure."
+      ],
+      "notes": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-16T20:41:22Z",
+      "updated_at": "2026-06-16T20:45:16Z"
     }
   ]
 }
