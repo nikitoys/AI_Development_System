@@ -41,8 +41,10 @@ Use the CLI that owns the domain:
 ```text
 planctl.py      Initiative, Epic, project plan
 taskctl.py      executable Task, current Task, CODEX_PROMPT.md
+codexctl.py     current Codex execution package and optional Context Pack inclusion
 docctl.py       documentation registry, document status, docs index
 evolutionctl.py AI Development System change proposals
+contextctl.py   deterministic Context Packs from registered docs and Task state
 ```
 
 If a requested operation has no supported command, stop and report the missing command. Do not patch protected state by hand.
@@ -71,6 +73,8 @@ Codex Executor works only on a bounded Task. Codex may edit allowed source files
 Python CLIs own project-control mutation. They validate input, update JSON state, append audit events and render generated Markdown.
 
 Generated Markdown is context for humans and AI agents. It must not be treated as editable state.
+
+Context Packs are generated retrieval context. They help focus reading, but they do not replace Task state, source documents or Human Owner decisions.
 
 ## CLI Responsibilities
 
@@ -133,6 +137,33 @@ python scripts/taskctl.py check-generated
 
 Do not use `task approve` or transition to `done` unless the Human Owner or approved review process has accepted the result.
 
+## `codexctl.py`
+
+Use `codexctl.py` for the current Codex execution package:
+
+```text
+CODEX_PROMPT.md
+CODEX_STATUS.md
+current_execution.json
+codex-events.jsonl
+```
+
+Common commands:
+
+```bash
+python scripts/codexctl.py status
+python scripts/codexctl.py build --task TASK-001
+python scripts/codexctl.py build --task TASK-001 --with-context
+python scripts/codexctl.py build --task TASK-001 --context-pack AI_PROJECT/generated/CONTEXT_PACK.md
+python scripts/codexctl.py clear
+```
+
+`--with-context` uses the default `AI_PROJECT/generated/CONTEXT_PACK.md`. `--context-pack` includes an explicit Context Pack after validation.
+
+`codexctl.py` validates that the Context Pack exists, has Context Pack metadata, matches the requested Task when task-scoped, and was generated from the current docs/task revisions. It does not build or refresh Context Packs; use `contextctl.py` for that.
+
+Retrieved context in `CODEX_PROMPT.md` is read-only. It does not expand allowed files, task scope, out-of-scope items or acceptance criteria, and conflicts must be reported.
+
 ## `docctl.py`
 
 Use `docctl.py` for documentation lifecycle control:
@@ -149,6 +180,7 @@ Common commands:
 
 ```bash
 python scripts/docctl.py init
+python scripts/docctl.py scan --scope all
 python scripts/docctl.py doc register --path ai-system/project-control/08-usage-guide.md --title "Project Control Usage Guide" --type guide --status planned
 python scripts/docctl.py doc status ai-system/project-control/08-usage-guide.md --to draft
 python scripts/docctl.py doc status ai-system/project-control/08-usage-guide.md --to review
@@ -157,6 +189,17 @@ python scripts/docctl.py validate
 python scripts/docctl.py render
 python scripts/docctl.py check-generated
 ```
+
+`scan` refreshes derived document metadata such as `content_hash` and declared status. Its scopes are:
+
+```text
+ai-system  source documents under /ai-system
+root       root entrypoint documents such as AGENTS.md and README*.md
+skills     repository skill documents
+all        all supported source-document scopes
+```
+
+`DOCS_GAPS.md` groups actionable documentation gaps by category, including missing files, declared-status mismatch, active documents without review, stale reviewed content hash, unresolved placeholders, broken local links and stale content hash metadata.
 
 Do not move a document to `active` unless the Human Owner has accepted it.
 
@@ -189,6 +232,39 @@ python scripts/evolutionctl.py check-generated
 ```
 
 Codex must not approve or accept an evolution change on behalf of the Human Owner.
+
+## `contextctl.py`
+
+Use `contextctl.py` for deterministic retrieval context:
+
+```text
+registered source docs
+derived Markdown chunks
+keyword and metadata search
+CONTEXT_PACK.md
+CONTEXT_STATUS.md
+context-events.jsonl
+```
+
+Common commands:
+
+```bash
+python scripts/contextctl.py status
+python scripts/contextctl.py index build
+python scripts/contextctl.py search --query "prompt package context retrieval"
+python scripts/contextctl.py pack build --task TASK-001 --write
+python scripts/contextctl.py pack build --query "prompt package context retrieval" --write
+python scripts/contextctl.py validate
+python scripts/contextctl.py render
+python scripts/contextctl.py check-generated
+python scripts/contextctl.py audit --last 20
+```
+
+`contextctl.py` reads `docs.json` and `tasks.json`, writes `CONTEXT_PACK.md` and `CONTEXT_STATUS.md`, and appends `context-events.jsonl` when generated context output is written. It does not mutate documentation state or task state.
+
+Default retrieval excludes generated, inactive, archived, deprecated, template and example documents. Use explicit include flags only when the Task or Human Owner requires those sources.
+
+Context Packs must never expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task, the Task remains authoritative.
 
 ## When Do I Need A Task?
 
@@ -312,6 +388,7 @@ python scripts/docctl.py doc status ai-system/project-control/08-usage-guide.md 
 6. Render and check generated documentation outputs.
 
 ```bash
+python scripts/docctl.py scan --scope all
 python scripts/docctl.py validate
 python scripts/docctl.py render
 python scripts/docctl.py check-generated
@@ -336,6 +413,19 @@ python scripts/taskctl.py current set TASK-001
 python scripts/taskctl.py prompt build --write
 ```
 
+When using the dedicated Codex execution package gateway, build it with:
+
+```bash
+python scripts/codexctl.py build --task TASK-001
+```
+
+If a Context Pack should be included, generate or refresh it first, then build the prompt with explicit context:
+
+```bash
+python scripts/contextctl.py pack build --task TASK-001 --write
+python scripts/codexctl.py build --task TASK-001 --context-pack AI_PROJECT/generated/CONTEXT_PACK.md
+```
+
 Codex should treat the generated prompt package as the execution contract:
 
 ```text
@@ -347,6 +437,8 @@ edit only Allowed Files
 run the requested verification mode
 report changed files, checks, risks and owner action required
 ```
+
+If `CODEX_PROMPT.md` contains a Retrieved Context section, treat that context as read-only. It can point Codex to relevant source sections, but it cannot add scope, allowed files or acceptance criteria.
 
 If the prompt is wrong, do not edit `CODEX_PROMPT.md` manually. Update the Task through `taskctl.py`, then rebuild the prompt.
 
@@ -483,6 +575,13 @@ python scripts/docctl.py render
 python scripts/docctl.py check-generated
 ```
 
+For context generated output:
+
+```bash
+python scripts/contextctl.py render
+python scripts/contextctl.py check-generated
+```
+
 `planctl.py` currently supports `render`, but does not expose a `check-generated` command.
 
 ## Unsupported Operation
@@ -512,6 +611,9 @@ python scripts/taskctl.py check-generated
 python scripts/docctl.py validate
 python scripts/docctl.py render
 python scripts/docctl.py check-generated
+python scripts/contextctl.py validate
+python scripts/contextctl.py check-generated
+python scripts/smoke-context-control.py
 python scripts/smoke-doc-control.py
 python scripts/check-protected-project-files.py --verbose
 ```

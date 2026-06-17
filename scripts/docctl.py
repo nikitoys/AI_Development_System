@@ -17,7 +17,7 @@ Examples:
   python scripts/docctl.py doc register --path ai-system/project-control/08-usage-guide.md --title "Project Control Usage Guide" --type guide --status planned
   python scripts/docctl.py doc status ai-system/project-control/01-overview.md --to active
   python scripts/docctl.py doc mark-reviewed ai-system/project-control/01-overview.md
-  python scripts/docctl.py scan
+  python scripts/docctl.py scan --scope all
   python scripts/docctl.py validate
   python scripts/docctl.py render
   python scripts/docctl.py check-generated
@@ -25,6 +25,7 @@ Examples:
 """
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -60,6 +61,47 @@ DOC_TYPES = {
 }
 
 GENERATED_HEADER = "<!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->"
+
+DECLARED_STATUS_ALIASES = {
+    "planned": "planned",
+    "proposed": "planned",
+    "draft": "draft",
+    "in review": "review",
+    "review": "review",
+    "active": "active",
+    "deprecated": "deprecated",
+    "archived": "archived",
+}
+
+DOC_OPTIONAL_STRING_KEYS = (
+    "content_hash",
+    "last_reviewed_content_hash",
+    "declared_status",
+    "declared_status_raw",
+    "declared_status_source",
+)
+
+DOC_GAP_CATEGORIES = (
+    ("missing_file", "Missing File"),
+    ("status_mismatch", "Status Mismatch"),
+    ("active_not_reviewed", "Active Not Reviewed"),
+    ("active_review_stale", "Active Review Stale"),
+    ("unresolved_placeholder", "Unresolved Placeholder"),
+    ("broken_local_link", "Broken Local Link"),
+    ("content_hash_stale", "Stale Content Hash"),
+    ("not_active", "Not Active"),
+)
+
+ROOT_DOC_PATTERNS = (
+    "AGENTS.md",
+    "README*.md",
+)
+
+SKILL_DOC_PATTERNS = (
+    ".agents/skills/**/SKILL.md",
+    "plugins/**/skills/**/SKILL.md",
+    "ai-system/skills/**/*.md",
+)
 
 DEFAULT_DOCS = [
     (
@@ -249,6 +291,11 @@ def default_docs_state():
                 "owner": "AI System Maintainer",
                 "last_reviewed_at": "",
                 "last_reviewed_by": "",
+                "content_hash": "",
+                "last_reviewed_content_hash": "",
+                "declared_status": "",
+                "declared_status_raw": "",
+                "declared_status_source": "",
                 "notes": [],
                 "created_at": now,
                 "updated_at": now,
@@ -296,6 +343,22 @@ def require_string_list(value, path, errors):
             errors.append("{}[{}] must be a string".format(path, i))
 
 
+def require_optional_string(obj, key, path, errors):
+    if key in obj:
+        require_string(obj.get(key), path + "." + key, errors)
+
+
+def require_optional_hash(obj, key, path, errors):
+    value = obj.get(key)
+    if value in (None, ""):
+        return
+    if not isinstance(value, str):
+        errors.append("{}.{} must be a string".format(path, key))
+        return
+    if not re.fullmatch(r"[0-9a-f]{64}", value):
+        errors.append("{}.{} must be a sha256 hex digest".format(path, key))
+
+
 def find_doc(state, path_text, required=True):
     normalized = normalize_doc_path(path_text)
     for doc in state.get("docs", []):
@@ -322,6 +385,8 @@ def infer_title(path):
 
 def infer_type(path):
     lower = path.lower()
+    if lower.endswith("/skill.md") or lower == "skill.md":
+        return "guide"
     if "changelog" in lower:
         return "changelog"
     if "template" in lower:
@@ -337,6 +402,138 @@ def infer_type(path):
     if "overview" in lower:
         return "overview"
     return "reference"
+
+
+def short_hash(value):
+    return value[:12] if value else "-"
+
+
+def normalize_declared_status(value):
+    cleaned = value.strip().strip("\"'`").strip()
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    normalized = cleaned.lower().replace("_", " ").replace("-", " ")
+    return DECLARED_STATUS_ALIASES.get(normalized)
+
+
+def parse_frontmatter_status(text):
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return None
+
+    for i, line in enumerate(lines[1:], start=1):
+        if line.strip() == "---":
+            for frontmatter_line in lines[1:i]:
+                match = re.match(r"\s*status\s*:\s*(.+?)\s*(?:#.*)?$", frontmatter_line, re.IGNORECASE)
+                if match:
+                    raw = match.group(1).strip()
+                    return raw, normalize_declared_status(raw), "frontmatter"
+            return None
+    return None
+
+
+def parse_status_field(text):
+    for line in text.splitlines()[:40]:
+        match = re.match(r"\s*Status\s*:\s*(.+?)\s*$", line, re.IGNORECASE)
+        if match:
+            raw = match.group(1).strip()
+            return raw, normalize_declared_status(raw), "status_field"
+    return None
+
+
+def parse_status_section(text):
+    lines = text.splitlines()
+    for i, line in enumerate(lines):
+        if not re.match(r"^#{2,6}\s+Status\s*$", line.strip(), re.IGNORECASE):
+            continue
+        for next_line in lines[i + 1 :]:
+            value = next_line.strip().strip("*_`")
+            if not value:
+                continue
+            if value.startswith("#"):
+                return None
+            return value, normalize_declared_status(value), "status_section"
+    return None
+
+
+def parse_declared_status(text):
+    for parser in (parse_frontmatter_status, parse_status_field, parse_status_section):
+        parsed = parser(text)
+        if parsed:
+            return parsed
+    return "", "", ""
+
+
+def content_hash_for_path(root, path):
+    full_path = root / path
+    if not full_path.exists() or not full_path.is_file():
+        return ""
+    digest = hashlib.sha256()
+    with full_path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def declared_status_for_path(root, path):
+    full_path = root / path
+    if not full_path.exists() or not full_path.is_file():
+        return "", "", ""
+    try:
+        text = full_path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return "", "", ""
+    return parse_declared_status(text)
+
+
+def refresh_doc_metadata(root, state):
+    changed = 0
+    for doc in state.get("docs", []):
+        path = doc.get("path", "")
+        before = {key: doc.get(key) for key in DOC_OPTIONAL_STRING_KEYS}
+        doc.setdefault("last_reviewed_content_hash", "")
+        try:
+            normalized = normalize_doc_path(path)
+        except DocError:
+            doc["content_hash"] = ""
+            doc["declared_status"] = ""
+            doc["declared_status_raw"] = ""
+            doc["declared_status_source"] = ""
+        else:
+            doc["content_hash"] = content_hash_for_path(root, normalized)
+            raw, declared_status, source = declared_status_for_path(root, normalized)
+            doc["declared_status"] = declared_status or ""
+            doc["declared_status_raw"] = raw or ""
+            doc["declared_status_source"] = source or ""
+        after = {key: doc.get(key) for key in DOC_OPTIONAL_STRING_KEYS}
+        if before != after:
+            changed += 1
+    return changed
+
+
+def scan_markdown_files(root, scope):
+    paths = set()
+
+    def add_path(path):
+        if path.is_file():
+            paths.add(path.relative_to(root).as_posix())
+
+    if scope in {"ai-system", "all"}:
+        ai_system = root / "ai-system"
+        if ai_system.exists():
+            for path in ai_system.rglob("*.md"):
+                add_path(path)
+
+    if scope in {"root", "all"}:
+        for pattern in ROOT_DOC_PATTERNS:
+            for path in root.glob(pattern):
+                add_path(path)
+
+    if scope in {"skills", "all"}:
+        for pattern in SKILL_DOC_PATTERNS:
+            for path in root.glob(pattern):
+                add_path(path)
+
+    return sorted(paths)
 
 
 def is_external_link(target):
@@ -356,13 +553,14 @@ def local_markdown_links(text):
         yield unquote(target.split("#", 1)[0])
 
 
-def validate_markdown_links(root, doc_path, errors):
+def markdown_link_errors(root, doc_path):
+    errors = []
     full_path = root / doc_path
     try:
         text = full_path.read_text(encoding="utf-8")
     except UnicodeDecodeError as exc:
         errors.append("{} invalid text encoding: {}".format(doc_path, exc))
-        return
+        return errors
 
     for target in local_markdown_links(text):
         if not target:
@@ -375,17 +573,28 @@ def validate_markdown_links(root, doc_path, errors):
             continue
         if not candidate.exists():
             errors.append("{} broken local link: {}".format(doc_path, target))
+    return errors
 
 
-def validate_no_unresolved_placeholders(root, doc, errors):
+def validate_markdown_links(root, doc_path, errors):
+    errors.extend(markdown_link_errors(root, doc_path))
+
+
+def unresolved_placeholder_errors(root, doc):
+    errors = []
     path = doc.get("path")
     try:
         text = (root / path).read_text(encoding="utf-8")
     except UnicodeDecodeError as exc:
         errors.append("{} invalid text encoding: {}".format(path, exc))
-        return
+        return errors
     if re.search(r"\{\{[^{}\n]+\}\}", text):
         errors.append("{} contains unresolved {{PLACEHOLDER}}".format(path))
+    return errors
+
+
+def validate_no_unresolved_placeholders(root, doc, errors):
+    errors.extend(unresolved_placeholder_errors(root, doc))
 
 
 def validate_docs(state, root):
@@ -450,6 +659,10 @@ def validate_docs(state, root):
         require_string(doc.get("last_reviewed_by"), path_name + ".last_reviewed_by", errors)
         require_bool(doc.get("required"), path_name + ".required", errors)
         require_string_list(doc.get("notes"), path_name + ".notes", errors)
+        for key in DOC_OPTIONAL_STRING_KEYS:
+            require_optional_string(doc, key, path_name, errors)
+        require_optional_hash(doc, "content_hash", path_name, errors)
+        require_optional_hash(doc, "last_reviewed_content_hash", path_name, errors)
 
         if status not in DOC_STATUSES:
             errors.append("{}.status is invalid: {}".format(path_name, status))
@@ -491,20 +704,82 @@ def sorted_docs(state):
     return sorted(state.get("docs", []), key=lambda x: (x.get("status", ""), x.get("path", "")))
 
 
+def add_gap(gaps, category, doc, message):
+    gaps.append({"category": category, "doc": doc, "message": message})
+
+
 def docs_gaps(state, root):
     gaps = []
     for doc in sorted_docs(state):
         path = doc.get("path")
-        exists = (root / path).exists()
-        if doc.get("status") == "planned":
-            gaps.append((doc, "planned document is not yet active"))
-        elif not exists:
-            gaps.append((doc, "registered document is missing"))
-        elif doc.get("status") in {"draft", "review"}:
-            gaps.append((doc, "document is not active"))
-        elif doc.get("status") == "active" and not doc.get("last_reviewed_at"):
-            gaps.append((doc, "active document has no recorded review"))
+        status = doc.get("status")
+        doc_type = doc.get("type")
+        try:
+            normalized = normalize_doc_path(path)
+        except DocError as exc:
+            add_gap(gaps, "missing_file", doc, str(exc))
+            continue
+
+        exists = (root / normalized).exists()
+        if not exists and status != "planned":
+            add_gap(gaps, "missing_file", doc, "registered document is missing")
+
+        if exists:
+            actual_hash = content_hash_for_path(root, normalized)
+            stored_hash = doc.get("content_hash", "")
+            if not stored_hash:
+                add_gap(gaps, "content_hash_stale", doc, "current content hash is not recorded")
+            elif actual_hash and stored_hash != actual_hash:
+                add_gap(gaps, "content_hash_stale", doc, "recorded content hash does not match file content")
+
+            raw_status, declared_status, source = declared_status_for_path(root, normalized)
+            if raw_status:
+                if not declared_status:
+                    add_gap(
+                        gaps,
+                        "status_mismatch",
+                        doc,
+                        "declared status `{}` from {} is not supported by docctl".format(raw_status, source),
+                    )
+                elif declared_status != status:
+                    add_gap(
+                        gaps,
+                        "status_mismatch",
+                        doc,
+                        "registry status `{}` differs from declared status `{}` from {}".format(
+                            status, declared_status, source
+                        ),
+                    )
+
+            if status != "planned":
+                for error in markdown_link_errors(root, normalized):
+                    add_gap(gaps, "broken_local_link", doc, error)
+            if status == "active" and doc_type != "template":
+                for error in unresolved_placeholder_errors(root, doc):
+                    add_gap(gaps, "unresolved_placeholder", doc, error)
+
+            if status == "active":
+                if not doc.get("last_reviewed_at"):
+                    add_gap(gaps, "active_not_reviewed", doc, "active document has no recorded review")
+                elif doc.get("last_reviewed_content_hash") != actual_hash:
+                    add_gap(gaps, "active_review_stale", doc, "active review does not match current content hash")
+
+        if status == "planned":
+            add_gap(gaps, "not_active", doc, "planned document is not yet active")
+        elif status in {"draft", "review", "deprecated", "archived"}:
+            add_gap(gaps, "not_active", doc, "document is not active")
     return gaps
+
+
+def validation_warnings(state, root):
+    warnings = []
+    warning_categories = {"status_mismatch", "content_hash_stale", "active_review_stale"}
+    for gap in docs_gaps(state, root):
+        if gap.get("category") not in warning_categories:
+            continue
+        doc = gap.get("doc", {})
+        warnings.append("{}: {}".format(doc.get("path"), gap.get("message")))
+    return warnings
 
 
 def render_index_markdown(state):
@@ -517,18 +792,21 @@ def render_index_markdown(state):
         "Revision: `{}`".format(state.get("revision", 0)),
         "Documents: `{}`".format(len(state.get("docs", []))),
         "",
-        "| Path | Title | Type | Status | Required | Last reviewed |",
-        "| --- | --- | --- | --- | --- | --- |",
+        "| Path | Title | Type | Status | Declared | Required | Content hash | Last reviewed | Reviewed hash |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for doc in sorted_docs(state):
         lines.append(
-            "| `{}` | {} | `{}` | `{}` | `{}` | {} |".format(
+            "| `{}` | {} | `{}` | `{}` | {} | `{}` | `{}` | {} | `{}` |".format(
                 doc.get("path"),
                 doc.get("title"),
                 doc.get("type"),
                 doc.get("status"),
+                "`{}`".format(doc.get("declared_status")) if doc.get("declared_status") else "-",
                 str(doc.get("required", False)).lower(),
+                short_hash(doc.get("content_hash")),
                 doc.get("last_reviewed_at") or "-",
+                short_hash(doc.get("last_reviewed_content_hash")),
             )
         )
     lines.append("")
@@ -545,6 +823,7 @@ def render_gaps_markdown(state, root):
         "",
         "Revision: `{}`".format(state.get("revision", 0)),
         "Open gaps: `{}`".format(len(gaps)),
+        "Tracked categories: {}".format(", ".join("`{}`".format(title) for _, title in DOC_GAP_CATEGORIES)),
         "",
     ]
     if not gaps:
@@ -552,8 +831,22 @@ def render_gaps_markdown(state, root):
         lines.append("")
         return "\n".join(lines)
 
-    for doc, reason in gaps:
-        lines.append("- `{}` ({}, {}): {}".format(doc.get("path"), doc.get("type"), doc.get("status"), reason))
+    for category, title in DOC_GAP_CATEGORIES:
+        lines.append("## {}".format(title))
+        lines.append("")
+        category_gaps = [gap for gap in gaps if gap.get("category") == category]
+        if not category_gaps:
+            lines.append("_No gaps._")
+            lines.append("")
+            continue
+        for gap in category_gaps:
+            doc = gap.get("doc", {})
+            lines.append(
+                "- `{}` ({}, {}): {}".format(
+                    doc.get("path"), doc.get("type"), doc.get("status"), gap.get("message")
+                )
+            )
+        lines.append("")
     lines.append("")
     return "\n".join(lines)
 
@@ -570,6 +863,7 @@ def mutate_state(args, command, entity_type, entity_id, payload, mutator):
     require_valid_docs(state, root)
     before = state["revision"]
     mutator(state)
+    refresh_doc_metadata(root, state)
     state["revision"] = before + 1
     state["updated_at"] = utc_now()
     require_valid_docs(state, root)
@@ -590,6 +884,7 @@ def cmd_init(args):
     if path.exists() and not args.force:
         raise DocError("DOCS_ALREADY_EXISTS: use --force to reinitialize")
     state = default_docs_state()
+    refresh_doc_metadata(root, state)
     save_docs(root, state)
     append_event(root, actor(args), "init", "docs", "docs", None, 0, {"force": bool(args.force)})
     render_doc_outputs(root, state)
@@ -621,6 +916,11 @@ def cmd_doc_register(args):
                 "owner": args.owner,
                 "last_reviewed_at": "",
                 "last_reviewed_by": "",
+                "content_hash": "",
+                "last_reviewed_content_hash": "",
+                "declared_status": "",
+                "declared_status_raw": "",
+                "declared_status_source": "",
                 "notes": list(args.note or []),
                 "created_at": now,
                 "updated_at": now,
@@ -651,11 +951,16 @@ def cmd_doc_status(args):
 
 def cmd_doc_mark_reviewed(args):
     now = utc_now()
+    root = repo_root(args)
+    path = normalize_doc_path(args.path)
+    reviewed_hash = content_hash_for_path(root, path)
 
     def apply(state):
         doc = find_doc(state, args.path)
+        doc["content_hash"] = reviewed_hash
         doc["last_reviewed_at"] = now
         doc["last_reviewed_by"] = actor(args)
+        doc["last_reviewed_content_hash"] = reviewed_hash
         doc["updated_at"] = now
         if args.note:
             doc.setdefault("notes", []).append(args.note)
@@ -664,19 +969,15 @@ def cmd_doc_mark_reviewed(args):
         args,
         "doc mark-reviewed",
         "doc",
-        normalize_doc_path(args.path),
-        {"reviewed_at": now, "note": args.note or ""},
+        path,
+        {"reviewed_at": now, "content_hash": reviewed_hash, "note": args.note or ""},
         apply,
     )
 
 
 def cmd_scan(args):
     root = repo_root(args)
-    markdown_files = sorted(
-        path.relative_to(root).as_posix()
-        for path in (root / "ai-system").rglob("*.md")
-        if path.is_file()
-    )
+    markdown_files = scan_markdown_files(root, args.scope)
     added = []
 
     def apply(state):
@@ -696,6 +997,11 @@ def cmd_scan(args):
                     "owner": args.owner,
                     "last_reviewed_at": "",
                     "last_reviewed_by": "",
+                    "content_hash": "",
+                    "last_reviewed_content_hash": "",
+                    "declared_status": "",
+                    "declared_status_raw": "",
+                    "declared_status_source": "",
                     "notes": [],
                     "created_at": now,
                     "updated_at": now,
@@ -704,7 +1010,7 @@ def cmd_scan(args):
             existing.add(path)
             added.append(path)
 
-    mutate_state(args, "scan", "docs", "docs", {"added": added, "status": args.status}, apply)
+    mutate_state(args, "scan", "docs", "docs", {"added": added, "status": args.status, "scope": args.scope}, apply)
     print("Added: {}".format(len(added)))
 
 
@@ -712,6 +1018,11 @@ def cmd_validate(args):
     root = repo_root(args)
     state = load_docs(root)
     require_valid_docs(state, root)
+    warnings = validation_warnings(state, root)
+    if warnings:
+        print("WARNINGS:")
+        for warning in warnings:
+            print("- {}".format(warning))
     print("OK: docs are valid")
 
 
@@ -790,6 +1101,11 @@ def cmd_status(args):
             print("- {}".format(error))
     else:
         print("Validation: OK")
+        warnings = validation_warnings(state, root)
+        if warnings:
+            print("Warnings:")
+            for warning in warnings:
+                print("- {}".format(warning))
 
 
 def build_parser():
@@ -808,7 +1124,8 @@ def build_parser():
     p_status = sub.add_parser("status", help="Show file paths and validation status")
     p_status.set_defaults(func=cmd_status)
 
-    p_scan = sub.add_parser("scan", help="Register untracked ai-system Markdown documents")
+    p_scan = sub.add_parser("scan", help="Register untracked Markdown documents and refresh doc metadata")
+    p_scan.add_argument("--scope", default="ai-system", choices=["ai-system", "root", "skills", "all"])
     p_scan.add_argument("--status", default="draft", choices=sorted(DOC_STATUSES))
     p_scan.add_argument("--owner", default="AI System Maintainer")
     p_scan.set_defaults(func=cmd_scan)

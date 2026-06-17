@@ -72,7 +72,43 @@ python scripts/planctl.py ...
 python scripts/taskctl.py ...
 python scripts/docctl.py ...
 python scripts/evolutionctl.py ...
+python scripts/contextctl.py ...
 ```
+
+Current documentation-control commands include:
+
+```bash
+python scripts/docctl.py init
+python scripts/docctl.py scan --scope ai-system
+python scripts/docctl.py scan --scope root
+python scripts/docctl.py scan --scope skills
+python scripts/docctl.py scan --scope all
+python scripts/docctl.py doc register --path <path> --title <title> --type <type> --status <status>
+python scripts/docctl.py doc status <path> --to <status>
+python scripts/docctl.py doc mark-reviewed <path> --note <text>
+python scripts/docctl.py validate
+python scripts/docctl.py render
+python scripts/docctl.py check-generated
+python scripts/docctl.py audit --last 20
+```
+
+`docctl.py` owns `AI_PROJECT/state/docs.json`, `AI_PROJECT/events/doc-events.jsonl`, `AI_PROJECT/generated/DOCS_INDEX.md` and `AI_PROJECT/generated/DOCS_GAPS.md`. It records current document content hashes, reviewed content hashes and declared-status metadata. Generated documentation gaps must be repaired through source documents or `docctl.py`, not by editing generated Markdown.
+
+Current context-control commands include:
+
+```bash
+python scripts/contextctl.py status
+python scripts/contextctl.py index build
+python scripts/contextctl.py search --query <text>
+python scripts/contextctl.py pack build --task <TASK_ID> --write
+python scripts/contextctl.py pack build --query <text> --write
+python scripts/contextctl.py validate
+python scripts/contextctl.py render
+python scripts/contextctl.py check-generated
+python scripts/contextctl.py audit --last 20
+```
+
+`contextctl.py` owns `AI_PROJECT/events/context-events.jsonl`, `AI_PROJECT/generated/CONTEXT_PACK.md` and `AI_PROJECT/generated/CONTEXT_STATUS.md`. It reads `AI_PROJECT/state/docs.json` and `AI_PROJECT/state/tasks.json`, but does not mutate them. Context Packs are generated retrieval output only; they must not be treated as source of truth and must not expand Task scope, allowed files or acceptance criteria.
 
 The command catalog boundary applies to this repository's root `/AI_PROJECT` state. Reusable templates under `/ai-system/templates/**/AI_PROJECT` and the golden project under `/examples/golden-project/AI_PROJECT` are separate documentation/template fixtures unless a bounded task explicitly edits them.
 
@@ -2170,6 +2206,7 @@ plan
 task
 current
 prompt
+context
 execution
 review
 qa
@@ -2213,6 +2250,28 @@ prompt build --task <TASK_ID>
 prompt show --task <TASK_ID>
 prompt validate --task <TASK_ID>
 ```
+
+## Context Commands
+
+```text
+context status
+context index build
+context search --query <text>
+context pack build --task <TASK_ID>
+context pack build --query <text>
+context validate
+context render
+context check-generated
+context audit
+```
+
+Current implementation entry point:
+
+```bash
+python scripts/contextctl.py ...
+```
+
+Context commands build deterministic, derived Context Packs from registered documentation and optional Task context. They do not create source state, do not use vector search or external APIs, and do not change the Task execution contract.
 
 ## Future Execution Commands
 

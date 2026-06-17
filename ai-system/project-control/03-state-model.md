@@ -68,6 +68,59 @@ Generated Markdown is readable output only. If generated output drifts, rebuild 
 
 The root self-hosted state is distinct from reusable templates under `/ai-system/templates/**/AI_PROJECT` and the non-runtime golden example under `/examples/golden-project/AI_PROJECT`.
 
+## Documentation Control State
+
+Documentation control uses the same state/events/generated model:
+
+```text
+AI_PROJECT/state/docs.json
+AI_PROJECT/events/doc-events.jsonl
+AI_PROJECT/generated/DOCS_INDEX.md
+AI_PROJECT/generated/DOCS_GAPS.md
+```
+
+`docs.json` is the authoritative registry for managed documentation. Each registered document stores lifecycle metadata plus derived retrieval metadata:
+
+```text
+path
+title
+type
+status
+required
+owner
+content_hash
+last_reviewed_at
+last_reviewed_by
+last_reviewed_content_hash
+declared_status
+declared_status_raw
+declared_status_source
+```
+
+`content_hash` is the current SHA-256 hash recorded by `docctl.py`. `last_reviewed_content_hash` is the SHA-256 hash reviewed by `docctl.py doc mark-reviewed`. Declared status fields are derived from document frontmatter, `Status:` metadata lines or a `## Status` section when present.
+
+`DOCS_GAPS.md` is generated from `docs.json` and current source files. It groups actionable gaps such as missing files, status mismatch, stale reviews, unresolved placeholders, broken local links and stale content hash metadata.
+
+## Context Control State
+
+Context control uses the state/events/generated model without adding a new source-of-truth state file:
+
+```text
+AI_PROJECT/state/docs.json
+AI_PROJECT/state/tasks.json
+AI_PROJECT/events/context-events.jsonl
+AI_PROJECT/generated/CONTEXT_PACK.md
+AI_PROJECT/generated/CONTEXT_STATUS.md
+```
+
+`scripts/contextctl.py` builds a deterministic derived index in memory from registered documents in `docs.json` and optional Task context from `tasks.json`.
+
+The derived index and Context Pack are not source of truth. They must not expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task or source documents, the Task and source documents remain authoritative.
+
+By default, context control indexes registered active source documents only. It excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless the operator explicitly enables the relevant include flag.
+
+`CONTEXT_PACK.md` includes selected source paths, headings, line ranges, source content hashes, chunk hashes, deterministic keyword scores and selection reasons. `CONTEXT_STATUS.md` summarizes the current generated pack, selected paths and exclusion reasons. Both files are generated output and must be regenerated through `contextctl.py`.
+
 ---
 
 # 1. Directory Layout
@@ -109,6 +162,7 @@ AI_PROJECT/
 ├── events/
 │   ├── plan-events.jsonl
 │   ├── task-events.jsonl
+│   ├── context-events.jsonl
 │   ├── current-events.jsonl
 │   ├── prompt-events.jsonl
 │   ├── execution-events.jsonl
@@ -122,6 +176,8 @@ AI_PROJECT/
     ├── CODEX_PLAN.md
     ├── CODEX_TASKS.md
     ├── CODEX_CURRENT.md
+    ├── CONTEXT_PACK.md
+    ├── CONTEXT_STATUS.md
     ├── PROMPT_PACKAGE.md
     ├── REVIEW_STATUS.md
     ├── QA_STATUS.md
@@ -878,10 +934,12 @@ AI_PROJECT/generated/*.md
 For execution work, future systems should use:
 
 ```bash id="5sh72u"
-python scripts/projectctl.py context build --task T-001 --profile codex
+python scripts/contextctl.py pack build --task TASK-001 --write
 ```
 
 The AI should receive a short working packet, not the full project database.
+
+Context Pack retrieval is deterministic keyword and metadata retrieval. It does not use vector search, embeddings or external APIs.
 
 ## Context Principle
 
@@ -890,6 +948,7 @@ State is for Python.
 Events are for audit.
 Generated Markdown is for humans and AI agents.
 Prompt Package is for execution.
+Context Pack is derived retrieval context.
 ```
 
 ---

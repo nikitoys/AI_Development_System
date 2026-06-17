@@ -51,6 +51,8 @@ Managed documents should use these states where applicable:
 
 A document may omit an explicit status field only when the surrounding repository convention already defines its status. For AI Development System documents, a visible `Status` field is preferred.
 
+When a managed document declares status in YAML frontmatter, a `Status:` metadata line or a `## Status` section, the declaration should stay synchronized with the project-control registry status managed by `docctl.py`.
+
 ## Document Operations
 
 ## Read
@@ -96,6 +98,8 @@ Documentation review should check:
 - language and localization policy;
 - broken references or missing index updates;
 - whether changelog or improvement log updates are needed.
+
+When review is recorded through `docctl.py doc mark-reviewed`, the review record should include the content hash that was reviewed so later edits can be detected as stale review evidence.
 
 ## Approve
 
