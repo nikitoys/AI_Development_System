@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `34`
-Current task: `TASK-007`
+Revision: `45`
+Current task: `TASK-008`
 
 ## Epic `EPIC-001`
 
@@ -41,7 +41,7 @@ Acceptance criteria:
 - clear invalidates or removes the current Codex prompt package without modifying source-of-truth task or evolution state.
 - Required validation commands from the owner prompt pass or any blocker is reported clearly.
 
-### TASK-007 — Record L4 Role-Agent Runtime Architecture ⭐
+### TASK-007 — Record L4 Role-Agent Runtime Architecture
 
 Status: `in_review`  
 Priority: `1`  
@@ -135,3 +135,81 @@ Acceptance criteria:
 - Documentation Navigation Skill, Agent Result Intake and Integration Review relationships are clear.
 - Current maturity remains L3, runtime remains DEFERRED and L4+ remains future/not approved.
 - Required validation commands pass and no protected AI_PROJECT files are manually edited.
+
+## Epic `EPIC-003`
+
+### TASK-008 — P0 Strengthen docctl metadata and documentation gaps ⭐
+
+Status: `ready`  
+Priority: `1`  
+Verification: `standard`  
+
+Improve docctl.py so registered documentation becomes a reliable source for future context retrieval.
+
+Acceptance criteria:
+
+- docctl validation detects mismatch between registry status and declared document status/frontmatter when such status is present.
+- docctl tracks current document content hash.
+- docctl mark-reviewed records the reviewed content hash.
+- DOCS_GAPS.md distinguishes at least: missing file, status mismatch, active not reviewed, active review stale, unresolved placeholder, broken local link, stale index or equivalent actionable categories.
+- docctl can register or account for root-level documents and skills without treating generated files as authoritative source docs.
+- Existing generated documentation outputs are regenerated only through docctl.py.
+- Existing plan/task/documentation validation passes or blockers are reported clearly.
+- No protected project-control files are edited manually.
+
+### TASK-009 — P1 Implement contextctl deterministic retrieval MVP
+
+Status: `planned`  
+Priority: `1`  
+Verification: `standard`  
+
+Create a new controlled CLI gateway that builds deterministic Context Packs from registered documents without vector search.
+
+Acceptance criteria:
+
+- contextctl.py uses only Python standard library.
+- contextctl can build or refresh a deterministic derived index.
+- contextctl can search registered source docs by query.
+- contextctl can build a Context Pack for a task ID or explicit query.
+- Context Pack includes selected documents/sections, reasons, hashes and source metadata.
+- Context Pack excludes generated files and inactive/archived docs by default.
+- Context Pack clearly states that it is generated output and not source of truth.
+- check-generated or equivalent detects stale generated context output.
+- Validation/smoke commands pass or blockers are reported.
+
+### TASK-010 — P2 Integrate Context Pack into codexctl prompt generation
+
+Status: `planned`  
+Priority: `1`  
+Verification: `standard`  
+
+Allow codexctl.py to include a validated Context Pack in generated Codex prompt packages.
+
+Acceptance criteria:
+
+- codexctl can build a prompt package with an explicit context pack.
+- codexctl fails clearly if the context pack is missing, stale or invalid.
+- Generated CODEX_PROMPT.md records context pack path/hash and source metadata.
+- Prompt explicitly states that retrieved context is read-only.
+- Prompt explicitly states that context does not expand allowed files, scope or acceptance criteria.
+- codexctl remains able to build prompts without context pack when requested.
+- Required validation/smoke commands pass or blockers are reported.
+
+### TASK-011 — P3 Add optional vector backend for contextctl
+
+Status: `planned`  
+Priority: `1`  
+Verification: `standard`  
+
+Add optional vector or hybrid retrieval backend after deterministic retrieval exists.
+
+Acceptance criteria:
+
+- Keyword backend remains default and works without optional dependencies.
+- Vector backend is opt-in.
+- External embeddings are disabled by default.
+- Vector index stores source path, heading, chunk hash, content hash and embedding metadata.
+- Stale vector chunks are detected when source content changes.
+- Vector backend is documented as derived cache, not source of truth.
+- Validation passes in environments without vector dependencies.
+- Required smoke checks pass or blockers are reported.

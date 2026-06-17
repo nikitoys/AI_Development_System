@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 34,
-  "current_task_id": "TASK-007",
+  "revision": 45,
+  "current_task_id": "TASK-008",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-16T20:45:16Z",
+  "updated_at": "2026-06-17T21:39:29Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -424,7 +424,258 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-16T20:41:22Z",
-      "updated_at": "2026-06-16T20:45:16Z"
+      "updated_at": "2026-06-17T21:37:19Z"
+    },
+    {
+      "id": "TASK-008",
+      "epic_id": "EPIC-003",
+      "title": "P0 Strengthen docctl metadata and documentation gaps",
+      "status": "ready",
+      "summary": "Improve docctl.py so registered documentation becomes a reliable source for future context retrieval.",
+      "description": "Add stricter documentation-control capabilities before implementing retrieval. The documentation registry must be able to detect status drift, content changes after review, stale indexes and root-level documentation coverage gaps.",
+      "priority": 1,
+      "order": 1,
+      "active_role": "Codex Executor",
+      "active_stage": "Documentation-control implementation",
+      "active_document": "scripts/docctl.py / AI_PROJECT/generated/DOCS_INDEX.md / AI_PROJECT/generated/DOCS_GAPS.md",
+      "expected_result": "docctl metadata and gap detection are strengthened for future context retrieval.",
+      "verification_mode": "standard",
+      "scope": [
+        "Inspect scripts/docctl.py and current docs state.",
+        "Add or specify document status/frontmatter synchronization checks.",
+        "Add content hash tracking for registered documents.",
+        "Add last reviewed content hash tracking.",
+        "Improve DOCS_GAPS.md categories so gaps are actionable.",
+        "Extend registration/scanning model to include root docs and skills where appropriate.",
+        "Keep AI_PROJECT/state/docs.json authoritative and mutable only through docctl.py.",
+        "Update related project-control documentation if needed."
+      ],
+      "out_of_scope": [
+        "Do not implement contextctl.py.",
+        "Do not implement vector search.",
+        "Do not change codexctl.py behavior.",
+        "Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/** or AI_PROJECT/generated/**.",
+        "Do not mark documents active without Human Owner approval."
+      ],
+      "allowed_files": [
+        "scripts/docctl.py",
+        "ai-system/project-control/08-usage-guide.md",
+        "ai-system/project-control/04-command-catalog.md",
+        "ai-system/project-control/03-state-model.md",
+        "ai-system/document-lifecycle.md",
+        "scripts/smoke-doc-control.py",
+        "AI_PROJECT/state/docs.json only through docctl.py",
+        "AI_PROJECT/events/doc-events.jsonl only through docctl.py",
+        "AI_PROJECT/generated/DOCS_INDEX.md only through docctl.py",
+        "AI_PROJECT/generated/DOCS_GAPS.md only through docctl.py"
+      ],
+      "acceptance_criteria": [
+        "docctl validation detects mismatch between registry status and declared document status/frontmatter when such status is present.",
+        "docctl tracks current document content hash.",
+        "docctl mark-reviewed records the reviewed content hash.",
+        "DOCS_GAPS.md distinguishes at least: missing file, status mismatch, active not reviewed, active review stale, unresolved placeholder, broken local link, stale index or equivalent actionable categories.",
+        "docctl can register or account for root-level documents and skills without treating generated files as authoritative source docs.",
+        "Existing generated documentation outputs are regenerated only through docctl.py.",
+        "Existing plan/task/documentation validation passes or blockers are reported clearly.",
+        "No protected project-control files are edited manually."
+      ],
+      "review_instructions": [
+        "Report changed files, commands run, validation results, generated files updated and any remaining documentation-control risks."
+      ],
+      "notes": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-17T21:25:57Z",
+      "updated_at": "2026-06-17T21:38:51Z"
+    },
+    {
+      "id": "TASK-009",
+      "epic_id": "EPIC-003",
+      "title": "P1 Implement contextctl deterministic retrieval MVP",
+      "status": "planned",
+      "summary": "Create a new controlled CLI gateway that builds deterministic Context Packs from registered documents without vector search.",
+      "description": "Implement scripts/contextctl.py as a dependency-light deterministic retrieval layer. It should use docs.json and registered source documents to build a reproducible keyword/metadata index and generate CONTEXT_PACK.md for a task or query.",
+      "priority": 1,
+      "order": 2,
+      "active_role": "Codex Executor",
+      "active_stage": "Context-control implementation",
+      "active_document": "scripts/contextctl.py / AI_PROJECT/generated/CONTEXT_PACK.md",
+      "expected_result": "A deterministic contextctl MVP can build and validate generated Context Packs without vector search.",
+      "verification_mode": "standard",
+      "scope": [
+        "Create scripts/contextctl.py.",
+        "Add deterministic Markdown chunking by document headings or another stable rule.",
+        "Build a local derived index from registered docs.",
+        "Implement keyword/metadata search.",
+        "Generate AI_PROJECT/generated/CONTEXT_PACK.md.",
+        "Generate AI_PROJECT/generated/CONTEXT_STATUS.md if useful.",
+        "Write AI_PROJECT/events/context-events.jsonl for context build events if generated output is written.",
+        "Exclude generated, archived, deprecated, template and example documents by default unless explicitly allowed.",
+        "Include selected source paths, headings, content hashes, chunk hashes and selection reasons in the Context Pack.",
+        "Add validation/check-generated behavior for context outputs.",
+        "Add smoke test coverage if the repository has an appropriate smoke test pattern."
+      ],
+      "out_of_scope": [
+        "Do not add vector DB or embeddings.",
+        "Do not call external APIs.",
+        "Do not modify codexctl.py integration yet.",
+        "Do not make context pack a source of truth.",
+        "Do not expand task allowed_files through retrieved context."
+      ],
+      "allowed_files": [
+        "scripts/contextctl.py",
+        "scripts/smoke-context-control.py",
+        "ai-system/project-control/03-state-model.md",
+        "ai-system/project-control/04-command-catalog.md",
+        "ai-system/project-control/06-prompt-package-spec.md",
+        "ai-system/project-control/08-usage-guide.md",
+        "AI_PROJECT/events/context-events.jsonl only through contextctl.py",
+        "AI_PROJECT/generated/CONTEXT_PACK.md only through contextctl.py",
+        "AI_PROJECT/generated/CONTEXT_STATUS.md only through contextctl.py"
+      ],
+      "acceptance_criteria": [
+        "contextctl.py uses only Python standard library.",
+        "contextctl can build or refresh a deterministic derived index.",
+        "contextctl can search registered source docs by query.",
+        "contextctl can build a Context Pack for a task ID or explicit query.",
+        "Context Pack includes selected documents/sections, reasons, hashes and source metadata.",
+        "Context Pack excludes generated files and inactive/archived docs by default.",
+        "Context Pack clearly states that it is generated output and not source of truth.",
+        "check-generated or equivalent detects stale generated context output.",
+        "Validation/smoke commands pass or blockers are reported."
+      ],
+      "review_instructions": [
+        "Report how deterministic scoring works, what files are indexed by default, what is excluded, and how stale context is detected."
+      ],
+      "notes": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-17T21:26:23Z",
+      "updated_at": "2026-06-17T21:26:23Z"
+    },
+    {
+      "id": "TASK-010",
+      "epic_id": "EPIC-003",
+      "title": "P2 Integrate Context Pack into codexctl prompt generation",
+      "status": "planned",
+      "summary": "Allow codexctl.py to include a validated Context Pack in generated Codex prompt packages.",
+      "description": "Extend codexctl.py so CODEX_PROMPT.md can include a read-only retrieved context section produced by contextctl.py. The Context Pack must help Codex read the right source documents but must not expand task scope, allowed files or acceptance criteria.",
+      "priority": 1,
+      "order": 3,
+      "active_role": "Codex Executor",
+      "active_stage": "Prompt-package integration implementation",
+      "active_document": "scripts/codexctl.py / AI_PROJECT/generated/CODEX_PROMPT.md",
+      "expected_result": "codexctl can optionally include a validated read-only Context Pack in generated prompt packages.",
+      "verification_mode": "standard",
+      "scope": [
+        "Inspect scripts/codexctl.py and scripts/contextctl.py.",
+        "Add explicit context-pack integration option to codexctl.py, using supported CLI design.",
+        "Validate context pack existence and freshness before including it.",
+        "Include context pack path/hash/source metadata in CODEX_PROMPT.md.",
+        "Add prompt rules stating that retrieved context is read-only and does not expand allowed files or task scope.",
+        "Add clear errors for missing, stale or invalid context pack.",
+        "Update prompt package documentation if needed.",
+        "Add smoke/validation coverage."
+      ],
+      "out_of_scope": [
+        "Do not implement vector search.",
+        "Do not change task lifecycle rules.",
+        "Do not make codexctl.py responsible for document indexing.",
+        "Do not allow retrieved context to override task fields.",
+        "Do not manually edit generated CODEX_PROMPT.md."
+      ],
+      "allowed_files": [
+        "scripts/codexctl.py",
+        "scripts/contextctl.py only if needed for compatibility fixes",
+        "scripts/smoke-context-control.py",
+        "scripts/smoke-project-control.py",
+        "ai-system/project-control/06-prompt-package-spec.md",
+        "ai-system/project-control/08-usage-guide.md",
+        "AI_PROJECT/generated/CODEX_PROMPT.md only through codexctl.py",
+        "AI_PROJECT/generated/CONTEXT_PACK.md only through contextctl.py",
+        "AI_PROJECT/events/codex-events.jsonl only through codexctl.py",
+        "AI_PROJECT/events/context-events.jsonl only through contextctl.py"
+      ],
+      "acceptance_criteria": [
+        "codexctl can build a prompt package with an explicit context pack.",
+        "codexctl fails clearly if the context pack is missing, stale or invalid.",
+        "Generated CODEX_PROMPT.md records context pack path/hash and source metadata.",
+        "Prompt explicitly states that retrieved context is read-only.",
+        "Prompt explicitly states that context does not expand allowed files, scope or acceptance criteria.",
+        "codexctl remains able to build prompts without context pack when requested.",
+        "Required validation/smoke commands pass or blockers are reported."
+      ],
+      "review_instructions": [
+        "Report new codexctl options, failure modes, generated prompt changes and compatibility with existing prompt generation."
+      ],
+      "notes": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-17T21:26:47Z",
+      "updated_at": "2026-06-17T21:26:47Z"
+    },
+    {
+      "id": "TASK-011",
+      "epic_id": "EPIC-003",
+      "title": "P3 Add optional vector backend for contextctl",
+      "status": "planned",
+      "summary": "Add optional vector or hybrid retrieval backend after deterministic retrieval exists.",
+      "description": "Extend contextctl.py with a backend abstraction so deterministic keyword retrieval remains the default and vector retrieval can be added later as an optional derived index. External embeddings must be disabled by default.",
+      "priority": 1,
+      "order": 4,
+      "active_role": "Codex Executor",
+      "active_stage": "Optional retrieval backend implementation",
+      "active_document": "scripts/contextctl.py / ai-system/project-control/08-usage-guide.md",
+      "expected_result": "contextctl gains an opt-in vector backend path while deterministic keyword retrieval remains the default.",
+      "verification_mode": "standard",
+      "scope": [
+        "Add backend abstraction to contextctl.py.",
+        "Keep keyword backend as default.",
+        "Add optional vector backend only behind explicit dependency/feature guard.",
+        "Add metadata/hash validation for vector chunks.",
+        "Detect stale embeddings when source chunk hash changes.",
+        "Add hybrid scoring rules if practical.",
+        "Add privacy guardrails for external embeddings.",
+        "Document vector backend as derived cache, not source of truth."
+      ],
+      "out_of_scope": [
+        "Do not require vector dependencies for normal validation.",
+        "Do not call external embedding APIs by default.",
+        "Do not store secrets.",
+        "Do not make vector index authoritative.",
+        "Do not remove deterministic keyword backend."
+      ],
+      "allowed_files": [
+        "scripts/contextctl.py",
+        "ai-system/project-control/08-usage-guide.md",
+        "ai-system/project-control/06-prompt-package-spec.md",
+        "ai-system/privacy-data-handling-policy.md",
+        "ai-system/security-policy.md",
+        ".gitignore if needed for local vector cache paths",
+        "requirements or project dependency file only if one already exists and the task explicitly justifies it"
+      ],
+      "acceptance_criteria": [
+        "Keyword backend remains default and works without optional dependencies.",
+        "Vector backend is opt-in.",
+        "External embeddings are disabled by default.",
+        "Vector index stores source path, heading, chunk hash, content hash and embedding metadata.",
+        "Stale vector chunks are detected when source content changes.",
+        "Vector backend is documented as derived cache, not source of truth.",
+        "Validation passes in environments without vector dependencies.",
+        "Required smoke checks pass or blockers are reported."
+      ],
+      "review_instructions": [
+        "Report optional dependency strategy, privacy/security guardrails, cache paths, stale embedding detection and fallback behavior."
+      ],
+      "notes": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-17T21:26:56Z",
+      "updated_at": "2026-06-17T21:26:56Z"
     }
   ]
 }

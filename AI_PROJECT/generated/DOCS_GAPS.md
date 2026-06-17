@@ -3,8 +3,8 @@
 
 # Documentation Gaps
 
-Revision: `15`
-Open gaps: `128`
+Revision: `17`
+Open gaps: `127`
 
 - `ai-system/project-control/01-overview.md` (overview, active): active document has no recorded review
 - `ai-system/project-control/02-domain-model.md` (reference, active): active document has no recorded review
@@ -132,5 +132,4 @@ Open gaps: `128`
 - `ai-system/verification-modes.md` (reference, draft): document is not active
 - `ai-system/work-item-hierarchy.md` (reference, draft): document is not active
 - `ai-system/workflow.md` (reference, draft): document is not active
-- `ai-system/l4-role-agent-runtime.md` (reference, review): document is not active
 - `ai-system/project-control/08-usage-guide.md` (guide, review): document is not active

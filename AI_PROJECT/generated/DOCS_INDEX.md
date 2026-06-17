@@ -3,12 +3,13 @@
 
 # Documentation Index
 
-Revision: `15`
+Revision: `17`
 Documents: `131`
 
 | Path | Title | Type | Status | Required | Last reviewed |
 | --- | --- | --- | --- | --- | --- |
 | `ai-system/agent-delegation.md` | Agent Delegation | `reference` | `active` | `false` | 2026-06-16T19:17:48Z |
+| `ai-system/l4-role-agent-runtime.md` | L4 Role-Agent Runtime Architecture | `reference` | `active` | `true` | 2026-06-17T21:28:33Z |
 | `ai-system/project-control/01-overview.md` | Project Control Gateway Overview | `overview` | `active` | `true` | - |
 | `ai-system/project-control/02-domain-model.md` | Project Control Domain Model | `reference` | `active` | `true` | - |
 | `ai-system/project-control/03-state-model.md` | Project Control State Model | `reference` | `active` | `true` | - |
@@ -137,5 +138,4 @@ Documents: `131`
 | `ai-system/verification-modes.md` | Verification Modes | `reference` | `draft` | `false` | - |
 | `ai-system/work-item-hierarchy.md` | Work Item Hierarchy | `reference` | `draft` | `false` | - |
 | `ai-system/workflow.md` | Workflow | `reference` | `draft` | `false` | - |
-| `ai-system/l4-role-agent-runtime.md` | L4 Role-Agent Runtime Architecture | `reference` | `review` | `true` | - |
 | `ai-system/project-control/08-usage-guide.md` | Project Control Usage Guide | `guide` | `review` | `false` | - |

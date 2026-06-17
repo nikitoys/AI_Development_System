@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 15,
+  "revision": 17,
   "created_at": "2026-06-15T21:36:58Z",
-  "updated_at": "2026-06-16T20:44:45Z",
+  "updated_at": "2026-06-17T21:28:33Z",
   "docs": [
     {
       "id": "DOC-001",
@@ -1838,16 +1838,17 @@
       "path": "ai-system/l4-role-agent-runtime.md",
       "title": "L4 Role-Agent Runtime Architecture",
       "type": "reference",
-      "status": "review",
+      "status": "active",
       "required": true,
       "owner": "AI System Maintainer / System Architect AI / Technical Writer AI",
-      "last_reviewed_at": "",
-      "last_reviewed_by": "",
+      "last_reviewed_at": "2026-06-17T21:28:33Z",
+      "last_reviewed_by": "human_owner",
       "notes": [
-        "Registered by TASK-007 for approved CHG-004."
+        "Registered by TASK-007 for approved CHG-004.",
+        "Human Owner reviewed and accepted L4 Role-Agent Runtime Architecture."
       ],
       "created_at": "2026-06-16T20:44:00Z",
-      "updated_at": "2026-06-16T20:44:45Z"
+      "updated_at": "2026-06-17T21:28:33Z"
     }
   ]
 }

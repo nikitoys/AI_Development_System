@@ -1,32 +1,38 @@
-<!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
-<!-- Source: AI_PROJECT/state/tasks.json -->
+# Codex Prompt Package
 
-# Current Codex Task
+Generated: 2026-06-17T21:39:29Z
+Source Type: task
+Source ID: TASK-008
+Source Status: ready
 
-Revision: `45`
+[SYSTEM]
 
-Task: `TASK-008` — **P0 Strengthen docctl metadata and documentation gaps**
-Epic: `EPIC-003`
-Status: `ready`
-Verification: `standard`
+Active Role:
+Codex Executor
 
-## Prompt Control Fields
+Active Stage:
+Documentation-control implementation
 
-Active Role: `Codex Executor`
-Active Stage: `Documentation-control implementation`
-Active Document: `scripts/docctl.py / AI_PROJECT/generated/DOCS_INDEX.md / AI_PROJECT/generated/DOCS_GAPS.md`
-Expected Result: `docctl metadata and gap detection are strengthened for future context retrieval.`
+Active Document:
+scripts/docctl.py / AI_PROJECT/generated/DOCS_INDEX.md / AI_PROJECT/generated/DOCS_GAPS.md
 
-## Summary
+Expected Result:
+docctl metadata and gap detection are strengthened for future context retrieval.
+
+Repository Context:
+This repository is an AI Development System governance control plane.
+Project-control state is managed through Python CLI gateways; generated Markdown is derived output.
+
+Source:
+Source Task: TASK-008
+Task Status: ready
+Title: P0 Strengthen docctl metadata and documentation gaps
 
 Improve docctl.py so registered documentation becomes a reliable source for future context retrieval.
 
-## Description
-
 Add stricter documentation-control capabilities before implementing retrieval. The documentation registry must be able to detect status drift, content changes after review, stale indexes and root-level documentation coverage gaps.
 
-## Scope
-
+Scope:
 - Inspect scripts/docctl.py and current docs state.
 - Add or specify document status/frontmatter synchronization checks.
 - Add content hash tracking for registered documents.
@@ -36,16 +42,14 @@ Add stricter documentation-control capabilities before implementing retrieval. T
 - Keep AI_PROJECT/state/docs.json authoritative and mutable only through docctl.py.
 - Update related project-control documentation if needed.
 
-## Out of Scope
-
+Out of Scope:
 - Do not implement contextctl.py.
 - Do not implement vector search.
 - Do not change codexctl.py behavior.
 - Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/** or AI_PROJECT/generated/**.
 - Do not mark documents active without Human Owner approval.
 
-## Allowed Files
-
+Allowed Files:
 - scripts/docctl.py
 - ai-system/project-control/08-usage-guide.md
 - ai-system/project-control/04-command-catalog.md
@@ -57,8 +61,15 @@ Add stricter documentation-control capabilities before implementing retrieval. T
 - AI_PROJECT/generated/DOCS_INDEX.md only through docctl.py
 - AI_PROJECT/generated/DOCS_GAPS.md only through docctl.py
 
-## Acceptance Criteria
+Implementation Instructions:
+- Inspect current files before editing.
+- Stay within allowed files.
+- Preserve existing conventions.
+- Prefer minimal, commit-ready changes.
+- Do not perform unrelated refactors.
+- Do not edit AI_PROJECT/state/**, AI_PROJECT/events/** or AI_PROJECT/generated/** manually.
 
+Acceptance Criteria:
 - docctl validation detects mismatch between registry status and declared document status/frontmatter when such status is present.
 - docctl tracks current document content hash.
 - docctl mark-reviewed records the reviewed content hash.
@@ -68,16 +79,16 @@ Add stricter documentation-control capabilities before implementing retrieval. T
 - Existing plan/task/documentation validation passes or blockers are reported clearly.
 - No protected project-control files are edited manually.
 
-## Review Instructions
+Verification:
+- Use verification mode `standard`.
+- Run the validation commands required by the task and report results.
 
+Result Format:
+- Summary
+- Changed files
+- Commands run
+- Verification result
+- Blockers or risks
+
+Review / Result Format Notes:
 - Report changed files, commands run, validation results, generated files updated and any remaining documentation-control risks.
-
-## Useful CLI
-
-```bash
-python scripts/taskctl.py task transition TASK-008 --to in_progress
-python scripts/taskctl.py task transition TASK-008 --to in_review
-python scripts/taskctl.py task approve TASK-008 --notes "..."
-python scripts/taskctl.py task transition TASK-008 --to done
-python scripts/taskctl.py prompt build --write
-```
