@@ -4,7 +4,7 @@
 # Documentation Gaps
 
 Revision: `18`
-Open gaps: `156`
+Open gaps: `160`
 Tracked categories: `Missing File`, `Status Mismatch`, `Active Not Reviewed`, `Active Review Stale`, `Unresolved Placeholder`, `Broken Local Link`, `Stale Content Hash`, `Not Active`
 
 ## Missing File
@@ -58,7 +58,10 @@ _No gaps._
 
 ## Stale Content Hash
 
-_No gaps._
+- `ai-system/project-control/03-state-model.md` (reference, active): recorded content hash does not match file content
+- `ai-system/project-control/04-command-catalog.md` (reference, active): recorded content hash does not match file content
+- `ai-system/project-control/06-prompt-package-spec.md` (reference, active): recorded content hash does not match file content
+- `ai-system/project-control/08-usage-guide.md` (guide, review): recorded content hash does not match file content
 
 ## Not Active
 

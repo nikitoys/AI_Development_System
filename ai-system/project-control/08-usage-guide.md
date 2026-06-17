@@ -43,6 +43,7 @@ planctl.py      Initiative, Epic, project plan
 taskctl.py      executable Task, current Task, CODEX_PROMPT.md
 docctl.py       documentation registry, document status, docs index
 evolutionctl.py AI Development System change proposals
+contextctl.py   deterministic Context Packs from registered docs and Task state
 ```
 
 If a requested operation has no supported command, stop and report the missing command. Do not patch protected state by hand.
@@ -71,6 +72,8 @@ Codex Executor works only on a bounded Task. Codex may edit allowed source files
 Python CLIs own project-control mutation. They validate input, update JSON state, append audit events and render generated Markdown.
 
 Generated Markdown is context for humans and AI agents. It must not be treated as editable state.
+
+Context Packs are generated retrieval context. They help focus reading, but they do not replace Task state, source documents or Human Owner decisions.
 
 ## CLI Responsibilities
 
@@ -201,6 +204,39 @@ python scripts/evolutionctl.py check-generated
 ```
 
 Codex must not approve or accept an evolution change on behalf of the Human Owner.
+
+## `contextctl.py`
+
+Use `contextctl.py` for deterministic retrieval context:
+
+```text
+registered source docs
+derived Markdown chunks
+keyword and metadata search
+CONTEXT_PACK.md
+CONTEXT_STATUS.md
+context-events.jsonl
+```
+
+Common commands:
+
+```bash
+python scripts/contextctl.py status
+python scripts/contextctl.py index build
+python scripts/contextctl.py search --query "prompt package context retrieval"
+python scripts/contextctl.py pack build --task TASK-001 --write
+python scripts/contextctl.py pack build --query "prompt package context retrieval" --write
+python scripts/contextctl.py validate
+python scripts/contextctl.py render
+python scripts/contextctl.py check-generated
+python scripts/contextctl.py audit --last 20
+```
+
+`contextctl.py` reads `docs.json` and `tasks.json`, writes `CONTEXT_PACK.md` and `CONTEXT_STATUS.md`, and appends `context-events.jsonl` when generated context output is written. It does not mutate documentation state or task state.
+
+Default retrieval excludes generated, inactive, archived, deprecated, template and example documents. Use explicit include flags only when the Task or Human Owner requires those sources.
+
+Context Packs must never expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task, the Task remains authoritative.
 
 ## When Do I Need A Task?
 
@@ -496,6 +532,13 @@ python scripts/docctl.py render
 python scripts/docctl.py check-generated
 ```
 
+For context generated output:
+
+```bash
+python scripts/contextctl.py render
+python scripts/contextctl.py check-generated
+```
+
 `planctl.py` currently supports `render`, but does not expose a `check-generated` command.
 
 ## Unsupported Operation
@@ -525,6 +568,9 @@ python scripts/taskctl.py check-generated
 python scripts/docctl.py validate
 python scripts/docctl.py render
 python scripts/docctl.py check-generated
+python scripts/contextctl.py validate
+python scripts/contextctl.py check-generated
+python scripts/smoke-context-control.py
 python scripts/smoke-doc-control.py
 python scripts/check-protected-project-files.py --verbose
 ```

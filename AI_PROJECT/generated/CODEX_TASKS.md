@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `47`
-Current task: `TASK-008`
+Revision: `57`
+Current task: `TASK-010`
 
 ## Epic `EPIC-001`
 
@@ -138,9 +138,9 @@ Acceptance criteria:
 
 ## Epic `EPIC-003`
 
-### TASK-008 — P0 Strengthen docctl metadata and documentation gaps ⭐
+### TASK-008 — P0 Strengthen docctl metadata and documentation gaps
 
-Status: `in_review`  
+Status: `done`  
 Priority: `1`  
 Verification: `standard`  
 
@@ -159,7 +159,7 @@ Acceptance criteria:
 
 ### TASK-009 — P1 Implement contextctl deterministic retrieval MVP
 
-Status: `planned`  
+Status: `done`  
 Priority: `1`  
 Verification: `standard`  
 
@@ -177,9 +177,9 @@ Acceptance criteria:
 - check-generated or equivalent detects stale generated context output.
 - Validation/smoke commands pass or blockers are reported.
 
-### TASK-010 — P2 Integrate Context Pack into codexctl prompt generation
+### TASK-010 — P2 Integrate Context Pack into codexctl prompt generation ⭐
 
-Status: `planned`  
+Status: `ready`  
 Priority: `1`  
 Verification: `standard`  
 
