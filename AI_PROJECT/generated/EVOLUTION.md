@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `278`
-Changes: `13`
+Revision: `301`
+Changes: `14`
 
 ## Summary
 
 - `accepted`: 12
-- `approved`: 1
+- `approved`: 2
 
 ## Changes
 
@@ -727,3 +727,60 @@ Impact:
 Linked tasks:
 
 - TASK-031
+
+### CHG-014 — Add task workflow automation MVP
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+Preparing tasks for Codex and submitting tasks for review still requires many manual CLI commands, even though the command registry, aictl facade, context generation, Codex prompt generation, doctor diagnostics, and Web actions already exist.
+
+Proposal:
+
+Add a minimal workflow automation layer that composes existing registered commands for prepare-for-codex, refresh-execution-context, and submit-for-review without bypassing validation, audit, generated-output rules, protected-file policy, or owner gates.
+
+Rationale:
+
+WFA-01 is the bounded first step for reducing manual task execution overhead while preserving the governed command layer introduced by the control plane.
+
+Approved by: `human_owner` at `2026-06-18T19:48:14Z`  
+Approval notes: Approved for WFA-01 task workflow automation MVP. Workflows must compose registered/validated commands only and must not directly edit protected project-control files.  
+
+Affected areas:
+
+- Project Control Gateway
+- Workflow automation
+- aictl workflow commands
+- Web Control Center workflow actions
+
+Affected files:
+
+- ai_project_ctl/core/workflows.py
+- ai_project_ctl/web/actions.py if workflow actions are exposed in UI
+- ai_project_ctl/web/server.py if workflow routes/buttons are exposed in UI
+- ai_project_ctl/web/read_model.py if UI read model needs workflow metadata
+- ai_project_ctl/core/registry.py if workflow command metadata is needed
+- scripts/aictl.py
+- tests/**
+
+Risks:
+
+- Workflow automation could accidentally bypass individual command validation if it writes protected files directly.
+- Prepare-for-Codex could hide failures if it continues after a failed step.
+- Submit-review could incorrectly move a task to in_review when blocking checks fail.
+- Web workflow buttons could weaken confirmation or write-safety guarantees.
+
+Impact:
+
+- Reduces manual command overhead for preparing tasks for Codex and submitting work for review.
+- Keeps workflows as compositions of existing registered commands.
+- Preserves validation, audit events, generated-output ownership, and protected-file boundaries.
+
+Linked tasks:
+
+- TASK-032

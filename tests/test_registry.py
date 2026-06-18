@@ -20,6 +20,9 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("task.list", names)
         self.assertIn("task.show", names)
         self.assertIn("task.create", names)
+        self.assertIn("task.prepare_for_codex", names)
+        self.assertIn("task.refresh_execution_context", names)
+        self.assertIn("task.submit_for_review", names)
         self.assertIn("task.transition", names)
         self.assertIn("current.set", names)
         self.assertIn("current.clear", names)
@@ -32,6 +35,8 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("web.serve", names)
         self.assertIn("command.list", names)
         self.assertIn("command.describe", names)
+        self.assertIn("workflow.list", names)
+        self.assertIn("workflow.describe", names)
         self.assertEqual(names, sorted(names))
 
     def test_describe_exposes_command_metadata(self):
@@ -62,6 +67,17 @@ class RegistryTests(unittest.TestCase):
         self.assertTrue(descriptor["read_write"]["writes_events"])
         self.assertTrue(descriptor["read_write"]["renders_generated"])
         self.assertIn("AI_PROJECT/state/tasks.json", descriptor["writes_state"])
+
+    def test_task_workflow_is_registered_as_confirmed_write(self):
+        descriptor = command_describe("task.prepare_for_codex")
+
+        self.assertEqual(descriptor["domain"], "task")
+        self.assertEqual(descriptor["kind"], "write")
+        self.assertTrue(descriptor["read_write"]["mutates_state"])
+        self.assertTrue(descriptor["read_write"]["writes_events"])
+        self.assertTrue(descriptor["read_write"]["renders_generated"])
+        self.assertEqual(descriptor["lock_scope"], "workflow")
+        self.assertIn("Explicit confirmation", descriptor["owner_approval"])
 
     def test_command_list_filters_domain_and_planned_commands(self):
         implemented_names = [

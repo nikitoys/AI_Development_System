@@ -31,6 +31,12 @@ from ai_project_ctl.core.registry import (  # noqa: E402
     default_command_registry,
 )
 from ai_project_ctl.core.result import CommandError, CommandMessage, CommandResult  # noqa: E402
+from ai_project_ctl.core.workflows import (  # noqa: E402
+    run_workflow,
+    workflow_describe,
+    workflow_list,
+    workflow_preview,
+)
 
 
 class FacadeError(CommandError):
@@ -856,6 +862,112 @@ def cmd_command_describe(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_workflow_list(args: argparse.Namespace) -> int:
+    _ensure_implemented("workflow.list")
+    workflows = workflow_list()
+    if args.json:
+        result = CommandResult.success(
+            command="workflow.list",
+            domain="workflow",
+            message="Listed workflows.",
+            data={"workflows": workflows},
+        )
+        _print_json(result.to_dict())
+        return 0
+
+    name_width = max(len(workflow["name"]) for workflow in workflows) if workflows else 8
+    for workflow in workflows:
+        confirmation = "confirm" if workflow.get("confirmation_required") else "no-confirm"
+        print(
+            "{name:<{width}}  {confirm:<10}  {description}".format(
+                name=workflow["name"],
+                width=name_width,
+                confirm=confirmation,
+                description=workflow["description"],
+            )
+        )
+    return 0
+
+
+def cmd_workflow_describe(args: argparse.Namespace) -> int:
+    _ensure_implemented("workflow.describe")
+    payload = (
+        workflow_preview(
+            args.name,
+            task_ref=args.task,
+            root=args.root,
+            actor=args.actor,
+        )
+        if args.task
+        else {"workflow": workflow_describe(args.name)}
+    )
+    if args.json:
+        result = CommandResult.success(
+            command="workflow.describe",
+            domain="workflow",
+            message="Described workflow.",
+            data=payload,
+        )
+        _print_json(result.to_dict())
+        return 0
+
+    workflow = payload["workflow"]
+    print("{} ({})".format(workflow["name"], workflow["label"]))
+    print(workflow["description"])
+    print("Confirmation required: {}".format("yes" if workflow["confirmation_required"] else "no"))
+    print("Steps:")
+    for step in payload.get("steps") or workflow.get("steps") or []:
+        command = step.get("command") or step.get("command_template") or []
+        print("  - {} [{}] {}".format(
+            step.get("title"),
+            step.get("route"),
+            " ".join(command),
+        ))
+    return 0
+
+
+def cmd_workflow_run(args: argparse.Namespace) -> int:
+    _ensure_implemented(args.name)
+    result = run_workflow(
+        args.name,
+        task_ref=args.task,
+        root=args.root,
+        actor=args.actor,
+        confirmed=args.confirm,
+    )
+    if args.json:
+        _print_json(result.to_dict())
+        return 0 if result.ok else 1
+
+    _emit_workflow_result(result)
+    return 0 if result.ok else 1
+
+
+def _emit_workflow_result(result: CommandResult) -> None:
+    print("{}: {}".format("OK" if result.ok else "ERROR", result.message))
+    print("Workflow: {}".format(result.command))
+    task = result.data.get("task") or {}
+    task_label = task.get("ref") or task.get("id") or result.data.get("task_ref") or ""
+    if task_label:
+        print("Task: {}".format(task_label))
+
+    steps = result.data.get("steps") or result.data.get("preview") or []
+    if steps:
+        print("Steps:")
+        for index, step in enumerate(steps, start=1):
+            status = step.get("status") or ("preview" if step.get("command") else "")
+            command = step.get("command") or step.get("command_template") or []
+            print("  {}. {} [{}]".format(index, step.get("title", ""), status))
+            print("     {}".format(" ".join(command)))
+            if step.get("skip_reason"):
+                print("     skipped: {}".format(step["skip_reason"]))
+
+    for error in result.errors:
+        print("ERROR: {}: {}".format(error.code, error.message), file=sys.stderr)
+    if result.owner_action_required:
+        print("Owner action required: {}".format(result.owner_action_required))
+
+
 def cmd_task_list(args: argparse.Namespace) -> int:
     _ensure_implemented("task.list")
     command_args = ["task", "list"]
@@ -1161,6 +1273,23 @@ def build_parser() -> argparse.ArgumentParser:
     p = command_sub.add_parser("describe", help="Describe one registered command")
     p.add_argument("name")
     p.set_defaults(func=cmd_command_describe, facade_command="command.describe")
+
+    workflow = sub.add_parser("workflow", help="Workflow automation commands")
+    workflow_sub = workflow.add_subparsers(dest="workflow_action", required=True)
+
+    p = workflow_sub.add_parser("list", help="List available workflows")
+    p.set_defaults(func=cmd_workflow_list, facade_command="workflow.list")
+
+    p = workflow_sub.add_parser("describe", help="Describe a workflow")
+    p.add_argument("name")
+    p.add_argument("--task", help="Optional task ref for concrete step preview.")
+    p.set_defaults(func=cmd_workflow_describe, facade_command="workflow.describe")
+
+    p = workflow_sub.add_parser("run", help="Run a confirmed workflow")
+    p.add_argument("name")
+    p.add_argument("--task", required=True)
+    p.add_argument("--confirm", action="store_true")
+    p.set_defaults(func=cmd_workflow_run, facade_command="workflow.run")
 
     task = sub.add_parser("task", help="Task facade commands")
     task_sub = task.add_subparsers(dest="task_action", required=True)

@@ -454,6 +454,19 @@ def render_commands(model: ReadOnlyProjectModel) -> str:
 def render_actions(data: Mapping[str, Any]) -> str:
     current = data.get("current_task") or {}
     default_task = current.get("ref") or current.get("id") or ""
+    workflow_rows = []
+    for workflow in data.get("workflows") or []:
+        step_titles = [
+            "{} ({})".format(step.get("title", ""), step.get("route", ""))
+            for step in workflow.get("steps") or []
+        ]
+        workflow_rows.append(
+            "<tr><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                escape(workflow.get("label", "")),
+                escape(workflow.get("name", "")),
+                escape(" -> ".join(step_titles)),
+            )
+        )
     action_rows = []
     for action in available_actions():
         read_write = action.get("read_write") or {}
@@ -475,6 +488,22 @@ def render_actions(data: Mapping[str, Any]) -> str:
         '<section class="panel action-panel">',
         "<h2>Write Actions</h2>",
         table(("Action", "Registered Command", "Effect"), action_rows, "No write actions."),
+        "</section>",
+        '<section class="panel action-panel">',
+        "<h2>Task Workflows</h2>",
+        table(("Workflow", "Command", "Step Preview"), workflow_rows, "No workflows."),
+        action_form(
+            "task.prepare_for_codex",
+            [input_field("task", "Task", default_task)],
+        ),
+        action_form(
+            "task.refresh_execution_context",
+            [input_field("task", "Task", default_task)],
+        ),
+        action_form(
+            "task.submit_for_review",
+            [input_field("task", "Task", default_task)],
+        ),
         "</section>",
         '<section class="panel action-panel">',
         "<h2>Task Transition</h2>",

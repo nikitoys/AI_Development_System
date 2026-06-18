@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 302,
+  "revision": 308,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-18T19:39:18Z",
+  "updated_at": "2026-06-18T20:07:12Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -2119,7 +2119,7 @@
       "id": "TASK-032",
       "epic_id": "EPIC-006",
       "title": "WFA-01 Add Task Workflow Automation MVP",
-      "status": "planned",
+      "status": "done",
       "summary": "Add high-level workflow actions for preparing tasks for Codex, refreshing execution context, and submitting tasks for review.",
       "description": "Introduce workflow automation that composes existing registered commands without bypassing validation, audit, generated-output rules, protected-file policy, or owner gates.",
       "priority": 1,
@@ -2180,11 +2180,11 @@
         "Requires approved Evolution Change before execution because workflow behavior and Web action behavior change."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-18T20:07:12Z",
+      "approval_notes": "Task workflow automation MVP accepted. Workflows compose governed commands, require confirmation, stop on blocking failures, and preserve owner gates.",
       "created_at": "2026-06-18T19:36:46Z",
-      "updated_at": "2026-06-18T19:36:46Z",
+      "updated_at": "2026-06-18T20:07:12Z",
       "uid": "tsk_ceea832bf67c",
       "ref": "WFA-01",
       "legacy_id": "TASK-032",

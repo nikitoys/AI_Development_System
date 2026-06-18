@@ -49,6 +49,7 @@ class AictlTests(unittest.TestCase):
         self.assertIn("current.set", names)
         self.assertIn("project.render", names)
         self.assertIn("task.transition", names)
+        self.assertIn("workflow.list", names)
 
     def test_command_describe_human_output(self):
         code, stdout, _run = self.run_main(["command", "describe", "task.transition"])
@@ -57,6 +58,37 @@ class AictlTests(unittest.TestCase):
         self.assertIn("task.transition (write, implemented)", stdout)
         self.assertIn("Transition a Task", stdout)
         self.assertIn("Legacy: python scripts/taskctl.py", stdout)
+
+    def test_workflow_list_json(self):
+        code, stdout, _run = self.run_main(["--json", "workflow", "list"])
+
+        payload = json.loads(stdout)
+        names = [workflow["name"] for workflow in payload["data"]["workflows"]]
+
+        self.assertEqual(code, 0)
+        self.assertIn("task.prepare_for_codex", names)
+        self.assertIn("task.refresh_execution_context", names)
+        self.assertIn("task.submit_for_review", names)
+
+    def test_workflow_run_without_confirm_returns_preview(self):
+        code, stdout, _run = self.run_main(
+            [
+                "--json",
+                "workflow",
+                "run",
+                "task.refresh_execution_context",
+                "--task",
+                "WFA-01",
+            ]
+        )
+
+        payload = json.loads(stdout)
+
+        self.assertEqual(code, 1)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["errors"][0]["code"], "WORKFLOW_CONFIRMATION_REQUIRED")
+        self.assertEqual(payload["data"]["task_ref"], "WFA-01")
+        self.assertTrue(payload["data"]["steps"])
 
     def test_task_list_delegates_with_native_json(self):
         completed = subprocess.CompletedProcess(

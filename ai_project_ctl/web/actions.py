@@ -286,6 +286,13 @@ def _build_codex_prompt_build(fields: Mapping[str, str]) -> list[str]:
     return args
 
 
+def _build_workflow(workflow_name: str) -> Callable[[Mapping[str, str]], list[str]]:
+    def build(fields: Mapping[str, str]) -> list[str]:
+        return ["workflow", "run", workflow_name, "--task", _task_ref(fields), "--confirm"]
+
+    return build
+
+
 def _task_ref(fields: Mapping[str, str]) -> str:
     return _field(fields, "task") or _require_field(fields, "task_id")
 
@@ -351,5 +358,23 @@ ACTIONS: dict[str, WebAction] = {
         command_name="codex.prompt.build",
         label="Build Codex prompt",
         builder=_build_codex_prompt_build,
+    ),
+    "task.prepare_for_codex": WebAction(
+        action_id="task.prepare_for_codex",
+        command_name="task.prepare_for_codex",
+        label="Prepare for Codex",
+        builder=_build_workflow("task.prepare_for_codex"),
+    ),
+    "task.refresh_execution_context": WebAction(
+        action_id="task.refresh_execution_context",
+        command_name="task.refresh_execution_context",
+        label="Refresh execution context",
+        builder=_build_workflow("task.refresh_execution_context"),
+    ),
+    "task.submit_for_review": WebAction(
+        action_id="task.submit_for_review",
+        command_name="task.submit_for_review",
+        label="Submit for review",
+        builder=_build_workflow("task.submit_for_review"),
     ),
 }

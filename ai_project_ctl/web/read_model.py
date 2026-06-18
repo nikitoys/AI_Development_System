@@ -17,6 +17,7 @@ from typing import Any, Mapping, Sequence
 from ai_project_ctl.core.paths import ProjectPaths
 from ai_project_ctl.core.registry import command_describe, command_list
 from ai_project_ctl.core.result import CommandError
+from ai_project_ctl.core.workflows import workflow_list
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[2]
@@ -205,6 +206,7 @@ class ReadOnlyProjectModel:
             "generated": generated,
             "events": events,
             "events_loaded": include_events,
+            "workflows": workflow_list(),
             "review_commands": [
                 command for command in commands if command.get("domain") == "review"
             ],

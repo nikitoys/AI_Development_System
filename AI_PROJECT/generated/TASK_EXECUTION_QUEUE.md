@@ -3,26 +3,21 @@
 
 # Task Execution Queue
 
-Revision: `302`
+Revision: `308`
 
 ## Executable Now
 
-- `WFA-01 (TASK-032)` [planned] `EPIC-006` priority `1` — WFA-01 Add Task Workflow Automation MVP
+- `WFA-02 (TASK-033)` [planned] `EPIC-006` priority `1` — WFA-02 Add Evolution Change Wizard
+- `WFA-03 (TASK-034)` [planned] `EPIC-006` priority `1` — WFA-03 Add Task Creation Wizard
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 
 ## Waiting For Dependencies
 
-- `WFA-02 (TASK-033)` [planned] `EPIC-006` priority `1` — WFA-02 Add Evolution Change Wizard
-  - `dependency_not_done`: depends on WFA-01 (TASK-032) with status planned
-- `WFA-03 (TASK-034)` [planned] `EPIC-006` priority `1` — WFA-03 Add Task Creation Wizard
-  - `dependency_not_done`: depends on WFA-01 (TASK-032) with status planned
 - `WFA-04 (TASK-035)` [planned] `EPIC-006` priority `1` — WFA-04 Add Bulk Task Import UI
   - `dependency_not_done`: depends on WFA-03 (TASK-034) with status planned
 - `WFA-05 (TASK-036)` [planned] `EPIC-006` priority `1` — WFA-05 Add Review And Close Helpers
-  - `dependency_not_done`: depends on WFA-01 (TASK-032) with status planned
   - `dependency_not_done`: depends on WFA-02 (TASK-033) with status planned
 - `WFA-06 (TASK-037)` [planned] `EPIC-006` priority `1` — WFA-06 Documentation Audit And Cleanup
-  - `dependency_not_done`: depends on WFA-01 (TASK-032) with status planned
   - `dependency_not_done`: depends on WFA-02 (TASK-033) with status planned
   - `dependency_not_done`: depends on WFA-03 (TASK-034) with status planned
   - `dependency_not_done`: depends on WFA-04 (TASK-035) with status planned
@@ -65,6 +60,8 @@ Revision: `302`
 - `CTL-13 (TASK-031)` [done] `EPIC-005` priority `1` — CTL-13 Optimize Web Control Center performance
   - `status_not_executable`: status is done
 - `TASK-002` [done] `EPIC-002` priority `1` — Document Skills Layer Roadmap
+  - `status_not_executable`: status is done
+- `WFA-01 (TASK-032)` [done] `EPIC-006` priority `1` — WFA-01 Add Task Workflow Automation MVP
   - `status_not_executable`: status is done
 - `TASK-003` [done] `EPIC-002` priority `1` — Create Clarification Gate Skill
   - `status_not_executable`: status is done

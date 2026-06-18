@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `302`
+Revision: `308`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -557,7 +557,7 @@ Acceptance criteria:
 
 ### WFA-01 (TASK-032) — WFA-01 Add Task Workflow Automation MVP
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_ceea832bf67c`, legacy `TASK-032`, aliases `TASK-032`, local `WFA` / `1`
