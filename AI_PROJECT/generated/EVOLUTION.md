@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `77`
-Changes: `4`
+Revision: `99`
+Changes: `5`
 
 ## Summary
 
 - `accepted`: 3
-- `approved`: 1
+- `approved`: 2
 
 ## Changes
 
@@ -222,3 +222,59 @@ Impact:
 Linked tasks:
 
 - TASK-007
+
+### CHG-005 — Introduce ai_project_ctl core package foundation
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+Project control logic is duplicated across ctl scripts and CTL-04 needs a shared core package foundation before future aictl implementation.
+
+Proposal:
+
+Create a minimal ai_project_ctl core package foundation for shared paths, result, store, events, IDs, locks, validation and transaction primitives without changing existing ctl behavior.
+
+Rationale:
+
+CTL-01 inventory, CTL-02 architecture, and CTL-03 ID allocation strategy require a controlled implementation path before adding shared control-plane code.
+
+Approved by: `human_owner` at `2026-06-18T13:41:39Z`  
+Approval notes: Approved for CTL-04 implementation of ai_project_ctl core package foundation. Existing ctl behavior must remain unchanged.  
+
+Affected areas:
+
+- Project Control Gateway
+- Shared control-plane core
+- Future aictl foundation
+
+Affected files:
+
+- ai_project_ctl/__init__.py
+- ai_project_ctl/core/__init__.py
+- ai_project_ctl/core/paths.py
+- ai_project_ctl/core/result.py
+- ai_project_ctl/core/store.py
+- ai_project_ctl/core/events.py
+- ai_project_ctl/core/ids.py
+- ai_project_ctl/core/locks.py
+- ai_project_ctl/core/validation.py
+- ai_project_ctl/core/transactions.py
+
+Risks:
+
+- Shared core package could accidentally change existing ctl behavior if wrappers are migrated too early.
+- Transaction, lock and event primitives must remain foundation-only until later tasks wire them into ctl scripts.
+
+Impact:
+
+- Provides controlled foundation for CTL-04 and later aictl/control-plane tasks.
+- Does not change existing CLI behavior in this task.
+
+Linked tasks:
+
+- TASK-022

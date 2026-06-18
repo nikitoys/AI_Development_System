@@ -3,47 +3,46 @@
 
 # Task Execution Queue
 
-Revision: `207`
+Revision: `217`
 
 ## Executable Now
 
-- `TASK-022` [planned] `EPIC-005` priority `1` — Task D - Introduce ai_project_ctl core package
+- `CTL-05 (TASK-023)` [planned] `EPIC-005` priority `1` — Task E - Add command registry
+- `CTL-09 (TASK-027)` [planned] `EPIC-005` priority `1` — Task I - Add locking and atomic write protection
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 
 ## Waiting For Dependencies
 
-- `TASK-023` [planned] `EPIC-005` priority `1` — Task E - Add command registry
-  - `dependency_not_done`: depends on TASK-022 with status planned
-- `TASK-024` [planned] `EPIC-005` priority `1` — Task F - Implement unified CLI facade scripts/aictl.py
-  - `dependency_not_done`: depends on TASK-023 with status planned
-- `TASK-025` [planned] `EPIC-005` priority `1` — Task G - Convert old ctl scripts into compatibility wrappers
-  - `dependency_not_done`: depends on TASK-024 with status planned
-- `TASK-026` [planned] `EPIC-005` priority `1` — Task H - Add project doctor command
-  - `dependency_not_done`: depends on TASK-024 with status planned
-- `TASK-027` [planned] `EPIC-005` priority `1` — Task I - Add locking and atomic write protection
-  - `dependency_not_done`: depends on TASK-022 with status planned
-- `TASK-028` [planned] `EPIC-005` priority `1` — Task J - Add read-only local Web Control Center MVP
-  - `dependency_not_done`: depends on TASK-026 with status planned
-  - `dependency_not_done`: depends on TASK-027 with status planned
-- `TASK-029` [planned] `EPIC-005` priority `1` — Task K - Add controlled Web write actions
-  - `dependency_not_done`: depends on TASK-028 with status planned
-- `TASK-030` [planned] `EPIC-005` priority `1` — Task L - Documentation and owner quickstart
-  - `dependency_not_done`: depends on TASK-024 with status planned
-  - `dependency_not_done`: depends on TASK-029 with status planned
+- `CTL-06 (TASK-024)` [planned] `EPIC-005` priority `1` — Task F - Implement unified CLI facade scripts/aictl.py
+  - `dependency_not_done`: depends on CTL-05 (TASK-023) with status planned
+- `CTL-07 (TASK-025)` [planned] `EPIC-005` priority `1` — Task G - Convert old ctl scripts into compatibility wrappers
+  - `dependency_not_done`: depends on CTL-06 (TASK-024) with status planned
+- `CTL-08 (TASK-026)` [planned] `EPIC-005` priority `1` — Task H - Add project doctor command
+  - `dependency_not_done`: depends on CTL-06 (TASK-024) with status planned
+- `CTL-10 (TASK-028)` [planned] `EPIC-005` priority `1` — Task J - Add read-only local Web Control Center MVP
+  - `dependency_not_done`: depends on CTL-08 (TASK-026) with status planned
+  - `dependency_not_done`: depends on CTL-09 (TASK-027) with status planned
+- `CTL-11 (TASK-029)` [planned] `EPIC-005` priority `1` — Task K - Add controlled Web write actions
+  - `dependency_not_done`: depends on CTL-10 (TASK-028) with status planned
+- `CTL-12 (TASK-030)` [planned] `EPIC-005` priority `1` — Task L - Documentation and owner quickstart
+  - `dependency_not_done`: depends on CTL-06 (TASK-024) with status planned
+  - `dependency_not_done`: depends on CTL-11 (TASK-029) with status planned
 
 ## Not Executable Due To Status Or Parent State
 
+- `CTL-01 (TASK-019)` [done] `EPIC-005` priority `1` — Task A - Inventory existing ctl commands and state mutation paths
+  - `status_not_executable`: status is done
 - `TASK-001` [done] `EPIC-001` priority `1` — Write Project Control Usage Guide
   - `status_not_executable`: status is done
-- `TASK-019` [done] `EPIC-005` priority `1` — Task A - Inventory existing ctl commands and state mutation paths
+- `CTL-02 (TASK-020)` [done] `EPIC-005` priority `1` — Task B - Design unified control-plane architecture
   - `status_not_executable`: status is done
 - `TASK-004` [done] `EPIC-001` priority `1` — Implement codexctl prompt package generator
   - `status_not_executable`: status is done
-- `TASK-020` [done] `EPIC-005` priority `1` — Task B - Design unified control-plane architecture
+- `CTL-03 (TASK-021)` [done] `EPIC-005` priority `1` — Task C - Add global ID allocation strategy
   - `status_not_executable`: status is done
 - `TASK-007` [done] `EPIC-001` priority `1` — Record L4 Role-Agent Runtime Architecture
   - `status_not_executable`: status is done
-- `TASK-021` [done] `EPIC-005` priority `1` — Task C - Add global ID allocation strategy
+- `CTL-04 (TASK-022)` [done] `EPIC-005` priority `1` — Task D - Introduce ai_project_ctl core package
   - `status_not_executable`: status is done
 - `TASK-018` [done] `EPIC-001` priority `1` — Fix documentation generated drift
   - `status_not_executable`: status is done

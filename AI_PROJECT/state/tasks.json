@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 207,
+  "revision": 217,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-18T13:27:32Z",
+  "updated_at": "2026-06-18T13:52:16Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -1196,12 +1196,15 @@
       "approved_at": "2026-06-18T06:45:48Z",
       "approval_notes": "Inventory report accepted. Findings are sufficient for control-plane architecture design.",
       "created_at": "2026-06-18T06:19:52Z",
-      "updated_at": "2026-06-18T06:45:48Z",
+      "updated_at": "2026-06-18T13:30:46Z",
       "uid": "tsk_d0e6e78d3c7c",
       "legacy_id": "TASK-019",
       "aliases": [
         "TASK-019"
-      ]
+      ],
+      "epic_key": "CTL",
+      "local_seq": 1,
+      "ref": "CTL-01"
     },
     {
       "id": "TASK-020",
@@ -1264,12 +1267,15 @@
       "approved_at": "2026-06-18T13:10:50Z",
       "approval_notes": "Unified control-plane architecture accepted. Design is sufficient for ID allocation strategy task.",
       "created_at": "2026-06-18T06:20:09Z",
-      "updated_at": "2026-06-18T13:10:50Z",
+      "updated_at": "2026-06-18T13:30:46Z",
       "uid": "tsk_49ec70a8f36e",
       "legacy_id": "TASK-020",
       "aliases": [
         "TASK-020"
-      ]
+      ],
+      "epic_key": "CTL",
+      "local_seq": 2,
+      "ref": "CTL-02"
     },
     {
       "id": "TASK-021",
@@ -1330,18 +1336,21 @@
       "approved_at": "2026-06-18T13:27:32Z",
       "approval_notes": "Global ID allocation strategy accepted. Identity, ref, UID, alias, locking, validation, and parallel allocation rules are sufficient for core package design.",
       "created_at": "2026-06-18T06:20:18Z",
-      "updated_at": "2026-06-18T13:27:32Z",
+      "updated_at": "2026-06-18T13:30:46Z",
       "uid": "tsk_c04df4f0310f",
       "legacy_id": "TASK-021",
       "aliases": [
         "TASK-021"
-      ]
+      ],
+      "epic_key": "CTL",
+      "local_seq": 3,
+      "ref": "CTL-03"
     },
     {
       "id": "TASK-022",
       "epic_id": "EPIC-005",
       "title": "Task D - Introduce ai_project_ctl core package",
-      "status": "planned",
+      "status": "done",
       "summary": "Create shared internal services that future CLI and Web UI both use.",
       "description": "Implement the core control-plane package for store loading/saving, audit events, validation, rendering triggers, result objects, error model, locking, and atomic writes while preserving existing behavior.",
       "priority": 1,
@@ -1399,16 +1408,19 @@
           "reason": "Core package implementation depends on the global ID allocation strategy."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-18T13:52:16Z",
+      "approval_notes": "ai_project_ctl core package foundation accepted. Existing ctl behavior preserved; tests and validation passed.",
       "created_at": "2026-06-18T06:20:28Z",
-      "updated_at": "2026-06-18T06:22:14Z",
+      "updated_at": "2026-06-18T13:52:16Z",
       "uid": "tsk_568bca24b2ff",
       "legacy_id": "TASK-022",
       "aliases": [
         "TASK-022"
-      ]
+      ],
+      "epic_key": "CTL",
+      "local_seq": 4,
+      "ref": "CTL-04"
     },
     {
       "id": "TASK-023",
@@ -1470,12 +1482,15 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-18T06:20:38Z",
-      "updated_at": "2026-06-18T06:22:17Z",
+      "updated_at": "2026-06-18T13:30:46Z",
       "uid": "tsk_05b8a81cf8cd",
       "legacy_id": "TASK-023",
       "aliases": [
         "TASK-023"
-      ]
+      ],
+      "epic_key": "CTL",
+      "local_seq": 5,
+      "ref": "CTL-05"
     },
     {
       "id": "TASK-024",
@@ -1538,12 +1553,15 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-18T06:20:50Z",
-      "updated_at": "2026-06-18T06:22:20Z",
+      "updated_at": "2026-06-18T13:30:46Z",
       "uid": "tsk_fc72e08b34f0",
       "legacy_id": "TASK-024",
       "aliases": [
         "TASK-024"
-      ]
+      ],
+      "epic_key": "CTL",
+      "local_seq": 6,
+      "ref": "CTL-06"
     },
     {
       "id": "TASK-025",
@@ -1611,12 +1629,15 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-18T06:21:01Z",
-      "updated_at": "2026-06-18T06:22:29Z",
+      "updated_at": "2026-06-18T13:30:46Z",
       "uid": "tsk_020a6425c9e0",
       "legacy_id": "TASK-025",
       "aliases": [
         "TASK-025"
-      ]
+      ],
+      "epic_key": "CTL",
+      "local_seq": 7,
+      "ref": "CTL-07"
     },
     {
       "id": "TASK-026",
@@ -1679,12 +1700,15 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-18T06:21:11Z",
-      "updated_at": "2026-06-18T06:22:44Z",
+      "updated_at": "2026-06-18T13:30:46Z",
       "uid": "tsk_5868b6f775a8",
       "legacy_id": "TASK-026",
       "aliases": [
         "TASK-026"
-      ]
+      ],
+      "epic_key": "CTL",
+      "local_seq": 8,
+      "ref": "CTL-08"
     },
     {
       "id": "TASK-027",
@@ -1749,12 +1773,15 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-18T06:21:24Z",
-      "updated_at": "2026-06-18T06:23:05Z",
+      "updated_at": "2026-06-18T13:30:46Z",
       "uid": "tsk_8992616ea198",
       "legacy_id": "TASK-027",
       "aliases": [
         "TASK-027"
-      ]
+      ],
+      "epic_key": "CTL",
+      "local_seq": 9,
+      "ref": "CTL-09"
     },
     {
       "id": "TASK-028",
@@ -1826,12 +1853,15 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-18T06:21:35Z",
-      "updated_at": "2026-06-18T06:23:17Z",
+      "updated_at": "2026-06-18T13:30:46Z",
       "uid": "tsk_1c8f867e1c2c",
       "legacy_id": "TASK-028",
       "aliases": [
         "TASK-028"
-      ]
+      ],
+      "epic_key": "CTL",
+      "local_seq": 10,
+      "ref": "CTL-10"
     },
     {
       "id": "TASK-029",
@@ -1896,12 +1926,15 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-18T06:21:45Z",
-      "updated_at": "2026-06-18T06:23:26Z",
+      "updated_at": "2026-06-18T13:30:46Z",
       "uid": "tsk_9bd489501264",
       "legacy_id": "TASK-029",
       "aliases": [
         "TASK-029"
-      ]
+      ],
+      "epic_key": "CTL",
+      "local_seq": 11,
+      "ref": "CTL-11"
     },
     {
       "id": "TASK-030",
@@ -1977,12 +2010,15 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-18T06:21:54Z",
-      "updated_at": "2026-06-18T06:23:34Z",
+      "updated_at": "2026-06-18T13:30:46Z",
       "uid": "tsk_235fab1d1516",
       "legacy_id": "TASK-030",
       "aliases": [
         "TASK-030"
-      ]
+      ],
+      "epic_key": "CTL",
+      "local_seq": 12,
+      "ref": "CTL-12"
     }
   ]
 }
