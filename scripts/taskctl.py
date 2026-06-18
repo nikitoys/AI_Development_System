@@ -18,6 +18,7 @@ taskctl.py — strict CLI gateway for AI_PROJECT/state/tasks.json
   AI_PROJECT/generated/CODEX_TASKS.md
   AI_PROJECT/generated/CODEX_CURRENT.md
   AI_PROJECT/generated/CODEX_PROMPT.md
+  AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md
 
 Примеры:
 
@@ -47,8 +48,10 @@ taskctl.py — strict CLI gateway for AI_PROJECT/state/tasks.json
 """
 
 import argparse
+import copy
 import json
 import os
+import re
 import sys
 import tempfile
 import uuid
@@ -58,6 +61,9 @@ from pathlib import Path
 
 TASK_SCHEMA_VERSION = 1
 PLAN_SCHEMA_VERSION = 1
+TASK_UID_PREFIX = "tsk_"
+TASK_REF_RE = re.compile(r"^([A-Z][A-Z0-9]{1,11})-(\d+)$")
+TASK_REF_SUFFIX_WIDTH = 2
 
 TASK_STATUSES = {
     "proposed",
@@ -97,6 +103,10 @@ CURRENT_ALLOWED_STATUSES = {
     "in_review",
     "changes_requested",
 }
+EXECUTABLE_CANDIDATE_STATUSES = {"planned", "ready", "changes_requested"}
+PARENT_EXECUTABLE_EPIC_STATUSES = {"planned", "active"}
+DEPENDENCY_TYPES = {"hard"}
+DEPENDENCY_SATISFIED_STATUS = "done"
 
 VERIFICATION_MODES = {"none", "manual", "light", "standard", "strict"}
 
@@ -160,6 +170,10 @@ def generated_current_path(root):
 
 def generated_prompt_path(root):
     return generated_dir(root) / "CODEX_PROMPT.md"
+
+
+def generated_execution_queue_path(root):
+    return generated_dir(root) / "TASK_EXECUTION_QUEUE.md"
 
 
 def ensure_project_dirs(root):
@@ -294,6 +308,18 @@ def require_string_list(value, path, errors):
             errors.append("{}[{}] must be a string".format(path, i))
 
 
+def require_non_empty_string_list(value, path, errors):
+    if not isinstance(value, list):
+        errors.append("{} must be a list".format(path))
+        return
+
+    for i, item in enumerate(value):
+        if not isinstance(item, str):
+            errors.append("{}[{}] must be a string".format(path, i))
+        elif not item.strip():
+            errors.append("{}[{}] must not be empty".format(path, i))
+
+
 def find_item(items, item_id, required=True):
     for item in items:
         if item.get("id") == item_id:
@@ -303,6 +329,245 @@ def find_item(items, item_id, required=True):
         raise TaskError("ENTITY_NOT_FOUND: {}".format(item_id))
 
     return None
+
+
+def task_reference_values(task):
+    for field in ["id", "uid", "ref", "legacy_id"]:
+        value = task.get(field)
+
+        if isinstance(value, str) and value.strip():
+            yield value
+
+    aliases = task.get("aliases", [])
+
+    if isinstance(aliases, list):
+        for alias in aliases:
+            if isinstance(alias, str) and alias.strip():
+                yield alias
+
+
+def task_identity_summary(task):
+    parts = ["id={}".format(task.get("id"))]
+
+    if task.get("ref"):
+        parts.append("ref={}".format(task.get("ref")))
+
+    if task.get("uid"):
+        parts.append("uid={}".format(task.get("uid")))
+
+    if task.get("legacy_id"):
+        parts.append("legacy_id={}".format(task.get("legacy_id")))
+
+    if task.get("aliases"):
+        parts.append("aliases=[{}]".format(", ".join(task.get("aliases", []))))
+
+    return ", ".join(parts)
+
+
+def validate_unique_task_references(tasks):
+    errors = []
+    owners = {}
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+
+        task_id = task.get("id")
+        seen_for_task = set()
+
+        for value in task_reference_values(task):
+            if value in seen_for_task:
+                continue
+
+            seen_for_task.add(value)
+
+            if value in owners and owners[value] != task_id:
+                errors.append(
+                    "duplicate task reference value: {} used by {} and {}".format(
+                        value,
+                        owners[value],
+                        task_id,
+                    )
+                )
+                continue
+
+            owners[value] = task_id
+
+    return errors
+
+
+def resolve_task_ref(tasks, task_ref):
+    if not isinstance(task_ref, str) or not task_ref.strip():
+        raise TaskError("TASK_REF_EMPTY")
+
+    ref = task_ref.strip()
+    matches = []
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+
+        if any(value == ref for value in task_reference_values(task)):
+            matches.append(task)
+
+    if not matches:
+        raise TaskError("TASK_REF_NOT_FOUND: {}".format(ref))
+
+    if len(matches) > 1:
+        details = "\n- " + "\n- ".join(task_identity_summary(task) for task in matches)
+        raise TaskError("AMBIGUOUS_TASK_REF: {}{}".format(ref, details))
+
+    return matches[0]
+
+
+def task_id_map(tasks):
+    return {
+        task.get("id"): task
+        for task in tasks
+        if isinstance(task, dict) and isinstance(task.get("id"), str) and task.get("id")
+    }
+
+
+def task_dependency_list(task):
+    deps = task.get("depends_on", [])
+    return deps if isinstance(deps, list) else []
+
+
+def hard_dependency_edges(tasks):
+    tasks_by_id = task_id_map(tasks)
+    edges = {}
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+
+        task_id = task.get("id")
+
+        if not task_id:
+            continue
+
+        edges.setdefault(task_id, [])
+
+        for dep in task_dependency_list(task):
+            if not isinstance(dep, dict):
+                continue
+
+            dep_task_id = dep.get("task_id")
+
+            if dep.get("type") == "hard" and dep_task_id in tasks_by_id:
+                edges[task_id].append(dep_task_id)
+
+    return edges
+
+
+def find_hard_dependency_cycle(tasks):
+    edges = hard_dependency_edges(tasks)
+    visiting = set()
+    visited = set()
+    stack = []
+
+    def visit(task_id):
+        if task_id in visiting:
+            start = stack.index(task_id)
+            return stack[start:] + [task_id]
+
+        if task_id in visited:
+            return None
+
+        visiting.add(task_id)
+        stack.append(task_id)
+
+        for dep_task_id in sorted(edges.get(task_id, [])):
+            cycle = visit(dep_task_id)
+
+            if cycle:
+                return cycle
+
+        stack.pop()
+        visiting.remove(task_id)
+        visited.add(task_id)
+        return None
+
+    for task_id in sorted(edges):
+        cycle = visit(task_id)
+
+        if cycle:
+            return cycle
+
+    return None
+
+
+def format_task_id_path(task_ids, tasks_by_id):
+    labels = []
+
+    for task_id in task_ids:
+        task = tasks_by_id.get(task_id) or {"id": task_id}
+        labels.append(task_display_label(task))
+
+    return " -> ".join(labels)
+
+
+def validate_task_dependencies(tasks):
+    errors = []
+    tasks_by_id = task_id_map(tasks)
+
+    for i, task in enumerate(tasks):
+        if not isinstance(task, dict):
+            continue
+
+        path = "tasks[{}]".format(i)
+        task_id = task.get("id")
+
+        if "depends_on" not in task:
+            continue
+
+        deps = task.get("depends_on")
+
+        if not isinstance(deps, list):
+            errors.append("{}.depends_on must be a list".format(path))
+            continue
+
+        seen = set()
+
+        for j, dep in enumerate(deps):
+            dep_path = "{}.depends_on[{}]".format(path, j)
+
+            if not isinstance(dep, dict):
+                errors.append("{} must be an object".format(dep_path))
+                continue
+
+            dep_task_id = dep.get("task_id")
+
+            if not isinstance(dep_task_id, str) or not dep_task_id.strip():
+                errors.append("{}.task_id must be a non-empty string".format(dep_path))
+            elif dep_task_id not in tasks_by_id:
+                errors.append("{}.task_id references missing task: {}".format(dep_path, dep_task_id))
+            elif dep_task_id == task_id:
+                errors.append("{}.task_id must not reference itself: {}".format(dep_path, dep_task_id))
+
+            if isinstance(dep_task_id, str) and dep_task_id.strip():
+                if dep_task_id in seen:
+                    errors.append("duplicate dependency for task {}: {}".format(task_id, dep_task_id))
+                else:
+                    seen.add(dep_task_id)
+
+            dep_type = dep.get("type")
+
+            if dep_type not in DEPENDENCY_TYPES:
+                errors.append("{}.type must be hard".format(dep_path))
+
+            if "reason" in dep and not isinstance(dep.get("reason"), str):
+                errors.append("{}.reason must be a string".format(dep_path))
+
+            if "created_at" in dep and not isinstance(dep.get("created_at"), str):
+                errors.append("{}.created_at must be a string".format(dep_path))
+
+    cycle = find_hard_dependency_cycle(tasks)
+
+    if cycle:
+        errors.append("hard dependency cycle: {}".format(format_task_id_path(cycle, tasks_by_id)))
+
+    return errors
 
 
 def next_id(prefix, items):
@@ -331,6 +596,350 @@ def next_order(items, parent_key=None, parent_id=None):
         return 1
 
     return max(int(x.get("order", 0)) for x in selected) + 1
+
+
+def generate_task_uid(tasks):
+    existing = {
+        task.get("uid")
+        for task in tasks
+        if isinstance(task, dict) and isinstance(task.get("uid"), str)
+    }
+
+    while True:
+        uid = TASK_UID_PREFIX + uuid.uuid4().hex[:12]
+
+        if uid not in existing:
+            return uid
+
+
+def format_task_ref(epic_key, local_seq):
+    return "{}-{:0{}d}".format(epic_key, local_seq, TASK_REF_SUFFIX_WIDTH)
+
+
+def task_ref_sequence(value, epic_key):
+    if not isinstance(value, str):
+        return None
+
+    match = TASK_REF_RE.fullmatch(value.strip())
+
+    if not match:
+        return None
+
+    if match.group(1) != epic_key:
+        return None
+
+    return int(match.group(2))
+
+
+def task_ref_sequences_in_text(value, epic_key):
+    if not isinstance(value, str) or not epic_key:
+        return set()
+
+    pattern = re.compile(r"(?<![A-Z0-9]){}-(\d+)(?![A-Z0-9])".format(re.escape(epic_key)))
+    return {int(match.group(1)) for match in pattern.finditer(value)}
+
+
+def used_local_sequences(tasks, epic_id, epic_key):
+    used = set()
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+
+        local_seq = task.get("local_seq")
+
+        if task.get("epic_key") == epic_key and isinstance(local_seq, int) and not isinstance(local_seq, bool) and local_seq > 0:
+            used.add(local_seq)
+
+        ref_seq = task_ref_sequence(task.get("ref"), epic_key)
+
+        if ref_seq:
+            used.add(ref_seq)
+
+        if task.get("epic_id") == epic_id:
+            used.update(task_ref_sequences_in_text(task.get("title"), epic_key))
+            used.update(task_ref_sequences_in_text(task.get("summary"), epic_key))
+
+            for note in task.get("notes", []):
+                used.update(task_ref_sequences_in_text(note, epic_key))
+
+    return used
+
+
+def allocate_local_seq(tasks, epic_id, epic_key):
+    used = used_local_sequences(tasks, epic_id, epic_key)
+    return max(used or {0}) + 1
+
+
+IDENTITY_MIGRATION_FIELDS = [
+    "uid",
+    "legacy_id",
+    "aliases",
+    "epic_key",
+    "local_seq",
+    "ref",
+]
+
+
+def task_identity_field_changes(before, after):
+    fields = {}
+
+    for field in IDENTITY_MIGRATION_FIELDS:
+        if before.get(field) != after.get(field):
+            fields[field] = {
+                "before": before.get(field),
+                "after": after.get(field),
+            }
+
+    return fields
+
+
+def plan_epic_key_map(plan):
+    return {
+        epic.get("id"): epic.get("key")
+        for epic in plan_epics(plan)
+        if isinstance(epic, dict) and isinstance(epic.get("id"), str)
+    }
+
+
+def validate_identity_migration_preconditions(state, plan):
+    errors = []
+    epic_keys = plan_epic_key_map(plan)
+    order_by_epic = {}
+
+    for task in state.get("tasks", []):
+        if not isinstance(task, dict):
+            continue
+
+        task_id = task.get("id")
+        epic_id = task.get("epic_id")
+        epic_key = epic_keys.get(epic_id)
+        order = task.get("order")
+
+        if epic_key:
+            if not isinstance(order, int) or isinstance(order, bool) or order < 1:
+                errors.append(
+                    "{} cannot receive deterministic ref for epic {}/{}: order must be positive integer".format(
+                        task_id,
+                        epic_id,
+                        epic_key,
+                    )
+                )
+                continue
+
+            epic_orders = order_by_epic.setdefault(epic_id, {})
+
+            if order in epic_orders:
+                errors.append(
+                    "duplicate task order in epic {}/{}: {} used by {} and {}".format(
+                        epic_id,
+                        epic_key,
+                        order,
+                        epic_orders[order],
+                        task_id,
+                    )
+                )
+            else:
+                epic_orders[order] = task_id
+
+            expected_ref = format_task_ref(epic_key, order)
+
+            if "epic_key" in task and task.get("epic_key") != epic_key:
+                errors.append(
+                    "{} existing epic_key must be {} for parent epic {}: {}".format(
+                        task_id,
+                        epic_key,
+                        epic_id,
+                        task.get("epic_key"),
+                    )
+                )
+
+            if "local_seq" in task and task.get("local_seq") != order:
+                errors.append(
+                    "{} existing local_seq must match order {}: {}".format(
+                        task_id,
+                        order,
+                        task.get("local_seq"),
+                    )
+                )
+
+            if "ref" in task and task.get("ref") != expected_ref:
+                errors.append(
+                    "{} existing ref must be {} from epic key/order: {}".format(
+                        task_id,
+                        expected_ref,
+                        task.get("ref"),
+                    )
+                )
+        elif any(field in task for field in ["epic_key", "local_seq", "ref"]):
+            errors.append(
+                "{} belongs to unkeyed epic {} and must not already carry epic_key/local_seq/ref".format(
+                    task_id,
+                    epic_id,
+                )
+            )
+
+    return errors
+
+
+def validate_migrated_identity_state(state, plan):
+    errors = validate_tasks(state, plan=plan, check_plan=True)
+    tasks = state.get("tasks", [])
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+
+        legacy_id = task.get("legacy_id")
+
+        if not legacy_id:
+            continue
+
+        try:
+            resolved = resolve_task_ref(tasks, legacy_id)
+        except TaskError as exc:
+            errors.append("{} legacy_id is not resolvable: {}".format(task.get("id"), exc))
+            continue
+
+        if resolved.get("id") != task.get("id"):
+            errors.append(
+                "{} legacy_id resolves to {} instead of itself".format(
+                    task.get("id"),
+                    resolved.get("id"),
+                )
+            )
+
+    return errors
+
+
+def require_valid_migrated_identity_state(state, plan):
+    errors = validate_migrated_identity_state(state, plan)
+
+    if errors:
+        raise TaskError("IDENTITY_MIGRATION_VALIDATION_FAILED:\n- " + "\n- ".join(errors))
+
+
+def apply_identity_migration(state, plan):
+    precondition_errors = validate_identity_migration_preconditions(state, plan)
+
+    if precondition_errors:
+        raise TaskError("IDENTITY_MIGRATION_UNSAFE:\n- " + "\n- ".join(precondition_errors))
+
+    epic_keys = plan_epic_key_map(plan)
+    tasks = state.get("tasks", [])
+    now = utc_now()
+    changes = []
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+
+        before = copy.deepcopy(task)
+        task_id = task.get("id")
+
+        if not task.get("uid"):
+            task["uid"] = generate_task_uid(tasks)
+
+        if not task.get("legacy_id"):
+            task["legacy_id"] = task_id
+
+        aliases = task.get("aliases")
+
+        if aliases is None:
+            aliases = []
+        else:
+            aliases = list(aliases)
+
+        if task_id not in aliases:
+            aliases.append(task_id)
+
+        task["aliases"] = aliases
+
+        epic_key = epic_keys.get(task.get("epic_id"))
+
+        if epic_key:
+            local_seq = task.get("order")
+            task["epic_key"] = epic_key
+            task["local_seq"] = local_seq
+            task["ref"] = format_task_ref(epic_key, local_seq)
+
+        fields = task_identity_field_changes(before, task)
+
+        if fields:
+            task["updated_at"] = now
+            changes.append(
+                {
+                    "id": task_id,
+                    "before_label": task_display_label(before),
+                    "after_label": task_display_label(task),
+                    "fields": fields,
+                }
+            )
+
+    require_valid_migrated_identity_state(state, plan)
+    return changes
+
+
+def identity_migration_report(changes, dry_run=False):
+    lines = []
+    lines.append("Migration: identity")
+    lines.append("Mode: {}".format("dry-run" if dry_run else "apply"))
+    lines.append("Changed tasks: {}".format(len(changes)))
+
+    if not changes:
+        lines.append("No identity changes needed.")
+        return "\n".join(lines)
+
+    for change in changes:
+        rendered_fields = []
+
+        for field in IDENTITY_MIGRATION_FIELDS:
+            if field not in change.get("fields", {}):
+                continue
+
+            field_change = change["fields"][field]
+            rendered_fields.append(
+                "{}: {} -> {}".format(
+                    field,
+                    json.dumps(field_change.get("before"), ensure_ascii=False),
+                    json.dumps(field_change.get("after"), ensure_ascii=False),
+                )
+            )
+
+        lines.append(
+            "- {}: {}".format(
+                change.get("id"),
+                "; ".join(rendered_fields),
+            )
+        )
+
+    return "\n".join(lines)
+
+
+def task_display_label(task):
+    ref = task.get("ref")
+    task_id = task.get("id")
+
+    if ref:
+        return "{} ({})".format(ref, task_id)
+
+    return task_id
+
+
+def task_epic_label(task, plan=None):
+    epic_id = task.get("epic_id")
+    epic_key = task.get("epic_key")
+
+    if not epic_key and plan:
+        epic = find_plan_epic(plan, epic_id)
+
+        if epic:
+            epic_key = epic.get("key")
+
+    if epic_key:
+        return "{}/{}".format(epic_id, epic_key)
+
+    return epic_id
 
 
 def plan_epics(plan):
@@ -363,6 +972,160 @@ def find_plan_initiative(plan, initiative_id):
             return initiative
 
     return None
+
+
+def task_execution_sort_key(task, plan=None):
+    epic = find_plan_epic(plan, task.get("epic_id")) if plan else None
+    priority = task.get("priority") if isinstance(task.get("priority"), int) else 999999
+    epic_order = epic.get("order") if epic and isinstance(epic.get("order"), int) else 999999
+    local_or_task_order = task.get("local_seq")
+
+    if not isinstance(local_or_task_order, int) or isinstance(local_or_task_order, bool):
+        local_or_task_order = task.get("order") if isinstance(task.get("order"), int) else 999999
+
+    ref_or_id = task.get("ref") or task.get("id") or ""
+    uid_or_id = task.get("uid") or task.get("id") or ""
+
+    return (priority, epic_order, local_or_task_order, ref_or_id, uid_or_id)
+
+
+def sort_execution_tasks(tasks, plan=None):
+    return sorted(tasks, key=lambda task: task_execution_sort_key(task, plan=plan))
+
+
+def task_dependency_blockers(task, tasks):
+    blockers = []
+    tasks_by_id = task_id_map(tasks)
+
+    for dep in task_dependency_list(task):
+        if not isinstance(dep, dict) or dep.get("type") != "hard":
+            continue
+
+        dep_task_id = dep.get("task_id")
+        dep_task = tasks_by_id.get(dep_task_id)
+
+        if dep_task is None:
+            blockers.append(
+                {
+                    "code": "dependency_missing",
+                    "dependency_id": dep_task_id,
+                    "detail": "depends on missing task {}".format(dep_task_id),
+                }
+            )
+            continue
+
+        if dep_task.get("status") != DEPENDENCY_SATISFIED_STATUS:
+            blockers.append(
+                {
+                    "code": "dependency_not_done",
+                    "dependency_id": dep_task_id,
+                    "detail": "depends on {} with status {}".format(
+                        task_display_label(dep_task),
+                        dep_task.get("status"),
+                    ),
+                }
+            )
+
+    return blockers
+
+
+def ensure_task_dependencies_satisfied(state, task):
+    blockers = task_dependency_blockers(task, state.get("tasks", []))
+
+    if not blockers:
+        return
+
+    blocker = blockers[0]
+
+    if blocker["code"] == "dependency_missing":
+        raise TaskError(
+            "TASK_DEPENDENCY_MISSING: {} depends on {}".format(
+                task_display_label(task),
+                blocker.get("dependency_id"),
+            )
+        )
+
+    raise TaskError(
+        "TASK_DEPENDENCY_NOT_DONE: {} depends on {}".format(
+            task_display_label(task),
+            blocker.get("dependency_id"),
+        )
+    )
+
+
+def task_executable_reasons(task, state, plan=None):
+    reasons = []
+    status = task.get("status")
+
+    if status not in EXECUTABLE_CANDIDATE_STATUSES:
+        reasons.append(
+            {
+                "code": "status_not_executable",
+                "detail": "status is {}".format(status),
+            }
+        )
+
+    epic = find_plan_epic(plan, task.get("epic_id")) if plan else None
+
+    if epic is None:
+        reasons.append(
+            {
+                "code": "parent_epic_not_executable",
+                "detail": "parent epic missing: {}".format(task.get("epic_id")),
+            }
+        )
+    elif epic.get("status") not in PARENT_EXECUTABLE_EPIC_STATUSES:
+        reasons.append(
+            {
+                "code": "parent_epic_not_executable",
+                "detail": "parent epic {} status is {}".format(epic.get("id"), epic.get("status")),
+            }
+        )
+    else:
+        initiative = find_plan_initiative(plan, epic.get("initiative_id")) if plan else None
+
+        if initiative and initiative.get("status") == "archived":
+            reasons.append(
+                {
+                    "code": "parent_epic_not_executable",
+                    "detail": "parent initiative {} is archived".format(initiative.get("id")),
+                }
+            )
+
+    reasons.extend(task_dependency_blockers(task, state.get("tasks", [])))
+    return reasons
+
+
+def task_queue_entry(task, state, plan=None):
+    reasons = task_executable_reasons(task, state, plan=plan)
+
+    return {
+        "id": task.get("id"),
+        "ref": task.get("ref"),
+        "uid": task.get("uid"),
+        "legacy_id": task.get("legacy_id"),
+        "title": task.get("title"),
+        "status": task.get("status"),
+        "epic_id": task.get("epic_id"),
+        "priority": task.get("priority"),
+        "order": task.get("order"),
+        "local_seq": task.get("local_seq"),
+        "executable": not reasons,
+        "reasons": reasons,
+    }
+
+
+def build_execution_queue(state, plan=None):
+    entries = [
+        task_queue_entry(task, state, plan=plan)
+        for task in sort_execution_tasks(state.get("tasks", []), plan=plan)
+    ]
+
+    return entries
+
+
+def queue_entry_has_reason(entry, codes):
+    return any(reason.get("code") in codes for reason in entry.get("reasons", []))
 
 
 def validate_plan_refs_for_tasks(state, plan):
@@ -459,6 +1222,10 @@ def validate_tasks(state, plan=None, check_plan=True):
         tasks = []
 
     task_ids = set()
+    task_uids = {}
+    task_refs = {}
+    task_aliases = {}
+    task_local_seqs = {}
 
     for i, task in enumerate(tasks):
         path = "tasks[{}]".format(i)
@@ -492,6 +1259,9 @@ def validate_tasks(state, plan=None, check_plan=True):
             errors,
         )
 
+        if not isinstance(task, dict):
+            continue
+
         task_id = task.get("id")
 
         if task_id in task_ids:
@@ -524,9 +1294,106 @@ def validate_tasks(state, plan=None, check_plan=True):
         for field in TASK_LIST_FIELDS:
             require_string_list(task.get(field), path + "." + field, errors)
 
+        if "uid" in task:
+            uid = task.get("uid")
+            require_string(uid, path + ".uid", errors, allow_empty=False)
+
+            if isinstance(uid, str) and uid.strip():
+                if uid in task_uids:
+                    errors.append("duplicate task uid: {} used by {} and {}".format(uid, task_uids[uid], task_id))
+                else:
+                    task_uids[uid] = task_id
+
+        if "ref" in task:
+            ref = task.get("ref")
+            require_string(ref, path + ".ref", errors, allow_empty=False)
+
+            if isinstance(ref, str) and ref.strip():
+                if ref in task_refs:
+                    errors.append("duplicate task ref: {} used by {} and {}".format(ref, task_refs[ref], task_id))
+                else:
+                    task_refs[ref] = task_id
+
+        if "legacy_id" in task:
+            require_string(task.get("legacy_id"), path + ".legacy_id", errors, allow_empty=False)
+
+        if "aliases" in task:
+            aliases = task.get("aliases")
+            require_non_empty_string_list(aliases, path + ".aliases", errors)
+
+            if isinstance(aliases, list):
+                for alias in aliases:
+                    if not isinstance(alias, str) or not alias.strip():
+                        continue
+
+                    if alias in task_aliases:
+                        errors.append(
+                            "duplicate task alias: {} used by {} and {}".format(
+                                alias,
+                                task_aliases[alias],
+                                task_id,
+                            )
+                        )
+                    else:
+                        task_aliases[alias] = task_id
+
+        epic_key = task.get("epic_key")
+
+        if "epic_key" in task:
+            require_string(epic_key, path + ".epic_key", errors, allow_empty=False)
+
+            if check_plan and plan:
+                epic = find_plan_epic(plan, task.get("epic_id"))
+                expected_key = epic.get("key") if epic else None
+
+                if epic and expected_key != epic_key:
+                    errors.append(
+                        "{}.epic_key must match parent epic key {}: {}".format(
+                            path,
+                            expected_key,
+                            epic_key,
+                        )
+                    )
+
+        local_seq = task.get("local_seq")
+        local_seq_valid = True
+
+        if "local_seq" in task:
+            if not isinstance(local_seq, int) or isinstance(local_seq, bool) or local_seq < 1:
+                errors.append("{}.local_seq must be a positive integer".format(path))
+                local_seq_valid = False
+
+            if "epic_key" not in task:
+                errors.append("{}.local_seq requires epic_key".format(path))
+                local_seq_valid = False
+
+        if "epic_key" in task and "local_seq" in task and local_seq_valid:
+            key = (epic_key, local_seq)
+
+            if key in task_local_seqs:
+                errors.append(
+                    "duplicate task local_seq for epic_key {}: {} used by {} and {}".format(
+                        epic_key,
+                        local_seq,
+                        task_local_seqs[key],
+                        task_id,
+                    )
+                )
+            else:
+                task_local_seqs[key] = task_id
+
+        if "ref" in task and "epic_key" in task and "local_seq" in task and local_seq_valid:
+            expected_ref = format_task_ref(epic_key, local_seq)
+
+            if task.get("ref") != expected_ref:
+                errors.append("{}.ref must be {} for epic_key/local_seq".format(path, expected_ref))
+
         if task.get("status") == "approved":
             if not task.get("approved_by") or not task.get("approved_at"):
                 errors.append("{} approved task must have approved_by and approved_at".format(path))
+
+    errors.extend(validate_unique_task_references(tasks))
+    errors.extend(validate_task_dependencies(tasks))
 
     if current_task_id:
         current = find_item(tasks, current_task_id, required=False)
@@ -647,11 +1514,28 @@ def render_tasks_markdown(state):
 
         for task in grouped[epic_id]:
             marker = " ⭐" if task.get("id") == state.get("current_task_id") else ""
-            lines.append("### {} — {}{}".format(task.get("id"), task.get("title"), marker))
+            lines.append("### {} — {}{}".format(task_display_label(task), task.get("title"), marker))
             lines.append("")
-            lines.append("Status: `{}`  ".format(task.get("status")))
-            lines.append("Priority: `{}`  ".format(task.get("priority")))
-            lines.append("Verification: `{}`  ".format(task.get("verification_mode")))
+            lines.append("Status: `{}`".format(task.get("status")))
+            lines.append("Priority: `{}`".format(task.get("priority")))
+            lines.append("Verification: `{}`".format(task.get("verification_mode")))
+
+            identity = []
+
+            if task.get("uid"):
+                identity.append("uid `{}`".format(task.get("uid")))
+
+            if task.get("legacy_id"):
+                identity.append("legacy `{}`".format(task.get("legacy_id")))
+
+            if task.get("aliases"):
+                identity.append("aliases `{}`".format("`, `".join(task.get("aliases", []))))
+
+            if task.get("epic_key") and task.get("local_seq"):
+                identity.append("local `{}` / `{}`".format(task.get("epic_key"), task.get("local_seq")))
+
+            if identity:
+                lines.append("Identity: {}".format(", ".join(identity)))
 
             if task.get("summary"):
                 lines.append("")
@@ -696,10 +1580,26 @@ def render_current_markdown(state):
 
     task = find_item(state.get("tasks", []), current_task_id)
 
-    lines.append("Task: `{}` — **{}**".format(task.get("id"), task.get("title")))
+    lines.append("Task: `{}` — **{}**".format(task_display_label(task), task.get("title")))
     lines.append("Epic: `{}`".format(task.get("epic_id")))
     lines.append("Status: `{}`".format(task.get("status")))
     lines.append("Verification: `{}`".format(task.get("verification_mode")))
+
+    if task.get("ref"):
+        lines.append("Ref: `{}`".format(task.get("ref")))
+
+    if task.get("uid"):
+        lines.append("UID: `{}`".format(task.get("uid")))
+
+    if task.get("legacy_id"):
+        lines.append("Legacy ID: `{}`".format(task.get("legacy_id")))
+
+    if task.get("aliases"):
+        lines.append("Aliases: `{}`".format("`, `".join(task.get("aliases", []))))
+
+    if task.get("epic_key") and task.get("local_seq"):
+        lines.append("Epic Key / Local Seq: `{}` / `{}`".format(task.get("epic_key"), task.get("local_seq")))
+
     lines.append("")
 
     lines.append("## Prompt Control Fields")
@@ -762,10 +1662,80 @@ def render_current_markdown(state):
     return "\n".join(lines).rstrip() + "\n"
 
 
+def queue_entry_label(entry):
+    if entry.get("ref"):
+        return "{} ({})".format(entry.get("ref"), entry.get("id"))
+
+    return entry.get("id") or "-"
+
+
+def append_queue_entries(lines, entries, empty_text, include_reasons=False):
+    if not entries:
+        lines.append(empty_text)
+        lines.append("")
+        return
+
+    for entry in entries:
+        lines.append(
+            "- `{}` [{}] `{}` priority `{}` — {}".format(
+                queue_entry_label(entry),
+                entry.get("status"),
+                entry.get("epic_id"),
+                entry.get("priority"),
+                entry.get("title"),
+            )
+        )
+
+        if include_reasons:
+            for reason in entry.get("reasons", []):
+                lines.append("  - `{}`: {}".format(reason.get("code"), reason.get("detail")))
+
+    lines.append("")
+
+
+def render_execution_queue_markdown(state, plan=None):
+    entries = build_execution_queue(state, plan=plan)
+    executable = [entry for entry in entries if entry.get("executable")]
+    waiting = [
+        entry
+        for entry in entries
+        if not entry.get("executable")
+        and not queue_entry_has_reason(entry, {"status_not_executable", "parent_epic_not_executable"})
+        and queue_entry_has_reason(entry, {"dependency_not_done", "dependency_missing"})
+    ]
+    not_executable = [
+        entry
+        for entry in entries
+        if not entry.get("executable")
+        and queue_entry_has_reason(entry, {"status_not_executable", "parent_epic_not_executable"})
+    ]
+
+    lines = []
+    lines.append("<!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->")
+    lines.append("<!-- Source: AI_PROJECT/state/tasks.json -->")
+    lines.append("")
+    lines.append("# Task Execution Queue")
+    lines.append("")
+    lines.append("Revision: `{}`".format(state.get("revision", 0)))
+    lines.append("")
+    lines.append("## Executable Now")
+    lines.append("")
+    append_queue_entries(lines, executable, "_No executable tasks._")
+    lines.append("## Waiting For Dependencies")
+    lines.append("")
+    append_queue_entries(lines, waiting, "_No tasks waiting only on dependencies._", include_reasons=True)
+    lines.append("## Not Executable Due To Status Or Parent State")
+    lines.append("")
+    append_queue_entries(lines, not_executable, "_No tasks blocked by status or parent state._", include_reasons=True)
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
 def render_task_outputs(root, state, plan=None, check_plan=True):
     require_valid_tasks(state, plan=plan, check_plan=check_plan)
     atomic_write_text(generated_tasks_path(root), render_tasks_markdown(state))
     atomic_write_text(generated_current_path(root), render_current_markdown(state))
+    atomic_write_text(generated_execution_queue_path(root), render_execution_queue_markdown(state, plan=plan))
 
 
 def build_prompt_text(state, task, plan=None):
@@ -783,6 +1753,22 @@ def build_prompt_text(state, task, plan=None):
     lines.append("")
     lines.append("Repository: current repository")
     lines.append("Task ID: {}".format(task.get("id")))
+
+    if task.get("ref"):
+        lines.append("Task Ref: {}".format(task.get("ref")))
+
+    if task.get("uid"):
+        lines.append("Task UID: {}".format(task.get("uid")))
+
+    if task.get("legacy_id"):
+        lines.append("Legacy Task ID: {}".format(task.get("legacy_id")))
+
+    if task.get("aliases"):
+        lines.append("Task Aliases: {}".format(", ".join(task.get("aliases", []))))
+
+    if task.get("epic_key") and task.get("local_seq"):
+        lines.append("Task Epic Key / Local Seq: {} / {}".format(task.get("epic_key"), task.get("local_seq")))
+
     lines.append("Task Title: {}".format(task.get("title")))
     lines.append("Task Status: {}".format(task.get("status")))
     lines.append("Verification Mode: {}".format(task.get("verification_mode")))
@@ -866,7 +1852,7 @@ def build_prompt_text(state, task, plan=None):
     return "\n".join(lines).rstrip() + "\n"
 
 
-def mutate(args, command, entity_type, entity_id, payload, mutator, check_plan=True):
+def mutate(args, command, entity_type, entity_id, payload, mutator, check_plan=True, emit=True):
     root = repo_root(args)
 
     ensure_project_dirs(root)
@@ -904,10 +1890,19 @@ def mutate(args, command, entity_type, entity_id, payload, mutator, check_plan=T
 
     render_task_outputs(root, state, plan=plan, check_plan=check_plan)
 
-    print("OK: {} revision {} -> {}".format(command, revision_before, state["revision"]))
+    if emit:
+        print("OK: {} revision {} -> {}".format(command, revision_before, state["revision"]))
 
-    if result.get("message"):
+    if emit and result.get("message"):
         print(result["message"])
+
+    return {
+        "revision_before": revision_before,
+        "revision_after": state["revision"],
+        "entity_id": event_entity_id,
+        "payload": event_payload,
+        "result": result,
+    }
 
 
 def print_json(data):
@@ -934,10 +1929,16 @@ def new_task_item(
     acceptance_criteria,
     review_instructions,
     notes,
+    uid=None,
+    ref=None,
+    legacy_id=None,
+    aliases=None,
+    epic_key=None,
+    local_seq=None,
 ):
     now = utc_now()
 
-    return {
+    task = {
         "id": task_id,
         "epic_id": epic_id,
         "title": title,
@@ -957,12 +1958,33 @@ def new_task_item(
         "acceptance_criteria": acceptance_criteria or [],
         "review_instructions": review_instructions or [],
         "notes": notes or [],
+        "depends_on": [],
         "approved_by": "",
         "approved_at": "",
         "approval_notes": "",
         "created_at": now,
         "updated_at": now,
     }
+
+    if uid:
+        task["uid"] = uid
+
+    if ref:
+        task["ref"] = ref
+
+    if legacy_id:
+        task["legacy_id"] = legacy_id
+
+    if aliases is not None:
+        task["aliases"] = aliases
+
+    if epic_key:
+        task["epic_key"] = epic_key
+
+    if local_seq is not None:
+        task["local_seq"] = local_seq
+
+    return task
 
 
 def cmd_init(args):
@@ -1040,6 +2062,7 @@ def cmd_status(args):
     print("Generated:  {}".format(generated_tasks_path(root)))
     print("Current:    {}".format(generated_current_path(root)))
     print("Prompt:     {}".format(generated_prompt_path(root)))
+    print("Queue:      {}".format(generated_execution_queue_path(root)))
 
     state = load_tasks(root)
     plan = load_plan(root, required=False)
@@ -1079,7 +2102,13 @@ def cmd_render(args):
 
     render_task_outputs(root, state, plan=plan, check_plan=not args.skip_plan_check)
 
-    print("OK: rendered {} and {}".format(generated_tasks_path(root), generated_current_path(root)))
+    print(
+        "OK: rendered {}, {} and {}".format(
+            generated_tasks_path(root),
+            generated_current_path(root),
+            generated_execution_queue_path(root),
+        )
+    )
 
 
 def cmd_check_generated(args):
@@ -1091,10 +2120,12 @@ def cmd_check_generated(args):
 
     expected_tasks = render_tasks_markdown(state)
     expected_current = render_current_markdown(state)
+    expected_queue = render_execution_queue_markdown(state, plan=plan)
 
     checks = [
         (generated_tasks_path(root), expected_tasks),
         (generated_current_path(root), expected_current),
+        (generated_execution_queue_path(root), expected_queue),
     ]
 
     failed = []
@@ -1118,6 +2149,111 @@ def cmd_check_generated(args):
         return 1
 
     print("OK: generated task files are up to date")
+    return 0
+
+
+def cmd_migrate_identity(args):
+    root = repo_root(args)
+
+    ensure_project_dirs(root)
+
+    state = load_tasks(root)
+    plan = load_plan(root, required=True)
+
+    require_valid_tasks(state, plan=plan, check_plan=True)
+
+    proposed = copy.deepcopy(state)
+    changes = apply_identity_migration(proposed, plan)
+
+    if args.dry_run:
+        result = {
+            "migration": "identity",
+            "dry_run": True,
+            "changed_count": len(changes),
+            "changed_tasks": changes,
+        }
+
+        if args.json:
+            print_json(result)
+        else:
+            print(identity_migration_report(changes, dry_run=True))
+            print("No files changed.")
+
+        return 0
+
+    if not changes:
+        revision = state.get("revision", 0)
+
+        render_task_outputs(root, state, plan=plan, check_plan=True)
+        append_event(
+            root=root,
+            actor=args.actor,
+            command="migrate.identity",
+            entity_type="task_migration",
+            entity_id="identity",
+            revision_before=revision,
+            revision_after=revision,
+            payload={
+                "changed_count": 0,
+                "changed_tasks": [],
+                "no_changes": True,
+            },
+        )
+
+        result = {
+            "migration": "identity",
+            "dry_run": False,
+            "changed_count": 0,
+            "changed_tasks": [],
+            "revision_before": revision,
+            "revision_after": revision,
+            "generated_refreshed": True,
+        }
+
+        if args.json:
+            print_json(result)
+        else:
+            print("OK: migrate.identity no changes at revision {}".format(revision))
+            print(identity_migration_report(changes, dry_run=False))
+            print("Generated task outputs refreshed.")
+
+        return 0
+
+    def apply(state, plan):
+        applied_changes = apply_identity_migration(state, plan)
+
+        return {
+            "entity_id": "identity",
+            "payload": {
+                "changed_count": len(applied_changes),
+                "changed_tasks": applied_changes,
+            },
+            "message": identity_migration_report(applied_changes, dry_run=False),
+        }
+
+    mutation = mutate(
+        args=args,
+        command="migrate.identity",
+        entity_type="task_migration",
+        entity_id="identity",
+        payload={"migration": "identity"},
+        mutator=apply,
+        check_plan=True,
+        emit=not args.json,
+    )
+
+    if args.json:
+        result = {
+            "migration": "identity",
+            "dry_run": False,
+            "changed_count": mutation["payload"].get("changed_count", 0),
+            "changed_tasks": mutation["payload"].get("changed_tasks", []),
+            "revision_before": mutation["revision_before"],
+            "revision_after": mutation["revision_after"],
+            "generated_refreshed": True,
+        }
+        print_json(result)
+
     return 0
 
 
@@ -1189,9 +2325,9 @@ def cmd_task_list(args):
         marker = " *current*" if task.get("id") == state.get("current_task_id") else ""
         print(
             "{} [{}] {} -> {}{}".format(
-                task.get("id"),
+                task_display_label(task),
                 task.get("status"),
-                task.get("epic_id"),
+                task_epic_label(task, plan=plan),
                 task.get("title"),
                 marker,
             )
@@ -1200,8 +2336,39 @@ def cmd_task_list(args):
 
 def cmd_task_show(args):
     state = load_tasks(repo_root(args))
-    task = find_item(state.get("tasks", []), args.task_id)
+    task = resolve_task_ref(state.get("tasks", []), args.task_ref)
     print_json(task)
+
+
+def cmd_task_resolve(args):
+    state = load_tasks(repo_root(args))
+    task = resolve_task_ref(state.get("tasks", []), args.task_ref)
+
+    if args.json:
+        print_json(
+            {
+                "id": task.get("id"),
+                "ref": task.get("ref"),
+                "uid": task.get("uid"),
+                "legacy_id": task.get("legacy_id"),
+                "aliases": task.get("aliases", []),
+                "epic_id": task.get("epic_id"),
+                "title": task.get("title"),
+                "status": task.get("status"),
+            }
+        )
+        return
+
+    print("Canonical ID: {}".format(task.get("id")))
+    print("Ref:          {}".format(task.get("ref") or "-"))
+    print("UID:          {}".format(task.get("uid") or "-"))
+    print("Legacy ID:    {}".format(task.get("legacy_id") or "-"))
+    print("Aliases:      {}".format(", ".join(task.get("aliases", [])) if task.get("aliases") else "-"))
+    print("Epic Key:     {}".format(task.get("epic_key") or "-"))
+    print("Local Seq:    {}".format(task.get("local_seq") or "-"))
+    print("Epic:         {}".format(task.get("epic_id")))
+    print("Title:        {}".format(task.get("title")))
+    print("Status:       {}".format(task.get("status")))
 
 
 def cmd_task_create(args):
@@ -1209,6 +2376,14 @@ def cmd_task_create(args):
         ensure_epic_can_accept_task(plan, args.epic, args.status)
 
         task_id = next_id("TASK", state["tasks"])
+        epic = find_plan_epic(plan, args.epic)
+        epic_key = epic.get("key") if epic else None
+        local_seq = None
+        ref = None
+
+        if epic_key:
+            local_seq = allocate_local_seq(state["tasks"], args.epic, epic_key)
+            ref = format_task_ref(epic_key, local_seq)
 
         task = new_task_item(
             task_id=task_id,
@@ -1230,14 +2405,25 @@ def cmd_task_create(args):
             acceptance_criteria=args.acceptance,
             review_instructions=args.review_instruction,
             notes=args.note,
+            uid=generate_task_uid(state["tasks"]),
+            ref=ref,
+            legacy_id=task_id,
+            aliases=[task_id],
+            epic_key=epic_key,
+            local_seq=local_seq,
         )
 
         state["tasks"].append(task)
 
+        payload = {"task_id": task_id}
+
+        if ref:
+            payload["ref"] = ref
+
         return {
             "entity_id": task_id,
-            "payload": {"task_id": task_id},
-            "message": "Created: {}".format(task_id),
+            "payload": payload,
+            "message": "Created: {}".format(task_display_label(task)),
         }
 
     mutate(
@@ -1257,17 +2443,18 @@ def cmd_task_create(args):
 
 def cmd_task_rename(args):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
         ensure_task_mutable(task)
 
         task["title"] = args.title
         task["updated_at"] = utc_now()
+        return {"entity_id": task.get("id")}
 
     mutate(
         args=args,
         command="task.rename",
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={"title": args.title},
         mutator=apply,
     )
@@ -1275,17 +2462,18 @@ def cmd_task_rename(args):
 
 def cmd_task_update_summary(args):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
         ensure_task_mutable(task)
 
         task["summary"] = args.text
         task["updated_at"] = utc_now()
+        return {"entity_id": task.get("id")}
 
     mutate(
         args=args,
         command="task.update_summary",
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={"summary": args.text},
         mutator=apply,
     )
@@ -1293,17 +2481,18 @@ def cmd_task_update_summary(args):
 
 def cmd_task_update_description(args):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
         ensure_task_mutable(task)
 
         task["description"] = args.text
         task["updated_at"] = utc_now()
+        return {"entity_id": task.get("id")}
 
     mutate(
         args=args,
         command="task.update_description",
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={"description": args.text},
         mutator=apply,
     )
@@ -1311,7 +2500,7 @@ def cmd_task_update_description(args):
 
 def cmd_task_set_prompt_fields(args):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
         ensure_task_mutable(task)
 
         changed = {}
@@ -1330,13 +2519,13 @@ def cmd_task_set_prompt_fields(args):
             raise TaskError("NO_FIELDS_TO_UPDATE")
 
         task["updated_at"] = utc_now()
-        return {"payload": {"changed": changed}}
+        return {"entity_id": task.get("id"), "payload": {"changed": changed}}
 
     mutate(
         args=args,
         command="task.set_prompt_fields",
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={},
         mutator=apply,
     )
@@ -1344,7 +2533,8 @@ def cmd_task_set_prompt_fields(args):
 
 def cmd_task_transition(args):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
+        task_id = task.get("id")
         old = task.get("status")
 
         ensure_task_status_transition(old, args.to)
@@ -1352,6 +2542,9 @@ def cmd_task_transition(args):
 
         if args.to == "approved":
             raise TaskError("USE_TASK_APPROVE_COMMAND_FOR_APPROVAL")
+
+        if args.to == "in_progress":
+            ensure_task_dependencies_satisfied(state, task)
 
         task["status"] = args.to
         task["updated_at"] = utc_now()
@@ -1361,14 +2554,16 @@ def cmd_task_transition(args):
             task["approved_at"] = "" if args.to not in {"done", "archived"} else task.get("approved_at", "")
             task["approval_notes"] = "" if args.to not in {"done", "archived"} else task.get("approval_notes", "")
 
-        if state.get("current_task_id") == args.task_id and args.to not in CURRENT_ALLOWED_STATUSES:
+        if state.get("current_task_id") == task_id and args.to not in CURRENT_ALLOWED_STATUSES:
             state["current_task_id"] = None
+
+        return {"entity_id": task_id}
 
     mutate(
         args=args,
         command="task.transition",
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={"to": args.to},
         mutator=apply,
     )
@@ -1376,7 +2571,8 @@ def cmd_task_transition(args):
 
 def cmd_task_approve(args):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
+        task_id = task.get("id")
 
         ensure_task_status_transition(task.get("status"), "approved")
         ensure_epic_can_accept_task(plan, task.get("epic_id"), "approved")
@@ -1387,16 +2583,16 @@ def cmd_task_approve(args):
         task["approval_notes"] = args.notes or ""
         task["updated_at"] = utc_now()
 
-        if state.get("current_task_id") == args.task_id:
+        if state.get("current_task_id") == task_id:
             state["current_task_id"] = None
 
-        return {"payload": {"by": task["approved_by"], "notes": args.notes or ""}}
+        return {"entity_id": task_id, "payload": {"by": task["approved_by"], "notes": args.notes or ""}}
 
     mutate(
         args=args,
         command="task.approve",
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={},
         mutator=apply,
     )
@@ -1409,17 +2605,18 @@ def cmd_task_archive(args):
 
 def task_add_list_item(args, field, command):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
         ensure_task_mutable(task)
 
         task.setdefault(field, []).append(args.text)
         task["updated_at"] = utc_now()
+        return {"entity_id": task.get("id")}
 
     mutate(
         args=args,
         command=command,
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={"field": field, "text": args.text},
         mutator=apply,
     )
@@ -1427,7 +2624,7 @@ def task_add_list_item(args, field, command):
 
 def task_remove_list_item(args, field, command):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
         ensure_task_mutable(task)
 
         items = task.setdefault(field, [])
@@ -1439,15 +2636,218 @@ def task_remove_list_item(args, field, command):
         removed = items.pop(index)
         task["updated_at"] = utc_now()
 
-        return {"payload": {"field": field, "index": args.index, "removed": removed}}
+        return {
+            "entity_id": task.get("id"),
+            "payload": {"field": field, "index": args.index, "removed": removed},
+        }
 
     mutate(
         args=args,
         command=command,
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={},
         mutator=apply,
+    )
+
+
+def cmd_task_deps_list(args):
+    root = repo_root(args)
+    state = load_tasks(root)
+    plan = load_plan(root, required=False)
+    require_valid_tasks(state, plan=plan, check_plan=not args.skip_plan_check)
+
+    task = resolve_task_ref(state.get("tasks", []), args.task_ref)
+    deps = task_dependency_list(task)
+    tasks_by_id = task_id_map(state.get("tasks", []))
+
+    if args.json:
+        items = []
+
+        for dep in deps:
+            dep_task = tasks_by_id.get(dep.get("task_id")) if isinstance(dep, dict) else None
+            item = dict(dep) if isinstance(dep, dict) else {"invalid": dep}
+
+            if dep_task:
+                item["resolved"] = {
+                    "id": dep_task.get("id"),
+                    "ref": dep_task.get("ref"),
+                    "title": dep_task.get("title"),
+                    "status": dep_task.get("status"),
+                }
+
+            items.append(item)
+
+        print_json(items)
+        return
+
+    if not deps:
+        print("No dependencies.")
+        return
+
+    for dep in deps:
+        dep_task = tasks_by_id.get(dep.get("task_id")) if isinstance(dep, dict) else None
+        label = task_display_label(dep_task) if dep_task else dep.get("task_id")
+        status = dep_task.get("status") if dep_task else "missing"
+        reason = dep.get("reason", "") if isinstance(dep, dict) else ""
+        suffix = " — {}".format(reason) if reason else ""
+        print("{} [{}] type={}{}".format(label, status, dep.get("type"), suffix))
+
+
+def cmd_task_deps_add(args):
+    def apply(state, plan):
+        task = resolve_task_ref(state["tasks"], args.task_ref)
+        dep_task = resolve_task_ref(state["tasks"], args.after)
+        ensure_task_mutable(task)
+
+        task_id = task.get("id")
+        dep_task_id = dep_task.get("id")
+
+        if task_id == dep_task_id:
+            raise TaskError("TASK_DEPENDENCY_SELF: {}".format(task_display_label(task)))
+
+        deps = task.setdefault("depends_on", [])
+
+        if not isinstance(deps, list):
+            raise TaskError("INVALID_DEPENDENCIES: depends_on must be a list")
+
+        for dep in deps:
+            if isinstance(dep, dict) and dep.get("task_id") == dep_task_id:
+                raise TaskError("DUPLICATE_TASK_DEPENDENCY: {} after {}".format(task_display_label(task), dep_task_id))
+
+        dependency = {
+            "task_id": dep_task_id,
+            "type": args.type,
+            "created_at": utc_now(),
+        }
+
+        if args.reason:
+            dependency["reason"] = args.reason
+
+        deps.append(dependency)
+        task["updated_at"] = utc_now()
+
+        return {
+            "entity_id": task_id,
+            "payload": {
+                "after": dep_task_id,
+                "type": args.type,
+                "reason": args.reason or "",
+            },
+        }
+
+    mutate(
+        args=args,
+        command="task.deps.add",
+        entity_type="task",
+        entity_id=args.task_ref,
+        payload={},
+        mutator=apply,
+    )
+
+
+def cmd_task_deps_remove(args):
+    def apply(state, plan):
+        task = resolve_task_ref(state["tasks"], args.task_ref)
+        dep_task = resolve_task_ref(state["tasks"], args.after)
+        ensure_task_mutable(task)
+
+        dep_task_id = dep_task.get("id")
+        deps = task.setdefault("depends_on", [])
+
+        if not isinstance(deps, list):
+            raise TaskError("INVALID_DEPENDENCIES: depends_on must be a list")
+
+        for index, dep in enumerate(deps):
+            if isinstance(dep, dict) and dep.get("task_id") == dep_task_id:
+                removed = deps.pop(index)
+                task["updated_at"] = utc_now()
+                return {
+                    "entity_id": task.get("id"),
+                    "payload": {"after": dep_task_id, "removed": removed},
+                }
+
+        raise TaskError("TASK_DEPENDENCY_NOT_FOUND: {} after {}".format(task_display_label(task), dep_task_id))
+
+    mutate(
+        args=args,
+        command="task.deps.remove",
+        entity_type="task",
+        entity_id=args.task_ref,
+        payload={},
+        mutator=apply,
+    )
+
+
+def cmd_task_graph_validate(args):
+    root = repo_root(args)
+    state = load_tasks(root)
+    plan = load_plan(root, required=False)
+    errors = validate_tasks(state, plan=plan, check_plan=not args.skip_plan_check)
+
+    if errors:
+        print("VALIDATION_FAILED:", file=sys.stderr)
+
+        for error in errors:
+            print("- {}".format(error), file=sys.stderr)
+
+        return 1
+
+    print("OK: task dependency graph is valid")
+    return 0
+
+
+def cmd_task_executable(args):
+    root = repo_root(args)
+    state = load_tasks(root)
+    plan = load_plan(root, required=False)
+    require_valid_tasks(state, plan=plan, check_plan=not args.skip_plan_check)
+
+    entries = [entry for entry in build_execution_queue(state, plan=plan) if entry.get("executable")]
+
+    if args.json:
+        print_json(entries)
+        return
+
+    if not entries:
+        print("No executable tasks.")
+        return
+
+    for entry in entries:
+        print(
+            "{} [{}] {} -> {}".format(
+                queue_entry_label(entry),
+                entry.get("status"),
+                entry.get("epic_id"),
+                entry.get("title"),
+            )
+        )
+
+
+def cmd_task_next(args):
+    root = repo_root(args)
+    state = load_tasks(root)
+    plan = load_plan(root, required=False)
+    require_valid_tasks(state, plan=plan, check_plan=not args.skip_plan_check)
+
+    entries = [entry for entry in build_execution_queue(state, plan=plan) if entry.get("executable")]
+    entry = entries[0] if entries else None
+
+    if args.json:
+        print_json(entry or {"task": None, "message": "No executable task."})
+        return
+
+    if entry is None:
+        print("No executable task.")
+        return
+
+    print(
+        "{} [{}] {} -> {}".format(
+            queue_entry_label(entry),
+            entry.get("status"),
+            entry.get("epic_id"),
+            entry.get("title"),
+        )
     )
 
 
@@ -1465,33 +2865,45 @@ def cmd_current_show(args):
         print_json(task)
         return
 
-    print("{} [{}] {} -> {}".format(task.get("id"), task.get("status"), task.get("epic_id"), task.get("title")))
+    plan = load_plan(repo_root(args), required=False)
+    print(
+        "{} [{}] {} -> {}".format(
+            task_display_label(task),
+            task.get("status"),
+            task_epic_label(task, plan=plan),
+            task.get("title"),
+        )
+    )
 
 
 def cmd_current_set(args):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
+        task_id = task.get("id")
 
         if task.get("status") not in CURRENT_ALLOWED_STATUSES:
             raise TaskError(
                 "TASK_CANNOT_BE_CURRENT: {} status is {}".format(
-                    args.task_id,
+                    task_id,
                     task.get("status"),
                 )
             )
 
         ensure_epic_can_accept_task(plan, task.get("epic_id"), task.get("status"))
 
-        previous = state.get("current_task_id")
-        state["current_task_id"] = args.task_id
+        if task.get("status") in EXECUTABLE_CANDIDATE_STATUSES:
+            ensure_task_dependencies_satisfied(state, task)
 
-        return {"payload": {"previous": previous, "current": args.task_id}}
+        previous = state.get("current_task_id")
+        state["current_task_id"] = task_id
+
+        return {"entity_id": task_id, "payload": {"previous": previous, "current": task_id}}
 
     mutate(
         args=args,
         command="current.set",
         entity_type="current_task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={},
         mutator=apply,
     )
@@ -1521,15 +2933,19 @@ def cmd_prompt_build(args):
 
     require_valid_tasks(state, plan=plan, check_plan=not args.skip_plan_check)
 
-    task_id = args.task or state.get("current_task_id")
+    task_ref = args.task or state.get("current_task_id")
 
-    if not task_id:
+    if not task_ref:
         raise TaskError("NO_TASK_SELECTED: use --task TASK-001 or `current set TASK-001`")
 
-    task = find_item(state.get("tasks", []), task_id)
+    task = resolve_task_ref(state.get("tasks", []), task_ref)
+    task_id = task.get("id")
 
     if not args.allow_inactive and task.get("status") not in CURRENT_ALLOWED_STATUSES:
         raise TaskError("TASK_IS_NOT_EXECUTABLE: {} status is {}".format(task_id, task.get("status")))
+
+    if not args.allow_inactive and task.get("status") in EXECUTABLE_CANDIDATE_STATUSES:
+        ensure_task_dependencies_satisfied(state, task)
 
     text = build_prompt_text(state, task, plan=plan)
 
@@ -1578,12 +2994,12 @@ def add_skip_plan_check(parser):
 
 def add_list_mutation_commands(task_sub, add_name, remove_name, field, add_command, remove_command, add_help):
     p = task_sub.add_parser(add_name, help=add_help)
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--text", required=True)
     p.set_defaults(func=lambda a, f=field, c=add_command: task_add_list_item(a, f, c))
 
     p = task_sub.add_parser(remove_name, help="Remove item from {}".format(field))
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--index", type=int, required=True)
     p.set_defaults(func=lambda a, f=field, c=remove_command: task_remove_list_item(a, f, c))
 
@@ -1628,6 +3044,14 @@ def build_parser():
     p.add_argument("--entity", help="Filter by entity id")
     p.set_defaults(func=cmd_audit)
 
+    migrate = sub.add_parser("migrate", help="Run task state migrations")
+    migrate_sub = migrate.add_subparsers(dest="migrate_command", required=True)
+
+    p = migrate_sub.add_parser("identity", help="Backfill task uid/ref/legacy identity fields")
+    p.add_argument("--dry-run", action="store_true", help="Preview identity changes without writing files")
+    p.add_argument("--json", action="store_true", help="Print machine-readable migration output")
+    p.set_defaults(func=cmd_migrate_identity)
+
     task = sub.add_parser("task", help="Manage executable tasks")
     task_sub = task.add_subparsers(dest="task_command", required=True)
 
@@ -1640,8 +3064,51 @@ def build_parser():
     p.set_defaults(func=cmd_task_list)
 
     p = task_sub.add_parser("show")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.set_defaults(func=cmd_task_show)
+
+    p = task_sub.add_parser("resolve")
+    p.add_argument("task_ref")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_task_resolve)
+
+    deps = task_sub.add_parser("deps")
+    deps_sub = deps.add_subparsers(dest="deps_command", required=True)
+
+    p = deps_sub.add_parser("list")
+    p.add_argument("task_ref")
+    p.add_argument("--json", action="store_true")
+    add_skip_plan_check(p)
+    p.set_defaults(func=cmd_task_deps_list)
+
+    p = deps_sub.add_parser("add")
+    p.add_argument("task_ref")
+    p.add_argument("--after", required=True)
+    p.add_argument("--type", choices=sorted(DEPENDENCY_TYPES), default="hard")
+    p.add_argument("--reason", default="")
+    p.set_defaults(func=cmd_task_deps_add)
+
+    p = deps_sub.add_parser("remove")
+    p.add_argument("task_ref")
+    p.add_argument("--after", required=True)
+    p.set_defaults(func=cmd_task_deps_remove)
+
+    graph = task_sub.add_parser("graph")
+    graph_sub = graph.add_subparsers(dest="graph_command", required=True)
+
+    p = graph_sub.add_parser("validate")
+    add_skip_plan_check(p)
+    p.set_defaults(func=cmd_task_graph_validate)
+
+    p = task_sub.add_parser("executable")
+    p.add_argument("--json", action="store_true")
+    add_skip_plan_check(p)
+    p.set_defaults(func=cmd_task_executable)
+
+    p = task_sub.add_parser("next")
+    p.add_argument("--json", action="store_true")
+    add_skip_plan_check(p)
+    p.set_defaults(func=cmd_task_next)
 
     p = task_sub.add_parser("create")
     p.add_argument("--epic", required=True)
@@ -1664,22 +3131,22 @@ def build_parser():
     p.set_defaults(func=cmd_task_create)
 
     p = task_sub.add_parser("rename")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--title", required=True)
     p.set_defaults(func=cmd_task_rename)
 
     p = task_sub.add_parser("update-summary")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--text", required=True)
     p.set_defaults(func=cmd_task_update_summary)
 
     p = task_sub.add_parser("update-description")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--text", required=True)
     p.set_defaults(func=cmd_task_update_description)
 
     p = task_sub.add_parser("set-prompt-fields")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--active-role")
     p.add_argument("--active-stage")
     p.add_argument("--active-document")
@@ -1688,18 +3155,18 @@ def build_parser():
     p.set_defaults(func=cmd_task_set_prompt_fields)
 
     p = task_sub.add_parser("transition")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--to", required=True, choices=sorted(TASK_STATUSES))
     p.set_defaults(func=cmd_task_transition)
 
     p = task_sub.add_parser("approve")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--by", default="")
     p.add_argument("--notes", default="")
     p.set_defaults(func=cmd_task_approve)
 
     p = task_sub.add_parser("archive")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.set_defaults(func=cmd_task_archive)
 
     add_list_mutation_commands(
@@ -1765,7 +3232,7 @@ def build_parser():
     p.set_defaults(func=cmd_current_show)
 
     p = current_sub.add_parser("set")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.set_defaults(func=cmd_current_set)
 
     p = current_sub.add_parser("clear")
@@ -1775,7 +3242,7 @@ def build_parser():
     prompt_sub = prompt.add_subparsers(dest="prompt_command", required=True)
 
     p = prompt_sub.add_parser("build")
-    p.add_argument("--task", help="Task id. Defaults to current_task_id.")
+    p.add_argument("--task", help="Task ref or id. Defaults to current_task_id.")
     p.add_argument("--write", action="store_true", help="Write to AI_PROJECT/generated/CODEX_PROMPT.md")
     p.add_argument("--out", help="Write prompt to custom path")
     p.add_argument("--allow-inactive", action="store_true", help="Allow prompt build for non-executable statuses")

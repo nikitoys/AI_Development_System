@@ -5,7 +5,7 @@
 
 Project: **AI Development System**
 Status: `active`
-Revision: `4`
+Revision: `6`
 
 ## Idea
 
@@ -33,3 +33,4 @@ Epics:
 - `EPIC-001` — Documentation Rails (`active`)
 - `EPIC-002` — Skills Layer (`active`)
 - `EPIC-003` — Prompt Context Retrieval Layer (`planned`)
+- `EPIC-004` / `TIG` — Task Identity and Execution Graph (`planned`)

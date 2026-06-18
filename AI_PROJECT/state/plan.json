@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "revision": 4,
+  "revision": 6,
   "project": {
     "id": "PROJECT-001",
     "name": "AI Development System",
     "status": "active",
     "created_at": "2026-06-15T21:47:25Z",
-    "updated_at": "2026-06-17T21:25:31Z"
+    "updated_at": "2026-06-18T04:54:26Z"
   },
   "idea": {
     "text": "",
@@ -68,6 +68,18 @@
       "created_at": "2026-06-17T21:25:31Z",
       "updated_at": "2026-06-17T21:25:31Z",
       "initiative_id": "INIT-001"
+    },
+    {
+      "id": "EPIC-004",
+      "title": "Task Identity and Execution Graph",
+      "status": "planned",
+      "summary": "Define and implement a stable task identity model, epic-scoped human refs, backward-compatible legacy task IDs, cross-epic dependencies, and an executable task queue for parallel epic execution.",
+      "priority": 1,
+      "order": 4,
+      "created_at": "2026-06-17T22:44:44Z",
+      "updated_at": "2026-06-18T04:54:26Z",
+      "initiative_id": "INIT-001",
+      "key": "TIG"
     }
   ]
 }

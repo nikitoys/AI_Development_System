@@ -3,16 +3,17 @@
 
 # Project Tasks
 
-Revision: `69`
+Revision: `165`
 Current task: `none`
 
 ## Epic `EPIC-001`
 
 ### TASK-001 — Write Project Control Usage Guide
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_0c39847a282c`, legacy `TASK-001`, aliases `TASK-001`
 
 Write the missing practical usage guide for the Project Control Gateway.
 
@@ -26,9 +27,10 @@ Acceptance criteria:
 
 ### TASK-004 — Implement codexctl prompt package generator
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_04d7aa259713`, legacy `TASK-004`, aliases `TASK-004`
 
 Implement approved CHG-001 by adding a dedicated Codex prompt package control CLI.
 
@@ -43,9 +45,10 @@ Acceptance criteria:
 
 ### TASK-007 — Record L4 Role-Agent Runtime Architecture
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_5b19d4868c96`, legacy `TASK-007`, aliases `TASK-007`
 
 Implement approved CHG-004 by creating the L4 Role-Agent Runtime Architecture source document and updating required README, operating model, roadmap, backlog and changelog references.
 
@@ -59,13 +62,31 @@ Acceptance criteria:
 - Operating model, roadmap, backlog, changelog and README/index references are updated.
 - Required validation passes and protected AI_PROJECT files are not manually edited.
 
+### TASK-018 — Fix documentation generated drift
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_9ecaaf287358`, legacy `TASK-018`, aliases `TASK-018`
+
+Resolve pre-existing DOCS_GAPS.md generated drift through docctl.py so protected-files validation becomes clean again.
+
+Acceptance criteria:
+
+- python scripts/docctl.py validate passes.
+- python scripts/docctl.py render completes successfully.
+- python scripts/docctl.py check-generated passes.
+- python scripts/check-protected-project-files.py --verbose no longer reports DOCS_GAPS.md drift.
+- No protected AI_PROJECT files are manually edited.
+
 ## Epic `EPIC-002`
 
 ### TASK-002 — Document Skills Layer Roadmap
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_6aa950ac6a24`, legacy `TASK-002`, aliases `TASK-002`
 
 Create a controlled skills layer documentation page that records useful project skills/plugins and recommends next skills to create.
 
@@ -82,9 +103,10 @@ Acceptance criteria:
 
 ### TASK-003 — Create Clarification Gate Skill
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_2453027a75a4`, legacy `TASK-003`, aliases `TASK-003`
 
 Create a high-priority Clarification Gate Skill for Codex and subagents, defining when to ask the Human Owner versus inspect or proceed with safe assumptions.
 
@@ -100,9 +122,10 @@ Acceptance criteria:
 
 ### TASK-005 — Create Documentation Navigation Skill
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_0b7a2076f7e5`, legacy `TASK-005`, aliases `TASK-005`
 
 Create a guidance-only Documentation Navigation Skill that routes agents to minimal source documents for AI_Development_System work.
 
@@ -119,9 +142,10 @@ Acceptance criteria:
 
 ### TASK-006 — Add Two-Level Delegated Agent Execution
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_534107e45648`, legacy `TASK-006`, aliases `TASK-006`
 
 Create L3 manual-only Controller Codex to Worker Agent delegation guidance, source documentation and reusable worker prompt template.
 
@@ -140,9 +164,10 @@ Acceptance criteria:
 
 ### TASK-008 — P0 Strengthen docctl metadata and documentation gaps
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_6cfac5a41fe8`, legacy `TASK-008`, aliases `TASK-008`
 
 Improve docctl.py so registered documentation becomes a reliable source for future context retrieval.
 
@@ -159,9 +184,10 @@ Acceptance criteria:
 
 ### TASK-009 — P1 Implement contextctl deterministic retrieval MVP
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_6fdf835d7ea2`, legacy `TASK-009`, aliases `TASK-009`
 
 Create a new controlled CLI gateway that builds deterministic Context Packs from registered documents without vector search.
 
@@ -179,9 +205,10 @@ Acceptance criteria:
 
 ### TASK-010 — P2 Integrate Context Pack into codexctl prompt generation
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_5640129358e6`, legacy `TASK-010`, aliases `TASK-010`
 
 Allow codexctl.py to include a validated Context Pack in generated Codex prompt packages.
 
@@ -197,9 +224,10 @@ Acceptance criteria:
 
 ### TASK-011 — P3 Add optional vector backend for contextctl
 
-Status: `planned`  
-Priority: `1`  
-Verification: `standard`  
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_ef81f7279309`, legacy `TASK-011`, aliases `TASK-011`
 
 Add optional vector or hybrid retrieval backend after deterministic retrieval exists.
 
@@ -213,3 +241,101 @@ Acceptance criteria:
 - Vector backend is documented as derived cache, not source of truth.
 - Validation passes in environments without vector dependencies.
 - Required smoke checks pass or blockers are reported.
+
+## Epic `EPIC-004`
+
+### TIG-01 (TASK-012) — TIG-01 Document task identity and execution graph design
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_4e8cdf2de480`, legacy `TASK-012`, aliases `TASK-012`, local `TIG` / `1`
+
+Define the target model for task uid, human ref, legacy aliases, epic keys, dependency graph, executable queue, and migration rules before implementation.
+
+Acceptance criteria:
+
+- A clear source-of-truth design exists.
+- The design states that task IDs do not imply execution order.
+- The design states that epics may execute in parallel by default.
+- The design defines explicit dependencies as the only cross-epic ordering mechanism.
+- The design includes migration rules for existing TASK-XXX tasks.
+- Generated project-control files are refreshed through CLI.
+
+### TIG-02 (TASK-013) — TIG-02 Add epic keys to plan model
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_3a7566ad482d`, legacy `TASK-013`, aliases `TASK-013`, local `TIG` / `2`
+
+Add stable short epic keys to the plan model so task refs can use readable prefixes such as TIG-01 or ACP-02.
+
+Acceptance criteria:
+
+- Existing plan validation still passes.
+- Existing epics without keys are handled safely or migrated according to the design.
+- New epics can have unique keys.
+- Duplicate keys are rejected.
+
+### TIG-03 (TASK-014) — TIG-03 Add task uid ref local sequence and aliases
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_51b56af6562d`, legacy `TASK-014`, aliases `TASK-014`, local `TIG` / `3`
+
+Extend task state with stable uid, human-readable ref, local sequence inside epic, and aliases for backward compatibility.
+
+Acceptance criteria:
+
+- Existing tasks can be migrated or read without losing history.
+- New tasks receive readable refs.
+- Legacy TASK-XXX references remain resolvable.
+
+### TIG-04 (TASK-015) — TIG-04 Add task reference resolver
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_b9599c96de80`, legacy `TASK-015`, aliases `TASK-015`, local `TIG` / `4`
+
+Allow taskctl and prompt generation to resolve tasks by new ref, uid, or legacy TASK-XXX alias.
+
+Acceptance criteria:
+
+- Existing CLI commands keep working with legacy TASK-XXX.
+- New refs work where task_id was previously required.
+- Ambiguous references produce a clear error.
+
+### TIG-05 (TASK-016) — TIG-05 Add task dependencies and executable queue
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_30c62f5c7e30`, legacy `TASK-016`, aliases `TASK-016`, local `TIG` / `5`
+
+Add explicit cross-epic task dependencies and a deterministic executable queue so parallel epics can be scheduled safely.
+
+Acceptance criteria:
+
+- Ready tasks blocked by dependencies are not reported as executable.
+- Cross-epic dependencies are supported.
+- Cycles are rejected.
+- Executable queue output is deterministic.
+
+### TIG-06 (TASK-017) — TIG-06 Add migration and generated output update
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_d9383d8b8e57`, legacy `TASK-017`, aliases `TASK-017`, local `TIG` / `6`
+
+Provide safe migration/backward compatibility for existing plan and task state and update generated outputs to display readable refs.
+
+Acceptance criteria:
+
+- Existing AI_PROJECT/state can be validated after migration.
+- Generated files display readable refs and legacy IDs where useful.
+- Prompt packages still contain enough identity data for Codex execution.
+- Validation and generated checks pass.
