@@ -1,15 +1,15 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/generated/CONTEXT_PACK.md -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-028 Task J - Add read-only local Web Control Center MVP Provide initial web visibility without mutation risk. Add a read-only local Control Center, preferably FastAPI + Jinja2 + HTMX unless repository constraints suggest otherwise, launched through python scripts/aictl.py web --host 127.0.0.1 --port 8765 and backed by the same command registry. ai_project_ctl/web Local web dashboard shows project-control state read-only through shared command registry. Add read-only dashboard pages for tasks, epics, current task, reviews, events, Codex prompt/status, and doctor output as available. Expose web command through scripts/aictl.py web --host 127.0.0.1 --port 8765. Use the same command/core layer as CLI for all data access. Clearly show current task, queues, stale generated files, and health status. Add tests or smoke checks for read-only route behavior. Do not add web write actions in this task. Do not add authentication or remote hosted deployment. Do not edit JSON directly from route handlers. scripts/aictl.py ai_project_ctl/web/** ai_project_ctl/** tests/** pyproject.toml requirements*.txt AI_PROJECT/state/tasks.json via taskctl.py only AI_PROJECT/events/task-events.jsonl via taskctl.py only AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only Web UI is read-only. Web UI uses the same command/core layer as CLI. Web UI does not edit JSON directly. Web UI clearly shows current task, queues, stale generated files, and health status. Verify route handlers cannot mutate protected state directly. Verify web dashboard remains local-only by default.","schema_version":1,"task_id":"TASK-028"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-029 Task K - Add controlled Web write actions Allow safe project-control state changes from UI only after the read-only MVP is stable. Add controlled web write actions for creating tasks, transitioning tasks, requesting review, marking review result, building Codex prompts, and regenerating generated views, with confirmations and audit events through the command registry. ai_project_ctl/web Web write actions use the same command registry and audit path as CLI writes. Add confirmation-backed web actions for task create, task transition, review request, review result, Codex prompt build, and generated view regeneration where supported. Route every write through command registry and shared services. Ensure every write creates the same kind of event as CLI writes. Block invalid transitions and show clear errors. Add tests for confirmation, invalid transition handling, and audit event behavior. Do not bypass command registry from route handlers. Do not add remote hosted deployment. Do not add multi-user authentication unless separately approved. ai_project_ctl/web/** ai_project_ctl/** scripts/aictl.py tests/** AI_PROJECT/state/tasks.json via taskctl.py only AI_PROJECT/events/task-events.jsonl via taskctl.py only AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only Web write path is identical to CLI write path. Audit events are created. Invalid transitions are blocked. Confirmation and error reporting are present. Verify route handlers do not write protected files directly. Verify every successful write has an audit event and validation path.","schema_version":1,"task_id":"TASK-029"} -->
 
 # Context Status
 
 Context pack exists: `true`
 Mode: `task`
-Task ID: `TASK-028`
+Task ID: `TASK-029`
 Limit: `8`
 Docs revision: `19`
-Tasks revision: `253`
+Tasks revision: `260`
 Indexed source documents: `10`
 Indexed chunks: `890`
 Selected chunks: `8`
@@ -20,6 +20,7 @@ Excluded registered sources: `130`
 - ai-system/project-control/03-state-model.md
 - ai-system/project-control/04-command-catalog.md
 - ai-system/project-control/06-prompt-package-spec.md
+- ai-system/project-control/07-validation-and-tests.md
 - ai-system/skills/README.md
 
 ## Exclusion Reasons

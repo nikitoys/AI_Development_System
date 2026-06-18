@@ -899,6 +899,26 @@ def cmd_task_transition(args: argparse.Namespace) -> int:
     )
 
 
+def cmd_current_set(args: argparse.Namespace) -> int:
+    _ensure_implemented("current.set")
+    return _run_delegated(
+        "current.set",
+        "current",
+        args,
+        _script_argv("taskctl.py", args, ["current", "set", args.task_ref]),
+    )
+
+
+def cmd_current_clear(args: argparse.Namespace) -> int:
+    _ensure_implemented("current.clear")
+    return _run_delegated(
+        "current.clear",
+        "current",
+        args,
+        _script_argv("taskctl.py", args, ["current", "clear"]),
+    )
+
+
 def cmd_epic_list(args: argparse.Namespace) -> int:
     _ensure_implemented("epic.list")
     command_args = ["epic", "list"]
@@ -1160,6 +1180,16 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--to", required=True)
     p.set_defaults(func=cmd_task_transition, facade_command="task.transition")
 
+    current = sub.add_parser("current", help="Current task facade commands")
+    current_sub = current.add_subparsers(dest="current_action", required=True)
+
+    p = current_sub.add_parser("set", help="Set current task through taskctl.py")
+    p.add_argument("task_ref")
+    p.set_defaults(func=cmd_current_set, facade_command="current.set")
+
+    p = current_sub.add_parser("clear", help="Clear current task through taskctl.py")
+    p.set_defaults(func=cmd_current_clear, facade_command="current.clear")
+
     epic = sub.add_parser("epic", help="Epic facade commands")
     epic_sub = epic.add_subparsers(dest="epic_action", required=True)
 
@@ -1201,7 +1231,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = project_sub.add_parser("render", help="Render generated project-control views")
     p.set_defaults(func=cmd_project_render, facade_command="project.render")
 
-    web = sub.add_parser("web", help="Run the local read-only Web Control Center")
+    web = sub.add_parser("web", help="Run the local Web Control Center")
     web.add_argument("--host", default="127.0.0.1")
     web.add_argument("--port", type=int, default=8765)
     web.set_defaults(func=cmd_web, facade_command="web.serve")

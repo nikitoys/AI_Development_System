@@ -46,6 +46,7 @@ class AictlTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertTrue(payload["ok"])
         self.assertIn("command.describe", names)
+        self.assertIn("current.set", names)
         self.assertIn("project.render", names)
         self.assertIn("task.transition", names)
 
@@ -100,6 +101,48 @@ class AictlTests(unittest.TestCase):
         self.assertNotIn("--json", argv)
         self.assertTrue(payload["ok"])
         self.assertIn("transitioned CTL-06", payload["data"]["stdout"])
+
+    def test_current_set_delegates_write_without_native_json(self):
+        completed = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="OK: current.set revision 4 -> 5\n",
+            stderr="",
+        )
+
+        code, stdout, run = self.run_main(
+            ["--json", "current", "set", "CTL-06"],
+            completed,
+        )
+
+        argv = run.call_args.args[0]
+        payload = json.loads(stdout)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(argv[-3:], ["current", "set", "CTL-06"])
+        self.assertTrue(payload["ok"])
+        self.assertIn("current.set", payload["data"]["stdout"])
+
+    def test_current_clear_delegates_write_without_native_json(self):
+        completed = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="OK: current.clear revision 5 -> 6\n",
+            stderr="",
+        )
+
+        code, stdout, run = self.run_main(
+            ["--json", "current", "clear"],
+            completed,
+        )
+
+        argv = run.call_args.args[0]
+        payload = json.loads(stdout)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(argv[-2:], ["current", "clear"])
+        self.assertTrue(payload["ok"])
+        self.assertIn("current.clear", payload["data"]["stdout"])
 
     def test_codex_prompt_build_resolves_task_ref_before_delegating(self):
         resolve = subprocess.CompletedProcess(

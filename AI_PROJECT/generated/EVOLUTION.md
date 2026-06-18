@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `228`
-Changes: `11`
+Revision: `255`
+Changes: `12`
 
 ## Summary
 
-- `accepted`: 9
-- `approved`: 2
+- `accepted`: 11
+- `approved`: 1
 
 ## Changes
 
@@ -560,7 +560,7 @@ Linked tasks:
 
 ### CHG-011 — Add read-only local Web Control Center MVP
 
-Status: `approved`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `compatible`  
@@ -580,6 +580,9 @@ CTL-02 architecture defines a future local web shell, CTL-06 introduced aictl, C
 
 Approved by: `human_owner` at `2026-06-18T17:30:06Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-18T17:43:17Z`  
+Acceptance notes: CTL-10 implemented and accepted. Read-only local Web Control Center MVP added without web write actions or direct protected-file mutation.  
 
 Affected areas:
 
@@ -609,3 +612,61 @@ Impact:
 Linked tasks:
 
 - TASK-028
+
+### CHG-012 — Add controlled Web write actions
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+The local Web Control Center is currently read-only; CTL-11 needs approved governance to add controlled write actions without bypassing command registry, lifecycle validation, locks, audit events, or protected-file rules.
+
+Proposal:
+
+Add a narrow set of confirmed Web write actions routed only through the registered command layer. Web route handlers must not directly edit AI_PROJECT/state, AI_PROJECT/events, or AI_PROJECT/generated files.
+
+Rationale:
+
+CTL-10 established a read-only local Web Control Center. CTL-11 is the bounded next step to add controlled writes using the existing registry, doctor, locking, and protected-file safety model.
+
+Approved by: `human_owner` at `2026-06-18T17:44:20Z`  
+Approval notes: Approved for CTL-11 controlled Web write actions. Writes must route through registered commands only; no direct JSON/event/generated edits; no approval/acceptance automation unless explicitly allowed by CTL-11.  
+
+Accepted by: `human_owner` at `2026-06-18T18:01:06Z`  
+Acceptance notes: CTL-11 implemented and accepted. Controlled Web write actions added through confirmed POST /actions and registered command routing without direct protected-file mutation.  
+
+Affected areas:
+
+- Project Control Gateway
+- Web Control Center write actions
+- Command registry routed mutations
+- Lifecycle and audit safety
+
+Affected files:
+
+- ai_project_ctl/web/**
+- scripts/aictl.py if web command routing changes are needed
+- ai_project_ctl/core/registry.py if write-action metadata changes are needed
+- ai_project_ctl/core/transactions.py if web action execution uses shared transaction helpers
+- tests/**
+
+Risks:
+
+- Web write routes could bypass registered command validation and mutate protected files directly.
+- Unsafe web actions could accidentally approve, accept, or close work without Human Owner intent.
+- Write actions could weaken loopback-only/read-only safety if method restrictions are not updated carefully.
+- Write actions could introduce stale prompt/context artifacts after task state changes.
+
+Impact:
+
+- Adds controlled local web mutations through the approved command layer.
+- Preserves audit events, lifecycle validation, locks, and generated-output regeneration.
+- Prepares owner-facing project control without direct JSON editing.
+
+Linked tasks:
+
+- TASK-029

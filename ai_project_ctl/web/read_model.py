@@ -1,4 +1,4 @@
-"""Read-only project-control data for the local Web Control Center."""
+"""Project-control read data for the local Web Control Center."""
 
 from __future__ import annotations
 
@@ -53,12 +53,12 @@ EXECUTABLE_QUEUE_STATUSES = (
 
 
 class WebControlError(CommandError):
-    """Stable read-only web-control error."""
+    """Stable web-control read error."""
 
 
 @dataclass(frozen=True)
 class ProcessResult:
-    """Captured read-only command output."""
+    """Captured read command output."""
 
     command: list[str]
     returncode: int
@@ -180,8 +180,9 @@ class ReadOnlyProjectModel:
             ],
             "read_only": {
                 "methods": ["GET", "HEAD"],
-                "blocked_methods": ["POST", "PUT", "PATCH", "DELETE"],
-                "write_actions": False,
+                "blocked_methods": ["PUT", "PATCH", "DELETE"],
+                "write_actions": True,
+                "write_route": "/actions",
             },
         }
 

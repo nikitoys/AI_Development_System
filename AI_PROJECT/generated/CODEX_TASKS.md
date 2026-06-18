@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `255`
+Revision: `262`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -504,7 +504,7 @@ Acceptance criteria:
 
 ### CTL-11 (TASK-029) — Task K - Add controlled Web write actions
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_9bd489501264`, legacy `TASK-029`, aliases `TASK-029`, local `CTL` / `11`

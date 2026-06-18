@@ -1,4 +1,4 @@
-"""Standard-library read-only HTTP server for the Web Control Center."""
+"""Standard-library loopback HTTP server for the Web Control Center."""
 
 from __future__ import annotations
 
@@ -9,9 +9,15 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 from ai_project_ctl.core.result import CommandError
+from ai_project_ctl.web.actions import (
+    WebActionError,
+    WebActionExecutor,
+    WebActionResult,
+    available_actions,
+)
 from ai_project_ctl.web.read_model import ReadOnlyProjectModel
 
 
@@ -27,6 +33,7 @@ NAV_ITEMS = (
     ("/generated", "Generated"),
     ("/doctor", "Doctor"),
     ("/commands", "Commands"),
+    ("/actions", "Actions"),
 )
 
 
@@ -41,13 +48,13 @@ def run_server(
     port: int = 8765,
     actor: str = "human_owner",
 ) -> None:
-    """Run the local read-only Web Control Center until interrupted."""
+    """Run the local Web Control Center until interrupted."""
 
     _require_loopback_host(host)
     model = ReadOnlyProjectModel(root, actor=actor)
     server = ThreadingHTTPServer((host, port), make_handler(model))
     url = "http://{}:{}".format(host, server.server_address[1])
-    print("Read-only Web Control Center: {}".format(url))
+    print("Web Control Center: {}".format(url))
     print("Root: {}".format(model.root))
     print("Press Ctrl+C to stop.")
     try:
@@ -59,7 +66,7 @@ def run_server(
 
 
 def make_handler(model: ReadOnlyProjectModel) -> type[BaseHTTPRequestHandler]:
-    """Create a request handler bound to one read-only project model."""
+    """Create a request handler bound to one project model."""
 
     class ControlCenterHandler(BaseHTTPRequestHandler):
         server_version = "AIProjectControlCenter/0.1"
@@ -71,7 +78,7 @@ def make_handler(model: ReadOnlyProjectModel) -> type[BaseHTTPRequestHandler]:
             self._handle_read(head_only=True)
 
         def do_POST(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
-            self._method_not_allowed()
+            self._handle_write()
 
         def do_PUT(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
             self._method_not_allowed()
@@ -102,15 +109,86 @@ def make_handler(model: ReadOnlyProjectModel) -> type[BaseHTTPRequestHandler]:
             if not head_only:
                 self.wfile.write(payload)
 
+        def _handle_write(self) -> None:
+            path = urlparse(self.path).path
+            if path != "/actions":
+                self._not_found()
+                return
+
+            try:
+                fields = self._read_action_fields()
+                executor = WebActionExecutor(model.root, actor=model.actor)
+                result = executor.execute(fields)
+                status = HTTPStatus.OK
+                body = render_action_result(result)
+            except WebActionError as exc:
+                status = HTTPStatus.BAD_REQUEST
+                body = render_action_error(exc)
+
+            payload = body.encode("utf-8")
+            self.send_response(int(status))
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(payload)
+
+        def _read_action_fields(self) -> dict[str, str]:
+            length_header = self.headers.get("Content-Length", "0")
+            try:
+                length = int(length_header)
+            except ValueError as exc:
+                raise WebActionError(
+                    "WEB_INVALID_CONTENT_LENGTH",
+                    "Invalid write request content length.",
+                    details={"content_length": length_header},
+                ) from exc
+            if length > 8192:
+                raise WebActionError(
+                    "WEB_ACTION_BODY_TOO_LARGE",
+                    "Write request body is too large.",
+                    details={"max_bytes": 8192, "content_length": length},
+                )
+
+            raw = self.rfile.read(length).decode("utf-8") if length else ""
+            content_type = self.headers.get("Content-Type", "")
+            if "application/json" in content_type:
+                try:
+                    payload = json.loads(raw or "{}")
+                except json.JSONDecodeError as exc:
+                    raise WebActionError(
+                        "WEB_INVALID_JSON_BODY",
+                        "Write request body is not valid JSON.",
+                        details={"error": str(exc)},
+                    ) from exc
+                if not isinstance(payload, dict):
+                    raise WebActionError(
+                        "WEB_INVALID_ACTION_BODY",
+                        "Write request JSON body must be an object.",
+                    )
+                return {str(key): str(value) for key, value in payload.items()}
+
+            parsed = parse_qs(raw, keep_blank_values=True)
+            return {key: values[-1] if values else "" for key, values in parsed.items()}
+
         def _method_not_allowed(self) -> None:
             payload = (
-                "Write actions are disabled in CTL-10. "
-                "This local control center accepts GET and HEAD only.\n"
+                "Unsupported method. This local control center accepts GET, HEAD, "
+                "and confirmed POST requests to /actions only.\n"
             ).encode("utf-8")
             self.send_response(HTTPStatus.METHOD_NOT_ALLOWED)
             self.send_header("Content-Type", "text/plain; charset=utf-8")
             self.send_header("Content-Length", str(len(payload)))
-            self.send_header("Allow", "GET, HEAD")
+            self.send_header("Allow", "GET, HEAD, POST")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(payload)
+
+        def _not_found(self) -> None:
+            payload = b"Not found.\n"
+            self.send_response(HTTPStatus.NOT_FOUND)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
             self.send_header("Cache-Control", "no-store")
             self.end_headers()
             self.wfile.write(payload)
@@ -126,7 +204,7 @@ def route(
 
     if path == "/healthz":
         return HTTPStatus.OK, "application/json; charset=utf-8", json.dumps(
-            {"ok": True, "mode": "read-only"},
+            {"ok": True, "mode": "controlled-writes", "write_route": "/actions"},
             indent=2,
             sort_keys=True,
         )
@@ -147,6 +225,7 @@ def route(
         "/generated": lambda: render_generated(model.dashboard()),
         "/doctor": lambda: render_doctor(model.dashboard()),
         "/commands": lambda: render_commands(model),
+        "/actions": lambda: render_actions(model.dashboard()),
     }
     if path not in pages:
         return HTTPStatus.NOT_FOUND, "text/html; charset=utf-8", render_page(
@@ -343,6 +422,73 @@ def render_commands(model: ReadOnlyProjectModel) -> str:
     return render_page("Commands", "".join(body), active="/commands")
 
 
+def render_actions(data: Mapping[str, Any]) -> str:
+    current = data.get("current_task") or {}
+    default_task = current.get("ref") or current.get("id") or ""
+    action_rows = []
+    for action in available_actions():
+        read_write = action.get("read_write") or {}
+        flags = []
+        if read_write.get("mutates_state"):
+            flags.append("writes state")
+        if read_write.get("writes_events"):
+            flags.append("writes events")
+        if read_write.get("renders_generated"):
+            flags.append("renders generated")
+        action_rows.append(
+            "<tr><td>{}</td><td><code>{}</code></td><td>{}</td></tr>".format(
+                escape(action.get("label", "")),
+                escape(action.get("command", "")),
+                escape(", ".join(flags)),
+            )
+        )
+    body = [
+        '<section class="panel action-panel">',
+        "<h2>Write Actions</h2>",
+        table(("Action", "Registered Command", "Effect"), action_rows, "No write actions."),
+        "</section>",
+        '<section class="panel action-panel">',
+        "<h2>Task Transition</h2>",
+        action_form(
+            "task.transition",
+            [
+                input_field("task", "Task", default_task),
+                select_field(
+                    "to",
+                    "Target",
+                    (
+                        "ready",
+                        "in_progress",
+                        "blocked",
+                        "in_review",
+                        "changes_requested",
+                        "deferred",
+                    ),
+                ),
+            ],
+        ),
+        "</section>",
+        '<section class="panel action-panel">',
+        "<h2>Current Task</h2>",
+        action_form("current.set", [input_field("task", "Task", default_task)]),
+        action_form("current.clear", []),
+        "</section>",
+        '<section class="panel action-panel">',
+        "<h2>Generated Output</h2>",
+        action_form("project.render", []),
+        action_form("context.build", [input_field("task", "Task", default_task)]),
+        action_form(
+            "codex.prompt.build",
+            [
+                input_field("task", "Task", default_task),
+                checkbox_field("with_context", "Include context"),
+            ],
+        ),
+        "</section>",
+    ]
+    return render_page("Actions", "".join(body), active="/actions")
+
+
 def render_error(error: CommandError) -> str:
     body = (
         '<section class="panel"><h2>Read Error</h2>'
@@ -352,6 +498,26 @@ def render_error(error: CommandError) -> str:
         escape(json.dumps(error.details, indent=2, sort_keys=True)),
     )
     return render_page("Read Error", body, active="")
+
+
+def render_action_result(result: WebActionResult) -> str:
+    return json.dumps(result.to_dict(), ensure_ascii=False, indent=2, sort_keys=True)
+
+
+def render_action_error(error: WebActionError) -> str:
+    return json.dumps(
+        {
+            "ok": False,
+            "error": {
+                "code": error.code,
+                "message": error.message,
+                "details": error.details,
+            },
+        },
+        ensure_ascii=False,
+        indent=2,
+        sort_keys=True,
+    )
 
 
 def render_page(title: str, body: str, *, active: str) -> str:
@@ -535,6 +701,61 @@ def render_page(title: str, body: str, *, active: str) -> str:
       font-size: 12px;
       word-break: break-word;
     }}
+    .action-panel form {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      align-items: end;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+    }}
+    .action-panel form:first-of-type {{
+      border-top: 0;
+      padding-top: 0;
+    }}
+    label {{
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }}
+    input, select {{
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 6px 8px;
+      color: var(--text);
+      background: #fff;
+      font: inherit;
+      text-transform: none;
+    }}
+    .checkline {{
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      min-height: 36px;
+      color: var(--text);
+      text-transform: none;
+      letter-spacing: 0;
+    }}
+    .checkline input {{
+      width: auto;
+      min-height: auto;
+    }}
+    button {{
+      min-height: 36px;
+      border: 1px solid #0d5f59;
+      border-radius: 6px;
+      padding: 7px 12px;
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }}
     .empty {{
       color: var(--muted);
       margin: 0;
@@ -634,6 +855,42 @@ def status_badge(value: str) -> str:
     return '<span class="badge {}">{}</span>'.format(
         escape(class_name),
         escape(safe),
+    )
+
+
+def action_form(action_id: str, fields: Sequence[str]) -> str:
+    controls = [
+        '<input type="hidden" name="action" value="{}">'.format(escape(action_id)),
+        *fields,
+        '<label class="checkline"><input type="checkbox" name="confirm" value="yes" required>Confirm</label>',
+        "<button type=\"submit\">{}</button>".format(escape(action_id)),
+    ]
+    return '<form method="post" action="/actions">{}</form>'.format("".join(controls))
+
+
+def input_field(name: str, label: str, value: str = "") -> str:
+    return '<label>{}<input name="{}" value="{}" required></label>'.format(
+        escape(label),
+        escape(name),
+        escape(value),
+    )
+
+
+def select_field(name: str, label: str, options: Sequence[str]) -> str:
+    choices = "".join(
+        '<option value="{0}">{0}</option>'.format(escape(option)) for option in options
+    )
+    return '<label>{}<select name="{}">{}</select></label>'.format(
+        escape(label),
+        escape(name),
+        choices,
+    )
+
+
+def checkbox_field(name: str, label: str) -> str:
+    return '<label class="checkline"><input type="checkbox" name="{}" value="yes">{}</label>'.format(
+        escape(name),
+        escape(label),
     )
 
 

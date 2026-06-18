@@ -21,6 +21,8 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("task.show", names)
         self.assertIn("task.create", names)
         self.assertIn("task.transition", names)
+        self.assertIn("current.set", names)
+        self.assertIn("current.clear", names)
         self.assertIn("epic.list", names)
         self.assertIn("change.create", names)
         self.assertIn("context.build", names)
@@ -50,6 +52,16 @@ class RegistryTests(unittest.TestCase):
             [argument["name"] for argument in descriptor["arguments"]],
             ["task_id", "to"],
         )
+
+    def test_current_set_is_registered_as_controlled_write(self):
+        descriptor = command_describe("current.set")
+
+        self.assertEqual(descriptor["domain"], "current")
+        self.assertEqual(descriptor["kind"], "write")
+        self.assertTrue(descriptor["read_write"]["mutates_state"])
+        self.assertTrue(descriptor["read_write"]["writes_events"])
+        self.assertTrue(descriptor["read_write"]["renders_generated"])
+        self.assertIn("AI_PROJECT/state/tasks.json", descriptor["writes_state"])
 
     def test_command_list_filters_domain_and_planned_commands(self):
         implemented_names = [
