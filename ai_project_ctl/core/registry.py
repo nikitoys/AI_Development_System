@@ -503,7 +503,8 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
             validators=("plan_state", "task_state", "evolution_state", "generated_output"),
             legacy_command=("python scripts/check-protected-project-files.py --verbose",),
             notes=(
-                "Facade-only command backed by existing protected-file checks.",
+                "Aggregates existing validation commands and protected-file checks.",
+                "Reports explicit PASS/WARN/FAIL diagnostics.",
                 "Does not mutate project-control state.",
             ),
         ),

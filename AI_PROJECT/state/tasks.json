@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 234,
+  "revision": 241,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-18T15:37:22Z",
+  "updated_at": "2026-06-18T16:38:05Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -1643,7 +1643,7 @@
       "id": "TASK-026",
       "epic_id": "EPIC-005",
       "title": "Task H - Add project doctor command",
-      "status": "planned",
+      "status": "done",
       "summary": "Provide one health check for project-control state.",
       "description": "Add a project doctor command that reports PASS/WARN/FAIL for duplicate IDs, invalid statuses, lifecycle residue, missing parents, stale generated files, stale Codex outputs, event/state assumptions, missing generated views, and detectable direct mutation risk.",
       "priority": 1,
@@ -1696,11 +1696,11 @@
           "reason": "Project doctor depends on the unified CLI facade."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-18T16:38:04Z",
+      "approval_notes": "Project doctor diagnostics accepted. PASS/WARN/FAIL model implemented; hard validation delegated to owning CLIs; stale prompt/context artifacts correctly reported as warnings.",
       "created_at": "2026-06-18T06:21:11Z",
-      "updated_at": "2026-06-18T13:30:46Z",
+      "updated_at": "2026-06-18T16:38:05Z",
       "uid": "tsk_5868b6f775a8",
       "legacy_id": "TASK-026",
       "aliases": [

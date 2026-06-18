@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `234`
+Revision: `241`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -456,7 +456,7 @@ Acceptance criteria:
 
 ### CTL-08 (TASK-026) — Task H - Add project doctor command
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_5868b6f775a8`, legacy `TASK-026`, aliases `TASK-026`, local `CTL` / `8`

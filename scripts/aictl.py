@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -169,6 +170,569 @@ def _run_delegated(
 
     _print_json(_delegated_result(command_name, domain, argv, completed).to_dict())
     return completed.returncode
+
+
+DOCTOR_PASS = "PASS"
+DOCTOR_WARN = "WARN"
+DOCTOR_FAIL = "FAIL"
+
+DOCTOR_CURRENT_STATUSES = {
+    "planned",
+    "ready",
+    "in_progress",
+    "blocked",
+    "in_review",
+    "changes_requested",
+}
+
+
+def _doctor_command_text(argv: Sequence[str]) -> str:
+    return shlex.join(_display_argv(argv))
+
+
+def _output_snippet(stdout: str, stderr: str, *, max_lines: int = 3) -> str:
+    lines = []
+    for text in (stdout, stderr):
+        for line in text.splitlines():
+            stripped = line.strip()
+            if stripped:
+                lines.append(stripped)
+            if len(lines) >= max_lines:
+                return " | ".join(lines)
+    return ""
+
+
+def _doctor_finding(
+    status: str,
+    check: str,
+    message: str,
+    *,
+    argv: Sequence[str] | None = None,
+    details: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    finding: dict[str, Any] = {
+        "status": status,
+        "check": check,
+        "message": message,
+    }
+    if argv:
+        finding["command"] = _doctor_command_text(argv)
+    if details:
+        finding["details"] = dict(details)
+    return finding
+
+
+def _append_cli_diagnostic(
+    findings: list[dict[str, Any]],
+    args: argparse.Namespace,
+    check: str,
+    script_name: str,
+    command_args: Sequence[str],
+    pass_message: str,
+    *,
+    include_actor: bool = True,
+    failure_status: str = DOCTOR_FAIL,
+) -> subprocess.CompletedProcess[str]:
+    argv = _script_argv(
+        script_name,
+        args,
+        command_args,
+        include_actor=include_actor,
+    )
+    completed = _run_subprocess(argv)
+    snippet = _output_snippet(completed.stdout, completed.stderr)
+    if completed.returncode == 0:
+        findings.append(
+            _doctor_finding(
+                DOCTOR_PASS,
+                check,
+                snippet or pass_message,
+                argv=argv,
+                details={"returncode": completed.returncode},
+            )
+        )
+    else:
+        findings.append(
+            _doctor_finding(
+                failure_status,
+                check,
+                snippet or "Command failed.",
+                argv=argv,
+                details={
+                    "returncode": completed.returncode,
+                    "stdout": completed.stdout,
+                    "stderr": completed.stderr,
+                },
+            )
+        )
+    return completed
+
+
+def _protected_error_is_prompt_context_warning(error: str, *, strict_prompt: bool) -> bool:
+    if strict_prompt:
+        return False
+    warning_fragments = (
+        "MISSING_GENERATED_PROMPT:",
+        "ORPHAN_GENERATED_PROMPT:",
+        "OUTDATED_GENERATED_FILE: AI_PROJECT/generated/CODEX_PROMPT.md",
+        "CODEX_PROMPT_RENDER_FAILED: STALE_CONTEXT_PACK:",
+    )
+    return any(fragment in error for fragment in warning_fragments)
+
+
+def _doctor_counts(findings: Sequence[Mapping[str, Any]]) -> dict[str, int]:
+    return {
+        DOCTOR_PASS: sum(1 for finding in findings if finding.get("status") == DOCTOR_PASS),
+        DOCTOR_WARN: sum(1 for finding in findings if finding.get("status") == DOCTOR_WARN),
+        DOCTOR_FAIL: sum(1 for finding in findings if finding.get("status") == DOCTOR_FAIL),
+    }
+
+
+def _doctor_overall_status(counts: Mapping[str, int]) -> str:
+    if counts.get(DOCTOR_FAIL, 0):
+        return DOCTOR_FAIL
+    if counts.get(DOCTOR_WARN, 0):
+        return DOCTOR_WARN
+    return DOCTOR_PASS
+
+
+def _parse_colon_lines(text: str) -> dict[str, str]:
+    parsed: dict[str, str] = {}
+    for line in text.splitlines():
+        if ":" not in line:
+            continue
+        key, value = line.split(":", 1)
+        parsed[key.strip().lower()] = value.strip()
+    return parsed
+
+
+def _read_text_optional(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except (FileNotFoundError, UnicodeDecodeError):
+        return ""
+
+
+def _append_registry_diagnostic(findings: list[dict[str, Any]]) -> None:
+    try:
+        descriptor = _ensure_implemented("project.doctor")
+    except CommandError as exc:
+        findings.append(
+            _doctor_finding(
+                DOCTOR_FAIL,
+                "command registry",
+                exc.message,
+                details={"code": exc.code, "command": "project.doctor"},
+            )
+        )
+        return
+
+    if descriptor.get("kind") != "validation":
+        findings.append(
+            _doctor_finding(
+                DOCTOR_WARN,
+                "command registry",
+                "project.doctor is implemented but not classified as validation.",
+                details={"kind": descriptor.get("kind")},
+            )
+        )
+        return
+
+    findings.append(
+        _doctor_finding(
+            DOCTOR_PASS,
+            "command registry",
+            "project.doctor is registered, implemented, and classified as validation.",
+            details={"availability": descriptor.get("availability")},
+        )
+    )
+
+
+def _append_protected_files_diagnostic(
+    findings: list[dict[str, Any]],
+    args: argparse.Namespace,
+) -> None:
+    command_args = []
+    for flag in (
+        "allow_uninitialized",
+        "allow_missing_generated",
+        "skip_plan_check",
+        "no_prompt_check",
+        "strict_prompt",
+    ):
+        if getattr(args, flag):
+            command_args.append("--{}".format(flag.replace("_", "-")))
+    command_args.append("--json")
+
+    argv = _script_argv(
+        "check-protected-project-files.py",
+        args,
+        command_args,
+        include_actor=False,
+    )
+    completed = _run_subprocess(argv)
+    parsed, text_stdout = _json_or_text(completed.stdout)
+    details: dict[str, Any] = {
+        "returncode": completed.returncode,
+    }
+
+    if isinstance(parsed, dict):
+        errors = list(parsed.get("errors") or [])
+        warnings = list(parsed.get("warnings") or [])
+        checked = list(parsed.get("checked") or [])
+        details.update(
+            {
+                "errors": errors,
+                "warnings": warnings,
+                "checked_count": len(checked),
+            }
+        )
+        prompt_context_warnings = [
+            error
+            for error in errors
+            if _protected_error_is_prompt_context_warning(
+                error,
+                strict_prompt=bool(args.strict_prompt),
+            )
+        ]
+        blocking_errors = [
+            error for error in errors if error not in prompt_context_warnings
+        ]
+        details["blocking_errors"] = blocking_errors
+        details["prompt_context_warnings"] = prompt_context_warnings
+        if blocking_errors or (completed.returncode != 0 and not errors):
+            findings.append(
+                _doctor_finding(
+                    DOCTOR_FAIL,
+                    "protected project files",
+                    "Protected-file check failed with {} error(s).".format(
+                        len(blocking_errors)
+                    ),
+                    argv=argv,
+                    details=details,
+                )
+            )
+        elif errors:
+            findings.append(
+                _doctor_finding(
+                    DOCTOR_WARN,
+                    "protected project files",
+                    "Protected-file check found {} prompt/context warning(s).".format(
+                        len(errors)
+                    ),
+                    argv=argv,
+                    details=details,
+                )
+            )
+        elif warnings:
+            findings.append(
+                _doctor_finding(
+                    DOCTOR_WARN,
+                    "protected project files",
+                    "Protected-file check passed with {} warning(s).".format(
+                        len(warnings)
+                    ),
+                    argv=argv,
+                    details=details,
+                )
+            )
+        else:
+            findings.append(
+                _doctor_finding(
+                    DOCTOR_PASS,
+                    "protected project files",
+                    "Protected-file check passed with {} successful check(s).".format(
+                        len(checked)
+                    ),
+                    argv=argv,
+                    details=details,
+                )
+            )
+        return
+
+    details.update({"stdout": text_stdout or completed.stdout, "stderr": completed.stderr})
+    findings.append(
+        _doctor_finding(
+            DOCTOR_FAIL,
+            "protected project files",
+            _output_snippet(completed.stdout, completed.stderr)
+            or "Protected-file check did not return JSON.",
+            argv=argv,
+            details=details,
+        )
+    )
+
+
+def _append_current_task_diagnostic(
+    findings: list[dict[str, Any]],
+    args: argparse.Namespace,
+) -> str:
+    argv = _script_argv("taskctl.py", args, ["current", "show", "--json"])
+    completed = _run_subprocess(argv)
+    parsed, text_stdout = _json_or_text(completed.stdout)
+
+    if completed.returncode != 0:
+        findings.append(
+            _doctor_finding(
+                DOCTOR_FAIL,
+                "current task",
+                _output_snippet(completed.stdout, completed.stderr)
+                or "Current task command failed.",
+                argv=argv,
+                details={
+                    "returncode": completed.returncode,
+                    "stdout": completed.stdout,
+                    "stderr": completed.stderr,
+                },
+            )
+        )
+        return ""
+
+    if not isinstance(parsed, dict) or not parsed.get("id"):
+        findings.append(
+            _doctor_finding(
+                DOCTOR_WARN,
+                "current task",
+                text_stdout.strip() or "No current task selected.",
+                argv=argv,
+                details={"returncode": completed.returncode},
+            )
+        )
+        return ""
+
+    task_id = str(parsed.get("id"))
+    status = str(parsed.get("status") or "")
+    if status in DOCTOR_CURRENT_STATUSES:
+        findings.append(
+            _doctor_finding(
+                DOCTOR_PASS,
+                "current task",
+                "Current task {} is {}.".format(task_id, status),
+                argv=argv,
+                details={"task_id": task_id, "status": status},
+            )
+        )
+    else:
+        findings.append(
+            _doctor_finding(
+                DOCTOR_FAIL,
+                "current task",
+                "Current task {} has non-current-compatible status {}.".format(
+                    task_id,
+                    status or "unknown",
+                ),
+                argv=argv,
+                details={"task_id": task_id, "status": status},
+            )
+        )
+    return task_id
+
+
+def _append_codex_status_diagnostic(
+    findings: list[dict[str, Any]],
+    args: argparse.Namespace,
+    current_task_id: str,
+) -> None:
+    argv = _script_argv(
+        "codexctl.py",
+        args,
+        ["status"],
+    )
+    completed = _run_subprocess(argv)
+    fields = _parse_colon_lines(completed.stdout)
+    status = fields.get("status", "").lower()
+    code = fields.get("code", "")
+    source_id = fields.get("source id", "")
+    prompt_exists = fields.get("prompt exists", "")
+    root = Path(args.root).resolve()
+    status_path = root / "AI_PROJECT" / "generated" / "CODEX_STATUS.md"
+    execution_path = root / "AI_PROJECT" / "state" / "current_execution.json"
+    details = {
+        "returncode": completed.returncode,
+        "code": code,
+        "status": status,
+        "source_id": source_id,
+        "prompt_exists": prompt_exists,
+    }
+
+    if completed.returncode != 0:
+        findings.append(
+            _doctor_finding(
+                DOCTOR_WARN,
+                "codex prompt/status",
+                _output_snippet(completed.stdout, completed.stderr)
+                or "Codex status command failed.",
+                argv=argv,
+                details=details,
+            )
+        )
+        return
+
+    warnings = []
+    if status != "ready" or code != "CODEX_READY":
+        warnings.append("Codex prompt package is not ready: {}".format(code or status or "unknown"))
+    if current_task_id and source_id and source_id != current_task_id:
+        warnings.append(
+            "Codex source {} does not match current task {}.".format(
+                source_id,
+                current_task_id,
+            )
+        )
+    if prompt_exists == "yes" and not execution_path.exists():
+        warnings.append("CODEX_PROMPT.md exists without current_execution.json.")
+    if execution_path.exists() and not status_path.exists():
+        warnings.append("CODEX_STATUS.md is missing.")
+    if status_path.exists():
+        status_text = _read_text_optional(status_path)
+        if source_id and "Source ID: `{}`".format(source_id) not in status_text:
+            warnings.append("CODEX_STATUS.md may be stale for source {}.".format(source_id))
+        if status and "Status: `{}`".format(status.upper()) not in status_text:
+            warnings.append("CODEX_STATUS.md may be stale for status {}.".format(status))
+
+    if warnings:
+        findings.append(
+            _doctor_finding(
+                DOCTOR_WARN,
+                "codex prompt/status",
+                "; ".join(warnings),
+                argv=argv,
+                details=details,
+            )
+        )
+    else:
+        findings.append(
+            _doctor_finding(
+                DOCTOR_PASS,
+                "codex prompt/status",
+                "Codex prompt package is ready for {}.".format(source_id or "current source"),
+                argv=argv,
+                details=details,
+            )
+        )
+
+
+def _append_context_status_diagnostic(
+    findings: list[dict[str, Any]],
+    args: argparse.Namespace,
+    current_task_id: str,
+) -> None:
+    argv = _script_argv("contextctl.py", args, ["status"])
+    completed = _run_subprocess(argv)
+    fields = _parse_colon_lines(completed.stdout)
+    context_task = fields.get("current context task", "")
+    mode = fields.get("current context mode", "")
+    details = {
+        "returncode": completed.returncode,
+        "mode": mode,
+        "context_task": context_task,
+    }
+
+    if completed.returncode != 0:
+        findings.append(
+            _doctor_finding(
+                DOCTOR_WARN,
+                "context pack status",
+                _output_snippet(completed.stdout, completed.stderr)
+                or "Context status command failed.",
+                argv=argv,
+                details=details,
+            )
+        )
+        return
+
+    if current_task_id and mode == "task" and context_task and context_task != current_task_id:
+        findings.append(
+            _doctor_finding(
+                DOCTOR_WARN,
+                "context pack status",
+                "Context Pack task {} does not match current task {}.".format(
+                    context_task,
+                    current_task_id,
+                ),
+                argv=argv,
+                details=details,
+            )
+        )
+    elif mode:
+        findings.append(
+            _doctor_finding(
+                DOCTOR_PASS,
+                "context pack status",
+                "Context Pack mode is {}{}.".format(
+                    mode,
+                    " for {}".format(context_task) if context_task else "",
+                ),
+                argv=argv,
+                details=details,
+            )
+        )
+    else:
+        findings.append(
+            _doctor_finding(
+                DOCTOR_WARN,
+                "context pack status",
+                "No current Context Pack metadata found.",
+                argv=argv,
+                details=details,
+            )
+        )
+
+
+def _doctor_result(root: Path, findings: list[dict[str, Any]]) -> CommandResult:
+    counts = _doctor_counts(findings)
+    overall = _doctor_overall_status(counts)
+    result = CommandResult(
+        ok=overall != DOCTOR_FAIL,
+        command="project.doctor",
+        domain="project",
+        message="Project doctor completed with overall status {}.".format(overall),
+        data={
+            "overall_status": overall,
+            "summary": counts,
+            "root": str(root),
+            "findings": findings,
+        },
+    )
+
+    for finding in findings:
+        status = finding.get("status")
+        message = "{}: {}".format(finding.get("check"), finding.get("message"))
+        if status == DOCTOR_WARN:
+            result.warnings.append(
+                CommandMessage(
+                    code="DOCTOR_WARN",
+                    message=message,
+                    details=finding,
+                )
+            )
+        elif status == DOCTOR_FAIL:
+            result.errors.append(
+                CommandMessage(
+                    code="DOCTOR_FAIL",
+                    message=message,
+                    details=finding,
+                )
+            )
+    return result
+
+
+def _emit_doctor_text(root: Path, findings: Sequence[Mapping[str, Any]]) -> None:
+    counts = _doctor_counts(findings)
+    overall = _doctor_overall_status(counts)
+    print("Project Doctor: {}".format(overall))
+    print(
+        "Summary: {PASS} PASS, {WARN} WARN, {FAIL} FAIL".format(
+            **counts,
+        )
+    )
+    print("")
+    for finding in findings:
+        print("{:<4}  {}".format(finding.get("status"), finding.get("check")))
+        print("      {}".format(finding.get("message")))
+        if finding.get("command"):
+            print("      command: {}".format(finding.get("command")))
+    print("")
+    print("Root: {}".format(root))
 
 
 def _resolve_task_ref(args: argparse.Namespace, task_ref: str) -> str:
@@ -389,32 +953,87 @@ def cmd_codex_prompt_build(args: argparse.Namespace) -> int:
 
 
 def cmd_project_doctor(args: argparse.Namespace) -> int:
-    _ensure_implemented("project.doctor")
-    command_args = []
-    for flag in (
-        "allow_uninitialized",
-        "allow_missing_generated",
-        "skip_plan_check",
-        "no_prompt_check",
-        "strict_prompt",
-    ):
-        if getattr(args, flag):
-            command_args.append("--{}".format(flag.replace("_", "-")))
-    if args.json:
-        command_args.append("--json")
-    else:
-        command_args.append("--verbose")
-    return _run_delegated(
-        "project.doctor",
-        "project",
+    root = Path(args.root).resolve()
+    findings: list[dict[str, Any]] = []
+
+    _append_registry_diagnostic(findings)
+    _append_cli_diagnostic(
+        findings,
         args,
-        _script_argv(
-            "check-protected-project-files.py",
-            args,
-            command_args,
-            include_actor=False,
-        ),
+        "plan validation",
+        "planctl.py",
+        ["validate"],
+        "Plan state is valid.",
     )
+    _append_cli_diagnostic(
+        findings,
+        args,
+        "task validation",
+        "taskctl.py",
+        ["validate"],
+        "Task state is valid.",
+    )
+    _append_cli_diagnostic(
+        findings,
+        args,
+        "task dependency graph",
+        "taskctl.py",
+        ["task", "graph", "validate"]
+        + (["--skip-plan-check"] if args.skip_plan_check else []),
+        "Task dependency graph is valid.",
+    )
+    _append_cli_diagnostic(
+        findings,
+        args,
+        "task generated output",
+        "taskctl.py",
+        ["check-generated"],
+        "Generated task files are up to date.",
+    )
+    _append_cli_diagnostic(
+        findings,
+        args,
+        "evolution validation",
+        "evolutionctl.py",
+        ["validate"],
+        "Evolution state is valid.",
+    )
+    _append_cli_diagnostic(
+        findings,
+        args,
+        "evolution generated output",
+        "evolutionctl.py",
+        ["check-generated"],
+        "Generated evolution files are up to date.",
+    )
+    _append_cli_diagnostic(
+        findings,
+        args,
+        "context validation",
+        "contextctl.py",
+        ["validate"],
+        "Context control files are valid.",
+    )
+    _append_cli_diagnostic(
+        findings,
+        args,
+        "context generated output",
+        "contextctl.py",
+        ["check-generated"],
+        "Generated context files are up to date.",
+        failure_status=DOCTOR_WARN,
+    )
+    _append_protected_files_diagnostic(findings, args)
+    current_task_id = _append_current_task_diagnostic(findings, args)
+    _append_codex_status_diagnostic(findings, args, current_task_id)
+    _append_context_status_diagnostic(findings, args, current_task_id)
+
+    result = _doctor_result(root, findings)
+    if args.json:
+        _print_json(result.to_dict())
+    else:
+        _emit_doctor_text(root, findings)
+    return 0 if result.ok else 1
 
 
 PROJECT_RENDER_STEPS = (

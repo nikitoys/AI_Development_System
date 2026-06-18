@@ -130,24 +130,138 @@ class AictlTests(unittest.TestCase):
         self.assertEqual(second_argv[-3:], ["build", "--task", "TASK-024"])
         self.assertTrue(payload["ok"])
 
-    def test_project_doctor_delegates_to_protected_file_check(self):
-        completed = subprocess.CompletedProcess(
-            args=[],
-            returncode=0,
-            stdout='{"ok": true, "errors": []}\n',
-            stderr="",
-        )
+    def test_project_doctor_reports_pass_warn_fail_json(self):
+        def fake_run(argv, **_kwargs):
+            script = Path(argv[1]).name
+            tail = argv[2:]
+            if script == "planctl.py":
+                return subprocess.CompletedProcess(argv, 0, "OK: plan is valid\n", "")
+            if script == "taskctl.py" and tail[-3:] == ["task", "graph", "validate"]:
+                return subprocess.CompletedProcess(argv, 1, "GRAPH_FAILED\n", "")
+            if script == "taskctl.py" and tail[-1] == "validate":
+                return subprocess.CompletedProcess(argv, 0, "OK: tasks are valid\n", "")
+            if script == "taskctl.py" and tail[-1] == "check-generated":
+                return subprocess.CompletedProcess(argv, 0, "OK: generated task files are up to date\n", "")
+            if script == "taskctl.py" and tail[-3:] == ["current", "show", "--json"]:
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    '{"id": "TASK-026", "status": "in_progress"}\n',
+                    "",
+                )
+            if script == "evolutionctl.py" and tail[-1] == "validate":
+                return subprocess.CompletedProcess(argv, 0, "OK: evolution is valid\n", "")
+            if script == "evolutionctl.py" and tail[-1] == "check-generated":
+                return subprocess.CompletedProcess(argv, 0, "OK: generated evolution file is up to date\n", "")
+            if script == "contextctl.py" and tail[-1] == "validate":
+                return subprocess.CompletedProcess(argv, 0, "OK: context control files are valid\n", "")
+            if script == "contextctl.py" and tail[-1] == "check-generated":
+                return subprocess.CompletedProcess(argv, 0, "OK: generated context files are up to date\n", "")
+            if script == "contextctl.py" and tail[-1] == "status":
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    "Current context mode: task\nCurrent context task: TASK-025\n",
+                    "",
+                )
+            if script == "codexctl.py":
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    "\n".join(
+                        [
+                            "CODEX_READY",
+                            "Code: CODEX_READY",
+                            "Status: READY",
+                            "Prompt exists: yes",
+                            "Source type: task",
+                            "Source ID: TASK-026",
+                            "Source status: in_progress",
+                        ]
+                    )
+                    + "\n",
+                    "",
+                )
+            if script == "check-protected-project-files.py":
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    '{"ok": true, "errors": [], "warnings": [], "checked": ["x"]}\n',
+                    "",
+                )
+            raise AssertionError("unexpected command: {}".format(argv))
 
-        code, stdout, run = self.run_main(["--json", "project", "doctor"], completed)
+        stdout = io.StringIO()
+        with patch.object(self.aictl.subprocess, "run", side_effect=fake_run) as run:
+            with redirect_stdout(stdout):
+                code = self.aictl.main(["--json", "project", "doctor"])
 
-        argv = run.call_args.args[0]
-        payload = json.loads(stdout)
+        payload = json.loads(stdout.getvalue())
+        statuses = {finding["status"] for finding in payload["data"]["findings"]}
+        scripts = [Path(call.args[0][1]).name for call in run.call_args_list]
+
+        self.assertEqual(code, 1)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["data"]["overall_status"], "FAIL")
+        self.assertIn("PASS", statuses)
+        self.assertIn("WARN", statuses)
+        self.assertIn("FAIL", statuses)
+        self.assertIn("check-protected-project-files.py", scripts)
+        protected_argv = [
+            call.args[0]
+            for call in run.call_args_list
+            if Path(call.args[0][1]).name == "check-protected-project-files.py"
+        ][0]
+        self.assertNotIn("--actor", protected_argv)
+        self.assertEqual(protected_argv[-1], "--json")
+
+    def test_project_doctor_human_output_uses_explicit_statuses(self):
+        completed = subprocess.CompletedProcess(args=[], returncode=0, stdout="OK\n", stderr="")
+
+        def fake_run(argv, **_kwargs):
+            script = Path(argv[1]).name
+            tail = argv[2:]
+            if script == "taskctl.py" and tail[-3:] == ["current", "show", "--json"]:
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    '{"id": "TASK-026", "status": "in_progress"}\n',
+                    "",
+                )
+            if script == "codexctl.py":
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    "Code: CODEX_READY\nStatus: READY\nPrompt exists: yes\nSource ID: TASK-026\n",
+                    "",
+                )
+            if script == "contextctl.py" and tail[-1] == "status":
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    "Current context mode: task\nCurrent context task: TASK-026\n",
+                    "",
+                )
+            if script == "check-protected-project-files.py":
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    '{"ok": true, "errors": [], "warnings": [], "checked": ["x"]}\n',
+                    "",
+                )
+            return completed
+
+        stdout = io.StringIO()
+        with patch.object(self.aictl.subprocess, "run", side_effect=fake_run):
+            with redirect_stdout(stdout):
+                code = self.aictl.main(["project", "doctor"])
+
+        output = stdout.getvalue()
 
         self.assertEqual(code, 0)
-        self.assertIn("check-protected-project-files.py", argv[1])
-        self.assertNotIn("--actor", argv)
-        self.assertEqual(argv[-1], "--json")
-        self.assertEqual(payload["data"]["result"]["ok"], True)
+        self.assertIn("Project Doctor: PASS", output)
+        self.assertIn("PASS  plan validation", output)
+        self.assertIn("PASS  protected project files", output)
 
     def test_project_render_runs_legacy_render_steps(self):
         completed = [

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 163,
+  "revision": 185,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-18T15:22:20Z",
+  "updated_at": "2026-06-18T15:43:30Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -345,7 +345,7 @@
     {
       "id": "CHG-008",
       "title": "Convert legacy ctl scripts into compatibility wrappers",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "tooling",
       "rationale": "CTL-01 found duplicated ctl logic, CTL-02 defined wrapper migration, CTL-04 introduced shared core primitives, CTL-05 introduced command registry, and CTL-06 introduced the aictl facade.",
       "problem": "Legacy ctl scripts still contain independent command implementations and duplicated control logic; CTL-07 needs an approved evolution change to migrate them toward compatibility wrappers safely.",
@@ -386,14 +386,64 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-18T15:22:20Z",
       "approval_notes": "Approved for CTL-07 compatibility wrapper migration. Must preserve existing ctl behavior and avoid circular delegation through aictl.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T15:38:01Z",
+      "acceptance_notes": "CTL-07 implemented and accepted. Legacy ctl scripts now share compatibility plumbing without changing command behavior or introducing aictl recursion.",
+      "notes": [],
+      "priority": 1,
+      "order": 8,
+      "created_at": "2026-06-18T15:21:51Z",
+      "updated_at": "2026-06-18T15:38:01Z"
+    },
+    {
+      "id": "CHG-009",
+      "title": "Add project doctor diagnostics",
+      "status": "approved",
+      "change_type": "tooling",
+      "rationale": "CTL-08 is the bounded implementation task for project doctor diagnostics after aictl facade and wrapper compatibility were introduced.",
+      "problem": "The existing aictl project doctor command only delegates to protected-file checks and does not provide explicit PASS/WARN/FAIL project health diagnostics required by CTL-08.",
+      "proposal": "Extend project.doctor with structured project health diagnostics for plan/task/evolution validation, dependency graph, generated-output freshness, protected-file checks, prompt/context status, command registry availability, and current task consistency.",
+      "affected_areas": [
+        "Project Control Gateway",
+        "Project doctor diagnostics",
+        "Validation behavior",
+        "aictl project doctor"
+      ],
+      "affected_files": [
+        "scripts/aictl.py",
+        "ai_project_ctl/** if shared doctor helpers are added",
+        "tests/**",
+        "scripts/check-protected-project-files.py only if CTL-08 explicitly requires it"
+      ],
+      "risks": [
+        "Doctor diagnostics could incorrectly mark warnings as blocking failures.",
+        "Doctor could duplicate validation logic instead of delegating to existing validated CLIs.",
+        "Prompt/context freshness checks may be noisy if ownership between taskctl.py, codexctl.py, and contextctl.py remains ambiguous."
+      ],
+      "impact": [
+        "Adds explicit PASS/WARN/FAIL project health diagnostics.",
+        "Improves owner visibility into stale generated files, prompt/context drift, dependency graph status, and protected-file safety.",
+        "Does not change lifecycle state or approval semantics."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-026"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T15:43:30Z",
+      "approval_notes": "Approved for CTL-08 project doctor diagnostics. Must preserve lifecycle semantics and distinguish PASS, WARN, and FAIL clearly.",
       "accepted_by": "",
       "accepted_at": "",
       "acceptance_notes": "",
       "notes": [],
       "priority": 1,
-      "order": 8,
-      "created_at": "2026-06-18T15:21:51Z",
-      "updated_at": "2026-06-18T15:22:20Z"
+      "order": 9,
+      "created_at": "2026-06-18T15:43:15Z",
+      "updated_at": "2026-06-18T15:43:30Z"
     }
   ]
 }

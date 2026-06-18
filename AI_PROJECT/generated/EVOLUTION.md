@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `163`
-Changes: `8`
+Revision: `185`
+Changes: `9`
 
 ## Summary
 
-- `accepted`: 6
+- `accepted`: 7
 - `approved`: 2
 
 ## Changes
@@ -390,7 +390,7 @@ Linked tasks:
 
 ### CHG-008 — Convert legacy ctl scripts into compatibility wrappers
 
-Status: `approved`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `compatible`  
@@ -410,6 +410,9 @@ CTL-01 found duplicated ctl logic, CTL-02 defined wrapper migration, CTL-04 intr
 
 Approved by: `human_owner` at `2026-06-18T15:22:20Z`  
 Approval notes: Approved for CTL-07 compatibility wrapper migration. Must preserve existing ctl behavior and avoid circular delegation through aictl.  
+
+Accepted by: `human_owner` at `2026-06-18T15:38:01Z`  
+Acceptance notes: CTL-07 implemented and accepted. Legacy ctl scripts now share compatibility plumbing without changing command behavior or introducing aictl recursion.  
 
 Affected areas:
 
@@ -443,3 +446,56 @@ Impact:
 Linked tasks:
 
 - TASK-025
+
+### CHG-009 — Add project doctor diagnostics
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+The existing aictl project doctor command only delegates to protected-file checks and does not provide explicit PASS/WARN/FAIL project health diagnostics required by CTL-08.
+
+Proposal:
+
+Extend project.doctor with structured project health diagnostics for plan/task/evolution validation, dependency graph, generated-output freshness, protected-file checks, prompt/context status, command registry availability, and current task consistency.
+
+Rationale:
+
+CTL-08 is the bounded implementation task for project doctor diagnostics after aictl facade and wrapper compatibility were introduced.
+
+Approved by: `human_owner` at `2026-06-18T15:43:30Z`  
+Approval notes: Approved for CTL-08 project doctor diagnostics. Must preserve lifecycle semantics and distinguish PASS, WARN, and FAIL clearly.  
+
+Affected areas:
+
+- Project Control Gateway
+- Project doctor diagnostics
+- Validation behavior
+- aictl project doctor
+
+Affected files:
+
+- scripts/aictl.py
+- ai_project_ctl/** if shared doctor helpers are added
+- tests/**
+- scripts/check-protected-project-files.py only if CTL-08 explicitly requires it
+
+Risks:
+
+- Doctor diagnostics could incorrectly mark warnings as blocking failures.
+- Doctor could duplicate validation logic instead of delegating to existing validated CLIs.
+- Prompt/context freshness checks may be noisy if ownership between taskctl.py, codexctl.py, and contextctl.py remains ambiguous.
+
+Impact:
+
+- Adds explicit PASS/WARN/FAIL project health diagnostics.
+- Improves owner visibility into stale generated files, prompt/context drift, dependency graph status, and protected-file safety.
+- Does not change lifecycle state or approval semantics.
+
+Linked tasks:
+
+- TASK-026
