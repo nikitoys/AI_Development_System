@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `185`
-Changes: `9`
+Revision: `206`
+Changes: `10`
 
 ## Summary
 
-- `accepted`: 7
+- `accepted`: 8
 - `approved`: 2
 
 ## Changes
@@ -449,7 +449,7 @@ Linked tasks:
 
 ### CHG-009 — Add project doctor diagnostics
 
-Status: `approved`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `compatible`  
@@ -469,6 +469,9 @@ CTL-08 is the bounded implementation task for project doctor diagnostics after a
 
 Approved by: `human_owner` at `2026-06-18T15:43:30Z`  
 Approval notes: Approved for CTL-08 project doctor diagnostics. Must preserve lifecycle semantics and distinguish PASS, WARN, and FAIL clearly.  
+
+Accepted by: `human_owner` at `2026-06-18T16:38:55Z`  
+Acceptance notes: CTL-08 implemented and accepted. Project doctor now reports explicit PASS/WARN/FAIL diagnostics while preserving lifecycle and validation ownership.  
 
 Affected areas:
 
@@ -499,3 +502,55 @@ Impact:
 Linked tasks:
 
 - TASK-026
+
+### CHG-010 — Add locking and atomic write protection
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+Project-control write operations can still race or partially update state/events/generated outputs without a shared lock and transaction safety model.
+
+Proposal:
+
+Add locking and atomic write protection for shared control-plane write paths, defining safe local lock behavior, stale write protection, and transaction boundaries without changing lifecycle semantics.
+
+Rationale:
+
+CTL-02 architecture and CTL-03 ID allocation strategy require lock-protected mutation before future web writes or broader parallel execution are safe.
+
+Approved by: `human_owner` at `2026-06-18T16:39:46Z`  
+Approval notes: Approved for CTL-09 locking and atomic write protection. Must preserve existing lifecycle semantics and avoid broad wrapper behavior changes.  
+
+Affected areas:
+
+- Project Control Gateway
+- Locking and atomic writes
+- Shared transaction safety
+
+Affected files:
+
+- ai_project_ctl/core/locks.py
+- ai_project_ctl/core/store.py
+- ai_project_ctl/core/transactions.py
+- ai_project_ctl/core/legacy.py if legacy ctl plumbing adopts lock helpers
+- tests/**
+
+Risks:
+
+- Locking could deadlock or leave stale lock files if not implemented conservatively.
+- Changing existing ctl write paths too broadly could alter behavior or exit codes.
+- Transaction ordering between event append, state write, and generated render must be explicit.
+
+Impact:
+
+- Improves safety for parallel local execution and future web write actions.
+- Prepares the control plane for lock-aware command execution without changing lifecycle semantics.
+
+Linked tasks:
+
+- TASK-027

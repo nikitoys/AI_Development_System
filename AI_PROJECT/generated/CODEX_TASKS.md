@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `241`
+Revision: `248`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -472,7 +472,7 @@ Acceptance criteria:
 
 ### CTL-09 (TASK-027) — Task I - Add locking and atomic write protection
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_8992616ea198`, legacy `TASK-027`, aliases `TASK-027`, local `CTL` / `9`

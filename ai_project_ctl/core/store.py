@@ -32,6 +32,7 @@ def atomic_write_text(path: str | Path, text: str) -> None:
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(tmp_name, str(target))
+        _fsync_directory(target.parent)
     finally:
         if os.path.exists(tmp_name):
             os.unlink(tmp_name)
@@ -75,3 +76,18 @@ class JsonStore:
     def exists(self) -> bool:
         return self.path.exists()
 
+
+def _fsync_directory(directory: Path) -> None:
+    flags = os.O_RDONLY
+    if hasattr(os, "O_DIRECTORY"):
+        flags |= os.O_DIRECTORY
+    try:
+        fd = os.open(str(directory), flags)
+    except OSError:
+        return
+    try:
+        os.fsync(fd)
+    except OSError:
+        pass
+    finally:
+        os.close(fd)

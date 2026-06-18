@@ -1,13 +1,21 @@
 import json
+import os
+import subprocess
+import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from ai_project_ctl.core.events import AuditLog
-from ai_project_ctl.core.locks import FileLock
+from ai_project_ctl.core import locks as locks_mod
+from ai_project_ctl.core.locks import FileLock, LockError
 from ai_project_ctl.core.store import JsonStore
 from ai_project_ctl.core.transactions import MutationTransaction, RenderTrigger
 from ai_project_ctl.core.validation import ValidationResult
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 class CoreTransactionsLocksTests(unittest.TestCase):
@@ -90,9 +98,97 @@ class CoreTransactionsLocksTests(unittest.TestCase):
             lock = FileLock(Path(tmp) / "locks" / "state.lock")
             with lock:
                 self.assertTrue(lock.held)
+                self.assertTrue(lock.path.exists())
             self.assertFalse(lock.held)
+            if lock.path.exists():
+                self.assertEqual(lock.path.read_text(encoding="utf-8"), "")
+
+    def test_file_lock_contention_returns_readable_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lock_path = Path(tmp) / "locks" / "state.lock"
+            with FileLock(lock_path):
+                child = run_lock_child(lock_path)
+
+            self.assertEqual(child.returncode, 7)
+            self.assertIn("LOCK_BUSY", child.stdout)
+            self.assertIn(str(lock_path), child.stdout)
+
+    def test_file_lock_reports_stale_busy_lock(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lock_path = Path(tmp) / "locks" / "state.lock"
+            with FileLock(lock_path):
+                lock_path.write_text(
+                    json.dumps({"pid": 999999, "acquired_at": time.time() - 3600}),
+                    encoding="utf-8",
+                )
+                child = run_lock_child(lock_path, stale_after=0.001)
+
+            self.assertEqual(child.returncode, 7)
+            self.assertIn("LOCK_STALE", child.stdout)
+            self.assertIn(str(lock_path), child.stdout)
+
+    def test_lockfile_fallback_removes_stale_lock(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lock_path = Path(tmp) / "locks" / "state.lock"
+            lock_path.parent.mkdir(parents=True)
+            lock_path.write_text(
+                json.dumps({"pid": 999999, "acquired_at": time.time() - 3600}),
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(locks_mod, "fcntl", None):
+                lock = FileLock(lock_path, stale_after=0.001)
+                with lock:
+                    self.assertTrue(lock.held)
+
+            self.assertFalse(lock_path.exists())
+
+    def test_lockfile_fallback_reports_busy_lock(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lock_path = Path(tmp) / "locks" / "state.lock"
+            lock_path.parent.mkdir(parents=True)
+            lock_path.write_text(
+                json.dumps({"pid": 123, "acquired_at": time.time()}),
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(locks_mod, "fcntl", None):
+                with self.assertRaises(LockError) as raised:
+                    FileLock(lock_path, stale_after=60).acquire(blocking=False)
+
+            self.assertEqual(raised.exception.code, "LOCK_BUSY")
+            self.assertIn(str(lock_path), raised.exception.message)
+
+
+def run_lock_child(lock_path, *, stale_after=None):
+    code = """
+import sys
+from pathlib import Path
+from ai_project_ctl.core.locks import FileLock, LockError
+
+stale_after = None if sys.argv[2] == "" else float(sys.argv[2])
+lock = FileLock(Path(sys.argv[1]), stale_after=stale_after)
+try:
+    lock.acquire(blocking=False)
+except LockError as exc:
+    print(f"{exc.code}:{exc.message}")
+    raise SystemExit(7)
+else:
+    lock.release()
+    print("acquired")
+    raise SystemExit(0)
+"""
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(ROOT) + os.pathsep + env.get("PYTHONPATH", "")
+    return subprocess.run(
+        [sys.executable, "-c", code, str(lock_path), "" if stale_after is None else str(stale_after)],
+        cwd=str(ROOT),
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
 
 
 if __name__ == "__main__":
     unittest.main()
-

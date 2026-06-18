@@ -3,17 +3,15 @@
 
 # Task Execution Queue
 
-Revision: `241`
+Revision: `248`
 
 ## Executable Now
 
-- `CTL-09 (TASK-027)` [planned] `EPIC-005` priority `1` — Task I - Add locking and atomic write protection
+- `CTL-10 (TASK-028)` [planned] `EPIC-005` priority `1` — Task J - Add read-only local Web Control Center MVP
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 
 ## Waiting For Dependencies
 
-- `CTL-10 (TASK-028)` [planned] `EPIC-005` priority `1` — Task J - Add read-only local Web Control Center MVP
-  - `dependency_not_done`: depends on CTL-09 (TASK-027) with status planned
 - `CTL-11 (TASK-029)` [planned] `EPIC-005` priority `1` — Task K - Add controlled Web write actions
   - `dependency_not_done`: depends on CTL-10 (TASK-028) with status planned
 - `CTL-12 (TASK-030)` [planned] `EPIC-005` priority `1` — Task L - Documentation and owner quickstart
@@ -44,6 +42,8 @@ Revision: `241`
 - `CTL-07 (TASK-025)` [done] `EPIC-005` priority `1` — Task G - Convert old ctl scripts into compatibility wrappers
   - `status_not_executable`: status is done
 - `CTL-08 (TASK-026)` [done] `EPIC-005` priority `1` — Task H - Add project doctor command
+  - `status_not_executable`: status is done
+- `CTL-09 (TASK-027)` [done] `EPIC-005` priority `1` — Task I - Add locking and atomic write protection
   - `status_not_executable`: status is done
 - `TASK-002` [done] `EPIC-002` priority `1` — Document Skills Layer Roadmap
   - `status_not_executable`: status is done

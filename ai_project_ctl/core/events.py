@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -57,8 +58,13 @@ class AuditLog:
 
     def append(self, event: AuditEvent) -> str:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with self.path.open("a", encoding="utf-8", newline="\n") as handle:
-            handle.write(event.to_json_line())
+        raw = event.to_json_line().encode("utf-8")
+        fd = os.open(str(self.path), os.O_APPEND | os.O_CREAT | os.O_WRONLY, 0o644)
+        try:
+            _write_all(fd, raw)
+            os.fsync(fd)
+        finally:
+            os.close(fd)
         return event.event_id
 
     def append_event(
@@ -83,3 +89,12 @@ class AuditLog:
         )
         return self.append(event)
 
+
+def _write_all(fd: int, data: bytes) -> None:
+    view = memoryview(data)
+    total = 0
+    while total < len(view):
+        written = os.write(fd, view[total:])
+        if written == 0:
+            raise OSError("zero-byte audit event write")
+        total += written

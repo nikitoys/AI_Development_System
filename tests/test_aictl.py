@@ -2,6 +2,7 @@ import importlib.util
 import io
 import json
 import subprocess
+import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -252,9 +253,19 @@ class AictlTests(unittest.TestCase):
             return completed
 
         stdout = io.StringIO()
-        with patch.object(self.aictl.subprocess, "run", side_effect=fake_run):
-            with redirect_stdout(stdout):
-                code = self.aictl.main(["project", "doctor"])
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "AI_PROJECT/state").mkdir(parents=True)
+            (root / "AI_PROJECT/generated").mkdir(parents=True)
+            (root / "AI_PROJECT/state/current_execution.json").write_text("{}\n", encoding="utf-8")
+            (root / "AI_PROJECT/generated/CODEX_STATUS.md").write_text(
+                "Source ID: `TASK-026`\nStatus: `READY`\n",
+                encoding="utf-8",
+            )
+
+            with patch.object(self.aictl.subprocess, "run", side_effect=fake_run):
+                with redirect_stdout(stdout):
+                    code = self.aictl.main(["--root", str(root), "project", "doctor"])
 
         output = stdout.getvalue()
 
