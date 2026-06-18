@@ -1090,6 +1090,20 @@ def cmd_project_render(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_web(args: argparse.Namespace) -> int:
+    _ensure_implemented("web.serve")
+    if args.json:
+        raise FacadeError(
+            "WEB_JSON_UNSUPPORTED",
+            "The web server is an interactive local process and does not support --json.",
+        )
+
+    from ai_project_ctl.web.server import run_server
+
+    run_server(args.root, host=args.host, port=args.port, actor=args.actor)
+    return 0
+
+
 def _add_project_doctor_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--allow-uninitialized", action="store_true")
     parser.add_argument("--allow-missing-generated", action="store_true")
@@ -1186,6 +1200,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = project_sub.add_parser("render", help="Render generated project-control views")
     p.set_defaults(func=cmd_project_render, facade_command="project.render")
+
+    web = sub.add_parser("web", help="Run the local read-only Web Control Center")
+    web.add_argument("--host", default="127.0.0.1")
+    web.add_argument("--port", type=int, default=8765)
+    web.set_defaults(func=cmd_web, facade_command="web.serve")
 
     return parser
 

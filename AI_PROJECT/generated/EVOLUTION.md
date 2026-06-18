@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `206`
-Changes: `10`
+Revision: `228`
+Changes: `11`
 
 ## Summary
 
-- `accepted`: 8
+- `accepted`: 9
 - `approved`: 2
 
 ## Changes
@@ -505,7 +505,7 @@ Linked tasks:
 
 ### CHG-010 — Add locking and atomic write protection
 
-Status: `approved`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `compatible`  
@@ -525,6 +525,9 @@ CTL-02 architecture and CTL-03 ID allocation strategy require lock-protected mut
 
 Approved by: `human_owner` at `2026-06-18T16:39:46Z`  
 Approval notes: Approved for CTL-09 locking and atomic write protection. Must preserve existing lifecycle semantics and avoid broad wrapper behavior changes.  
+
+Accepted by: `human_owner` at `2026-06-18T17:12:06Z`  
+Acceptance notes: CTL-09 implemented and accepted. Locking and atomic write protection added without changing lifecycle semantics.  
 
 Affected areas:
 
@@ -554,3 +557,55 @@ Impact:
 Linked tasks:
 
 - TASK-027
+
+### CHG-011 — Add read-only local Web Control Center MVP
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+Project control is now available through ctl scripts and aictl, but there is no local read-only UI for observing current task state, executable queue, health diagnostics, events, and generated project-control status.
+
+Proposal:
+
+Add a read-only local Web Control Center MVP over existing aictl/core/registry/project doctor capabilities. The web UI must not mutate JSON, events, generated files, lifecycle state, or approval status.
+
+Rationale:
+
+CTL-02 architecture defines a future local web shell, CTL-06 introduced aictl, CTL-08 added project doctor diagnostics, and CTL-09 added locking/atomic-write safety. CTL-10 is the bounded read-only UI step before any web write actions.
+
+Approved by: `human_owner` at `2026-06-18T17:30:06Z`  
+Approval notes: Approved  
+
+Affected areas:
+
+- Project Control Gateway
+- Read-only local Web Control Center
+- aictl web/dashboard surface
+
+Affected files:
+
+- scripts/aictl.py if web command routing is added
+- ai_project_ctl/web/**
+- ai_project_ctl/core/** only if read-only web integration requires compatible helpers
+- tests/**
+
+Risks:
+
+- Web UI could accidentally introduce mutation paths if route handlers bypass the command registry.
+- Adding web dependencies could make the project harder to run if dependency policy is unclear.
+- Dashboard may display stale generated state unless it clearly labels derived outputs and doctor warnings.
+
+Impact:
+
+- Adds local read-only visibility for project-control state.
+- Keeps all state changes disabled in CTL-10.
+- Prepares CTL-11 web write actions without implementing them.
+
+Linked tasks:
+
+- TASK-028

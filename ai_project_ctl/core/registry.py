@@ -279,6 +279,7 @@ def _arg(
     *,
     value_type: str = "string",
     required: bool = False,
+    default: Any = None,
     repeatable: bool = False,
     choices: tuple[str, ...] = (),
 ) -> ArgumentSpec:
@@ -287,6 +288,7 @@ def _arg(
         description=description,
         value_type=value_type,
         required=required,
+        default=default,
         repeatable=repeatable,
         choices=choices,
     )
@@ -547,6 +549,30 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
             notes=(
                 "Facade-only orchestration over existing render commands.",
                 "Each delegated ctl script remains responsible for its own validation and writes.",
+            ),
+        ),
+        CommandDescriptor(
+            name="web.serve",
+            domain="web",
+            description="Serve the local read-only Web Control Center.",
+            kind=CommandKind.READ,
+            arguments=(
+                _arg("host", "Loopback host to bind.", default="127.0.0.1"),
+                _arg("port", "Local port to bind.", value_type="integer", default=8765),
+            ),
+            reads_state=(
+                state_plan,
+                state_tasks,
+                state_evolution,
+                state_docs,
+                state_execution,
+            ),
+            output=_output("Local read-only web dashboard.", fields=("url",)),
+            validators=("command_registry", "read_only_routes", "loopback_host"),
+            legacy_command=("python scripts/aictl.py web --host 127.0.0.1 --port 8765",),
+            notes=(
+                "CTL-10 read-only surface; route handlers do not mutate project-control files.",
+                "Generated Markdown is displayed as derived output only.",
             ),
         ),
         CommandDescriptor(

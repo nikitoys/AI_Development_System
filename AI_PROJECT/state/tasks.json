@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 248,
+  "revision": 255,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-18T17:11:11Z",
+  "updated_at": "2026-06-18T17:42:42Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -1787,7 +1787,7 @@
       "id": "TASK-028",
       "epic_id": "EPIC-005",
       "title": "Task J - Add read-only local Web Control Center MVP",
-      "status": "planned",
+      "status": "done",
       "summary": "Provide initial web visibility without mutation risk.",
       "description": "Add a read-only local Control Center, preferably FastAPI + Jinja2 + HTMX unless repository constraints suggest otherwise, launched through python scripts/aictl.py web --host 127.0.0.1 --port 8765 and backed by the same command registry.",
       "priority": 1,
@@ -1849,11 +1849,11 @@
           "reason": "Read-only Web Control Center should follow locking and atomic write protection foundation."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-18T17:42:42Z",
+      "approval_notes": "Read-only local Web Control Center MVP accepted. UI is loopback-only, GET/HEAD-only, generated files are labeled derived, and no web mutation paths were added.",
       "created_at": "2026-06-18T06:21:35Z",
-      "updated_at": "2026-06-18T13:30:46Z",
+      "updated_at": "2026-06-18T17:42:42Z",
       "uid": "tsk_1c8f867e1c2c",
       "legacy_id": "TASK-028",
       "aliases": [

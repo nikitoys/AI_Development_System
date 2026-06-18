@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `248`
+Revision: `255`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -488,7 +488,7 @@ Acceptance criteria:
 
 ### CTL-10 (TASK-028) — Task J - Add read-only local Web Control Center MVP
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_1c8f867e1c2c`, legacy `TASK-028`, aliases `TASK-028`, local `CTL` / `10`

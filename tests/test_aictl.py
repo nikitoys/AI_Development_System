@@ -299,6 +299,18 @@ class AictlTests(unittest.TestCase):
         self.assertTrue(payload["ok"])
         self.assertEqual(len(payload["data"]["steps"]), 5)
 
+    def test_web_command_starts_loopback_server_by_default(self):
+        with patch("ai_project_ctl.web.server.run_server") as run_server:
+            code = self.aictl.main(["--root", "/tmp/project", "--actor", "tester", "web"])
+
+        self.assertEqual(code, 0)
+        run_server.assert_called_once_with(
+            "/tmp/project",
+            host="127.0.0.1",
+            port=8765,
+            actor="tester",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 206,
+  "revision": 228,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-18T16:39:46Z",
+  "updated_at": "2026-06-18T17:30:06Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -448,7 +448,7 @@
     {
       "id": "CHG-010",
       "title": "Add locking and atomic write protection",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "tooling",
       "rationale": "CTL-02 architecture and CTL-03 ID allocation strategy require lock-protected mutation before future web writes or broader parallel execution are safe.",
       "problem": "Project-control write operations can still race or partially update state/events/generated outputs without a shared lock and transaction safety model.",
@@ -485,14 +485,63 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-18T16:39:46Z",
       "approval_notes": "Approved for CTL-09 locking and atomic write protection. Must preserve existing lifecycle semantics and avoid broad wrapper behavior changes.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T17:12:06Z",
+      "acceptance_notes": "CTL-09 implemented and accepted. Locking and atomic write protection added without changing lifecycle semantics.",
+      "notes": [],
+      "priority": 1,
+      "order": 10,
+      "created_at": "2026-06-18T16:39:17Z",
+      "updated_at": "2026-06-18T17:12:06Z"
+    },
+    {
+      "id": "CHG-011",
+      "title": "Add read-only local Web Control Center MVP",
+      "status": "approved",
+      "change_type": "tooling",
+      "rationale": "CTL-02 architecture defines a future local web shell, CTL-06 introduced aictl, CTL-08 added project doctor diagnostics, and CTL-09 added locking/atomic-write safety. CTL-10 is the bounded read-only UI step before any web write actions.",
+      "problem": "Project control is now available through ctl scripts and aictl, but there is no local read-only UI for observing current task state, executable queue, health diagnostics, events, and generated project-control status.",
+      "proposal": "Add a read-only local Web Control Center MVP over existing aictl/core/registry/project doctor capabilities. The web UI must not mutate JSON, events, generated files, lifecycle state, or approval status.",
+      "affected_areas": [
+        "Project Control Gateway",
+        "Read-only local Web Control Center",
+        "aictl web/dashboard surface"
+      ],
+      "affected_files": [
+        "scripts/aictl.py if web command routing is added",
+        "ai_project_ctl/web/**",
+        "ai_project_ctl/core/** only if read-only web integration requires compatible helpers",
+        "tests/**"
+      ],
+      "risks": [
+        "Web UI could accidentally introduce mutation paths if route handlers bypass the command registry.",
+        "Adding web dependencies could make the project harder to run if dependency policy is unclear.",
+        "Dashboard may display stale generated state unless it clearly labels derived outputs and doctor warnings."
+      ],
+      "impact": [
+        "Adds local read-only visibility for project-control state.",
+        "Keeps all state changes disabled in CTL-10.",
+        "Prepares CTL-11 web write actions without implementing them."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-028"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T17:30:06Z",
+      "approval_notes": "Approved",
       "accepted_by": "",
       "accepted_at": "",
       "acceptance_notes": "",
       "notes": [],
       "priority": 1,
-      "order": 10,
-      "created_at": "2026-06-18T16:39:17Z",
-      "updated_at": "2026-06-18T16:39:46Z"
+      "order": 11,
+      "created_at": "2026-06-18T17:12:24Z",
+      "updated_at": "2026-06-18T17:30:06Z"
     }
   ]
 }

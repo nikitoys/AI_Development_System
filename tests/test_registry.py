@@ -27,6 +27,7 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("codex.prompt.build", names)
         self.assertIn("project.doctor", names)
         self.assertIn("project.render", names)
+        self.assertIn("web.serve", names)
         self.assertIn("command.list", names)
         self.assertIn("command.describe", names)
         self.assertEqual(names, sorted(names))
