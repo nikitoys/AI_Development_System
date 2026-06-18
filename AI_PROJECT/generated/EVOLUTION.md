@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `119`
-Changes: `6`
+Revision: `137`
+Changes: `7`
 
 ## Summary
 
-- `accepted`: 4
+- `accepted`: 5
 - `approved`: 2
 
 ## Changes
@@ -284,7 +284,7 @@ Linked tasks:
 
 ### CHG-006 — Add command registry foundation
 
-Status: `approved`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `compatible`  
@@ -304,6 +304,9 @@ CTL-01 inventory found duplicated parser/command behavior, CTL-02 architecture r
 
 Approved by: `human_owner` at `2026-06-18T14:41:29Z`  
 Approval notes: Approved for CTL-05 command registry foundation. Existing ctl behavior must remain unchanged; no aictl facade or wrapper migration in this task.  
+
+Accepted by: `human_owner` at `2026-06-18T14:54:59Z`  
+Acceptance notes: CTL-05 implemented and accepted. Command registry foundation added as metadata-only without changing existing ctl behavior.  
 
 Affected areas:
 
@@ -332,3 +335,52 @@ Impact:
 Linked tasks:
 
 - TASK-023
+
+### CHG-007 — Add unified aictl CLI facade
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+Project control still requires multiple ctl entrypoints; CTL-06 needs an approved evolution change to introduce scripts/aictl.py as the unified facade.
+
+Proposal:
+
+Add scripts/aictl.py as a facade over the existing command registry and shared core primitives without migrating legacy ctl scripts or changing existing command behavior.
+
+Rationale:
+
+CTL-02 defines aictl as the preferred facade, CTL-04 introduced core primitives, and CTL-05 introduced the command registry foundation.
+
+Approved by: `human_owner` at `2026-06-18T14:56:33Z`  
+Approval notes: Approved for CTL-06 scripts/aictl.py facade implementation. Must remain facade-only; no wrapper migration or behavior changes.  
+
+Affected areas:
+
+- Project Control Gateway
+- Unified CLI facade
+- Command registry integration
+
+Affected files:
+
+- scripts/aictl.py
+- ai_project_ctl/core/registry.py if facade metadata access requires compatible additions
+- tests/test_aictl.py or equivalent facade tests
+
+Risks:
+
+- aictl could accidentally become an independent implementation instead of a facade.
+- aictl output could diverge from existing ctl behavior if it attempts to execute mutations too early.
+
+Impact:
+
+- Adds the first unified CLI entrypoint for command discovery and safe facade behavior.
+- Existing ctl scripts remain unchanged and compatible.
+
+Linked tasks:
+
+- TASK-024

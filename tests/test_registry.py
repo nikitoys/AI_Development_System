@@ -26,6 +26,7 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("context.build", names)
         self.assertIn("codex.prompt.build", names)
         self.assertIn("project.doctor", names)
+        self.assertIn("project.render", names)
         self.assertIn("command.list", names)
         self.assertIn("command.describe", names)
         self.assertEqual(names, sorted(names))
@@ -59,8 +60,8 @@ class RegistryTests(unittest.TestCase):
             for command in command_list(domain="project", include_planned=True)
         ]
 
-        self.assertEqual(implemented_names, [])
-        self.assertEqual(all_project_names, ["project.doctor"])
+        self.assertEqual(implemented_names, ["project.doctor", "project.render"])
+        self.assertEqual(all_project_names, ["project.doctor", "project.render"])
 
     def test_registry_rejects_duplicate_commands(self):
         descriptor = CommandDescriptor(

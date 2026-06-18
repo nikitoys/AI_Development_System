@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `222`
+Revision: `227`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -424,7 +424,7 @@ Acceptance criteria:
 
 ### CTL-06 (TASK-024) — Task F - Implement unified CLI facade scripts/aictl.py
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_fc72e08b34f0`, legacy `TASK-024`, aliases `TASK-024`, local `CTL` / `6`

@@ -3,27 +3,23 @@
 
 # Task Execution Queue
 
-Revision: `222`
+Revision: `227`
 
 ## Executable Now
 
-- `CTL-06 (TASK-024)` [planned] `EPIC-005` priority `1` — Task F - Implement unified CLI facade scripts/aictl.py
+- `CTL-07 (TASK-025)` [planned] `EPIC-005` priority `1` — Task G - Convert old ctl scripts into compatibility wrappers
+- `CTL-08 (TASK-026)` [planned] `EPIC-005` priority `1` — Task H - Add project doctor command
 - `CTL-09 (TASK-027)` [planned] `EPIC-005` priority `1` — Task I - Add locking and atomic write protection
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 
 ## Waiting For Dependencies
 
-- `CTL-07 (TASK-025)` [planned] `EPIC-005` priority `1` — Task G - Convert old ctl scripts into compatibility wrappers
-  - `dependency_not_done`: depends on CTL-06 (TASK-024) with status planned
-- `CTL-08 (TASK-026)` [planned] `EPIC-005` priority `1` — Task H - Add project doctor command
-  - `dependency_not_done`: depends on CTL-06 (TASK-024) with status planned
 - `CTL-10 (TASK-028)` [planned] `EPIC-005` priority `1` — Task J - Add read-only local Web Control Center MVP
   - `dependency_not_done`: depends on CTL-08 (TASK-026) with status planned
   - `dependency_not_done`: depends on CTL-09 (TASK-027) with status planned
 - `CTL-11 (TASK-029)` [planned] `EPIC-005` priority `1` — Task K - Add controlled Web write actions
   - `dependency_not_done`: depends on CTL-10 (TASK-028) with status planned
 - `CTL-12 (TASK-030)` [planned] `EPIC-005` priority `1` — Task L - Documentation and owner quickstart
-  - `dependency_not_done`: depends on CTL-06 (TASK-024) with status planned
   - `dependency_not_done`: depends on CTL-11 (TASK-029) with status planned
 
 ## Not Executable Due To Status Or Parent State
@@ -45,6 +41,8 @@ Revision: `222`
 - `TASK-018` [done] `EPIC-001` priority `1` — Fix documentation generated drift
   - `status_not_executable`: status is done
 - `CTL-05 (TASK-023)` [done] `EPIC-005` priority `1` — Task E - Add command registry
+  - `status_not_executable`: status is done
+- `CTL-06 (TASK-024)` [done] `EPIC-005` priority `1` — Task F - Implement unified CLI facade scripts/aictl.py
   - `status_not_executable`: status is done
 - `TASK-002` [done] `EPIC-002` priority `1` — Document Skills Layer Roadmap
   - `status_not_executable`: status is done
