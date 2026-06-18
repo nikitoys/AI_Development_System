@@ -12,7 +12,7 @@ Task ID: `TASK-030`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `22`
-Tasks revision: `275`
+Tasks revision: `276`
 
 ## Query
 
@@ -23,7 +23,7 @@ TASK-030 Task L - Documentation and owner quickstart Make the unified control-pl
 ## Task Boundary Snapshot
 
 Task: `TASK-030` - Task L - Documentation and owner quickstart
-Status: `in_progress`
+Status: `in_review`
 
 Scope:
 - Document how to use aictl.

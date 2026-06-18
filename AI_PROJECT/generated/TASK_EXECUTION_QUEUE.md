@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `276`
+Revision: `278`
 
 ## Executable Now
 
@@ -45,8 +45,8 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `CTL-11 (TASK-029)` [done] `EPIC-005` priority `1` — Task K - Add controlled Web write actions
   - `status_not_executable`: status is done
-- `CTL-12 (TASK-030)` [in_review] `EPIC-005` priority `1` — Task L - Documentation and owner quickstart
-  - `status_not_executable`: status is in_review
+- `CTL-12 (TASK-030)` [done] `EPIC-005` priority `1` — Task L - Documentation and owner quickstart
+  - `status_not_executable`: status is done
 - `TASK-002` [done] `EPIC-002` priority `1` — Document Skills Layer Roadmap
   - `status_not_executable`: status is done
 - `TASK-003` [done] `EPIC-002` priority `1` — Create Clarification Gate Skill

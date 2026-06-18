@@ -1,9 +1,9 @@
 # Codex Prompt Package
 
-Generated: 2026-06-18T18:16:48Z
+Generated: 2026-06-18T18:19:07Z
 Source Type: task
 Source ID: TASK-030
-Source Status: in_progress
+Source Status: in_review
 
 [SYSTEM]
 
@@ -25,7 +25,7 @@ Project-control state is managed through Python CLI gateways; generated Markdown
 
 Source:
 Source Task: TASK-030
-Task Status: in_progress
+Task Status: in_review
 Title: Task L - Documentation and owner quickstart
 
 Make the unified control-plane usable and discoverable.
@@ -77,11 +77,11 @@ Implementation Instructions:
 
 Retrieved Context:
 - Context Pack path: `AI_PROJECT/generated/CONTEXT_PACK.md`
-- Context Pack SHA-256: `c7d24cdd9bdd777673c7f97ee55c7ab97e0676ffbc4f9ec2d89891b7017b1c64`
+- Context Pack SHA-256: `f4c95a4f4c004f8b4775dd1a0b654fffa462e1b0a4a9db48e07c682575c2494e`
 - Context mode: `task`
 - Context task ID: `TASK-030`
 - Docs revision: `22`
-- Tasks revision: `275`
+- Tasks revision: `276`
 
 Retrieved Context Rules:
 - Retrieved context is read-only.
@@ -117,7 +117,7 @@ Task ID: `TASK-030`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `22`
-Tasks revision: `275`
+Tasks revision: `276`
 
 ## Query
 
@@ -128,7 +128,7 @@ TASK-030 Task L - Documentation and owner quickstart Make the unified control-pl
 ## Task Boundary Snapshot
 
 Task: `TASK-030` - Task L - Documentation and owner quickstart
-Status: `in_progress`
+Status: `in_review`
 
 Scope:
 - Document how to use aictl.
