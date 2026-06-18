@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 308,
+  "revision": 314,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-18T20:07:12Z",
+  "updated_at": "2026-06-18T20:34:12Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -2198,7 +2198,7 @@
       "id": "TASK-033",
       "epic_id": "EPIC-006",
       "title": "WFA-02 Add Evolution Change Wizard",
-      "status": "planned",
+      "status": "done",
       "summary": "Add a guided workflow/UI helper to create and prepare Evolution Change records for tasks that require controlled system evolution approval.",
       "description": "Reduce manual evolutionctl command overhead by generating a draft/ready Change Proposal from a selected task's fields, then linking it to the task. Approval remains an explicit Human Owner action.",
       "priority": 1,
@@ -2255,11 +2255,11 @@
           "reason": "WFA-02 builds on the workflow foundation from WFA-01."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-18T20:34:08Z",
+      "approval_notes": "Evolution Change Wizard accepted. It creates and prepares Change Proposals through governed commands, links tasks correctly, and preserves Human Owner approval gates..",
       "created_at": "2026-06-18T19:37:04Z",
-      "updated_at": "2026-06-18T19:38:30Z",
+      "updated_at": "2026-06-18T20:34:12Z",
       "uid": "tsk_eb70d29e43ed",
       "ref": "WFA-02",
       "legacy_id": "TASK-033",

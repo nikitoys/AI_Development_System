@@ -453,6 +453,39 @@ class WebControlCenterTests(unittest.TestCase):
             ],
         )
 
+    def test_evolution_workflow_web_action_delegates_to_confirmed_aictl_workflow(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"ok": true, "data": {"change_id": "CHG-099", "steps": []}}\n',
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process) as run:
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "evolution.create_for_task",
+                    "confirm": "yes",
+                    "task": "WFA-02",
+                }
+            )
+
+        argv = run.call_args.args[0]
+
+        self.assertTrue(result.ok)
+        self.assertEqual(Path(argv[1]).name, "aictl.py")
+        self.assertEqual(
+            argv[-6:],
+            [
+                "workflow",
+                "run",
+                "evolution.create_for_task",
+                "--task",
+                "WFA-02",
+                "--confirm",
+            ],
+        )
+
     def test_health_route_is_json_read_only(self):
         status, content_type, body = route("/healthz", object())
 

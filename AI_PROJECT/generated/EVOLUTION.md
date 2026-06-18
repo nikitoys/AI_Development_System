@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `301`
-Changes: `14`
+Revision: `330`
+Changes: `15`
 
 ## Summary
 
-- `accepted`: 12
-- `approved`: 2
+- `accepted`: 14
+- `approved`: 1
 
 ## Changes
 
@@ -730,7 +730,7 @@ Linked tasks:
 
 ### CHG-014 — Add task workflow automation MVP
 
-Status: `approved`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `compatible`  
@@ -750,6 +750,9 @@ WFA-01 is the bounded first step for reducing manual task execution overhead whi
 
 Approved by: `human_owner` at `2026-06-18T19:48:14Z`  
 Approval notes: Approved for WFA-01 task workflow automation MVP. Workflows must compose registered/validated commands only and must not directly edit protected project-control files.  
+
+Accepted by: `human_owner` at `2026-06-18T20:07:43Z`  
+Acceptance notes: WFA-01 implemented and accepted. Task workflow automation MVP added while preserving validation, generated-output ownership, protected-file rules, and owner gates.  
 
 Affected areas:
 
@@ -784,3 +787,62 @@ Impact:
 Linked tasks:
 
 - TASK-032
+
+### CHG-015 — Add Evolution Change Wizard
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+Creating Evolution Change records still requires many manual evolutionctl.py commands for affected areas, files, risks, impacts, task linking, and lifecycle preparation.
+
+Proposal:
+
+Add a guided workflow/UI helper that creates and prepares an Evolution Change for a selected task, using task fields to draft problem/proposal/rationale and link the legacy task id, while keeping approval as an explicit Human Owner action.
+
+Rationale:
+
+WFA-02 is the bounded next step after WFA-01 workflow automation, reducing governance overhead without removing owner approval gates.
+
+Approved by: `human_owner` at `2026-06-18T20:09:47Z`  
+Approval notes: Approved for WFA-02 Evolution Change Wizard. Wizard may create and prepare Change records, but must not approve or accept them automatically.  
+
+Accepted by: `human_owner` at `2026-06-18T20:34:31Z`  
+Acceptance notes: WFA-02 implemented and accepted. Evolution Change Wizard added without bypassing Human Owner approval.  
+
+Affected areas:
+
+- Workflow automation
+- Evolution Change Flow
+- Web Control Center
+- aictl workflow commands
+
+Affected files:
+
+- ai_project_ctl/core/workflows.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/core/registry.py
+- scripts/aictl.py
+- tests/**
+
+Risks:
+
+- Wizard could over-generate low-quality Change fields if task data is vague.
+- Wizard could accidentally approve or accept changes if owner gates are not preserved.
+- Wizard must link by legacy task id where evolutionctl.py requires TASK-XXX references.
+
+Impact:
+
+- Reduces manual overhead for controlled self-evolution.
+- Keeps approval as explicit Human Owner action.
+- Improves consistency of affected files, risks, impact, and linked task records.
+
+Linked tasks:
+
+- TASK-033

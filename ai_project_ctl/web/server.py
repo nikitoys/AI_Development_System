@@ -504,6 +504,10 @@ def render_actions(data: Mapping[str, Any]) -> str:
             "task.submit_for_review",
             [input_field("task", "Task", default_task)],
         ),
+        action_form(
+            "evolution.create_for_task",
+            [input_field("task", "Task", default_task)],
+        ),
         "</section>",
         '<section class="panel action-panel">',
         "<h2>Task Transition</h2>",

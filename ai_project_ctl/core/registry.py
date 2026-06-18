@@ -530,6 +530,36 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
             ),
         ),
         CommandDescriptor(
+            name="evolution.create_for_task",
+            domain="evolution",
+            description=(
+                "Draft and prepare an Evolution Change Proposal from one Task "
+                "without approving it."
+            ),
+            kind=CommandKind.WRITE,
+            arguments=(
+                _arg("task", "Task ID, ref, UID, legacy ID, or alias.", required=True),
+                _arg("confirm", "Required explicit confirmation.", value_type="boolean", required=True),
+            ),
+            reads_state=(state_tasks, state_evolution),
+            writes_state=(state_evolution,),
+            event_logs=("AI_PROJECT/events/evolution-events.jsonl",),
+            generated_files=("AI_PROJECT/generated/EVOLUTION.md",),
+            output=_output("Step-by-step workflow result.", fields=("steps", "change_id", "change_preview")),
+            validators=("task_state", "evolution_state", "linked_task_references"),
+            lock_scope="workflow",
+            owner_approval=(
+                "Explicit confirmation is required to create and prepare the "
+                "Change; approval remains a separate Human Owner action."
+            ),
+            dry_run=True,
+            legacy_command=("python scripts/aictl.py workflow run evolution.create_for_task --task <TASK_ID> --confirm",),
+            notes=(
+                "Composes evolutionctl.py change create/add/link/transition commands.",
+                "Moves the Change Proposal only to ready; it does not approve, accept, or close the Change.",
+            ),
+        ),
+        CommandDescriptor(
             name="current.set",
             domain="current",
             description="Set the current executable Task through taskctl.py.",

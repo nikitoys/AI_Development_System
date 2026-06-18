@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `308`
+Revision: `314`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -577,7 +577,7 @@ Acceptance criteria:
 
 ### WFA-02 (TASK-033) — WFA-02 Add Evolution Change Wizard
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_eb70d29e43ed`, legacy `TASK-033`, aliases `TASK-033`, local `WFA` / `2`

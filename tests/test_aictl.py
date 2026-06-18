@@ -69,6 +69,7 @@ class AictlTests(unittest.TestCase):
         self.assertIn("task.prepare_for_codex", names)
         self.assertIn("task.refresh_execution_context", names)
         self.assertIn("task.submit_for_review", names)
+        self.assertIn("evolution.create_for_task", names)
 
     def test_workflow_run_without_confirm_returns_preview(self):
         code, stdout, _run = self.run_main(
@@ -89,6 +90,121 @@ class AictlTests(unittest.TestCase):
         self.assertEqual(payload["errors"][0]["code"], "WORKFLOW_CONFIRMATION_REQUIRED")
         self.assertEqual(payload["data"]["task_ref"], "WFA-01")
         self.assertTrue(payload["data"]["steps"])
+
+    def test_evolution_create_for_task_workflow_delegates_without_approval(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            state = root / "AI_PROJECT" / "state"
+            state.mkdir(parents=True)
+            (state / "tasks.json").write_text(
+                json.dumps(
+                    {
+                        "tasks": [
+                            {
+                                "id": "TASK-033",
+                                "ref": "WFA-02",
+                                "legacy_id": "TASK-033",
+                                "aliases": ["TASK-033"],
+                                "status": "in_progress",
+                                "title": "WFA-02 Add Evolution Change Wizard",
+                                "summary": "Create an Evolution Change wizard.",
+                                "description": "Prepare a ready Change Proposal from task fields.",
+                                "scope": ["Add workflow evolution.create_for_task."],
+                                "out_of_scope": ["Do not auto-approve Evolution Changes."],
+                                "allowed_files": [
+                                    "ai_project_ctl/core/workflows.py",
+                                    "tests/**",
+                                ],
+                                "acceptance_criteria": [
+                                    "Created Change links to the correct legacy task id."
+                                ],
+                                "review_instructions": [
+                                    "Verify owner approval remains separate."
+                                ],
+                            }
+                        ]
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            def fake_run(argv, **_kwargs):
+                script = Path(argv[1]).name
+                if script == "taskctl.py" and argv[-4:] == [
+                    "task",
+                    "resolve",
+                    "WFA-02",
+                    "--json",
+                ]:
+                    return subprocess.CompletedProcess(
+                        argv,
+                        0,
+                        '{"id": "TASK-033", "ref": "WFA-02", "status": "in_progress"}\n',
+                        "",
+                    )
+                if script == "evolutionctl.py":
+                    command_text = " ".join(argv)
+                    if " approve " in command_text or " accept " in command_text:
+                        raise AssertionError("workflow must not approve or accept changes")
+                    if argv[-1] == "check-generated":
+                        return subprocess.CompletedProcess(
+                            argv,
+                            0,
+                            "OK: generated evolution file is up to date\n",
+                            "",
+                        )
+                    if argv[-1] == "validate":
+                        return subprocess.CompletedProcess(
+                            argv,
+                            0,
+                            "OK: evolution is valid\n",
+                            "",
+                        )
+                    if "create" in argv:
+                        return subprocess.CompletedProcess(
+                            argv,
+                            0,
+                            "OK: change.create revision 1 -> 2\nCreated: CHG-099\n",
+                            "",
+                        )
+                    return subprocess.CompletedProcess(argv, 0, "OK\n", "")
+                raise AssertionError("unexpected command: {}".format(argv))
+
+            stdout = io.StringIO()
+            with patch("ai_project_ctl.core.workflows.subprocess.run", side_effect=fake_run) as run:
+                with redirect_stdout(stdout):
+                    code = self.aictl.main(
+                        [
+                            "--root",
+                            str(root),
+                            "--actor",
+                            "tester",
+                            "--json",
+                            "workflow",
+                            "run",
+                            "evolution.create_for_task",
+                            "--task",
+                            "WFA-02",
+                            "--confirm",
+                        ]
+                    )
+
+        payload = json.loads(stdout.getvalue())
+        commands = [call.args[0] for call in run.call_args_list]
+
+        self.assertEqual(code, 0)
+        self.assertEqual(payload["data"]["change_id"], "CHG-099")
+        self.assertEqual(payload["data"]["change_preview"]["linked_task"], "TASK-033")
+        self.assertIn("approve explicitly", payload["owner_action_required"])
+        self.assertTrue(
+            any(command[-5:] == ["change", "link-task", "CHG-099", "--task", "TASK-033"] for command in commands)
+        )
+        self.assertTrue(
+            any(command[-5:] == ["change", "transition", "CHG-099", "--to", "ready"] for command in commands)
+        )
+        self.assertFalse(any("approve" in command for command in commands))
+        self.assertFalse(any("accept" in command for command in commands))
 
     def test_task_list_delegates_with_native_json(self):
         completed = subprocess.CompletedProcess(

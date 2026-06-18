@@ -377,4 +377,10 @@ ACTIONS: dict[str, WebAction] = {
         label="Submit for review",
         builder=_build_workflow("task.submit_for_review"),
     ),
+    "evolution.create_for_task": WebAction(
+        action_id="evolution.create_for_task",
+        command_name="evolution.create_for_task",
+        label="Create Evolution Change",
+        builder=_build_workflow("evolution.create_for_task"),
+    ),
 }

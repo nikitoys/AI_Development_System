@@ -23,6 +23,7 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("task.prepare_for_codex", names)
         self.assertIn("task.refresh_execution_context", names)
         self.assertIn("task.submit_for_review", names)
+        self.assertIn("evolution.create_for_task", names)
         self.assertIn("task.transition", names)
         self.assertIn("current.set", names)
         self.assertIn("current.clear", names)
@@ -78,6 +79,18 @@ class RegistryTests(unittest.TestCase):
         self.assertTrue(descriptor["read_write"]["renders_generated"])
         self.assertEqual(descriptor["lock_scope"], "workflow")
         self.assertIn("Explicit confirmation", descriptor["owner_approval"])
+
+    def test_evolution_create_for_task_is_registered_without_approval(self):
+        descriptor = command_describe("evolution.create_for_task")
+
+        self.assertEqual(descriptor["domain"], "evolution")
+        self.assertEqual(descriptor["kind"], "write")
+        self.assertTrue(descriptor["read_write"]["mutates_state"])
+        self.assertTrue(descriptor["read_write"]["writes_events"])
+        self.assertTrue(descriptor["read_write"]["renders_generated"])
+        self.assertIn("AI_PROJECT/state/evolution.json", descriptor["writes_state"])
+        self.assertIn("separate Human Owner action", descriptor["owner_approval"])
+        self.assertIn("does not approve", " ".join(descriptor["notes"]))
 
     def test_command_list_filters_domain_and_planned_commands(self):
         implemented_names = [

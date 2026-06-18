@@ -152,6 +152,10 @@ def workflow_preview(
         "id": task_ref or "<task>",
         "status": "<resolved-status>",
     }
+    change_preview: dict[str, Any] | None = None
+    if descriptor.name == "evolution.create_for_task" and task_ref:
+        task = _load_task_for_preview(Path(root).resolve(), task_ref) or task
+        change_preview = _derive_evolution_change(task)
     steps = _build_steps(
         descriptor.name,
         task=task,
@@ -159,12 +163,17 @@ def workflow_preview(
         actor=actor,
         python_executable=python_executable or sys.executable,
         include_resolve=True,
+        change_preview=change_preview,
     )
-    return {
+    payload = {
         "workflow": descriptor.to_dict(),
         "task_ref": task_ref or "",
+        "task": task,
         "steps": [step.preview_dict() for step in steps],
     }
+    if change_preview is not None:
+        payload["change_preview"] = change_preview
+    return payload
 
 
 def run_workflow(
@@ -230,6 +239,9 @@ class WorkflowExecutor:
         self.runner = runner or self._run_subprocess
 
     def run(self, descriptor: WorkflowDescriptor, *, task_ref: str) -> CommandResult:
+        if descriptor.name == "evolution.create_for_task":
+            return self._run_evolution_create_for_task(descriptor, task_ref=task_ref)
+
         resolve_step = _resolve_step(
             task_ref,
             root=self.root,
@@ -275,6 +287,161 @@ class WorkflowExecutor:
             step_results=step_results,
             message="Workflow completed.",
         )
+
+    def _run_evolution_create_for_task(
+        self,
+        descriptor: WorkflowDescriptor,
+        *,
+        task_ref: str,
+    ) -> CommandResult:
+        resolve_step = _resolve_step(
+            task_ref,
+            root=self.root,
+            actor=self.actor,
+            python_executable=self.python_executable,
+        )
+        resolve_result = self._execute_step(resolve_step)
+        step_results = [resolve_result]
+        task: dict[str, Any] = {}
+        change_preview: dict[str, Any] = {}
+        change_id = ""
+
+        if not resolve_result.ok:
+            return self._result(
+                descriptor,
+                task_ref=task_ref,
+                task=task,
+                step_results=step_results,
+                message="Workflow stopped while resolving task reference.",
+            )
+
+        try:
+            resolved = _parse_resolved_task(resolve_result.stdout, task_ref=task_ref)
+            task = _load_task_by_id(self.root, str(resolved.get("id") or ""))
+            change_preview = _derive_evolution_change(task)
+        except WorkflowError as exc:
+            failed_step = WorkflowStep(
+                step_id="derive_change",
+                title="Derive Evolution Change preview",
+                command_name="evolution.create_for_task.derive",
+                route=READ_ONLY_CTL,
+                argv=("read", "AI_PROJECT/state/tasks.json"),
+            )
+            step_results.append(
+                WorkflowStepResult(
+                    step=failed_step,
+                    status="failed",
+                    returncode=1,
+                    stderr=exc.message,
+                )
+            )
+            result = self._result(
+                descriptor,
+                task_ref=task_ref,
+                task=task,
+                step_results=step_results,
+                message="Workflow stopped while deriving Evolution Change preview.",
+            )
+            result.errors.append(exc.to_message())
+            return result
+
+        create_step = _evolution_change_create_step(
+            task,
+            change_preview,
+            self.root,
+            self.actor,
+            self.python_executable,
+        )
+        create_result = self._execute_step(create_step)
+        step_results.append(create_result)
+        if not create_result.ok:
+            result = self._result(
+                descriptor,
+                task_ref=task_ref,
+                task=task,
+                step_results=step_results,
+                message="Workflow stopped while creating Evolution Change Proposal.",
+            )
+            result.data["change_preview"] = change_preview
+            return result
+
+        try:
+            change_id = _parse_created_change_id(create_result.stdout)
+        except WorkflowError as exc:
+            failed_step = WorkflowStep(
+                step_id="parse_change_id",
+                title="Parse created Change ID",
+                command_name="evolution.create_for_task.parse_change_id",
+                route=READ_ONLY_CTL,
+                argv=("parse", "evolutionctl output"),
+            )
+            step_results.append(
+                WorkflowStepResult(
+                    step=failed_step,
+                    status="failed",
+                    returncode=1,
+                    stderr=exc.message,
+                )
+            )
+            result = self._result(
+                descriptor,
+                task_ref=task_ref,
+                task=task,
+                step_results=step_results,
+                message="Workflow stopped after creating a Change Proposal because its ID could not be parsed.",
+            )
+            result.data["change_preview"] = change_preview
+            result.errors.append(exc.to_message())
+            result.owner_action_required = (
+                "Inspect evolutionctl output and continue manually through evolutionctl.py."
+            )
+            return result
+
+        steps = _evolution_change_followup_steps(
+            task,
+            change_preview,
+            change_id,
+            self.root,
+            self.actor,
+            self.python_executable,
+        )
+        for step in steps:
+            step_result = self._execute_step(step)
+            step_results.append(step_result)
+            if not step_result.ok and step.blocking:
+                result = self._result(
+                    descriptor,
+                    task_ref=task_ref,
+                    task=task,
+                    step_results=step_results,
+                    message="Workflow stopped on blocking step: {}".format(step.title),
+                )
+                result.data["change_id"] = change_id
+                result.data["change_preview"] = change_preview
+                result.owner_action_required = (
+                    "Review Change Proposal {} and continue manually through evolutionctl.py."
+                ).format(change_id)
+                return result
+
+        result = self._result(
+            descriptor,
+            task_ref=task_ref,
+            task=task,
+            step_results=step_results,
+            message="Workflow completed. Evolution Change Proposal is ready for Human Owner approval.",
+        )
+        result.data["change_id"] = change_id
+        result.data["change_preview"] = change_preview
+        result.owner_action_required = (
+            "Review Change Proposal {change_id}; approve explicitly only if appropriate: "
+            "python scripts/evolutionctl.py change approve {change_id} --notes \"Approved\""
+        ).format(change_id=change_id)
+        result.next_actions.append(
+            "python scripts/evolutionctl.py change approve {} --notes \"Approved\"".format(
+                change_id
+            )
+        )
+        return result
 
     def _execute_step(self, step: WorkflowStep) -> WorkflowStepResult:
         if step.skip_reason:
@@ -402,6 +569,29 @@ def _workflow_descriptors() -> tuple[WorkflowDescriptor, ...]:
                 _template("task_review", "Move task to in_review", "task.transition", REGISTERED, "python scripts/aictl.py task transition <TASK> --to in_review"),
             ),
         ),
+        WorkflowDescriptor(
+            name="evolution.create_for_task",
+            label="Create Evolution Change",
+            description=(
+                "Draft an Evolution Change Proposal from a selected Task, add "
+                "derived files/risks/impact, link the Task, validate, and move "
+                "the Change to ready for separate Human Owner approval."
+            ),
+            confirmation_required=True,
+            arguments=task_argument,
+            steps=(
+                _template("resolve", "Resolve task reference", "taskctl.task.resolve", READ_ONLY_CTL, "python scripts/taskctl.py task resolve <TASK> --json"),
+                _template("change_create", "Create draft Change Proposal", "evolutionctl.change.create", VALIDATED_CTL, "python scripts/evolutionctl.py change create --title <TITLE> --type <TYPE> --status draft --problem <PROBLEM> --proposal <PROPOSAL> --rationale <RATIONALE>"),
+                _template("add_affected_files", "Add affected files", "evolutionctl.change.add_affected_file", VALIDATED_CTL, "python scripts/evolutionctl.py change add-affected-file <CHANGE> --text <FILE>"),
+                _template("add_risks", "Add risks", "evolutionctl.change.add_risk", VALIDATED_CTL, "python scripts/evolutionctl.py change add-risk <CHANGE> --text <RISK>"),
+                _template("add_impact", "Add impact", "evolutionctl.change.add_impact", VALIDATED_CTL, "python scripts/evolutionctl.py change add-impact <CHANGE> --text <IMPACT>"),
+                _template("link_task", "Link legacy task ID", "evolutionctl.change.link_task", VALIDATED_CTL, "python scripts/evolutionctl.py change link-task <CHANGE> --task <TASK>"),
+                _template("validate_before_ready", "Validate evolution state before ready", "evolutionctl.validate", VALIDATED_CTL, "python scripts/evolutionctl.py validate"),
+                _template("ready", "Move Change Proposal to ready", "evolutionctl.change.transition", VALIDATED_CTL, "python scripts/evolutionctl.py change transition <CHANGE> --to ready"),
+                _template("validate", "Validate evolution state", "evolutionctl.validate", VALIDATED_CTL, "python scripts/evolutionctl.py validate"),
+                _template("check_generated", "Check generated evolution output", "evolutionctl.check-generated", VALIDATED_CTL, "python scripts/evolutionctl.py check-generated"),
+            ),
+        ),
     )
 
 
@@ -436,6 +626,8 @@ def _build_steps(
     actor: str,
     python_executable: str,
     include_resolve: bool,
+    change_preview: Mapping[str, Any] | None = None,
+    change_id: str = "<CHANGE>",
 ) -> list[WorkflowStep]:
     task_id = str(task.get("id") or "<task>")
     status = str(task.get("status") or "")
@@ -525,7 +717,397 @@ def _build_steps(
         )
         return steps
 
+    if workflow_name == "evolution.create_for_task":
+        preview = dict(change_preview or _derive_evolution_change(task))
+        steps.append(
+            _evolution_change_create_step(
+                task,
+                preview,
+                root,
+                actor,
+                python_executable,
+            )
+        )
+        steps.extend(
+            _evolution_change_followup_steps(
+                task,
+                preview,
+                change_id,
+                root,
+                actor,
+                python_executable,
+            )
+        )
+        return steps
+
     raise WorkflowError("WORKFLOW_NOT_FOUND", "Unknown workflow: {}".format(workflow_name))
+
+def _load_task_for_preview(root: Path, task_ref: str) -> dict[str, Any] | None:
+    try:
+        return _load_task_from_state(root, task_ref)
+    except WorkflowError:
+        return None
+
+
+def _load_task_by_id(root: Path, task_id: str) -> dict[str, Any]:
+    return _load_task_from_state(root, task_id, exact_id=True)
+
+
+def _load_task_from_state(
+    root: Path,
+    task_ref: str,
+    *,
+    exact_id: bool = False,
+) -> dict[str, Any]:
+    path = root / "AI_PROJECT" / "state" / "tasks.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise WorkflowError(
+            "WORKFLOW_TASK_STATE_MISSING",
+            "Task state is missing: {}".format(path),
+            details={"path": str(path)},
+        ) from exc
+    except json.JSONDecodeError as exc:
+        raise WorkflowError(
+            "WORKFLOW_TASK_STATE_INVALID_JSON",
+            "Task state is not valid JSON: {}".format(path),
+            details={"path": str(path), "error": str(exc)},
+        ) from exc
+
+    tasks = payload.get("tasks")
+    if not isinstance(tasks, list):
+        raise WorkflowError(
+            "WORKFLOW_TASK_STATE_INVALID_SHAPE",
+            "Task state must contain a tasks list.",
+            details={"path": str(path)},
+        )
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+        if exact_id and task.get("id") == task_ref:
+            return dict(task)
+        if not exact_id and _task_matches_ref(task, task_ref):
+            return dict(task)
+
+    raise WorkflowError(
+        "WORKFLOW_TASK_NOT_FOUND",
+        "Task was not found in task state: {}".format(task_ref),
+        details={"task_ref": task_ref, "path": str(path)},
+    )
+
+
+def _task_matches_ref(task: Mapping[str, Any], task_ref: str) -> bool:
+    for field in ("id", "uid", "ref", "legacy_id"):
+        if str(task.get(field) or "") == task_ref:
+            return True
+    aliases = task.get("aliases") or []
+    return isinstance(aliases, list) and task_ref in [str(alias) for alias in aliases]
+
+
+def _derive_evolution_change(task: Mapping[str, Any]) -> dict[str, Any]:
+    title = str(task.get("title") or "Evolution Change for {}".format(_task_label(task)))
+    summary = str(task.get("summary") or "").strip()
+    description = str(task.get("description") or "").strip()
+    expected = str(task.get("expected_result") or "").strip()
+    scope = _string_list(task.get("scope"))
+    out_of_scope = _string_list(task.get("out_of_scope"))
+    allowed_files = _string_list(task.get("allowed_files"))
+    acceptance = _string_list(task.get("acceptance_criteria"))
+    review = _string_list(task.get("review_instructions"))
+
+    problem_source = summary or description or expected or "Task requires controlled system evolution."
+    problem = (
+        "Task {task} requires an explicit Evolution Change Proposal before "
+        "implementation: {text}"
+    ).format(task=_task_label(task), text=problem_source)
+
+    proposal_items = scope or [description or summary or "Implement the bounded task scope."]
+    proposal = "Implement the bounded task scope: {}".format("; ".join(proposal_items))
+
+    rationale = description or expected or summary or (
+        "A ready Change Proposal keeps system evolution auditable and separate "
+        "from Human Owner approval."
+    )
+
+    risks = _unique_text_items(
+        [_risk_from_boundary(item) for item in out_of_scope]
+        + review
+        + [
+            "Generated Change Proposal fields may need Human Owner review before approval.",
+            "Workflow must delegate all protected project-control mutations to evolutionctl.py.",
+        ]
+    )
+
+    impact = _unique_text_items(
+        [
+            "Creates an Evolution Change Proposal linked to task {}.".format(
+                _legacy_task_id(task)
+            ),
+            "Keeps Change approval as a separate explicit Human Owner action.",
+        ]
+        + scope[:5]
+        + acceptance[:3]
+    )
+
+    return {
+        "title": title,
+        "change_type": _infer_change_type(allowed_files),
+        "problem": problem,
+        "proposal": proposal,
+        "rationale": rationale,
+        "affected_files": _unique_text_items(allowed_files),
+        "risks": risks,
+        "impact": impact,
+        "linked_task": _legacy_task_id(task),
+    }
+
+
+def _task_label(task: Mapping[str, Any]) -> str:
+    return str(task.get("ref") or task.get("legacy_id") or task.get("id") or "<task>")
+
+
+def _legacy_task_id(task: Mapping[str, Any]) -> str:
+    return str(task.get("legacy_id") or task.get("id") or _task_label(task))
+
+
+def _string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item).strip() for item in value if str(item).strip()]
+
+
+def _unique_text_items(values: Sequence[str]) -> list[str]:
+    seen: set[str] = set()
+    unique = []
+    for value in values:
+        text = str(value).strip()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        unique.append(text)
+    return unique
+
+
+def _risk_from_boundary(text: str) -> str:
+    stripped = text.strip()
+    if stripped.lower().startswith("do not "):
+        return "Boundary risk: {}".format(stripped)
+    return stripped
+
+
+def _infer_change_type(allowed_files: Sequence[str]) -> str:
+    paths = [path.lower() for path in allowed_files]
+    if any(path.startswith("ai-system/") or path.startswith("docs/") for path in paths):
+        return "docs"
+    if any("skill" in path for path in paths):
+        return "plugin"
+    if any("template" in path for path in paths):
+        return "template"
+    if any("security" in path or "privacy" in path for path in paths):
+        return "security"
+    if any(path.startswith("spec/") or path.endswith(".schema.json") for path in paths):
+        return "schema"
+    if any(path.startswith("scripts/") or path.startswith("ai_project_ctl/") for path in paths):
+        return "tooling"
+    return "process"
+
+
+def _evolution_change_create_step(
+    task: Mapping[str, Any],
+    change_preview: Mapping[str, Any],
+    root: Path,
+    actor: str,
+    python_executable: str,
+) -> WorkflowStep:
+    return _ctl_step(
+        "change_create",
+        "Create draft Change Proposal",
+        "evolutionctl.change.create",
+        "evolutionctl.py",
+        root,
+        actor,
+        python_executable,
+        "change",
+        "create",
+        "--title",
+        str(change_preview.get("title") or "Evolution Change for {}".format(_task_label(task))),
+        "--type",
+        str(change_preview.get("change_type") or "process"),
+        "--status",
+        "draft",
+        "--problem",
+        str(change_preview.get("problem") or ""),
+        "--proposal",
+        str(change_preview.get("proposal") or ""),
+        "--rationale",
+        str(change_preview.get("rationale") or ""),
+    )
+
+
+def _evolution_change_followup_steps(
+    task: Mapping[str, Any],
+    change_preview: Mapping[str, Any],
+    change_id: str,
+    root: Path,
+    actor: str,
+    python_executable: str,
+) -> list[WorkflowStep]:
+    steps: list[WorkflowStep] = []
+    for index, text in enumerate(_string_list(change_preview.get("affected_files")), start=1):
+        steps.append(
+            _evolution_list_step(
+                "add_affected_file_{}".format(index),
+                "Add affected file",
+                "evolutionctl.change.add_affected_file",
+                root,
+                actor,
+                python_executable,
+                "add-affected-file",
+                change_id,
+                text,
+            )
+        )
+    for index, text in enumerate(_string_list(change_preview.get("risks")), start=1):
+        steps.append(
+            _evolution_list_step(
+                "add_risk_{}".format(index),
+                "Add risk",
+                "evolutionctl.change.add_risk",
+                root,
+                actor,
+                python_executable,
+                "add-risk",
+                change_id,
+                text,
+            )
+        )
+    for index, text in enumerate(_string_list(change_preview.get("impact")), start=1):
+        steps.append(
+            _evolution_list_step(
+                "add_impact_{}".format(index),
+                "Add impact",
+                "evolutionctl.change.add_impact",
+                root,
+                actor,
+                python_executable,
+                "add-impact",
+                change_id,
+                text,
+            )
+        )
+
+    steps.append(
+        _ctl_step(
+            "link_task",
+            "Link legacy task ID",
+            "evolutionctl.change.link_task",
+            "evolutionctl.py",
+            root,
+            actor,
+            python_executable,
+            "change",
+            "link-task",
+            change_id,
+            "--task",
+            str(change_preview.get("linked_task") or _legacy_task_id(task)),
+        )
+    )
+    steps.extend(
+        [
+            _ctl_step(
+                "validate_before_ready",
+                "Validate evolution state before ready",
+                "evolutionctl.validate",
+                "evolutionctl.py",
+                root,
+                actor,
+                python_executable,
+                "validate",
+            ),
+            _ctl_step(
+                "ready",
+                "Move Change Proposal to ready",
+                "evolutionctl.change.transition",
+                "evolutionctl.py",
+                root,
+                actor,
+                python_executable,
+                "change",
+                "transition",
+                change_id,
+                "--to",
+                "ready",
+            ),
+            _ctl_step(
+                "validate",
+                "Validate evolution state",
+                "evolutionctl.validate",
+                "evolutionctl.py",
+                root,
+                actor,
+                python_executable,
+                "validate",
+            ),
+            _ctl_step(
+                "check_generated",
+                "Check generated evolution output",
+                "evolutionctl.check-generated",
+                "evolutionctl.py",
+                root,
+                actor,
+                python_executable,
+                "check-generated",
+            ),
+        ]
+    )
+    return steps
+
+
+def _evolution_list_step(
+    step_id: str,
+    title: str,
+    command_name: str,
+    root: Path,
+    actor: str,
+    python_executable: str,
+    command: str,
+    change_id: str,
+    text: str,
+) -> WorkflowStep:
+    return _ctl_step(
+        step_id,
+        title,
+        command_name,
+        "evolutionctl.py",
+        root,
+        actor,
+        python_executable,
+        "change",
+        command,
+        change_id,
+        "--text",
+        text,
+    )
+
+
+def _parse_created_change_id(stdout: str) -> str:
+    for line in stdout.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("Created:"):
+            candidate = stripped.split(":", 1)[1].strip()
+            if candidate.startswith("CHG-"):
+                return candidate
+    for token in stdout.replace("\n", " ").split():
+        candidate = token.strip(".,;")
+        if candidate.startswith("CHG-"):
+            return candidate
+    raise WorkflowError(
+        "WORKFLOW_CHANGE_ID_NOT_FOUND",
+        "Could not find created Change ID in evolutionctl output.",
+        details={"stdout": stdout},
+    )
 
 
 def _resolve_step(
