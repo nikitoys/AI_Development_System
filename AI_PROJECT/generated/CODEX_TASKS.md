@@ -3,16 +3,16 @@
 
 # Project Tasks
 
-Revision: `133`
-Current task: `none`
+Revision: `147`
+Current task: `TASK-017`
 
 ## Epic `EPIC-001`
 
 ### TASK-001 — Write Project Control Usage Guide
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Write the missing practical usage guide for the Project Control Gateway.
 
@@ -26,9 +26,9 @@ Acceptance criteria:
 
 ### TASK-004 — Implement codexctl prompt package generator
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Implement approved CHG-001 by adding a dedicated Codex prompt package control CLI.
 
@@ -43,9 +43,9 @@ Acceptance criteria:
 
 ### TASK-007 — Record L4 Role-Agent Runtime Architecture
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Implement approved CHG-004 by creating the L4 Role-Agent Runtime Architecture source document and updating required README, operating model, roadmap, backlog and changelog references.
 
@@ -63,9 +63,9 @@ Acceptance criteria:
 
 ### TASK-002 — Document Skills Layer Roadmap
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Create a controlled skills layer documentation page that records useful project skills/plugins and recommends next skills to create.
 
@@ -82,9 +82,9 @@ Acceptance criteria:
 
 ### TASK-003 — Create Clarification Gate Skill
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Create a high-priority Clarification Gate Skill for Codex and subagents, defining when to ask the Human Owner versus inspect or proceed with safe assumptions.
 
@@ -100,9 +100,9 @@ Acceptance criteria:
 
 ### TASK-005 — Create Documentation Navigation Skill
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Create a guidance-only Documentation Navigation Skill that routes agents to minimal source documents for AI_Development_System work.
 
@@ -119,9 +119,9 @@ Acceptance criteria:
 
 ### TASK-006 — Add Two-Level Delegated Agent Execution
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Create L3 manual-only Controller Codex to Worker Agent delegation guidance, source documentation and reusable worker prompt template.
 
@@ -140,9 +140,9 @@ Acceptance criteria:
 
 ### TASK-008 — P0 Strengthen docctl metadata and documentation gaps
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Improve docctl.py so registered documentation becomes a reliable source for future context retrieval.
 
@@ -159,9 +159,9 @@ Acceptance criteria:
 
 ### TASK-009 — P1 Implement contextctl deterministic retrieval MVP
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Create a new controlled CLI gateway that builds deterministic Context Packs from registered documents without vector search.
 
@@ -179,9 +179,9 @@ Acceptance criteria:
 
 ### TASK-010 — P2 Integrate Context Pack into codexctl prompt generation
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Allow codexctl.py to include a validated Context Pack in generated Codex prompt packages.
 
@@ -197,9 +197,9 @@ Acceptance criteria:
 
 ### TASK-011 — P3 Add optional vector backend for contextctl
 
-Status: `planned`  
-Priority: `1`  
-Verification: `standard`  
+Status: `planned`
+Priority: `1`
+Verification: `standard`
 
 Add optional vector or hybrid retrieval backend after deterministic retrieval exists.
 
@@ -218,9 +218,9 @@ Acceptance criteria:
 
 ### TASK-012 — TIG-01 Document task identity and execution graph design
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Define the target model for task uid, human ref, legacy aliases, epic keys, dependency graph, executable queue, and migration rules before implementation.
 
@@ -235,9 +235,9 @@ Acceptance criteria:
 
 ### TASK-013 — TIG-02 Add epic keys to plan model
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Add stable short epic keys to the plan model so task refs can use readable prefixes such as TIG-01 or ACP-02.
 
@@ -250,9 +250,9 @@ Acceptance criteria:
 
 ### TASK-014 — TIG-03 Add task uid ref local sequence and aliases
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Extend task state with stable uid, human-readable ref, local sequence inside epic, and aliases for backward compatibility.
 
@@ -264,9 +264,9 @@ Acceptance criteria:
 
 ### TASK-015 — TIG-04 Add task reference resolver
 
-Status: `done`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Allow taskctl and prompt generation to resolve tasks by new ref, uid, or legacy TASK-XXX alias.
 
@@ -278,9 +278,9 @@ Acceptance criteria:
 
 ### TASK-016 — TIG-05 Add task dependencies and executable queue
 
-Status: `planned`  
-Priority: `1`  
-Verification: `standard`  
+Status: `done`
+Priority: `1`
+Verification: `standard`
 
 Add explicit cross-epic task dependencies and a deterministic executable queue so parallel epics can be scheduled safely.
 
@@ -291,11 +291,11 @@ Acceptance criteria:
 - Cycles are rejected.
 - Executable queue output is deterministic.
 
-### TASK-017 — TIG-06 Add migration and generated output update
+### TASK-017 — TIG-06 Add migration and generated output update ⭐
 
-Status: `planned`  
-Priority: `1`  
-Verification: `standard`  
+Status: `planned`
+Priority: `1`
+Verification: `standard`
 
 Provide safe migration/backward compatibility for existing plan and task state and update generated outputs to display readable refs.
 
