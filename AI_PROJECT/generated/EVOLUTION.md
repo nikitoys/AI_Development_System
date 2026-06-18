@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `99`
-Changes: `5`
+Revision: `119`
+Changes: `6`
 
 ## Summary
 
-- `accepted`: 3
+- `accepted`: 4
 - `approved`: 2
 
 ## Changes
@@ -225,7 +225,7 @@ Linked tasks:
 
 ### CHG-005 — Introduce ai_project_ctl core package foundation
 
-Status: `approved`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `compatible`  
@@ -245,6 +245,9 @@ CTL-01 inventory, CTL-02 architecture, and CTL-03 ID allocation strategy require
 
 Approved by: `human_owner` at `2026-06-18T13:41:39Z`  
 Approval notes: Approved for CTL-04 implementation of ai_project_ctl core package foundation. Existing ctl behavior must remain unchanged.  
+
+Accepted by: `human_owner` at `2026-06-18T13:52:58Z`  
+Acceptance notes: CTL-04 implemented and accepted. Core package foundation added without changing existing ctl behavior.  
 
 Affected areas:
 
@@ -278,3 +281,54 @@ Impact:
 Linked tasks:
 
 - TASK-022
+
+### CHG-006 — Add command registry foundation
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+The future unified control plane needs a shared command registry so CLI, wrappers, automation, and future Web UI can discover and invoke the same allowed commands without duplicating command catalog behavior.
+
+Proposal:
+
+Add a minimal ai_project_ctl/core/registry.py foundation for command metadata, command descriptors, read/write classification, argument schema placeholders, affected files metadata, and registry lookup without migrating existing ctl scripts yet.
+
+Rationale:
+
+CTL-01 inventory found duplicated parser/command behavior, CTL-02 architecture requires a shared command registry, and CTL-05 is the bounded implementation task for that registry foundation.
+
+Approved by: `human_owner` at `2026-06-18T14:41:29Z`  
+Approval notes: Approved for CTL-05 command registry foundation. Existing ctl behavior must remain unchanged; no aictl facade or wrapper migration in this task.  
+
+Affected areas:
+
+- Project Control Gateway
+- Command registry
+- Future aictl facade
+- Future Web Control Center command routing
+
+Affected files:
+
+- ai_project_ctl/core/registry.py
+- ai_project_ctl/core/__init__.py if registry exports are added
+- tests/test_registry.py or equivalent registry tests
+
+Risks:
+
+- Registry metadata could diverge from existing ctl behavior if legacy commands are migrated before parity tests exist.
+- Over-scoping CTL-05 could accidentally start aictl or wrapper migration too early.
+
+Impact:
+
+- Adds shared registry foundation required by CTL-05 and later aictl tasks.
+- Does not change existing ctl script behavior in CTL-05.
+- Provides a future source for command discovery, command metadata, and Web UI action routing.
+
+Linked tasks:
+
+- TASK-023

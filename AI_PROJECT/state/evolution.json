@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 99,
+  "revision": 119,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-18T13:41:39Z",
+  "updated_at": "2026-06-18T14:41:29Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -198,7 +198,7 @@
     {
       "id": "CHG-005",
       "title": "Introduce ai_project_ctl core package foundation",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "tooling",
       "rationale": "CTL-01 inventory, CTL-02 architecture, and CTL-03 ID allocation strategy require a controlled implementation path before adding shared control-plane code.",
       "problem": "Project control logic is duplicated across ctl scripts and CTL-04 needs a shared core package foundation before future aictl implementation.",
@@ -239,14 +239,62 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-18T13:41:39Z",
       "approval_notes": "Approved for CTL-04 implementation of ai_project_ctl core package foundation. Existing ctl behavior must remain unchanged.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T13:52:58Z",
+      "acceptance_notes": "CTL-04 implemented and accepted. Core package foundation added without changing existing ctl behavior.",
+      "notes": [],
+      "priority": 1,
+      "order": 5,
+      "created_at": "2026-06-18T13:40:17Z",
+      "updated_at": "2026-06-18T13:52:58Z"
+    },
+    {
+      "id": "CHG-006",
+      "title": "Add command registry foundation",
+      "status": "approved",
+      "change_type": "tooling",
+      "rationale": "CTL-01 inventory found duplicated parser/command behavior, CTL-02 architecture requires a shared command registry, and CTL-05 is the bounded implementation task for that registry foundation.",
+      "problem": "The future unified control plane needs a shared command registry so CLI, wrappers, automation, and future Web UI can discover and invoke the same allowed commands without duplicating command catalog behavior.",
+      "proposal": "Add a minimal ai_project_ctl/core/registry.py foundation for command metadata, command descriptors, read/write classification, argument schema placeholders, affected files metadata, and registry lookup without migrating existing ctl scripts yet.",
+      "affected_areas": [
+        "Project Control Gateway",
+        "Command registry",
+        "Future aictl facade",
+        "Future Web Control Center command routing"
+      ],
+      "affected_files": [
+        "ai_project_ctl/core/registry.py",
+        "ai_project_ctl/core/__init__.py if registry exports are added",
+        "tests/test_registry.py or equivalent registry tests"
+      ],
+      "risks": [
+        "Registry metadata could diverge from existing ctl behavior if legacy commands are migrated before parity tests exist.",
+        "Over-scoping CTL-05 could accidentally start aictl or wrapper migration too early."
+      ],
+      "impact": [
+        "Adds shared registry foundation required by CTL-05 and later aictl tasks.",
+        "Does not change existing ctl script behavior in CTL-05.",
+        "Provides a future source for command discovery, command metadata, and Web UI action routing."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-023"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T14:41:29Z",
+      "approval_notes": "Approved for CTL-05 command registry foundation. Existing ctl behavior must remain unchanged; no aictl facade or wrapper migration in this task.",
       "accepted_by": "",
       "accepted_at": "",
       "acceptance_notes": "",
       "notes": [],
       "priority": 1,
-      "order": 5,
-      "created_at": "2026-06-18T13:40:17Z",
-      "updated_at": "2026-06-18T13:41:39Z"
+      "order": 6,
+      "created_at": "2026-06-18T14:40:59Z",
+      "updated_at": "2026-06-18T14:41:29Z"
     }
   ]
 }

@@ -1,0 +1,515 @@
+"""Command registry metadata for the future unified control plane."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Iterable, Mapping
+
+from .result import CommandError
+
+
+class RegistryError(CommandError):
+    """Registry lookup or descriptor validation error."""
+
+
+class CommandKind(str, Enum):
+    READ = "read"
+    WRITE = "write"
+    RENDER = "render"
+    VALIDATION = "validation"
+    AUDIT = "audit"
+    UTILITY = "utility"
+
+
+class CommandAvailability(str, Enum):
+    IMPLEMENTED = "implemented"
+    PLANNED = "planned"
+
+
+@dataclass(frozen=True)
+class ArgumentSpec:
+    """Small JSON-schema-like command argument descriptor."""
+
+    name: str
+    description: str
+    value_type: str = "string"
+    required: bool = False
+    default: Any = None
+    choices: tuple[str, ...] = ()
+    repeatable: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        data: dict[str, Any] = {
+            "name": self.name,
+            "description": self.description,
+            "type": self.value_type,
+            "required": self.required,
+            "repeatable": self.repeatable,
+        }
+        if self.default is not None:
+            data["default"] = self.default
+        if self.choices:
+            data["choices"] = list(self.choices)
+        return data
+
+
+@dataclass(frozen=True)
+class OutputSpec:
+    """Describes supported output formats and result shape."""
+
+    description: str
+    formats: tuple[str, ...] = ("human", "json")
+    schema: Mapping[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        data: dict[str, Any] = {
+            "description": self.description,
+            "formats": list(self.formats),
+        }
+        if self.schema:
+            data["schema"] = dict(self.schema)
+        return data
+
+
+@dataclass(frozen=True)
+class CommandDescriptor:
+    """Metadata for one allowed or planned project-control command."""
+
+    name: str
+    domain: str
+    description: str
+    kind: CommandKind
+    arguments: tuple[ArgumentSpec, ...] = ()
+    reads_state: tuple[str, ...] = ()
+    writes_state: tuple[str, ...] = ()
+    event_logs: tuple[str, ...] = ()
+    generated_files: tuple[str, ...] = ()
+    output: OutputSpec = field(
+        default_factory=lambda: OutputSpec("Human-readable command result.")
+    )
+    validators: tuple[str, ...] = ()
+    lock_scope: str = ""
+    owner_approval: str = ""
+    dry_run: bool = False
+    json_output: bool = True
+    availability: CommandAvailability = CommandAvailability.IMPLEMENTED
+    legacy_command: tuple[str, ...] = ()
+    notes: tuple[str, ...] = ()
+
+    @property
+    def mutates_state(self) -> bool:
+        return bool(self.writes_state)
+
+    @property
+    def writes_events(self) -> bool:
+        return bool(self.event_logs)
+
+    @property
+    def renders_generated(self) -> bool:
+        return bool(self.generated_files)
+
+    @property
+    def validates(self) -> bool:
+        return self.kind == CommandKind.VALIDATION or bool(self.validators)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "domain": self.domain,
+            "description": self.description,
+            "kind": self.kind.value,
+            "arguments": [argument.to_dict() for argument in self.arguments],
+            "reads_state": list(self.reads_state),
+            "writes_state": list(self.writes_state),
+            "read_write": {
+                "mutates_state": self.mutates_state,
+                "writes_events": self.writes_events,
+                "renders_generated": self.renders_generated,
+                "validates": self.validates,
+            },
+            "event_logs": list(self.event_logs),
+            "generated_files": list(self.generated_files),
+            "output": self.output.to_dict(),
+            "validators": list(self.validators),
+            "lock_scope": self.lock_scope,
+            "owner_approval": self.owner_approval,
+            "dry_run": self.dry_run,
+            "json_output": self.json_output,
+            "availability": self.availability.value,
+            "legacy_command": list(self.legacy_command),
+            "notes": list(self.notes),
+        }
+
+
+class CommandRegistry:
+    """In-memory catalog for command discovery and description."""
+
+    def __init__(self, descriptors: Iterable[CommandDescriptor] = ()) -> None:
+        self._commands: dict[str, CommandDescriptor] = {}
+        for descriptor in descriptors:
+            self.register(descriptor)
+
+    def register(self, descriptor: CommandDescriptor) -> None:
+        _validate_descriptor(descriptor)
+        if descriptor.name in self._commands:
+            raise RegistryError(
+                "DUPLICATE_COMMAND",
+                f"Command is already registered: {descriptor.name}",
+            )
+        self._commands[descriptor.name] = descriptor
+
+    def get(self, name: str) -> CommandDescriptor:
+        try:
+            return self._commands[name]
+        except KeyError as exc:
+            raise RegistryError("COMMAND_NOT_FOUND", f"Unknown command: {name}") from exc
+
+    def describe(self, name: str) -> dict[str, Any]:
+        return self.get(name).to_dict()
+
+    def list_commands(
+        self,
+        *,
+        domain: str | None = None,
+        include_planned: bool = True,
+    ) -> list[CommandDescriptor]:
+        commands = self._commands.values()
+        if domain is not None:
+            commands = [command for command in commands if command.domain == domain]
+        if not include_planned:
+            commands = [
+                command
+                for command in commands
+                if command.availability == CommandAvailability.IMPLEMENTED
+            ]
+        return sorted(commands, key=lambda command: command.name)
+
+    def list_command_names(
+        self,
+        *,
+        domain: str | None = None,
+        include_planned: bool = True,
+    ) -> list[str]:
+        return [
+            command.name
+            for command in self.list_commands(
+                domain=domain,
+                include_planned=include_planned,
+            )
+        ]
+
+    def domains(self, *, include_planned: bool = True) -> tuple[str, ...]:
+        return tuple(
+            sorted(
+                {
+                    command.domain
+                    for command in self.list_commands(include_planned=include_planned)
+                }
+            )
+        )
+
+    def to_list(
+        self,
+        *,
+        domain: str | None = None,
+        include_planned: bool = True,
+    ) -> list[dict[str, Any]]:
+        return [
+            command.to_dict()
+            for command in self.list_commands(
+                domain=domain,
+                include_planned=include_planned,
+            )
+        ]
+
+
+def default_command_registry() -> CommandRegistry:
+    """Return the foundation registry without mutating project-control state."""
+
+    return CommandRegistry(_default_descriptors())
+
+
+def command_list(
+    registry: CommandRegistry | None = None,
+    *,
+    domain: str | None = None,
+    include_planned: bool = True,
+) -> list[dict[str, Any]]:
+    """List registered command metadata for future CLI/API surfaces."""
+
+    selected = registry or default_command_registry()
+    return selected.to_list(domain=domain, include_planned=include_planned)
+
+
+def command_describe(
+    name: str,
+    registry: CommandRegistry | None = None,
+) -> dict[str, Any]:
+    """Describe one registered command for future CLI/API surfaces."""
+
+    selected = registry or default_command_registry()
+    return selected.describe(name)
+
+
+def _validate_descriptor(descriptor: CommandDescriptor) -> None:
+    if not descriptor.name or "." not in descriptor.name:
+        raise RegistryError(
+            "INVALID_COMMAND_NAME",
+            "Command name must be dotted, such as task.show",
+        )
+    if not descriptor.domain:
+        raise RegistryError("INVALID_COMMAND_DOMAIN", "Command domain is required")
+    if not descriptor.name.startswith(f"{descriptor.domain}."):
+        raise RegistryError(
+            "COMMAND_DOMAIN_MISMATCH",
+            f"{descriptor.name} does not belong to domain {descriptor.domain}",
+        )
+    argument_names = [argument.name for argument in descriptor.arguments]
+    if len(argument_names) != len(set(argument_names)):
+        raise RegistryError(
+            "DUPLICATE_COMMAND_ARGUMENT",
+            f"Command has duplicate argument names: {descriptor.name}",
+        )
+
+
+def _arg(
+    name: str,
+    description: str,
+    *,
+    value_type: str = "string",
+    required: bool = False,
+    repeatable: bool = False,
+    choices: tuple[str, ...] = (),
+) -> ArgumentSpec:
+    return ArgumentSpec(
+        name=name,
+        description=description,
+        value_type=value_type,
+        required=required,
+        repeatable=repeatable,
+        choices=choices,
+    )
+
+
+def _output(description: str, *, fields: tuple[str, ...] = ()) -> OutputSpec:
+    schema: dict[str, Any] = {}
+    if fields:
+        schema["fields"] = list(fields)
+    return OutputSpec(description, schema=schema)
+
+
+def _default_descriptors() -> tuple[CommandDescriptor, ...]:
+    state_tasks = "AI_PROJECT/state/tasks.json"
+    state_plan = "AI_PROJECT/state/plan.json"
+    state_evolution = "AI_PROJECT/state/evolution.json"
+    state_docs = "AI_PROJECT/state/docs.json"
+    state_execution = "AI_PROJECT/state/current_execution.json"
+
+    return (
+        CommandDescriptor(
+            name="command.list",
+            domain="command",
+            description="List registered project-control command metadata.",
+            kind=CommandKind.READ,
+            arguments=(
+                _arg("domain", "Optional command domain filter."),
+                _arg("include_planned", "Include planned, non-executable commands.", value_type="boolean"),
+            ),
+            output=_output("Registered command descriptors.", fields=("commands",)),
+            notes=("Metadata-only registry operation; does not mutate state.",),
+        ),
+        CommandDescriptor(
+            name="command.describe",
+            domain="command",
+            description="Describe one registered project-control command.",
+            kind=CommandKind.READ,
+            arguments=(_arg("name", "Dotted command name to describe.", required=True),),
+            output=_output("Single command descriptor.", fields=("command",)),
+            notes=("Metadata-only registry operation; does not mutate state.",),
+        ),
+        CommandDescriptor(
+            name="task.list",
+            domain="task",
+            description="List executable Tasks managed by taskctl.py.",
+            kind=CommandKind.READ,
+            arguments=(
+                _arg("status", "Optional task status filter."),
+                _arg("epic", "Optional parent Epic ID or key filter."),
+            ),
+            reads_state=(state_tasks, state_plan),
+            output=_output("Task list.", fields=("tasks",)),
+            validators=("task_state", "plan_references"),
+            legacy_command=("python scripts/taskctl.py task list",),
+        ),
+        CommandDescriptor(
+            name="task.show",
+            domain="task",
+            description="Show one Task by ID, ref, UID, legacy ID, or alias.",
+            kind=CommandKind.READ,
+            arguments=(_arg("task_id", "Task ID, ref, UID, legacy ID, or alias.", required=True),),
+            reads_state=(state_tasks, state_plan),
+            output=_output("Task detail.", fields=("task",)),
+            validators=("task_state", "plan_references", "task_identity"),
+            legacy_command=("python scripts/taskctl.py task show <TASK_ID>",),
+        ),
+        CommandDescriptor(
+            name="task.create",
+            domain="task",
+            description="Create a bounded executable Task under an Epic.",
+            kind=CommandKind.WRITE,
+            arguments=(
+                _arg("epic", "Parent Epic ID.", required=True),
+                _arg("title", "Task title.", required=True),
+                _arg("summary", "Task summary."),
+                _arg("scope", "Scope item.", repeatable=True),
+                _arg("out_of_scope", "Out-of-scope item.", repeatable=True),
+                _arg("allowed_file", "Allowed file path.", repeatable=True),
+                _arg("acceptance", "Acceptance criterion.", repeatable=True),
+                _arg("verification_mode", "Verification mode."),
+                _arg("status", "Initial task status."),
+            ),
+            reads_state=(state_tasks, state_plan),
+            writes_state=(state_tasks,),
+            event_logs=("AI_PROJECT/events/task-events.jsonl",),
+            generated_files=(
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+            ),
+            output=_output("Created task result.", fields=("task_id", "ref", "uid")),
+            validators=("task_state", "plan_references", "task_required_fields"),
+            lock_scope="task",
+            owner_approval="Owner-approved executable work is required before execution.",
+            dry_run=True,
+            legacy_command=("python scripts/taskctl.py task create",),
+        ),
+        CommandDescriptor(
+            name="task.transition",
+            domain="task",
+            description="Transition a Task through the validated task lifecycle.",
+            kind=CommandKind.WRITE,
+            arguments=(
+                _arg("task_id", "Task ID, ref, UID, legacy ID, or alias.", required=True),
+                _arg("to", "Target task status.", required=True),
+            ),
+            reads_state=(state_tasks, state_plan),
+            writes_state=(state_tasks,),
+            event_logs=("AI_PROJECT/events/task-events.jsonl",),
+            generated_files=(
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+            ),
+            output=_output("Task lifecycle transition result.", fields=("task_id", "from", "to")),
+            validators=("task_state", "plan_references", "task_lifecycle"),
+            lock_scope="task",
+            owner_approval="Approval and done states remain Human Owner/review gates.",
+            dry_run=True,
+            legacy_command=("python scripts/taskctl.py task transition <TASK_ID> --to <STATUS>",),
+        ),
+        CommandDescriptor(
+            name="epic.list",
+            domain="epic",
+            description="List planning Epics managed by planctl.py.",
+            kind=CommandKind.READ,
+            arguments=(_arg("initiative", "Optional parent Initiative ID filter."),),
+            reads_state=(state_plan,),
+            output=_output("Epic list.", fields=("epics",)),
+            validators=("plan_state",),
+            legacy_command=("python scripts/planctl.py epic list",),
+        ),
+        CommandDescriptor(
+            name="change.create",
+            domain="change",
+            description="Create an Evolution Change Proposal through evolutionctl.py.",
+            kind=CommandKind.WRITE,
+            arguments=(
+                _arg("title", "Change Proposal title.", required=True),
+                _arg("type", "Change type.", required=True),
+                _arg("problem", "Problem statement.", required=True),
+                _arg("proposal", "Proposed change.", required=True),
+            ),
+            reads_state=(state_evolution, state_tasks),
+            writes_state=(state_evolution,),
+            event_logs=("AI_PROJECT/events/evolution-events.jsonl",),
+            generated_files=("AI_PROJECT/generated/EVOLUTION.md",),
+            output=_output("Created Change Proposal.", fields=("change_id",)),
+            validators=("evolution_state", "linked_task_references"),
+            lock_scope="evolution",
+            owner_approval="Human Owner approval required before implementation.",
+            dry_run=True,
+            legacy_command=("python scripts/evolutionctl.py change create",),
+        ),
+        CommandDescriptor(
+            name="context.build",
+            domain="context",
+            description="Build deterministic Context Pack generated output.",
+            kind=CommandKind.RENDER,
+            arguments=(
+                _arg("task", "Optional task-scoped context pack."),
+                _arg("query", "Optional query-scoped context pack."),
+                _arg("write", "Write generated context files.", value_type="boolean"),
+            ),
+            reads_state=(state_docs, state_tasks),
+            event_logs=("AI_PROJECT/events/context-events.jsonl",),
+            generated_files=(
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+            ),
+            output=_output("Context Pack build result.", fields=("context_pack", "context_status")),
+            validators=("docs_state", "tasks_state", "context_pack_metadata"),
+            lock_scope="context",
+            legacy_command=("python scripts/contextctl.py pack build",),
+            notes=("Generated context is read-only and cannot expand Task scope.",),
+        ),
+        CommandDescriptor(
+            name="codex.prompt.build",
+            domain="codex",
+            description="Build the current Codex execution prompt package.",
+            kind=CommandKind.WRITE,
+            arguments=(
+                _arg("task", "Task ID for prompt build.", required=True),
+                _arg("with_context", "Include default generated Context Pack.", value_type="boolean"),
+                _arg("context_pack", "Explicit Context Pack path."),
+            ),
+            reads_state=(state_tasks, state_plan),
+            writes_state=(state_execution,),
+            event_logs=("AI_PROJECT/events/codex-events.jsonl",),
+            generated_files=(
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+            ),
+            output=_output("Codex prompt build result.", fields=("task_id", "prompt_path", "status_path")),
+            validators=("task_state", "plan_references", "context_pack_freshness"),
+            lock_scope="codex",
+            owner_approval="Prompt build must not override Task scope or Human Owner gates.",
+            legacy_command=("python scripts/codexctl.py build --task <TASK_ID>",),
+            notes=("Context inclusion is read-only and validated by codexctl.py.",),
+        ),
+        CommandDescriptor(
+            name="project.doctor",
+            domain="project",
+            description="Planned cross-domain project-control health check.",
+            kind=CommandKind.UTILITY,
+            output=_output("Project-control health findings.", fields=("findings",)),
+            validators=("plan_state", "task_state", "evolution_state", "generated_output"),
+            availability=CommandAvailability.PLANNED,
+            notes=(
+                "Reserved for future aictl/project-control work.",
+                "Not executable by current ctl scripts.",
+            ),
+        ),
+        CommandDescriptor(
+            name="review.list",
+            domain="review",
+            description="Planned review-domain list command for future review lifecycle state.",
+            kind=CommandKind.READ,
+            output=_output("Review records.", fields=("reviews",)),
+            availability=CommandAvailability.PLANNED,
+            notes=(
+                "Review lifecycle state is not implemented in current ctl scripts.",
+                "Registered as planned metadata only.",
+            ),
+        ),
+    )

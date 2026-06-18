@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 217,
+  "revision": 222,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-18T13:52:16Z",
+  "updated_at": "2026-06-18T14:54:28Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -1426,7 +1426,7 @@
       "id": "TASK-023",
       "epic_id": "EPIC-005",
       "title": "Task E - Add command registry",
-      "status": "planned",
+      "status": "done",
       "summary": "Make project-control operations discoverable and callable through one registry.",
       "description": "Introduce command metadata with names, descriptions, argument schema, read/write metadata, and output format metadata so both CLI and future web UI can discover and describe supported operations.",
       "priority": 1,
@@ -1478,11 +1478,11 @@
           "reason": "Command registry depends on shared core services."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-18T14:54:28Z",
+      "approval_notes": "Command registry foundation accepted. Registry is metadata-only, existing ctl behavior preserved, tests and validation passed.",
       "created_at": "2026-06-18T06:20:38Z",
-      "updated_at": "2026-06-18T13:30:46Z",
+      "updated_at": "2026-06-18T14:54:28Z",
       "uid": "tsk_05b8a81cf8cd",
       "legacy_id": "TASK-023",
       "aliases": [

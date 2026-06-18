@@ -3,18 +3,16 @@
 
 # Task Execution Queue
 
-Revision: `217`
+Revision: `222`
 
 ## Executable Now
 
-- `CTL-05 (TASK-023)` [planned] `EPIC-005` priority `1` — Task E - Add command registry
+- `CTL-06 (TASK-024)` [planned] `EPIC-005` priority `1` — Task F - Implement unified CLI facade scripts/aictl.py
 - `CTL-09 (TASK-027)` [planned] `EPIC-005` priority `1` — Task I - Add locking and atomic write protection
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 
 ## Waiting For Dependencies
 
-- `CTL-06 (TASK-024)` [planned] `EPIC-005` priority `1` — Task F - Implement unified CLI facade scripts/aictl.py
-  - `dependency_not_done`: depends on CTL-05 (TASK-023) with status planned
 - `CTL-07 (TASK-025)` [planned] `EPIC-005` priority `1` — Task G - Convert old ctl scripts into compatibility wrappers
   - `dependency_not_done`: depends on CTL-06 (TASK-024) with status planned
 - `CTL-08 (TASK-026)` [planned] `EPIC-005` priority `1` — Task H - Add project doctor command
@@ -45,6 +43,8 @@ Revision: `217`
 - `CTL-04 (TASK-022)` [done] `EPIC-005` priority `1` — Task D - Introduce ai_project_ctl core package
   - `status_not_executable`: status is done
 - `TASK-018` [done] `EPIC-001` priority `1` — Fix documentation generated drift
+  - `status_not_executable`: status is done
+- `CTL-05 (TASK-023)` [done] `EPIC-005` priority `1` — Task E - Add command registry
   - `status_not_executable`: status is done
 - `TASK-002` [done] `EPIC-002` priority `1` — Document Skills Layer Roadmap
   - `status_not_executable`: status is done

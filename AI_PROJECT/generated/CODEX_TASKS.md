@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `217`
+Revision: `222`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -408,7 +408,7 @@ Acceptance criteria:
 
 ### CTL-05 (TASK-023) — Task E - Add command registry
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_05b8a81cf8cd`, legacy `TASK-023`, aliases `TASK-023`, local `CTL` / `5`
