@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 255,
+  "revision": 278,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-18T18:01:06Z",
+  "updated_at": "2026-06-18T19:20:34Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -594,6 +594,57 @@
       "order": 12,
       "created_at": "2026-06-18T17:44:05Z",
       "updated_at": "2026-06-18T18:01:06Z"
+    },
+    {
+      "id": "CHG-013",
+      "title": "Optimize Web Control Center performance",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "Measured timings show /healthz is fast, while project doctor takes about 3.8s, /data.json about 4.9s, and dashboard about 5.8s. The bottleneck is backend read-model/doctor execution, not networking.",
+      "problem": "Web Control Center dashboard and data endpoints are slow because they run full project doctor and heavy CLI checks on normal page/data requests.",
+      "proposal": "Add caching and explicit doctor refresh behavior so normal dashboard/data views are fast while full diagnostics remain available and accurate.",
+      "affected_areas": [
+        "Web Control Center",
+        "Read model performance",
+        "Project doctor caching",
+        "Controlled Web write cache invalidation"
+      ],
+      "affected_files": [
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py if cache invalidation is needed",
+        "scripts/aictl.py if web/doctor flags require compatible updates",
+        "tests/**"
+      ],
+      "risks": [
+        "Caching could hide fresh FAIL diagnostics if refresh behavior is unclear.",
+        "Cache invalidation after POST /actions could be incomplete.",
+        "Optimization could accidentally weaken project doctor or protected-file checks."
+      ],
+      "impact": [
+        "Makes Dashboard and /data.json usable interactively.",
+        "Keeps heavy project doctor diagnostics available through explicit refresh or cached result.",
+        "Preserves loopback-only and controlled Web write safety."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-031"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T18:58:59Z",
+      "approval_notes": "Approved for CTL-13 Web Control Center performance optimization. Must preserve doctor correctness and Web write safety.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T19:20:34Z",
+      "acceptance_notes": "CTL-13 implemented and accepted. Web Control Center dashboard/data performance optimized without weakening doctor diagnostics or write safety.",
+      "notes": [],
+      "priority": 1,
+      "order": 13,
+      "created_at": "2026-06-18T18:58:39Z",
+      "updated_at": "2026-06-18T19:20:34Z"
     }
   ]
 }

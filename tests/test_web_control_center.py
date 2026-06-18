@@ -36,46 +36,103 @@ class WebControlCenterTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, "WEB_COMMAND_NOT_READ_ONLY")
 
-    def test_dashboard_uses_read_only_facade_commands(self):
+    def test_dashboard_uses_read_only_state_without_subprocesses(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "CTL-01",
+                        "status": "ready",
+                        "title": "Ready task",
+                        "epic_id": "EPIC-001",
+                        "order": 1,
+                    }
+                ],
+                current_task_id="TASK-001",
+                epics=[{"id": "EPIC-001", "status": "active", "order": 1}],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+            with patch("ai_project_ctl.web.read_model.subprocess.run") as run:
+                data = model.dashboard()
+                run.assert_not_called()
+
+        self.assertEqual(data["doctor"]["overall_status"], "UNKNOWN")
+        self.assertFalse(data["doctor"]["cache"]["cached"])
+        self.assertEqual(data["queue"][0]["id"], "TASK-001")
+
+    def test_dashboard_and_data_routes_do_not_refresh_doctor_by_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            model = ReadOnlyProjectModel(root, actor="tester")
+            with patch("ai_project_ctl.web.read_model.subprocess.run") as run:
+                dashboard_status, _, _ = route("/", model)
+                data_status, _, data_body = route("/data.json", model)
+                run.assert_not_called()
+
+        payload = json.loads(data_body)
+
+        self.assertEqual(dashboard_status.value, 200)
+        self.assertEqual(data_status.value, 200)
+        self.assertEqual(payload["doctor"]["overall_status"], "UNKNOWN")
+        self.assertFalse(payload["doctor"]["cache"]["cached"])
+
+    def test_doctor_refresh_runs_diagnostics_and_reuses_cache(self):
         calls = []
 
         def fake_run(argv, **_kwargs):
             calls.append(argv)
             script = Path(argv[1]).name
             tail = argv[argv.index("--json") + 1 :] if "--json" in argv else argv[-3:]
-            if script == "aictl.py" and tail == ["task", "list"]:
-                return completed(
-                    {
-                        "data": {
-                            "result": [
-                                {
-                                    "id": "TASK-001",
-                                    "ref": "CTL-01",
-                                    "status": "ready",
-                                    "title": "Ready task",
-                                }
-                            ]
-                        }
-                    }
-                )
-            if script == "aictl.py" and tail == ["task", "list", "--current"]:
-                return completed(
-                    {
-                        "data": {
-                            "result": [
-                                {
-                                    "id": "TASK-001",
-                                    "ref": "CTL-01",
-                                    "status": "ready",
-                                    "title": "Ready task",
-                                }
-                            ]
-                        }
-                    }
-                )
-            if script == "aictl.py" and tail == ["epic", "list"]:
-                return completed({"data": {"result": [{"id": "EPIC-001", "status": "active"}]}})
             if script == "aictl.py" and tail == ["project", "doctor"]:
+                return completed(
+                    {
+                        "data": {
+                            "overall_status": "WARN",
+                            "summary": {"PASS": 1, "WARN": 1, "FAIL": 0},
+                            "findings": [
+                                {
+                                    "status": "WARN",
+                                    "check": "context generated output",
+                                    "message": "Generated context files are stale.",
+                                }
+                            ],
+                        }
+                    }
+                )
+            if script.endswith("ctl.py"):
+                return process(stdout="")
+            raise AssertionError("unexpected command: {}".format(argv))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            model = ReadOnlyProjectModel(root, actor="tester")
+            with patch("ai_project_ctl.web.read_model.subprocess.run", side_effect=fake_run):
+                doctor_status, _, doctor_body = route("/doctor?refresh=1", model)
+                data_status, _, data_body = route("/data.json", model)
+
+        doctor_calls = [
+            call
+            for call in calls
+            if Path(call[1]).name == "aictl.py" and call[-2:] == ["project", "doctor"]
+        ]
+        payload = json.loads(data_body)
+
+        self.assertEqual(doctor_status.value, 200)
+        self.assertEqual(data_status.value, 200)
+        self.assertIn("Generated context files are stale.", doctor_body)
+        self.assertEqual(len(doctor_calls), 1)
+        self.assertEqual(payload["doctor"]["overall_status"], "WARN")
+        self.assertTrue(payload["doctor"]["cache"]["cached"])
+
+    def test_post_action_invalidates_doctor_cache(self):
+        def fake_doctor_run(argv, **_kwargs):
+            tail = argv[argv.index("--json") + 1 :] if "--json" in argv else argv[-3:]
+            if Path(argv[1]).name == "aictl.py" and tail == ["project", "doctor"]:
                 return completed(
                     {
                         "data": {
@@ -85,21 +142,66 @@ class WebControlCenterTests(unittest.TestCase):
                         }
                     }
                 )
-            if script.endswith("ctl.py"):
-                return process(stdout="2026-06-18T00:00:00Z EVT test\n")
             raise AssertionError("unexpected command: {}".format(argv))
+
+        def fake_action_run(argv, **_kwargs):
+            return process(
+                stdout=json.dumps(
+                    {
+                        "ok": True,
+                        "data": {
+                            "delegate": ["python", "scripts/taskctl.py"],
+                            "stdout": "OK: task.transition revision 1 -> 2\n",
+                        },
+                    }
+                )
+                + "\n"
+            )
 
         with tempfile.TemporaryDirectory() as tmp:
             model = ReadOnlyProjectModel(tmp, actor="tester")
-            with patch("ai_project_ctl.web.read_model.subprocess.run", side_effect=fake_run):
-                data = model.dashboard()
+            with patch(
+                "ai_project_ctl.web.read_model.subprocess.run",
+                side_effect=fake_doctor_run,
+            ):
+                model.doctor(refresh=True)
 
-        command_names = [Path(call[1]).name for call in calls]
+            self.assertTrue(model.doctor()["cache"]["cached"])
 
-        self.assertEqual(data["doctor"]["overall_status"], "PASS")
-        self.assertEqual(data["queue"][0]["id"], "TASK-001")
-        self.assertIn("aictl.py", command_names)
-        self.assertNotIn("task.transition", " ".join(" ".join(call) for call in calls))
+            server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(model))
+            thread = threading.Thread(target=server.serve_forever)
+            thread.daemon = True
+            thread.start()
+            try:
+                url = "http://127.0.0.1:{}/actions".format(server.server_address[1])
+                body = json.dumps(
+                    {
+                        "action": "task.transition",
+                        "confirm": "yes",
+                        "task": "TASK-001",
+                        "to": "in_review",
+                    }
+                ).encode("utf-8")
+                request = urllib.request.Request(
+                    url,
+                    data=body,
+                    method="POST",
+                    headers={"Content-Type": "application/json"},
+                )
+                with patch(
+                    "ai_project_ctl.web.actions.subprocess.run",
+                    side_effect=fake_action_run,
+                ):
+                    response = urllib.request.urlopen(request, timeout=5)
+                    payload = json.loads(response.read().decode("utf-8"))
+
+                self.assertEqual(response.status, 200)
+                self.assertTrue(payload["ok"])
+                self.assertFalse(model.doctor()["cache"]["cached"])
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
 
     def test_unknown_post_route_is_rejected_without_model_reads(self):
         class ExplodingModel:
@@ -345,6 +447,32 @@ def process(stdout="", stderr="", returncode=0):
     item.stdout = stdout
     item.stderr = stderr
     return item
+
+
+def write_web_state(root, *, tasks=None, current_task_id=None, epics=None):
+    state_dir = root / "AI_PROJECT" / "state"
+    state_dir.mkdir(parents=True, exist_ok=True)
+    (state_dir / "tasks.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "revision": 1,
+                "current_task_id": current_task_id,
+                "tasks": tasks or [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (state_dir / "plan.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "revision": 1,
+                "epics": epics or [],
+            }
+        ),
+        encoding="utf-8",
+    )
 
 
 def run_ctl(root, script, *args):

@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `278`
+Revision: `286`
 
 ## Executable Now
 
@@ -46,6 +46,8 @@ _No tasks waiting only on dependencies._
 - `CTL-11 (TASK-029)` [done] `EPIC-005` priority `1` — Task K - Add controlled Web write actions
   - `status_not_executable`: status is done
 - `CTL-12 (TASK-030)` [done] `EPIC-005` priority `1` — Task L - Documentation and owner quickstart
+  - `status_not_executable`: status is done
+- `CTL-13 (TASK-031)` [done] `EPIC-005` priority `1` — CTL-13 Optimize Web Control Center performance
   - `status_not_executable`: status is done
 - `TASK-002` [done] `EPIC-002` priority `1` — Document Skills Layer Roadmap
   - `status_not_executable`: status is done

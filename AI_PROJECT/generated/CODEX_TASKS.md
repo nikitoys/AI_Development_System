@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `278`
+Revision: `286`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -533,3 +533,22 @@ Acceptance criteria:
 - Codex can be pointed to aictl as the preferred interface.
 - Docs clearly say generated files are derived.
 - Docs explain legacy ctl wrappers, project doctor, local web dashboard, web safety model, state/events/generated architecture, and ID allocation policy.
+
+### CTL-13 (TASK-031) — CTL-13 Optimize Web Control Center performance
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_c95542f013df`, legacy `TASK-031`, aliases `TASK-031`, local `CTL` / `13`
+
+Make Web Control Center dashboard and data endpoints fast by avoiding full project doctor execution on every request.
+
+Acceptance criteria:
+
+- GET /healthz remains fast and does not run heavy diagnostics.
+- GET / and GET /data.json no longer run full project doctor on every request.
+- Full project doctor remains available and accurate through explicit refresh or cached diagnostics.
+- POST /actions invalidates relevant web caches.
+- Web write safety remains unchanged: write actions still route through registered commands and do not directly edit protected files.
+- Tests cover dashboard/data performance behavior, doctor refresh, and cache invalidation.
+- Required validation, generated checks, project doctor, and protected-file checks pass.

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import copy
 import json
 import subprocess
 import sys
+import threading
+import time
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -20,6 +23,7 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = PACKAGE_ROOT / "scripts"
 
 READ_ONLY_KINDS = {"read", "validation", "audit", "utility"}
+DOCTOR_CACHE_TTL_SECONDS = 20.0
 
 GENERATED_VIEW_FILES = (
     "CODEX_CURRENT.md",
@@ -70,6 +74,15 @@ class ProcessResult:
         return self.returncode == 0
 
 
+@dataclass(frozen=True)
+class DoctorCacheEntry:
+    """One cached project doctor result."""
+
+    data: dict[str, Any]
+    captured_at: datetime
+    captured_monotonic: float
+
+
 def require_read_only_command(command_name: str) -> dict[str, Any]:
     """Return command metadata only when it cannot mutate project state."""
 
@@ -112,15 +125,6 @@ def _parse_json_output(text: str, *, command: Sequence[str]) -> Any:
         ) from exc
 
 
-def _unwrap_facade_result(payload: Any) -> Any:
-    if isinstance(payload, dict) and "data" in payload:
-        data = payload.get("data")
-        if isinstance(data, dict) and "result" in data:
-            return data["result"]
-        return data
-    return payload
-
-
 def _iso_mtime(path: Path) -> str:
     return (
         datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
@@ -138,6 +142,22 @@ def _first_heading(text: str) -> str:
     return ""
 
 
+def _task_sort_key(task: Mapping[str, Any]) -> tuple[str, int, str]:
+    return (
+        str(task.get("epic_id") or ""),
+        int(task.get("order") or 0),
+        str(task.get("id") or ""),
+    )
+
+
+def _epic_sort_key(epic: Mapping[str, Any]) -> tuple[str, int, str]:
+    return (
+        str(epic.get("initiative_id") or ""),
+        int(epic.get("order") or 0),
+        str(epic.get("id") or ""),
+    )
+
+
 class ReadOnlyProjectModel:
     """Build page data without writing protected project-control files."""
 
@@ -147,22 +167,31 @@ class ReadOnlyProjectModel:
         *,
         actor: str = "human_owner",
         python_executable: str | None = None,
+        doctor_ttl_seconds: float = DOCTOR_CACHE_TTL_SECONDS,
     ) -> None:
         self.paths = ProjectPaths.from_root(root)
         self.actor = actor
         self.python_executable = python_executable or sys.executable
+        self.doctor_ttl_seconds = doctor_ttl_seconds
+        self._cache_lock = threading.Lock()
+        self._doctor_cache: DoctorCacheEntry | None = None
 
     @property
     def root(self) -> Path:
         return self.paths.root
 
-    def dashboard(self) -> dict[str, Any]:
+    def dashboard(
+        self,
+        *,
+        refresh_doctor: bool = False,
+        include_events: bool = False,
+    ) -> dict[str, Any]:
         tasks = self.tasks()
         current_task = self.current_task(tasks)
         epics = self.epics()
-        doctor = self.doctor()
+        doctor = self.doctor(refresh=refresh_doctor)
         generated = self.generated_views()
-        events = self.audit_events(last=5)
+        events = self.audit_events(last=5) if include_events else []
         commands = command_list(include_planned=True)
         return {
             "root": str(self.root),
@@ -175,6 +204,7 @@ class ReadOnlyProjectModel:
             "doctor": doctor,
             "generated": generated,
             "events": events,
+            "events_loaded": include_events,
             "review_commands": [
                 command for command in commands if command.get("domain") == "review"
             ],
@@ -187,15 +217,22 @@ class ReadOnlyProjectModel:
         }
 
     def tasks(self) -> list[dict[str, Any]]:
-        payload = self._facade_json("task.list", ("task", "list"))
-        result = _unwrap_facade_result(payload)
-        return result if isinstance(result, list) else []
+        state = self._state_json("tasks.json")
+        tasks = state.get("tasks")
+        if not isinstance(tasks, list):
+            return []
+        return sorted(
+            [dict(task) for task in tasks if isinstance(task, dict)],
+            key=_task_sort_key,
+        )
 
     def current_task(self, tasks: Sequence[Mapping[str, Any]] | None = None) -> dict[str, Any]:
-        payload = self._facade_json("task.list", ("task", "list", "--current"))
-        result = _unwrap_facade_result(payload)
-        if isinstance(result, list) and result:
-            return dict(result[0])
+        state = self._state_json("tasks.json")
+        current_task_id = state.get("current_task_id")
+        if current_task_id:
+            for task in tasks or state.get("tasks", []):
+                if task.get("id") == current_task_id:
+                    return dict(task)
 
         for task in tasks or ():
             if task.get("status") == "in_progress":
@@ -203,17 +240,97 @@ class ReadOnlyProjectModel:
         return {}
 
     def epics(self) -> list[dict[str, Any]]:
-        payload = self._facade_json("epic.list", ("epic", "list"))
-        result = _unwrap_facade_result(payload)
-        return result if isinstance(result, list) else []
+        state = self._state_json("plan.json")
+        epics = state.get("epics")
+        if not isinstance(epics, list):
+            return []
+        return sorted(
+            [dict(epic) for epic in epics if isinstance(epic, dict)],
+            key=_epic_sort_key,
+        )
 
-    def doctor(self) -> dict[str, Any]:
+    def doctor(self, *, refresh: bool = False) -> dict[str, Any]:
+        if refresh:
+            data = self._run_doctor()
+            entry = DoctorCacheEntry(
+                data=copy.deepcopy(data),
+                captured_at=datetime.now(timezone.utc).replace(microsecond=0),
+                captured_monotonic=time.monotonic(),
+            )
+            with self._cache_lock:
+                self._doctor_cache = entry
+            return self._doctor_payload(entry)
+
+        with self._cache_lock:
+            entry = self._doctor_cache
+        if entry is None:
+            return self._empty_doctor_payload()
+        return self._doctor_payload(entry)
+
+    def invalidate_caches(self) -> None:
+        """Clear read-model caches after controlled project-control writes."""
+
+        with self._cache_lock:
+            self._doctor_cache = None
+
+    def _run_doctor(self) -> dict[str, Any]:
         payload = self._facade_json("project.doctor", ("project", "doctor"))
         if isinstance(payload, dict):
             data = payload.get("data")
             if isinstance(data, dict):
-                return data
+                return dict(data)
         return {}
+
+    def _doctor_payload(self, entry: DoctorCacheEntry) -> dict[str, Any]:
+        payload = copy.deepcopy(entry.data)
+        age_seconds = max(0.0, time.monotonic() - entry.captured_monotonic)
+        payload["cache"] = {
+            "cached": True,
+            "generated_at": entry.captured_at.isoformat().replace("+00:00", "Z"),
+            "age_seconds": round(age_seconds, 3),
+            "ttl_seconds": self.doctor_ttl_seconds,
+            "stale": age_seconds > self.doctor_ttl_seconds,
+        }
+        return payload
+
+    def _empty_doctor_payload(self) -> dict[str, Any]:
+        return {
+            "overall_status": "UNKNOWN",
+            "summary": {"PASS": 0, "WARN": 0, "FAIL": 0},
+            "root": str(self.root),
+            "findings": [],
+            "cache": {
+                "cached": False,
+                "generated_at": "",
+                "age_seconds": None,
+                "ttl_seconds": self.doctor_ttl_seconds,
+                "stale": True,
+            },
+        }
+
+    def _state_json(self, name: str) -> dict[str, Any]:
+        path = self.paths.state_file(name)
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except FileNotFoundError as exc:
+            raise WebControlError(
+                "WEB_STATE_FILE_MISSING",
+                "Project-control state file is missing: {}".format(path),
+                details={"path": str(path)},
+            ) from exc
+        except json.JSONDecodeError as exc:
+            raise WebControlError(
+                "WEB_INVALID_STATE_JSON",
+                "Project-control state file is not valid JSON: {}".format(path),
+                details={"path": str(path), "error": str(exc)},
+            ) from exc
+        if not isinstance(payload, dict):
+            raise WebControlError(
+                "WEB_INVALID_STATE_SHAPE",
+                "Project-control state file must contain a JSON object: {}".format(path),
+                details={"path": str(path)},
+            )
+        return payload
 
     def executable_queue(
         self,

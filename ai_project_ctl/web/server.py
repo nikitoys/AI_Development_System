@@ -93,9 +93,13 @@ def make_handler(model: ReadOnlyProjectModel) -> type[BaseHTTPRequestHandler]:
             return
 
         def _handle_read(self, *, head_only: bool) -> None:
-            path = urlparse(self.path).path
+            parsed = urlparse(self.path)
             try:
-                status, content_type, body = route(path, model)
+                status, content_type, body = route(
+                    parsed.path,
+                    model,
+                    query=parse_qs(parsed.query),
+                )
             except CommandError as exc:
                 status = HTTPStatus.INTERNAL_SERVER_ERROR
                 content_type = "text/html; charset=utf-8"
@@ -119,6 +123,7 @@ def make_handler(model: ReadOnlyProjectModel) -> type[BaseHTTPRequestHandler]:
                 fields = self._read_action_fields()
                 executor = WebActionExecutor(model.root, actor=model.actor)
                 result = executor.execute(fields)
+                model.invalidate_caches()
                 status = HTTPStatus.OK
                 body = render_action_result(result)
             except WebActionError as exc:
@@ -199,8 +204,17 @@ def make_handler(model: ReadOnlyProjectModel) -> type[BaseHTTPRequestHandler]:
 def route(
     path: str,
     model: ReadOnlyProjectModel,
+    *,
+    query: Mapping[str, Sequence[str]] | None = None,
 ) -> tuple[HTTPStatus, str, str]:
     """Route one read-only request."""
+
+    if "?" in path:
+        parsed = urlparse(path)
+        path = parsed.path
+        query = parse_qs(parsed.query)
+    query = query or {}
+    refresh_doctor = _query_enabled(query, "refresh")
 
     if path == "/healthz":
         return HTTPStatus.OK, "application/json; charset=utf-8", json.dumps(
@@ -210,7 +224,7 @@ def route(
         )
     if path == "/data.json":
         return HTTPStatus.OK, "application/json; charset=utf-8", json.dumps(
-            model.dashboard(),
+            model.dashboard(refresh_doctor=refresh_doctor),
             ensure_ascii=False,
             indent=2,
             sort_keys=True,
@@ -221,9 +235,11 @@ def route(
         "/tasks": lambda: render_tasks(model.dashboard()),
         "/epics": lambda: render_epics(model.dashboard()),
         "/reviews": lambda: render_reviews(model.dashboard()),
-        "/events": lambda: render_events(model.dashboard()),
+        "/events": lambda: render_events(model.dashboard(include_events=True)),
         "/generated": lambda: render_generated(model.dashboard()),
-        "/doctor": lambda: render_doctor(model.dashboard()),
+        "/doctor": lambda: render_doctor(
+            model.dashboard(refresh_doctor=refresh_doctor)
+        ),
         "/commands": lambda: render_commands(model),
         "/actions": lambda: render_actions(model.dashboard()),
     }
@@ -266,6 +282,8 @@ def render_dashboard(data: Mapping[str, Any]) -> str:
             escape(summary.get("WARN", 0)),
             escape(summary.get("FAIL", 0)),
         ),
+        doctor_cache_detail(doctor),
+        '<a class="button-link" href="/doctor?refresh=1">Refresh doctor</a>',
         "</div>",
         "</section>",
     ]
@@ -372,6 +390,7 @@ def render_generated(data: Mapping[str, Any]) -> str:
 
 def render_doctor(data: Mapping[str, Any]) -> str:
     doctor = data.get("doctor") or {}
+    summary = doctor.get("summary") or {}
     rows = []
     for finding in doctor.get("findings") or []:
         rows.append(
@@ -385,6 +404,16 @@ def render_doctor(data: Mapping[str, Any]) -> str:
     body = [
         '<section class="panel">',
         "<h2>Project Doctor</h2>",
+        '<div class="status-row">',
+        status_badge(str(doctor.get("overall_status") or "UNKNOWN")),
+        "<span>{} PASS</span><span>{} WARN</span><span>{} FAIL</span>".format(
+            escape(summary.get("PASS", 0)),
+            escape(summary.get("WARN", 0)),
+            escape(summary.get("FAIL", 0)),
+        ),
+        doctor_cache_detail(doctor),
+        '<a class="button-link" href="/doctor?refresh=1">Refresh doctor</a>',
+        "</div>",
         table(("Status", "Check", "Message", "Command"), rows, "No doctor findings."),
         "</section>",
     ]
@@ -756,6 +785,18 @@ def render_page(title: str, body: str, *, active: str) -> str:
       font-weight: 700;
       cursor: pointer;
     }}
+    .button-link {{
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      border: 1px solid #0d5f59;
+      border-radius: 6px;
+      padding: 5px 10px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      text-decoration: none;
+    }}
     .empty {{
       color: var(--muted);
       margin: 0;
@@ -797,6 +838,23 @@ def metric(label: str, value: str) -> str:
     return '<div class="metric"><span>{}</span><strong>{}</strong></div>'.format(
         escape(label),
         escape(value),
+    )
+
+
+def doctor_cache_detail(doctor: Mapping[str, Any]) -> str:
+    cache = doctor.get("cache") or {}
+    if not cache.get("cached"):
+        return '<span class="pill">doctor cache: empty</span>'
+
+    state = "stale" if cache.get("stale") else "fresh"
+    age = cache.get("age_seconds")
+    if isinstance(age, (int, float)):
+        age_text = "{:.1f}s old".format(float(age))
+    else:
+        age_text = "age unknown"
+    return '<span class="pill">doctor cache: {}, {}</span>'.format(
+        escape(state),
+        escape(age_text),
     )
 
 
@@ -855,6 +913,13 @@ def status_badge(value: str) -> str:
     return '<span class="badge {}">{}</span>'.format(
         escape(class_name),
         escape(safe),
+    )
+
+
+def _query_enabled(query: Mapping[str, Sequence[str]], name: str) -> bool:
+    values = query.get(name) or ()
+    return any(
+        str(value).lower() in {"1", "true", "yes", "refresh"} for value in values
     )
 
 

@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `255`
-Changes: `12`
+Revision: `278`
+Changes: `13`
 
 ## Summary
 
-- `accepted`: 11
+- `accepted`: 12
 - `approved`: 1
 
 ## Changes
@@ -670,3 +670,60 @@ Impact:
 Linked tasks:
 
 - TASK-029
+
+### CHG-013 — Optimize Web Control Center performance
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+Web Control Center dashboard and data endpoints are slow because they run full project doctor and heavy CLI checks on normal page/data requests.
+
+Proposal:
+
+Add caching and explicit doctor refresh behavior so normal dashboard/data views are fast while full diagnostics remain available and accurate.
+
+Rationale:
+
+Measured timings show /healthz is fast, while project doctor takes about 3.8s, /data.json about 4.9s, and dashboard about 5.8s. The bottleneck is backend read-model/doctor execution, not networking.
+
+Approved by: `human_owner` at `2026-06-18T18:58:59Z`  
+Approval notes: Approved for CTL-13 Web Control Center performance optimization. Must preserve doctor correctness and Web write safety.  
+
+Accepted by: `human_owner` at `2026-06-18T19:20:34Z`  
+Acceptance notes: CTL-13 implemented and accepted. Web Control Center dashboard/data performance optimized without weakening doctor diagnostics or write safety.  
+
+Affected areas:
+
+- Web Control Center
+- Read model performance
+- Project doctor caching
+- Controlled Web write cache invalidation
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py if cache invalidation is needed
+- scripts/aictl.py if web/doctor flags require compatible updates
+- tests/**
+
+Risks:
+
+- Caching could hide fresh FAIL diagnostics if refresh behavior is unclear.
+- Cache invalidation after POST /actions could be incomplete.
+- Optimization could accidentally weaken project doctor or protected-file checks.
+
+Impact:
+
+- Makes Dashboard and /data.json usable interactively.
+- Keeps heavy project doctor diagnostics available through explicit refresh or cached result.
+- Preserves loopback-only and controlled Web write safety.
+
+Linked tasks:
+
+- TASK-031
