@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `227`
+Revision: `234`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -440,7 +440,7 @@ Acceptance criteria:
 
 ### CTL-07 (TASK-025) — Task G - Convert old ctl scripts into compatibility wrappers
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_020a6425c9e0`, legacy `TASK-025`, aliases `TASK-025`, local `CTL` / `7`

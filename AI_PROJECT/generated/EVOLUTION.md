@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `137`
-Changes: `7`
+Revision: `163`
+Changes: `8`
 
 ## Summary
 
-- `accepted`: 5
+- `accepted`: 6
 - `approved`: 2
 
 ## Changes
@@ -338,7 +338,7 @@ Linked tasks:
 
 ### CHG-007 — Add unified aictl CLI facade
 
-Status: `approved`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `compatible`  
@@ -358,6 +358,9 @@ CTL-02 defines aictl as the preferred facade, CTL-04 introduced core primitives,
 
 Approved by: `human_owner` at `2026-06-18T14:56:33Z`  
 Approval notes: Approved for CTL-06 scripts/aictl.py facade implementation. Must remain facade-only; no wrapper migration or behavior changes.  
+
+Accepted by: `human_owner` at `2026-06-18T15:19:29Z`  
+Acceptance notes: Linked CTL task implemented and accepted.  
 
 Affected areas:
 
@@ -384,3 +387,59 @@ Impact:
 Linked tasks:
 
 - TASK-024
+
+### CHG-008 — Convert legacy ctl scripts into compatibility wrappers
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+Legacy ctl scripts still contain independent command implementations and duplicated control logic; CTL-07 needs an approved evolution change to migrate them toward compatibility wrappers safely.
+
+Proposal:
+
+Convert legacy ctl scripts into compatibility wrappers only where shared core/domain services make it safe, preserving command syntax, output compatibility, lifecycle gates, protected-file rules, and avoiding circular delegation through aictl.
+
+Rationale:
+
+CTL-01 found duplicated ctl logic, CTL-02 defined wrapper migration, CTL-04 introduced shared core primitives, CTL-05 introduced command registry, and CTL-06 introduced the aictl facade.
+
+Approved by: `human_owner` at `2026-06-18T15:22:20Z`  
+Approval notes: Approved for CTL-07 compatibility wrapper migration. Must preserve existing ctl behavior and avoid circular delegation through aictl.  
+
+Affected areas:
+
+- Project Control Gateway
+- Legacy ctl compatibility wrappers
+- Shared core/domain service migration
+
+Affected files:
+
+- scripts/planctl.py if allowed by CTL-07
+- scripts/taskctl.py if allowed by CTL-07
+- scripts/docctl.py if allowed by CTL-07
+- scripts/contextctl.py if allowed by CTL-07
+- scripts/codexctl.py if allowed by CTL-07
+- scripts/evolutionctl.py if allowed by CTL-07
+- ai_project_ctl/core/* if compatible shared helpers are needed
+- tests/test_*ctl*.py or equivalent wrapper compatibility tests
+
+Risks:
+
+- Wrapper migration can create circular delegation if old ctl scripts call aictl while aictl still delegates to old ctl scripts.
+- Existing command output, exit codes, lifecycle gates, or protected-file behavior could change unintentionally.
+- Migrating all ctl scripts in one task may be too broad if shared domain services are not ready.
+
+Impact:
+
+- Moves legacy ctl scripts toward shared control-plane architecture.
+- Keeps existing CLI commands compatible for current workflows.
+- Prepares safer future aictl and web control integration.
+
+Linked tasks:
+
+- TASK-025

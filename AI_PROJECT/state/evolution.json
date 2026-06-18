@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 137,
+  "revision": 163,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-18T14:56:33Z",
+  "updated_at": "2026-06-18T15:22:20Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -299,7 +299,7 @@
     {
       "id": "CHG-007",
       "title": "Add unified aictl CLI facade",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "tooling",
       "rationale": "CTL-02 defines aictl as the preferred facade, CTL-04 introduced core primitives, and CTL-05 introduced the command registry foundation.",
       "problem": "Project control still requires multiple ctl entrypoints; CTL-06 needs an approved evolution change to introduce scripts/aictl.py as the unified facade.",
@@ -333,14 +333,67 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-18T14:56:33Z",
       "approval_notes": "Approved for CTL-06 scripts/aictl.py facade implementation. Must remain facade-only; no wrapper migration or behavior changes.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T15:19:29Z",
+      "acceptance_notes": "Linked CTL task implemented and accepted.",
+      "notes": [],
+      "priority": 1,
+      "order": 7,
+      "created_at": "2026-06-18T14:56:25Z",
+      "updated_at": "2026-06-18T15:19:29Z"
+    },
+    {
+      "id": "CHG-008",
+      "title": "Convert legacy ctl scripts into compatibility wrappers",
+      "status": "approved",
+      "change_type": "tooling",
+      "rationale": "CTL-01 found duplicated ctl logic, CTL-02 defined wrapper migration, CTL-04 introduced shared core primitives, CTL-05 introduced command registry, and CTL-06 introduced the aictl facade.",
+      "problem": "Legacy ctl scripts still contain independent command implementations and duplicated control logic; CTL-07 needs an approved evolution change to migrate them toward compatibility wrappers safely.",
+      "proposal": "Convert legacy ctl scripts into compatibility wrappers only where shared core/domain services make it safe, preserving command syntax, output compatibility, lifecycle gates, protected-file rules, and avoiding circular delegation through aictl.",
+      "affected_areas": [
+        "Project Control Gateway",
+        "Legacy ctl compatibility wrappers",
+        "Shared core/domain service migration"
+      ],
+      "affected_files": [
+        "scripts/planctl.py if allowed by CTL-07",
+        "scripts/taskctl.py if allowed by CTL-07",
+        "scripts/docctl.py if allowed by CTL-07",
+        "scripts/contextctl.py if allowed by CTL-07",
+        "scripts/codexctl.py if allowed by CTL-07",
+        "scripts/evolutionctl.py if allowed by CTL-07",
+        "ai_project_ctl/core/* if compatible shared helpers are needed",
+        "tests/test_*ctl*.py or equivalent wrapper compatibility tests"
+      ],
+      "risks": [
+        "Wrapper migration can create circular delegation if old ctl scripts call aictl while aictl still delegates to old ctl scripts.",
+        "Existing command output, exit codes, lifecycle gates, or protected-file behavior could change unintentionally.",
+        "Migrating all ctl scripts in one task may be too broad if shared domain services are not ready."
+      ],
+      "impact": [
+        "Moves legacy ctl scripts toward shared control-plane architecture.",
+        "Keeps existing CLI commands compatible for current workflows.",
+        "Prepares safer future aictl and web control integration."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-025"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T15:22:20Z",
+      "approval_notes": "Approved for CTL-07 compatibility wrapper migration. Must preserve existing ctl behavior and avoid circular delegation through aictl.",
       "accepted_by": "",
       "accepted_at": "",
       "acceptance_notes": "",
       "notes": [],
       "priority": 1,
-      "order": 7,
-      "created_at": "2026-06-18T14:56:25Z",
-      "updated_at": "2026-06-18T14:56:33Z"
+      "order": 8,
+      "created_at": "2026-06-18T15:21:51Z",
+      "updated_at": "2026-06-18T15:22:20Z"
     }
   ]
 }

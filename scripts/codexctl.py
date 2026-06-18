@@ -20,10 +20,21 @@ import hashlib
 import json
 import os
 import sys
-import tempfile
-import uuid
-from datetime import datetime, timezone
 from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from ai_project_ctl.core.legacy import (  # noqa: E402
+    append_audit_event,
+    atomic_write_text as core_atomic_write_text,
+    ensure_project_dirs as core_ensure_project_dirs,
+    events_dir as core_events_dir,
+    generated_dir as core_generated_dir,
+    state_dir as core_state_dir,
+    utc_now as core_utc_now,
+)
 
 
 CODEX_SCHEMA_VERSION = 1
@@ -71,7 +82,7 @@ class CodexError(Exception):
 
 
 def utc_now():
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return core_utc_now()
 
 
 def repo_root(args):
@@ -79,15 +90,15 @@ def repo_root(args):
 
 
 def state_dir(root):
-    return root / "AI_PROJECT" / "state"
+    return core_state_dir(root)
 
 
 def events_dir(root):
-    return root / "AI_PROJECT" / "events"
+    return core_events_dir(root)
 
 
 def generated_dir(root):
-    return root / "AI_PROJECT" / "generated"
+    return core_generated_dir(root)
 
 
 def current_execution_path(root):
@@ -123,30 +134,11 @@ def evolution_path(root):
 
 
 def ensure_project_dirs(root):
-    state_dir(root).mkdir(parents=True, exist_ok=True)
-    events_dir(root).mkdir(parents=True, exist_ok=True)
-    generated_dir(root).mkdir(parents=True, exist_ok=True)
+    core_ensure_project_dirs(root)
 
 
 def atomic_write_text(path, text):
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    fd, tmp_name = tempfile.mkstemp(
-        prefix=path.name + ".",
-        suffix=".tmp",
-        dir=str(path.parent),
-    )
-
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
-            f.write(text)
-            f.flush()
-            os.fsync(f.fileno())
-
-        os.replace(tmp_name, str(path))
-    finally:
-        if os.path.exists(tmp_name):
-            os.unlink(tmp_name)
+    core_atomic_write_text(path, text)
 
 
 def write_json(path, data):
@@ -204,24 +196,16 @@ def load_current_execution(root):
 
 
 def append_event(root, actor, command, entity_type, entity_id, revision_before, revision_after, payload):
-    event = {
-        "event_id": "EVT-" + uuid.uuid4().hex[:12].upper(),
-        "timestamp": utc_now(),
-        "actor": actor,
-        "command": command,
-        "entity_type": entity_type,
-        "entity_id": entity_id,
-        "revision_before": revision_before,
-        "revision_after": revision_after,
-        "payload": payload,
-    }
-
-    line = json.dumps(event, ensure_ascii=False, separators=(",", ":")) + "\n"
-    path = codex_events_path(root)
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    with path.open("a", encoding="utf-8", newline="\n") as f:
-        f.write(line)
+    append_audit_event(
+        codex_events_path(root),
+        actor=actor,
+        command=command,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        revision_before=revision_before,
+        revision_after=revision_after,
+        payload=payload,
+    )
 
 
 def find_item(items, item_id):

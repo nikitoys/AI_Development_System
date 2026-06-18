@@ -3,11 +3,10 @@
 
 # Task Execution Queue
 
-Revision: `227`
+Revision: `234`
 
 ## Executable Now
 
-- `CTL-07 (TASK-025)` [planned] `EPIC-005` priority `1` — Task G - Convert old ctl scripts into compatibility wrappers
 - `CTL-08 (TASK-026)` [planned] `EPIC-005` priority `1` — Task H - Add project doctor command
 - `CTL-09 (TASK-027)` [planned] `EPIC-005` priority `1` — Task I - Add locking and atomic write protection
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
@@ -43,6 +42,8 @@ Revision: `227`
 - `CTL-05 (TASK-023)` [done] `EPIC-005` priority `1` — Task E - Add command registry
   - `status_not_executable`: status is done
 - `CTL-06 (TASK-024)` [done] `EPIC-005` priority `1` — Task F - Implement unified CLI facade scripts/aictl.py
+  - `status_not_executable`: status is done
+- `CTL-07 (TASK-025)` [done] `EPIC-005` priority `1` — Task G - Convert old ctl scripts into compatibility wrappers
   - `status_not_executable`: status is done
 - `TASK-002` [done] `EPIC-002` priority `1` — Document Skills Layer Roadmap
   - `status_not_executable`: status is done
