@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
-  "revision": 31,
+  "revision": 40,
   "status": "blocked",
-  "code": "CODEX_CONTEXT_PACK_INVALID",
+  "code": "CODEX_CONTEXT_PACK_STALE",
   "source_type": "task",
-  "source_id": "TASK-019",
+  "source_id": "TASK-020",
   "source_status": "",
   "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
   "status_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_STATUS.md",
   "prompt_exists": false,
-  "blocked_reason": "CONTEXT_TASK_MISMATCH: expected TASK-019 got TASK-010",
+  "blocked_reason": "STALE_CONTEXT_PACK: tasks revision 197 != current 199",
   "details": [
-    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CONTEXT_PACK.md"
+    "tasks revision 197 != current 199"
   ],
   "created_at": "2026-06-16T15:22:41Z",
-  "updated_at": "2026-06-18T06:38:05Z"
+  "updated_at": "2026-06-18T10:36:54Z"
 }

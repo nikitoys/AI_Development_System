@@ -3,18 +3,16 @@
 
 # Task Execution Queue
 
-Revision: `196`
+Revision: `202`
 
 ## Executable Now
 
-- `TASK-020` [planned] `EPIC-005` priority `1` — Task B - Design unified control-plane architecture
 - `TASK-021` [planned] `EPIC-005` priority `1` — Task C - Add global ID allocation strategy
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 
 ## Waiting For Dependencies
 
 - `TASK-022` [planned] `EPIC-005` priority `1` — Task D - Introduce ai_project_ctl core package
-  - `dependency_not_done`: depends on TASK-020 with status planned
   - `dependency_not_done`: depends on TASK-021 with status planned
 - `TASK-023` [planned] `EPIC-005` priority `1` — Task E - Add command registry
   - `dependency_not_done`: depends on TASK-022 with status planned
@@ -42,6 +40,8 @@ Revision: `196`
 - `TASK-019` [done] `EPIC-005` priority `1` — Task A - Inventory existing ctl commands and state mutation paths
   - `status_not_executable`: status is done
 - `TASK-004` [done] `EPIC-001` priority `1` — Implement codexctl prompt package generator
+  - `status_not_executable`: status is done
+- `TASK-020` [done] `EPIC-005` priority `1` — Task B - Design unified control-plane architecture
   - `status_not_executable`: status is done
 - `TASK-007` [done] `EPIC-001` priority `1` — Record L4 Role-Agent Runtime Architecture
   - `status_not_executable`: status is done

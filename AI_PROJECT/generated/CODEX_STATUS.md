@@ -4,20 +4,20 @@
 # Codex Execution Status
 
 Status: `BLOCKED`
-Code: `CODEX_CONTEXT_PACK_INVALID`
-Updated: `2026-06-18T06:38:05Z`
+Code: `CODEX_CONTEXT_PACK_STALE`
+Updated: `2026-06-18T10:36:54Z`
 
 Prompt exists: `false`
 Prompt path: `/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md`
 
 Source type: `task`
-Source ID: `TASK-019`
+Source ID: `TASK-020`
 Source status: `unknown`
 
 Blocked reason:
 
-CONTEXT_TASK_MISMATCH: expected TASK-019 got TASK-010
+STALE_CONTEXT_PACK: tasks revision 197 != current 199
 
 Details:
 
-- /home/nikitoys/AI-Development-System/AI_PROJECT/generated/CONTEXT_PACK.md
+- tasks revision 197 != current 199

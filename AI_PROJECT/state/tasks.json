@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 196,
+  "revision": 202,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-18T06:45:48Z",
+  "updated_at": "2026-06-18T13:10:50Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -1207,7 +1207,7 @@
       "id": "TASK-020",
       "epic_id": "EPIC-005",
       "title": "Task B - Design unified control-plane architecture",
-      "status": "planned",
+      "status": "done",
       "summary": "Record the target architecture for a shared command/service layer before implementation.",
       "description": "Design the future scripts/aictl.py entrypoint and ai_project_ctl package structure, including store, events, validation, registry, renderer, IDs, locks, domain services, and web shell boundaries.",
       "priority": 1,
@@ -1260,11 +1260,11 @@
           "reason": "Architecture design depends on the current ctl inventory."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-18T13:10:50Z",
+      "approval_notes": "Unified control-plane architecture accepted. Design is sufficient for ID allocation strategy task.",
       "created_at": "2026-06-18T06:20:09Z",
-      "updated_at": "2026-06-18T06:22:02Z",
+      "updated_at": "2026-06-18T13:10:50Z",
       "uid": "tsk_49ec70a8f36e",
       "legacy_id": "TASK-020",
       "aliases": [

@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `196`
+Revision: `202`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -360,7 +360,7 @@ Acceptance criteria:
 
 ### TASK-020 — Task B - Design unified control-plane architecture
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_49ec70a8f36e`, legacy `TASK-020`, aliases `TASK-020`
