@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `165`
+Revision: `196`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -339,3 +339,197 @@ Acceptance criteria:
 - Generated files display readable refs and legacy IDs where useful.
 - Prompt packages still contain enough identity data for Codex execution.
 - Validation and generated checks pass.
+
+## Epic `EPIC-005`
+
+### TASK-019 — Task A - Inventory existing ctl commands and state mutation paths
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_d0e6e78d3c7c`, legacy `TASK-019`, aliases `TASK-019`
+
+Map current ctl scripts, commands, state files, event logs, generated outputs, and direct mutation risks.
+
+Acceptance criteria:
+
+- Existing ctl surface is documented.
+- Write paths are known.
+- Gaps and unsafe paths are listed.
+- No code behavior changed.
+
+### TASK-020 — Task B - Design unified control-plane architecture
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_49ec70a8f36e`, legacy `TASK-020`, aliases `TASK-020`
+
+Record the target architecture for a shared command/service layer before implementation.
+
+Acceptance criteria:
+
+- Architecture is recorded in the plan/task description or an approved design artifact.
+- Design explicitly states that Web UI cannot bypass the command layer.
+- Design explicitly states generated/*.md is derived and must not be edited manually.
+- No implementation files are created in this design task.
+
+### TASK-021 — Task C - Add global ID allocation strategy
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_c04df4f0310f`, legacy `TASK-021`, aliases `TASK-021`
+
+Define a global ID allocation model that prevents task conflicts across parallel epics and future web actions.
+
+Acceptance criteria:
+
+- The plan explicitly resolves cross-epic task ID collision risk.
+- There is a clear future implementation path for ids.py or equivalent.
+- Parallel execution risk is accounted for.
+- No ID migration or code behavior change is performed in this design task.
+
+### TASK-022 — Task D - Introduce ai_project_ctl core package
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_568bca24b2ff`, legacy `TASK-022`, aliases `TASK-022`
+
+Create shared internal services that future CLI and Web UI both use.
+
+Acceptance criteria:
+
+- Existing behavior remains compatible.
+- Core package has tests.
+- No domain command should need to write state directly after migration path is established.
+- State mutation still goes through validated CLI/service paths.
+
+### TASK-023 — Task E - Add command registry
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_05b8a81cf8cd`, legacy `TASK-023`, aliases `TASK-023`
+
+Make project-control operations discoverable and callable through one registry.
+
+Acceptance criteria:
+
+- Commands have names, descriptions, args schema, read/write metadata, and output format metadata.
+- CLI can list and describe commands.
+- Web UI can later use the registry to render actions/forms.
+- Registry does not bypass domain validation.
+
+### TASK-024 — Task F - Implement unified CLI facade scripts/aictl.py
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_fc72e08b34f0`, legacy `TASK-024`, aliases `TASK-024`
+
+Create one preferred entrypoint for project-control operations.
+
+Acceptance criteria:
+
+- aictl can call shared domain services.
+- aictl supports human-readable output.
+- aictl supports --json for automation.
+- Existing taskctl/evolutionctl behavior is not broken.
+
+### TASK-025 — Task G - Convert old ctl scripts into compatibility wrappers
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_020a6425c9e0`, legacy `TASK-025`, aliases `TASK-025`
+
+Keep existing ctl workflows working while centralizing logic.
+
+Acceptance criteria:
+
+- Existing commands still work.
+- New code path is centralized.
+- No duplicate lifecycle validation remains where avoidable.
+- Wrapper compatibility is documented or obvious from implementation.
+
+### TASK-026 — Task H - Add project doctor command
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_5868b6f775a8`, legacy `TASK-026`, aliases `TASK-026`
+
+Provide one health check for project-control state.
+
+Acceptance criteria:
+
+- python scripts/aictl.py project doctor reports PASS/WARN/FAIL.
+- Doctor exits non-zero on FAIL.
+- Output is useful for both humans and CI.
+- Doctor does not bypass owning CLI validation or render commands.
+
+### TASK-027 — Task I - Add locking and atomic write protection
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_8992616ea198`, legacy `TASK-027`, aliases `TASK-027`
+
+Make parallel project-control operations safer.
+
+Acceptance criteria:
+
+- Concurrent writes cannot corrupt state.
+- Locking behavior is tested.
+- Error messages are readable.
+- State/events/generated writes avoid partial output.
+
+### TASK-028 — Task J - Add read-only local Web Control Center MVP
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_1c8f867e1c2c`, legacy `TASK-028`, aliases `TASK-028`
+
+Provide initial web visibility without mutation risk.
+
+Acceptance criteria:
+
+- Web UI is read-only.
+- Web UI uses the same command/core layer as CLI.
+- Web UI does not edit JSON directly.
+- Web UI clearly shows current task, queues, stale generated files, and health status.
+
+### TASK-029 — Task K - Add controlled Web write actions
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_9bd489501264`, legacy `TASK-029`, aliases `TASK-029`
+
+Allow safe project-control state changes from UI only after the read-only MVP is stable.
+
+Acceptance criteria:
+
+- Web write path is identical to CLI write path.
+- Audit events are created.
+- Invalid transitions are blocked.
+- Confirmation and error reporting are present.
+
+### TASK-030 — Task L - Documentation and owner quickstart
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_235fab1d1516`, legacy `TASK-030`, aliases `TASK-030`
+
+Make the unified control-plane usable and discoverable.
+
+Acceptance criteria:
+
+- Owner can discover common commands quickly.
+- Codex can be pointed to aictl as the preferred interface.
+- Docs clearly say generated files are derived.
+- Docs explain legacy ctl wrappers, project doctor, local web dashboard, web safety model, state/events/generated architecture, and ID allocation policy.

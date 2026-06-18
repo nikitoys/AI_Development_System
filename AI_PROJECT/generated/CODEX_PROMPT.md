@@ -1,51 +1,57 @@
 [SYSTEM]
 
-Active Role: Codex Executor + Documentation Control Maintainer
-Active Stage: Documentation Generated Drift Cleanup
-Active Document: AI_PROJECT/generated/DOCS_GAPS.md / scripts/docctl.py
-Expected Result: DOCS_GAPS.md drift resolved through docctl.py, generated docs checks pass, protected-files check is clean.
+Active Role: AI System Maintainer / Project Control Architect
+Active Stage: Control Plane Inventory
+Active Document: ai-system/project-control/control-plane-inventory.md
+Expected Result: Inventory report produced; no code behavior changed.
 
 Repository: current repository
-Task ID: TASK-018
-Task UID: tsk_9ecaaf287358
-Legacy Task ID: TASK-018
-Task Aliases: TASK-018
-Task Title: Fix documentation generated drift
+Task ID: TASK-019
+Task UID: tsk_d0e6e78d3c7c
+Legacy Task ID: TASK-019
+Task Aliases: TASK-019
+Task Title: Task A - Inventory existing ctl commands and state mutation paths
 Task Status: in_review
 Verification Mode: standard
 
-Initiative: INIT-001 — AI Development System Evolution
-Epic: EPIC-001 — Documentation Rails
+Initiative: INIT-002 — Centralized AI Project Control Plane
+Epic: EPIC-005 — Implement unified aictl and local Control Center foundation
 
 Context:
-Resolve pre-existing DOCS_GAPS.md generated drift through docctl.py so protected-files validation becomes clean again.
+Map current ctl scripts, commands, state files, event logs, generated outputs, and direct mutation risks.
+
+Details:
+Inventory all current project-control command surfaces before any unification work. The result should make existing write paths, duplicated lifecycle logic, and unsafe direct mutation paths visible.
 
 Scope:
-- Inspect docctl.py behavior and documentation registry state to identify why DOCS_GAPS.md is stale.
-- Refresh documentation generated files through docctl.py only.
-- Run documentation generated checks and protected-files validation.
+- Identify all scripts/*ctl.py files and their command domains.
+- List supported commands by domain and classify read, write, render, validation, and audit behavior.
+- Identify duplicated lifecycle logic and direct state/events/generated mutation paths.
+- Identify task ID collision risks across epics and aliases.
+- Produce a readable inventory artifact if an approved standard location exists.
 
 Out of Scope:
-- Do not change task identity, dependency graph, execution queue, epic keys, or task resolver behavior.
+- Do not implement aictl.py.
+- Do not refactor existing ctl scripts.
+- Do not create web app files.
 - Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
 
 Allowed Files:
-- AI_PROJECT/state/docs.json via docctl.py only
-- AI_PROJECT/events/doc-events.jsonl via docctl.py only
-- AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only
-- AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only
-- scripts/docctl.py only if the drift is caused by a docctl rendering bug
+- ai-system/project-control/control-plane-inventory.md
+- AI_PROJECT/state/tasks.json via taskctl.py only
+- AI_PROJECT/events/task-events.jsonl via taskctl.py only
+- AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only
+- AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only
 
 Acceptance Criteria:
-- python scripts/docctl.py validate passes.
-- python scripts/docctl.py render completes successfully.
-- python scripts/docctl.py check-generated passes.
-- python scripts/check-protected-project-files.py --verbose no longer reports DOCS_GAPS.md drift.
-- No protected AI_PROJECT files are manually edited.
+- Existing ctl surface is documented.
+- Write paths are known.
+- Gaps and unsafe paths are listed.
+- No code behavior changed.
 
 Review Instructions:
-- Verify that DOCS_GAPS.md was updated only through docctl.py unless a docctl rendering bug required a scoped scripts/docctl.py fix.
-- Verify that TIG/task identity behavior was not modified.
+- Verify that protected project-control files were changed only through the owning CLI.
+- Verify that this is inventory only and does not alter ctl script behavior.
 
 Execution Rules:
 - Do not edit AI_PROJECT/state/*.json manually.
@@ -57,7 +63,7 @@ Execution Rules:
 
 Suggested lifecycle commands:
 ```bash
-python scripts/taskctl.py task transition TASK-018 --to in_progress
-python scripts/taskctl.py task transition TASK-018 --to in_review
+python scripts/taskctl.py task transition TASK-019 --to in_progress
+python scripts/taskctl.py task transition TASK-019 --to in_review
 python scripts/taskctl.py validate
 ```

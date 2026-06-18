@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 165,
+  "revision": 196,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-18T06:09:19Z",
+  "updated_at": "2026-06-18T06:45:48Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -1141,6 +1141,847 @@
       "legacy_id": "TASK-018",
       "aliases": [
         "TASK-018"
+      ]
+    },
+    {
+      "id": "TASK-019",
+      "epic_id": "EPIC-005",
+      "title": "Task A - Inventory existing ctl commands and state mutation paths",
+      "status": "done",
+      "summary": "Map current ctl scripts, commands, state files, event logs, generated outputs, and direct mutation risks.",
+      "description": "Inventory all current project-control command surfaces before any unification work. The result should make existing write paths, duplicated lifecycle logic, and unsafe direct mutation paths visible.",
+      "priority": 1,
+      "order": 1,
+      "active_role": "AI System Maintainer / Project Control Architect",
+      "active_stage": "Control Plane Inventory",
+      "active_document": "ai-system/project-control/control-plane-inventory.md",
+      "expected_result": "Inventory report produced; no code behavior changed.",
+      "verification_mode": "standard",
+      "scope": [
+        "Identify all scripts/*ctl.py files and their command domains.",
+        "List supported commands by domain and classify read, write, render, validation, and audit behavior.",
+        "Identify duplicated lifecycle logic and direct state/events/generated mutation paths.",
+        "Identify task ID collision risks across epics and aliases.",
+        "Produce a readable inventory artifact if an approved standard location exists."
+      ],
+      "out_of_scope": [
+        "Do not implement aictl.py.",
+        "Do not refactor existing ctl scripts.",
+        "Do not create web app files.",
+        "Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/control-plane-inventory.md",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only"
+      ],
+      "acceptance_criteria": [
+        "Existing ctl surface is documented.",
+        "Write paths are known.",
+        "Gaps and unsafe paths are listed.",
+        "No code behavior changed."
+      ],
+      "review_instructions": [
+        "Verify that protected project-control files were changed only through the owning CLI.",
+        "Verify that this is inventory only and does not alter ctl script behavior."
+      ],
+      "notes": [
+        "Phase 1 - Planning and design.",
+        "Future implementation tasks that change AI Development System behavior require the approved evolution path before execution."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-18T06:45:48Z",
+      "approval_notes": "Inventory report accepted. Findings are sufficient for control-plane architecture design.",
+      "created_at": "2026-06-18T06:19:52Z",
+      "updated_at": "2026-06-18T06:45:48Z",
+      "uid": "tsk_d0e6e78d3c7c",
+      "legacy_id": "TASK-019",
+      "aliases": [
+        "TASK-019"
+      ]
+    },
+    {
+      "id": "TASK-020",
+      "epic_id": "EPIC-005",
+      "title": "Task B - Design unified control-plane architecture",
+      "status": "planned",
+      "summary": "Record the target architecture for a shared command/service layer before implementation.",
+      "description": "Design the future scripts/aictl.py entrypoint and ai_project_ctl package structure, including store, events, validation, registry, renderer, IDs, locks, domain services, and web shell boundaries.",
+      "priority": 1,
+      "order": 2,
+      "active_role": "AI System Maintainer / Project Control Architect",
+      "active_stage": "Control Plane Architecture Design",
+      "active_document": "ai-system/project-control/control-plane-architecture.md",
+      "expected_result": "Architecture recorded in an approved design artifact; no implementation yet.",
+      "verification_mode": "standard",
+      "scope": [
+        "Describe scripts/aictl.py as the preferred unified CLI facade.",
+        "Describe ai_project_ctl/core services for store, events, validation, registry, renderer, ids, and locks.",
+        "Describe ai_project_ctl/domains services for tasks, epics, changes, reviews, evolution, codex, and context.",
+        "Describe ai_project_ctl/web as a thin local UI over the same command registry.",
+        "State the transaction rule: Command -> Validate -> Append Event -> Mutate State -> Regenerate Views -> Return Result.",
+        "State that generated/*.md is derived and must not be edited manually."
+      ],
+      "out_of_scope": [
+        "Do not create ai_project_ctl package files.",
+        "Do not create scripts/aictl.py.",
+        "Do not change existing ctl behavior.",
+        "Do not bypass evolution approval for future source changes."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/control-plane-architecture.md",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only"
+      ],
+      "acceptance_criteria": [
+        "Architecture is recorded in the plan/task description or an approved design artifact.",
+        "Design explicitly states that Web UI cannot bypass the command layer.",
+        "Design explicitly states generated/*.md is derived and must not be edited manually.",
+        "No implementation files are created in this design task."
+      ],
+      "review_instructions": [
+        "Verify that the architecture preserves existing project-control source-of-truth boundaries.",
+        "Verify that future implementation still requires controlled evolution approval where behavior changes."
+      ],
+      "notes": [
+        "Phase 1 - Planning and design.",
+        "Depends conceptually on TASK-019 inventory findings."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-019",
+          "type": "hard",
+          "created_at": "2026-06-18T06:22:02Z",
+          "reason": "Architecture design depends on the current ctl inventory."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-18T06:20:09Z",
+      "updated_at": "2026-06-18T06:22:02Z",
+      "uid": "tsk_49ec70a8f36e",
+      "legacy_id": "TASK-020",
+      "aliases": [
+        "TASK-020"
+      ]
+    },
+    {
+      "id": "TASK-021",
+      "epic_id": "EPIC-005",
+      "title": "Task C - Add global ID allocation strategy",
+      "status": "planned",
+      "summary": "Define a global ID allocation model that prevents task conflicts across parallel epics and future web actions.",
+      "description": "Specify whether IDs are globally unique or scoped, prefer globally unique TASK-001 style task IDs, define atomic allocation behavior, and define validation for duplicate task IDs across all epics.",
+      "priority": 1,
+      "order": 3,
+      "active_role": "AI System Maintainer / Project Control Architect",
+      "active_stage": "ID Allocation Design",
+      "active_document": "ai-system/project-control/control-plane-id-allocation.md",
+      "expected_result": "ID allocation policy recorded with a clear future implementation path.",
+      "verification_mode": "standard",
+      "scope": [
+        "Define global versus scoped ID policy for tasks, epics, changes, and command registry entities.",
+        "Prefer globally unique task IDs while preserving existing aliases and epic-scoped refs.",
+        "Design atomic ID allocation for CLI and future web write actions.",
+        "Design validation that prevents duplicate task IDs across all epics.",
+        "Define whether ID allocation should write audit events."
+      ],
+      "out_of_scope": [
+        "Do not implement ids.py.",
+        "Do not migrate existing task IDs.",
+        "Do not change taskctl.py behavior in this design task."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/control-plane-id-allocation.md",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only"
+      ],
+      "acceptance_criteria": [
+        "The plan explicitly resolves cross-epic task ID collision risk.",
+        "There is a clear future implementation path for ids.py or equivalent.",
+        "Parallel execution risk is accounted for.",
+        "No ID migration or code behavior change is performed in this design task."
+      ],
+      "review_instructions": [
+        "Verify that the design is compatible with existing legacy IDs, task aliases, and epic keys.",
+        "Verify that protected project-control files were not manually edited."
+      ],
+      "notes": [
+        "Phase 1 - Planning and design.",
+        "Future implementation must preserve existing TASK-* references and aliases."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-019",
+          "type": "hard",
+          "created_at": "2026-06-18T06:22:05Z",
+          "reason": "ID allocation strategy depends on the current ctl inventory."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-18T06:20:18Z",
+      "updated_at": "2026-06-18T06:22:05Z",
+      "uid": "tsk_c04df4f0310f",
+      "legacy_id": "TASK-021",
+      "aliases": [
+        "TASK-021"
+      ]
+    },
+    {
+      "id": "TASK-022",
+      "epic_id": "EPIC-005",
+      "title": "Task D - Introduce ai_project_ctl core package",
+      "status": "planned",
+      "summary": "Create shared internal services that future CLI and Web UI both use.",
+      "description": "Implement the core control-plane package for store loading/saving, audit events, validation, rendering triggers, result objects, error model, locking, and atomic writes while preserving existing behavior.",
+      "priority": 1,
+      "order": 4,
+      "active_role": "Backend Developer AI / AI System Maintainer",
+      "active_stage": "Core Package Implementation",
+      "active_document": "ai_project_ctl/core",
+      "expected_result": "Shared core services exist with tests and existing ctl behavior remains compatible.",
+      "verification_mode": "standard",
+      "scope": [
+        "Create ai_project_ctl/core store, events, validation, registry, renderer, ids, locks, result, and error support as needed.",
+        "Move shared state loading, saving, event append, validation hooks, rendering triggers, and atomic write helpers into reusable services.",
+        "Add tests for core package behavior.",
+        "Preserve current planctl.py, taskctl.py, docctl.py, contextctl.py, codexctl.py, and evolutionctl.py behavior."
+      ],
+      "out_of_scope": [
+        "Do not replace all old ctl scripts in this task.",
+        "Do not add web UI files.",
+        "Do not change lifecycle rules beyond approved scope."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/**",
+        "tests/**",
+        "scripts/*ctl.py",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only"
+      ],
+      "acceptance_criteria": [
+        "Existing behavior remains compatible.",
+        "Core package has tests.",
+        "No domain command should need to write state directly after migration path is established.",
+        "State mutation still goes through validated CLI/service paths."
+      ],
+      "review_instructions": [
+        "Verify behavior compatibility for existing ctl commands.",
+        "Verify tests cover atomic writes, event append, validation errors, and render trigger behavior where implemented."
+      ],
+      "notes": [
+        "Phase 2 - CLI foundation.",
+        "Requires approved evolution change before execution because this modifies scripts and control behavior."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-020",
+          "type": "hard",
+          "created_at": "2026-06-18T06:22:11Z",
+          "reason": "Core package implementation depends on the approved architecture design."
+        },
+        {
+          "task_id": "TASK-021",
+          "type": "hard",
+          "created_at": "2026-06-18T06:22:14Z",
+          "reason": "Core package implementation depends on the global ID allocation strategy."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-18T06:20:28Z",
+      "updated_at": "2026-06-18T06:22:14Z",
+      "uid": "tsk_568bca24b2ff",
+      "legacy_id": "TASK-022",
+      "aliases": [
+        "TASK-022"
+      ]
+    },
+    {
+      "id": "TASK-023",
+      "epic_id": "EPIC-005",
+      "title": "Task E - Add command registry",
+      "status": "planned",
+      "summary": "Make project-control operations discoverable and callable through one registry.",
+      "description": "Introduce command metadata with names, descriptions, argument schema, read/write metadata, and output format metadata so both CLI and future web UI can discover and describe supported operations.",
+      "priority": 1,
+      "order": 5,
+      "active_role": "Backend Developer AI / AI System Maintainer",
+      "active_stage": "Command Registry Implementation",
+      "active_document": "ai_project_ctl/core/registry.py",
+      "expected_result": "Command registry supports listing and describing project-control commands.",
+      "verification_mode": "standard",
+      "scope": [
+        "Implement command registry metadata for task, epic, change, review, context, codex, project, and command domains where available.",
+        "Support example names such as task.list, task.show, task.create, task.transition, epic.list, change.create, context.build, codex.prompt.build, project.doctor, command.list, and command.describe.",
+        "Expose command names, descriptions, args schema, read/write metadata, and output format metadata.",
+        "Add tests for registry listing and command description behavior."
+      ],
+      "out_of_scope": [
+        "Do not implement web forms in this task.",
+        "Do not remove existing ctl entrypoints.",
+        "Do not add unsupported lifecycle commands."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/core/registry.py",
+        "ai_project_ctl/domains/**",
+        "tests/**",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only"
+      ],
+      "acceptance_criteria": [
+        "Commands have names, descriptions, args schema, read/write metadata, and output format metadata.",
+        "CLI can list and describe commands.",
+        "Web UI can later use the registry to render actions/forms.",
+        "Registry does not bypass domain validation."
+      ],
+      "review_instructions": [
+        "Verify that registry metadata cannot execute unsupported or unvalidated operations.",
+        "Verify command descriptions match implemented behavior."
+      ],
+      "notes": [
+        "Phase 2 - CLI foundation.",
+        "Requires approved evolution change before execution because command catalog behavior changes."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-022",
+          "type": "hard",
+          "created_at": "2026-06-18T06:22:17Z",
+          "reason": "Command registry depends on shared core services."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-18T06:20:38Z",
+      "updated_at": "2026-06-18T06:22:17Z",
+      "uid": "tsk_05b8a81cf8cd",
+      "legacy_id": "TASK-023",
+      "aliases": [
+        "TASK-023"
+      ]
+    },
+    {
+      "id": "TASK-024",
+      "epic_id": "EPIC-005",
+      "title": "Task F - Implement unified CLI facade scripts/aictl.py",
+      "status": "planned",
+      "summary": "Create one preferred entrypoint for project-control operations.",
+      "description": "Add scripts/aictl.py as a unified CLI facade over shared domain services, supporting human-readable output and --json automation output while preserving existing taskctl/evolutionctl/docctl/contextctl/codexctl behavior.",
+      "priority": 1,
+      "order": 6,
+      "active_role": "Backend Developer AI / AI System Maintainer",
+      "active_stage": "Unified CLI Facade Implementation",
+      "active_document": "scripts/aictl.py",
+      "expected_result": "aictl facade works through shared services and existing ctl scripts remain functional.",
+      "verification_mode": "standard",
+      "scope": [
+        "Implement commands such as task list, task show, task transition, epic list, context build, codex prompt build, project doctor, project render, command list, and command describe as supported by shared services.",
+        "Support human-readable output.",
+        "Support --json output for automation.",
+        "Ensure aictl calls shared domain services and command registry instead of duplicating lifecycle logic.",
+        "Add tests or smoke coverage for representative read and write commands."
+      ],
+      "out_of_scope": [
+        "Do not remove legacy ctl scripts.",
+        "Do not add web UI in this task.",
+        "Do not implement unsupported commands without validation."
+      ],
+      "allowed_files": [
+        "scripts/aictl.py",
+        "ai_project_ctl/**",
+        "tests/**",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only"
+      ],
+      "acceptance_criteria": [
+        "aictl can call shared domain services.",
+        "aictl supports human-readable output.",
+        "aictl supports --json for automation.",
+        "Existing taskctl/evolutionctl behavior is not broken."
+      ],
+      "review_instructions": [
+        "Verify aictl delegates to validated shared services and does not mutate protected files directly.",
+        "Verify existing ctl command compatibility after aictl is introduced."
+      ],
+      "notes": [
+        "Phase 2 - CLI foundation.",
+        "Requires approved evolution change before execution because this adds the preferred project-control entrypoint."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-023",
+          "type": "hard",
+          "created_at": "2026-06-18T06:22:20Z",
+          "reason": "Unified CLI facade depends on command registry metadata."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-18T06:20:50Z",
+      "updated_at": "2026-06-18T06:22:20Z",
+      "uid": "tsk_fc72e08b34f0",
+      "legacy_id": "TASK-024",
+      "aliases": [
+        "TASK-024"
+      ]
+    },
+    {
+      "id": "TASK-025",
+      "epic_id": "EPIC-005",
+      "title": "Task G - Convert old ctl scripts into compatibility wrappers",
+      "status": "planned",
+      "summary": "Keep existing ctl workflows working while centralizing logic.",
+      "description": "Update taskctl.py, evolutionctl.py, planctl.py, docctl.py, contextctl.py, and codexctl.py where practical so they delegate to ai_project_ctl domain services or aictl-compatible services without breaking existing command syntax.",
+      "priority": 1,
+      "order": 7,
+      "active_role": "Backend Developer AI / AI System Maintainer",
+      "active_stage": "Legacy Wrapper Migration",
+      "active_document": "scripts/*ctl.py",
+      "expected_result": "Legacy ctl scripts remain supported while shared services own behavior.",
+      "verification_mode": "standard",
+      "scope": [
+        "Make taskctl.py delegate to ai_project_ctl domains or shared services where practical.",
+        "Make evolutionctl.py and other ctl scripts delegate where practical.",
+        "Keep old command syntax compatible unless a separate approved migration says otherwise.",
+        "Mark wrappers as legacy-compatible but supported in documentation or code comments where appropriate.",
+        "Reduce duplicate lifecycle validation where avoidable."
+      ],
+      "out_of_scope": [
+        "Do not remove existing ctl scripts.",
+        "Do not change public command syntax unless explicitly approved.",
+        "Do not implement web UI in this task."
+      ],
+      "allowed_files": [
+        "scripts/planctl.py",
+        "scripts/taskctl.py",
+        "scripts/docctl.py",
+        "scripts/evolutionctl.py",
+        "scripts/contextctl.py",
+        "scripts/codexctl.py",
+        "ai_project_ctl/**",
+        "tests/**",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only"
+      ],
+      "acceptance_criteria": [
+        "Existing commands still work.",
+        "New code path is centralized.",
+        "No duplicate lifecycle validation remains where avoidable.",
+        "Wrapper compatibility is documented or obvious from implementation."
+      ],
+      "review_instructions": [
+        "Run representative compatibility checks for old ctl commands.",
+        "Verify protected state mutation still goes only through approved service paths."
+      ],
+      "notes": [
+        "Phase 2 - CLI foundation.",
+        "Requires approved evolution change before execution because existing ctl behavior is refactored."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-024",
+          "type": "hard",
+          "created_at": "2026-06-18T06:22:29Z",
+          "reason": "Compatibility wrappers depend on the unified CLI/service facade."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-18T06:21:01Z",
+      "updated_at": "2026-06-18T06:22:29Z",
+      "uid": "tsk_020a6425c9e0",
+      "legacy_id": "TASK-025",
+      "aliases": [
+        "TASK-025"
+      ]
+    },
+    {
+      "id": "TASK-026",
+      "epic_id": "EPIC-005",
+      "title": "Task H - Add project doctor command",
+      "status": "planned",
+      "summary": "Provide one health check for project-control state.",
+      "description": "Add a project doctor command that reports PASS/WARN/FAIL for duplicate IDs, invalid statuses, lifecycle residue, missing parents, stale generated files, stale Codex outputs, event/state assumptions, missing generated views, and detectable direct mutation risk.",
+      "priority": 1,
+      "order": 8,
+      "active_role": "Backend Developer AI / QA Engineer AI",
+      "active_stage": "Project Doctor Implementation",
+      "active_document": "scripts/aictl.py project doctor",
+      "expected_result": "Project doctor reports useful PASS/WARN/FAIL health output and exits non-zero on FAIL.",
+      "verification_mode": "standard",
+      "scope": [
+        "Implement python scripts/aictl.py project doctor or equivalent command registry route.",
+        "Check duplicate IDs, invalid task status, invalid lifecycle transition residue, missing parent epic, stale generated files, stale CODEX_PROMPT.md or CODEX_STATUS.md, event/state assumptions, missing generated views, and unsupported direct mutations where detectable.",
+        "Return useful human-readable and automation-friendly output.",
+        "Add tests or smoke checks for PASS, WARN, and FAIL scenarios."
+      ],
+      "out_of_scope": [
+        "Do not repair state automatically unless a supported render command is explicitly invoked.",
+        "Do not edit protected files manually.",
+        "Do not add web UI in this task."
+      ],
+      "allowed_files": [
+        "scripts/aictl.py",
+        "ai_project_ctl/**",
+        "tests/**",
+        "scripts/check-protected-project-files.py",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only"
+      ],
+      "acceptance_criteria": [
+        "python scripts/aictl.py project doctor reports PASS/WARN/FAIL.",
+        "Doctor exits non-zero on FAIL.",
+        "Output is useful for both humans and CI.",
+        "Doctor does not bypass owning CLI validation or render commands."
+      ],
+      "review_instructions": [
+        "Verify doctor failures are deterministic and actionable.",
+        "Verify doctor does not mutate semantic state unexpectedly."
+      ],
+      "notes": [
+        "Phase 3 - Safety and validation.",
+        "Requires approved evolution change before execution because this adds validation behavior."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-024",
+          "type": "hard",
+          "created_at": "2026-06-18T06:22:44Z",
+          "reason": "Project doctor depends on the unified CLI facade."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-18T06:21:11Z",
+      "updated_at": "2026-06-18T06:22:44Z",
+      "uid": "tsk_5868b6f775a8",
+      "legacy_id": "TASK-026",
+      "aliases": [
+        "TASK-026"
+      ]
+    },
+    {
+      "id": "TASK-027",
+      "epic_id": "EPIC-005",
+      "title": "Task I - Add locking and atomic write protection",
+      "status": "planned",
+      "summary": "Make parallel project-control operations safer.",
+      "description": "Add file locking and atomic write behavior for state, events, and generated outputs so concurrent operations cannot corrupt project-control files or leave partial writes.",
+      "priority": 1,
+      "order": 9,
+      "active_role": "Backend Developer AI / DevOps Engineer AI",
+      "active_stage": "Locking And Atomic Writes",
+      "active_document": "ai_project_ctl/core/locks.py",
+      "expected_result": "Concurrent writes are guarded by locks and atomic replace semantics with readable errors.",
+      "verification_mode": "standard",
+      "scope": [
+        "Add file lock support for state mutations.",
+        "Use atomic write via temp file plus replace for protected outputs where appropriate.",
+        "Return clear errors if another process is writing.",
+        "Avoid partial writes to state/events/generated files.",
+        "Add tests for lock contention and atomic write behavior."
+      ],
+      "out_of_scope": [
+        "Do not introduce a database backend.",
+        "Do not implement remote or multi-user server locking.",
+        "Do not change lifecycle semantics."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/core/locks.py",
+        "ai_project_ctl/core/store.py",
+        "ai_project_ctl/core/events.py",
+        "ai_project_ctl/core/renderer.py",
+        "tests/**",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only"
+      ],
+      "acceptance_criteria": [
+        "Concurrent writes cannot corrupt state.",
+        "Locking behavior is tested.",
+        "Error messages are readable.",
+        "State/events/generated writes avoid partial output."
+      ],
+      "review_instructions": [
+        "Verify lock implementation is cross-platform enough for the repository's expected local workflow.",
+        "Verify tests cover contention and failure cleanup."
+      ],
+      "notes": [
+        "Phase 3 - Safety and validation.",
+        "Requires approved evolution change before execution because project-control write semantics change."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-022",
+          "type": "hard",
+          "created_at": "2026-06-18T06:23:05Z",
+          "reason": "Locking and atomic writes depend on shared core services."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-18T06:21:24Z",
+      "updated_at": "2026-06-18T06:23:05Z",
+      "uid": "tsk_8992616ea198",
+      "legacy_id": "TASK-027",
+      "aliases": [
+        "TASK-027"
+      ]
+    },
+    {
+      "id": "TASK-028",
+      "epic_id": "EPIC-005",
+      "title": "Task J - Add read-only local Web Control Center MVP",
+      "status": "planned",
+      "summary": "Provide initial web visibility without mutation risk.",
+      "description": "Add a read-only local Control Center, preferably FastAPI + Jinja2 + HTMX unless repository constraints suggest otherwise, launched through python scripts/aictl.py web --host 127.0.0.1 --port 8765 and backed by the same command registry.",
+      "priority": 1,
+      "order": 10,
+      "active_role": "Frontend Developer AI / Backend Developer AI",
+      "active_stage": "Read-Only Web MVP",
+      "active_document": "ai_project_ctl/web",
+      "expected_result": "Local web dashboard shows project-control state read-only through shared command registry.",
+      "verification_mode": "standard",
+      "scope": [
+        "Add read-only dashboard pages for tasks, epics, current task, reviews, events, Codex prompt/status, and doctor output as available.",
+        "Expose web command through scripts/aictl.py web --host 127.0.0.1 --port 8765.",
+        "Use the same command/core layer as CLI for all data access.",
+        "Clearly show current task, queues, stale generated files, and health status.",
+        "Add tests or smoke checks for read-only route behavior."
+      ],
+      "out_of_scope": [
+        "Do not add web write actions in this task.",
+        "Do not add authentication or remote hosted deployment.",
+        "Do not edit JSON directly from route handlers."
+      ],
+      "allowed_files": [
+        "scripts/aictl.py",
+        "ai_project_ctl/web/**",
+        "ai_project_ctl/**",
+        "tests/**",
+        "pyproject.toml",
+        "requirements*.txt",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only"
+      ],
+      "acceptance_criteria": [
+        "Web UI is read-only.",
+        "Web UI uses the same command/core layer as CLI.",
+        "Web UI does not edit JSON directly.",
+        "Web UI clearly shows current task, queues, stale generated files, and health status."
+      ],
+      "review_instructions": [
+        "Verify route handlers cannot mutate protected state directly.",
+        "Verify web dashboard remains local-only by default."
+      ],
+      "notes": [
+        "Phase 4 - Web MVP.",
+        "Requires approved evolution change before execution because it adds a local control surface."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-026",
+          "type": "hard",
+          "created_at": "2026-06-18T06:23:13Z",
+          "reason": "Read-only Web Control Center should surface doctor health output."
+        },
+        {
+          "task_id": "TASK-027",
+          "type": "hard",
+          "created_at": "2026-06-18T06:23:17Z",
+          "reason": "Read-only Web Control Center should follow locking and atomic write protection foundation."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-18T06:21:35Z",
+      "updated_at": "2026-06-18T06:23:17Z",
+      "uid": "tsk_1c8f867e1c2c",
+      "legacy_id": "TASK-028",
+      "aliases": [
+        "TASK-028"
+      ]
+    },
+    {
+      "id": "TASK-029",
+      "epic_id": "EPIC-005",
+      "title": "Task K - Add controlled Web write actions",
+      "status": "planned",
+      "summary": "Allow safe project-control state changes from UI only after the read-only MVP is stable.",
+      "description": "Add controlled web write actions for creating tasks, transitioning tasks, requesting review, marking review result, building Codex prompts, and regenerating generated views, with confirmations and audit events through the command registry.",
+      "priority": 1,
+      "order": 11,
+      "active_role": "Frontend Developer AI / Backend Developer AI / AI System Maintainer",
+      "active_stage": "Controlled Web Writes",
+      "active_document": "ai_project_ctl/web",
+      "expected_result": "Web write actions use the same command registry and audit path as CLI writes.",
+      "verification_mode": "standard",
+      "scope": [
+        "Add confirmation-backed web actions for task create, task transition, review request, review result, Codex prompt build, and generated view regeneration where supported.",
+        "Route every write through command registry and shared services.",
+        "Ensure every write creates the same kind of event as CLI writes.",
+        "Block invalid transitions and show clear errors.",
+        "Add tests for confirmation, invalid transition handling, and audit event behavior."
+      ],
+      "out_of_scope": [
+        "Do not bypass command registry from route handlers.",
+        "Do not add remote hosted deployment.",
+        "Do not add multi-user authentication unless separately approved."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/**",
+        "ai_project_ctl/**",
+        "scripts/aictl.py",
+        "tests/**",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only"
+      ],
+      "acceptance_criteria": [
+        "Web write path is identical to CLI write path.",
+        "Audit events are created.",
+        "Invalid transitions are blocked.",
+        "Confirmation and error reporting are present."
+      ],
+      "review_instructions": [
+        "Verify route handlers do not write protected files directly.",
+        "Verify every successful write has an audit event and validation path."
+      ],
+      "notes": [
+        "Phase 5 - Web write actions and docs.",
+        "Requires successful or accepted read-only Web MVP foundation before execution.",
+        "Requires approved evolution change before execution because it introduces web-based mutation actions."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-028",
+          "type": "hard",
+          "created_at": "2026-06-18T06:23:26Z",
+          "reason": "Controlled web writes must wait for read-only Web MVP stability."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-18T06:21:45Z",
+      "updated_at": "2026-06-18T06:23:26Z",
+      "uid": "tsk_9bd489501264",
+      "legacy_id": "TASK-029",
+      "aliases": [
+        "TASK-029"
+      ]
+    },
+    {
+      "id": "TASK-030",
+      "epic_id": "EPIC-005",
+      "title": "Task L - Documentation and owner quickstart",
+      "status": "planned",
+      "summary": "Make the unified control-plane usable and discoverable.",
+      "description": "Update or create owner-facing documentation for aictl usage, legacy wrapper relationship, project doctor, local web dashboard, web safety model, state/events/generated architecture, and ID allocation policy.",
+      "priority": 1,
+      "order": 12,
+      "active_role": "Technical Writer AI / AI System Maintainer",
+      "active_stage": "Control Plane Documentation",
+      "active_document": "ai-system/project-control",
+      "expected_result": "Owner quickstart and control-plane documentation explain how to use and safely operate the new model.",
+      "verification_mode": "standard",
+      "scope": [
+        "Document how to use aictl.",
+        "Document how legacy ctl wrappers relate to aictl.",
+        "Document how to run project doctor.",
+        "Document how to run the local web dashboard.",
+        "Document the Web UI safety model.",
+        "Document state/events/generated architecture and ID allocation policy.",
+        "Ensure Codex can be pointed to aictl as the preferred interface."
+      ],
+      "out_of_scope": [
+        "Do not implement new control-plane behavior in documentation task.",
+        "Do not mark documents active without Human Owner acceptance.",
+        "Do not manually edit documentation-control protected files."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/**",
+        "README.md",
+        "AGENTS.md",
+        "AI_PROJECT/state/docs.json via docctl.py only",
+        "AI_PROJECT/events/doc-events.jsonl via docctl.py only",
+        "AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only",
+        "AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only"
+      ],
+      "acceptance_criteria": [
+        "Owner can discover common commands quickly.",
+        "Codex can be pointed to aictl as the preferred interface.",
+        "Docs clearly say generated files are derived.",
+        "Docs explain legacy ctl wrappers, project doctor, local web dashboard, web safety model, state/events/generated architecture, and ID allocation policy."
+      ],
+      "review_instructions": [
+        "Verify docs do not claim generated Markdown is source of truth.",
+        "Verify documentation-control files are updated only through docctl.py.",
+        "Verify Human Owner acceptance remains required before active/accepted states."
+      ],
+      "notes": [
+        "Phase 5 - Web write actions and docs.",
+        "Documentation should be updated after implementation details are stable enough to describe."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-024",
+          "type": "hard",
+          "created_at": "2026-06-18T06:23:31Z",
+          "reason": "Owner quickstart needs stable aictl interface details."
+        },
+        {
+          "task_id": "TASK-029",
+          "type": "hard",
+          "created_at": "2026-06-18T06:23:34Z",
+          "reason": "Owner quickstart should cover controlled web write action behavior after it is implemented."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-18T06:21:54Z",
+      "updated_at": "2026-06-18T06:23:34Z",
+      "uid": "tsk_235fab1d1516",
+      "legacy_id": "TASK-030",
+      "aliases": [
+        "TASK-030"
       ]
     }
   ]

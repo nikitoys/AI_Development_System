@@ -3,19 +3,43 @@
 
 # Task Execution Queue
 
-Revision: `165`
+Revision: `196`
 
 ## Executable Now
 
+- `TASK-020` [planned] `EPIC-005` priority `1` — Task B - Design unified control-plane architecture
+- `TASK-021` [planned] `EPIC-005` priority `1` — Task C - Add global ID allocation strategy
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 
 ## Waiting For Dependencies
 
-_No tasks waiting only on dependencies._
+- `TASK-022` [planned] `EPIC-005` priority `1` — Task D - Introduce ai_project_ctl core package
+  - `dependency_not_done`: depends on TASK-020 with status planned
+  - `dependency_not_done`: depends on TASK-021 with status planned
+- `TASK-023` [planned] `EPIC-005` priority `1` — Task E - Add command registry
+  - `dependency_not_done`: depends on TASK-022 with status planned
+- `TASK-024` [planned] `EPIC-005` priority `1` — Task F - Implement unified CLI facade scripts/aictl.py
+  - `dependency_not_done`: depends on TASK-023 with status planned
+- `TASK-025` [planned] `EPIC-005` priority `1` — Task G - Convert old ctl scripts into compatibility wrappers
+  - `dependency_not_done`: depends on TASK-024 with status planned
+- `TASK-026` [planned] `EPIC-005` priority `1` — Task H - Add project doctor command
+  - `dependency_not_done`: depends on TASK-024 with status planned
+- `TASK-027` [planned] `EPIC-005` priority `1` — Task I - Add locking and atomic write protection
+  - `dependency_not_done`: depends on TASK-022 with status planned
+- `TASK-028` [planned] `EPIC-005` priority `1` — Task J - Add read-only local Web Control Center MVP
+  - `dependency_not_done`: depends on TASK-026 with status planned
+  - `dependency_not_done`: depends on TASK-027 with status planned
+- `TASK-029` [planned] `EPIC-005` priority `1` — Task K - Add controlled Web write actions
+  - `dependency_not_done`: depends on TASK-028 with status planned
+- `TASK-030` [planned] `EPIC-005` priority `1` — Task L - Documentation and owner quickstart
+  - `dependency_not_done`: depends on TASK-024 with status planned
+  - `dependency_not_done`: depends on TASK-029 with status planned
 
 ## Not Executable Due To Status Or Parent State
 
 - `TASK-001` [done] `EPIC-001` priority `1` — Write Project Control Usage Guide
+  - `status_not_executable`: status is done
+- `TASK-019` [done] `EPIC-005` priority `1` — Task A - Inventory existing ctl commands and state mutation paths
   - `status_not_executable`: status is done
 - `TASK-004` [done] `EPIC-001` priority `1` — Implement codexctl prompt package generator
   - `status_not_executable`: status is done
