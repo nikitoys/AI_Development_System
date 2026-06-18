@@ -1,39 +1,51 @@
 [SYSTEM]
 
-Active Role: Codex Executor
-Active Stage: Task Execution
-Active Document: AI_PROJECT/generated/CODEX_CURRENT.md
-Expected Result: Task completed according to acceptance criteria
+Active Role: Codex Executor + Documentation Control Maintainer
+Active Stage: Documentation Generated Drift Cleanup
+Active Document: AI_PROJECT/generated/DOCS_GAPS.md / scripts/docctl.py
+Expected Result: DOCS_GAPS.md drift resolved through docctl.py, generated docs checks pass, protected-files check is clean.
 
 Repository: current repository
-Task ID: TASK-017
-Task Title: TIG-06 Add migration and generated output update
-Task Status: planned
+Task ID: TASK-018
+Task UID: tsk_9ecaaf287358
+Legacy Task ID: TASK-018
+Task Aliases: TASK-018
+Task Title: Fix documentation generated drift
+Task Status: in_review
 Verification Mode: standard
 
 Initiative: INIT-001 — AI Development System Evolution
-Epic: EPIC-004 — Task Identity and Execution Graph
+Epic: EPIC-001 — Documentation Rails
 
 Context:
-Provide safe migration/backward compatibility for existing plan and task state and update generated outputs to display readable refs.
+Resolve pre-existing DOCS_GAPS.md generated drift through docctl.py so protected-files validation becomes clean again.
 
 Scope:
-- Add migration path for existing tasks and epics.
-- Preserve auditability and legacy aliases.
-- Update CODEX_TASKS.md, CODEX_CURRENT.md and CODEX_PROMPT.md rendering.
-- Update validation and generated checks.
+- Inspect docctl.py behavior and documentation registry state to identify why DOCS_GAPS.md is stale.
+- Refresh documentation generated files through docctl.py only.
+- Run documentation generated checks and protected-files validation.
 
 Out of Scope:
-- Do not remove legacy TASK-XXX compatibility yet.
+- Do not change task identity, dependency graph, execution queue, epic keys, or task resolver behavior.
+- Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
 
 Allowed Files:
-- Not specified. Do not edit files until allowed files are clarified.
+- AI_PROJECT/state/docs.json via docctl.py only
+- AI_PROJECT/events/doc-events.jsonl via docctl.py only
+- AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only
+- AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only
+- scripts/docctl.py only if the drift is caused by a docctl rendering bug
 
 Acceptance Criteria:
-- Existing AI_PROJECT/state can be validated after migration.
-- Generated files display readable refs and legacy IDs where useful.
-- Prompt packages still contain enough identity data for Codex execution.
-- Validation and generated checks pass.
+- python scripts/docctl.py validate passes.
+- python scripts/docctl.py render completes successfully.
+- python scripts/docctl.py check-generated passes.
+- python scripts/check-protected-project-files.py --verbose no longer reports DOCS_GAPS.md drift.
+- No protected AI_PROJECT files are manually edited.
+
+Review Instructions:
+- Verify that DOCS_GAPS.md was updated only through docctl.py unless a docctl rendering bug required a scoped scripts/docctl.py fix.
+- Verify that TIG/task identity behavior was not modified.
 
 Execution Rules:
 - Do not edit AI_PROJECT/state/*.json manually.
@@ -45,7 +57,7 @@ Execution Rules:
 
 Suggested lifecycle commands:
 ```bash
-python scripts/taskctl.py task transition TASK-017 --to in_progress
-python scripts/taskctl.py task transition TASK-017 --to in_review
+python scripts/taskctl.py task transition TASK-018 --to in_progress
+python scripts/taskctl.py task transition TASK-018 --to in_review
 python scripts/taskctl.py validate
 ```

@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 147,
-  "current_task_id": "TASK-017",
+  "revision": 165,
+  "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-18T05:45:12Z",
+  "updated_at": "2026-06-18T06:09:19Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -71,7 +71,12 @@
       "approved_at": "2026-06-17T22:19:18Z",
       "approval_notes": "Accepted by Human Owner after review.",
       "created_at": "2026-06-15T21:47:57Z",
-      "updated_at": "2026-06-17T22:20:45Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_0c39847a282c",
+      "legacy_id": "TASK-001",
+      "aliases": [
+        "TASK-001"
+      ]
     },
     {
       "id": "TASK-002",
@@ -143,7 +148,12 @@
       "approved_at": "2026-06-17T22:19:18Z",
       "approval_notes": "Accepted by Human Owner after review.",
       "created_at": "2026-06-15T21:56:37Z",
-      "updated_at": "2026-06-17T22:20:51Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_6aa950ac6a24",
+      "legacy_id": "TASK-002",
+      "aliases": [
+        "TASK-002"
+      ]
     },
     {
       "id": "TASK-003",
@@ -192,7 +202,12 @@
       "approved_at": "2026-06-17T22:19:18Z",
       "approval_notes": "Accepted by Human Owner after review.",
       "created_at": "2026-06-15T22:09:39Z",
-      "updated_at": "2026-06-17T22:20:52Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_2453027a75a4",
+      "legacy_id": "TASK-003",
+      "aliases": [
+        "TASK-003"
+      ]
     },
     {
       "id": "TASK-004",
@@ -240,7 +255,12 @@
       "approved_at": "2026-06-16T15:38:13Z",
       "approval_notes": "Reviewed and accepted",
       "created_at": "2026-06-16T15:15:21Z",
-      "updated_at": "2026-06-16T15:38:13Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_04d7aa259713",
+      "legacy_id": "TASK-004",
+      "aliases": [
+        "TASK-004"
+      ]
     },
     {
       "id": "TASK-005",
@@ -307,7 +327,12 @@
       "approved_at": "2026-06-16T16:17:39Z",
       "approval_notes": "Approved in attached CODEX prompt; validation passed before closure.",
       "created_at": "2026-06-16T16:13:42Z",
-      "updated_at": "2026-06-16T16:17:44Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_0b7a2076f7e5",
+      "legacy_id": "TASK-005",
+      "aliases": [
+        "TASK-005"
+      ]
     },
     {
       "id": "TASK-006",
@@ -371,7 +396,12 @@
       "approved_at": "2026-06-16T19:18:19Z",
       "approval_notes": "Approved in attached CODEX request; acceptance criteria satisfied and required verification checks passed.",
       "created_at": "2026-06-16T19:00:57Z",
-      "updated_at": "2026-06-16T19:18:23Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_534107e45648",
+      "legacy_id": "TASK-006",
+      "aliases": [
+        "TASK-006"
+      ]
     },
     {
       "id": "TASK-007",
@@ -424,7 +454,12 @@
       "approved_at": "2026-06-17T22:19:32Z",
       "approval_notes": "Accepted after confirming prior requested changes were resolved.",
       "created_at": "2026-06-16T20:41:22Z",
-      "updated_at": "2026-06-17T22:20:49Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_5b19d4868c96",
+      "legacy_id": "TASK-007",
+      "aliases": [
+        "TASK-007"
+      ]
     },
     {
       "id": "TASK-008",
@@ -487,7 +522,12 @@
       "approved_at": "2026-06-17T21:54:55Z",
       "approval_notes": "Reviewed and accepted by Human Owner",
       "created_at": "2026-06-17T21:25:57Z",
-      "updated_at": "2026-06-17T21:54:55Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_6cfac5a41fe8",
+      "legacy_id": "TASK-008",
+      "aliases": [
+        "TASK-008"
+      ]
     },
     {
       "id": "TASK-009",
@@ -553,7 +593,12 @@
       "approved_at": "2026-06-17T22:12:20Z",
       "approval_notes": "Reviewed and accepted by Human Owner",
       "created_at": "2026-06-17T21:26:23Z",
-      "updated_at": "2026-06-17T22:12:20Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_6fdf835d7ea2",
+      "legacy_id": "TASK-009",
+      "aliases": [
+        "TASK-009"
+      ]
     },
     {
       "id": "TASK-010",
@@ -615,7 +660,12 @@
       "approved_at": "2026-06-17T22:38:53Z",
       "approval_notes": "Reviewed and accepted by Human Owner",
       "created_at": "2026-06-17T21:26:47Z",
-      "updated_at": "2026-06-17T22:38:54Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_5640129358e6",
+      "legacy_id": "TASK-010",
+      "aliases": [
+        "TASK-010"
+      ]
     },
     {
       "id": "TASK-011",
@@ -675,7 +725,12 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-17T21:26:56Z",
-      "updated_at": "2026-06-17T21:26:56Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_ef81f7279309",
+      "legacy_id": "TASK-011",
+      "aliases": [
+        "TASK-011"
+      ]
     },
     {
       "id": "TASK-012",
@@ -735,7 +790,15 @@
       "approved_at": "2026-06-17T23:12:33Z",
       "approval_notes": "",
       "created_at": "2026-06-17T22:44:58Z",
-      "updated_at": "2026-06-17T23:12:39Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_4e8cdf2de480",
+      "legacy_id": "TASK-012",
+      "aliases": [
+        "TASK-012"
+      ],
+      "epic_key": "TIG",
+      "local_seq": 1,
+      "ref": "TIG-01"
     },
     {
       "id": "TASK-013",
@@ -786,7 +849,15 @@
       "approved_at": "2026-06-18T04:58:41Z",
       "approval_notes": "TIG-02 reviewed and accepted. Epic key support implemented; EPIC-004 assigned TIG. Existing generated drift in CODEX_PROMPT.md and DOCS_GAPS.md accepted as pre-existing and not blocking this task.",
       "created_at": "2026-06-17T22:45:06Z",
-      "updated_at": "2026-06-18T04:58:41Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_3a7566ad482d",
+      "legacy_id": "TASK-013",
+      "aliases": [
+        "TASK-013"
+      ],
+      "epic_key": "TIG",
+      "local_seq": 2,
+      "ref": "TIG-02"
     },
     {
       "id": "TASK-014",
@@ -832,7 +903,15 @@
       "approved_at": "2026-06-18T05:14:58Z",
       "approval_notes": "TIG-03 reviewed and accepted. Task identity fields implemented with backward compatibility; resolver/dependencies/queue correctly deferred.",
       "created_at": "2026-06-17T22:45:11Z",
-      "updated_at": "2026-06-18T05:14:58Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_51b56af6562d",
+      "legacy_id": "TASK-014",
+      "aliases": [
+        "TASK-014"
+      ],
+      "epic_key": "TIG",
+      "local_seq": 3,
+      "ref": "TIG-03"
     },
     {
       "id": "TASK-015",
@@ -877,7 +956,15 @@
       "approved_at": "2026-06-18T05:29:24Z",
       "approval_notes": "TIG-04 reviewed and accepted. Central task reference resolver implemented with TASK-XXX backward compatibility.",
       "created_at": "2026-06-17T22:45:17Z",
-      "updated_at": "2026-06-18T05:29:25Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_b9599c96de80",
+      "legacy_id": "TASK-015",
+      "aliases": [
+        "TASK-015"
+      ],
+      "epic_key": "TIG",
+      "local_seq": 4,
+      "ref": "TIG-04"
     },
     {
       "id": "TASK-016",
@@ -928,13 +1015,21 @@
       "approved_at": "2026-06-18T05:44:49Z",
       "approval_notes": "TIG-05 reviewed and accepted. Dependency graph, executable queue, dependency gates and generated TASK_EXECUTION_QUEUE.md implemented. Known DOCS_GAPS.md drift is pre-existing and not blocking this task.",
       "created_at": "2026-06-17T22:45:24Z",
-      "updated_at": "2026-06-18T05:44:49Z"
+      "updated_at": "2026-06-18T05:53:52Z",
+      "uid": "tsk_30c62f5c7e30",
+      "legacy_id": "TASK-016",
+      "aliases": [
+        "TASK-016"
+      ],
+      "epic_key": "TIG",
+      "local_seq": 5,
+      "ref": "TIG-05"
     },
     {
       "id": "TASK-017",
       "epic_id": "EPIC-004",
       "title": "TIG-06 Add migration and generated output update",
-      "status": "planned",
+      "status": "done",
       "summary": "Provide safe migration/backward compatibility for existing plan and task state and update generated outputs to display readable refs.",
       "description": "",
       "priority": 1,
@@ -953,7 +1048,15 @@
       "out_of_scope": [
         "Do not remove legacy TASK-XXX compatibility yet."
       ],
-      "allowed_files": [],
+      "allowed_files": [
+        "scripts/taskctl.py",
+        "AI_PROJECT/state/tasks.json via taskctl.py only",
+        "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_CURRENT.md via taskctl.py only",
+        "AI_PROJECT/generated/CODEX_PROMPT.md via taskctl.py/codexctl.py only",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only"
+      ],
       "acceptance_criteria": [
         "Existing AI_PROJECT/state can be validated after migration.",
         "Generated files display readable refs and legacy IDs where useful.",
@@ -964,11 +1067,11 @@
       "notes": [
         "Logical label: TIG-06"
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-18T05:58:52Z",
+      "approval_notes": "TIG-06 reviewed and accepted. Identity migration implemented, real project state migrated, EPIC-004 tasks mapped to TIG-01..TIG-06, generated outputs refreshed. Known DOCS_GAPS.md drift is pre-existing and not blocking this task.",
       "created_at": "2026-06-17T22:45:31Z",
-      "updated_at": "2026-06-18T05:45:05Z",
+      "updated_at": "2026-06-18T05:58:53Z",
       "depends_on": [
         {
           "task_id": "TASK-016",
@@ -976,6 +1079,68 @@
           "created_at": "2026-06-18T05:45:05Z",
           "reason": "TIG-06 migration depends on the dependency graph and executable queue implemented in TIG-05."
         }
+      ],
+      "uid": "tsk_d9383d8b8e57",
+      "legacy_id": "TASK-017",
+      "aliases": [
+        "TASK-017"
+      ],
+      "epic_key": "TIG",
+      "local_seq": 6,
+      "ref": "TIG-06"
+    },
+    {
+      "id": "TASK-018",
+      "epic_id": "EPIC-001",
+      "title": "Fix documentation generated drift",
+      "status": "done",
+      "summary": "Resolve pre-existing DOCS_GAPS.md generated drift through docctl.py so protected-files validation becomes clean again.",
+      "description": "",
+      "priority": 1,
+      "order": 4,
+      "active_role": "Codex Executor + Documentation Control Maintainer",
+      "active_stage": "Documentation Generated Drift Cleanup",
+      "active_document": "AI_PROJECT/generated/DOCS_GAPS.md / scripts/docctl.py",
+      "expected_result": "DOCS_GAPS.md drift resolved through docctl.py, generated docs checks pass, protected-files check is clean.",
+      "verification_mode": "standard",
+      "scope": [
+        "Inspect docctl.py behavior and documentation registry state to identify why DOCS_GAPS.md is stale.",
+        "Refresh documentation generated files through docctl.py only.",
+        "Run documentation generated checks and protected-files validation."
+      ],
+      "out_of_scope": [
+        "Do not change task identity, dependency graph, execution queue, epic keys, or task resolver behavior.",
+        "Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**."
+      ],
+      "allowed_files": [
+        "AI_PROJECT/state/docs.json via docctl.py only",
+        "AI_PROJECT/events/doc-events.jsonl via docctl.py only",
+        "AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only",
+        "AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only",
+        "scripts/docctl.py only if the drift is caused by a docctl rendering bug"
+      ],
+      "acceptance_criteria": [
+        "python scripts/docctl.py validate passes.",
+        "python scripts/docctl.py render completes successfully.",
+        "python scripts/docctl.py check-generated passes.",
+        "python scripts/check-protected-project-files.py --verbose no longer reports DOCS_GAPS.md drift.",
+        "No protected AI_PROJECT files are manually edited."
+      ],
+      "review_instructions": [
+        "Verify that DOCS_GAPS.md was updated only through docctl.py unless a docctl rendering bug required a scoped scripts/docctl.py fix.",
+        "Verify that TIG/task identity behavior was not modified."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-18T06:09:19Z",
+      "approval_notes": "Documentation generated drift cleanup reviewed and accepted. DOCS_GAPS.md was refreshed through docctl.py render; protected-files validation is clean.",
+      "created_at": "2026-06-18T06:01:19Z",
+      "updated_at": "2026-06-18T06:09:19Z",
+      "uid": "tsk_9ecaaf287358",
+      "legacy_id": "TASK-018",
+      "aliases": [
+        "TASK-018"
       ]
     }
   ]

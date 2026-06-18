@@ -48,6 +48,7 @@ taskctl.py — strict CLI gateway for AI_PROJECT/state/tasks.json
 """
 
 import argparse
+import copy
 import json
 import os
 import re
@@ -363,6 +364,38 @@ def task_identity_summary(task):
     return ", ".join(parts)
 
 
+def validate_unique_task_references(tasks):
+    errors = []
+    owners = {}
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+
+        task_id = task.get("id")
+        seen_for_task = set()
+
+        for value in task_reference_values(task):
+            if value in seen_for_task:
+                continue
+
+            seen_for_task.add(value)
+
+            if value in owners and owners[value] != task_id:
+                errors.append(
+                    "duplicate task reference value: {} used by {} and {}".format(
+                        value,
+                        owners[value],
+                        task_id,
+                    )
+                )
+                continue
+
+            owners[value] = task_id
+
+    return errors
+
+
 def resolve_task_ref(tasks, task_ref):
     if not isinstance(task_ref, str) or not task_ref.strip():
         raise TaskError("TASK_REF_EMPTY")
@@ -636,6 +669,251 @@ def used_local_sequences(tasks, epic_id, epic_key):
 def allocate_local_seq(tasks, epic_id, epic_key):
     used = used_local_sequences(tasks, epic_id, epic_key)
     return max(used or {0}) + 1
+
+
+IDENTITY_MIGRATION_FIELDS = [
+    "uid",
+    "legacy_id",
+    "aliases",
+    "epic_key",
+    "local_seq",
+    "ref",
+]
+
+
+def task_identity_field_changes(before, after):
+    fields = {}
+
+    for field in IDENTITY_MIGRATION_FIELDS:
+        if before.get(field) != after.get(field):
+            fields[field] = {
+                "before": before.get(field),
+                "after": after.get(field),
+            }
+
+    return fields
+
+
+def plan_epic_key_map(plan):
+    return {
+        epic.get("id"): epic.get("key")
+        for epic in plan_epics(plan)
+        if isinstance(epic, dict) and isinstance(epic.get("id"), str)
+    }
+
+
+def validate_identity_migration_preconditions(state, plan):
+    errors = []
+    epic_keys = plan_epic_key_map(plan)
+    order_by_epic = {}
+
+    for task in state.get("tasks", []):
+        if not isinstance(task, dict):
+            continue
+
+        task_id = task.get("id")
+        epic_id = task.get("epic_id")
+        epic_key = epic_keys.get(epic_id)
+        order = task.get("order")
+
+        if epic_key:
+            if not isinstance(order, int) or isinstance(order, bool) or order < 1:
+                errors.append(
+                    "{} cannot receive deterministic ref for epic {}/{}: order must be positive integer".format(
+                        task_id,
+                        epic_id,
+                        epic_key,
+                    )
+                )
+                continue
+
+            epic_orders = order_by_epic.setdefault(epic_id, {})
+
+            if order in epic_orders:
+                errors.append(
+                    "duplicate task order in epic {}/{}: {} used by {} and {}".format(
+                        epic_id,
+                        epic_key,
+                        order,
+                        epic_orders[order],
+                        task_id,
+                    )
+                )
+            else:
+                epic_orders[order] = task_id
+
+            expected_ref = format_task_ref(epic_key, order)
+
+            if "epic_key" in task and task.get("epic_key") != epic_key:
+                errors.append(
+                    "{} existing epic_key must be {} for parent epic {}: {}".format(
+                        task_id,
+                        epic_key,
+                        epic_id,
+                        task.get("epic_key"),
+                    )
+                )
+
+            if "local_seq" in task and task.get("local_seq") != order:
+                errors.append(
+                    "{} existing local_seq must match order {}: {}".format(
+                        task_id,
+                        order,
+                        task.get("local_seq"),
+                    )
+                )
+
+            if "ref" in task and task.get("ref") != expected_ref:
+                errors.append(
+                    "{} existing ref must be {} from epic key/order: {}".format(
+                        task_id,
+                        expected_ref,
+                        task.get("ref"),
+                    )
+                )
+        elif any(field in task for field in ["epic_key", "local_seq", "ref"]):
+            errors.append(
+                "{} belongs to unkeyed epic {} and must not already carry epic_key/local_seq/ref".format(
+                    task_id,
+                    epic_id,
+                )
+            )
+
+    return errors
+
+
+def validate_migrated_identity_state(state, plan):
+    errors = validate_tasks(state, plan=plan, check_plan=True)
+    tasks = state.get("tasks", [])
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+
+        legacy_id = task.get("legacy_id")
+
+        if not legacy_id:
+            continue
+
+        try:
+            resolved = resolve_task_ref(tasks, legacy_id)
+        except TaskError as exc:
+            errors.append("{} legacy_id is not resolvable: {}".format(task.get("id"), exc))
+            continue
+
+        if resolved.get("id") != task.get("id"):
+            errors.append(
+                "{} legacy_id resolves to {} instead of itself".format(
+                    task.get("id"),
+                    resolved.get("id"),
+                )
+            )
+
+    return errors
+
+
+def require_valid_migrated_identity_state(state, plan):
+    errors = validate_migrated_identity_state(state, plan)
+
+    if errors:
+        raise TaskError("IDENTITY_MIGRATION_VALIDATION_FAILED:\n- " + "\n- ".join(errors))
+
+
+def apply_identity_migration(state, plan):
+    precondition_errors = validate_identity_migration_preconditions(state, plan)
+
+    if precondition_errors:
+        raise TaskError("IDENTITY_MIGRATION_UNSAFE:\n- " + "\n- ".join(precondition_errors))
+
+    epic_keys = plan_epic_key_map(plan)
+    tasks = state.get("tasks", [])
+    now = utc_now()
+    changes = []
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+
+        before = copy.deepcopy(task)
+        task_id = task.get("id")
+
+        if not task.get("uid"):
+            task["uid"] = generate_task_uid(tasks)
+
+        if not task.get("legacy_id"):
+            task["legacy_id"] = task_id
+
+        aliases = task.get("aliases")
+
+        if aliases is None:
+            aliases = []
+        else:
+            aliases = list(aliases)
+
+        if task_id not in aliases:
+            aliases.append(task_id)
+
+        task["aliases"] = aliases
+
+        epic_key = epic_keys.get(task.get("epic_id"))
+
+        if epic_key:
+            local_seq = task.get("order")
+            task["epic_key"] = epic_key
+            task["local_seq"] = local_seq
+            task["ref"] = format_task_ref(epic_key, local_seq)
+
+        fields = task_identity_field_changes(before, task)
+
+        if fields:
+            task["updated_at"] = now
+            changes.append(
+                {
+                    "id": task_id,
+                    "before_label": task_display_label(before),
+                    "after_label": task_display_label(task),
+                    "fields": fields,
+                }
+            )
+
+    require_valid_migrated_identity_state(state, plan)
+    return changes
+
+
+def identity_migration_report(changes, dry_run=False):
+    lines = []
+    lines.append("Migration: identity")
+    lines.append("Mode: {}".format("dry-run" if dry_run else "apply"))
+    lines.append("Changed tasks: {}".format(len(changes)))
+
+    if not changes:
+        lines.append("No identity changes needed.")
+        return "\n".join(lines)
+
+    for change in changes:
+        rendered_fields = []
+
+        for field in IDENTITY_MIGRATION_FIELDS:
+            if field not in change.get("fields", {}):
+                continue
+
+            field_change = change["fields"][field]
+            rendered_fields.append(
+                "{}: {} -> {}".format(
+                    field,
+                    json.dumps(field_change.get("before"), ensure_ascii=False),
+                    json.dumps(field_change.get("after"), ensure_ascii=False),
+                )
+            )
+
+        lines.append(
+            "- {}: {}".format(
+                change.get("id"),
+                "; ".join(rendered_fields),
+            )
+        )
+
+    return "\n".join(lines)
 
 
 def task_display_label(task):
@@ -1114,6 +1392,7 @@ def validate_tasks(state, plan=None, check_plan=True):
             if not task.get("approved_by") or not task.get("approved_at"):
                 errors.append("{} approved task must have approved_by and approved_at".format(path))
 
+    errors.extend(validate_unique_task_references(tasks))
     errors.extend(validate_task_dependencies(tasks))
 
     if current_task_id:
@@ -1249,6 +1528,9 @@ def render_tasks_markdown(state):
             if task.get("legacy_id"):
                 identity.append("legacy `{}`".format(task.get("legacy_id")))
 
+            if task.get("aliases"):
+                identity.append("aliases `{}`".format("`, `".join(task.get("aliases", []))))
+
             if task.get("epic_key") and task.get("local_seq"):
                 identity.append("local `{}` / `{}`".format(task.get("epic_key"), task.get("local_seq")))
 
@@ -1303,6 +1585,9 @@ def render_current_markdown(state):
     lines.append("Status: `{}`".format(task.get("status")))
     lines.append("Verification: `{}`".format(task.get("verification_mode")))
 
+    if task.get("ref"):
+        lines.append("Ref: `{}`".format(task.get("ref")))
+
     if task.get("uid"):
         lines.append("UID: `{}`".format(task.get("uid")))
 
@@ -1311,6 +1596,9 @@ def render_current_markdown(state):
 
     if task.get("aliases"):
         lines.append("Aliases: `{}`".format("`, `".join(task.get("aliases", []))))
+
+    if task.get("epic_key") and task.get("local_seq"):
+        lines.append("Epic Key / Local Seq: `{}` / `{}`".format(task.get("epic_key"), task.get("local_seq")))
 
     lines.append("")
 
@@ -1478,6 +1766,9 @@ def build_prompt_text(state, task, plan=None):
     if task.get("aliases"):
         lines.append("Task Aliases: {}".format(", ".join(task.get("aliases", []))))
 
+    if task.get("epic_key") and task.get("local_seq"):
+        lines.append("Task Epic Key / Local Seq: {} / {}".format(task.get("epic_key"), task.get("local_seq")))
+
     lines.append("Task Title: {}".format(task.get("title")))
     lines.append("Task Status: {}".format(task.get("status")))
     lines.append("Verification Mode: {}".format(task.get("verification_mode")))
@@ -1561,7 +1852,7 @@ def build_prompt_text(state, task, plan=None):
     return "\n".join(lines).rstrip() + "\n"
 
 
-def mutate(args, command, entity_type, entity_id, payload, mutator, check_plan=True):
+def mutate(args, command, entity_type, entity_id, payload, mutator, check_plan=True, emit=True):
     root = repo_root(args)
 
     ensure_project_dirs(root)
@@ -1599,10 +1890,19 @@ def mutate(args, command, entity_type, entity_id, payload, mutator, check_plan=T
 
     render_task_outputs(root, state, plan=plan, check_plan=check_plan)
 
-    print("OK: {} revision {} -> {}".format(command, revision_before, state["revision"]))
+    if emit:
+        print("OK: {} revision {} -> {}".format(command, revision_before, state["revision"]))
 
-    if result.get("message"):
+    if emit and result.get("message"):
         print(result["message"])
+
+    return {
+        "revision_before": revision_before,
+        "revision_after": state["revision"],
+        "entity_id": event_entity_id,
+        "payload": event_payload,
+        "result": result,
+    }
 
 
 def print_json(data):
@@ -1852,6 +2152,111 @@ def cmd_check_generated(args):
     return 0
 
 
+def cmd_migrate_identity(args):
+    root = repo_root(args)
+
+    ensure_project_dirs(root)
+
+    state = load_tasks(root)
+    plan = load_plan(root, required=True)
+
+    require_valid_tasks(state, plan=plan, check_plan=True)
+
+    proposed = copy.deepcopy(state)
+    changes = apply_identity_migration(proposed, plan)
+
+    if args.dry_run:
+        result = {
+            "migration": "identity",
+            "dry_run": True,
+            "changed_count": len(changes),
+            "changed_tasks": changes,
+        }
+
+        if args.json:
+            print_json(result)
+        else:
+            print(identity_migration_report(changes, dry_run=True))
+            print("No files changed.")
+
+        return 0
+
+    if not changes:
+        revision = state.get("revision", 0)
+
+        render_task_outputs(root, state, plan=plan, check_plan=True)
+        append_event(
+            root=root,
+            actor=args.actor,
+            command="migrate.identity",
+            entity_type="task_migration",
+            entity_id="identity",
+            revision_before=revision,
+            revision_after=revision,
+            payload={
+                "changed_count": 0,
+                "changed_tasks": [],
+                "no_changes": True,
+            },
+        )
+
+        result = {
+            "migration": "identity",
+            "dry_run": False,
+            "changed_count": 0,
+            "changed_tasks": [],
+            "revision_before": revision,
+            "revision_after": revision,
+            "generated_refreshed": True,
+        }
+
+        if args.json:
+            print_json(result)
+        else:
+            print("OK: migrate.identity no changes at revision {}".format(revision))
+            print(identity_migration_report(changes, dry_run=False))
+            print("Generated task outputs refreshed.")
+
+        return 0
+
+    def apply(state, plan):
+        applied_changes = apply_identity_migration(state, plan)
+
+        return {
+            "entity_id": "identity",
+            "payload": {
+                "changed_count": len(applied_changes),
+                "changed_tasks": applied_changes,
+            },
+            "message": identity_migration_report(applied_changes, dry_run=False),
+        }
+
+    mutation = mutate(
+        args=args,
+        command="migrate.identity",
+        entity_type="task_migration",
+        entity_id="identity",
+        payload={"migration": "identity"},
+        mutator=apply,
+        check_plan=True,
+        emit=not args.json,
+    )
+
+    if args.json:
+        result = {
+            "migration": "identity",
+            "dry_run": False,
+            "changed_count": mutation["payload"].get("changed_count", 0),
+            "changed_tasks": mutation["payload"].get("changed_tasks", []),
+            "revision_before": mutation["revision_before"],
+            "revision_after": mutation["revision_after"],
+            "generated_refreshed": True,
+        }
+        print_json(result)
+
+    return 0
+
+
 def cmd_audit(args):
     path = task_events_path(repo_root(args))
 
@@ -1958,6 +2363,9 @@ def cmd_task_resolve(args):
     print("Ref:          {}".format(task.get("ref") or "-"))
     print("UID:          {}".format(task.get("uid") or "-"))
     print("Legacy ID:    {}".format(task.get("legacy_id") or "-"))
+    print("Aliases:      {}".format(", ".join(task.get("aliases", [])) if task.get("aliases") else "-"))
+    print("Epic Key:     {}".format(task.get("epic_key") or "-"))
+    print("Local Seq:    {}".format(task.get("local_seq") or "-"))
     print("Epic:         {}".format(task.get("epic_id")))
     print("Title:        {}".format(task.get("title")))
     print("Status:       {}".format(task.get("status")))
@@ -2635,6 +3043,14 @@ def build_parser():
     p.add_argument("--last", type=int, default=20)
     p.add_argument("--entity", help="Filter by entity id")
     p.set_defaults(func=cmd_audit)
+
+    migrate = sub.add_parser("migrate", help="Run task state migrations")
+    migrate_sub = migrate.add_subparsers(dest="migrate_command", required=True)
+
+    p = migrate_sub.add_parser("identity", help="Backfill task uid/ref/legacy identity fields")
+    p.add_argument("--dry-run", action="store_true", help="Preview identity changes without writing files")
+    p.add_argument("--json", action="store_true", help="Print machine-readable migration output")
+    p.set_defaults(func=cmd_migrate_identity)
 
     task = sub.add_parser("task", help="Manage executable tasks")
     task_sub = task.add_subparsers(dest="task_command", required=True)

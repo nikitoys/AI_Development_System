@@ -4,7 +4,7 @@
 # Documentation Gaps
 
 Revision: `19`
-Open gaps: `157`
+Open gaps: `158`
 Tracked categories: `Missing File`, `Status Mismatch`, `Active Not Reviewed`, `Active Review Stale`, `Unresolved Placeholder`, `Broken Local Link`, `Stale Content Hash`, `Not Active`
 
 ## Missing File
@@ -58,7 +58,7 @@ _No gaps._
 
 ## Stale Content Hash
 
-_No gaps._
+- `ai-system/project-control/09-task-identity-and-execution-graph.md` (reference, draft): recorded content hash does not match file content
 
 ## Not Active
 
