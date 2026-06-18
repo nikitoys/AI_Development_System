@@ -49,6 +49,7 @@ taskctl.py — strict CLI gateway for AI_PROJECT/state/tasks.json
 import argparse
 import json
 import os
+import re
 import sys
 import tempfile
 import uuid
@@ -58,6 +59,9 @@ from pathlib import Path
 
 TASK_SCHEMA_VERSION = 1
 PLAN_SCHEMA_VERSION = 1
+TASK_UID_PREFIX = "tsk_"
+TASK_REF_RE = re.compile(r"^([A-Z][A-Z0-9]{1,11})-(\d+)$")
+TASK_REF_SUFFIX_WIDTH = 2
 
 TASK_STATUSES = {
     "proposed",
@@ -294,6 +298,18 @@ def require_string_list(value, path, errors):
             errors.append("{}[{}] must be a string".format(path, i))
 
 
+def require_non_empty_string_list(value, path, errors):
+    if not isinstance(value, list):
+        errors.append("{} must be a list".format(path))
+        return
+
+    for i, item in enumerate(value):
+        if not isinstance(item, str):
+            errors.append("{}[{}] must be a string".format(path, i))
+        elif not item.strip():
+            errors.append("{}[{}] must not be empty".format(path, i))
+
+
 def find_item(items, item_id, required=True):
     for item in items:
         if item.get("id") == item_id:
@@ -331,6 +347,105 @@ def next_order(items, parent_key=None, parent_id=None):
         return 1
 
     return max(int(x.get("order", 0)) for x in selected) + 1
+
+
+def generate_task_uid(tasks):
+    existing = {
+        task.get("uid")
+        for task in tasks
+        if isinstance(task, dict) and isinstance(task.get("uid"), str)
+    }
+
+    while True:
+        uid = TASK_UID_PREFIX + uuid.uuid4().hex[:12]
+
+        if uid not in existing:
+            return uid
+
+
+def format_task_ref(epic_key, local_seq):
+    return "{}-{:0{}d}".format(epic_key, local_seq, TASK_REF_SUFFIX_WIDTH)
+
+
+def task_ref_sequence(value, epic_key):
+    if not isinstance(value, str):
+        return None
+
+    match = TASK_REF_RE.fullmatch(value.strip())
+
+    if not match:
+        return None
+
+    if match.group(1) != epic_key:
+        return None
+
+    return int(match.group(2))
+
+
+def task_ref_sequences_in_text(value, epic_key):
+    if not isinstance(value, str) or not epic_key:
+        return set()
+
+    pattern = re.compile(r"(?<![A-Z0-9]){}-(\d+)(?![A-Z0-9])".format(re.escape(epic_key)))
+    return {int(match.group(1)) for match in pattern.finditer(value)}
+
+
+def used_local_sequences(tasks, epic_id, epic_key):
+    used = set()
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+
+        local_seq = task.get("local_seq")
+
+        if task.get("epic_key") == epic_key and isinstance(local_seq, int) and not isinstance(local_seq, bool) and local_seq > 0:
+            used.add(local_seq)
+
+        ref_seq = task_ref_sequence(task.get("ref"), epic_key)
+
+        if ref_seq:
+            used.add(ref_seq)
+
+        if task.get("epic_id") == epic_id:
+            used.update(task_ref_sequences_in_text(task.get("title"), epic_key))
+            used.update(task_ref_sequences_in_text(task.get("summary"), epic_key))
+
+            for note in task.get("notes", []):
+                used.update(task_ref_sequences_in_text(note, epic_key))
+
+    return used
+
+
+def allocate_local_seq(tasks, epic_id, epic_key):
+    used = used_local_sequences(tasks, epic_id, epic_key)
+    return max(used or {0}) + 1
+
+
+def task_display_label(task):
+    ref = task.get("ref")
+    task_id = task.get("id")
+
+    if ref:
+        return "{} ({})".format(ref, task_id)
+
+    return task_id
+
+
+def task_epic_label(task, plan=None):
+    epic_id = task.get("epic_id")
+    epic_key = task.get("epic_key")
+
+    if not epic_key and plan:
+        epic = find_plan_epic(plan, epic_id)
+
+        if epic:
+            epic_key = epic.get("key")
+
+    if epic_key:
+        return "{}/{}".format(epic_id, epic_key)
+
+    return epic_id
 
 
 def plan_epics(plan):
@@ -459,6 +574,10 @@ def validate_tasks(state, plan=None, check_plan=True):
         tasks = []
 
     task_ids = set()
+    task_uids = {}
+    task_refs = {}
+    task_aliases = {}
+    task_local_seqs = {}
 
     for i, task in enumerate(tasks):
         path = "tasks[{}]".format(i)
@@ -492,6 +611,9 @@ def validate_tasks(state, plan=None, check_plan=True):
             errors,
         )
 
+        if not isinstance(task, dict):
+            continue
+
         task_id = task.get("id")
 
         if task_id in task_ids:
@@ -523,6 +645,100 @@ def validate_tasks(state, plan=None, check_plan=True):
 
         for field in TASK_LIST_FIELDS:
             require_string_list(task.get(field), path + "." + field, errors)
+
+        if "uid" in task:
+            uid = task.get("uid")
+            require_string(uid, path + ".uid", errors, allow_empty=False)
+
+            if isinstance(uid, str) and uid.strip():
+                if uid in task_uids:
+                    errors.append("duplicate task uid: {} used by {} and {}".format(uid, task_uids[uid], task_id))
+                else:
+                    task_uids[uid] = task_id
+
+        if "ref" in task:
+            ref = task.get("ref")
+            require_string(ref, path + ".ref", errors, allow_empty=False)
+
+            if isinstance(ref, str) and ref.strip():
+                if ref in task_refs:
+                    errors.append("duplicate task ref: {} used by {} and {}".format(ref, task_refs[ref], task_id))
+                else:
+                    task_refs[ref] = task_id
+
+        if "legacy_id" in task:
+            require_string(task.get("legacy_id"), path + ".legacy_id", errors, allow_empty=False)
+
+        if "aliases" in task:
+            aliases = task.get("aliases")
+            require_non_empty_string_list(aliases, path + ".aliases", errors)
+
+            if isinstance(aliases, list):
+                for alias in aliases:
+                    if not isinstance(alias, str) or not alias.strip():
+                        continue
+
+                    if alias in task_aliases:
+                        errors.append(
+                            "duplicate task alias: {} used by {} and {}".format(
+                                alias,
+                                task_aliases[alias],
+                                task_id,
+                            )
+                        )
+                    else:
+                        task_aliases[alias] = task_id
+
+        epic_key = task.get("epic_key")
+
+        if "epic_key" in task:
+            require_string(epic_key, path + ".epic_key", errors, allow_empty=False)
+
+            if check_plan and plan:
+                epic = find_plan_epic(plan, task.get("epic_id"))
+                expected_key = epic.get("key") if epic else None
+
+                if epic and expected_key != epic_key:
+                    errors.append(
+                        "{}.epic_key must match parent epic key {}: {}".format(
+                            path,
+                            expected_key,
+                            epic_key,
+                        )
+                    )
+
+        local_seq = task.get("local_seq")
+        local_seq_valid = True
+
+        if "local_seq" in task:
+            if not isinstance(local_seq, int) or isinstance(local_seq, bool) or local_seq < 1:
+                errors.append("{}.local_seq must be a positive integer".format(path))
+                local_seq_valid = False
+
+            if "epic_key" not in task:
+                errors.append("{}.local_seq requires epic_key".format(path))
+                local_seq_valid = False
+
+        if "epic_key" in task and "local_seq" in task and local_seq_valid:
+            key = (epic_key, local_seq)
+
+            if key in task_local_seqs:
+                errors.append(
+                    "duplicate task local_seq for epic_key {}: {} used by {} and {}".format(
+                        epic_key,
+                        local_seq,
+                        task_local_seqs[key],
+                        task_id,
+                    )
+                )
+            else:
+                task_local_seqs[key] = task_id
+
+        if "ref" in task and "epic_key" in task and "local_seq" in task and local_seq_valid:
+            expected_ref = format_task_ref(epic_key, local_seq)
+
+            if task.get("ref") != expected_ref:
+                errors.append("{}.ref must be {} for epic_key/local_seq".format(path, expected_ref))
 
         if task.get("status") == "approved":
             if not task.get("approved_by") or not task.get("approved_at"):
@@ -647,11 +863,25 @@ def render_tasks_markdown(state):
 
         for task in grouped[epic_id]:
             marker = " ⭐" if task.get("id") == state.get("current_task_id") else ""
-            lines.append("### {} — {}{}".format(task.get("id"), task.get("title"), marker))
+            lines.append("### {} — {}{}".format(task_display_label(task), task.get("title"), marker))
             lines.append("")
             lines.append("Status: `{}`  ".format(task.get("status")))
             lines.append("Priority: `{}`  ".format(task.get("priority")))
             lines.append("Verification: `{}`  ".format(task.get("verification_mode")))
+
+            identity = []
+
+            if task.get("uid"):
+                identity.append("uid `{}`".format(task.get("uid")))
+
+            if task.get("legacy_id"):
+                identity.append("legacy `{}`".format(task.get("legacy_id")))
+
+            if task.get("epic_key") and task.get("local_seq"):
+                identity.append("local `{}` / `{}`".format(task.get("epic_key"), task.get("local_seq")))
+
+            if identity:
+                lines.append("Identity: {}  ".format(", ".join(identity)))
 
             if task.get("summary"):
                 lines.append("")
@@ -696,10 +926,20 @@ def render_current_markdown(state):
 
     task = find_item(state.get("tasks", []), current_task_id)
 
-    lines.append("Task: `{}` — **{}**".format(task.get("id"), task.get("title")))
+    lines.append("Task: `{}` — **{}**".format(task_display_label(task), task.get("title")))
     lines.append("Epic: `{}`".format(task.get("epic_id")))
     lines.append("Status: `{}`".format(task.get("status")))
     lines.append("Verification: `{}`".format(task.get("verification_mode")))
+
+    if task.get("uid"):
+        lines.append("UID: `{}`".format(task.get("uid")))
+
+    if task.get("legacy_id"):
+        lines.append("Legacy ID: `{}`".format(task.get("legacy_id")))
+
+    if task.get("aliases"):
+        lines.append("Aliases: `{}`".format("`, `".join(task.get("aliases", []))))
+
     lines.append("")
 
     lines.append("## Prompt Control Fields")
@@ -783,6 +1023,19 @@ def build_prompt_text(state, task, plan=None):
     lines.append("")
     lines.append("Repository: current repository")
     lines.append("Task ID: {}".format(task.get("id")))
+
+    if task.get("ref"):
+        lines.append("Task Ref: {}".format(task.get("ref")))
+
+    if task.get("uid"):
+        lines.append("Task UID: {}".format(task.get("uid")))
+
+    if task.get("legacy_id"):
+        lines.append("Legacy Task ID: {}".format(task.get("legacy_id")))
+
+    if task.get("aliases"):
+        lines.append("Task Aliases: {}".format(", ".join(task.get("aliases", []))))
+
     lines.append("Task Title: {}".format(task.get("title")))
     lines.append("Task Status: {}".format(task.get("status")))
     lines.append("Verification Mode: {}".format(task.get("verification_mode")))
@@ -934,10 +1187,16 @@ def new_task_item(
     acceptance_criteria,
     review_instructions,
     notes,
+    uid=None,
+    ref=None,
+    legacy_id=None,
+    aliases=None,
+    epic_key=None,
+    local_seq=None,
 ):
     now = utc_now()
 
-    return {
+    task = {
         "id": task_id,
         "epic_id": epic_id,
         "title": title,
@@ -963,6 +1222,26 @@ def new_task_item(
         "created_at": now,
         "updated_at": now,
     }
+
+    if uid:
+        task["uid"] = uid
+
+    if ref:
+        task["ref"] = ref
+
+    if legacy_id:
+        task["legacy_id"] = legacy_id
+
+    if aliases is not None:
+        task["aliases"] = aliases
+
+    if epic_key:
+        task["epic_key"] = epic_key
+
+    if local_seq is not None:
+        task["local_seq"] = local_seq
+
+    return task
 
 
 def cmd_init(args):
@@ -1189,9 +1468,9 @@ def cmd_task_list(args):
         marker = " *current*" if task.get("id") == state.get("current_task_id") else ""
         print(
             "{} [{}] {} -> {}{}".format(
-                task.get("id"),
+                task_display_label(task),
                 task.get("status"),
-                task.get("epic_id"),
+                task_epic_label(task, plan=plan),
                 task.get("title"),
                 marker,
             )
@@ -1209,6 +1488,14 @@ def cmd_task_create(args):
         ensure_epic_can_accept_task(plan, args.epic, args.status)
 
         task_id = next_id("TASK", state["tasks"])
+        epic = find_plan_epic(plan, args.epic)
+        epic_key = epic.get("key") if epic else None
+        local_seq = None
+        ref = None
+
+        if epic_key:
+            local_seq = allocate_local_seq(state["tasks"], args.epic, epic_key)
+            ref = format_task_ref(epic_key, local_seq)
 
         task = new_task_item(
             task_id=task_id,
@@ -1230,14 +1517,25 @@ def cmd_task_create(args):
             acceptance_criteria=args.acceptance,
             review_instructions=args.review_instruction,
             notes=args.note,
+            uid=generate_task_uid(state["tasks"]),
+            ref=ref,
+            legacy_id=task_id,
+            aliases=[task_id],
+            epic_key=epic_key,
+            local_seq=local_seq,
         )
 
         state["tasks"].append(task)
 
+        payload = {"task_id": task_id}
+
+        if ref:
+            payload["ref"] = ref
+
         return {
             "entity_id": task_id,
-            "payload": {"task_id": task_id},
-            "message": "Created: {}".format(task_id),
+            "payload": payload,
+            "message": "Created: {}".format(task_display_label(task)),
         }
 
     mutate(
@@ -1465,7 +1763,15 @@ def cmd_current_show(args):
         print_json(task)
         return
 
-    print("{} [{}] {} -> {}".format(task.get("id"), task.get("status"), task.get("epic_id"), task.get("title")))
+    plan = load_plan(repo_root(args), required=False)
+    print(
+        "{} [{}] {} -> {}".format(
+            task_display_label(task),
+            task.get("status"),
+            task_epic_label(task, plan=plan),
+            task.get("title"),
+        )
+    )
 
 
 def cmd_current_set(args):

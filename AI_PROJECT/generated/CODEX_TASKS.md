@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `109`
-Current task: `TASK-013`
+Revision: `122`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -233,9 +233,9 @@ Acceptance criteria:
 - The design includes migration rules for existing TASK-XXX tasks.
 - Generated project-control files are refreshed through CLI.
 
-### TASK-013 — TIG-02 Add epic keys to plan model ⭐
+### TASK-013 — TIG-02 Add epic keys to plan model
 
-Status: `in_review`  
+Status: `done`  
 Priority: `1`  
 Verification: `standard`  
 
@@ -250,7 +250,7 @@ Acceptance criteria:
 
 ### TASK-014 — TIG-03 Add task uid ref local sequence and aliases
 
-Status: `planned`  
+Status: `done`  
 Priority: `1`  
 Verification: `standard`  
 
