@@ -3,7 +3,7 @@
 
 # Current Codex Task
 
-Revision: `286`
+Revision: `302`
 
 _No current task selected._
 

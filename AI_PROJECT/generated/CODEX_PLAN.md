@@ -5,7 +5,7 @@
 
 Project: **AI Development System**
 Status: `active`
-Revision: `9`
+Revision: `10`
 
 ## Idea
 
@@ -45,3 +45,4 @@ Unify scattered ctl commands into one validated command layer and prepare a loca
 Epics:
 
 - `EPIC-005` / `CTL` — Implement unified aictl and local Control Center foundation (`planned`)
+- `EPIC-006` / `WFA` — Control Plane Workflow Automation (`planned`)

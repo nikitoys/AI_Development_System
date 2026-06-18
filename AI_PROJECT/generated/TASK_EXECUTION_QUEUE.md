@@ -3,15 +3,30 @@
 
 # Task Execution Queue
 
-Revision: `286`
+Revision: `302`
 
 ## Executable Now
 
+- `WFA-01 (TASK-032)` [planned] `EPIC-006` priority `1` — WFA-01 Add Task Workflow Automation MVP
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 
 ## Waiting For Dependencies
 
-_No tasks waiting only on dependencies._
+- `WFA-02 (TASK-033)` [planned] `EPIC-006` priority `1` — WFA-02 Add Evolution Change Wizard
+  - `dependency_not_done`: depends on WFA-01 (TASK-032) with status planned
+- `WFA-03 (TASK-034)` [planned] `EPIC-006` priority `1` — WFA-03 Add Task Creation Wizard
+  - `dependency_not_done`: depends on WFA-01 (TASK-032) with status planned
+- `WFA-04 (TASK-035)` [planned] `EPIC-006` priority `1` — WFA-04 Add Bulk Task Import UI
+  - `dependency_not_done`: depends on WFA-03 (TASK-034) with status planned
+- `WFA-05 (TASK-036)` [planned] `EPIC-006` priority `1` — WFA-05 Add Review And Close Helpers
+  - `dependency_not_done`: depends on WFA-01 (TASK-032) with status planned
+  - `dependency_not_done`: depends on WFA-02 (TASK-033) with status planned
+- `WFA-06 (TASK-037)` [planned] `EPIC-006` priority `1` — WFA-06 Documentation Audit And Cleanup
+  - `dependency_not_done`: depends on WFA-01 (TASK-032) with status planned
+  - `dependency_not_done`: depends on WFA-02 (TASK-033) with status planned
+  - `dependency_not_done`: depends on WFA-03 (TASK-034) with status planned
+  - `dependency_not_done`: depends on WFA-04 (TASK-035) with status planned
+  - `dependency_not_done`: depends on WFA-05 (TASK-036) with status planned
 
 ## Not Executable Due To Status Or Parent State
 

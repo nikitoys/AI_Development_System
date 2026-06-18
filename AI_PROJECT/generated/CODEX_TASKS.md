@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `286`
+Revision: `302`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -552,3 +552,115 @@ Acceptance criteria:
 - Web write safety remains unchanged: write actions still route through registered commands and do not directly edit protected files.
 - Tests cover dashboard/data performance behavior, doctor refresh, and cache invalidation.
 - Required validation, generated checks, project doctor, and protected-file checks pass.
+
+## Epic `EPIC-006`
+
+### WFA-01 (TASK-032) — WFA-01 Add Task Workflow Automation MVP
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_ceea832bf67c`, legacy `TASK-032`, aliases `TASK-032`, local `WFA` / `1`
+
+Add high-level workflow actions for preparing tasks for Codex, refreshing execution context, and submitting tasks for review.
+
+Acceptance criteria:
+
+- Owner can prepare a task for Codex with one CLI workflow or one UI action.
+- Prepare workflow sets/validates current task, moves task to in_progress when valid, refreshes context, refreshes Codex prompt, and runs doctor.
+- Refresh context workflow rebuilds Context Pack and Codex prompt for a task.
+- Submit-review workflow runs required checks and moves task to in_review only when blocking checks pass.
+- All write workflows require explicit confirmation.
+- Workflows do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Existing individual commands still work.
+- Tests and validations pass.
+
+### WFA-02 (TASK-033) — WFA-02 Add Evolution Change Wizard
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_eb70d29e43ed`, legacy `TASK-033`, aliases `TASK-033`, local `WFA` / `2`
+
+Add a guided workflow/UI helper to create and prepare Evolution Change records for tasks that require controlled system evolution approval.
+
+Acceptance criteria:
+
+- Owner can create a Change Proposal for a selected task with preview and confirmation.
+- Created Change links to the correct legacy task id.
+- Created Change includes affected files, risks, impact, problem/proposal/rationale draft.
+- Change approval remains a separate explicit action.
+- No direct protected-file edits.
+- Tests and validations pass.
+
+### WFA-03 (TASK-034) — WFA-03 Add Task Creation Wizard
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_95ae4203c49f`, legacy `TASK-034`, aliases `TASK-034`, local `WFA` / `3`
+
+Add owner-facing CLI/UI workflow for creating individual tasks without long taskctl.py command lines.
+
+Acceptance criteria:
+
+- Owner can create a single task through workflow/UI without manually writing a long CLI command.
+- Created task is persisted through approved command path.
+- Generated task views are refreshed through owning CLI/facade.
+- Task dependencies can be added where supported.
+- No direct protected-file edits.
+- Tests and validations pass.
+
+### WFA-04 (TASK-035) — WFA-04 Add Bulk Task Import UI
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_b1b9da9dd270`, legacy `TASK-035`, aliases `TASK-035`, local `WFA` / `4`
+
+Add a grouped task import interface for importing multiple planned tasks from structured text with preview, validation, and confirmation.
+
+Acceptance criteria:
+
+- Owner can paste a batch of task definitions and preview them.
+- Import preview shows tasks, fields, dependencies, and planned commands.
+- Invalid imports fail before any task is created.
+- Confirmed import creates tasks through approved command path only.
+- No direct AI_PROJECT/state/** edits from importer.
+- Tests and validations pass.
+
+### WFA-05 (TASK-036) — WFA-05 Add Review And Close Helpers
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_78c014419aa9`, legacy `TASK-036`, aliases `TASK-036`, local `WFA` / `5`
+
+Add guarded workflow helpers for closing reviewed tasks, accepting linked Evolution Changes, and optionally closing completed Epics.
+
+Acceptance criteria:
+
+- Owner can close an in_review task with explicit notes and confirmation.
+- Owner can accept an Evolution Change only when linked task completion rules pass.
+- Invalid close/accept attempts are rejected with clear messages.
+- Existing lifecycle semantics are preserved.
+- Tests and validations pass.
+
+### WFA-06 (TASK-037) — WFA-06 Documentation Audit And Cleanup
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_c4ef4282293c`, legacy `TASK-037`, aliases `TASK-037`, local `WFA` / `6`
+
+Audit and update documentation after workflow automation and UI improvements are implemented.
+
+Acceptance criteria:
+
+- Documentation reflects the current aictl/web/workflow model.
+- Legacy ctl scripts are described as compatibility layer.
+- Bulk task import is documented.
+- Evolution Change Flow is documented as controlled self-evolution.
+- Generated files are clearly described as derived output.
+- Protected-file rules are current.
+- Documentation checks and project-control checks pass.
