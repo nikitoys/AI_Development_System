@@ -11,6 +11,16 @@ It is not a normal application repository. The primary source of truth for syste
 
 This repository now intentionally uses root-level `/AI_PROJECT` as its self-hosted Project Control Layer. It stores machine-readable state, append-only audit events and generated readable outputs for AI_Development_System's own controlled evolution. Protected files under `/AI_PROJECT/state/**`, `/AI_PROJECT/events/**` and `/AI_PROJECT/generated/**` must be changed only through the project-control CLI gateways.
 
+Owner quickstart for the centralized control plane:
+
+```bash
+python scripts/aictl.py command list
+python scripts/aictl.py project doctor
+python scripts/aictl.py web --host 127.0.0.1 --port 8765
+```
+
+Use `/ai-system/project-control/10-owner-quickstart.md` for the practical command guide and `/ai-system/project-control/08-usage-guide.md` for the full Project Control Gateway usage guide.
+
 `AI_PROJECT` appears in three distinct contexts:
 
 - `/AI_PROJECT` — the self-hosted project-control layer for this repository itself.

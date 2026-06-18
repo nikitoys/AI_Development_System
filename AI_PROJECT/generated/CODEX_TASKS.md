@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `262`
-Current task: `none`
+Revision: `276`
+Current task: `TASK-030`
 
 ## Epic `EPIC-001`
 
@@ -518,9 +518,9 @@ Acceptance criteria:
 - Invalid transitions are blocked.
 - Confirmation and error reporting are present.
 
-### CTL-12 (TASK-030) — Task L - Documentation and owner quickstart
+### CTL-12 (TASK-030) — Task L - Documentation and owner quickstart ⭐
 
-Status: `planned`
+Status: `in_review`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_235fab1d1516`, legacy `TASK-030`, aliases `TASK-030`, local `CTL` / `12`

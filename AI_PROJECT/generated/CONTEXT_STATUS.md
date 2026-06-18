@@ -1,29 +1,28 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/generated/CONTEXT_PACK.md -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-029 Task K - Add controlled Web write actions Allow safe project-control state changes from UI only after the read-only MVP is stable. Add controlled web write actions for creating tasks, transitioning tasks, requesting review, marking review result, building Codex prompts, and regenerating generated views, with confirmations and audit events through the command registry. ai_project_ctl/web Web write actions use the same command registry and audit path as CLI writes. Add confirmation-backed web actions for task create, task transition, review request, review result, Codex prompt build, and generated view regeneration where supported. Route every write through command registry and shared services. Ensure every write creates the same kind of event as CLI writes. Block invalid transitions and show clear errors. Add tests for confirmation, invalid transition handling, and audit event behavior. Do not bypass command registry from route handlers. Do not add remote hosted deployment. Do not add multi-user authentication unless separately approved. ai_project_ctl/web/** ai_project_ctl/** scripts/aictl.py tests/** AI_PROJECT/state/tasks.json via taskctl.py only AI_PROJECT/events/task-events.jsonl via taskctl.py only AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only Web write path is identical to CLI write path. Audit events are created. Invalid transitions are blocked. Confirmation and error reporting are present. Verify route handlers do not write protected files directly. Verify every successful write has an audit event and validation path.","schema_version":1,"task_id":"TASK-029"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-030 Task L - Documentation and owner quickstart Make the unified control-plane usable and discoverable. Update or create owner-facing documentation for aictl usage, legacy wrapper relationship, project doctor, local web dashboard, web safety model, state/events/generated architecture, and ID allocation policy. ai-system/project-control Owner quickstart and control-plane documentation explain how to use and safely operate the new model. Document how to use aictl. Document how legacy ctl wrappers relate to aictl. Document how to run project doctor. Document how to run the local web dashboard. Document the Web UI safety model. Document state/events/generated architecture and ID allocation policy. Ensure Codex can be pointed to aictl as the preferred interface. Do not implement new control-plane behavior in documentation task. Do not mark documents active without Human Owner acceptance. Do not manually edit documentation-control protected files. ai-system/project-control/** README.md AGENTS.md AI_PROJECT/state/docs.json via docctl.py only AI_PROJECT/events/doc-events.jsonl via docctl.py only AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only AI_PROJECT/state/tasks.json via taskctl.py only AI_PROJECT/events/task-events.jsonl via taskctl.py only AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only AI_PROJECT/generated/CONTEXT_PACK.md via contextctl.py/aictl.py only AI_PROJECT/generated/CONTEXT_STATUS.md via contextctl.py/aictl.py only AI_PROJECT/events/context-events.jsonl via contextctl.py/aictl.py only AI_PROJECT/state/context.json via contextctl.py/aictl.py only if the command updates it AI_PROJECT/generated/CODEX_PROMPT.md via codexctl.py/aictl.py/taskctl.py only AI_PROJECT/generated/CODEX_STATUS.md via codexctl.py/aictl.py only AI_PROJECT/events/codex-events.jsonl via codexctl.py/aictl.py only AI_PROJECT/state/current_execution.json via codexctl.py/aictl.py only if the command updates it Owner can discover common commands quickly. Codex can be pointed to aictl as the preferred interface. Docs clearly say generated files are derived. Docs explain legacy ctl wrappers, project doctor, local web dashboard, web safety model, state/events/generated architecture, and ID allocation policy. Verify docs do not claim generated Markdown is source of truth. Verify documentation-control files are updated only through docctl.py. Verify Human Owner acceptance remains required before active/accepted states.","schema_version":1,"task_id":"TASK-030"} -->
 
 # Context Status
 
 Context pack exists: `true`
 Mode: `task`
-Task ID: `TASK-029`
+Task ID: `TASK-030`
 Limit: `8`
-Docs revision: `19`
-Tasks revision: `260`
+Docs revision: `22`
+Tasks revision: `275`
 Indexed source documents: `10`
 Indexed chunks: `890`
 Selected chunks: `8`
-Excluded registered sources: `130`
+Excluded registered sources: `134`
 
 ## Selected Source Paths
 
 - ai-system/project-control/03-state-model.md
 - ai-system/project-control/04-command-catalog.md
 - ai-system/project-control/06-prompt-package-spec.md
-- ai-system/project-control/07-validation-and-tests.md
 - ai-system/skills/README.md
 
 ## Exclusion Reasons
 
-- inactive document excluded by default: `89`
+- inactive document excluded by default: `93`
 - template document excluded by default: `41`

@@ -3,8 +3,8 @@
 
 # Documentation Index
 
-Revision: `19`
-Documents: `140`
+Revision: `22`
+Documents: `144`
 
 | Path | Title | Type | Status | Declared | Required | Content hash | Last reviewed | Reviewed hash |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -23,8 +23,8 @@ Documents: `140`
 | `.agents/skills/clarification-gate/SKILL.md` | Skill | `guide` | `draft` | - | `false` | `3a4bc7fb0e58` | - | `-` |
 | `.agents/skills/documentation-navigation/SKILL.md` | Skill | `guide` | `draft` | - | `false` | `64ca93923e7d` | - | `-` |
 | `.agents/skills/project-control-gateway/SKILL.md` | Skill | `guide` | `draft` | - | `false` | `880e4a5b6b09` | - | `-` |
-| `AGENTS.md` | Agents | `reference` | `draft` | `draft` | `false` | `62a62b2a8cdd` | - | `-` |
-| `README.md` | Readme | `reference` | `draft` | `draft` | `false` | `9840bad8f5e4` | - | `-` |
+| `AGENTS.md` | Agents | `reference` | `draft` | `draft` | `false` | `7d1440de6021` | - | `-` |
+| `README.md` | Readme | `reference` | `draft` | `draft` | `false` | `ec59ec8c56ab` | - | `-` |
 | `README.ru.md` | Readme.Ru | `reference` | `draft` | - | `false` | `06ef242455e3` | - | `-` |
 | `ai-system/README.md` | Readme | `reference` | `draft` | `draft` | `false` | `088eb0b5b89b` | - | `-` |
 | `ai-system/agent-result-intake.md` | Agent Result Intake | `reference` | `draft` | `draft` | `false` | `380fdf66798e` | - | `-` |
@@ -83,7 +83,10 @@ Documents: `140`
 | `ai-system/project-bootstrap.md` | Project Bootstrap | `reference` | `draft` | `draft` | `false` | `d169627438cf` | - | `-` |
 | `ai-system/project-control-connectivity.md` | Project Control Connectivity | `reference` | `draft` | `draft` | `false` | `3b6e938568b2` | - | `-` |
 | `ai-system/project-control-files.md` | Project Control Files | `reference` | `draft` | `draft` | `false` | `c3ab0549e8bb` | - | `-` |
-| `ai-system/project-control/09-task-identity-and-execution-graph.md` | Task Identity and Execution Graph | `reference` | `draft` | `draft` | `false` | `3a96c2455435` | - | `-` |
+| `ai-system/project-control/09-task-identity-and-execution-graph.md` | Task Identity and Execution Graph | `reference` | `draft` | `draft` | `false` | `6cc7a2a365c8` | - | `-` |
+| `ai-system/project-control/control-plane-architecture.md` | Control Plane Architecture | `reference` | `draft` | `draft` | `false` | `565ffa004ad3` | - | `-` |
+| `ai-system/project-control/control-plane-id-allocation.md` | Control Plane Id Allocation | `reference` | `draft` | `draft` | `false` | `50dc65164bbe` | - | `-` |
+| `ai-system/project-control/control-plane-inventory.md` | Control Plane Inventory | `reference` | `draft` | `draft` | `false` | `ee423af14cfd` | - | `-` |
 | `ai-system/project-integration-model.md` | Project Integration Model | `reference` | `draft` | `draft` | `false` | `4146b7a5d3a9` | - | `-` |
 | `ai-system/project-operation-profile.md` | Project Operation Profile | `reference` | `draft` | `draft` | `false` | `a3492e3d2c12` | - | `-` |
 | `ai-system/project-system-update.md` | Project System Update | `reference` | `draft` | `draft` | `false` | `8edf3f9585e9` | - | `-` |
@@ -147,4 +150,5 @@ Documents: `140`
 | `ai-system/work-item-hierarchy.md` | Work Item Hierarchy | `reference` | `draft` | `draft` | `false` | `1ff8ca9832b1` | - | `-` |
 | `ai-system/workflow.md` | Workflow | `reference` | `draft` | `draft` | `false` | `6b18b7d5f515` | - | `-` |
 | `plugins/ai-project-control/skills/project-control-gateway/SKILL.md` | Skill | `guide` | `draft` | - | `false` | `880e4a5b6b09` | - | `-` |
-| `ai-system/project-control/08-usage-guide.md` | Project Control Usage Guide | `guide` | `review` | `draft` | `false` | `7daf2c94787f` | - | `-` |
+| `ai-system/project-control/08-usage-guide.md` | Project Control Usage Guide | `guide` | `review` | `review` | `false` | `6663bd3baabb` | - | `-` |
+| `ai-system/project-control/10-owner-quickstart.md` | Project Control Owner Quickstart | `guide` | `review` | `review` | `false` | `356887dffa2c` | - | `-` |

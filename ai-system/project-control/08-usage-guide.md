@@ -2,13 +2,19 @@
 
 ## Status
 
-Draft
+Review
 
 ## Purpose
 
 This guide explains how to use Project Control Gateway in daily work.
 
-It is practical by design. Use it when you need to decide which CLI owns a change, when a Task is required, how `CODEX_PROMPT.md` fits into execution, or what Codex must never edit manually.
+It is practical by design. Use it when you need to decide which CLI owns a change, when a Task is required, how `CODEX_PROMPT.md` fits into execution, how the local Web Control Center stays safe, or what Codex must never edit manually.
+
+For a short owner-facing command path, start with:
+
+```text
+ai-system/project-control/10-owner-quickstart.md
+```
 
 Core rule:
 
@@ -39,6 +45,7 @@ AI_PROJECT/generated/**
 Use the CLI that owns the domain:
 
 ```text
+aictl.py       preferred facade for discovery, health checks, supported commands and web
 planctl.py      Initiative, Epic, project plan
 taskctl.py      executable Task, current Task, CODEX_PROMPT.md
 codexctl.py     current Codex execution package and optional Context Pack inclusion
@@ -77,6 +84,37 @@ Generated Markdown is context for humans and AI agents. It must not be treated a
 Context Packs are generated retrieval context. They help focus reading, but they do not replace Task state, source documents or Human Owner decisions.
 
 ## CLI Responsibilities
+
+## `aictl.py`
+
+Use `aictl.py` as the preferred owner and Codex-facing facade for command discovery, common project-control commands, project health checks, generated view rendering, Context Pack builds, Codex prompt builds and the local Web Control Center.
+
+Common commands:
+
+```bash
+python scripts/aictl.py command list
+python scripts/aictl.py command describe task.transition
+python scripts/aictl.py task list --current
+python scripts/aictl.py task show CTL-12
+python scripts/aictl.py current set CTL-12
+python scripts/aictl.py task transition CTL-12 --to in_review
+python scripts/aictl.py context build --task CTL-12 --write
+python scripts/aictl.py codex prompt build --task CTL-12 --with-context
+python scripts/aictl.py project doctor
+python scripts/aictl.py project render
+python scripts/aictl.py web --host 127.0.0.1 --port 8765
+```
+
+Use `--json` when another tool needs machine-readable output:
+
+```bash
+python scripts/aictl.py --json command list
+python scripts/aictl.py --json project doctor
+```
+
+`aictl.py` does not replace domain ownership. If a needed command is not exposed by the facade parser, use the owning legacy script and keep the same protected-file rules. For example, use `docctl.py` for document registry state, `evolutionctl.py` for Change Proposals and detailed evolution gates, and `taskctl.py` for task creation or task validation commands that are not exposed through `aictl.py`.
+
+The command registry may describe commands that are implemented by a legacy script before they are exposed as an `aictl.py` subcommand. In that case, command discovery tells you the owner and safety metadata; execution still uses the available facade command or the listed legacy command.
 
 ## `planctl.py`
 
@@ -266,6 +304,77 @@ Default retrieval excludes generated, inactive, archived, deprecated, template a
 
 Context Packs must never expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task, the Task remains authoritative.
 
+## Legacy Scripts Versus `aictl.py`
+
+Prefer `aictl.py` for:
+
+```text
+command discovery
+project doctor
+local Web Control Center
+supported task list/show/transition commands
+current task set/clear
+Context Pack build
+Codex prompt build
+project render
+```
+
+Use legacy domain scripts for:
+
+```text
+plan mutations not exposed through aictl.py
+task creation and detailed task validation
+documentation registry changes
+evolution Change Proposal approval gates
+domain-specific audit and generated-output checks
+commands explicitly required by a Task or lifecycle document
+```
+
+Do not use direct file edits to work around a missing facade command. Use the owning CLI or report an unsupported operation.
+
+## Web Control Center
+
+Run the local Web Control Center with:
+
+```bash
+python scripts/aictl.py web --host 127.0.0.1 --port 8765
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8765/
+```
+
+The Web Control Center is a local loopback surface. Read views display dashboard state, tasks, epics, review information, recent events, generated output previews, project doctor results, command metadata and available actions.
+
+Controlled write actions are submitted only through confirmed `POST` requests to `/actions`. Web route handlers must not edit protected files directly. A Web write action must route through a registered command, delegate through `aictl.py`, and rely on the owning CLI for validation, audit events and generated-output updates.
+
+Current controlled Web actions:
+
+```text
+task.transition
+current.set
+current.clear
+project.render
+context.build
+codex.prompt.build
+```
+
+Web task transitions are limited to non-acceptance statuses:
+
+```text
+planned
+ready
+in_progress
+blocked
+in_review
+changes_requested
+deferred
+```
+
+The Web surface must not approve tasks, move tasks to `done`, accept evolution changes, mark documents active, or directly edit `AI_PROJECT/state/**`, `AI_PROJECT/events/**` or `AI_PROJECT/generated/**`.
+
 ## When Do I Need A Task?
 
 Create a Task when the work can change repository files or controlled state.
@@ -409,6 +518,8 @@ AI_PROJECT/generated/CODEX_PROMPT.md
 Build it with:
 
 ```bash
+python scripts/aictl.py current set TASK-001
+python scripts/aictl.py codex prompt build --task TASK-001
 python scripts/taskctl.py current set TASK-001
 python scripts/taskctl.py prompt build --write
 ```
@@ -422,6 +533,8 @@ python scripts/codexctl.py build --task TASK-001
 If a Context Pack should be included, generate or refresh it first, then build the prompt with explicit context:
 
 ```bash
+python scripts/aictl.py context build --task TASK-001 --write
+python scripts/aictl.py codex prompt build --task TASK-001 --with-context
 python scripts/contextctl.py pack build --task TASK-001 --write
 python scripts/codexctl.py build --task TASK-001 --context-pack AI_PROJECT/generated/CONTEXT_PACK.md
 ```
