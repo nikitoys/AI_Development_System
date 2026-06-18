@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 202,
+  "revision": 207,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-18T13:10:50Z",
+  "updated_at": "2026-06-18T13:27:32Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -1275,7 +1275,7 @@
       "id": "TASK-021",
       "epic_id": "EPIC-005",
       "title": "Task C - Add global ID allocation strategy",
-      "status": "planned",
+      "status": "done",
       "summary": "Define a global ID allocation model that prevents task conflicts across parallel epics and future web actions.",
       "description": "Specify whether IDs are globally unique or scoped, prefer globally unique TASK-001 style task IDs, define atomic allocation behavior, and define validation for duplicate task IDs across all epics.",
       "priority": 1,
@@ -1326,11 +1326,11 @@
           "reason": "ID allocation strategy depends on the current ctl inventory."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-18T13:27:32Z",
+      "approval_notes": "Global ID allocation strategy accepted. Identity, ref, UID, alias, locking, validation, and parallel allocation rules are sufficient for core package design.",
       "created_at": "2026-06-18T06:20:18Z",
-      "updated_at": "2026-06-18T06:22:05Z",
+      "updated_at": "2026-06-18T13:27:32Z",
       "uid": "tsk_c04df4f0310f",
       "legacy_id": "TASK-021",
       "aliases": [

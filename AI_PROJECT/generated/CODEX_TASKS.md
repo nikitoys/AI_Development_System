@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `202`
+Revision: `207`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -376,7 +376,7 @@ Acceptance criteria:
 
 ### TASK-021 — Task C - Add global ID allocation strategy
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_c04df4f0310f`, legacy `TASK-021`, aliases `TASK-021`

@@ -1,18 +1,28 @@
 {
   "schema_version": 1,
-  "revision": 40,
-  "status": "blocked",
-  "code": "CODEX_CONTEXT_PACK_STALE",
+  "revision": 45,
+  "status": "ready",
+  "code": "CODEX_READY",
   "source_type": "task",
-  "source_id": "TASK-020",
-  "source_status": "",
+  "source_id": "TASK-021",
+  "source_status": "in_progress",
   "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
   "status_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_STATUS.md",
-  "prompt_exists": false,
-  "blocked_reason": "STALE_CONTEXT_PACK: tasks revision 197 != current 199",
-  "details": [
-    "tasks revision 197 != current 199"
-  ],
+  "prompt_exists": true,
+  "blocked_reason": "",
+  "details": [],
   "created_at": "2026-06-16T15:22:41Z",
-  "updated_at": "2026-06-18T10:36:54Z"
+  "updated_at": "2026-06-18T13:13:19Z",
+  "ready_at": "2026-06-18T13:13:19Z",
+  "last_build_at": "2026-06-18T13:13:19Z",
+  "context_pack": {
+    "relative_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+    "path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CONTEXT_PACK.md",
+    "sha256": "968e3ba662a89a005b4396fa0b0ec514e124d77480c2291eb07c94e51e24861a",
+    "mode": "task",
+    "task_id": "TASK-021",
+    "docs_revision": 19,
+    "tasks_revision": 204,
+    "selected_source_count": 8
+  }
 }
