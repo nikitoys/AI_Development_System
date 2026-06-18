@@ -510,6 +510,29 @@ Future implementation tasks should add validation for:
 - Should Epic keys be immutable after first Task creation?
 - Should archived Epic keys be reserved forever to protect historical aliases?
 
+## Owner Decisions
+
+The following decisions are accepted for the MVP implementation path:
+
+1. Hard dependency satisfaction requires the dependency task to be `done`.
+   `approved` does not count as satisfied for MVP scheduling.
+
+2. Task reparenting is forbidden in the MVP.
+   If a task was created under the wrong Epic, the old task must be archived or superseded and a new task must be created under the correct Epic.
+
+3. Locks and resources are not part of the `TIG-05` MVP.
+   `TIG-05` implements explicit task dependencies and deterministic executable queue only.
+   Resource locks may be introduced by a later Epic.
+
+4. Legacy `TASK-XXX` references must remain stored and resolvable indefinitely.
+   Compact generated views may prefer the new human ref, but detailed views, audit history and resolver behavior must preserve legacy references.
+
+5. Epic keys are immutable after the first task is created under the Epic.
+   Before any child task exists, an Epic key may be corrected through a validated CLI operation.
+
+6. Archived Epic keys are reserved forever.
+   Reusing archived keys is forbidden because old task refs, aliases and audit history must remain unambiguous.
+
 ## Review Notes
 
 Review should check that this document:

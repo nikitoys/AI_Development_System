@@ -37,6 +37,7 @@ Task лучше вынести отдельно в AI_PROJECT/state/tasks.json.
 import argparse
 import json
 import os
+import re
 import sys
 import tempfile
 import uuid
@@ -68,6 +69,7 @@ STATUS_TRANSITIONS = {
 }
 
 TERMINAL_OR_INACTIVE = {"done", "deferred", "archived"}
+EPIC_KEY_RE = re.compile(r"^[A-Z][A-Z0-9]{1,11}$")
 
 
 class PlanError(Exception):
@@ -100,6 +102,10 @@ def plan_path(root):
 
 def plan_events_path(root):
     return events_dir(root) / "plan-events.jsonl"
+
+
+def tasks_path(root):
+    return state_dir(root) / "tasks.json"
 
 
 def generated_plan_path(root):
@@ -150,6 +156,26 @@ def read_json(path):
         raise PlanError(
             "INVALID_JSON: {}:{}:{} {}".format(path, e.lineno, e.colno, e.msg)
         )
+
+
+def read_optional_tasks(root):
+    path = tasks_path(root)
+
+    if not path.exists():
+        return {"tasks": []}
+
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            state = json.load(f)
+    except json.JSONDecodeError as e:
+        raise PlanError(
+            "INVALID_JSON: {}:{}:{} {}".format(path, e.lineno, e.colno, e.msg)
+        )
+
+    if not isinstance(state, dict) or not isinstance(state.get("tasks"), list):
+        raise PlanError("TASK_STATE_INVALID: tasks must be a list")
+
+    return state
 
 
 def load_plan(root):
@@ -234,6 +260,59 @@ def find_item(items, item_id, required=True):
         raise PlanError("ENTITY_NOT_FOUND: {}".format(item_id))
 
     return None
+
+
+def epic_key_errors(key, path):
+    if not isinstance(key, str):
+        return ["{}.key must be a string".format(path)]
+
+    if not key:
+        return ["{}.key must be non-empty".format(path)]
+
+    if key != key.upper():
+        return ["{}.key must be uppercase".format(path)]
+
+    if not EPIC_KEY_RE.fullmatch(key):
+        return [
+            "{}.key must match {}".format(
+                path,
+                EPIC_KEY_RE.pattern,
+            )
+        ]
+
+    return []
+
+
+def require_valid_epic_key(key):
+    errors = epic_key_errors(key, "epic")
+
+    if errors:
+        raise PlanError("INVALID_EPIC_KEY:\n- " + "\n- ".join(errors))
+
+    return key
+
+
+def epic_key_label(epic):
+    if epic.get("key"):
+        return "{} / {}".format(epic.get("id"), epic.get("key"))
+
+    return epic.get("id")
+
+
+def rendered_epic_label(epic):
+    if epic.get("key"):
+        return "`{}` / `{}`".format(epic.get("id"), epic.get("key"))
+
+    return "`{}`".format(epic.get("id"))
+
+
+def count_child_tasks(root, epic_id):
+    state = read_optional_tasks(root)
+
+    return len([
+        task for task in state.get("tasks", [])
+        if task.get("epic_id") == epic_id
+    ])
 
 
 def validate_plan(plan):
@@ -328,6 +407,7 @@ def validate_plan(plan):
             errors.append("{}.order must be integer".format(path))
 
     epic_ids = set()
+    epic_keys = {}
 
     for i, item in enumerate(epics):
         path = "epics[{}]".format(i)
@@ -345,6 +425,24 @@ def validate_plan(plan):
             errors.append("duplicate epic id: {}".format(item_id))
 
         epic_ids.add(item_id)
+
+        if "key" in item:
+            key_errors = epic_key_errors(item.get("key"), path)
+            errors.extend(key_errors)
+
+            if not key_errors:
+                key = item.get("key")
+
+                if key in epic_keys:
+                    errors.append(
+                        "{}.key duplicates epic key {} used by {}".format(
+                            path,
+                            key,
+                            epic_keys[key],
+                        )
+                    )
+                else:
+                    epic_keys[key] = item_id
 
         if item.get("initiative_id") not in initiative_ids:
             errors.append(
@@ -518,8 +616,8 @@ def render_plan_markdown(plan):
 
                 for epic in child_epics:
                     lines.append(
-                        "- `{}` — {} (`{}`)".format(
-                            epic.get("id"),
+                        "- {} — {} (`{}`)".format(
+                            rendered_epic_label(epic),
                             epic.get("title"),
                             epic.get("status"),
                         )
@@ -1049,7 +1147,7 @@ def cmd_epic_list(args):
     ):
         print(
             "{} [{}] {} -> {}".format(
-                item.get("id"),
+                epic_key_label(item),
                 item.get("status"),
                 item.get("initiative_id"),
                 item.get("title"),
@@ -1068,6 +1166,7 @@ def cmd_epic_create(args):
     created = {"id": None}
 
     def apply(plan):
+        key = require_valid_epic_key(args.key) if args.key is not None else None
         initiative = find_item(plan["initiatives"], args.initiative)
 
         if initiative.get("status") == "archived":
@@ -1075,6 +1174,10 @@ def cmd_epic_create(args):
 
         item_id = next_id("EPIC", plan["epics"])
         created["id"] = item_id
+        extra = {"initiative_id": args.initiative}
+
+        if key is not None:
+            extra["key"] = key
 
         item = new_plan_item(
             item_id=item_id,
@@ -1083,7 +1186,7 @@ def cmd_epic_create(args):
             summary=args.summary,
             priority=args.priority,
             order=next_order(plan["epics"], "initiative_id", args.initiative),
-            extra={"initiative_id": args.initiative},
+            extra=extra,
         )
 
         plan["epics"].append(item)
@@ -1097,6 +1200,7 @@ def cmd_epic_create(args):
             "initiative_id": args.initiative,
             "title": args.title,
             "status": args.status,
+            "key": args.key,
         },
         mutator=apply,
     )
@@ -1140,6 +1244,63 @@ def cmd_epic_summary(args):
         entity_type="epic",
         entity_id=args.epic_id,
         payload={"summary": args.text},
+        mutator=apply,
+    )
+
+
+def cmd_epic_set_key(args):
+    root = repo_root(args)
+    new_key = require_valid_epic_key(args.key)
+    payload = {
+        "old_key": None,
+        "key": new_key,
+        "force_legacy_migration": bool(args.force_legacy_migration),
+    }
+
+    def apply(plan):
+        item = find_item(plan["epics"], args.epic_id)
+
+        if item.get("status") == "archived":
+            raise PlanError("ARCHIVED_ENTITY_IS_IMMUTABLE")
+
+        current_key = item.get("key")
+        payload["old_key"] = current_key
+        child_count = count_child_tasks(root, args.epic_id)
+
+        if child_count and current_key:
+            if current_key == new_key:
+                raise PlanError(
+                    "EPIC_KEY_ALREADY_SET: {} already has key {}".format(
+                        args.epic_id,
+                        current_key,
+                    )
+                )
+
+            raise PlanError(
+                "EPIC_KEY_IMMUTABLE: {} has {} child task(s) and key {}".format(
+                    args.epic_id,
+                    child_count,
+                    current_key,
+                )
+            )
+
+        if child_count and not args.force_legacy_migration:
+            raise PlanError(
+                "EPIC_KEY_LEGACY_MIGRATION_REQUIRES_FORCE: {} has {} child task(s)".format(
+                    args.epic_id,
+                    child_count,
+                )
+            )
+
+        item["key"] = new_key
+        item["updated_at"] = utc_now()
+
+    mutate(
+        args=args,
+        command="epic.set_key",
+        entity_type="epic",
+        entity_id=args.epic_id,
+        payload=payload,
         mutator=apply,
     )
 
@@ -1352,6 +1513,7 @@ def build_parser():
     p = epic_sub.add_parser("create")
     p.add_argument("--initiative", required=True)
     p.add_argument("--title", required=True)
+    p.add_argument("--key")
     p.add_argument("--summary", default="")
     p.add_argument("--priority", type=int, default=1)
     p.add_argument("--status", choices=sorted(PLAN_STATUSES), default="planned")
@@ -1366,6 +1528,12 @@ def build_parser():
     p.add_argument("epic_id")
     p.add_argument("--text", required=True)
     p.set_defaults(func=cmd_epic_summary)
+
+    p = epic_sub.add_parser("set-key")
+    p.add_argument("epic_id")
+    p.add_argument("--key", required=True)
+    p.add_argument("--force-legacy-migration", action="store_true")
+    p.set_defaults(func=cmd_epic_set_key)
 
     p = epic_sub.add_parser("status")
     p.add_argument("epic_id")
