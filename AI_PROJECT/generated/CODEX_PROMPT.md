@@ -6,8 +6,8 @@ Active Document: AI_PROJECT/generated/CODEX_CURRENT.md
 Expected Result: Task completed according to acceptance criteria
 
 Repository: current repository
-Task ID: TASK-014
-Task Title: TIG-03 Add task uid ref local sequence and aliases
+Task ID: TASK-015
+Task Title: TIG-04 Add task reference resolver
 Task Status: in_review
 Verification Mode: standard
 
@@ -15,16 +15,15 @@ Initiative: INIT-001 — AI Development System Evolution
 Epic: EPIC-004 — Task Identity and Execution Graph
 
 Context:
-Extend task state with stable uid, human-readable ref, local sequence inside epic, and aliases for backward compatibility.
+Allow taskctl and prompt generation to resolve tasks by new ref, uid, or legacy TASK-XXX alias.
 
 Scope:
-- Add uid/ref/local_seq/aliases fields to task schema.
-- Generate refs from epic key and local sequence.
-- Preserve legacy TASK-XXX compatibility.
-- Update validation and rendering.
+- Add a central task reference resolver.
+- Use resolver in show, transition, approve, archive, current set, prompt build and list mutation commands.
+- Reject ambiguous references.
 
 Out of Scope:
-- Do not implement dependency graph in this task.
+- Do not add dependency scheduling in this task.
 
 Allowed Files:
 - scripts/taskctl.py
@@ -35,9 +34,9 @@ Allowed Files:
 - AI_PROJECT/generated/CODEX_PROMPT.md via taskctl.py/codexctl.py only
 
 Acceptance Criteria:
-- Existing tasks can be migrated or read without losing history.
-- New tasks receive readable refs.
-- Legacy TASK-XXX references remain resolvable.
+- Existing CLI commands keep working with legacy TASK-XXX.
+- New refs work where task_id was previously required.
+- Ambiguous references produce a clear error.
 
 Execution Rules:
 - Do not edit AI_PROJECT/state/*.json manually.
@@ -49,7 +48,7 @@ Execution Rules:
 
 Suggested lifecycle commands:
 ```bash
-python scripts/taskctl.py task transition TASK-014 --to in_progress
-python scripts/taskctl.py task transition TASK-014 --to in_review
+python scripts/taskctl.py task transition TASK-015 --to in_progress
+python scripts/taskctl.py task transition TASK-015 --to in_review
 python scripts/taskctl.py validate
 ```

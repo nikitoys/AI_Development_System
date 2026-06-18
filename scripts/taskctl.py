@@ -321,6 +321,63 @@ def find_item(items, item_id, required=True):
     return None
 
 
+def task_reference_values(task):
+    for field in ["id", "uid", "ref", "legacy_id"]:
+        value = task.get(field)
+
+        if isinstance(value, str) and value.strip():
+            yield value
+
+    aliases = task.get("aliases", [])
+
+    if isinstance(aliases, list):
+        for alias in aliases:
+            if isinstance(alias, str) and alias.strip():
+                yield alias
+
+
+def task_identity_summary(task):
+    parts = ["id={}".format(task.get("id"))]
+
+    if task.get("ref"):
+        parts.append("ref={}".format(task.get("ref")))
+
+    if task.get("uid"):
+        parts.append("uid={}".format(task.get("uid")))
+
+    if task.get("legacy_id"):
+        parts.append("legacy_id={}".format(task.get("legacy_id")))
+
+    if task.get("aliases"):
+        parts.append("aliases=[{}]".format(", ".join(task.get("aliases", []))))
+
+    return ", ".join(parts)
+
+
+def resolve_task_ref(tasks, task_ref):
+    if not isinstance(task_ref, str) or not task_ref.strip():
+        raise TaskError("TASK_REF_EMPTY")
+
+    ref = task_ref.strip()
+    matches = []
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+
+        if any(value == ref for value in task_reference_values(task)):
+            matches.append(task)
+
+    if not matches:
+        raise TaskError("TASK_REF_NOT_FOUND: {}".format(ref))
+
+    if len(matches) > 1:
+        details = "\n- " + "\n- ".join(task_identity_summary(task) for task in matches)
+        raise TaskError("AMBIGUOUS_TASK_REF: {}{}".format(ref, details))
+
+    return matches[0]
+
+
 def next_id(prefix, items):
     max_num = 0
     head = prefix + "-"
@@ -1479,8 +1536,36 @@ def cmd_task_list(args):
 
 def cmd_task_show(args):
     state = load_tasks(repo_root(args))
-    task = find_item(state.get("tasks", []), args.task_id)
+    task = resolve_task_ref(state.get("tasks", []), args.task_ref)
     print_json(task)
+
+
+def cmd_task_resolve(args):
+    state = load_tasks(repo_root(args))
+    task = resolve_task_ref(state.get("tasks", []), args.task_ref)
+
+    if args.json:
+        print_json(
+            {
+                "id": task.get("id"),
+                "ref": task.get("ref"),
+                "uid": task.get("uid"),
+                "legacy_id": task.get("legacy_id"),
+                "aliases": task.get("aliases", []),
+                "epic_id": task.get("epic_id"),
+                "title": task.get("title"),
+                "status": task.get("status"),
+            }
+        )
+        return
+
+    print("Canonical ID: {}".format(task.get("id")))
+    print("Ref:          {}".format(task.get("ref") or "-"))
+    print("UID:          {}".format(task.get("uid") or "-"))
+    print("Legacy ID:    {}".format(task.get("legacy_id") or "-"))
+    print("Epic:         {}".format(task.get("epic_id")))
+    print("Title:        {}".format(task.get("title")))
+    print("Status:       {}".format(task.get("status")))
 
 
 def cmd_task_create(args):
@@ -1555,17 +1640,18 @@ def cmd_task_create(args):
 
 def cmd_task_rename(args):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
         ensure_task_mutable(task)
 
         task["title"] = args.title
         task["updated_at"] = utc_now()
+        return {"entity_id": task.get("id")}
 
     mutate(
         args=args,
         command="task.rename",
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={"title": args.title},
         mutator=apply,
     )
@@ -1573,17 +1659,18 @@ def cmd_task_rename(args):
 
 def cmd_task_update_summary(args):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
         ensure_task_mutable(task)
 
         task["summary"] = args.text
         task["updated_at"] = utc_now()
+        return {"entity_id": task.get("id")}
 
     mutate(
         args=args,
         command="task.update_summary",
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={"summary": args.text},
         mutator=apply,
     )
@@ -1591,17 +1678,18 @@ def cmd_task_update_summary(args):
 
 def cmd_task_update_description(args):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
         ensure_task_mutable(task)
 
         task["description"] = args.text
         task["updated_at"] = utc_now()
+        return {"entity_id": task.get("id")}
 
     mutate(
         args=args,
         command="task.update_description",
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={"description": args.text},
         mutator=apply,
     )
@@ -1609,7 +1697,7 @@ def cmd_task_update_description(args):
 
 def cmd_task_set_prompt_fields(args):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
         ensure_task_mutable(task)
 
         changed = {}
@@ -1628,13 +1716,13 @@ def cmd_task_set_prompt_fields(args):
             raise TaskError("NO_FIELDS_TO_UPDATE")
 
         task["updated_at"] = utc_now()
-        return {"payload": {"changed": changed}}
+        return {"entity_id": task.get("id"), "payload": {"changed": changed}}
 
     mutate(
         args=args,
         command="task.set_prompt_fields",
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={},
         mutator=apply,
     )
@@ -1642,7 +1730,8 @@ def cmd_task_set_prompt_fields(args):
 
 def cmd_task_transition(args):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
+        task_id = task.get("id")
         old = task.get("status")
 
         ensure_task_status_transition(old, args.to)
@@ -1659,14 +1748,16 @@ def cmd_task_transition(args):
             task["approved_at"] = "" if args.to not in {"done", "archived"} else task.get("approved_at", "")
             task["approval_notes"] = "" if args.to not in {"done", "archived"} else task.get("approval_notes", "")
 
-        if state.get("current_task_id") == args.task_id and args.to not in CURRENT_ALLOWED_STATUSES:
+        if state.get("current_task_id") == task_id and args.to not in CURRENT_ALLOWED_STATUSES:
             state["current_task_id"] = None
+
+        return {"entity_id": task_id}
 
     mutate(
         args=args,
         command="task.transition",
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={"to": args.to},
         mutator=apply,
     )
@@ -1674,7 +1765,8 @@ def cmd_task_transition(args):
 
 def cmd_task_approve(args):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
+        task_id = task.get("id")
 
         ensure_task_status_transition(task.get("status"), "approved")
         ensure_epic_can_accept_task(plan, task.get("epic_id"), "approved")
@@ -1685,16 +1777,16 @@ def cmd_task_approve(args):
         task["approval_notes"] = args.notes or ""
         task["updated_at"] = utc_now()
 
-        if state.get("current_task_id") == args.task_id:
+        if state.get("current_task_id") == task_id:
             state["current_task_id"] = None
 
-        return {"payload": {"by": task["approved_by"], "notes": args.notes or ""}}
+        return {"entity_id": task_id, "payload": {"by": task["approved_by"], "notes": args.notes or ""}}
 
     mutate(
         args=args,
         command="task.approve",
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={},
         mutator=apply,
     )
@@ -1707,17 +1799,18 @@ def cmd_task_archive(args):
 
 def task_add_list_item(args, field, command):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
         ensure_task_mutable(task)
 
         task.setdefault(field, []).append(args.text)
         task["updated_at"] = utc_now()
+        return {"entity_id": task.get("id")}
 
     mutate(
         args=args,
         command=command,
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={"field": field, "text": args.text},
         mutator=apply,
     )
@@ -1725,7 +1818,7 @@ def task_add_list_item(args, field, command):
 
 def task_remove_list_item(args, field, command):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
         ensure_task_mutable(task)
 
         items = task.setdefault(field, [])
@@ -1737,13 +1830,16 @@ def task_remove_list_item(args, field, command):
         removed = items.pop(index)
         task["updated_at"] = utc_now()
 
-        return {"payload": {"field": field, "index": args.index, "removed": removed}}
+        return {
+            "entity_id": task.get("id"),
+            "payload": {"field": field, "index": args.index, "removed": removed},
+        }
 
     mutate(
         args=args,
         command=command,
         entity_type="task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={},
         mutator=apply,
     )
@@ -1776,12 +1872,13 @@ def cmd_current_show(args):
 
 def cmd_current_set(args):
     def apply(state, plan):
-        task = find_item(state["tasks"], args.task_id)
+        task = resolve_task_ref(state["tasks"], args.task_ref)
+        task_id = task.get("id")
 
         if task.get("status") not in CURRENT_ALLOWED_STATUSES:
             raise TaskError(
                 "TASK_CANNOT_BE_CURRENT: {} status is {}".format(
-                    args.task_id,
+                    task_id,
                     task.get("status"),
                 )
             )
@@ -1789,15 +1886,15 @@ def cmd_current_set(args):
         ensure_epic_can_accept_task(plan, task.get("epic_id"), task.get("status"))
 
         previous = state.get("current_task_id")
-        state["current_task_id"] = args.task_id
+        state["current_task_id"] = task_id
 
-        return {"payload": {"previous": previous, "current": args.task_id}}
+        return {"entity_id": task_id, "payload": {"previous": previous, "current": task_id}}
 
     mutate(
         args=args,
         command="current.set",
         entity_type="current_task",
-        entity_id=args.task_id,
+        entity_id=args.task_ref,
         payload={},
         mutator=apply,
     )
@@ -1827,12 +1924,13 @@ def cmd_prompt_build(args):
 
     require_valid_tasks(state, plan=plan, check_plan=not args.skip_plan_check)
 
-    task_id = args.task or state.get("current_task_id")
+    task_ref = args.task or state.get("current_task_id")
 
-    if not task_id:
+    if not task_ref:
         raise TaskError("NO_TASK_SELECTED: use --task TASK-001 or `current set TASK-001`")
 
-    task = find_item(state.get("tasks", []), task_id)
+    task = resolve_task_ref(state.get("tasks", []), task_ref)
+    task_id = task.get("id")
 
     if not args.allow_inactive and task.get("status") not in CURRENT_ALLOWED_STATUSES:
         raise TaskError("TASK_IS_NOT_EXECUTABLE: {} status is {}".format(task_id, task.get("status")))
@@ -1884,12 +1982,12 @@ def add_skip_plan_check(parser):
 
 def add_list_mutation_commands(task_sub, add_name, remove_name, field, add_command, remove_command, add_help):
     p = task_sub.add_parser(add_name, help=add_help)
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--text", required=True)
     p.set_defaults(func=lambda a, f=field, c=add_command: task_add_list_item(a, f, c))
 
     p = task_sub.add_parser(remove_name, help="Remove item from {}".format(field))
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--index", type=int, required=True)
     p.set_defaults(func=lambda a, f=field, c=remove_command: task_remove_list_item(a, f, c))
 
@@ -1946,8 +2044,13 @@ def build_parser():
     p.set_defaults(func=cmd_task_list)
 
     p = task_sub.add_parser("show")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.set_defaults(func=cmd_task_show)
+
+    p = task_sub.add_parser("resolve")
+    p.add_argument("task_ref")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_task_resolve)
 
     p = task_sub.add_parser("create")
     p.add_argument("--epic", required=True)
@@ -1970,22 +2073,22 @@ def build_parser():
     p.set_defaults(func=cmd_task_create)
 
     p = task_sub.add_parser("rename")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--title", required=True)
     p.set_defaults(func=cmd_task_rename)
 
     p = task_sub.add_parser("update-summary")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--text", required=True)
     p.set_defaults(func=cmd_task_update_summary)
 
     p = task_sub.add_parser("update-description")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--text", required=True)
     p.set_defaults(func=cmd_task_update_description)
 
     p = task_sub.add_parser("set-prompt-fields")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--active-role")
     p.add_argument("--active-stage")
     p.add_argument("--active-document")
@@ -1994,18 +2097,18 @@ def build_parser():
     p.set_defaults(func=cmd_task_set_prompt_fields)
 
     p = task_sub.add_parser("transition")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--to", required=True, choices=sorted(TASK_STATUSES))
     p.set_defaults(func=cmd_task_transition)
 
     p = task_sub.add_parser("approve")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.add_argument("--by", default="")
     p.add_argument("--notes", default="")
     p.set_defaults(func=cmd_task_approve)
 
     p = task_sub.add_parser("archive")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.set_defaults(func=cmd_task_archive)
 
     add_list_mutation_commands(
@@ -2071,7 +2174,7 @@ def build_parser():
     p.set_defaults(func=cmd_current_show)
 
     p = current_sub.add_parser("set")
-    p.add_argument("task_id")
+    p.add_argument("task_ref")
     p.set_defaults(func=cmd_current_set)
 
     p = current_sub.add_parser("clear")
@@ -2081,7 +2184,7 @@ def build_parser():
     prompt_sub = prompt.add_subparsers(dest="prompt_command", required=True)
 
     p = prompt_sub.add_parser("build")
-    p.add_argument("--task", help="Task id. Defaults to current_task_id.")
+    p.add_argument("--task", help="Task ref or id. Defaults to current_task_id.")
     p.add_argument("--write", action="store_true", help="Write to AI_PROJECT/generated/CODEX_PROMPT.md")
     p.add_argument("--out", help="Write prompt to custom path")
     p.add_argument("--allow-inactive", action="store_true", help="Allow prompt build for non-executable statuses")

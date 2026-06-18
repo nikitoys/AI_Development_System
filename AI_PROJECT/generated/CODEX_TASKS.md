@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `122`
+Revision: `133`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -264,7 +264,7 @@ Acceptance criteria:
 
 ### TASK-015 — TIG-04 Add task reference resolver
 
-Status: `planned`  
+Status: `done`  
 Priority: `1`  
 Verification: `standard`  
 
