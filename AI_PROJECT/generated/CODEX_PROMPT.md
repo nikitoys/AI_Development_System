@@ -1,64 +1,61 @@
 # Codex Prompt Package
 
-Generated: 2026-06-19T15:37:29Z
+Generated: 2026-06-19T22:10:38Z
 Source Type: task
-Source ID: TASK-043
+Source ID: TASK-058
 Source Status: in_review
 
 [SYSTEM]
 
 Active Role:
-Codex Executor
+AI System Maintainer / Codex Integration Engineer
 
 Active Stage:
-Task Execution
+Codex Execution Adapter Implementation
 
 Active Document:
-AI_PROJECT/generated/CODEX_CURRENT.md
+ai_project_ctl/pipeline/codex_adapter.py
 
 Expected Result:
-Task completed according to acceptance criteria
+Pipeline can safely invoke or prepare Codex execution through a controlled adapter only when all pre-execution gates pass.
 
 Repository Context:
 This repository is an AI Development System governance control plane.
 Project-control state is managed through Python CLI gateways; generated Markdown is derived output.
 
 Source:
-Source Task: TASK-043
+Source Task: TASK-058
 Task Status: in_review
-Title: UIX-06 Update UI workflow documentation
+Title: PIPE-07 Codex Execution Adapter
 
-Update owner-facing documentation for the improved UI cockpit, task filters, workflow buttons, Evolution tab, and bulk file import.
+Launch or hand off Codex Executor only after policy and Token Budget Gate PASS, then capture execution metadata.
 
-Document the new owner workflow after UI cockpit improvements so daily operation is clear and old manual command-heavy instructions are de-emphasized.
+Add a controlled Codex execution adapter with dry-run/manual default behavior, explicit policy enablement, timeout, command allowlist, captured output, and report handoff instructions.
 
 Scope:
-- Update owner quickstart with UI-first daily workflow.
-- Document Tasks filtering/grouping/collapse.
-- Document task row workflow buttons.
-- Document action result panel.
-- Document Evolution management tab.
-- Document Bulk Task Import from paste and file.
-- Clarify that legacy ctl scripts remain compatibility tools.
-- Clarify that UI writes route through governed workflows/commands.
-- Run docctl validation/render/check-generated if documentation registry is used.
+- Define Codex Execution Adapter interface with dry-run, manual-handoff, and configured-local-command modes if appropriate.
+- Require policy permission before any non-dry-run execution.
+- Require Token Budget Gate PASS before execution.
+- Pass only the generated Codex prompt path/payload and bounded task context.
+- Capture start/end time, return code, stdout/stderr references, timeout, and adapter mode.
+- Require Codex to submit a structured execution report through the existing report path before downstream gates can pass.
+- Stop safely on timeout, non-zero exit, missing prompt, stale prompt, or missing report.
+- Add tests with a fake adapter/runner; do not require real Codex in normal test runs.
 
 Out of Scope:
-- Do not change command behavior.
-- Do not add new UI actions.
-- Do not edit generated docs manually.
-- Do not mark docs accepted without Human Owner approval.
+- Do not bypass task allowed_files.
+- Do not give Codex permission to push, merge, or approve owner decisions.
+- Do not require external Codex services for local tests.
+- Do not auto-close tasks based only on adapter success.
 
 Allowed Files:
-- README.md
-- AGENTS.md
-- ai-system/project-control/08-usage-guide.md
-- ai-system/project-control/10-owner-quickstart.md
-- ai-system/project-control/** if documentation index or appendix updates are needed
-- AI_PROJECT/state/docs.json via docctl.py only
-- AI_PROJECT/events/doc-events.jsonl via docctl.py only
-- AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only
-- AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only
+- ai_project_ctl/pipeline/codex_adapter.py
+- ai_project_ctl/pipeline/runner.py if integration is needed
+- ai_project_ctl/pipeline/policy.py if policy compatibility is needed
+- ai_project_ctl/core/registry.py if command metadata is needed
+- scripts/aictl.py if adapter command routing is needed
+- tests/**
+- ai-system/project-control/** if adapter documentation is needed
 
 Implementation Instructions:
 - Inspect current files before editing.
@@ -70,11 +67,11 @@ Implementation Instructions:
 
 Retrieved Context:
 - Context Pack path: `AI_PROJECT/generated/CONTEXT_PACK.md`
-- Context Pack SHA-256: `56f8df540193dba43bf7416800ea76f2cf0f6922d0d7fa198a889bb3b6af5b73`
+- Context Pack SHA-256: `c70c6703b81537c8d35ca6464a30981e3e3b7ebd34a73a1278f5378cc4cd6379`
 - Context mode: `task`
-- Context task ID: `TASK-043`
+- Context task ID: `TASK-058`
 - Docs revision: `24`
-- Tasks revision: `468`
+- Tasks revision: `529`
 
 Retrieved Context Rules:
 - Retrieved context is read-only.
@@ -84,21 +81,21 @@ Retrieved Context Rules:
 - If retrieved context conflicts with the source Task, source documents, or Human Owner instructions, report the conflict.
 
 Retrieved Context Source Metadata:
-- `ai-system/skills/README.md` lines 80-92; heading: Skills Layer Roadmap > Recommended Skills To Create; content: `dbf637225bec`; chunk: `eef80c572381`
 - `ai-system/skills/README.md` lines 34-43; heading: Skills Layer Roadmap > Existing Useful Skills; content: `dbf637225bec`; chunk: `758bde12e28c`
-- `ai-system/project-control/04-command-catalog.md` lines 64-118; heading: Project Control Command Catalog > Self-Hosted Command Boundary; content: `d6bfbf03256d`; chunk: `749381be335a`
-- `ai-system/project-control/03-state-model.md` lines 104-125; heading: Project Control State Model > Context Control State; content: `9e818e514763`; chunk: `0cd80bdf0d55`
-- `ai-system/project-control/06-prompt-package-spec.md` lines 580-670; heading: 12. Prompt Package Template; content: `3444e8d40e40`; chunk: `4b3949b96350`
-- `ai-system/project-control/03-state-model.md` lines 71-103; heading: Project Control State Model > Documentation Control State; content: `9e818e514763`; chunk: `c68c7fcfa12b`
-- `ai-system/project-control/04-command-catalog.md` lines 21-63; heading: Project Control Command Catalog > Scope; content: `d6bfbf03256d`; chunk: `d914c61786e4`
+- `ai-system/skills/README.md` lines 80-92; heading: Skills Layer Roadmap > Recommended Skills To Create; content: `dbf637225bec`; chunk: `eef80c572381`
 - `ai-system/project-control/06-prompt-package-spec.md` lines 797-833; heading: 14. Context Budget Rules > Context Pack Boundary; content: `3444e8d40e40`; chunk: `24706f89c068`
+- `ai-system/project-control/04-command-catalog.md` lines 64-118; heading: Project Control Command Catalog > Self-Hosted Command Boundary; content: `d6bfbf03256d`; chunk: `749381be335a`
+- `ai-system/project-control/06-prompt-package-spec.md` lines 874-906; heading: 17. Relationship To taskctl.py And codexctl.py; content: `3444e8d40e40`; chunk: `6cf68be89257`
+- `ai-system/project-control/06-prompt-package-spec.md` lines 580-670; heading: 12. Prompt Package Template; content: `3444e8d40e40`; chunk: `4b3949b96350`
+- `ai-system/project-control/04-command-catalog.md` lines 21-63; heading: Project Control Command Catalog > Scope; content: `d6bfbf03256d`; chunk: `d914c61786e4`
+- `ai-system/project-control/06-prompt-package-spec.md` lines 123-162; heading: 3. Current Implementation; content: `3444e8d40e40`; chunk: `4fe051d2de08`
 
 Retrieved Context Pack Content:
 
 ````text
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/state/docs.json + AI_PROJECT/state/tasks.json -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-043 UIX-06 Update UI workflow documentation Update owner-facing documentation for the improved UI cockpit, task filters, workflow buttons, Evolution tab, and bulk file import. Document the new owner workflow after UI cockpit improvements so daily operation is clear and old manual command-heavy instructions are de-emphasized. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Update owner quickstart with UI-first daily workflow. Document Tasks filtering/grouping/collapse. Document task row workflow buttons. Document action result panel. Document Evolution management tab. Document Bulk Task Import from paste and file. Clarify that legacy ctl scripts remain compatibility tools. Clarify that UI writes route through governed workflows/commands. Run docctl validation/render/check-generated if documentation registry is used. Do not change command behavior. Do not add new UI actions. Do not edit generated docs manually. Do not mark docs accepted without Human Owner approval. README.md AGENTS.md ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md ai-system/project-control/** if documentation index or appendix updates are needed AI_PROJECT/state/docs.json via docctl.py only AI_PROJECT/events/doc-events.jsonl via docctl.py only AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only Documentation describes the UI-first daily workflow. Documentation explains task filters, workflow buttons, Evolution tab, and bulk file import. Documentation preserves protected-file and generated-output rules. Legacy ctl scripts are documented as compatibility layer. Documentation checks and project-control checks pass. Verify that documentation matches the implemented UI behavior. Verify that outdated command-heavy workflow is not presented as the preferred path.","schema_version":1,"task_id":"TASK-043"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-058 PIPE-07 Codex Execution Adapter Launch or hand off Codex Executor only after policy and Token Budget Gate PASS, then capture execution metadata. Add a controlled Codex execution adapter with dry-run/manual default behavior, explicit policy enablement, timeout, command allowlist, captured output, and report handoff instructions. ai_project_ctl/pipeline/codex_adapter.py Pipeline can safely invoke or prepare Codex execution through a controlled adapter only when all pre-execution gates pass. Define Codex Execution Adapter interface with dry-run, manual-handoff, and configured-local-command modes if appropriate. Require policy permission before any non-dry-run execution. Require Token Budget Gate PASS before execution. Pass only the generated Codex prompt path/payload and bounded task context. Capture start/end time, return code, stdout/stderr references, timeout, and adapter mode. Require Codex to submit a structured execution report through the existing report path before downstream gates can pass. Stop safely on timeout, non-zero exit, missing prompt, stale prompt, or missing report. Add tests with a fake adapter/runner; do not require real Codex in normal test runs. Do not bypass task allowed_files. Do not give Codex permission to push, merge, or approve owner decisions. Do not require external Codex services for local tests. Do not auto-close tasks based only on adapter success. ai_project_ctl/pipeline/codex_adapter.py ai_project_ctl/pipeline/runner.py if integration is needed ai_project_ctl/pipeline/policy.py if policy compatibility is needed ai_project_ctl/core/registry.py if command metadata is needed scripts/aictl.py if adapter command routing is needed tests/** ai-system/project-control/** if adapter documentation is needed Adapter default mode is safe and does not unexpectedly launch external tools. Adapter refuses execution unless policy allows it and Token Budget Gate PASS is present. Adapter captures execution metadata and exposes it to pipeline session state. Adapter failure stops the pipeline with a clear blocker. Normal tests use a fake adapter and do not require a real Codex binary/service. Tests and project-control validations pass. Verify no external execution happens by default. Verify adapter cannot run before Token Budget Gate PASS.","schema_version":1,"task_id":"TASK-058"} -->
 
 # Context Pack
 
@@ -106,51 +103,49 @@ This generated Context Pack is derived output only. It is not source of truth.
 It does not expand task scope, allowed files, out-of-scope items, or acceptance criteria.
 
 Mode: `task`
-Task ID: `TASK-043`
+Task ID: `TASK-058`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `24`
-Tasks revision: `468`
+Tasks revision: `529`
 
 ## Query
 
 ```text
-TASK-043 UIX-06 Update UI workflow documentation Update owner-facing documentation for the improved UI cockpit, task filters, workflow buttons, Evolution tab, and bulk file import. Document the new owner workflow after UI cockpit improvements so daily operation is clear and old manual command-heavy instructions are de-emphasized. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Update owner quickstart with UI-first daily workflow. Document Tasks filtering/grouping/collapse. Document task row workflow buttons. Document action result panel. Document Evolution management tab. Document Bulk Task Import from paste and file. Clarify that legacy ctl scripts remain compatibility tools. Clarify that UI writes route through governed workflows/commands. Run docctl validation/render/check-generated if documentation registry is used. Do not change command behavior. Do not add new UI actions. Do not edit generated docs manually. Do not mark docs accepted without Human Owner approval. README.md AGENTS.md ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md ai-system/project-control/** if documentation index or appendix updates are needed AI_PROJECT/state/docs.json via docctl.py only AI_PROJECT/events/doc-events.jsonl via docctl.py only AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only Documentation describes the UI-first daily workflow. Documentation explains task filters, workflow buttons, Evolution tab, and bulk file import. Documentation preserves protected-file and generated-output rules. Legacy ctl scripts are documented as compatibility layer. Documentation checks and project-control checks pass. Verify that documentation matches the implemented UI behavior. Verify that outdated command-heavy workflow is not presented as the preferred path.
+TASK-058 PIPE-07 Codex Execution Adapter Launch or hand off Codex Executor only after policy and Token Budget Gate PASS, then capture execution metadata. Add a controlled Codex execution adapter with dry-run/manual default behavior, explicit policy enablement, timeout, command allowlist, captured output, and report handoff instructions. ai_project_ctl/pipeline/codex_adapter.py Pipeline can safely invoke or prepare Codex execution through a controlled adapter only when all pre-execution gates pass. Define Codex Execution Adapter interface with dry-run, manual-handoff, and configured-local-command modes if appropriate. Require policy permission before any non-dry-run execution. Require Token Budget Gate PASS before execution. Pass only the generated Codex prompt path/payload and bounded task context. Capture start/end time, return code, stdout/stderr references, timeout, and adapter mode. Require Codex to submit a structured execution report through the existing report path before downstream gates can pass. Stop safely on timeout, non-zero exit, missing prompt, stale prompt, or missing report. Add tests with a fake adapter/runner; do not require real Codex in normal test runs. Do not bypass task allowed_files. Do not give Codex permission to push, merge, or approve owner decisions. Do not require external Codex services for local tests. Do not auto-close tasks based only on adapter success. ai_project_ctl/pipeline/codex_adapter.py ai_project_ctl/pipeline/runner.py if integration is needed ai_project_ctl/pipeline/policy.py if policy compatibility is needed ai_project_ctl/core/registry.py if command metadata is needed scripts/aictl.py if adapter command routing is needed tests/** ai-system/project-control/** if adapter documentation is needed Adapter default mode is safe and does not unexpectedly launch external tools. Adapter refuses execution unless policy allows it and Token Budget Gate PASS is present. Adapter captures execution metadata and exposes it to pipeline session state. Adapter failure stops the pipeline with a clear blocker. Normal tests use a fake adapter and do not require a real Codex binary/service. Tests and project-control validations pass. Verify no external execution happens by default. Verify adapter cannot run before Token Budget Gate PASS.
 ```
 
 ## Task Boundary Snapshot
 
-Task: `TASK-043` - UIX-06 Update UI workflow documentation
+Task: `TASK-058` - PIPE-07 Codex Execution Adapter
 Status: `in_review`
 
 Scope:
-- Update owner quickstart with UI-first daily workflow.
-- Document Tasks filtering/grouping/collapse.
-- Document task row workflow buttons.
-- Document action result panel.
-- Document Evolution management tab.
-- Document Bulk Task Import from paste and file.
-- Clarify that legacy ctl scripts remain compatibility tools.
-- Clarify that UI writes route through governed workflows/commands.
-- Run docctl validation/render/check-generated if documentation registry is used.
+- Define Codex Execution Adapter interface with dry-run, manual-handoff, and configured-local-command modes if appropriate.
+- Require policy permission before any non-dry-run execution.
+- Require Token Budget Gate PASS before execution.
+- Pass only the generated Codex prompt path/payload and bounded task context.
+- Capture start/end time, return code, stdout/stderr references, timeout, and adapter mode.
+- Require Codex to submit a structured execution report through the existing report path before downstream gates can pass.
+- Stop safely on timeout, non-zero exit, missing prompt, stale prompt, or missing report.
+- Add tests with a fake adapter/runner; do not require real Codex in normal test runs.
 
 Allowed Files:
-- README.md
-- AGENTS.md
-- ai-system/project-control/08-usage-guide.md
-- ai-system/project-control/10-owner-quickstart.md
-- ai-system/project-control/** if documentation index or appendix updates are needed
-- AI_PROJECT/state/docs.json via docctl.py only
-- AI_PROJECT/events/doc-events.jsonl via docctl.py only
-- AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only
-- AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only
+- ai_project_ctl/pipeline/codex_adapter.py
+- ai_project_ctl/pipeline/runner.py if integration is needed
+- ai_project_ctl/pipeline/policy.py if policy compatibility is needed
+- ai_project_ctl/core/registry.py if command metadata is needed
+- scripts/aictl.py if adapter command routing is needed
+- tests/**
+- ai-system/project-control/** if adapter documentation is needed
 
 Acceptance Criteria:
-- Documentation describes the UI-first daily workflow.
-- Documentation explains task filters, workflow buttons, Evolution tab, and bulk file import.
-- Documentation preserves protected-file and generated-output rules.
-- Legacy ctl scripts are documented as compatibility layer.
-- Documentation checks and project-control checks pass.
+- Adapter default mode is safe and does not unexpectedly launch external tools.
+- Adapter refuses execution unless policy allows it and Token Budget Gate PASS is present.
+- Adapter captures execution metadata and exposes it to pipeline session state.
+- Adapter failure stops the pipeline with a clear blocker.
+- Normal tests use a fake adapter and do not require a real Codex binary/service.
+- Tests and project-control validations pass.
 
 ## Index Summary
 
@@ -165,14 +160,14 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 | Score | Source | Heading | Lines | Content hash | Chunk hash | Reasons |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 177 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: layer, to; metadata token match: ai-system, layer, md, readme, to; content token match: acceptance, accepted, actions, agents, and, approval, as, checks |
-| 164 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | heading token match: layer; metadata token match: ai-system, layer, md, readme; content token match: acceptance, accepted, actions, add, after, agents, ai_project, and |
-| 162 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 64-118 | `d6bfbf03256d` | `749381be335a` | heading token match: command; metadata token match: ai-system, command, md, project-control; content token match: acceptance, ai-system, ai_project, and, are, as, check-generated, command |
-| 126 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: state; metadata token match: ai-system, md, project-control, state; content token match: acceptance, ai_project, and, are, criteria, docs, events, file |
-| 123 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 580-670 | `3444e8d40e40` | `4b3949b96350` | metadata token match: ai-system, md, project-control; content token match: acceptance, action, ai_project, and, change, checks, command, commands |
-| 117 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Documentation Control State | 71-103 | `9e818e514763` | `c68c7fcfa12b` | heading token match: documentation, state; metadata token match: ai-system, documentation, md, project-control, state; content token match: ai_project, and, are, as, doc-events, docctl, docs, docs_gaps |
-| 108 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Scope | 21-63 | `d6bfbf03256d` | `d914c61786e4` | heading token match: command; metadata token match: ai-system, command, md, project-control; content token match: actions, add, and, as, change, command, docctl, docs |
-| 102 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 797-833 | `3444e8d40e40` | `24706f89c068` | heading token match: rules; metadata token match: ai-system, md, project-control, rules; content token match: acceptance, add, and, change, criteria, docs, documentation, from |
+| 160 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | heading token match: existing; metadata token match: ai-system, existing; content token match: a, add, after, allows, and, approve, before, behavior |
+| 148 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: to; metadata token match: ai-system, to; content token match: a, and, before, bounded, bypass, can, capture, controlled |
+| 131 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 797-833 | `3444e8d40e40` | `24706f89c068` | heading token match: budget, context; metadata token match: ai-system, budget, context, project-control, prompt; content token match: a, add, and, before, bounded, by, codex, context |
+| 127 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 64-118 | `d6bfbf03256d` | `749381be335a` | heading token match: command; metadata token match: ai-system, command, project-control; content token match: a, ai-system, aictl, all, and, bounded, by, command |
+| 127 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 874-906 | `3444e8d40e40` | `6cf68be89257` | heading token match: and, py, to; metadata token match: ai-system, and, project-control, prompt, py, to; content token match: a, and, before, by, bypass, can, clear, codex |
+| 112 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 580-670 | `3444e8d40e40` | `4b3949b96350` | heading token match: prompt; metadata token match: ai-system, project-control, prompt; content token match: and, bounded, by, command, context, do, does, end |
+| 104 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Scope | 21-63 | `d6bfbf03256d` | `d914c61786e4` | heading token match: command; metadata token match: ai-system, command, project-control; content token match: a, add, aictl, and, bounded, codex, command, context |
+| 103 | `ai-system/project-control/06-prompt-package-spec.md` | 3. Current Implementation | 123-162 | `3444e8d40e40` | `4fe051d2de08` | metadata token match: ai-system, project-control, prompt; content token match: a, allows, and, behavior, clear, codex, context, default |
 
 ## Selected Context
 
@@ -180,35 +175,12 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 Title: Skills Layer Roadmap
 Status: `active`  Type: `guide`
-Heading: Skills Layer Roadmap > Recommended Skills To Create
-Lines: `80-92`
-Score: `177`
-Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
-Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
-Reasons: heading token match: layer, to; metadata token match: ai-system, layer, md, readme, to; content token match: acceptance, accepted, actions, agents, and, approval, as, checks
-
-```text
-## Recommended Skills To Create
-
-| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
-| --- | --- | --- | --- | --- | --- |
-| Documentation Control Skill | Guide documentation registration, status changes, generated indexes and documentation validation. | `docctl.py` | P0 | Register documents, set draft/review status, render/check generated docs, explain documentation lifecycle. | Mark documents active without Human Owner approval; manually edit `docs.json`, doc events or generated doc indexes. |
-| Protected Files Skill | Keep agents inside the protected-files boundary and detect unsafe project-control edits. | `check-protected-project-files.py`, `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Explain protected paths, run protected-files checks, route repairs through CLIs. | Edit protected state/events/generated files manually; use ad hoc scripts to mutate protected files; hide drift. |
-| Review Gate Skill | Guide review intake before a Task can be accepted or closed. | `taskctl.py`; future review control CLI if approved | P1 | Check scope, allowed files, acceptance criteria, validation output and review status; recommend APPROVED, REWORK, REJECTED or DEFERRED. | Self-approve work; mark a Task done without the required approval path; ignore Critical or Major findings. |
-
-[...truncated by contextctl...]
-```
-
-### 2. `ai-system/skills/README.md`
-
-Title: Skills Layer Roadmap
-Status: `active`  Type: `guide`
 Heading: Skills Layer Roadmap > Existing Useful Skills
 Lines: `34-43`
-Score: `164`
+Score: `160`
 Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
 Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
-Reasons: heading token match: layer; metadata token match: ai-system, layer, md, readme; content token match: acceptance, accepted, actions, add, after, agents, ai_project, and
+Reasons: heading token match: existing; metadata token match: ai-system, existing; content token match: a, add, after, allows, and, approve, before, behavior
 
 ```text
 ## Existing Useful Skills
@@ -222,16 +194,89 @@ Reasons: heading token match: layer; metadata token match: ai-system, layer, md,
 [...truncated by contextctl...]
 ```
 
-### 3. `ai-system/project-control/04-command-catalog.md`
+### 2. `ai-system/skills/README.md`
+
+Title: Skills Layer Roadmap
+Status: `active`  Type: `guide`
+Heading: Skills Layer Roadmap > Recommended Skills To Create
+Lines: `80-92`
+Score: `148`
+Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
+Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
+Reasons: heading token match: to; metadata token match: ai-system, to; content token match: a, and, before, bounded, bypass, can, capture, controlled
+
+```text
+## Recommended Skills To Create
+
+| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
+| --- | --- | --- | --- | --- | --- |
+| Documentation Control Skill | Guide documentation registration, status changes, generated indexes and documentation validation. | `docctl.py` | P0 | Register documents, set draft/review status, render/check generated docs, explain documentation lifecycle. | Mark documents active without Human Owner approval; manually edit `docs.json`, doc events or generated doc indexes. |
+| Protected Files Skill | Keep agents inside the protected-files boundary and detect unsafe project-control edits. | `check-protected-project-files.py`, `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Explain protected paths, run protected-files checks, route repairs through CLIs. | Edit protected state/events/generated files manually; use ad hoc scripts to mutate protected files; hide drift. |
+| Review Gate Skill | Guide review intake before a Task can be accepted or closed. | `taskctl.py`; future review control CLI if approved | P1 | Check scope, allowed files, acceptance criteria, validation output and review status; recommend APPROVED, REWORK, REJECTED or DEFERRED. | Self-approve work; mark a Task done without the required approval path; ignore Critical or Major findings. |
+
+[...truncated by contextctl...]
+```
+
+### 3. `ai-system/project-control/06-prompt-package-spec.md`
+
+Title: Project Control Prompt Package Specification
+Status: `active`  Type: `reference`
+Heading: 14. Context Budget Rules > Context Pack Boundary
+Lines: `797-833`
+Score: `131`
+Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
+Chunk hash: `24706f89c068bb280d5630a712f0d9b260c02079a14823cc0a350875c71ba831`
+Reasons: heading token match: budget, context; metadata token match: ai-system, budget, context, project-control, prompt; content token match: a, add, and, before, bounded, by, codex, context
+
+```text
+## Context Pack Boundary
+
+When Codex needs additional documentation context, use `contextctl.py` to generate a bounded Context Pack:
+
+```bash
+python scripts/contextctl.py pack build --task <TASK_ID> --write
+```
+
+Context Pack output is derived retrieval context. It may help Codex decide which source sections to inspect, but it must not change the Prompt Package contract.
+
+Context Pack must not:
+
+```text
+- expand Task scope;
+- add allowed files;
+- add acceptance criteria;
+- override out-of-scope items;
+- replace source documents or Task state;
+- include full tasks.json, full docs.json or full audit logs by default.
+```
+
+The default retrieval policy excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless explicitly allowed by a `contextctl.py` include flag.
+
+Before `codexctl.py` includes a Context Pack in `CODEX_PROMPT.md`, it must validate that the pack:
+
+```text
+- exists;
+- has the generated-file header;
+- has valid Context Pack metadata;
+- matches the requested Task when the pack is task-scoped;
+- was generated from the current docs/task revisions recorded in project-control state.
+```
+
+If validation fails, `codexctl.py` must fail clearly and must not include stale or invalid retrieved context in the prompt package.
+
+---
+```
+
+### 4. `ai-system/project-control/04-command-catalog.md`
 
 Title: Project Control Command Catalog
 Status: `active`  Type: `reference`
 Heading: Project Control Command Catalog > Self-Hosted Command Boundary
 Lines: `64-118`
-Score: `162`
+Score: `127`
 Content hash: `d6bfbf03256d4d5a7f005184d36c94434a45640595c0d654fc463065a1428adf`
 Chunk hash: `749381be335ac66aa70d957f55a95f190d998afd70c4347643a6c88c059f6587`
-Reasons: heading token match: command; metadata token match: ai-system, command, md, project-control; content token match: acceptance, ai-system, ai_project, and, are, as, check-generated, command
+Reasons: heading token match: command; metadata token match: ai-system, command, project-control; content token match: a, ai-system, aictl, all, and, bounded, by, command
 
 ```text
 ## Self-Hosted Command Boundary
@@ -272,51 +317,62 @@ python scripts/docctl.py audit --last 20
 [...truncated by contextctl...]
 ```
 
-### 4. `ai-system/project-control/03-state-model.md`
+### 5. `ai-system/project-control/06-prompt-package-spec.md`
 
-Title: Project Control State Model
+Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
-Heading: Project Control State Model > Context Control State
-Lines: `104-125`
-Score: `126`
-Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
-Chunk hash: `0cd80bdf0d55e5284fa6355477f50005896398136bf33b7e1a181718f309f8b4`
-Reasons: heading token match: state; metadata token match: ai-system, md, project-control, state; content token match: acceptance, ai_project, and, are, criteria, docs, events, file
+Heading: 17. Relationship To taskctl.py And codexctl.py
+Lines: `874-906`
+Score: `127`
+Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
+Chunk hash: `6cf68be892579b77502246852781af90dc2942f367d5af5b0a3c4a4ee727323f`
+Reasons: heading token match: and, py, to; metadata token match: ai-system, and, project-control, prompt, py, to; content token match: a, and, before, by, bypass, can, clear, codex
 
 ```text
-## Context Control State
+# 17. Relationship To taskctl.py And codexctl.py
 
-Context control uses the state/events/generated model without adding a new source-of-truth state file:
+Task prompt output can be built by `taskctl.py`.
 
-```text
-AI_PROJECT/state/docs.json
-AI_PROJECT/state/tasks.json
-AI_PROJECT/events/context-events.jsonl
-AI_PROJECT/generated/CONTEXT_PACK.md
-AI_PROJECT/generated/CONTEXT_STATUS.md
+`taskctl.py` owns:
+
+```text id="d2esmn"
+Task state
+Current Task
+Task generated Markdown
+Codex Prompt Package
+Task audit events
 ```
 
-`scripts/contextctl.py` builds a deterministic derived index in memory from registered documents in `docs.json` and optional Task context from `tasks.json`.
+`codexctl.py` owns:
 
-The derived index and Context Pack are not source of truth. They must not expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task or source documents, the Task and source documents remain authoritative.
+```text
+Current Codex execution state
+CODEX_STATUS.md
+Codex prompt build and clear audit events
+Optional read-only Context Pack inclusion in CODEX_PROMPT.md
+```
 
-By default, context control indexes registered active source documents only. It excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless the operator explicitly enables the relevant include flag.
+Prompt Package build must not bypass task validation.
 
-`CONTEXT_PACK.md` includes selected source paths, headings, line ranges, source content hashes, chunk hashes, deterministic keyword scores and selection reasons. `CONTEXT_STATUS.md` summarizes the current generated pack, selected paths and exclusion reasons. Both files are generated output and must be regenerated through `contextctl.py`.
+Before building the package, task state must be valid.
+
+`contextctl.py` may read Task state to derive a search query for a Context Pack, but it does not mutate Task state and does not make retrieved context executable scope.
+
+`codexctl.py` may validate and include an existing Context Pack, but it must not build the index or refresh Context Pack content itself.
 
 ---
 ```
 
-### 5. `ai-system/project-control/06-prompt-package-spec.md`
+### 6. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 12. Prompt Package Template
 Lines: `580-670`
-Score: `123`
+Score: `112`
 Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
 Chunk hash: `4b3949b963506d03a8ca61d2f28eb70f0cc2ca715a4c20495bab284ca4d8fcb0`
-Reasons: metadata token match: ai-system, md, project-control; content token match: acceptance, action, ai_project, and, change, checks, command, commands
+Reasons: heading token match: prompt; metadata token match: ai-system, project-control, prompt; content token match: and, bounded, by, command, context, do, does, end
 
 ```text
 # 12. Prompt Package Template
@@ -389,62 +445,16 @@ Execution Rules:
 [...truncated by contextctl...]
 ```
 
-### 6. `ai-system/project-control/03-state-model.md`
-
-Title: Project Control State Model
-Status: `active`  Type: `reference`
-Heading: Project Control State Model > Documentation Control State
-Lines: `71-103`
-Score: `117`
-Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
-Chunk hash: `c68c7fcfa12b1f98261105372d826707cb0cef9b3340f394ea7dc928123e4bc0`
-Reasons: heading token match: documentation, state; metadata token match: ai-system, documentation, md, project-control, state; content token match: ai_project, and, are, as, doc-events, docctl, docs, docs_gaps
-
-```text
-## Documentation Control State
-
-Documentation control uses the same state/events/generated model:
-
-```text
-AI_PROJECT/state/docs.json
-AI_PROJECT/events/doc-events.jsonl
-AI_PROJECT/generated/DOCS_INDEX.md
-AI_PROJECT/generated/DOCS_GAPS.md
-```
-
-`docs.json` is the authoritative registry for managed documentation. Each registered document stores lifecycle metadata plus derived retrieval metadata:
-
-```text
-path
-title
-type
-status
-required
-owner
-content_hash
-last_reviewed_at
-last_reviewed_by
-last_reviewed_content_hash
-declared_status
-declared_status_raw
-declared_status_source
-```
-
-`content_hash` is the current SHA-256 hash recorded by `docctl.py`. `last_reviewed_content_hash` is the SHA-256 hash reviewed by `docctl.py doc mark-reviewed`. Declared status fields are derived from document frontmatter, `Status:` metadata lines or a `## Status` section when present.
-
-`DOCS_GAPS.md` is generated from `docs.json` and current source files. It groups actionable gaps such as missing files, status mismatch, stale reviews, unresolved placeholders, broken local links and stale content hash metadata.
-```
-
 ### 7. `ai-system/project-control/04-command-catalog.md`
 
 Title: Project Control Command Catalog
 Status: `active`  Type: `reference`
 Heading: Project Control Command Catalog > Scope
 Lines: `21-63`
-Score: `108`
+Score: `104`
 Content hash: `d6bfbf03256d4d5a7f005184d36c94434a45640595c0d654fc463065a1428adf`
 Chunk hash: `d914c61786e4b852b59e3a000d5c0b85638a7e8731366116abd8c8b8e9591815`
-Reasons: heading token match: command; metadata token match: ai-system, command, md, project-control; content token match: actions, add, and, as, change, command, docctl, docs
+Reasons: heading token match: command; metadata token match: ai-system, command, project-control; content token match: a, add, aictl, and, bounded, codex, command, context
 
 ```text
 ## Scope
@@ -495,48 +505,51 @@ These must not be invented through free-form AI actions. Add them only through a
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
-Heading: 14. Context Budget Rules > Context Pack Boundary
-Lines: `797-833`
-Score: `102`
+Heading: 3. Current Implementation
+Lines: `123-162`
+Score: `103`
 Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
-Chunk hash: `24706f89c068bb280d5630a712f0d9b260c02079a14823cc0a350875c71ba831`
-Reasons: heading token match: rules; metadata token match: ai-system, md, project-control, rules; content token match: acceptance, add, and, change, criteria, docs, documentation, from
+Chunk hash: `4fe051d2de08383b0737cc69ca48f864bb8341acd7154ddc8b2d3a70fb1ad30a`
+Reasons: metadata token match: ai-system, project-control, prompt; content token match: a, allows, and, behavior, clear, codex, context, default
 
 ```text
-## Context Pack Boundary
+# 3. Current Implementation
 
-When Codex needs additional documentation context, use `contextctl.py` to generate a bounded Context Pack:
+Current CLI:
+
+```bash id="55p5jr"
+python scripts/taskctl.py prompt build
+```
+
+Supported options:
+
+```text id="xuo71y"
+--task <TASK_ID>       Build prompt for a specific Task.
+--write                Write prompt to AI_PROJECT/generated/CODEX_PROMPT.md.
+--out <PATH>           Write prompt to custom output path.
+--allow-inactive       Allow prompt build for non-executable statuses.
+--skip-plan-check      Validate tasks without checking plan references.
+```
+
+Default behavior:
+
+```text id="d56ig6"
+If --task is not provided, taskctl.py uses current_task_id.
+If no current task exists, prompt build fails.
+If task status is not executable and --allow-inactive is not provided, prompt build fails.
+```
+
+Dedicated Codex execution CLI:
 
 ```bash
-python scripts/contextctl.py pack build --task <TASK_ID> --write
+python scripts/codexctl.py build --task <TASK_ID>
+python scripts/codexctl.py build --task <TASK_ID> --with-context
+python scripts/codexctl.py build --task <TASK_ID> --context-pack AI_PROJECT/generated/CONTEXT_PACK.md
+python scripts/codexctl.py status
+python scripts/codexctl.py clear
 ```
 
-Context Pack output is derived retrieval context. It may help Codex decide which source sections to inspect, but it must not change the Prompt Package contract.
-
-Context Pack must not:
-
-```text
-- expand Task scope;
-- add allowed files;
-- add acceptance criteria;
-- override out-of-scope items;
-- replace source documents or Task state;
-- include full tasks.json, full docs.json or full audit logs by default.
-```
-
-The default retrieval policy excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless explicitly allowed by a `contextctl.py` include flag.
-
-Before `codexctl.py` includes a Context Pack in `CODEX_PROMPT.md`, it must validate that the pack:
-
-```text
-- exists;
-- has the generated-file header;
-- has valid Context Pack metadata;
-- matches the requested Task when the pack is task-scoped;
-- was generated from the current docs/task revisions recorded in project-control state.
-```
-
-If validation fails, `codexctl.py` must fail clearly and must not include stale or invalid retrieved context in the prompt package.
+`--with-context` uses the default generated Context Pack path. `--context-pack` allows an explicit repository-relative or absolute Context Pack path. Both options are read-only with respect to context generation; `contextctl.py` remains responsible for building and refreshing Context Packs.
 
 ---
 ```
@@ -588,14 +601,15 @@ If validation fails, `codexctl.py` must fail clearly and must not include stale 
 ````
 
 Acceptance Criteria:
-- Documentation describes the UI-first daily workflow.
-- Documentation explains task filters, workflow buttons, Evolution tab, and bulk file import.
-- Documentation preserves protected-file and generated-output rules.
-- Legacy ctl scripts are documented as compatibility layer.
-- Documentation checks and project-control checks pass.
+- Adapter default mode is safe and does not unexpectedly launch external tools.
+- Adapter refuses execution unless policy allows it and Token Budget Gate PASS is present.
+- Adapter captures execution metadata and exposes it to pipeline session state.
+- Adapter failure stops the pipeline with a clear blocker.
+- Normal tests use a fake adapter and do not require a real Codex binary/service.
+- Tests and project-control validations pass.
 
 Verification:
-- Use verification mode `standard`.
+- Use verification mode `strict`.
 - Run the validation commands required by the task and report results.
 
 Result Format:
@@ -606,5 +620,5 @@ Result Format:
 - Blockers or risks
 
 Review / Result Format Notes:
-- Verify that documentation matches the implemented UI behavior.
-- Verify that outdated command-heavy workflow is not presented as the preferred path.
+- Verify no external execution happens by default.
+- Verify adapter cannot run before Token Budget Gate PASS.

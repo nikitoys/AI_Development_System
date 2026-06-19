@@ -39,6 +39,16 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("change.create", names)
         self.assertIn("context.build", names)
         self.assertIn("codex.prompt.build", names)
+        self.assertIn("pipeline.status", names)
+        self.assertIn("pipeline.validate", names)
+        self.assertIn("pipeline.render", names)
+        self.assertIn("pipeline.check_generated", names)
+        self.assertIn("pipeline.session.create", names)
+        self.assertIn("pipeline.run_next", names)
+        self.assertIn("pipeline.step.start", names)
+        self.assertIn("pipeline.step.result", names)
+        self.assertIn("pipeline.session.stop", names)
+        self.assertIn("pipeline.session.complete", names)
         self.assertIn("docs.render", names)
         self.assertIn("project.doctor", names)
         self.assertIn("project.protected_check", names)
@@ -214,6 +224,38 @@ class RegistryTests(unittest.TestCase):
         self.assertTrue(protected_check["read_write"]["validates"])
         self.assertFalse(protected_check["read_write"]["mutates_state"])
         self.assertFalse(protected_check["read_write"]["renders_generated"])
+
+    def test_pipeline_session_commands_are_registered_as_governed_writes(self):
+        create = command_describe("pipeline.session.create")
+        run_next = command_describe("pipeline.run_next")
+        validate = command_describe("pipeline.validate")
+        check_generated = command_describe("pipeline.check_generated")
+
+        self.assertEqual(create["domain"], "pipeline")
+        self.assertEqual(create["kind"], "write")
+        self.assertTrue(create["read_write"]["mutates_state"])
+        self.assertTrue(create["read_write"]["writes_events"])
+        self.assertTrue(create["read_write"]["renders_generated"])
+        self.assertIn("AI_PROJECT/state/pipeline_sessions.json", create["writes_state"])
+        self.assertIn("AI_PROJECT/events/pipeline-events.jsonl", create["event_logs"])
+        self.assertIn("AI_PROJECT/generated/PIPELINE_STATUS.md", create["generated_files"])
+        self.assertIn("does not run Codex", create["owner_approval"])
+
+        self.assertEqual(run_next["kind"], "write")
+        self.assertTrue(run_next["read_write"]["mutates_state"])
+        self.assertTrue(run_next["read_write"]["writes_events"])
+        self.assertTrue(run_next["read_write"]["renders_generated"])
+        self.assertIn("AI_PROJECT/state/pipeline_sessions.json", run_next["writes_state"])
+        self.assertIn("AI_PROJECT/events/pipeline-events.jsonl", run_next["event_logs"])
+        self.assertIn("AI_PROJECT/generated/PIPELINE_STATUS.md", run_next["generated_files"])
+        self.assertIn("run-until-blocker", " ".join(run_next["notes"]))
+
+        self.assertEqual(validate["kind"], "validation")
+        self.assertTrue(validate["read_write"]["validates"])
+        self.assertFalse(validate["read_write"]["mutates_state"])
+
+        self.assertEqual(check_generated["kind"], "validation")
+        self.assertTrue(check_generated["read_write"]["validates"])
 
     def test_registry_rejects_duplicate_commands(self):
         descriptor = CommandDescriptor(

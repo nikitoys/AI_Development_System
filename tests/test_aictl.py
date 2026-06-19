@@ -81,6 +81,9 @@ class AictlTests(unittest.TestCase):
         self.assertIn("command.describe", names)
         self.assertIn("current.set", names)
         self.assertIn("project.render", names)
+        self.assertIn("pipeline.run_next", names)
+        self.assertIn("pipeline.session.create", names)
+        self.assertIn("pipeline.status", names)
         self.assertIn("task.import", names)
         self.assertIn("task.report.submit", names)
         self.assertIn("task.transition", names)
@@ -131,6 +134,79 @@ class AictlTests(unittest.TestCase):
         self.assertEqual(payload["errors"][0]["code"], "WORKFLOW_CONFIRMATION_REQUIRED")
         self.assertEqual(payload["data"]["task_ref"], "WFA-01")
         self.assertTrue(payload["data"]["steps"])
+
+    def test_pipeline_session_create_json_uses_governed_service(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root)
+
+            code, stdout, _run = self.run_main(
+                [
+                    "--root",
+                    str(root),
+                    "--actor",
+                    "tester",
+                    "--json",
+                    "pipeline",
+                    "session",
+                    "create",
+                    "--policy",
+                    "dry_run",
+                    "--task-ref",
+                    "WFA-01",
+                    "--current-task-id",
+                    "TASK-032",
+                ]
+            )
+
+            payload = json.loads(stdout)
+
+            self.assertEqual(code, 0)
+            self.assertTrue(payload["ok"])
+            self.assertEqual(payload["data"]["session_id"], "PSESS-001")
+            self.assertTrue((root / "AI_PROJECT" / "state" / "pipeline_sessions.json").exists())
+            self.assertTrue((root / "AI_PROJECT" / "events" / "pipeline-events.jsonl").exists())
+            self.assertTrue((root / "AI_PROJECT" / "generated" / "PIPELINE_STATUS.md").exists())
+
+    def test_pipeline_run_next_json_uses_governed_runner(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root)
+            create_code, create_stdout, _run = self.run_main(
+                [
+                    "--root",
+                    str(root),
+                    "--actor",
+                    "tester",
+                    "--json",
+                    "pipeline",
+                    "session",
+                    "create",
+                    "--policy",
+                    "dry_run",
+                ]
+            )
+            self.assertEqual(create_code, 0, create_stdout)
+
+            code, stdout, _run = self.run_main(
+                [
+                    "--root",
+                    str(root),
+                    "--actor",
+                    "tester",
+                    "--json",
+                    "pipeline",
+                    "run-next",
+                    "PSESS-001",
+                ]
+            )
+            payload = json.loads(stdout)
+
+            self.assertEqual(code, 0)
+            self.assertTrue(payload["ok"])
+            self.assertEqual(payload["data"]["session_id"], "PSESS-001")
+            self.assertEqual(payload["data"]["stop_code"], "BLOCKED")
+            self.assertTrue((root / "AI_PROJECT" / "generated" / "PIPELINE_STATUS.md").exists())
 
     def test_evolution_create_for_task_workflow_delegates_without_approval(self):
         with tempfile.TemporaryDirectory() as tmp:

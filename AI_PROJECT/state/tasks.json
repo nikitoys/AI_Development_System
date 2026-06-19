@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 470,
-  "current_task_id": null,
+  "revision": 529,
+  "current_task_id": "TASK-058",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-19T15:39:35Z",
+  "updated_at": "2026-06-19T22:09:21Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -3888,6 +3888,1161 @@
       ],
       "epic_key": "WFA",
       "local_seq": 20
+    },
+    {
+      "id": "TASK-052",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-01 Automation Policy Model",
+      "status": "done",
+      "summary": "Define the supervised batch pipeline automation policy model and safe presets.",
+      "description": "Create the policy contract that controls what the Pipeline may do automatically: queue selection, Evolution Change handling, token budget, Codex execution, review, rework, closure, and local commit behavior.",
+      "priority": 1,
+      "order": 1,
+      "active_role": "AI System Maintainer / Project Control Architect",
+      "active_stage": "Pipeline Policy Design and Implementation",
+      "active_document": "ai_project_ctl/pipeline/policy.py",
+      "expected_result": "Automation policy model exists, validates safe/unsafe combinations, and is usable by future pipeline commands without executing tasks.",
+      "verification_mode": "standard",
+      "scope": [
+        "Create a policy model for supervised batch pipeline execution.",
+        "Define policy fields for queue selection, linked Evolution Change creation/approval/acceptance, token budget thresholds, Codex execution mode, review behavior, rework loop, auto-close behavior, and local commit behavior.",
+        "Add safe presets such as dry_run, supervised, supervised_autoclose, and supervised_local_commit if appropriate.",
+        "Require explicit policy values for any action that can mutate lifecycle state, launch Codex, close tasks, accept Changes, or create commits.",
+        "Reject unsafe combinations such as auto-close without Machine Review PASS and Codex Review APPROVE, commit without commit readiness, push/merge, or execution without Token Budget Gate PASS.",
+        "Expose policy validation through a governed command or registry metadata if needed.",
+        "Add tests for valid presets, invalid combinations, defaults, and serialization."
+      ],
+      "out_of_scope": [
+        "Do not run tasks.",
+        "Do not launch Codex.",
+        "Do not close tasks, accept Changes, or commit.",
+        "Do not implement queue execution loop.",
+        "Do not bypass Human Owner policy selection."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/policy.py",
+        "ai_project_ctl/pipeline/__init__.py",
+        "ai_project_ctl/core/registry.py if command metadata is needed",
+        "scripts/aictl.py if policy command routing is needed",
+        "tests/**",
+        "ai-system/project-control/** if policy documentation is needed"
+      ],
+      "acceptance_criteria": [
+        "Policy schema covers all approved pipeline automation decisions.",
+        "Policy validation rejects unsafe combinations with stable error codes.",
+        "Default policy is safe and does not auto-run Codex, auto-close tasks, accept Changes, or commit.",
+        "Auto-close is representable only when Machine Review PASS and Codex Review APPROVE are required.",
+        "Commit policy is local-only and explicitly forbids push and merge.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify that policy cannot authorize push, merge, unsafe auto-close, lifecycle bypass, or execution without token gate.",
+        "Verify that policy values are explicit enough for audit."
+      ],
+      "notes": [
+        "Requires approved Evolution Change before execution because this adds pipeline control behavior."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T20:48:32Z",
+      "approval_notes": "Define the supervised batch pipeline automation policy model and safe presets.",
+      "created_at": "2026-06-19T20:33:22Z",
+      "updated_at": "2026-06-19T20:48:32Z",
+      "uid": "tsk_a44362cd6361",
+      "ref": "PIPE-01",
+      "legacy_id": "TASK-052",
+      "aliases": [
+        "TASK-052"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 1
+    },
+    {
+      "id": "TASK-053",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-02 Pipeline Queue Planner",
+      "status": "done",
+      "summary": "Select the next executable task from an owner-selected queue under policy constraints.",
+      "description": "Implement a deterministic queue planner that reads existing task execution state, owner queue filters, and policy constraints, then returns the next executable task without mutating lifecycle state.",
+      "priority": 1,
+      "order": 2,
+      "active_role": "AI System Maintainer / Backend Developer AI",
+      "active_stage": "Pipeline Queue Planning",
+      "active_document": "ai_project_ctl/pipeline/queue.py",
+      "expected_result": "Pipeline can preview and select the next executable task from a bounded queue without starting execution.",
+      "verification_mode": "standard",
+      "scope": [
+        "Create a queue planner for selected task refs, epic filters, status filters, priority/order rules, and max task limits.",
+        "Reuse existing task executable queue semantics where possible.",
+        "Respect task dependencies, parent Epic/Initiative state, current-task conflicts, terminal statuses, and policy queue constraints.",
+        "Return deterministic queue preview with executable, waiting, skipped, and blocked reasons.",
+        "Select exactly one next executable task for run-next.",
+        "Do not mutate task state during planning.",
+        "Add tests for empty queue, executable queue, dependency-blocked tasks, invalid refs, and deterministic ordering."
+      ],
+      "out_of_scope": [
+        "Do not run tasks.",
+        "Do not create Evolution Changes.",
+        "Do not modify task lifecycle state.",
+        "Do not implement batch loop yet.",
+        "Do not invent new task dependency semantics."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/queue.py",
+        "ai_project_ctl/pipeline/policy.py if compatibility changes are needed",
+        "ai_project_ctl/core/registry.py if command metadata is needed",
+        "scripts/aictl.py if queue preview command routing is needed",
+        "tests/**"
+      ],
+      "acceptance_criteria": [
+        "Queue planner can preview owner-selected queues.",
+        "Queue planner selects the same next task deterministically for the same state and policy.",
+        "Tasks blocked by dependencies or parent state are not selected as executable.",
+        "Planner explains skipped and blocked reasons.",
+        "Planner does not mutate AI_PROJECT/state, events, or generated outputs.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify that queue planning is read-only.",
+        "Verify that existing task executable semantics are preserved."
+      ],
+      "notes": [
+        "Requires approved Evolution Change before execution because this adds pipeline planning behavior."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-052",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:05Z",
+          "reason": "Queue planner needs automation policy constraints."
+        }
+      ],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T21:01:13Z",
+      "approval_notes": "Select the next executable task from an owner-selected queue under policy constraints.",
+      "created_at": "2026-06-19T20:33:23Z",
+      "updated_at": "2026-06-19T21:01:13Z",
+      "uid": "tsk_7290d2dfc064",
+      "ref": "PIPE-02",
+      "legacy_id": "TASK-053",
+      "aliases": [
+        "TASK-053"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 2
+    },
+    {
+      "id": "TASK-054",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-03 Pipeline Session State",
+      "status": "done",
+      "summary": "Persist supervised pipeline sessions, selected queue, policy snapshot, step status, stop reason, and audit references.",
+      "description": "Add governed pipeline session state so batch runs are restartable, auditable, and stoppable without relying on transient UI memory or manual notes.",
+      "priority": 1,
+      "order": 3,
+      "active_role": "AI System Maintainer / Backend Developer AI",
+      "active_stage": "Pipeline Session State",
+      "active_document": "AI_PROJECT/state/pipeline_sessions.json",
+      "expected_result": "Pipeline session state is governed by CLI/service paths and records selected queue, policy, current task, gate outcomes, and stop conditions.",
+      "verification_mode": "standard",
+      "scope": [
+        "Define pipeline session state schema with session id, status, selected queue, policy snapshot, current task, current step, attempt counters, gate outcomes, linked Change ids, report ids, review ids, commit ids if any, and stop reason.",
+        "Add governed state read/write paths for pipeline_sessions.json.",
+        "Append pipeline audit events for session creation, step start, step result, stop, and completion.",
+        "Generate a read-only Pipeline Status output if useful.",
+        "Support session statuses such as planned, running, stopped, blocked, failed, completed, and archived if appropriate.",
+        "Add validation for dangling task/change/report references.",
+        "Add tests for session creation, update, validation, and generated output freshness."
+      ],
+      "out_of_scope": [
+        "Do not run Codex.",
+        "Do not implement run-next step logic yet.",
+        "Do not store secrets or raw prompts larger than necessary.",
+        "Do not treat generated Pipeline Status as source of truth."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/session.py",
+        "ai_project_ctl/pipeline/state.py",
+        "ai_project_ctl/core/registry.py if command metadata is needed",
+        "scripts/aictl.py if session command routing is needed",
+        "AI_PROJECT/state/pipeline_sessions.json via governed CLI/service only",
+        "AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only",
+        "AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only",
+        "tests/**"
+      ],
+      "acceptance_criteria": [
+        "Pipeline session state is validated before and after mutation.",
+        "Session state records queue, policy snapshot, current task, gate outcomes, and stop reason.",
+        "Pipeline events are appended for session lifecycle mutations.",
+        "Generated Pipeline Status is derived output and can be checked for freshness if implemented.",
+        "No direct protected-file writes are introduced.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify state/events/generated separation.",
+        "Verify no raw secret or unnecessary prompt payload is stored in session state."
+      ],
+      "notes": [
+        "Requires approved Evolution Change before execution because this adds new project-control state."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-052",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:06Z",
+          "reason": "Session state records selected policy snapshots."
+        }
+      ],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T21:20:02Z",
+      "approval_notes": "Persist supervised pipeline sessions, selected queue, policy snapshot, step status, stop reason, and audit references.",
+      "created_at": "2026-06-19T20:33:23Z",
+      "updated_at": "2026-06-19T21:20:02Z",
+      "uid": "tsk_bee07a59c599",
+      "ref": "PIPE-03",
+      "legacy_id": "TASK-054",
+      "aliases": [
+        "TASK-054"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 3
+    },
+    {
+      "id": "TASK-055",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-04 Run Next Step Action",
+      "status": "done",
+      "summary": "Implement a supervised run-next pipeline action that advances exactly one safe step and stops on blockers.",
+      "description": "Add the one-step pipeline executor. It should compose queue planning, policy checks, lifecycle preparation, gate calls, execution adapter calls, review gates, close/rework/accept/commit decisions, and session updates without running a full loop.",
+      "priority": 1,
+      "order": 4,
+      "active_role": "AI System Maintainer / Pipeline Orchestrator",
+      "active_stage": "Pipeline Run-Next Implementation",
+      "active_document": "ai_project_ctl/pipeline/runner.py",
+      "expected_result": "Pipeline can advance one supervised step, update session state, and stop safely on the first unavailable gate, blocker, or policy violation.",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a run-next action for one pipeline session.",
+        "Resolve selected policy and queue.",
+        "Choose the next executable task through the queue planner.",
+        "Create a linked Evolution Change when required and policy allows.",
+        "Approve a linked Change only when policy explicitly allows and lifecycle gates pass.",
+        "Prepare task execution by setting current task, moving it to in_progress when valid, building Context Pack, and building Codex prompt.",
+        "Call Token Budget Gate before any Codex execution.",
+        "Call Codex Execution Adapter only when Token Budget Gate PASS.",
+        "Call report, machine review, Codex review, auto-close/rework, Change acceptance, and commit actions only when those components exist and policy allows.",
+        "Stop with a clear NOT_IMPLEMENTED, BLOCKED, POLICY_VIOLATION, UNSAFE_CONDITION, or TOKEN_BUDGET_FAILURE result when a required component is unavailable or fails.",
+        "Update pipeline session state and audit events for every decision."
+      ],
+      "out_of_scope": [
+        "Do not implement run-until-blocker loop.",
+        "Do not push or merge.",
+        "Do not bypass any existing task/evolution lifecycle validation.",
+        "Do not close tasks unless policy and review gates allow.",
+        "Do not silently continue after blockers."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/runner.py",
+        "ai_project_ctl/pipeline/**",
+        "ai_project_ctl/core/registry.py if command metadata is needed",
+        "ai_project_ctl/core/workflows.py if workflow routing is needed",
+        "ai_project_ctl/web/actions.py if UI action routing is needed",
+        "scripts/aictl.py",
+        "tests/**",
+        "AI_PROJECT/state/pipeline_sessions.json via governed CLI/service only",
+        "AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only",
+        "AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only"
+      ],
+      "acceptance_criteria": [
+        "Run-next advances at most one pipeline step.",
+        "Run-next records policy decision, selected task, gate result, and stop reason.",
+        "Run-next stops when a required component is not implemented instead of bypassing it.",
+        "Run-next never launches Codex before Token Budget Gate PASS.",
+        "Run-next never closes a task without Machine Review PASS and Codex Review APPROVE when auto-close is enabled.",
+        "Run-next never accepts a Change or commits unless policy explicitly allows it and readiness gates pass.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify that run-next is a guarded orchestrator, not an unsafe autonomous loop.",
+        "Verify stop-on-first-blocker behavior."
+      ],
+      "notes": [
+        "Requires approved Evolution Change before execution because this introduces pipeline orchestration behavior."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-053",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:06Z",
+          "reason": "Run-next uses queue planner."
+        },
+        {
+          "task_id": "TASK-054",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:06Z",
+          "reason": "Run-next persists pipeline session state."
+        }
+      ],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T21:39:27Z",
+      "approval_notes": "Implement a supervised run-next pipeline action that advances exactly one safe step and stops on blockers.",
+      "created_at": "2026-06-19T20:33:24Z",
+      "updated_at": "2026-06-19T21:39:27Z",
+      "uid": "tsk_77abb2cfe0c1",
+      "ref": "PIPE-04",
+      "legacy_id": "TASK-055",
+      "aliases": [
+        "TASK-055"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 4
+    },
+    {
+      "id": "TASK-056",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-05 Batch Runner Run Until Blocker",
+      "status": "planned",
+      "summary": "Run repeated pipeline run-next steps until first blocker, policy violation, unsafe condition, token failure, or queue completion.",
+      "description": "Add the supervised batch runner loop over run-next. It must honor policy limits, max steps, max tasks, rework limits, and stop-on-blocker semantics.",
+      "priority": 1,
+      "order": 5,
+      "active_role": "AI System Maintainer / Pipeline Orchestrator",
+      "active_stage": "Batch Runner Implementation",
+      "active_document": "ai_project_ctl/pipeline/batch.py",
+      "expected_result": "Pipeline can process a selected queue under policy until the first blocker or completion, with a complete session record.",
+      "verification_mode": "strict",
+      "scope": [
+        "Add run-until-blocker action for an existing or newly created pipeline session.",
+        "Loop over run-next with max steps, max tasks, max failures, and max rework attempts from policy.",
+        "Stop on first blocker, policy violation, unsafe condition, token budget failure, report failure, review failure, commit readiness failure, or queue completion.",
+        "Persist each step result to session state and pipeline audit events.",
+        "Return a final summary with completed tasks, changed tasks, requested changes, accepted Changes, commits if any, blockers, and next owner action.",
+        "Expose CLI command and optional UI action with explicit confirmation.",
+        "Add tests for queue completion, blocker stop, policy stop, max-step stop, and session resume behavior if supported."
+      ],
+      "out_of_scope": [
+        "Do not run as a background daemon.",
+        "Do not continue past blockers.",
+        "Do not push, merge, or open PRs.",
+        "Do not create tasks during the batch run unless a bounded policy explicitly supports it later.",
+        "Do not hide failed step details."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/batch.py",
+        "ai_project_ctl/pipeline/**",
+        "ai_project_ctl/core/registry.py if command metadata is needed",
+        "ai_project_ctl/web/actions.py if UI action routing is needed",
+        "ai_project_ctl/web/server.py if UI controls are added",
+        "scripts/aictl.py",
+        "tests/**",
+        "AI_PROJECT/state/pipeline_sessions.json via governed CLI/service only",
+        "AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only",
+        "AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only"
+      ],
+      "acceptance_criteria": [
+        "Batch runner stops on the first blocker or policy violation.",
+        "Batch runner stops when token budget gate fails.",
+        "Batch runner stops when queue is complete and reports completion.",
+        "Batch runner enforces max steps, max tasks, and rework limits.",
+        "Every step is auditable through session state/events.",
+        "CLI/UI action requires explicit confirmation.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify no background/unsupervised execution is introduced.",
+        "Verify that failed gates are visible and stop the loop."
+      ],
+      "notes": [
+        "Requires approved Evolution Change before execution because this introduces repeated pipeline execution."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-063",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:08Z",
+          "reason": "Batch runner composes all one-step gates before looping."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T20:33:25Z",
+      "updated_at": "2026-06-19T20:34:08Z",
+      "uid": "tsk_06eb9ba3c9a9",
+      "ref": "PIPE-05",
+      "legacy_id": "TASK-056",
+      "aliases": [
+        "TASK-056"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 5
+    },
+    {
+      "id": "TASK-057",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-06 Token Budget Gate",
+      "status": "done",
+      "summary": "Gate Codex execution using the actual prompt payload token budget and policy thresholds.",
+      "description": "Implement the Token Budget Gate that counts or estimates the actual Codex payload, checks remaining-token thresholds, detects unavailable token counting in strict mode, and blocks execution when context must be compacted or split.",
+      "priority": 1,
+      "order": 6,
+      "active_role": "AI System Maintainer / QA Engineer AI",
+      "active_stage": "Token Budget Gate Implementation",
+      "active_document": "ai_project_ctl/pipeline/token_budget.py",
+      "expected_result": "Pipeline refuses to launch Codex when the actual prompt payload violates token budget policy.",
+      "verification_mode": "strict",
+      "scope": [
+        "Read the actual generated Codex prompt payload and included Context Pack metadata.",
+        "Count tokens through an available local/provider strategy or return token_count_unavailable with a stable reason.",
+        "Compare prompt size, model context limit, reserved output tokens, and policy remaining-token threshold.",
+        "Fail in strict mode when token count is unavailable.",
+        "Fail when prompt does not fit, remaining tokens are below threshold, or context requires compact/split.",
+        "Return PASS/WARN/FAIL gate result with measured bytes, estimated/measured tokens, thresholds, and reason.",
+        "Expose gate result to pipeline session state and audit.",
+        "Add tests for pass, oversized prompt, low remaining tokens, unavailable counter in strict mode, and compact/split required."
+      ],
+      "out_of_scope": [
+        "Do not call external token services unless explicitly configured and policy allows.",
+        "Do not compact or split context in this task.",
+        "Do not launch Codex.",
+        "Do not mutate task scope or allowed_files based on retrieved context."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/token_budget.py",
+        "ai_project_ctl/pipeline/policy.py if policy compatibility is needed",
+        "ai_project_ctl/pipeline/runner.py if integration is needed",
+        "ai_project_ctl/core/registry.py if command metadata is needed",
+        "scripts/aictl.py if gate command routing is needed",
+        "tests/**",
+        "ai-system/project-control/** if token gate documentation is needed"
+      ],
+      "acceptance_criteria": [
+        "Token Budget Gate evaluates the actual Codex prompt payload.",
+        "Gate blocks execution when prompt does not fit or remaining tokens are below policy threshold.",
+        "Gate blocks in strict mode when token count is unavailable.",
+        "Gate blocks when context requires compact or split.",
+        "Gate result includes measurable evidence and stable failure codes.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify strict-mode failure behavior.",
+        "Verify token gate cannot be bypassed by run-next before Codex execution."
+      ],
+      "notes": [
+        "Requires approved Evolution Change before execution because this adds a required execution safety gate."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-055",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:06Z",
+          "reason": "Token Budget Gate attaches to run-next preparation flow."
+        }
+      ],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T21:52:55Z",
+      "approval_notes": "Gate Codex execution using the actual prompt payload token budget and policy thresholds.",
+      "created_at": "2026-06-19T20:33:26Z",
+      "updated_at": "2026-06-19T21:52:55Z",
+      "uid": "tsk_c64b6f51da04",
+      "ref": "PIPE-06",
+      "legacy_id": "TASK-057",
+      "aliases": [
+        "TASK-057"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 6
+    },
+    {
+      "id": "TASK-058",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-07 Codex Execution Adapter",
+      "status": "in_review",
+      "summary": "Launch or hand off Codex Executor only after policy and Token Budget Gate PASS, then capture execution metadata.",
+      "description": "Add a controlled Codex execution adapter with dry-run/manual default behavior, explicit policy enablement, timeout, command allowlist, captured output, and report handoff instructions.",
+      "priority": 1,
+      "order": 7,
+      "active_role": "AI System Maintainer / Codex Integration Engineer",
+      "active_stage": "Codex Execution Adapter Implementation",
+      "active_document": "ai_project_ctl/pipeline/codex_adapter.py",
+      "expected_result": "Pipeline can safely invoke or prepare Codex execution through a controlled adapter only when all pre-execution gates pass.",
+      "verification_mode": "strict",
+      "scope": [
+        "Define Codex Execution Adapter interface with dry-run, manual-handoff, and configured-local-command modes if appropriate.",
+        "Require policy permission before any non-dry-run execution.",
+        "Require Token Budget Gate PASS before execution.",
+        "Pass only the generated Codex prompt path/payload and bounded task context.",
+        "Capture start/end time, return code, stdout/stderr references, timeout, and adapter mode.",
+        "Require Codex to submit a structured execution report through the existing report path before downstream gates can pass.",
+        "Stop safely on timeout, non-zero exit, missing prompt, stale prompt, or missing report.",
+        "Add tests with a fake adapter/runner; do not require real Codex in normal test runs."
+      ],
+      "out_of_scope": [
+        "Do not bypass task allowed_files.",
+        "Do not give Codex permission to push, merge, or approve owner decisions.",
+        "Do not require external Codex services for local tests.",
+        "Do not auto-close tasks based only on adapter success."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/codex_adapter.py",
+        "ai_project_ctl/pipeline/runner.py if integration is needed",
+        "ai_project_ctl/pipeline/policy.py if policy compatibility is needed",
+        "ai_project_ctl/core/registry.py if command metadata is needed",
+        "scripts/aictl.py if adapter command routing is needed",
+        "tests/**",
+        "ai-system/project-control/** if adapter documentation is needed"
+      ],
+      "acceptance_criteria": [
+        "Adapter default mode is safe and does not unexpectedly launch external tools.",
+        "Adapter refuses execution unless policy allows it and Token Budget Gate PASS is present.",
+        "Adapter captures execution metadata and exposes it to pipeline session state.",
+        "Adapter failure stops the pipeline with a clear blocker.",
+        "Normal tests use a fake adapter and do not require a real Codex binary/service.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify no external execution happens by default.",
+        "Verify adapter cannot run before Token Budget Gate PASS."
+      ],
+      "notes": [
+        "Requires approved Evolution Change before execution because this can launch Codex when policy allows."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-057",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:07Z",
+          "reason": "Codex adapter may launch only after Token Budget Gate."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T20:33:27Z",
+      "updated_at": "2026-06-19T22:09:21Z",
+      "uid": "tsk_98b7b78bc079",
+      "ref": "PIPE-07",
+      "legacy_id": "TASK-058",
+      "aliases": [
+        "TASK-058"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 7
+    },
+    {
+      "id": "TASK-059",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-08 Codex Report Gate",
+      "status": "planned",
+      "summary": "Validate Codex structured execution reports before review and closure gates.",
+      "description": "Add a report gate that checks the latest Codex execution report for required fields, task identity, token usage, changed files, generated files, checks, warnings, blockers, and credibility basics.",
+      "priority": 1,
+      "order": 8,
+      "active_role": "QA Engineer AI / AI System Maintainer",
+      "active_stage": "Codex Report Gate Implementation",
+      "active_document": "ai_project_ctl/pipeline/report_gate.py",
+      "expected_result": "Pipeline refuses downstream review/closure unless Codex submitted a valid structured execution report for the task.",
+      "verification_mode": "strict",
+      "scope": [
+        "Read the latest structured task execution report for the selected task.",
+        "Validate report schema, task id/ref match, implementation summary, changed files, generated files, checks, warnings, blockers, notes, owner decision flag, and token usage fields.",
+        "Require blockers to stop the pipeline.",
+        "Require token usage evidence when policy requires it.",
+        "Reject reports with changed files outside task allowed_files unless explicitly classified as generated or governed state output.",
+        "Return PASS/WARN/FAIL with report id and failure reasons.",
+        "Add tests for missing report, invalid schema, mismatched task, blockers present, missing token usage, and out-of-scope changed files."
+      ],
+      "out_of_scope": [
+        "Do not decide semantic acceptance criteria; that belongs to Codex Review Gate.",
+        "Do not close tasks.",
+        "Do not edit report state manually.",
+        "Do not hide blockers as warnings."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/report_gate.py",
+        "ai_project_ctl/pipeline/runner.py if integration is needed",
+        "scripts/taskctl.py if report schema compatibility is required",
+        "ai_project_ctl/web/read_model.py if report gate status is surfaced",
+        "tests/**",
+        "ai-system/project-control/** if report gate documentation is needed"
+      ],
+      "acceptance_criteria": [
+        "Report Gate blocks missing, invalid, mismatched, or blocker-containing reports.",
+        "Report Gate checks changed files against task allowed_files/governed generated files.",
+        "Report Gate checks token usage when policy requires it.",
+        "Report Gate result is stored or exposed for pipeline session audit.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify report credibility checks are machine-checkable and do not replace semantic review.",
+        "Verify blockers cannot be downgraded silently."
+      ],
+      "notes": [
+        "Builds on the existing structured task execution report flow."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-058",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:07Z",
+          "reason": "Report gate validates Codex adapter output."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T20:33:28Z",
+      "updated_at": "2026-06-19T20:34:07Z",
+      "uid": "tsk_c59152e998be",
+      "ref": "PIPE-08",
+      "legacy_id": "TASK-059",
+      "aliases": [
+        "TASK-059"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 8
+    },
+    {
+      "id": "TASK-060",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-09 Machine Review Gate",
+      "status": "planned",
+      "summary": "Run deterministic machine checks for tests, doctor, protected files, generated outputs, allowed_files, token usage, and blockers.",
+      "description": "Implement the machine review gate that collects deterministic evidence before Codex semantic review or auto-close decisions.",
+      "priority": 1,
+      "order": 9,
+      "active_role": "QA Engineer AI / Project Control Maintainer",
+      "active_stage": "Machine Review Gate Implementation",
+      "active_document": "ai_project_ctl/pipeline/machine_review.py",
+      "expected_result": "Pipeline has a deterministic Machine Review PASS/WARN/FAIL gate before semantic review and auto-close.",
+      "verification_mode": "strict",
+      "scope": [
+        "Run or collect project-control validation checks: task validate, task graph validate, generated checks, evolution validate/check-generated, context validate/check-generated, project doctor, and protected-file check.",
+        "Run task/report-declared tests or configured test commands only when policy allows and commands are safe.",
+        "Check changed files against task allowed_files and protected-file rules.",
+        "Check report blockers and token usage against policy.",
+        "Return PASS only when all blocking checks pass.",
+        "Return structured evidence with command, result, duration if available, stdout/stderr summaries, and failure reasons.",
+        "Add tests with fake command runners and representative pass/fail cases."
+      ],
+      "out_of_scope": [
+        "Do not do semantic acceptance review.",
+        "Do not close tasks.",
+        "Do not accept Changes.",
+        "Do not commit.",
+        "Do not suppress doctor/protected-file failures."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/machine_review.py",
+        "ai_project_ctl/pipeline/report_gate.py if integration is needed",
+        "ai_project_ctl/pipeline/runner.py if integration is needed",
+        "ai_project_ctl/core/registry.py if command metadata is needed",
+        "scripts/aictl.py if gate command routing is needed",
+        "tests/**",
+        "ai-system/project-control/** if machine review documentation is needed"
+      ],
+      "acceptance_criteria": [
+        "Machine Review PASS requires all blocking checks to pass.",
+        "Machine Review FAIL stops the pipeline.",
+        "Protected-file and allowed_files violations are blocking.",
+        "Token usage and report blockers are checked according to policy.",
+        "Gate output is structured and auditable.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify that deterministic checks are actually blocking.",
+        "Verify that allowed_files/protected-file checks cannot be bypassed by report wording."
+      ],
+      "notes": [
+        "Requires approved Evolution Change before execution because this adds a pipeline review gate."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-059",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:07Z",
+          "reason": "Machine Review consumes structured execution report."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T20:33:29Z",
+      "updated_at": "2026-06-19T20:34:07Z",
+      "uid": "tsk_2b44723c1bdb",
+      "ref": "PIPE-09",
+      "legacy_id": "TASK-060",
+      "aliases": [
+        "TASK-060"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 9
+    },
+    {
+      "id": "TASK-061",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-10 Codex Review Gate",
+      "status": "planned",
+      "summary": "Run a narrow read-only Codex Reviewer prompt for semantic review and structured verdict.",
+      "description": "Add the semantic review gate. It should generate and optionally run a narrow Codex Reviewer prompt that checks acceptance criteria, out_of_scope, hidden risks, and report credibility without changing files or lifecycle state.",
+      "priority": 1,
+      "order": 10,
+      "active_role": "Codex Reviewer / QA",
+      "active_stage": "Codex Review Gate Implementation",
+      "active_document": "ai_project_ctl/pipeline/codex_review.py",
+      "expected_result": "Pipeline can obtain a structured semantic review verdict without allowing reviewer-side mutations.",
+      "verification_mode": "strict",
+      "scope": [
+        "Create a narrow review prompt package for Codex Reviewer.",
+        "Include task scope, out_of_scope, acceptance criteria, allowed_files, execution report summary, machine review evidence, changed files, and relevant context references.",
+        "Require reviewer role to be read-only: no file edits, no lifecycle transitions, no commits.",
+        "Support structured verdicts APPROVE, REQUEST_CHANGES, BLOCKED with findings and severity.",
+        "Fail the gate if reviewer output is missing, malformed, or contradicts required evidence.",
+        "Expose review result to pipeline session state and audit.",
+        "Add tests using fake reviewer outputs for approve, request changes, blocked, malformed, and missing verdict."
+      ],
+      "out_of_scope": [
+        "Do not let reviewer edit files.",
+        "Do not let reviewer move task lifecycle.",
+        "Do not let reviewer approve as Human Owner.",
+        "Do not auto-close tasks in this task.",
+        "Do not run reviewer before Machine Review evidence exists."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/codex_review.py",
+        "ai_project_ctl/pipeline/runner.py if integration is needed",
+        "AI_PROJECT/generated/PIPELINE_REVIEW_PROMPT.md via governed CLI/service only if implemented",
+        "AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only",
+        "tests/**",
+        "ai-system/project-control/** if review gate documentation is needed"
+      ],
+      "acceptance_criteria": [
+        "Codex Review Gate prompt is narrow and read-only.",
+        "Reviewer cannot mutate files, lifecycle, or commits through this gate.",
+        "Gate accepts only structured verdicts APPROVE, REQUEST_CHANGES, or BLOCKED.",
+        "REQUEST_CHANGES and BLOCKED stop auto-close.",
+        "Malformed/missing reviewer output blocks the pipeline.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify reviewer prompt does not authorize file edits or lifecycle movement.",
+        "Verify semantic verdict cannot override Machine Review FAIL."
+      ],
+      "notes": [
+        "Requires approved Evolution Change before execution because this adds a Codex Reviewer gate."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-060",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:07Z",
+          "reason": "Codex Review runs after Machine Review evidence exists."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T20:33:30Z",
+      "updated_at": "2026-06-19T20:34:07Z",
+      "uid": "tsk_12dcf6285371",
+      "ref": "PIPE-10",
+      "legacy_id": "TASK-061",
+      "aliases": [
+        "TASK-061"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 10
+    },
+    {
+      "id": "TASK-062",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-11 Auto Review Auto Close Policy",
+      "status": "planned",
+      "summary": "Apply policy-controlled close/rework decisions only after Machine Review PASS and Codex Review APPROVE.",
+      "description": "Implement the decision logic that maps review gate results into task done, changes_requested, rework loop, or stop states under explicit automation policy.",
+      "priority": 1,
+      "order": 11,
+      "active_role": "AI System Maintainer / QA Lead AI",
+      "active_stage": "Auto Review and Close Policy",
+      "active_document": "ai_project_ctl/pipeline/close_policy.py",
+      "expected_result": "Pipeline can safely close or request changes for tasks only when policy and review gates allow it.",
+      "verification_mode": "strict",
+      "scope": [
+        "Implement decision logic for Machine Review result plus Codex Review result.",
+        "Allow auto-close only if policy allows and Machine Review PASS and Codex Review APPROVE.",
+        "Move task to changes_requested or start a bounded rework loop only when policy allows and review verdict requests changes.",
+        "Stop when review is blocked, malformed, failing, or policy disallows automatic lifecycle mutation.",
+        "Require explicit audit notes that identify policy, machine gate, Codex review verdict, and report id.",
+        "Prevent auto-close when task report has blockers or changed files outside allowed_files.",
+        "Add tests for approve+pass close, request changes, blocked review, machine fail, policy disabled, and rework-limit reached."
+      ],
+      "out_of_scope": [
+        "Do not bypass task lifecycle transitions.",
+        "Do not accept linked Evolution Changes.",
+        "Do not commit.",
+        "Do not treat Codex Review as Human Owner approval outside the selected policy.",
+        "Do not continue rework indefinitely."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/close_policy.py",
+        "ai_project_ctl/pipeline/runner.py if integration is needed",
+        "ai_project_ctl/core/workflows.py if close/request-changes workflow metadata needs compatible updates",
+        "tests/**",
+        "ai-system/project-control/** if auto-close documentation is needed"
+      ],
+      "acceptance_criteria": [
+        "Auto-close requires policy permission, Machine Review PASS, and Codex Review APPROVE.",
+        "REQUEST_CHANGES moves to changes_requested or starts rework only if policy allows.",
+        "Blocked or failed gates stop the pipeline.",
+        "Rework loop has a policy-controlled maximum.",
+        "Lifecycle mutations route through governed task workflows/commands.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify auto-close cannot happen on Machine Review FAIL or Codex Review REQUEST_CHANGES.",
+        "Verify lifecycle changes are routed through governed commands."
+      ],
+      "notes": [
+        "Requires approved Evolution Change before execution because this adds automated lifecycle decisions."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-061",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:08Z",
+          "reason": "Auto-close policy requires both review gates."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T20:33:31Z",
+      "updated_at": "2026-06-19T20:34:08Z",
+      "uid": "tsk_01a078bae3e6",
+      "ref": "PIPE-11",
+      "legacy_id": "TASK-062",
+      "aliases": [
+        "TASK-062"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 11
+    },
+    {
+      "id": "TASK-063",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-12 Controlled Git Commit Action",
+      "status": "planned",
+      "summary": "Create local commits only when policy allows and commit readiness is green.",
+      "description": "Add a controlled local git commit action for completed pipeline work. It must never push, merge, reset, discard, or create remote changes.",
+      "priority": 1,
+      "order": 12,
+      "active_role": "DevOps Engineer AI / Git Safety Reviewer",
+      "active_stage": "Controlled Local Commit Action",
+      "active_document": "ai_project_ctl/pipeline/git_commit.py",
+      "expected_result": "Pipeline can optionally create a local commit only when commit policy allows and readiness checks are green.",
+      "verification_mode": "strict",
+      "scope": [
+        "Implement read-only commit readiness check reuse or integration with the existing Commit Readiness view.",
+        "Implement local commit action only behind explicit policy permission.",
+        "Require clean readiness: task done, required Change accepted if policy requires it, machine checks pass, protected-file checks pass, generated outputs fresh, no unrelated dirty files unless policy explicitly allows.",
+        "Stage only files approved by policy/session evidence.",
+        "Generate commit message from completed task refs, Change ids, and session id.",
+        "Run git commit locally only; explicitly forbid push, merge, reset, checkout, rebase, and destructive git commands.",
+        "Record commit hash or failure in pipeline session/audit.",
+        "Add tests with fake git runner for readiness green, readiness fail, unrelated files, commit success, and forbidden command attempts."
+      ],
+      "out_of_scope": [
+        "Do not push.",
+        "Do not merge.",
+        "Do not open PRs.",
+        "Do not discard or reset changes.",
+        "Do not commit when readiness is not green.",
+        "Do not auto-accept Changes in this task."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/git_commit.py",
+        "ai_project_ctl/pipeline/runner.py if integration is needed",
+        "ai_project_ctl/web/read_model.py if commit readiness data is reused",
+        "ai_project_ctl/core/registry.py if command metadata is needed",
+        "scripts/aictl.py if commit command routing is needed",
+        "tests/**",
+        "ai-system/project-control/** if git commit policy documentation is needed"
+      ],
+      "acceptance_criteria": [
+        "Commit action is disabled unless policy explicitly allows local commit.",
+        "Commit action refuses when commit readiness is not green.",
+        "Commit action stages only approved files.",
+        "Commit action never pushes, merges, resets, rebases, or discards changes.",
+        "Commit result is recorded in session/audit.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify command allowlist forbids push/merge/destructive git actions.",
+        "Verify readiness failure blocks commit."
+      ],
+      "notes": [
+        "Requires approved Evolution Change before execution because this adds git mutation behavior."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-062",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:08Z",
+          "reason": "Commit action depends on safe close/review policy."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T20:33:31Z",
+      "updated_at": "2026-06-19T20:34:08Z",
+      "uid": "tsk_6f7cf68ecdf8",
+      "ref": "PIPE-12",
+      "legacy_id": "TASK-063",
+      "aliases": [
+        "TASK-063"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 12
+    },
+    {
+      "id": "TASK-064",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-13 Pipeline UI Dashboard",
+      "status": "planned",
+      "summary": "Add a Web Control Center dashboard for pipeline sessions, queue preview, policy selection, run-next, and run-until-blocker.",
+      "description": "Expose supervised pipeline operation in the local Web Control Center without weakening confirmation, policy, or lifecycle gates.",
+      "priority": 1,
+      "order": 13,
+      "active_role": "Frontend Developer AI / Backend Developer AI",
+      "active_stage": "Pipeline Dashboard UI",
+      "active_document": "ai_project_ctl/web/server.py / ai_project_ctl/web/read_model.py",
+      "expected_result": "Human Owner can inspect and operate supervised pipeline sessions from the local UI with explicit confirmation.",
+      "verification_mode": "standard",
+      "scope": [
+        "Add Pipeline dashboard/page to the Web Control Center.",
+        "Show policy selector/preset preview, queue selector, queue preview, session status, current step, gates, stop reason, and latest audit entries.",
+        "Expose Create Session, Run Next, Run Until Blocker, Stop Session, and Refresh Status actions where implemented.",
+        "Require explicit confirmation for any write/run action.",
+        "Show action result panel with step status, blockers, changed/generated files, reports, reviews, and next actions.",
+        "Keep UI local-only and route writes through governed commands/workflows.",
+        "Add tests for dashboard rendering, confirmation requirements, and action routing."
+      ],
+      "out_of_scope": [
+        "Do not add remote hosting.",
+        "Do not bypass pipeline policy.",
+        "Do not auto-start sessions on page load.",
+        "Do not run arbitrary shell commands from UI.",
+        "Do not hide blockers or failed gates."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/pipeline/** if UI integration requires compatible changes",
+        "ai_project_ctl/core/registry.py if action metadata is needed",
+        "scripts/aictl.py if routing is needed",
+        "tests/test_web_control_center.py",
+        "tests/**",
+        "ai-system/project-control/** if UI documentation is needed"
+      ],
+      "acceptance_criteria": [
+        "Pipeline dashboard shows sessions, selected policy, queue preview, current step, and stop reason.",
+        "Run actions require explicit confirmation.",
+        "UI writes route through governed commands/workflows.",
+        "Failed gates and blockers are visible.",
+        "UI remains local-only by default.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify UI cannot start or continue pipeline silently.",
+        "Verify all mutations route through governed command paths."
+      ],
+      "notes": [
+        "Requires approved Evolution Change before execution because this adds pipeline UI actions."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-056",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:09Z",
+          "reason": "Dashboard surfaces implemented pipeline/session behavior."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T20:33:32Z",
+      "updated_at": "2026-06-19T20:34:09Z",
+      "uid": "tsk_d4153f05f2bc",
+      "ref": "PIPE-13",
+      "legacy_id": "TASK-064",
+      "aliases": [
+        "TASK-064"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 13
+    },
+    {
+      "id": "TASK-065",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-14 Pipeline Audit Trail",
+      "status": "planned",
+      "summary": "Record a complete audit trail for pipeline sessions, policy decisions, gates, Codex runs, reviews, stops, and commits.",
+      "description": "Strengthen pipeline observability by adding structured audit events and generated timeline output for all supervised batch decisions.",
+      "priority": 1,
+      "order": 14,
+      "active_role": "AI System Maintainer / QA Engineer AI",
+      "active_stage": "Pipeline Audit Trail",
+      "active_document": "AI_PROJECT/events/pipeline-events.jsonl",
+      "expected_result": "Every pipeline decision and stop condition is auditable and visible in generated read-only output.",
+      "verification_mode": "standard",
+      "scope": [
+        "Define pipeline event types for session create, policy selected, queue planned, task selected, Change created/approved/accepted, context built, token gate result, Codex run result, report gate result, machine review, Codex review, close/rework decision, commit readiness, commit result, stop, and completion.",
+        "Append events through governed pipeline services only.",
+        "Generate a readable Pipeline Audit or Pipeline Status timeline if useful.",
+        "Include stable ids for session, task, Change, report, review, gate, and commit references.",
+        "Avoid storing secrets or excessive raw prompt contents in audit events.",
+        "Add tests for event append, validation, generated output freshness, and redaction/sizing behavior."
+      ],
+      "out_of_scope": [
+        "Do not make audit logs editable from UI.",
+        "Do not store raw secrets.",
+        "Do not store full huge prompt payloads when hashes/paths are sufficient.",
+        "Do not replace existing task/evolution/codex/context event logs."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/audit.py",
+        "ai_project_ctl/pipeline/session.py",
+        "ai_project_ctl/pipeline/** if integration is needed",
+        "AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only",
+        "AI_PROJECT/generated/PIPELINE_AUDIT.md via governed CLI/service only",
+        "AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only",
+        "tests/**",
+        "ai-system/project-control/** if audit documentation is needed"
+      ],
+      "acceptance_criteria": [
+        "Pipeline audit captures every major gate and decision.",
+        "Audit events include stable references and stop reasons.",
+        "Audit avoids raw secrets and oversized prompt payloads.",
+        "Generated audit/status output is derived and can be refreshed/check-generated if implemented.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify event/state/generated separation.",
+        "Verify audit is sufficient to reconstruct why pipeline stopped."
+      ],
+      "notes": [
+        "Requires approved Evolution Change before execution because this adds pipeline audit behavior."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-056",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:09Z",
+          "reason": "Audit trail reflects complete pipeline loop behavior."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T20:33:33Z",
+      "updated_at": "2026-06-19T20:34:09Z",
+      "uid": "tsk_b7153a9d28be",
+      "ref": "PIPE-14",
+      "legacy_id": "TASK-065",
+      "aliases": [
+        "TASK-065"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 14
+    },
+    {
+      "id": "TASK-066",
+      "epic_id": "EPIC-007",
+      "title": "PIPE-15 Pipeline SOP Documentation",
+      "status": "planned",
+      "summary": "Document the supervised batch pipeline runner, policies, gates, UI flow, blockers, and operator responsibilities.",
+      "description": "Create owner-facing and system-facing SOP documentation for the PIPE epic after implementation details are stable.",
+      "priority": 1,
+      "order": 15,
+      "active_role": "Technical Writer AI / AI System Maintainer",
+      "active_stage": "Pipeline SOP Documentation",
+      "active_document": "ai-system/project-control/pipeline-runner.md",
+      "expected_result": "Human Owner and Codex can operate the supervised batch pipeline safely using documented SOPs.",
+      "verification_mode": "standard",
+      "scope": [
+        "Create or update pipeline runner documentation.",
+        "Document Queue -> Policy -> Change -> Prepare -> Token Gate -> Codex Execute -> Report -> Machine Review -> Codex Review -> Done/Rework -> Accept Change -> Commit -> Next / Stop on Blocker.",
+        "Document policy presets and what each one may or may not automate.",
+        "Document token budget gate behavior and strict-mode failure cases.",
+        "Document Codex Executor report requirements and Codex Reviewer read-only responsibilities.",
+        "Document Machine Review and Codex Review gate meanings.",
+        "Document auto-close, rework loop, Change acceptance, and local commit rules.",
+        "Document UI dashboard operation and CLI equivalents.",
+        "Document common blockers, unsafe conditions, recovery paths, and audit trail interpretation.",
+        "Run docctl validation/render/check-generated and project-control checks."
+      ],
+      "out_of_scope": [
+        "Do not change pipeline command behavior.",
+        "Do not mark documentation accepted without Human Owner approval.",
+        "Do not edit generated documentation manually.",
+        "Do not document unsupported unsafe automation as available."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/pipeline-runner.md",
+        "ai-system/project-control/10-owner-quickstart.md",
+        "ai-system/project-control/04-command-catalog.md",
+        "ai-system/project-control/README.md if index update is needed",
+        "README.md if owner-facing quick links are needed",
+        "AGENTS.md if Codex handoff rules need a pointer",
+        "AI_PROJECT/state/docs.json via docctl.py only",
+        "AI_PROJECT/events/doc-events.jsonl via docctl.py only",
+        "AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only",
+        "AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only"
+      ],
+      "acceptance_criteria": [
+        "Pipeline SOP documents the approved algorithm and stop conditions.",
+        "Documentation clearly distinguishes policy-selected automation from forbidden autonomy.",
+        "Documentation says Codex Reviewer is read-only and cannot mutate files/lifecycle/commits.",
+        "Documentation says commit is local-only and push/merge remain forbidden.",
+        "Documentation explains token budget strict-mode failures.",
+        "Documentation checks and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify documentation does not overclaim unimplemented behavior.",
+        "Verify generated docs are refreshed only through docctl.py."
+      ],
+      "notes": [
+        "Should run after implementation tasks are stable enough to document."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-064",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:09Z",
+          "reason": "SOP documents final UI/operator flow."
+        },
+        {
+          "task_id": "TASK-065",
+          "type": "hard",
+          "created_at": "2026-06-19T20:34:10Z",
+          "reason": "SOP documents audit/timeline evidence."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T20:33:34Z",
+      "updated_at": "2026-06-19T20:34:10Z",
+      "uid": "tsk_712743bf741e",
+      "ref": "PIPE-15",
+      "legacy_id": "TASK-066",
+      "aliases": [
+        "TASK-066"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 15
     }
   ]
 }

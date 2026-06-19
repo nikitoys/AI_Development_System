@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `470`
-Current task: `none`
+Revision: `529`
+Current task: `TASK-058`
 
 ## Epic `EPIC-001`
 
@@ -935,3 +935,275 @@ Acceptance criteria:
 - No git write operations are performed.
 - No project-control state mutation is introduced by viewing commit readiness.
 - Tests and project-control validations pass.
+
+## Epic `EPIC-007`
+
+### PIPE-01 (TASK-052) — PIPE-01 Automation Policy Model
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_a44362cd6361`, legacy `TASK-052`, aliases `TASK-052`, local `PIPE` / `1`
+
+Define the supervised batch pipeline automation policy model and safe presets.
+
+Acceptance criteria:
+
+- Policy schema covers all approved pipeline automation decisions.
+- Policy validation rejects unsafe combinations with stable error codes.
+- Default policy is safe and does not auto-run Codex, auto-close tasks, accept Changes, or commit.
+- Auto-close is representable only when Machine Review PASS and Codex Review APPROVE are required.
+- Commit policy is local-only and explicitly forbids push and merge.
+- Tests and project-control validations pass.
+
+### PIPE-02 (TASK-053) — PIPE-02 Pipeline Queue Planner
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_7290d2dfc064`, legacy `TASK-053`, aliases `TASK-053`, local `PIPE` / `2`
+
+Select the next executable task from an owner-selected queue under policy constraints.
+
+Acceptance criteria:
+
+- Queue planner can preview owner-selected queues.
+- Queue planner selects the same next task deterministically for the same state and policy.
+- Tasks blocked by dependencies or parent state are not selected as executable.
+- Planner explains skipped and blocked reasons.
+- Planner does not mutate AI_PROJECT/state, events, or generated outputs.
+- Tests and project-control validations pass.
+
+### PIPE-03 (TASK-054) — PIPE-03 Pipeline Session State
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_bee07a59c599`, legacy `TASK-054`, aliases `TASK-054`, local `PIPE` / `3`
+
+Persist supervised pipeline sessions, selected queue, policy snapshot, step status, stop reason, and audit references.
+
+Acceptance criteria:
+
+- Pipeline session state is validated before and after mutation.
+- Session state records queue, policy snapshot, current task, gate outcomes, and stop reason.
+- Pipeline events are appended for session lifecycle mutations.
+- Generated Pipeline Status is derived output and can be checked for freshness if implemented.
+- No direct protected-file writes are introduced.
+- Tests and project-control validations pass.
+
+### PIPE-04 (TASK-055) — PIPE-04 Run Next Step Action
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_77abb2cfe0c1`, legacy `TASK-055`, aliases `TASK-055`, local `PIPE` / `4`
+
+Implement a supervised run-next pipeline action that advances exactly one safe step and stops on blockers.
+
+Acceptance criteria:
+
+- Run-next advances at most one pipeline step.
+- Run-next records policy decision, selected task, gate result, and stop reason.
+- Run-next stops when a required component is not implemented instead of bypassing it.
+- Run-next never launches Codex before Token Budget Gate PASS.
+- Run-next never closes a task without Machine Review PASS and Codex Review APPROVE when auto-close is enabled.
+- Run-next never accepts a Change or commits unless policy explicitly allows it and readiness gates pass.
+- Tests and project-control validations pass.
+
+### PIPE-05 (TASK-056) — PIPE-05 Batch Runner Run Until Blocker
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_06eb9ba3c9a9`, legacy `TASK-056`, aliases `TASK-056`, local `PIPE` / `5`
+
+Run repeated pipeline run-next steps until first blocker, policy violation, unsafe condition, token failure, or queue completion.
+
+Acceptance criteria:
+
+- Batch runner stops on the first blocker or policy violation.
+- Batch runner stops when token budget gate fails.
+- Batch runner stops when queue is complete and reports completion.
+- Batch runner enforces max steps, max tasks, and rework limits.
+- Every step is auditable through session state/events.
+- CLI/UI action requires explicit confirmation.
+- Tests and project-control validations pass.
+
+### PIPE-06 (TASK-057) — PIPE-06 Token Budget Gate
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_c64b6f51da04`, legacy `TASK-057`, aliases `TASK-057`, local `PIPE` / `6`
+
+Gate Codex execution using the actual prompt payload token budget and policy thresholds.
+
+Acceptance criteria:
+
+- Token Budget Gate evaluates the actual Codex prompt payload.
+- Gate blocks execution when prompt does not fit or remaining tokens are below policy threshold.
+- Gate blocks in strict mode when token count is unavailable.
+- Gate blocks when context requires compact or split.
+- Gate result includes measurable evidence and stable failure codes.
+- Tests and project-control validations pass.
+
+### PIPE-07 (TASK-058) — PIPE-07 Codex Execution Adapter ⭐
+
+Status: `in_review`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_98b7b78bc079`, legacy `TASK-058`, aliases `TASK-058`, local `PIPE` / `7`
+
+Launch or hand off Codex Executor only after policy and Token Budget Gate PASS, then capture execution metadata.
+
+Acceptance criteria:
+
+- Adapter default mode is safe and does not unexpectedly launch external tools.
+- Adapter refuses execution unless policy allows it and Token Budget Gate PASS is present.
+- Adapter captures execution metadata and exposes it to pipeline session state.
+- Adapter failure stops the pipeline with a clear blocker.
+- Normal tests use a fake adapter and do not require a real Codex binary/service.
+- Tests and project-control validations pass.
+
+### PIPE-08 (TASK-059) — PIPE-08 Codex Report Gate
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_c59152e998be`, legacy `TASK-059`, aliases `TASK-059`, local `PIPE` / `8`
+
+Validate Codex structured execution reports before review and closure gates.
+
+Acceptance criteria:
+
+- Report Gate blocks missing, invalid, mismatched, or blocker-containing reports.
+- Report Gate checks changed files against task allowed_files/governed generated files.
+- Report Gate checks token usage when policy requires it.
+- Report Gate result is stored or exposed for pipeline session audit.
+- Tests and project-control validations pass.
+
+### PIPE-09 (TASK-060) — PIPE-09 Machine Review Gate
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_2b44723c1bdb`, legacy `TASK-060`, aliases `TASK-060`, local `PIPE` / `9`
+
+Run deterministic machine checks for tests, doctor, protected files, generated outputs, allowed_files, token usage, and blockers.
+
+Acceptance criteria:
+
+- Machine Review PASS requires all blocking checks to pass.
+- Machine Review FAIL stops the pipeline.
+- Protected-file and allowed_files violations are blocking.
+- Token usage and report blockers are checked according to policy.
+- Gate output is structured and auditable.
+- Tests and project-control validations pass.
+
+### PIPE-10 (TASK-061) — PIPE-10 Codex Review Gate
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_12dcf6285371`, legacy `TASK-061`, aliases `TASK-061`, local `PIPE` / `10`
+
+Run a narrow read-only Codex Reviewer prompt for semantic review and structured verdict.
+
+Acceptance criteria:
+
+- Codex Review Gate prompt is narrow and read-only.
+- Reviewer cannot mutate files, lifecycle, or commits through this gate.
+- Gate accepts only structured verdicts APPROVE, REQUEST_CHANGES, or BLOCKED.
+- REQUEST_CHANGES and BLOCKED stop auto-close.
+- Malformed/missing reviewer output blocks the pipeline.
+- Tests and project-control validations pass.
+
+### PIPE-11 (TASK-062) — PIPE-11 Auto Review Auto Close Policy
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_01a078bae3e6`, legacy `TASK-062`, aliases `TASK-062`, local `PIPE` / `11`
+
+Apply policy-controlled close/rework decisions only after Machine Review PASS and Codex Review APPROVE.
+
+Acceptance criteria:
+
+- Auto-close requires policy permission, Machine Review PASS, and Codex Review APPROVE.
+- REQUEST_CHANGES moves to changes_requested or starts rework only if policy allows.
+- Blocked or failed gates stop the pipeline.
+- Rework loop has a policy-controlled maximum.
+- Lifecycle mutations route through governed task workflows/commands.
+- Tests and project-control validations pass.
+
+### PIPE-12 (TASK-063) — PIPE-12 Controlled Git Commit Action
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_6f7cf68ecdf8`, legacy `TASK-063`, aliases `TASK-063`, local `PIPE` / `12`
+
+Create local commits only when policy allows and commit readiness is green.
+
+Acceptance criteria:
+
+- Commit action is disabled unless policy explicitly allows local commit.
+- Commit action refuses when commit readiness is not green.
+- Commit action stages only approved files.
+- Commit action never pushes, merges, resets, rebases, or discards changes.
+- Commit result is recorded in session/audit.
+- Tests and project-control validations pass.
+
+### PIPE-13 (TASK-064) — PIPE-13 Pipeline UI Dashboard
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_d4153f05f2bc`, legacy `TASK-064`, aliases `TASK-064`, local `PIPE` / `13`
+
+Add a Web Control Center dashboard for pipeline sessions, queue preview, policy selection, run-next, and run-until-blocker.
+
+Acceptance criteria:
+
+- Pipeline dashboard shows sessions, selected policy, queue preview, current step, and stop reason.
+- Run actions require explicit confirmation.
+- UI writes route through governed commands/workflows.
+- Failed gates and blockers are visible.
+- UI remains local-only by default.
+- Tests and project-control validations pass.
+
+### PIPE-14 (TASK-065) — PIPE-14 Pipeline Audit Trail
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_b7153a9d28be`, legacy `TASK-065`, aliases `TASK-065`, local `PIPE` / `14`
+
+Record a complete audit trail for pipeline sessions, policy decisions, gates, Codex runs, reviews, stops, and commits.
+
+Acceptance criteria:
+
+- Pipeline audit captures every major gate and decision.
+- Audit events include stable references and stop reasons.
+- Audit avoids raw secrets and oversized prompt payloads.
+- Generated audit/status output is derived and can be refreshed/check-generated if implemented.
+- Tests and project-control validations pass.
+
+### PIPE-15 (TASK-066) — PIPE-15 Pipeline SOP Documentation
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_712743bf741e`, legacy `TASK-066`, aliases `TASK-066`, local `PIPE` / `15`
+
+Document the supervised batch pipeline runner, policies, gates, UI flow, blockers, and operator responsibilities.
+
+Acceptance criteria:
+
+- Pipeline SOP documents the approved algorithm and stop conditions.
+- Documentation clearly distinguishes policy-selected automation from forbidden autonomy.
+- Documentation says Codex Reviewer is read-only and cannot mutate files/lifecycle/commits.
+- Documentation says commit is local-only and push/merge remain forbidden.
+- Documentation explains token budget strict-mode failures.
+- Documentation checks and project-control validations pass.
