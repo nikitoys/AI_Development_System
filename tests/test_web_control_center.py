@@ -131,6 +131,53 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('<details class="task-group task-group-done">', done_body)
         self.assertIn("done visible", done_body)
 
+    def test_tasks_page_shows_status_aware_row_workflow_buttons(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root, **large_task_view_state())
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/tasks?show_done=1", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Prepare for Codex", body)
+        self.assertIn('value="task.prepare_for_codex"', body)
+        self.assertIn('value="DOC-01"', body)
+        self.assertIn("Refresh Context", body)
+        self.assertIn('value="task.refresh_execution_context"', body)
+        self.assertIn("Submit for Review", body)
+        self.assertIn('value="task.submit_for_review"', body)
+        self.assertIn("Set current task", body)
+        self.assertIn("Build Codex prompt with context", body)
+        self.assertIn('name="confirm" value="yes" required', body)
+
+    def test_tasks_page_hides_row_workflows_for_invalid_statuses(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root, **large_task_view_state())
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            review_status, _, review_body = route(
+                "/tasks?status=in_review&group=none",
+                model,
+            )
+            done_status, _, done_body = route(
+                "/tasks?status=done&show_done=1&group=none",
+                model,
+            )
+
+        self.assertEqual(review_status.value, 200)
+        self.assertIn("No row workflows", review_body)
+        self.assertNotIn('value="task.prepare_for_codex"', review_body)
+        self.assertNotIn('value="task.refresh_execution_context"', review_body)
+        self.assertNotIn('value="task.submit_for_review"', review_body)
+
+        self.assertEqual(done_status.value, 200)
+        self.assertIn("No row workflows", done_body)
+        self.assertNotIn('value="task.prepare_for_codex"', done_body)
+        self.assertNotIn('value="task.refresh_execution_context"', done_body)
+        self.assertNotIn('value="task.submit_for_review"', done_body)
+
     def test_doctor_refresh_runs_diagnostics_and_reuses_cache(self):
         calls = []
 
@@ -659,6 +706,60 @@ class WebControlCenterTests(unittest.TestCase):
                 "WFA-01",
                 "--confirm",
             ],
+        )
+
+    def test_prepare_for_codex_action_result_includes_next_instruction(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "ok": True,
+                    "command": "task.prepare_for_codex",
+                    "domain": "workflow",
+                    "message": "Workflow completed.",
+                    "data": {
+                        "steps": [
+                            {
+                                "id": "current_set",
+                                "title": "Set current task",
+                                "status": "ok",
+                            },
+                            {
+                                "id": "codex_build",
+                                "title": "Build Codex prompt with context",
+                                "status": "ok",
+                            },
+                        ]
+                    },
+                    "next_actions": [],
+                    "owner_action_required": None,
+                }
+            )
+            + "\n",
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "task.prepare_for_codex",
+                    "confirm": "yes",
+                    "task": "WFA-08",
+                }
+            )
+
+        payload = result.to_dict()
+
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["summary"]["step_counts"]["ok"], 2)
+        self.assertEqual(
+            payload["summary"]["next_codex_instruction"],
+            "Read AI_PROJECT/generated/CODEX_PROMPT.md and execute it.",
+        )
+        self.assertIn(
+            "Read AI_PROJECT/generated/CODEX_PROMPT.md and execute it.",
+            payload["summary"]["next_actions"],
         )
 
     def test_evolution_workflow_web_action_delegates_to_confirmed_aictl_workflow(self):

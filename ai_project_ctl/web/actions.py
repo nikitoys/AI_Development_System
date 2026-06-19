@@ -91,6 +91,11 @@ class WebActionResult:
         }
         if self.parsed_stdout is not None:
             payload["result"] = self.parsed_stdout
+            payload["summary"] = _action_result_summary(
+                self.action,
+                self.process.ok,
+                self.parsed_stdout,
+            )
         return payload
 
 
@@ -394,6 +399,58 @@ def _parse_json(text: str) -> Any | None:
         return json.loads(stripped)
     except json.JSONDecodeError:
         return None
+
+
+def _action_result_summary(
+    action: WebAction,
+    ok: bool,
+    parsed_stdout: Any,
+) -> dict[str, Any]:
+    if not isinstance(parsed_stdout, Mapping):
+        return {}
+
+    data = parsed_stdout.get("data")
+    data_mapping = data if isinstance(data, Mapping) else {}
+    steps = data_mapping.get("steps")
+    summary: dict[str, Any] = {
+        "ok": ok,
+        "message": str(parsed_stdout.get("message") or ""),
+        "owner_action_required": str(parsed_stdout.get("owner_action_required") or ""),
+        "next_actions": _string_list(parsed_stdout.get("next_actions")),
+    }
+    if isinstance(steps, list):
+        summary["steps"] = [
+            {
+                "id": str(step.get("id") or ""),
+                "title": str(step.get("title") or ""),
+                "status": str(step.get("status") or ""),
+            }
+            for step in steps
+            if isinstance(step, Mapping)
+        ]
+        summary["step_counts"] = _step_counts(summary["steps"])
+
+    if action.action_id == "task.prepare_for_codex" and ok:
+        instruction = "Read AI_PROJECT/generated/CODEX_PROMPT.md and execute it."
+        summary["next_codex_instruction"] = instruction
+        if instruction not in summary["next_actions"]:
+            summary["next_actions"].append(instruction)
+
+    return summary
+
+
+def _string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value if str(item).strip()]
+
+
+def _step_counts(steps: Sequence[Mapping[str, Any]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for step in steps:
+        status = str(step.get("status") or "unknown")
+        counts[status] = counts.get(status, 0) + 1
+    return counts
 
 
 ACTIONS: dict[str, WebAction] = {

@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `468`
-Changes: `19`
+Revision: `506`
+Changes: `20`
 
 ## Summary
 
-- `accepted`: 18
+- `accepted`: 19
 - `approved`: 1
 
 ## Changes
@@ -1115,3 +1115,73 @@ Impact:
 Linked tasks:
 
 - TASK-038
+
+### CHG-020 — UIX-02 Add task row workflow buttons
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-08 requires an explicit Evolution Change Proposal before implementation: Add status-aware workflow buttons next to tasks, including Prepare for Codex, Refresh Context, and Submit for Review.
+
+Proposal:
+
+Implement the bounded task scope: Add status-aware task row buttons.; Expose Prepare for Codex for planned/ready tasks.; Expose Refresh Context for current/in-progress tasks.; Expose Submit for Review for in-progress tasks.; Show confirmation preview before workflow execution.; Route all actions through existing workflow runner and aictl command paths.; Show result summary after execution.; Show next Codex instruction after Prepare for Codex.
+
+Rationale:
+
+Make routine task operation possible from the Tasks page by exposing existing workflow automation actions as row-level buttons.
+
+Approved by: `human_owner` at `2026-06-19T09:22:31Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-19T09:41:49Z`  
+Acceptance notes: WFA-08 implemented and accepted. Task row workflow buttons added while preserving confirmation gates and governed command-path execution.  
+
+Affected files:
+
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/core/workflows.py if workflow metadata needs compatible updates
+- ai_project_ctl/core/registry.py if workflow metadata needs compatible updates
+- scripts/aictl.py if workflow routing needs compatible updates
+- tests/test_web_control_center.py
+- tests/test_workflows.py
+- tests/test_aictl.py
+- tests/test_registry.py
+
+Risks:
+
+- Boundary risk: Do not auto-run Codex.
+- Boundary risk: Do not auto-approve tasks.
+- Boundary risk: Do not auto-close tasks.
+- Boundary risk: Do not accept Evolution Changes.
+- Boundary risk: Do not add arbitrary shell command execution.
+- Boundary risk: Do not directly edit protected project-control files.
+- Verify that buttons are not shown for invalid task states.
+- Verify that every write workflow requires confirmation.
+- Verify that Prepare for Codex produces the instruction to send Codex.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-039.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add status-aware task row buttons.
+- Expose Prepare for Codex for planned/ready tasks.
+- Expose Refresh Context for current/in-progress tasks.
+- Expose Submit for Review for in-progress tasks.
+- Show confirmation preview before workflow execution.
+- Tasks page shows useful workflow buttons based on task status.
+- Prepare for Codex can be launched from a task row with explicit confirmation.
+- Refresh Context can be launched from a task row with explicit confirmation.
+
+Linked tasks:
+
+- TASK-039

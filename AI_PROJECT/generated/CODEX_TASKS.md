@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `361`
+Revision: `368`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -648,7 +648,7 @@ Acceptance criteria:
 
 ### WFA-06 (TASK-037) — WFA-06 Documentation Audit And Cleanup
 
-Status: `in_review`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_c4ef4282293c`, legacy `TASK-037`, aliases `TASK-037`, local `WFA` / `6`
@@ -686,7 +686,7 @@ Acceptance criteria:
 
 ### WFA-08 (TASK-039) — UIX-02 Add task row workflow buttons
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_ba9070900730`, legacy `TASK-039`, aliases `TASK-039`, local `WFA` / `8`

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 468,
+  "revision": 506,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-19T09:20:22Z",
+  "updated_at": "2026-06-19T09:41:49Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -1001,6 +1001,72 @@
       "order": 19,
       "created_at": "2026-06-19T09:04:11Z",
       "updated_at": "2026-06-19T09:20:22Z"
+    },
+    {
+      "id": "CHG-020",
+      "title": "UIX-02 Add task row workflow buttons",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "Make routine task operation possible from the Tasks page by exposing existing workflow automation actions as row-level buttons.",
+      "problem": "Task WFA-08 requires an explicit Evolution Change Proposal before implementation: Add status-aware workflow buttons next to tasks, including Prepare for Codex, Refresh Context, and Submit for Review.",
+      "proposal": "Implement the bounded task scope: Add status-aware task row buttons.; Expose Prepare for Codex for planned/ready tasks.; Expose Refresh Context for current/in-progress tasks.; Expose Submit for Review for in-progress tasks.; Show confirmation preview before workflow execution.; Route all actions through existing workflow runner and aictl command paths.; Show result summary after execution.; Show next Codex instruction after Prepare for Codex.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/core/workflows.py if workflow metadata needs compatible updates",
+        "ai_project_ctl/core/registry.py if workflow metadata needs compatible updates",
+        "scripts/aictl.py if workflow routing needs compatible updates",
+        "tests/test_web_control_center.py",
+        "tests/test_workflows.py",
+        "tests/test_aictl.py",
+        "tests/test_registry.py"
+      ],
+      "risks": [
+        "Boundary risk: Do not auto-run Codex.",
+        "Boundary risk: Do not auto-approve tasks.",
+        "Boundary risk: Do not auto-close tasks.",
+        "Boundary risk: Do not accept Evolution Changes.",
+        "Boundary risk: Do not add arbitrary shell command execution.",
+        "Boundary risk: Do not directly edit protected project-control files.",
+        "Verify that buttons are not shown for invalid task states.",
+        "Verify that every write workflow requires confirmation.",
+        "Verify that Prepare for Codex produces the instruction to send Codex.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-039.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Add status-aware task row buttons.",
+        "Expose Prepare for Codex for planned/ready tasks.",
+        "Expose Refresh Context for current/in-progress tasks.",
+        "Expose Submit for Review for in-progress tasks.",
+        "Show confirmation preview before workflow execution.",
+        "Tasks page shows useful workflow buttons based on task status.",
+        "Prepare for Codex can be launched from a task row with explicit confirmation.",
+        "Refresh Context can be launched from a task row with explicit confirmation."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-039"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T09:22:31Z",
+      "approval_notes": "Approved",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T09:41:49Z",
+      "acceptance_notes": "WFA-08 implemented and accepted. Task row workflow buttons added while preserving confirmation gates and governed command-path execution.",
+      "notes": [],
+      "priority": 1,
+      "order": 20,
+      "created_at": "2026-06-19T09:22:14Z",
+      "updated_at": "2026-06-19T09:41:49Z"
     }
   ]
 }

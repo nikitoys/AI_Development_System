@@ -38,6 +38,24 @@ NAV_ITEMS = (
 
 TASK_FOCUS_STATUSES = {"ready", "in_progress", "in_review", "changes_requested"}
 TASK_GROUP_OPTIONS = {"none", "epic", "status"}
+TASK_ROW_WORKFLOWS = (
+    {
+        "action": "task.prepare_for_codex",
+        "statuses": {"planned", "ready"},
+        "label": "Prepare for Codex",
+    },
+    {
+        "action": "task.refresh_execution_context",
+        "statuses": {"in_progress"},
+        "label": "Refresh Context",
+        "current": True,
+    },
+    {
+        "action": "task.submit_for_review",
+        "statuses": {"in_progress"},
+        "label": "Submit for Review",
+    },
+)
 
 
 class WebServerError(CommandError):
@@ -315,7 +333,12 @@ def render_tasks(
         "</section>",
         '<section class="panel">',
         "<h2>Focus Tasks</h2>",
-        task_table(focused, empty_text="No current, in-progress, or review tasks match the filters."),
+        task_table(
+            focused,
+            empty_text="No current, in-progress, or review tasks match the filters.",
+            data=data,
+            include_actions=True,
+        ),
         "</section>",
         '<section class="panel">',
         "<h2>Tasks</h2>",
@@ -931,6 +954,35 @@ def render_page(title: str, body: str, *, active: str) -> str:
     .task-group table {{
       border-top: 1px solid var(--line);
     }}
+    .row-actions {{
+      display: grid;
+      gap: 8px;
+      min-width: 220px;
+    }}
+    .row-action {{
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f8fafc;
+      padding: 6px;
+    }}
+    .row-action summary {{
+      color: #0d5f59;
+      cursor: pointer;
+      font-weight: 700;
+    }}
+    .row-action form {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      padding-top: 8px;
+    }}
+    .action-preview {{
+      margin: 8px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 12px;
+    }}
     label {{
       display: grid;
       gap: 4px;
@@ -1235,7 +1287,12 @@ def task_grouped_table(
         return '<p class="empty">{}</p>'.format(escape(empty_text))
     group_by = str(filters.get("group") or "epic")
     if group_by == "none":
-        return task_table(tasks, empty_text=empty_text)
+        return task_table(
+            tasks,
+            empty_text=empty_text,
+            data=data,
+            include_actions=True,
+        )
 
     epics_by_id = epics_by_id_map(data)
     groups: dict[str, list[Mapping[str, Any]]] = {}
@@ -1270,7 +1327,12 @@ def task_grouped_table(
                 open_attr,
                 escape(label),
                 escape(len(items)),
-                task_table(items, empty_text=empty_text),
+                task_table(
+                    items,
+                    empty_text=empty_text,
+                    data=data,
+                    include_actions=True,
+                ),
             )
         )
     return "".join(sections)
@@ -1367,20 +1429,30 @@ def task_table(
     tasks: Sequence[Mapping[str, Any]],
     *,
     empty_text: str,
+    data: Mapping[str, Any] | None = None,
+    include_actions: bool = False,
 ) -> str:
     rows = []
     for task in tasks:
+        cells = [
+            task_identity_cell(task),
+            status_badge(str(task.get("status") or "unknown")),
+            escape(task.get("epic_key") or task.get("epic_id") or ""),
+            escape(task.get("title", "")),
+            escape(task.get("summary", "")),
+            escape(task.get("active_stage", "")),
+        ]
+        if include_actions:
+            cells.append(task_row_actions(task, data or {}))
         rows.append(
-            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
-                task_identity_cell(task),
-                status_badge(str(task.get("status") or "unknown")),
-                escape(task.get("epic_key") or task.get("epic_id") or ""),
-                escape(task.get("title", "")),
-                escape(task.get("summary", "")),
-                escape(task.get("active_stage", "")),
+            "<tr>{}</tr>".format(
+                "".join("<td>{}</td>".format(cell) for cell in cells)
             )
         )
-    return table(("Task", "Status", "Epic", "Title", "Summary", "Stage"), rows, empty_text)
+    headers = ["Task", "Status", "Epic", "Title", "Summary", "Stage"]
+    if include_actions:
+        headers.append("Actions")
+    return table(tuple(headers), rows, empty_text)
 
 
 def task_identity_cell(task: Mapping[str, Any]) -> str:
@@ -1392,6 +1464,78 @@ def task_identity_cell(task: Mapping[str, Any]) -> str:
             escape(legacy),
         )
     return "<strong>{}</strong>".format(escape(primary))
+
+
+def task_row_actions(task: Mapping[str, Any], data: Mapping[str, Any]) -> str:
+    specs = task_row_action_specs(task, data)
+    if not specs:
+        return '<span class="pill">No row workflows</span>'
+    return '<div class="row-actions">{}</div>'.format(
+        "".join(task_row_action(task, data, spec) for spec in specs)
+    )
+
+
+def task_row_action_specs(
+    task: Mapping[str, Any],
+    data: Mapping[str, Any],
+) -> list[Mapping[str, Any]]:
+    status = str(task.get("status") or "")
+    current = data.get("current_task") or {}
+    is_current = bool(task.get("id") and task.get("id") == current.get("id"))
+    specs = []
+    for spec in TASK_ROW_WORKFLOWS:
+        statuses = spec.get("statuses") or set()
+        if status in statuses or (spec.get("current") and is_current):
+            specs.append(spec)
+    return specs
+
+
+def task_row_action(
+    task: Mapping[str, Any],
+    data: Mapping[str, Any],
+    spec: Mapping[str, Any],
+) -> str:
+    action_id = str(spec.get("action") or "")
+    label = str(spec.get("label") or action_id)
+    workflow = workflow_by_name(data).get(action_id) or {}
+    task_ref = str(task.get("ref") or task.get("id") or "")
+    return (
+        '<details class="row-action row-action-{}">'
+        "<summary>{}</summary>"
+        "{}"
+        "{}"
+        "</details>"
+    ).format(
+        escape(css_token(action_id)),
+        escape(label),
+        workflow_preview_html(workflow),
+        action_form(
+            action_id,
+            [hidden_field("task", task_ref)],
+            button_label=label,
+        ),
+    )
+
+
+def workflow_by_name(data: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
+    return {
+        str(workflow.get("name") or ""): workflow
+        for workflow in data.get("workflows") or []
+        if isinstance(workflow, Mapping)
+    }
+
+
+def workflow_preview_html(workflow: Mapping[str, Any]) -> str:
+    steps = [
+        str(step.get("title") or step.get("id") or "")
+        for step in workflow.get("steps") or []
+        if isinstance(step, Mapping) and (step.get("title") or step.get("id"))
+    ]
+    if not steps:
+        return ""
+    return '<ol class="action-preview">{}</ol>'.format(
+        "".join("<li>{}</li>".format(escape(step)) for step in steps)
+    )
 
 
 def table(headers: Sequence[str], rows: Sequence[str], empty_text: str) -> str:
@@ -1448,6 +1592,13 @@ def action_form(
         ),
     ]
     return '<form method="post" action="/actions">{}</form>'.format("".join(controls))
+
+
+def hidden_field(name: str, value: str) -> str:
+    return '<input type="hidden" name="{}" value="{}">'.format(
+        escape(name),
+        escape(value),
+    )
 
 
 def input_field(name: str, label: str, value: str = "", *, required: bool = True) -> str:
