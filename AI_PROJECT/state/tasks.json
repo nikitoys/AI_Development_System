@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 424,
-  "current_task_id": null,
+  "revision": 451,
+  "current_task_id": "TASK-042",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-19T12:27:35Z",
+  "updated_at": "2026-06-19T14:32:24Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -2951,7 +2951,7 @@
       "id": "TASK-042",
       "epic_id": "EPIC-006",
       "title": "UIX-05 Add Bulk Task Import from file",
-      "status": "planned",
+      "status": "in_progress",
       "summary": "Extend Bulk Task Import to support uploading JSON files in addition to pasted JSON text.",
       "description": "Allow the owner to import task batches from a local JSON file while preserving preview, validation, confirmation, and governed command-path creation.",
       "priority": 1,
@@ -3021,7 +3021,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-19T09:02:34Z",
-      "updated_at": "2026-06-19T09:03:48Z",
+      "updated_at": "2026-06-19T14:32:24Z",
       "uid": "tsk_82ea27760cf4",
       "ref": "WFA-11",
       "legacy_id": "TASK-042",
@@ -3377,7 +3377,7 @@
       "id": "TASK-046",
       "epic_id": "EPIC-006",
       "title": "UIX-09 Add Codex Execution Report Submission",
-      "status": "planned",
+      "status": "done",
       "summary": "Add a governed way for Codex to submit structured task execution reports through aictl instead of relying on manual pasted summaries.",
       "description": "Introduce a machine-readable Codex execution report flow. At the end of task execution, Codex should be able to write a structured JSON report and submit it through a governed CLI command. The report must be validated, stored through project-control state/events, and made available to the Web Control Center for task review.",
       "priority": 1,
@@ -3448,11 +3448,11 @@
           "reason": "Codex execution report submission should use the unified result/action foundation."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T13:12:05Z",
+      "approval_notes": "WFA-15 accepted. Codex Execution Report Submission implemented and verified. Structured task reports can now be submitted through governed CLI paths, stored in task_reports state/events, exposed to the Web read model, and do not replace Human Owner review.",
       "created_at": "2026-06-19T09:59:23Z",
-      "updated_at": "2026-06-19T09:59:48Z",
+      "updated_at": "2026-06-19T13:12:06Z",
       "uid": "tsk_6a6615a135ce",
       "ref": "WFA-15",
       "legacy_id": "TASK-046",
@@ -3466,7 +3466,7 @@
       "id": "TASK-047",
       "epic_id": "EPIC-006",
       "title": "UIX-10 Add Task Review Package View",
-      "status": "planned",
+      "status": "done",
       "summary": "Add a task review view that combines task metadata, linked Change, Codex report, changed files, checks, and owner decision controls.",
       "description": "Create a review-oriented UI view for tasks in review. The owner should be able to see what Codex changed, what checks passed, what blockers remain, and then make a review decision from one place.",
       "priority": 1,
@@ -3536,11 +3536,11 @@
           "reason": "Task Review Package should include review Done/Request Changes controls."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T13:31:33Z",
+      "approval_notes": "WFA-16 accepted. Task Review Package View implemented and verified. UI now shows task metadata, linked Change status, latest Codex report, changed/generated files, checks, warnings, blockers, notes, and governed review controls without bypassing Human Owner gates.",
       "created_at": "2026-06-19T09:59:24Z",
-      "updated_at": "2026-06-19T09:59:48Z",
+      "updated_at": "2026-06-19T13:31:33Z",
       "uid": "tsk_0e3c4d7a0a5d",
       "ref": "WFA-16",
       "legacy_id": "TASK-047",
@@ -3554,7 +3554,7 @@
       "id": "TASK-048",
       "epic_id": "EPIC-006",
       "title": "UIX-11 Add Current Execution Status Panel",
-      "status": "planned",
+      "status": "done",
       "summary": "Add a UI panel showing current task, Context Pack status, Codex prompt status, and safe execution-context actions.",
       "description": "Make the current execution state visible in the Web Control Center so the owner knows which task is prepared for Codex and whether the context/prompt artifacts are ready or stale.",
       "priority": 1,
@@ -3608,7 +3608,8 @@
       ],
       "notes": [
         "Logical label: UIX-11",
-        "Requires approved Evolution Change before execution because Web execution-status behavior changes."
+        "Requires approved Evolution Change before execution because Web execution-status behavior changes.",
+        "WFA-17 accepted. Current Execution panel implemented and verified. UI now shows current task identity, Context Pack/Codex prompt readiness, generated paths, copyable Codex instruction, and governed refresh/clear actions while preserving protected-file boundaries."
       ],
       "depends_on": [
         {
@@ -3618,11 +3619,11 @@
           "reason": "Current Execution Status Panel should use unified result/action UX."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T13:55:39Z",
+      "approval_notes": "WFA-17 accepted. Current Execution panel implemented and verified. UI now shows current task identity, Context Pack/Codex prompt readiness, generated paths, copyable Codex instruction, and governed refresh/clear actions while preserving protected-file boundaries.",
       "created_at": "2026-06-19T09:59:25Z",
-      "updated_at": "2026-06-19T09:59:49Z",
+      "updated_at": "2026-06-19T13:55:39Z",
       "uid": "tsk_2c1b0507ab6b",
       "ref": "WFA-17",
       "legacy_id": "TASK-048",
@@ -3636,7 +3637,7 @@
       "id": "TASK-049",
       "epic_id": "EPIC-006",
       "title": "UIX-12 Add Project Health Repair Actions",
-      "status": "planned",
+      "status": "done",
       "summary": "Add UI health and repair actions for doctor, stale generated artifacts, docs render, context/Codex refresh, and protected-file checks.",
       "description": "Turn common project-control warnings into visible UI health signals with safe repair buttons that route through owning CLIs. The owner should be able to diagnose and fix stale generated artifacts without remembering individual commands.",
       "priority": 1,
@@ -3703,11 +3704,11 @@
           "reason": "Project Health Repair Actions depend on visible current execution and artifact status."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T14:24:47Z",
+      "approval_notes": "WFA-18 accepted. Project Health Repair Actions implemented and verified. UI now exposes doctor summary, generated artifact health, docs render, context/Codex refresh, protected-file checks, confirmation-gated repair actions, and safe-target rejection through governed command paths.",
       "created_at": "2026-06-19T09:59:26Z",
-      "updated_at": "2026-06-19T09:59:49Z",
+      "updated_at": "2026-06-19T14:24:47Z",
       "uid": "tsk_e878d597769a",
       "ref": "WFA-18",
       "legacy_id": "TASK-049",

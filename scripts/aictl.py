@@ -1119,6 +1119,29 @@ def cmd_task_transition(args: argparse.Namespace) -> int:
     )
 
 
+def cmd_task_report_submit(args: argparse.Namespace) -> int:
+    _ensure_implemented("task.report.submit")
+    command_args = [
+        "task",
+        "report",
+        "submit",
+        "--task",
+        args.task,
+        "--file",
+        args.file,
+    ]
+    if args.confirm:
+        command_args.append("--confirm")
+    if args.json:
+        command_args.append("--json")
+    return _run_delegated(
+        "task.report.submit",
+        "task",
+        args,
+        _script_argv("taskctl.py", args, command_args),
+    )
+
+
 def cmd_current_set(args: argparse.Namespace) -> int:
     _ensure_implemented("current.set")
     return _run_delegated(
@@ -1192,6 +1215,16 @@ def cmd_codex_prompt_build(args: argparse.Namespace) -> int:
     )
 
 
+def cmd_docs_render(args: argparse.Namespace) -> int:
+    _ensure_implemented("docs.render")
+    return _run_delegated(
+        "docs.render",
+        "docs",
+        args,
+        _script_argv("docctl.py", args, ["render"]),
+    )
+
+
 def cmd_project_doctor(args: argparse.Namespace) -> int:
     root = Path(args.root).resolve()
     findings: list[dict[str, Any]] = []
@@ -1229,6 +1262,22 @@ def cmd_project_doctor(args: argparse.Namespace) -> int:
         "taskctl.py",
         ["check-generated"],
         "Generated task files are up to date.",
+    )
+    _append_cli_diagnostic(
+        findings,
+        args,
+        "docs validation",
+        "docctl.py",
+        ["validate"],
+        "Documentation state is valid.",
+    )
+    _append_cli_diagnostic(
+        findings,
+        args,
+        "docs generated output",
+        "docctl.py",
+        ["check-generated"],
+        "Generated documentation files are up to date.",
     )
     _append_cli_diagnostic(
         findings,
@@ -1274,6 +1323,24 @@ def cmd_project_doctor(args: argparse.Namespace) -> int:
     else:
         _emit_doctor_text(root, findings)
     return 0 if result.ok else 1
+
+
+def cmd_project_protected_check(args: argparse.Namespace) -> int:
+    _ensure_implemented("project.protected_check")
+    command_args = ["--verbose"]
+    if args.json:
+        command_args.append("--json")
+    return _run_delegated(
+        "project.protected_check",
+        "project",
+        args,
+        _script_argv(
+            "check-protected-project-files.py",
+            args,
+            command_args,
+            include_actor=False,
+        ),
+    )
 
 
 PROJECT_RENDER_STEPS = (
@@ -1483,6 +1550,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--to", required=True)
     p.set_defaults(func=cmd_task_transition, facade_command="task.transition")
 
+    report = task_sub.add_parser("report", help="Task execution report facade commands")
+    report_sub = report.add_subparsers(dest="task_report_action", required=True)
+
+    p = report_sub.add_parser("submit", help="Submit a structured execution report through taskctl.py")
+    p.add_argument("--task", required=True)
+    p.add_argument("--file", required=True)
+    p.add_argument("--confirm", action="store_true")
+    p.set_defaults(func=cmd_task_report_submit, facade_command="task.report.submit")
+
     current = sub.add_parser("current", help="Current task facade commands")
     current_sub = current.add_subparsers(dest="current_action", required=True)
 
@@ -1524,12 +1600,21 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--context-pack")
     p.set_defaults(func=cmd_codex_prompt_build, facade_command="codex.prompt.build")
 
+    docs = sub.add_parser("docs", help="Documentation-control facade commands")
+    docs_sub = docs.add_subparsers(dest="docs_action", required=True)
+
+    p = docs_sub.add_parser("render", help="Render documentation generated views through docctl.py")
+    p.set_defaults(func=cmd_docs_render, facade_command="docs.render")
+
     project = sub.add_parser("project", help="Project-level facade commands")
     project_sub = project.add_subparsers(dest="project_action", required=True)
 
     p = project_sub.add_parser("doctor", help="Run project-control health checks")
     _add_project_doctor_flags(p)
     p.set_defaults(func=cmd_project_doctor, facade_command="project.doctor")
+
+    p = project_sub.add_parser("protected-check", help="Run protected project-control file checks")
+    p.set_defaults(func=cmd_project_protected_check, facade_command="project.protected_check")
 
     p = project_sub.add_parser("render", help="Render generated project-control views")
     p.set_defaults(func=cmd_project_render, facade_command="project.render")

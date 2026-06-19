@@ -5,6 +5,8 @@ from __future__ import annotations
 import html
 import ipaddress
 import json
+from email.parser import BytesParser
+from email.policy import default as email_policy
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -12,6 +14,7 @@ from typing import Any, Callable, Mapping, Sequence
 from urllib.parse import parse_qs, urlparse
 
 from ai_project_ctl.core.result import CommandError
+from ai_project_ctl.core.workflows import BULK_IMPORT_MAX_BYTES
 from ai_project_ctl.web.actions import (
     WebActionError,
     WebActionExecutor,
@@ -23,6 +26,10 @@ from ai_project_ctl.web.read_model import ReadOnlyProjectModel
 
 LOCAL_HOSTS = {"localhost"}
 LOCAL_ADDRESSES = {"127.0.0.1", "::1"}
+WEB_IMPORT_FILE_FIELD = "import_file"
+WEB_IMPORT_ALLOWED_SUFFIXES = {".json", ".txt"}
+WEB_IMPORT_FILE_MAX_BYTES = BULK_IMPORT_MAX_BYTES
+WEB_ACTION_BODY_MAX_BYTES = WEB_IMPORT_FILE_MAX_BYTES + 16_384
 
 NAV_ITEMS = (
     ("/", "Dashboard"),
@@ -40,6 +47,7 @@ NAV_ITEMS = (
 TASK_FOCUS_STATUSES = {"ready", "in_progress", "in_review", "changes_requested"}
 TASK_GROUP_OPTIONS = {"none", "epic", "status"}
 CHANGE_ACTION_STATUSES = {"ready", "approved", "in_progress", "in_review"}
+TASK_REPAIR_STATUSES = {"ready", "in_progress", "in_review", "changes_requested"}
 TASK_ROW_WORKFLOWS = (
     {
         "action": "task.prepare_for_codex",
@@ -185,15 +193,22 @@ def make_handler(model: ReadOnlyProjectModel) -> type[BaseHTTPRequestHandler]:
                     "Invalid write request content length.",
                     details={"content_length": length_header},
                 ) from exc
-            if length > 262144:
+            if length > WEB_ACTION_BODY_MAX_BYTES:
                 raise WebActionError(
                     "WEB_ACTION_BODY_TOO_LARGE",
                     "Write request body is too large.",
-                    details={"max_bytes": 262144, "content_length": length},
+                    details={
+                        "max_bytes": WEB_ACTION_BODY_MAX_BYTES,
+                        "content_length": length,
+                    },
                 )
 
-            raw = self.rfile.read(length).decode("utf-8") if length else ""
+            raw_bytes = self.rfile.read(length) if length else b""
             content_type = self.headers.get("Content-Type", "")
+            if "multipart/form-data" in content_type:
+                return parse_multipart_action_fields(content_type, raw_bytes)
+
+            raw = raw_bytes.decode("utf-8") if raw_bytes else ""
             if "application/json" in content_type:
                 try:
                     payload = json.loads(raw or "{}")
@@ -272,7 +287,7 @@ def route(
         "/tasks": lambda: render_tasks(model.dashboard(), query=query),
         "/evolution": lambda: render_evolution(model.dashboard(), query=query),
         "/epics": lambda: render_epics(model.dashboard()),
-        "/reviews": lambda: render_reviews(model.dashboard()),
+        "/reviews": lambda: render_reviews(model.dashboard(), query=query),
         "/events": lambda: render_events(model.dashboard(include_events=True)),
         "/generated": lambda: render_generated(model.dashboard()),
         "/doctor": lambda: render_doctor(
@@ -305,9 +320,14 @@ def render_dashboard(data: Mapping[str, Any]) -> str:
         metric("Changes", "{} proposals".format(len(changes))),
         metric("Generated", "{} derived views".format(sum(1 for item in generated if item.get("exists")))),
         "</section>",
+        project_health_panel(data),
         '<section class="panel">',
         "<h2>Current Task</h2>",
         task_detail(current),
+        "</section>",
+        '<section class="panel execution-panel">',
+        "<h2>Current Execution</h2>",
+        execution_status_panel(data),
         "</section>",
         '<section class="panel">',
         "<h2>Executable Queue</h2>",
@@ -340,6 +360,7 @@ def render_tasks(
     filters = task_filter_state(data, query)
     tasks = filter_tasks(data.get("tasks") or [], data, filters)
     focused = focus_tasks(data, tasks)
+    selected_task = tasks[0] if len(tasks) == 1 else {}
     body = [
         '<section class="summary-grid">',
         *[metric(str(status), str(count)) for status, count in sorted(counts.items())],
@@ -350,6 +371,11 @@ def render_tasks(
         task_filter_form(data, filters),
         task_filter_summary(filters),
         "</section>",
+        '<section class="panel execution-panel">',
+        "<h2>Current Execution</h2>",
+        execution_status_panel(data, selected_task=selected_task, show_actions=False),
+        "</section>",
+        project_health_panel(data, selected_task=selected_task),
         '<section class="panel">',
         "<h2>Focus Tasks</h2>",
         task_table(
@@ -429,11 +455,14 @@ def render_epics(data: Mapping[str, Any]) -> str:
     return render_page("Epics", "".join(body), active="/epics")
 
 
-def render_reviews(data: Mapping[str, Any]) -> str:
+def render_reviews(
+    data: Mapping[str, Any],
+    *,
+    query: Mapping[str, Sequence[str]] | None = None,
+) -> str:
     review_commands = data.get("review_commands") or []
-    in_review = [
-        task for task in data.get("tasks") or [] if task.get("status") == "in_review"
-    ]
+    selected_task = _query_value(query or {}, "task")
+    review_tasks = task_review_candidates(data, selected_task)
     command_rows = [
         "<tr><td>{}</td><td>{}</td><td>{}</td></tr>".format(
             escape(command.get("name")),
@@ -444,8 +473,9 @@ def render_reviews(data: Mapping[str, Any]) -> str:
     ]
     body = [
         '<section class="panel">',
-        "<h2>Tasks In Review</h2>",
-        task_table(in_review, empty_text="No tasks are currently in review."),
+        "<h2>Task Review Packages</h2>",
+        review_task_selector(data, selected_task),
+        task_review_packages(review_tasks, data, selected_task=selected_task),
         "</section>",
         '<section class="panel">',
         "<h2>Review Registry</h2>",
@@ -485,6 +515,7 @@ def render_generated(data: Mapping[str, Any]) -> str:
             )
         )
     body = [
+        project_health_panel(data),
         '<section class="panel">',
         "<h2>Generated Views</h2>",
         table(("File", "Source", "Exists", "Updated", "First Line"), rows, "No generated views."),
@@ -521,6 +552,7 @@ def render_doctor(data: Mapping[str, Any]) -> str:
         "</div>",
         table(("Status", "Check", "Message", "Command"), rows, "No doctor findings."),
         "</section>",
+        project_health_panel(data),
     ]
     return render_page("Doctor", "".join(body), active="/doctor")
 
@@ -536,6 +568,8 @@ def render_commands(model: ReadOnlyProjectModel) -> str:
             flags.append("writes events")
         if read_write.get("renders_generated"):
             flags.append("renders generated")
+        if read_write.get("validates"):
+            flags.append("validates")
         if not flags:
             flags.append("read-only")
         rows.append(
@@ -593,6 +627,8 @@ def render_actions(data: Mapping[str, Any]) -> str:
             flags.append("writes events")
         if read_write.get("renders_generated"):
             flags.append("renders generated")
+        if read_write.get("validates"):
+            flags.append("validates")
         action_rows.append(
             "<tr><td>{}</td><td><code>{}</code></td><td>{}</td></tr>".format(
                 escape(action.get("label", "")),
@@ -652,6 +688,11 @@ def render_actions(data: Mapping[str, Any]) -> str:
         action_form(
             "task.import",
             [
+                file_input_field(
+                    WEB_IMPORT_FILE_FIELD,
+                    "JSON/Text File",
+                    accept=".json,.txt,application/json,text/plain",
+                ),
                 textarea_field(
                     "import_text",
                     "JSON Payload",
@@ -674,7 +715,15 @@ def render_actions(data: Mapping[str, Any]) -> str:
             ],
             confirm_required=False,
             button_label="Preview / Import",
+            multipart=True,
         ),
+        "</section>",
+        '<section class="panel action-panel">',
+        "<h2>Health & Repair</h2>",
+        action_form("project.doctor", [], button_label="Run Doctor"),
+        action_form("project.protected_check", [], button_label="Check Protected Files"),
+        action_form("docs.render", [], button_label="Render Docs"),
+        action_form("project.render", [], button_label="Render Project Views"),
         "</section>",
         '<section class="panel action-panel">',
         "<h2>Task Workflows</h2>",
@@ -756,6 +805,8 @@ def render_actions(data: Mapping[str, Any]) -> str:
         '<section class="panel action-panel">',
         "<h2>Generated Output</h2>",
         action_form("project.render", []),
+        action_form("docs.render", [], button_label="Render Docs"),
+        action_form("project.protected_check", [], button_label="Check Protected Files"),
         action_form("context.build", [input_field("task", "Task", default_task)]),
         action_form(
             "codex.prompt.build",
@@ -1052,6 +1103,333 @@ def _sanitize_technical(value: Any) -> Any:
     return value
 
 
+def task_review_candidates(
+    data: Mapping[str, Any],
+    selected_task: str = "",
+) -> list[Mapping[str, Any]]:
+    tasks = [
+        task
+        for task in data.get("tasks") or []
+        if isinstance(task, Mapping)
+    ]
+    if selected_task:
+        return [task for task in tasks if task_ref_matches(task, selected_task)]
+    return [task for task in tasks if str(task.get("status") or "") == "in_review"]
+
+
+def review_task_selector(data: Mapping[str, Any], selected_task: str) -> str:
+    options = [("", "Tasks in review"), *task_select_options(data)]
+    return (
+        '<form class="task-controls" method="get" action="/reviews">'
+        "{}"
+        '<button type="submit">Open</button>'
+        '<a class="button-link secondary" href="/reviews">Reset</a>'
+        "</form>"
+    ).format(
+        filter_select("task", "Task", options, selected_task),
+    )
+
+
+def task_review_packages(
+    tasks: Sequence[Mapping[str, Any]],
+    data: Mapping[str, Any],
+    *,
+    selected_task: str = "",
+) -> str:
+    if not tasks:
+        if selected_task:
+            return '<p class="empty">No task matches {}.</p>'.format(
+                escape(selected_task)
+            )
+        return '<p class="empty">No tasks are currently in review.</p>'
+    return "".join(task_review_package(task, data) for task in tasks)
+
+
+def task_review_package(task: Mapping[str, Any], data: Mapping[str, Any]) -> str:
+    status = str(task.get("status") or "unknown")
+    report = _mapping(task.get("latest_report"))
+    task_ref = str(task.get("ref") or task.get("id") or "")
+    parts = [
+        '<section class="review-package review-package-{}">'.format(
+            escape(css_token(status))
+        ),
+        '<div class="review-package-header">',
+        "<div>",
+        '<h3>{}</h3>'.format(escape(task.get("title") or task_ref or "Task")),
+        '<div class="status-row">{}{}{}{}</div>'.format(
+            status_badge(status),
+            '<strong>{}</strong>'.format(escape(task_ref)) if task_ref else "",
+            '<code>{}</code>'.format(escape(task.get("legacy_id") or task.get("id") or "")),
+            '<span>{}</span>'.format(escape(task.get("active_stage") or "")),
+        ),
+        "</div>",
+        "</div>",
+        task_review_context(task),
+        linked_change_panel(task, data),
+        codex_report_panel(report),
+        review_decision_controls(task, data),
+        "</section>",
+    ]
+    return "".join(parts)
+
+
+def task_review_context(task: Mapping[str, Any]) -> str:
+    rows = [
+        ("Ref", escape(task.get("ref") or task.get("id") or "")),
+        ("Legacy ID", escape(task.get("legacy_id") or task.get("id") or "")),
+        ("Task ID", escape(task.get("id") or "")),
+        ("Status", status_badge(str(task.get("status") or "unknown"))),
+        ("Summary", escape(task.get("summary") or task.get("description") or "")),
+        ("Scope", text_list(task.get("scope"), empty_text="No scope recorded.")),
+        (
+            "Acceptance",
+            text_list(
+                task.get("acceptance_criteria"),
+                empty_text="No acceptance criteria recorded.",
+            ),
+        ),
+    ]
+    return '<div class="review-grid">{}</div>'.format(
+        "".join(
+            '<div class="review-field"><span>{}</span><div>{}</div></div>'.format(
+                escape(label),
+                value,
+            )
+            for label, value in rows
+        )
+    )
+
+
+def linked_change_panel(task: Mapping[str, Any], data: Mapping[str, Any]) -> str:
+    changes = linked_changes_for_task(task, data)
+    if not changes:
+        return (
+            '<section class="review-section">'
+            "<h3>Linked Evolution Change</h3>"
+            '<p class="empty">No linked Evolution Change.</p>'
+            "</section>"
+        )
+    rows = []
+    for change in changes:
+        rows.append(
+            "<tr><td><code>{}</code></td><td>{}</td><td>{}</td></tr>".format(
+                escape(change.get("id") or ""),
+                status_badge(str(change.get("status") or "unknown")),
+                escape(change.get("title") or ""),
+            )
+        )
+    return (
+        '<section class="review-section">'
+        "<h3>Linked Evolution Change</h3>"
+        "{}"
+        "</section>"
+    ).format(
+        table(("Change", "Status", "Title"), rows, "No linked Evolution Change."),
+    )
+
+
+def codex_report_panel(report: Mapping[str, Any]) -> str:
+    if not report:
+        return (
+            '<section class="review-section">'
+            "<h3>Codex Execution Report</h3>"
+            '<p class="empty">No Codex execution report submitted for this task.</p>'
+            "</section>"
+        )
+    summary = str(report.get("implementation_summary") or "")
+    return (
+        '<section class="review-section">'
+        "<h3>Codex Execution Report</h3>"
+        '<div class="review-grid">'
+        '<div class="review-field"><span>Report</span><div><code>{}</code></div></div>'
+        '<div class="review-field"><span>Submitted</span><div>{}</div></div>'
+        '<div class="review-field"><span>Owner Decision</span><div>{}</div></div>'
+        '<div class="review-field wide-field"><span>Summary</span><div>{}</div></div>'
+        "</div>"
+        "{}{}{}{}"
+        "</section>"
+    ).format(
+        escape(report.get("id") or ""),
+        escape(report.get("submitted_at") or "not reported"),
+        "required" if report.get("owner_decision_required") else "not required",
+        escape(summary or "No implementation summary recorded."),
+        report_file_panel("Changed Source Files", report.get("changed_files")),
+        report_file_panel(
+            "Generated / Project-Control Files",
+            report.get("generated_files"),
+        ),
+        report_checks_panel(report.get("checks")),
+        report_messages_panel(report),
+    )
+
+
+def report_file_panel(title: str, value: Any) -> str:
+    return (
+        '<section class="review-subsection">'
+        "<h4>{}</h4>"
+        "{}"
+        "</section>"
+    ).format(
+        escape(title),
+        text_list(value, empty_text="None reported.", code=True),
+    )
+
+
+def report_checks_panel(value: Any) -> str:
+    checks = [check for check in value or [] if isinstance(check, Mapping)]
+    rows = []
+    for check in checks:
+        blocking = "blocking" if check.get("blocking") else "advisory"
+        detail = str(check.get("details") or check.get("command") or "")
+        rows.append(
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                escape(check.get("name") or "check"),
+                status_badge(str(check.get("result") or "unknown")),
+                escape(blocking),
+                escape(detail),
+            )
+        )
+    return (
+        '<section class="review-subsection">'
+        "<h4>Checks</h4>"
+        "{}"
+        "</section>"
+    ).format(
+        table(("Check", "Result", "Type", "Details"), rows, "No checks reported."),
+    )
+
+
+def report_messages_panel(report: Mapping[str, Any]) -> str:
+    sections = []
+    for title, field in (
+        ("Warnings", "warnings"),
+        ("Blockers", "blockers"),
+        ("Notes", "notes"),
+    ):
+        sections.append(
+            '<section class="review-subsection">'
+            "<h4>{}</h4>"
+            "{}"
+            "</section>".format(
+                escape(title),
+                text_list(report.get(field), empty_text="None reported."),
+            )
+        )
+    return "".join(sections)
+
+
+def review_decision_controls(
+    task: Mapping[str, Any],
+    data: Mapping[str, Any],
+) -> str:
+    status = str(task.get("status") or "")
+    if status != "in_review":
+        return (
+            '<section class="review-section">'
+            "<h3>Review Decision</h3>"
+            '<p class="empty">Review decision controls unavailable: task status is {}.</p>'
+            "</section>"
+        ).format(escape(status or "unknown"))
+
+    task_ref = str(task.get("ref") or task.get("id") or "")
+    workflows = workflow_by_name(data)
+    controls = []
+    for action_id, label, notes_label, placeholder in (
+        (
+            "task.close_reviewed",
+            "Approve & Done",
+            "Approval Notes",
+            "Record the Human Owner approval basis.",
+        ),
+        (
+            "task.request_changes",
+            "Request Changes",
+            "Change Request Notes",
+            "Describe the required rework.",
+        ),
+    ):
+        controls.append(
+            '<div class="review-action">'
+            "<h4>{}</h4>"
+            "{}"
+            "{}"
+            "</div>".format(
+                escape(label),
+                workflow_preview_html(workflows.get(action_id) or {}),
+                action_form(
+                    action_id,
+                    [
+                        hidden_field("task", task_ref),
+                        textarea_field(
+                            "notes",
+                            notes_label,
+                            rows=2,
+                            placeholder=placeholder,
+                            required=True,
+                        ),
+                    ],
+                    button_label=label,
+                ),
+            )
+        )
+    return (
+        '<section class="review-section">'
+        "<h3>Review Decision</h3>"
+        '<div class="review-actions">{}</div>'
+        "</section>"
+    ).format("".join(controls))
+
+
+def linked_changes_for_task(
+    task: Mapping[str, Any],
+    data: Mapping[str, Any],
+) -> list[Mapping[str, Any]]:
+    refs = set(task_ref_values(task))
+    matches = []
+    for change in data.get("changes") or []:
+        if not isinstance(change, Mapping):
+            continue
+        linked = set(_string_items(change.get("linked_tasks")))
+        if refs.intersection(linked):
+            matches.append(change)
+    return matches
+
+
+def task_ref_matches(task: Mapping[str, Any], value: str) -> bool:
+    needle = str(value or "").strip()
+    return bool(needle) and needle in set(task_ref_values(task))
+
+
+def task_ref_values(task: Mapping[str, Any]) -> list[str]:
+    values = [
+        str(task.get("id") or ""),
+        str(task.get("ref") or ""),
+        str(task.get("legacy_id") or ""),
+    ]
+    aliases = task.get("aliases")
+    if isinstance(aliases, Sequence) and not isinstance(aliases, (str, bytes)):
+        values.extend(str(alias or "") for alias in aliases)
+    return [value for value in values if value]
+
+
+def text_list(
+    value: Any,
+    *,
+    empty_text: str,
+    code: bool = False,
+) -> str:
+    items = _string_items(value)
+    if not items:
+        return '<p class="empty">{}</p>'.format(escape(empty_text))
+    if code:
+        return '<ul class="compact-list">{}</ul>'.format(
+            "".join("<li><code>{}</code></li>".format(escape(item)) for item in items)
+        )
+    return '<ul class="compact-list">{}</ul>'.format(
+        "".join("<li>{}</li>".format(escape(item)) for item in items)
+    )
+
+
 def _mapping(value: Any) -> Mapping[str, Any]:
     return value if isinstance(value, Mapping) else {}
 
@@ -1220,11 +1598,11 @@ def render_page(title: str, body: str, *, active: str) -> str:
       background: var(--accent-soft);
       color: var(--accent);
     }}
-    .badge.warn, .badge.planned, .badge.blocked, .badge.in_review {{
+    .badge.warn, .badge.planned, .badge.blocked, .badge.in_review, .badge.stale, .badge.unknown {{
       background: var(--warn-soft);
       color: var(--warn);
     }}
-    .badge.fail, .badge.changes_requested, .badge.write {{
+    .badge.fail, .badge.changes_requested, .badge.write, .badge.missing {{
       background: var(--fail-soft);
       color: var(--fail);
     }}
@@ -1238,6 +1616,73 @@ def render_page(title: str, body: str, *, active: str) -> str:
       flex-wrap: wrap;
       gap: 12px;
       align-items: center;
+    }}
+    .execution-status {{
+      display: grid;
+      gap: 14px;
+    }}
+    .execution-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+    }}
+    .execution-item {{
+      display: grid;
+      gap: 6px;
+      align-content: start;
+      min-height: 92px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      background: #fbfcfe;
+    }}
+    .execution-item > span {{
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }}
+    .execution-item code {{
+      overflow-wrap: anywhere;
+    }}
+    .execution-item p {{
+      margin: 0;
+    }}
+    .execution-actions {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }}
+    .execution-actions form {{
+      display: grid;
+      gap: 8px;
+      align-content: end;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      background: #f8fafc;
+    }}
+    .execution-warnings {{
+      margin: 0;
+      padding-left: 18px;
+      color: var(--warn);
+    }}
+    .execution-warnings li {{
+      margin: 4px 0;
+    }}
+    .health-message {{
+      min-width: 260px;
+      overflow-wrap: anywhere;
+    }}
+    .health-actions form {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      min-width: 220px;
+    }}
+    .health-actions button {{
+      min-width: 120px;
     }}
     .event-list {{
       margin: 0;
@@ -1348,6 +1793,66 @@ def render_page(title: str, body: str, *, active: str) -> str:
       padding-left: 18px;
       color: var(--muted);
       font-size: 12px;
+    }}
+    .review-package {{
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+      margin-top: 16px;
+    }}
+    .review-package:first-of-type {{
+      border-top: 0;
+      margin-top: 0;
+    }}
+    .review-package-header {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }}
+    .review-package h3 {{
+      margin: 0 0 8px;
+      font-size: 16px;
+    }}
+    .review-package h4 {{
+      margin: 0 0 8px;
+      font-size: 13px;
+    }}
+    .review-section {{
+      border-top: 1px solid var(--line);
+      margin-top: 16px;
+      padding-top: 14px;
+    }}
+    .review-subsection {{
+      margin-top: 12px;
+    }}
+    .review-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 10px;
+    }}
+    .review-field {{
+      min-width: 0;
+    }}
+    .review-field span {{
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }}
+    .review-field div {{
+      overflow-wrap: anywhere;
+    }}
+    .review-actions {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }}
+    .review-action form {{
+      display: grid;
+      gap: 8px;
     }}
     .action-result-header {{
       display: flex;
@@ -1544,6 +2049,109 @@ def doctor_cache_detail(doctor: Mapping[str, Any]) -> str:
         escape(state),
         escape(age_text),
     )
+
+
+def project_health_panel(
+    data: Mapping[str, Any],
+    *,
+    selected_task: Mapping[str, Any] | None = None,
+) -> str:
+    health = _mapping(data.get("health"))
+    doctor = _mapping(health.get("doctor"))
+    artifacts = [
+        artifact
+        for artifact in health.get("artifacts") or []
+        if isinstance(artifact, Mapping)
+    ]
+    items = ([doctor] if doctor else []) + artifacts
+    rows = []
+    for item in items:
+        detail = str(item.get("message") or item.get("reason") or "")
+        path = str(item.get("path") or "")
+        if path:
+            detail = "{}{}".format(
+                "{} ".format(detail) if detail else "",
+                path,
+            ).strip()
+        rows.append(
+            "<tr><td>{}</td><td>{}</td><td class=\"health-message\">{}</td><td class=\"health-actions\">{}</td></tr>".format(
+                escape(item.get("label") or item.get("key") or ""),
+                status_badge(str(item.get("status") or "UNKNOWN")),
+                escape(detail),
+                health_action_control(item, selected_task=selected_task),
+            )
+        )
+    return (
+        '<section class="panel health-panel">'
+        "<h2>Project Health</h2>"
+        "{}"
+        "</section>"
+    ).format(
+        table(("Area", "Status", "Signal", "Repair / Check"), rows, "No health signals.")
+    )
+
+
+def health_action_control(
+    item: Mapping[str, Any],
+    *,
+    selected_task: Mapping[str, Any] | None = None,
+) -> str:
+    action = str(item.get("action") or "")
+    if not action:
+        return '<p class="empty">No action.</p>'
+    target_action = action in {
+        "task.refresh_execution_context",
+        "codex.prompt.build",
+        "context.build",
+    }
+    if item.get("available") is False and not target_action:
+        return '<p class="empty">{}</p>'.format(
+            escape(item.get("reason") or "Action unavailable.")
+        )
+
+    fields: list[str] = []
+    if target_action:
+        task_ref, reason = health_action_task_ref(item, selected_task=selected_task)
+        if not task_ref:
+            return '<p class="empty">{}</p>'.format(escape(reason))
+        fields.append(hidden_field("task", task_ref))
+        if action == "codex.prompt.build":
+            fields.append(hidden_field("with_context", "yes"))
+
+    return action_form(
+        action,
+        fields,
+        button_label=str(item.get("action_label") or action),
+    )
+
+
+def health_action_task_ref(
+    item: Mapping[str, Any],
+    *,
+    selected_task: Mapping[str, Any] | None = None,
+) -> tuple[str, str]:
+    item_task = str(item.get("task") or "")
+    if selected_task is not None:
+        selected_ref = str(selected_task.get("ref") or selected_task.get("id") or "")
+        if not selected_ref:
+            return "", "No safe target task exists."
+
+        status = str(selected_task.get("status") or "")
+        if status not in TASK_REPAIR_STATUSES:
+            return "", "No safe target task exists."
+
+        selected_refs = {
+            str(selected_task.get(field) or "")
+            for field in ("id", "ref", "legacy_id")
+            if selected_task.get(field)
+        }
+        if status == "in_review" and item_task not in selected_refs:
+            return "", "No safe target task exists."
+        return selected_ref, ""
+
+    if item_task:
+        return item_task, ""
+    return "", "No safe target task exists."
 
 
 def task_filter_state(
@@ -2138,6 +2746,160 @@ def task_detail(task: Mapping[str, Any]) -> str:
     )
 
 
+def execution_status_panel(
+    data: Mapping[str, Any],
+    *,
+    selected_task: Mapping[str, Any] | None = None,
+    show_actions: bool = True,
+) -> str:
+    context = _mapping(data.get("execution_context"))
+    current = _mapping(context.get("current_task") or data.get("current_task"))
+    prompt = _mapping(context.get("prompt"))
+    pack = _mapping(context.get("context_pack"))
+    warnings = _string_items(context.get("warnings"))
+    selected_warning = _selected_task_warning(current, selected_task or {})
+    if selected_warning:
+        warnings.insert(0, selected_warning)
+
+    parts = ['<div class="execution-status">']
+    parts.append(current_execution_task_line(current))
+    parts.append(
+        '<div class="execution-grid">{}{}{}{} </div>'.format(
+            execution_status_item(
+                "Codex Prompt",
+                str(prompt.get("status") or "unknown"),
+                str(prompt.get("path") or "AI_PROJECT/generated/CODEX_PROMPT.md"),
+                str(prompt.get("reason") or ""),
+            ),
+            execution_status_item(
+                "Context Pack",
+                str(pack.get("status") or "unknown"),
+                str(pack.get("path") or "AI_PROJECT/generated/CONTEXT_PACK.md"),
+                str(pack.get("reason") or ""),
+            ),
+            execution_status_item(
+                "Prompt Code",
+                str(prompt.get("code") or prompt.get("raw_status") or "unknown"),
+                str(context.get("updated_at") or ""),
+                "",
+            ),
+            execution_status_item(
+                "Context Task",
+                str(pack.get("task_id") or "unknown"),
+                _revision_detail(pack),
+                "",
+            ),
+        )
+    )
+    copy_instruction = str(prompt.get("copy_instruction") or "")
+    if copy_instruction:
+        parts.append(
+            '<label class="copy-field">Copy Codex Instruction'
+            '<textarea readonly rows="2">{}</textarea></label>'.format(
+                escape(copy_instruction)
+            )
+        )
+    if current and show_actions:
+        parts.append(execution_action_controls(current))
+    if warnings:
+        parts.append(
+            '<ul class="execution-warnings">{}</ul>'.format(
+                "".join("<li>{}</li>".format(escape(warning)) for warning in warnings)
+            )
+        )
+    parts.append("</div>")
+    return "".join(parts)
+
+
+def current_execution_task_line(task: Mapping[str, Any]) -> str:
+    if not task:
+        return '<p class="empty">No current task selected.</p>'
+    return (
+        '<div class="status-row execution-current">{}'
+        '<strong>{}</strong><code>{}</code><span>{}</span></div>'
+    ).format(
+        status_badge(str(task.get("status") or "unknown")),
+        escape(task.get("ref") or task.get("id") or ""),
+        escape(task.get("legacy_id") or task.get("id") or ""),
+        escape(task.get("title") or ""),
+    )
+
+
+def execution_status_item(
+    label: str,
+    status: str,
+    detail: str,
+    reason: str,
+) -> str:
+    return (
+        '<div class="execution-item">'
+        "<span>{}</span>{}<code>{}</code>{}"
+        "</div>"
+    ).format(
+        escape(label),
+        status_badge(status),
+        escape(detail),
+        '<p class="muted">{}</p>'.format(escape(reason)) if reason else "",
+    )
+
+
+def execution_action_controls(current: Mapping[str, Any]) -> str:
+    task_ref = str(current.get("ref") or current.get("id") or "")
+    return (
+        '<div class="execution-actions">'
+        "{}{}{}"
+        "</div>"
+    ).format(
+        action_form(
+            "task.refresh_execution_context",
+            [hidden_field("task", task_ref)],
+            button_label="Refresh Context",
+        ),
+        action_form(
+            "codex.prompt.build",
+            [
+                hidden_field("task", task_ref),
+                hidden_field("with_context", "yes"),
+            ],
+            button_label="Refresh Prompt",
+        ),
+        action_form(
+            "current.clear",
+            [],
+            button_label="Clear Current",
+        ),
+    )
+
+
+def _selected_task_warning(
+    current: Mapping[str, Any],
+    selected_task: Mapping[str, Any],
+) -> str:
+    if not selected_task:
+        return ""
+    selected_label = str(selected_task.get("ref") or selected_task.get("id") or "")
+    if not current:
+        return "Selected task {} is not the current task; no current task is selected.".format(
+            selected_label
+        )
+    if task_ref_matches(current, selected_label):
+        return ""
+    current_label = str(current.get("ref") or current.get("id") or "")
+    return "Selected task {} differs from current task {}.".format(
+        selected_label,
+        current_label,
+    )
+
+
+def _revision_detail(pack: Mapping[str, Any]) -> str:
+    parts = []
+    if pack.get("tasks_revision") is not None:
+        parts.append("tasks rev {}".format(pack.get("tasks_revision")))
+    if pack.get("docs_revision") is not None:
+        parts.append("docs rev {}".format(pack.get("docs_revision")))
+    return ", ".join(parts) or "not reported"
+
+
 def task_table(
     tasks: Sequence[Mapping[str, Any]],
     *,
@@ -2366,8 +3128,10 @@ def action_form(
     *,
     confirm_required: bool = True,
     button_label: str | None = None,
+    multipart: bool = False,
 ) -> str:
     confirm_required_attr = " required" if confirm_required else ""
+    enctype_attr = ' enctype="multipart/form-data"' if multipart else ""
     controls = [
         '<input type="hidden" name="action" value="{}">'.format(escape(action_id)),
         *fields,
@@ -2378,7 +3142,10 @@ def action_form(
             escape(button_label or action_id)
         ),
     ]
-    return '<form method="post" action="/actions">{}</form>'.format("".join(controls))
+    return '<form method="post" action="/actions"{}>{}</form>'.format(
+        enctype_attr,
+        "".join(controls),
+    )
 
 
 def hidden_field(name: str, value: str) -> str:
@@ -2395,6 +3162,15 @@ def input_field(name: str, label: str, value: str = "", *, required: bool = True
         escape(name),
         escape(value),
         required_attr,
+    )
+
+
+def file_input_field(name: str, label: str, *, accept: str = "") -> str:
+    accept_attr = ' accept="{}"'.format(escape(accept)) if accept else ""
+    return '<label>{}<input type="file" name="{}"{}></label>'.format(
+        escape(label),
+        escape(name),
+        accept_attr,
     )
 
 
@@ -2477,6 +3253,124 @@ def checkbox_field(name: str, label: str) -> str:
         escape(name),
         escape(label),
     )
+
+
+def parse_multipart_action_fields(content_type: str, body: bytes) -> dict[str, str]:
+    """Parse a bounded multipart web action body without executing uploaded content."""
+
+    header = "Content-Type: {}\r\nMIME-Version: 1.0\r\n\r\n".format(content_type)
+    message = BytesParser(policy=email_policy).parsebytes(
+        header.encode("utf-8", "replace") + body
+    )
+    if not message.is_multipart():
+        raise WebActionError(
+            "WEB_INVALID_MULTIPART_BODY",
+            "Multipart write request body is invalid.",
+        )
+
+    fields: dict[str, str] = {}
+    uploads: list[tuple[str, str, bytes]] = []
+    for part in message.iter_parts():
+        if part.get_content_disposition() != "form-data":
+            continue
+        name = part.get_param("name", header="content-disposition")
+        if not name:
+            continue
+        payload = part.get_payload(decode=True) or b""
+        filename = part.get_filename()
+        if filename is None:
+            try:
+                fields[str(name)] = payload.decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise WebActionError(
+                    "WEB_MULTIPART_FIELD_NOT_UTF8",
+                    "Multipart form field is not valid UTF-8.",
+                    details={"field": str(name)},
+                ) from exc
+            continue
+        if filename or payload:
+            uploads.append((str(name), str(filename), payload))
+
+    apply_import_upload(fields, uploads)
+    return fields
+
+
+def apply_import_upload(
+    fields: dict[str, str],
+    uploads: Sequence[tuple[str, str, bytes]],
+) -> None:
+    """Map a validated Bulk Task Import upload onto the existing import_text field."""
+
+    if not uploads:
+        return
+    action = fields.get("action", "")
+    if action != "task.import":
+        raise WebActionError(
+            "WEB_UNSUPPORTED_FILE_UPLOAD",
+            "File uploads are supported only by Bulk Task Import.",
+            details={"action": action or "missing"},
+        )
+    unexpected = sorted(
+        name
+        for name, _filename, _payload in uploads
+        if name != WEB_IMPORT_FILE_FIELD
+    )
+    if unexpected:
+        raise WebActionError(
+            "WEB_UNSUPPORTED_FILE_UPLOAD",
+            "Unsupported file upload field.",
+            details={"fields": unexpected},
+        )
+
+    import_uploads = [
+        (filename, payload)
+        for name, filename, payload in uploads
+        if name == WEB_IMPORT_FILE_FIELD
+    ]
+    if len(import_uploads) > 1:
+        raise WebActionError(
+            "WEB_IMPORT_MULTIPLE_FILES",
+            "Bulk Task Import accepts one uploaded file.",
+        )
+    filename, payload = import_uploads[0]
+    if not filename:
+        raise WebActionError(
+            "WEB_IMPORT_FILE_NAME_REQUIRED",
+            "Uploaded import file must have a filename.",
+        )
+    suffix = Path(filename).suffix.lower()
+    if suffix not in WEB_IMPORT_ALLOWED_SUFFIXES:
+        raise WebActionError(
+            "WEB_IMPORT_FILE_TYPE_REJECTED",
+            "Bulk Task Import accepts only .json or .txt files.",
+            details={
+                "filename": filename,
+                "allowed_suffixes": sorted(WEB_IMPORT_ALLOWED_SUFFIXES),
+            },
+        )
+    if len(payload) > WEB_IMPORT_FILE_MAX_BYTES:
+        raise WebActionError(
+            "WEB_IMPORT_FILE_TOO_LARGE",
+            "Uploaded import file is too large.",
+            details={
+                "filename": filename,
+                "max_bytes": WEB_IMPORT_FILE_MAX_BYTES,
+                "actual_bytes": len(payload),
+            },
+        )
+    if fields.get("import_text", "").strip():
+        raise WebActionError(
+            "WEB_IMPORT_SOURCE_CONFLICT",
+            "Use either pasted JSON or an uploaded file for Bulk Task Import.",
+        )
+    try:
+        fields["import_text"] = payload.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise WebActionError(
+            "WEB_IMPORT_FILE_NOT_UTF8",
+            "Uploaded import file must be valid UTF-8 text.",
+            details={"filename": filename},
+        ) from exc
 
 
 def escape(value: Any) -> str:

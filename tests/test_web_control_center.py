@@ -18,6 +18,7 @@ from ai_project_ctl.web.read_model import (
     require_read_only_command,
 )
 from ai_project_ctl.web.server import (
+    WEB_IMPORT_FILE_MAX_BYTES,
     WebServerError,
     make_handler,
     render_action_error,
@@ -160,6 +161,419 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('value="task.request_changes"', body)
         self.assertIn("Build Codex prompt with context", body)
         self.assertIn('name="confirm" value="yes" required', body)
+
+    def test_current_execution_panel_shows_ready_prompt_and_copy_instruction(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            prompt_path = root / "AI_PROJECT/generated/CODEX_PROMPT.md"
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-048",
+                        "ref": "WFA-17",
+                        "legacy_id": "TASK-048",
+                        "status": "in_progress",
+                        "title": "Current execution panel",
+                        "summary": "Show execution status.",
+                        "epic_id": "EPIC-006",
+                        "epic_key": "WFA",
+                    }
+                ],
+                current_task_id="TASK-048",
+                epics=[{"id": "EPIC-006", "key": "WFA", "status": "active"}],
+                execution={
+                    "status": "READY",
+                    "code": "CODEX_READY",
+                    "updated_at": "2026-06-19T13:35:28Z",
+                    "prompt_exists": True,
+                    "prompt_path": str(prompt_path),
+                    "source_type": "task",
+                    "source_id": "TASK-048",
+                    "source_status": "in_progress",
+                    "context_pack": {
+                        "path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+                        "task_id": "TASK-048",
+                        "tasks_revision": 1,
+                        "docs_revision": 23,
+                    },
+                },
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            data_status, _, data_body = route("/data.json", model)
+            dashboard_status, _, dashboard_body = route("/", model)
+            tasks_status, _, tasks_body = route("/tasks?q=WFA-17", model)
+
+        payload = json.loads(data_body)
+
+        self.assertEqual(data_status.value, 200)
+        self.assertEqual(dashboard_status.value, 200)
+        self.assertEqual(tasks_status.value, 200)
+        self.assertEqual(payload["execution_context"]["prompt"]["status"], "ready")
+        self.assertEqual(payload["execution_context"]["context_pack"]["status"], "ready")
+        self.assertIn("Current Execution", dashboard_body)
+        self.assertIn("Codex Prompt", dashboard_body)
+        self.assertIn("Context Pack", dashboard_body)
+        self.assertIn("Copy Codex Instruction", dashboard_body)
+        self.assertIn(
+            "Read AI_PROJECT/generated/CODEX_PROMPT.md and execute it.",
+            dashboard_body,
+        )
+        self.assertIn("Refresh Context", dashboard_body)
+        self.assertIn("Refresh Prompt", dashboard_body)
+        self.assertIn("Clear Current", dashboard_body)
+        self.assertIn("Current Execution", tasks_body)
+
+    def test_current_execution_panel_shows_stale_prompt_context_and_selection_warning(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-048",
+                        "ref": "WFA-17",
+                        "legacy_id": "TASK-048",
+                        "status": "in_progress",
+                        "title": "Current task",
+                        "epic_id": "EPIC-006",
+                        "epic_key": "WFA",
+                    },
+                    {
+                        "id": "TASK-049",
+                        "ref": "WFA-18",
+                        "legacy_id": "TASK-049",
+                        "status": "ready",
+                        "title": "Selected task",
+                        "epic_id": "EPIC-006",
+                        "epic_key": "WFA",
+                    },
+                ],
+                current_task_id="TASK-048",
+                epics=[{"id": "EPIC-006", "key": "WFA", "status": "active"}],
+                execution={
+                    "status": "READY",
+                    "code": "CODEX_READY",
+                    "prompt_exists": True,
+                    "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+                    "source_type": "task",
+                    "source_id": "TASK-999",
+                    "source_status": "in_progress",
+                    "context_pack": {
+                        "path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+                        "task_id": "TASK-048",
+                        "tasks_revision": 0,
+                    },
+                },
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            data_status, _, data_body = route("/data.json", model)
+            tasks_status, _, tasks_body = route("/tasks?q=WFA-18&group=none", model)
+
+        payload = json.loads(data_body)
+
+        self.assertEqual(data_status.value, 200)
+        self.assertEqual(tasks_status.value, 200)
+        self.assertEqual(payload["execution_context"]["prompt"]["status"], "stale")
+        self.assertEqual(payload["execution_context"]["context_pack"]["status"], "stale")
+        self.assertIn("Codex prompt targets TASK-999", tasks_body)
+        self.assertIn("Context Pack tasks revision is 0 but current is 1", tasks_body)
+        self.assertIn(
+            "Selected task WFA-18 differs from current task WFA-17.",
+            tasks_body,
+        )
+        self.assertNotIn("Copy Codex Instruction", tasks_body)
+
+    def test_current_execution_panel_shows_missing_prompt_and_context(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-048",
+                        "ref": "WFA-17",
+                        "legacy_id": "TASK-048",
+                        "status": "in_progress",
+                        "title": "Missing execution state",
+                        "epic_id": "EPIC-006",
+                    }
+                ],
+                current_task_id="TASK-048",
+                epics=[{"id": "EPIC-006", "status": "active"}],
+            )
+
+            data_status, _, data_body = route(
+                "/data.json",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
+            dashboard_status, _, dashboard_body = route(
+                "/",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
+
+        payload = json.loads(data_body)
+
+        self.assertEqual(data_status.value, 200)
+        self.assertEqual(dashboard_status.value, 200)
+        self.assertEqual(payload["execution_context"]["prompt"]["status"], "missing")
+        self.assertEqual(payload["execution_context"]["context_pack"]["status"], "missing")
+        self.assertIn("No current Codex prompt state exists.", dashboard_body)
+        self.assertIn("No Context Pack metadata exists.", dashboard_body)
+        self.assertNotIn("Copy Codex Instruction", dashboard_body)
+
+    def test_current_execution_panel_shows_no_current_task_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "DOC-01",
+                        "legacy_id": "TASK-001",
+                        "status": "ready",
+                        "title": "Ready but not current",
+                        "epic_id": "EPIC-001",
+                    }
+                ],
+                epics=[{"id": "EPIC-001", "status": "active"}],
+            )
+
+            data_status, _, data_body = route(
+                "/data.json",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
+            dashboard_status, _, dashboard_body = route(
+                "/",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
+
+        payload = json.loads(data_body)
+
+        self.assertEqual(data_status.value, 200)
+        self.assertEqual(dashboard_status.value, 200)
+        self.assertEqual(payload["execution_context"]["prompt"]["status"], "unknown")
+        self.assertEqual(payload["execution_context"]["context_pack"]["status"], "unknown")
+        self.assertIn("No current task selected.", dashboard_body)
+        self.assertNotIn('value="current.clear"', dashboard_body)
+
+    def test_dashboard_exposes_latest_task_execution_report(self):
+        report_state = {
+            "schema_version": 1,
+            "revision": 1,
+            "created_at": "2026-06-19T12:00:00Z",
+            "updated_at": "2026-06-19T12:00:00Z",
+            "latest_by_task": {"TASK-001": "RPT-001"},
+            "reports": [
+                {
+                    "id": "RPT-001",
+                    "task_id": "TASK-001",
+                    "task_ref": "DOC-01",
+                    "submitted_at": "2026-06-19T12:00:00Z",
+                    "submitted_by": "codex",
+                    "source_file": "/tmp/report.json",
+                    "report": {
+                        "task_id": "TASK-001",
+                        "task_ref": "DOC-01",
+                        "implementation_summary": "Implemented report flow.",
+                        "changed_files": ["scripts/taskctl.py"],
+                        "generated_files": [],
+                        "checks": [
+                            {
+                                "name": "unit",
+                                "result": "pass",
+                                "blocking": True,
+                                "duration_sec": 1.2,
+                            }
+                        ],
+                        "warnings": [],
+                        "blockers": [],
+                        "notes": ["Ready for review."],
+                        "owner_decision_required": True,
+                    },
+                }
+            ],
+        }
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "DOC-01",
+                        "status": "in_review",
+                        "title": "Task with report",
+                        "epic_id": "EPIC-001",
+                        "order": 1,
+                    }
+                ],
+                epics=[{"id": "EPIC-001", "status": "active", "order": 1}],
+                task_reports=report_state,
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+            data = model.dashboard()
+
+        latest = data["tasks"][0]["latest_report"]
+        self.assertEqual(latest["id"], "RPT-001")
+        self.assertEqual(latest["implementation_summary"], "Implemented report flow.")
+        self.assertEqual(latest["check_counts"]["pass"], 1)
+        self.assertTrue(latest["owner_decision_required"])
+
+    def test_reviews_page_shows_task_review_package_with_report(self):
+        task = {
+            "id": "TASK-047",
+            "ref": "WFA-16",
+            "legacy_id": "TASK-047",
+            "status": "in_review",
+            "title": "UIX-10 Add Task Review Package View",
+            "summary": "Review task changes in one place.",
+            "epic_id": "EPIC-006",
+            "epic_key": "WFA",
+            "active_stage": "Task Execution",
+            "scope": ["Show review metadata.", "Show report details."],
+            "acceptance_criteria": ["Owner can understand the decision."],
+            "order": 16,
+        }
+        report_state = review_report_state(
+            task_id="TASK-047",
+            task_ref="WFA-16",
+            summary="Implemented the review package.",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[task],
+                epics=[{"id": "EPIC-006", "status": "active", "order": 1}],
+                task_reports=report_state,
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/reviews", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Task Review Packages", body)
+        self.assertIn("UIX-10 Add Task Review Package View", body)
+        self.assertIn("WFA-16", body)
+        self.assertIn("TASK-047", body)
+        self.assertIn("Review task changes in one place.", body)
+        self.assertIn("Show review metadata.", body)
+        self.assertIn("Owner can understand the decision.", body)
+        self.assertIn("Implemented the review package.", body)
+        self.assertIn("ai_project_ctl/web/server.py", body)
+        self.assertIn("AI_PROJECT/generated/CODEX_PROMPT.md", body)
+        self.assertIn("unit", body)
+        self.assertIn("warn", body)
+        self.assertIn("Review warning.", body)
+        self.assertIn("Manual blocker.", body)
+        self.assertIn("Ready for owner decision.", body)
+        self.assertIn("Approve &amp; Done", body)
+        self.assertIn('value="task.close_reviewed"', body)
+        self.assertIn("Request Changes", body)
+        self.assertIn('value="task.request_changes"', body)
+        self.assertIn('name="confirm" value="yes" required', body)
+        self.assertIn('textarea name="notes" rows="2"', body)
+
+    def test_reviews_page_shows_missing_report_clearly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-047",
+                        "ref": "WFA-16",
+                        "legacy_id": "TASK-047",
+                        "status": "in_review",
+                        "title": "Review without report",
+                        "summary": "No report yet.",
+                        "epic_id": "EPIC-006",
+                        "order": 16,
+                    }
+                ],
+                epics=[{"id": "EPIC-006", "status": "active", "order": 1}],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/reviews", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Review without report", body)
+        self.assertIn("No Codex execution report submitted for this task.", body)
+
+    def test_reviews_page_shows_linked_change_status(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-047",
+                        "ref": "WFA-16",
+                        "legacy_id": "TASK-047",
+                        "status": "in_review",
+                        "title": "Review with change",
+                        "epic_id": "EPIC-006",
+                        "order": 16,
+                    }
+                ],
+                epics=[{"id": "EPIC-006", "status": "active", "order": 1}],
+                changes=[
+                    {
+                        "id": "CHG-026",
+                        "status": "approved",
+                        "title": "UIX-10 Add Task Review Package View",
+                        "linked_tasks": ["TASK-047"],
+                        "order": 26,
+                    }
+                ],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/reviews", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Linked Evolution Change", body)
+        self.assertIn("CHG-026", body)
+        self.assertIn("approved", body)
+        self.assertIn("UIX-10 Add Task Review Package View", body)
+
+    def test_reviews_page_hides_decision_controls_for_invalid_status(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "DOC-01",
+                        "legacy_id": "TASK-001",
+                        "status": "ready",
+                        "title": "Ready task",
+                        "epic_id": "EPIC-001",
+                        "order": 1,
+                    }
+                ],
+                epics=[{"id": "EPIC-001", "status": "active", "order": 1}],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/reviews?task=DOC-01", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Ready task", body)
+        self.assertIn(
+            "Review decision controls unavailable: task status is ready.",
+            body,
+        )
+        self.assertNotIn('value="task.close_reviewed"', body)
+        self.assertNotIn('value="task.request_changes"', body)
 
     def test_tasks_page_shows_dependency_and_missing_change_blockers(self):
         tasks = [
@@ -532,6 +946,87 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(payload["doctor"]["overall_status"], "WARN")
         self.assertTrue(payload["doctor"]["cache"]["cached"])
 
+    def test_project_health_panel_shows_warn_fail_and_repair_actions(self):
+        def fake_run(argv, **_kwargs):
+            tail = argv[argv.index("--json") + 1 :] if "--json" in argv else argv[-3:]
+            if Path(argv[1]).name == "aictl.py" and tail == ["project", "doctor"]:
+                return completed(
+                    {
+                        "data": {
+                            "overall_status": "FAIL",
+                            "summary": {"PASS": 1, "WARN": 1, "FAIL": 1},
+                            "findings": [
+                                {
+                                    "status": "WARN",
+                                    "check": "docs generated output",
+                                    "message": "Generated docs are stale.",
+                                },
+                                {
+                                    "status": "FAIL",
+                                    "check": "protected project files",
+                                    "message": "Protected-file check failed.",
+                                },
+                            ],
+                        }
+                    }
+                )
+            raise AssertionError("unexpected command: {}".format(argv))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            model = ReadOnlyProjectModel(root, actor="tester")
+            with patch("ai_project_ctl.web.read_model.subprocess.run", side_effect=fake_run):
+                status, _, body = route("/doctor?refresh=1", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Project Health", body)
+        self.assertIn("Generated docs are stale.", body)
+        self.assertIn("Protected-file check failed.", body)
+        self.assertIn("Render Docs", body)
+        self.assertIn('value="docs.render"', body)
+        self.assertIn("Check Protected Files", body)
+        self.assertIn('value="project.protected_check"', body)
+        self.assertIn("FAIL", body)
+
+    def test_tasks_page_health_actions_use_single_selected_task(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-049",
+                        "ref": "WFA-18",
+                        "legacy_id": "TASK-049",
+                        "status": "ready",
+                        "title": "Selected repair target",
+                        "epic_id": "EPIC-006",
+                    }
+                ],
+                epics=[{"id": "EPIC-006", "key": "WFA", "status": "active"}],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/tasks?q=WFA-18", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Refresh Context/Codex", body)
+        self.assertIn('value="task.refresh_execution_context"', body)
+        self.assertIn('name="task" value="WFA-18"', body)
+
+    def test_dashboard_health_actions_reject_missing_task_target(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("No safe target task exists.", body)
+        self.assertNotIn('value="task.refresh_execution_context"', body)
+
     def test_post_action_invalidates_doctor_cache(self):
         def fake_doctor_run(argv, **_kwargs):
             tail = argv[argv.index("--json") + 1 :] if "--json" in argv else argv[-3:]
@@ -804,7 +1299,10 @@ class WebControlCenterTests(unittest.TestCase):
                     }
                 ],
             )
-            status, _, body = route("/actions", ReadOnlyProjectModel(root, actor="tester"))
+            status, _, body = route(
+                "/actions",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
 
         self.assertEqual(status.value, 200)
         self.assertIn("Create Task", body)
@@ -888,6 +1386,156 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("--confirm", tail)
         self.assertNotIn("--preview", tail)
 
+    def test_task_import_multipart_file_upload_previews_via_text_payload(self):
+        calls = []
+        payload = '{"tasks":[{"epic":"EPIC-006","title":"Imported from file"}]}'
+
+        def fake_run(argv, **_kwargs):
+            calls.append(argv)
+            return process(
+                stdout=json.dumps(
+                    {
+                        "ok": True,
+                        "data": {
+                            "dry_run": True,
+                            "task_count": 1,
+                            "steps": [],
+                        },
+                    }
+                )
+                + "\n"
+            )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            server = ThreadingHTTPServer(
+                ("127.0.0.1", 0),
+                make_handler(ReadOnlyProjectModel(tmp, actor="tester")),
+            )
+            thread = threading.Thread(target=server.serve_forever)
+            thread.daemon = True
+            thread.start()
+            try:
+                url = "http://127.0.0.1:{}/actions".format(server.server_address[1])
+                boundary, body = multipart_body(
+                    {"action": "task.import"},
+                    {"import_file": ("tasks.json", "application/json", payload)},
+                )
+                request = urllib.request.Request(
+                    url,
+                    data=body,
+                    method="POST",
+                    headers={
+                        "Content-Type": "multipart/form-data; boundary={}".format(
+                            boundary
+                        )
+                    },
+                )
+                with patch(
+                    "ai_project_ctl.web.actions.subprocess.run",
+                    side_effect=fake_run,
+                ):
+                    response = urllib.request.urlopen(request, timeout=5)
+                    body_html = response.read().decode("utf-8")
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+
+        tail = calls[0][calls[0].index("--json") + 1 :]
+
+        self.assertEqual(response.status, 200)
+        self.assertIn("Bulk import tasks", body_html)
+        self.assertEqual(tail[:4], ["task", "import", "--text", payload])
+        self.assertIn("--preview", tail)
+        self.assertNotIn("--file", tail)
+
+    def test_task_import_upload_rejects_unsupported_file_type_before_delegating(self):
+        calls = []
+
+        with tempfile.TemporaryDirectory() as tmp:
+            server = ThreadingHTTPServer(
+                ("127.0.0.1", 0),
+                make_handler(ReadOnlyProjectModel(tmp, actor="tester")),
+            )
+            thread = threading.Thread(target=server.serve_forever)
+            thread.daemon = True
+            thread.start()
+            try:
+                url = "http://127.0.0.1:{}/actions".format(server.server_address[1])
+                boundary, body = multipart_body(
+                    {"action": "task.import"},
+                    {"import_file": ("tasks.py", "text/x-python", '{"tasks": []}')},
+                )
+                request = urllib.request.Request(
+                    url,
+                    data=body,
+                    method="POST",
+                    headers={
+                        "Content-Type": "multipart/form-data; boundary={}".format(
+                            boundary
+                        )
+                    },
+                )
+                with patch(
+                    "ai_project_ctl.web.actions.subprocess.run",
+                    side_effect=calls.append,
+                ):
+                    with self.assertRaises(urllib.error.HTTPError) as raised:
+                        urllib.request.urlopen(request, timeout=5)
+                    body_html = raised.exception.read().decode("utf-8")
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+
+        self.assertEqual(raised.exception.code, 400)
+        self.assertIn("WEB_IMPORT_FILE_TYPE_REJECTED", body_html)
+        self.assertEqual(calls, [])
+
+    def test_task_import_upload_rejects_oversized_file_before_delegating(self):
+        calls = []
+        oversized = b"[" + b" " * WEB_IMPORT_FILE_MAX_BYTES + b"]"
+
+        with tempfile.TemporaryDirectory() as tmp:
+            server = ThreadingHTTPServer(
+                ("127.0.0.1", 0),
+                make_handler(ReadOnlyProjectModel(tmp, actor="tester")),
+            )
+            thread = threading.Thread(target=server.serve_forever)
+            thread.daemon = True
+            thread.start()
+            try:
+                url = "http://127.0.0.1:{}/actions".format(server.server_address[1])
+                boundary, body = multipart_body(
+                    {"action": "task.import"},
+                    {"import_file": ("tasks.json", "application/json", oversized)},
+                )
+                request = urllib.request.Request(
+                    url,
+                    data=body,
+                    method="POST",
+                    headers={
+                        "Content-Type": "multipart/form-data; boundary={}".format(
+                            boundary
+                        )
+                    },
+                )
+                with patch(
+                    "ai_project_ctl.web.actions.subprocess.run",
+                    side_effect=calls.append,
+                ):
+                    with self.assertRaises(urllib.error.HTTPError) as raised:
+                        urllib.request.urlopen(request, timeout=5)
+                    body_html = raised.exception.read().decode("utf-8")
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+
+        self.assertEqual(raised.exception.code, 400)
+        self.assertIn("WEB_IMPORT_FILE_TOO_LARGE", body_html)
+        self.assertEqual(calls, [])
+
     def test_actions_page_renders_bulk_import_form(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -898,6 +1546,9 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("Bulk Task Import", body)
         self.assertIn('value="task.import"', body)
         self.assertIn('name="import_text"', body)
+        self.assertIn('enctype="multipart/form-data"', body)
+        self.assertIn('type="file" name="import_file"', body)
+        self.assertIn('accept=".json,.txt,application/json,text/plain"', body)
         self.assertIn("Preview / Import", body)
 
     def test_unknown_web_action_does_not_edit_protected_file(self):
@@ -982,6 +1633,130 @@ class WebControlCenterTests(unittest.TestCase):
             self.assertTrue(result.ok)
             self.assertIn("task.transition", [event.get("command") for event in events])
 
+    def test_task_report_submit_stores_report_without_touching_tasks_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            init_basic_task_project(root)
+            report_file = write_execution_report(root / "report.json", task_id="TASK-001")
+            tasks_path = root / "AI_PROJECT/state/tasks.json"
+            tasks_before = tasks_path.read_text(encoding="utf-8")
+
+            completed = run_ctl(
+                root,
+                "taskctl.py",
+                "task",
+                "report",
+                "submit",
+                "--task",
+                "TASK-001",
+                "--file",
+                str(report_file),
+                "--confirm",
+                "--json",
+            )
+
+            payload = json.loads(completed.stdout)
+            reports_state = json.loads(
+                (root / "AI_PROJECT/state/task_reports.json").read_text(encoding="utf-8")
+            )
+            events = [
+                json.loads(line)
+                for line in (root / "AI_PROJECT/events/task-report-events.jsonl")
+                .read_text(encoding="utf-8")
+                .splitlines()
+                if line.strip()
+            ]
+            model = ReadOnlyProjectModel(root, actor="tester")
+            task = model.dashboard()["tasks"][0]
+            tasks_after = tasks_path.read_text(encoding="utf-8")
+
+        self.assertEqual(payload["report_id"], "RPT-001")
+        self.assertEqual(reports_state["latest_by_task"]["TASK-001"], "RPT-001")
+        self.assertEqual(events[-1]["command"], "task.report.submit")
+        self.assertEqual(tasks_after, tasks_before)
+        self.assertEqual(task["latest_report"]["id"], "RPT-001")
+
+    def test_task_report_submit_rejects_invalid_task_without_persistent_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            init_basic_task_project(root)
+            report_file = write_execution_report(root / "report.json", task_id="TASK-999")
+
+            completed = run_ctl_raw(
+                root,
+                "taskctl.py",
+                "task",
+                "report",
+                "submit",
+                "--task",
+                "TASK-001",
+                "--file",
+                str(report_file),
+                "--confirm",
+            )
+            report_state_exists = (root / "AI_PROJECT/state/task_reports.json").exists()
+
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("INVALID_REPORT_SCHEMA", completed.stderr)
+        self.assertFalse(report_state_exists)
+
+    def test_task_report_submit_rejects_invalid_schema_without_persistent_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            init_basic_task_project(root)
+            report_file = root / "bad-report.json"
+            report_file.write_text(
+                json.dumps(
+                    {
+                        "task_id": "TASK-001",
+                        "implementation_summary": "Missing required lists.",
+                        "commands": ["python scripts/taskctl.py task transition TASK-001 --to done"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            completed = run_ctl_raw(
+                root,
+                "taskctl.py",
+                "task",
+                "report",
+                "submit",
+                "--task",
+                "TASK-001",
+                "--file",
+                str(report_file),
+                "--confirm",
+            )
+            report_state_exists = (root / "AI_PROJECT/state/task_reports.json").exists()
+
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("INVALID_REPORT_SCHEMA", completed.stderr)
+        self.assertFalse(report_state_exists)
+
+    def test_task_report_submit_rejects_missing_file_without_persistent_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            init_basic_task_project(root)
+
+            completed = run_ctl_raw(
+                root,
+                "taskctl.py",
+                "task",
+                "report",
+                "submit",
+                "--task",
+                "TASK-001",
+                "--file",
+                str(root / "missing-report.json"),
+                "--confirm",
+            )
+            report_state_exists = (root / "AI_PROJECT/state/task_reports.json").exists()
+
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("REPORT_FILE_NOT_FOUND", completed.stderr)
+        self.assertFalse(report_state_exists)
+
     def test_workflow_web_action_delegates_to_confirmed_aictl_workflow(self):
         completed_process = subprocess.CompletedProcess(
             args=[],
@@ -1014,6 +1789,38 @@ class WebControlCenterTests(unittest.TestCase):
                 "--confirm",
             ],
         )
+
+    def test_health_repair_web_actions_delegate_to_aictl(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"ok": true, "data": {"delegate": ["python"]}}\n',
+            stderr="",
+        )
+
+        cases = [
+            ("project.doctor", ["project", "doctor"]),
+            ("project.protected_check", ["project", "protected-check"]),
+            ("docs.render", ["docs", "render"]),
+        ]
+        for action, expected_tail in cases:
+            with self.subTest(action=action):
+                with patch(
+                    "ai_project_ctl.web.actions.subprocess.run",
+                    return_value=completed_process,
+                ) as run:
+                    result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                        {
+                            "action": action,
+                            "confirm": "yes",
+                        }
+                    )
+
+                argv = run.call_args.args[0]
+
+                self.assertTrue(result.ok)
+                self.assertEqual(Path(argv[1]).name, "aictl.py")
+                self.assertEqual(argv[-len(expected_tail) :], expected_tail)
 
     def test_prepare_for_codex_action_result_includes_next_instruction(self):
         completed_process = subprocess.CompletedProcess(
@@ -1571,6 +2378,7 @@ def write_web_state(
     initiatives=None,
     changes=None,
     execution=None,
+    task_reports=None,
 ):
     state_dir = root / "AI_PROJECT" / "state"
     state_dir.mkdir(parents=True, exist_ok=True)
@@ -1611,6 +2419,44 @@ def write_web_state(
         ),
         encoding="utf-8",
     )
+    if task_reports is not None:
+        (state_dir / "task_reports.json").write_text(
+            json.dumps(task_reports),
+            encoding="utf-8",
+        )
+
+
+def multipart_body(fields, files):
+    boundary = "ai-project-test-boundary"
+    chunks = []
+    for name, value in fields.items():
+        chunks.extend(
+            [
+                "--{}\r\n".format(boundary).encode("utf-8"),
+                'Content-Disposition: form-data; name="{}"\r\n\r\n'.format(
+                    name
+                ).encode("utf-8"),
+                str(value).encode("utf-8"),
+                b"\r\n",
+            ]
+        )
+    for name, (filename, content_type, content) in files.items():
+        payload = (
+            content if isinstance(content, bytes) else str(content).encode("utf-8")
+        )
+        chunks.extend(
+            [
+                "--{}\r\n".format(boundary).encode("utf-8"),
+                (
+                    'Content-Disposition: form-data; name="{}"; filename="{}"\r\n'
+                ).format(name, filename).encode("utf-8"),
+                "Content-Type: {}\r\n\r\n".format(content_type).encode("utf-8"),
+                payload,
+                b"\r\n",
+            ]
+        )
+    chunks.append("--{}--\r\n".format(boundary).encode("utf-8"))
+    return boundary, b"".join(chunks)
 
 
 def run_ctl(root, script, *args):
@@ -1638,6 +2484,125 @@ def run_ctl(root, script, *args):
             )
         )
     return completed
+
+
+def run_ctl_raw(root, script, *args):
+    return subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).resolve().parents[1] / "scripts" / script),
+            "--root",
+            str(root),
+            "--actor",
+            "tester",
+            *args,
+        ],
+        cwd=str(Path(__file__).resolve().parents[1]),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+
+def init_basic_task_project(root):
+    run_ctl(root, "planctl.py", "init")
+    run_ctl(root, "planctl.py", "initiative", "create", "--title", "Control")
+    run_ctl(root, "planctl.py", "epic", "create", "--initiative", "INIT-001", "--title", "Tasks")
+    run_ctl(root, "taskctl.py", "init")
+    run_ctl(
+        root,
+        "taskctl.py",
+        "task",
+        "create",
+        "--epic",
+        "EPIC-001",
+        "--title",
+        "Report task",
+        "--status",
+        "in_progress",
+        "--scope",
+        "Submit report",
+        "--allowed-file",
+        "scripts/taskctl.py",
+        "--acceptance",
+        "Report state exists",
+    )
+
+
+def write_execution_report(path, *, task_id="TASK-001"):
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "task_id": task_id,
+                "implementation_summary": "Implemented structured report submission.",
+                "changed_files": ["scripts/taskctl.py"],
+                "generated_files": [],
+                "checks": [
+                    {
+                        "name": "unit",
+                        "command": "python -m unittest",
+                        "result": "pass",
+                        "duration_sec": 1.0,
+                        "blocking": True,
+                        "details": "Selected tests passed.",
+                    }
+                ],
+                "warnings": [],
+                "blockers": [],
+                "notes": ["Submitted through CLI."],
+                "owner_decision_required": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
+def review_report_state(*, task_id, task_ref, summary):
+    return {
+        "schema_version": 1,
+        "revision": 1,
+        "created_at": "2026-06-19T12:00:00Z",
+        "updated_at": "2026-06-19T12:00:00Z",
+        "latest_by_task": {task_id: "RPT-001"},
+        "reports": [
+            {
+                "id": "RPT-001",
+                "task_id": task_id,
+                "task_ref": task_ref,
+                "submitted_at": "2026-06-19T12:00:00Z",
+                "submitted_by": "codex",
+                "source_file": "/tmp/report.json",
+                "report": {
+                    "task_id": task_id,
+                    "task_ref": task_ref,
+                    "implementation_summary": summary,
+                    "changed_files": ["ai_project_ctl/web/server.py"],
+                    "generated_files": ["AI_PROJECT/generated/CODEX_PROMPT.md"],
+                    "checks": [
+                        {
+                            "name": "unit",
+                            "command": "python -m unittest",
+                            "result": "pass",
+                            "duration_sec": 1.0,
+                            "blocking": True,
+                        },
+                        {
+                            "name": "docs",
+                            "details": "Documentation warning.",
+                            "result": "warn",
+                            "blocking": False,
+                        },
+                    ],
+                    "warnings": ["Review warning."],
+                    "blockers": ["Manual blocker."],
+                    "notes": ["Ready for owner decision."],
+                    "owner_decision_required": True,
+                },
+            }
+        ],
+    }
 
 
 if __name__ == "__main__":

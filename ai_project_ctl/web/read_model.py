@@ -213,6 +213,8 @@ class ReadOnlyProjectModel:
         include_events: bool = False,
     ) -> dict[str, Any]:
         tasks = self.tasks()
+        latest_reports = self.latest_task_reports_by_task()
+        tasks = attach_latest_task_reports(tasks, latest_reports)
         current_task = self.current_task(tasks)
         initiatives = self.initiatives()
         epics = self.epics()
@@ -229,16 +231,30 @@ class ReadOnlyProjectModel:
             docs_revision=docs_revision,
         )
         current_task = _enriched_current_task(current_task, tasks)
+        execution_context = execution_context_summary(
+            current_task,
+            execution,
+            tasks_revision=tasks_revision,
+            docs_revision=docs_revision,
+            root=self.root,
+        )
         epics = epic_hints(epics, tasks)
         changes = change_hints(changes, tasks)
         doctor = self.doctor(refresh=refresh_doctor)
         generated = self.generated_views()
+        health = project_health_summary(
+            doctor,
+            generated,
+            execution_context=execution_context,
+            current_task=current_task,
+        )
         events = self.audit_events(last=5) if include_events else []
         commands = command_list(include_planned=True)
         return {
             "root": str(self.root),
             "current_task": current_task,
             "tasks": tasks,
+            "task_reports": self.task_reports(),
             "task_counts": dict(Counter(task.get("status", "unknown") for task in tasks)),
             "queue": self.executable_queue(tasks),
             "initiatives": initiatives,
@@ -249,7 +265,9 @@ class ReadOnlyProjectModel:
                 Counter(change.get("status", "unknown") for change in changes)
             ),
             "doctor": doctor,
+            "health": health,
             "execution": execution,
+            "execution_context": execution_context,
             "generated": generated,
             "events": events,
             "events_loaded": include_events,
@@ -322,6 +340,49 @@ class ReadOnlyProjectModel:
             [dict(change) for change in changes if isinstance(change, dict)],
             key=_change_sort_key,
         )
+
+    def task_reports(self) -> list[dict[str, Any]]:
+        try:
+            state = self._state_json("task_reports.json")
+        except WebControlError as exc:
+            if exc.code == "WEB_STATE_FILE_MISSING":
+                return []
+            raise
+        reports = state.get("reports")
+        if not isinstance(reports, list):
+            return []
+        return [dict(report) for report in reports if isinstance(report, dict)]
+
+    def latest_task_reports_by_task(self) -> dict[str, dict[str, Any]]:
+        try:
+            state = self._state_json("task_reports.json")
+        except WebControlError as exc:
+            if exc.code == "WEB_STATE_FILE_MISSING":
+                return {}
+            raise
+        reports = [
+            dict(report)
+            for report in state.get("reports", [])
+            if isinstance(report, dict)
+        ]
+        reports_by_id = {
+            str(report.get("id") or ""): report
+            for report in reports
+            if str(report.get("id") or "")
+        }
+        latest: dict[str, dict[str, Any]] = {}
+        latest_by_task = state.get("latest_by_task")
+        if isinstance(latest_by_task, Mapping):
+            for task_id, report_id in latest_by_task.items():
+                report = reports_by_id.get(str(report_id or ""))
+                if report:
+                    latest[str(task_id)] = _task_report_summary(report)
+
+        for report in reports:
+            task_id = str(report.get("task_id") or "")
+            if task_id and task_id not in latest:
+                latest[task_id] = _task_report_summary(report)
+        return latest
 
     def execution_status(self) -> dict[str, Any]:
         try:
@@ -580,6 +641,20 @@ def task_hints(
             tasks_revision=tasks_revision,
             docs_revision=docs_revision,
         )
+        enriched.append(item)
+    return enriched
+
+
+def attach_latest_task_reports(
+    tasks: Sequence[Mapping[str, Any]],
+    latest_reports: Mapping[str, Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    enriched = []
+    for task in tasks:
+        item = dict(task)
+        report = latest_reports.get(str(task.get("id") or ""))
+        if report:
+            item["latest_report"] = dict(report)
         enriched.append(item)
     return enriched
 
@@ -1072,6 +1147,354 @@ def _execution_stale_reason(
     return ""
 
 
+def execution_context_summary(
+    current_task: Mapping[str, Any],
+    execution: Mapping[str, Any],
+    *,
+    tasks_revision: int | None,
+    docs_revision: int | None,
+    root: Path,
+) -> dict[str, Any]:
+    """Return UI-focused status for the current Codex handoff context."""
+
+    current = dict(current_task)
+    prompt_path = _display_project_path(
+        root,
+        str(execution.get("prompt_path") or ""),
+        fallback="AI_PROJECT/generated/CODEX_PROMPT.md",
+    )
+    context_pack = (
+        execution.get("context_pack")
+        if isinstance(execution.get("context_pack"), Mapping)
+        else {}
+    )
+    context_path = _display_project_path(
+        root,
+        str(context_pack.get("path") or ""),
+        fallback="AI_PROJECT/generated/CONTEXT_PACK.md",
+    )
+    prompt_status, prompt_reason = _prompt_readiness(current, execution)
+    context_status, context_reason = _context_readiness(
+        current,
+        context_pack,
+        tasks_revision=tasks_revision,
+        docs_revision=docs_revision,
+    )
+    warnings = [
+        reason
+        for reason in (prompt_reason, context_reason)
+        if reason and reason not in {"No current task selected."}
+    ]
+    copy_instruction = (
+        "Read {} and execute it.".format(prompt_path)
+        if prompt_status == "ready"
+        else ""
+    )
+    return {
+        "current_task": current,
+        "prompt": {
+            "status": prompt_status,
+            "reason": prompt_reason,
+            "path": prompt_path,
+            "raw_status": str(execution.get("status") or "unknown"),
+            "code": str(execution.get("code") or ""),
+            "exists": bool(execution.get("prompt_exists")),
+            "copy_instruction": copy_instruction,
+        },
+        "context_pack": {
+            "status": context_status,
+            "reason": context_reason,
+            "path": context_path,
+            "sha256": str(context_pack.get("sha256") or context_pack.get("sha_256") or ""),
+            "task_id": str(context_pack.get("task_id") or ""),
+            "docs_revision": context_pack.get("docs_revision"),
+            "tasks_revision": context_pack.get("tasks_revision"),
+            "selected_sources": context_pack.get("selected_sources"),
+        },
+        "warnings": warnings,
+        "updated_at": str(execution.get("updated_at") or ""),
+    }
+
+
+def _prompt_readiness(
+    current_task: Mapping[str, Any],
+    execution: Mapping[str, Any],
+) -> tuple[str, str]:
+    if not current_task:
+        return "unknown", "No current task selected."
+    if not execution or str(execution.get("status") or "") == "missing":
+        return "missing", "No current Codex prompt state exists."
+    raw_status = str(execution.get("status") or "").lower()
+    if raw_status != "ready":
+        return "blocked", str(
+            execution.get("blocked_reason")
+            or "Codex prompt status is {}".format(execution.get("status") or "unknown")
+        )
+    if not bool(execution.get("prompt_exists")):
+        return "missing", "Codex prompt file is missing."
+    refs = _task_refs(current_task)
+    source_id = str(execution.get("source_id") or "")
+    if source_id not in refs:
+        return "stale", "Codex prompt targets {}".format(source_id or "another task")
+    source_status = str(execution.get("source_status") or "")
+    task_status = str(current_task.get("status") or "")
+    if source_status and task_status and source_status != task_status:
+        return "stale", "Codex prompt has task status {}, current status is {}".format(
+            source_status,
+            task_status,
+        )
+    return "ready", ""
+
+
+def _context_readiness(
+    current_task: Mapping[str, Any],
+    context_pack: Mapping[str, Any],
+    *,
+    tasks_revision: int | None,
+    docs_revision: int | None,
+) -> tuple[str, str]:
+    if not current_task:
+        return "unknown", "No current task selected."
+    if not context_pack:
+        return "missing", "No Context Pack metadata exists."
+    refs = _task_refs(current_task)
+    context_task = str(context_pack.get("task_id") or "")
+    if context_task and context_task not in refs:
+        return "stale", "Context Pack targets {}".format(context_task)
+    context_tasks_revision = context_pack.get("tasks_revision")
+    if (
+        tasks_revision is not None
+        and isinstance(context_tasks_revision, int)
+        and context_tasks_revision != tasks_revision
+    ):
+        return "stale", "Context Pack tasks revision is {} but current is {}".format(
+            context_tasks_revision,
+            tasks_revision,
+        )
+    context_docs_revision = context_pack.get("docs_revision")
+    if (
+        docs_revision is not None
+        and isinstance(context_docs_revision, int)
+        and context_docs_revision != docs_revision
+    ):
+        return "stale", "Context Pack docs revision is {} but current is {}".format(
+            context_docs_revision,
+            docs_revision,
+        )
+    return "ready", ""
+
+
+def project_health_summary(
+    doctor: Mapping[str, Any],
+    generated: Sequence[Mapping[str, Any]],
+    *,
+    execution_context: Mapping[str, Any],
+    current_task: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Return UI-focused health and repair hints without running checks."""
+
+    generated_by_name = {
+        str(item.get("name") or ""): item
+        for item in generated
+        if isinstance(item, Mapping)
+    }
+    doctor_status = str(doctor.get("overall_status") or "UNKNOWN")
+    doctor_cached = bool(_mapping(doctor.get("cache")).get("cached"))
+    task_ref = str(current_task.get("ref") or current_task.get("id") or "")
+    return {
+        "doctor": {
+            "label": "Project Doctor",
+            "status": doctor_status,
+            "message": _doctor_health_message(doctor, doctor_cached),
+            "action": "project.doctor",
+            "action_label": "Run Doctor",
+            "available": True,
+            "reason": "",
+        },
+        "artifacts": [
+            _doctor_backed_artifact(
+                doctor,
+                generated_by_name,
+                key="task_generated",
+                label="Task generated views",
+                checks=("task generated output",),
+                files=("CODEX_TASKS.md", "CODEX_CURRENT.md", "TASK_EXECUTION_QUEUE.md"),
+                action="project.render",
+                action_label="Render project views",
+                doctor_cached=doctor_cached,
+            ),
+            _doctor_backed_artifact(
+                doctor,
+                generated_by_name,
+                key="docs_generated",
+                label="Docs generated views",
+                checks=("docs generated output", "docs validation"),
+                files=("DOCS_INDEX.md", "DOCS_GAPS.md"),
+                action="docs.render",
+                action_label="Render Docs",
+                doctor_cached=doctor_cached,
+            ),
+            _execution_artifact(
+                key="context_pack",
+                label="Context Pack",
+                status=str(_mapping(execution_context.get("context_pack")).get("status") or "unknown"),
+                reason=str(_mapping(execution_context.get("context_pack")).get("reason") or ""),
+                path=str(_mapping(execution_context.get("context_pack")).get("path") or ""),
+                task_ref=task_ref,
+                action="task.refresh_execution_context",
+                action_label="Refresh Context/Codex",
+            ),
+            _execution_artifact(
+                key="codex_prompt",
+                label="Codex prompt",
+                status=str(_mapping(execution_context.get("prompt")).get("status") or "unknown"),
+                reason=str(_mapping(execution_context.get("prompt")).get("reason") or ""),
+                path=str(_mapping(execution_context.get("prompt")).get("path") or ""),
+                task_ref=task_ref,
+                action="codex.prompt.build",
+                action_label="Refresh Codex Prompt",
+            ),
+            _doctor_backed_artifact(
+                doctor,
+                generated_by_name,
+                key="evolution_generated",
+                label="Evolution generated view",
+                checks=("evolution generated output", "evolution validation"),
+                files=("EVOLUTION.md",),
+                action="project.render",
+                action_label="Render project views",
+                doctor_cached=doctor_cached,
+            ),
+            _doctor_backed_artifact(
+                doctor,
+                generated_by_name,
+                key="protected_files",
+                label="Protected files",
+                checks=("protected project files",),
+                files=(),
+                action="project.protected_check",
+                action_label="Check Protected Files",
+                doctor_cached=doctor_cached,
+            ),
+        ],
+    }
+
+
+def _doctor_health_message(doctor: Mapping[str, Any], cached: bool) -> str:
+    if not cached:
+        return "Doctor has not been run in this web session."
+    summary = _mapping(doctor.get("summary"))
+    return "{} PASS, {} WARN, {} FAIL".format(
+        summary.get("PASS", 0),
+        summary.get("WARN", 0),
+        summary.get("FAIL", 0),
+    )
+
+
+def _doctor_backed_artifact(
+    doctor: Mapping[str, Any],
+    generated_by_name: Mapping[str, Mapping[str, Any]],
+    *,
+    key: str,
+    label: str,
+    checks: Sequence[str],
+    files: Sequence[str],
+    action: str,
+    action_label: str,
+    doctor_cached: bool,
+) -> dict[str, Any]:
+    finding = _doctor_finding(doctor, checks)
+    missing = [
+        "AI_PROJECT/generated/{}".format(name)
+        for name in files
+        if not bool(_mapping(generated_by_name.get(name)).get("exists"))
+    ]
+    if finding:
+        status = str(finding.get("status") or "UNKNOWN")
+        message = str(finding.get("message") or "")
+    elif missing:
+        status = "WARN"
+        message = "Missing generated view(s): {}".format(", ".join(missing))
+    elif doctor_cached:
+        status = "PASS"
+        message = "No stale state detected by the latest doctor run."
+    else:
+        status = "UNKNOWN"
+        message = "Run Doctor to detect stale or failed generated output."
+    return {
+        "key": key,
+        "label": label,
+        "status": status,
+        "message": message,
+        "files": list(files),
+        "action": action,
+        "action_label": action_label,
+        "available": True,
+        "reason": "",
+    }
+
+
+def _execution_artifact(
+    *,
+    key: str,
+    label: str,
+    status: str,
+    reason: str,
+    path: str,
+    task_ref: str,
+    action: str,
+    action_label: str,
+) -> dict[str, Any]:
+    available = bool(task_ref)
+    if not available:
+        reason = "No current task selected."
+    return {
+        "key": key,
+        "label": label,
+        "status": _execution_health_status(status),
+        "message": reason or "Ready for the current task.",
+        "path": path,
+        "task": task_ref,
+        "action": action,
+        "action_label": action_label,
+        "available": available,
+        "reason": "" if available else reason,
+    }
+
+
+def _execution_health_status(status: str) -> str:
+    normalized = status.lower()
+    if normalized == "ready":
+        return "PASS"
+    if normalized in {"stale", "missing", "blocked"}:
+        return "WARN"
+    return "UNKNOWN"
+
+
+def _doctor_finding(
+    doctor: Mapping[str, Any],
+    checks: Sequence[str],
+) -> Mapping[str, Any]:
+    wanted = {check.lower() for check in checks}
+    for finding in doctor.get("findings") or []:
+        if not isinstance(finding, Mapping):
+            continue
+        if str(finding.get("check") or "").lower() in wanted:
+            return finding
+    return {}
+
+
+def _display_project_path(root: Path, value: str, *, fallback: str) -> str:
+    text = value.strip() or fallback
+    path = Path(text)
+    if path.is_absolute():
+        try:
+            return path.resolve().relative_to(root.resolve()).as_posix()
+        except ValueError:
+            return path.as_posix()
+    return path.as_posix()
+
+
 def _change_linked_task_blockers(
     change: Mapping[str, Any],
     tasks_by_ref: Mapping[str, Mapping[str, Any]],
@@ -1096,6 +1519,42 @@ def _change_summary(change: Mapping[str, Any]) -> dict[str, Any]:
         "id": str(change.get("id") or ""),
         "status": str(change.get("status") or "unknown"),
         "title": str(change.get("title") or ""),
+    }
+
+
+def _task_report_summary(report_record: Mapping[str, Any]) -> dict[str, Any]:
+    report = report_record.get("report")
+    report_data = report if isinstance(report, Mapping) else {}
+    checks = [
+        dict(check)
+        for check in report_data.get("checks", [])
+        if isinstance(check, Mapping)
+    ]
+    check_counts = Counter(str(check.get("result") or "unknown") for check in checks)
+    blocking_failures = [
+        check
+        for check in checks
+        if bool(check.get("blocking"))
+        and str(check.get("result") or "").lower() in {"fail", "failed", "error"}
+    ]
+    return {
+        "id": str(report_record.get("id") or ""),
+        "task_id": str(report_record.get("task_id") or ""),
+        "task_ref": str(report_record.get("task_ref") or ""),
+        "submitted_at": str(report_record.get("submitted_at") or ""),
+        "submitted_by": str(report_record.get("submitted_by") or ""),
+        "source_file": str(report_record.get("source_file") or ""),
+        "implementation_summary": str(report_data.get("implementation_summary") or ""),
+        "changed_files": _string_list(report_data.get("changed_files")),
+        "generated_files": _string_list(report_data.get("generated_files")),
+        "warnings": _string_list(report_data.get("warnings")),
+        "blockers": _string_list(report_data.get("blockers")),
+        "notes": _string_list(report_data.get("notes")),
+        "owner_decision_required": bool(report_data.get("owner_decision_required")),
+        "checks": checks,
+        "check_counts": dict(check_counts),
+        "blocking_failures": len(blocking_failures),
+        "has_blockers": bool(_string_list(report_data.get("blockers")) or blocking_failures),
     }
 
 
@@ -1142,3 +1601,9 @@ def _string_list(value: Any) -> list[str]:
     if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
         return []
     return [str(item) for item in value if str(item).strip()]
+
+
+def _mapping(value: Any) -> Mapping[str, Any]:
+    if isinstance(value, Mapping):
+        return value
+    return {}

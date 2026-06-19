@@ -21,6 +21,7 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("task.show", names)
         self.assertIn("task.create", names)
         self.assertIn("task.import", names)
+        self.assertIn("task.report.submit", names)
         self.assertIn("task.prepare_for_codex", names)
         self.assertIn("task.refresh_execution_context", names)
         self.assertIn("task.submit_for_review", names)
@@ -38,7 +39,9 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("change.create", names)
         self.assertIn("context.build", names)
         self.assertIn("codex.prompt.build", names)
+        self.assertIn("docs.render", names)
         self.assertIn("project.doctor", names)
+        self.assertIn("project.protected_check", names)
         self.assertIn("project.render", names)
         self.assertIn("web.serve", names)
         self.assertIn("command.list", names)
@@ -113,6 +116,22 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("Preview is allowed", descriptor["owner_approval"])
         self.assertIn("Validates all Epic", " ".join(descriptor["notes"]))
 
+    def test_task_report_submit_is_registered_as_separate_report_write(self):
+        descriptor = command_describe("task.report.submit")
+        argument_names = [argument["name"] for argument in descriptor["arguments"]]
+
+        self.assertEqual(descriptor["domain"], "task")
+        self.assertEqual(descriptor["kind"], "write")
+        self.assertTrue(descriptor["read_write"]["mutates_state"])
+        self.assertTrue(descriptor["read_write"]["writes_events"])
+        self.assertFalse(descriptor["read_write"]["renders_generated"])
+        self.assertIn("AI_PROJECT/state/task_reports.json", descriptor["writes_state"])
+        self.assertNotIn("AI_PROJECT/state/tasks.json", descriptor["writes_state"])
+        self.assertIn("AI_PROJECT/events/task-report-events.jsonl", descriptor["event_logs"])
+        self.assertEqual(argument_names, ["task", "file", "confirm"])
+        self.assertIn("do not approve", descriptor["owner_approval"])
+        self.assertIn("Does not modify tasks.json", " ".join(descriptor["notes"]))
+
     def test_evolution_create_for_task_is_registered_without_approval(self):
         descriptor = command_describe("evolution.create_for_task")
 
@@ -173,8 +192,28 @@ class RegistryTests(unittest.TestCase):
             for command in command_list(domain="project", include_planned=True)
         ]
 
-        self.assertEqual(implemented_names, ["project.doctor", "project.render"])
-        self.assertEqual(all_project_names, ["project.doctor", "project.render"])
+        self.assertEqual(
+            implemented_names,
+            ["project.doctor", "project.protected_check", "project.render"],
+        )
+        self.assertEqual(
+            all_project_names,
+            ["project.doctor", "project.protected_check", "project.render"],
+        )
+
+    def test_health_repair_commands_are_registered_with_safe_effects(self):
+        docs_render = command_describe("docs.render")
+        protected_check = command_describe("project.protected_check")
+
+        self.assertEqual(docs_render["kind"], "render")
+        self.assertTrue(docs_render["read_write"]["renders_generated"])
+        self.assertFalse(docs_render["read_write"]["mutates_state"])
+        self.assertIn("AI_PROJECT/generated/DOCS_INDEX.md", docs_render["generated_files"])
+
+        self.assertEqual(protected_check["kind"], "validation")
+        self.assertTrue(protected_check["read_write"]["validates"])
+        self.assertFalse(protected_check["read_write"]["mutates_state"])
+        self.assertFalse(protected_check["read_write"]["renders_generated"])
 
     def test_registry_rejects_duplicate_commands(self):
         descriptor = CommandDescriptor(

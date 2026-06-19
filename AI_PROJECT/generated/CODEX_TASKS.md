@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `424`
-Current task: `none`
+Revision: `451`
+Current task: `TASK-042`
 
 ## Epic `EPIC-001`
 
@@ -743,9 +743,9 @@ Acceptance criteria:
 - All writes route through governed commands/workflows.
 - Tests and project-control validations pass.
 
-### WFA-11 (TASK-042) — UIX-05 Add Bulk Task Import from file
+### WFA-11 (TASK-042) — UIX-05 Add Bulk Task Import from file ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_82ea27760cf4`, legacy `TASK-042`, aliases `TASK-042`, local `WFA` / `11`
@@ -824,7 +824,7 @@ Acceptance criteria:
 
 ### WFA-15 (TASK-046) — UIX-09 Add Codex Execution Report Submission
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_6a6615a135ce`, legacy `TASK-046`, aliases `TASK-046`, local `WFA` / `15`
@@ -843,7 +843,7 @@ Acceptance criteria:
 
 ### WFA-16 (TASK-047) — UIX-10 Add Task Review Package View
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_0e3c4d7a0a5d`, legacy `TASK-047`, aliases `TASK-047`, local `WFA` / `16`
@@ -862,7 +862,7 @@ Acceptance criteria:
 
 ### WFA-17 (TASK-048) — UIX-11 Add Current Execution Status Panel
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_2c1b0507ab6b`, legacy `TASK-048`, aliases `TASK-048`, local `WFA` / `17`
@@ -881,7 +881,7 @@ Acceptance criteria:
 
 ### WFA-18 (TASK-049) — UIX-12 Add Project Health Repair Actions
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_e878d597769a`, legacy `TASK-049`, aliases `TASK-049`, local `WFA` / `18`
