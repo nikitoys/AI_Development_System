@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `451`
-Current task: `TASK-042`
+Revision: `470`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -743,9 +743,9 @@ Acceptance criteria:
 - All writes route through governed commands/workflows.
 - Tests and project-control validations pass.
 
-### WFA-11 (TASK-042) — UIX-05 Add Bulk Task Import from file ⭐
+### WFA-11 (TASK-042) — UIX-05 Add Bulk Task Import from file
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_82ea27760cf4`, legacy `TASK-042`, aliases `TASK-042`, local `WFA` / `11`
@@ -764,7 +764,7 @@ Acceptance criteria:
 
 ### WFA-12 (TASK-043) — UIX-06 Update UI workflow documentation
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_ed5d17298252`, legacy `TASK-043`, aliases `TASK-043`, local `WFA` / `12`
@@ -900,7 +900,7 @@ Acceptance criteria:
 
 ### WFA-19 (TASK-050) — UIX-13 Add Epic Close UI Action
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_32b3ecc1372f`, legacy `TASK-050`, aliases `TASK-050`, local `WFA` / `19`
@@ -919,7 +919,7 @@ Acceptance criteria:
 
 ### WFA-20 (TASK-051) — UIX-14 Add Commit Readiness View
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_d2bb13c07d81`, legacy `TASK-051`, aliases `TASK-051`, local `WFA` / `20`

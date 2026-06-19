@@ -37,6 +37,7 @@ NAV_ITEMS = (
     ("/evolution", "Evolution"),
     ("/epics", "Epics"),
     ("/reviews", "Reviews"),
+    ("/commit", "Commit"),
     ("/events", "Events"),
     ("/generated", "Generated"),
     ("/doctor", "Doctor"),
@@ -288,6 +289,9 @@ def route(
         "/evolution": lambda: render_evolution(model.dashboard(), query=query),
         "/epics": lambda: render_epics(model.dashboard()),
         "/reviews": lambda: render_reviews(model.dashboard(), query=query),
+        "/commit": lambda: render_commit_readiness(
+            model.commit_readiness(refresh_doctor=refresh_doctor)
+        ),
         "/events": lambda: render_events(model.dashboard(include_events=True)),
         "/generated": lambda: render_generated(model.dashboard()),
         "/doctor": lambda: render_doctor(
@@ -443,13 +447,29 @@ def render_epics(data: Mapping[str, Any]) -> str:
             status_badge(str(epic.get("status") or "unknown")),
             escape(epic.get("initiative_id", "")),
             escape(epic.get("title", "")),
+            epic_completion_cell(epic),
+            epic_open_changes_cell(epic),
             pipeline_hint_cell(epic),
+            epic_row_actions(epic, data),
         ]
         rows.append("<tr>{}</tr>".format("".join("<td>{}</td>".format(cell) for cell in cells)))
     body = [
         '<section class="panel">',
         "<h2>Epics</h2>",
-        table(("Epic", "Status", "Initiative", "Title", "Next / Blockers"), rows, "No epics."),
+        table(
+            (
+                "Epic",
+                "Status",
+                "Initiative",
+                "Title",
+                "Tasks",
+                "Open Changes",
+                "Next / Blockers",
+                "Actions",
+            ),
+            rows,
+            "No epics.",
+        ),
         "</section>",
     ]
     return render_page("Epics", "".join(body), active="/epics")
@@ -483,6 +503,157 @@ def render_reviews(
         "</section>",
     ]
     return render_page("Reviews", "".join(body), active="/reviews")
+
+
+def render_commit_readiness(data: Mapping[str, Any]) -> str:
+    git = _mapping(data.get("git"))
+    doctor = _mapping(data.get("doctor"))
+    changed_files = [
+        item
+        for item in git.get("changed_files") or []
+        if isinstance(item, Mapping)
+    ]
+    body = [
+        '<section class="summary-grid">',
+        metric("Readiness", str(data.get("status") or "UNKNOWN")),
+        metric("Changed Files", str(len(changed_files))),
+        metric("Validation", str(doctor.get("overall_status") or "UNKNOWN")),
+        metric("Git", str(git.get("status") or "unknown")),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Commit Readiness</h2>",
+        '<div class="status-row">',
+        status_badge(str(data.get("status") or "UNKNOWN")),
+        "<span>{}</span>".format(escape(data.get("message") or "")),
+        doctor_cache_detail(doctor),
+        '<a class="button-link" href="/commit?refresh=1">Refresh readiness checks</a>',
+        "</div>",
+        "</section>",
+        '<section class="panel">',
+        "<h2>Changed Files</h2>",
+        commit_changed_files_table(git),
+        '<p class="muted">Read command: <code>{}</code></p>'.format(
+            escape(git.get("command") or "git status --short --untracked-files=all")
+        ),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Readiness Checks</h2>",
+        commit_validation_table(_mapping(data.get("validation"))),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Completed Tasks</h2>",
+        commit_task_table(data.get("completed_tasks")),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Accepted Changes</h2>",
+        commit_change_table(data.get("accepted_changes")),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Suggested Commit Message (not executed)</h2>",
+        '<textarea readonly rows="2">{}</textarea>'.format(
+            escape(data.get("suggested_commit_message") or "")
+        ),
+        '<p class="muted">Suggestion only. This view does not run git commit, git push, staging, reset, restore, or checkout commands.</p>',
+        "</section>",
+    ]
+    return render_page("Commit Readiness", "".join(body), active="/commit")
+
+
+def commit_changed_files_table(git: Mapping[str, Any]) -> str:
+    rows = []
+    for item in git.get("changed_files") or []:
+        if not isinstance(item, Mapping):
+            continue
+        rows.append(
+            "<tr><td>{}</td><td><code>{}</code></td></tr>".format(
+                escape(item.get("status") or ""),
+                escape(item.get("path") or ""),
+            )
+        )
+    return table(
+        ("Status", "Path"),
+        rows,
+        str(git.get("message") or "No changed files available."),
+    )
+
+
+def commit_validation_table(validation: Mapping[str, Any]) -> str:
+    groups = [
+        _mapping(validation.get("project")),
+        _mapping(validation.get("protected_files")),
+        _mapping(validation.get("generated")),
+    ]
+    rows = []
+    for group in groups:
+        if not group:
+            continue
+        rows.append(
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                escape(group.get("label") or ""),
+                status_badge(str(group.get("status") or "UNKNOWN")),
+                escape(group.get("message") or ""),
+                commit_finding_list(group.get("findings")),
+            )
+        )
+    return table(
+        ("Area", "Status", "Signal", "Findings"),
+        rows,
+        "No readiness checks available.",
+    )
+
+
+def commit_finding_list(value: Any) -> str:
+    findings = [item for item in value or [] if isinstance(item, Mapping)]
+    if not findings:
+        return '<p class="empty">No findings yet.</p>'
+    items = []
+    for finding in findings:
+        label = "{}: {}".format(
+            finding.get("check") or "check",
+            finding.get("message") or "",
+        ).strip()
+        items.append(
+            "<li>{} {}</li>".format(
+                status_badge(str(finding.get("status") or "UNKNOWN")),
+                escape(label),
+            )
+        )
+    return '<ul class="compact-list">{}</ul>'.format("".join(items))
+
+
+def commit_task_table(value: Any) -> str:
+    tasks = [item for item in value or [] if isinstance(item, Mapping)]
+    rows = [
+        "<tr><td><code>{}</code></td><td>{}</td><td>{}</td></tr>".format(
+            escape(task.get("ref") or task.get("id") or ""),
+            escape(task.get("title") or ""),
+            escape(task.get("updated_at") or ""),
+        )
+        for task in tasks
+    ]
+    return table(
+        ("Task", "Title", "Updated"),
+        rows,
+        "No completed task records available.",
+    )
+
+
+def commit_change_table(value: Any) -> str:
+    changes = [item for item in value or [] if isinstance(item, Mapping)]
+    rows = [
+        "<tr><td><code>{}</code></td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+            escape(change.get("id") or ""),
+            escape(change.get("title") or ""),
+            escape(change.get("accepted_at") or change.get("updated_at") or ""),
+            escape(", ".join(_string_items(change.get("linked_tasks")))),
+        )
+        for change in changes
+    ]
+    return table(
+        ("Change", "Title", "Accepted", "Linked Tasks"),
+        rows,
+        "No accepted Change records available.",
+    )
 
 
 def render_events(data: Mapping[str, Any]) -> str:
@@ -774,6 +945,7 @@ def render_actions(data: Mapping[str, Any]) -> str:
                 if epic_options
                 else input_field("epic", "Epic"),
             ],
+            button_label="Close Epic If Complete",
         ),
         "</section>",
         '<section class="panel action-panel">',
@@ -2484,6 +2656,94 @@ def change_table(
 
 def change_identity_cell(change: Mapping[str, Any]) -> str:
     return "<strong>{}</strong>".format(escape(change.get("id") or ""))
+
+
+def epic_completion_cell(epic: Mapping[str, Any]) -> str:
+    completion = _mapping(epic.get("task_completion"))
+    counts = _mapping(completion.get("counts"))
+    total = int(completion.get("total") or 0)
+    closed = int(completion.get("closed") or 0)
+    open_count = int(completion.get("open") or 0)
+    incomplete_tasks = [
+        task
+        for task in completion.get("incomplete_tasks") or []
+        if isinstance(task, Mapping)
+    ]
+    count_items = [
+        "<li>{} {}</li>".format(escape(status), escape(count))
+        for status, count in sorted(counts.items(), key=lambda item: status_sort_key(str(item[0])))
+    ]
+    parts = [
+        '<div class="epic-completion">',
+        "<strong>{} / {} closed</strong>".format(escape(closed), escape(total)),
+        '<span class="muted">{} open</span>'.format(escape(open_count)),
+    ]
+    if count_items:
+        parts.append('<ul class="compact-list">{}</ul>'.format("".join(count_items)))
+    if incomplete_tasks:
+        parts.append(
+            '<ul class="compact-list">{}</ul>'.format(
+                "".join(
+                    "<li>{} {}</li>".format(
+                        escape(task.get("ref") or task.get("id") or ""),
+                        status_badge(str(task.get("status") or "unknown")),
+                    )
+                    for task in incomplete_tasks[:5]
+                )
+            )
+        )
+    parts.append("</div>")
+    return "".join(parts)
+
+
+def epic_open_changes_cell(epic: Mapping[str, Any]) -> str:
+    hints = _mapping(epic.get("pipeline_hints"))
+    changes = [
+        change
+        for change in hints.get("linked_changes") or []
+        if isinstance(change, Mapping)
+    ]
+    if not changes:
+        return '<span class="muted">none</span>'
+    items = []
+    for change in changes[:5]:
+        label = "{} {}".format(
+            change.get("id") or "",
+            change.get("status") or "unknown",
+        ).strip()
+        title = str(change.get("title") or "")
+        items.append(
+            "<li><strong>{}</strong>{}</li>".format(
+                escape(label),
+                " {}".format(escape(title)) if title else "",
+            )
+        )
+    if len(changes) > 5:
+        items.append("<li>+{} more</li>".format(escape(len(changes) - 5)))
+    return '<ul class="compact-list">{}</ul>'.format("".join(items))
+
+
+def epic_row_actions(epic: Mapping[str, Any], data: Mapping[str, Any]) -> str:
+    action_id = "epic.close_if_complete"
+    if entity_action_available(epic, action_id) is not True:
+        return '<span class="pill">No row workflows</span>'
+    epic_ref = str(epic.get("key") or epic.get("id") or "")
+    workflow = workflow_by_name(data).get(action_id) or {}
+    return (
+        '<details class="row-action row-action-{}">'
+        "<summary>Close Epic If Complete</summary>"
+        "{}"
+        "{}"
+        "</details>"
+    ).format(
+        escape(css_token(action_id)),
+        workflow_preview_html(workflow),
+        action_form(
+            action_id,
+            [hidden_field("epic", epic_ref)],
+            button_label="Close Epic If Complete",
+        ),
+    )
 
 
 def change_list_cell(value: Any, *, limit: int = 3) -> str:

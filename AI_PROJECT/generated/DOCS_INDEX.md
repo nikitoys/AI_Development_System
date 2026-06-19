@@ -3,7 +3,7 @@
 
 # Documentation Index
 
-Revision: `23`
+Revision: `24`
 Documents: `144`
 
 | Path | Title | Type | Status | Declared | Required | Content hash | Last reviewed | Reviewed hash |
@@ -24,7 +24,7 @@ Documents: `144`
 | `.agents/skills/documentation-navigation/SKILL.md` | Skill | `guide` | `draft` | - | `false` | `64ca93923e7d` | - | `-` |
 | `.agents/skills/project-control-gateway/SKILL.md` | Skill | `guide` | `draft` | - | `false` | `880e4a5b6b09` | - | `-` |
 | `AGENTS.md` | Agents | `reference` | `draft` | `draft` | `false` | `7d1440de6021` | - | `-` |
-| `README.md` | Readme | `reference` | `draft` | `draft` | `false` | `acffc50e1479` | - | `-` |
+| `README.md` | Readme | `reference` | `draft` | `draft` | `false` | `c94f7ff1cddb` | - | `-` |
 | `README.ru.md` | Readme.Ru | `reference` | `draft` | - | `false` | `06ef242455e3` | - | `-` |
 | `ai-system/README.md` | Readme | `reference` | `draft` | `draft` | `false` | `088eb0b5b89b` | - | `-` |
 | `ai-system/agent-result-intake.md` | Agent Result Intake | `reference` | `draft` | `draft` | `false` | `380fdf66798e` | - | `-` |
@@ -150,5 +150,5 @@ Documents: `144`
 | `ai-system/work-item-hierarchy.md` | Work Item Hierarchy | `reference` | `draft` | `draft` | `false` | `1ff8ca9832b1` | - | `-` |
 | `ai-system/workflow.md` | Workflow | `reference` | `draft` | `draft` | `false` | `6b18b7d5f515` | - | `-` |
 | `plugins/ai-project-control/skills/project-control-gateway/SKILL.md` | Skill | `guide` | `draft` | - | `false` | `880e4a5b6b09` | - | `-` |
-| `ai-system/project-control/08-usage-guide.md` | Project Control Usage Guide | `guide` | `review` | `review` | `false` | `e6463b152c8e` | - | `-` |
-| `ai-system/project-control/10-owner-quickstart.md` | Project Control Owner Quickstart | `guide` | `review` | `review` | `false` | `94619d84fb32` | - | `-` |
+| `ai-system/project-control/08-usage-guide.md` | Project Control Usage Guide | `guide` | `review` | `review` | `false` | `e5e442e6c124` | - | `-` |
+| `ai-system/project-control/10-owner-quickstart.md` | Project Control Owner Quickstart | `guide` | `review` | `review` | `false` | `7622f907549b` | - | `-` |

@@ -599,7 +599,7 @@ ACTIONS: dict[str, WebAction] = {
     "epic.close_if_complete": WebAction(
         action_id="epic.close_if_complete",
         command_name="epic.close_if_complete",
-        label="Close Epic if complete",
+        label="Close Epic If Complete",
         builder=_build_workflow("epic.close_if_complete", target_field="epic"),
     ),
 }

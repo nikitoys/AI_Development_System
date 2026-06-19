@@ -10,11 +10,13 @@ This guide explains how to use Project Control Gateway in daily work.
 
 It is practical by design. Use it when you need to decide which CLI owns a change, when a Task is required, how `CODEX_PROMPT.md` fits into execution, how the local Web Control Center stays safe, or what Codex must never edit manually.
 
-For a short owner-facing command path, start with:
+For the short owner-facing path, start with:
 
 ```text
 ai-system/project-control/10-owner-quickstart.md
 ```
+
+That quickstart is UI-first. This guide keeps both the Web Control Center workflow and the command-line compatibility details.
 
 Core rule:
 
@@ -391,6 +393,86 @@ The Web Control Center is a local loopback surface. Read views display dashboard
 
 Controlled write actions are submitted only through confirmed `POST` requests to `/actions`. Web route handlers must not edit protected files directly. A Web write action must route through a registered command, delegate through `aictl.py`, and rely on the owning CLI for validation, audit events and generated-output updates.
 
+Use the Web Control Center as the normal daily cockpit:
+
+```text
+Dashboard  current execution, queue and project doctor summary
+Tasks      filtered Task workflow cockpit
+Evolution  Change Proposal management
+Actions    Task creation, Bulk Task Import, repair/check and workflow forms
+Doctor     detailed project health findings
+Generated  read-only generated output previews
+Commands   registered command metadata
+```
+
+The UI does not make protected state editable. It submits governed actions and then shows the resulting command evidence.
+
+## Tasks Cockpit
+
+The `Tasks` view is designed for large task sets. It has filters for Initiative, Epic, Status and search text. It can group by `Epic`, `Status` or `None`; done Tasks are hidden by default unless `Show done` is selected or a done status filter is active. Grouped results are rendered as collapsible sections. Done status groups start collapsed.
+
+The `Focus Tasks` section keeps the current Task plus ready, in-progress, review and changes-requested Tasks near the top. Use it for the owner loop when a Task is being prepared, executed, reviewed or sent back for rework.
+
+Task rows expose status-aware workflow controls. They show only actions that the Task status and pipeline hints allow:
+
+```text
+Prepare for Codex  planned, ready or changes_requested Tasks
+Refresh Context    current or in_progress Tasks when available
+Submit for Review  in_progress Tasks
+Approve & Done     in_review Tasks with Human Owner approval notes
+Request Changes    in_review Tasks with rework notes
+No row workflows   done or otherwise unavailable actions
+```
+
+Row workflow buttons are convenience wrappers around registered workflows. They do not create a new lifecycle path. They still route through `aictl.py`, the owning `*ctl.py` script, validation, audit events and generated-output rendering.
+
+Codex may use `Submit for Review` after satisfying a Task contract when the Task scope permits it. Codex must not use `Approve & Done` or provide Human Owner approval notes unless the Human Owner explicitly gave the approval decision.
+
+## Action Result Panel
+
+Every Web write action returns an Action Result panel. Read it before taking the next step.
+
+The panel reports:
+
+```text
+PASS or FAIL
+registered command
+workflow name
+target Task, Change or Epic
+return code
+workflow step results
+changed files
+generated files
+warnings and errors
+next actions
+Codex instruction when a prompt package is prepared
+technical details
+```
+
+The Action Result panel is evidence, not approval. A passing action result does not mean Human Owner acceptance, review closure or permission to edit protected files manually.
+
+## Evolution Management Tab
+
+Use the `Evolution` tab for Change Proposal management. It provides Status, Type and search filters; a create-change-for-task form; Change Proposal rows with linked Tasks, affected files, risks, approval state, acceptance state and next-action hints; and lifecycle-aware row actions.
+
+Available row actions depend on Change status:
+
+```text
+ready                 Approve Change
+approved/in_progress  Move to Review
+approved/in_review    Accept Change
+```
+
+These actions are owner-facing workflow helpers. Approval and acceptance still require explicit Human Owner notes and still route through registered workflows and `evolutionctl.py`. Codex must not approve, accept, archive or supersede Evolution Changes on behalf of the Human Owner.
+
+## Bulk Task Import In The UI
+
+Use `Actions` -> `Bulk Task Import` when several bounded Tasks already have clear scope. The form accepts pasted JSON in `JSON Payload` or one uploaded `.json` or `.txt` file. Use only one input method per submission.
+
+Leave Confirm unchecked to preview the import. Check Confirm only when the preview is ready to create Tasks. The Web action delegates to `aictl.py task import --text ...` with either `--preview` or `--confirm`.
+
+Bulk import still rejects unknown fields, invalid statuses, invalid Epic references and invalid dependency references before creating anything. It does not set current Task, start work, approve Tasks or execute imported content.
+
 Current controlled Web actions:
 
 ```text
@@ -400,13 +482,19 @@ task.transition
 current.set
 current.clear
 project.render
+project.doctor
+project.protected_check
+docs.render
 context.build
 codex.prompt.build
 task.prepare_for_codex
 task.refresh_execution_context
 task.submit_for_review
 task.close_reviewed
+task.request_changes
 evolution.create_for_task
+evolution.approve_change
+evolution.move_to_review
 evolution.accept_change
 epic.close_if_complete
 ```
@@ -423,7 +511,7 @@ changes_requested
 deferred
 ```
 
-The Web surface must not approve tasks, move tasks to `done`, accept evolution changes, mark documents active, or directly edit `AI_PROJECT/state/**`, `AI_PROJECT/events/**` or `AI_PROJECT/generated/**`.
+The Web surface must not directly edit `AI_PROJECT/state/**`, `AI_PROJECT/events/**` or `AI_PROJECT/generated/**`. It must not silently approve tasks, move tasks to `done`, accept evolution changes, or mark documents active. Owner-facing approval and acceptance actions require explicit notes, route through registered commands and remain Human Owner decisions.
 
 ## When Do I Need A Task?
 
@@ -458,7 +546,39 @@ Do not execute an Initiative or Epic directly. If the Human Owner asks for an Ep
 
 ## Daily Workflow
 
-Use this flow for ordinary controlled work:
+Use this UI-first flow for ordinary controlled work:
+
+1. Start the local Web Control Center.
+
+```bash
+python scripts/aictl.py web --host 127.0.0.1 --port 8765
+```
+
+2. Open `http://127.0.0.1:8765/`, check `Dashboard` and `Doctor`, and use `Tasks` to find the current work by Initiative, Epic, Status or search.
+
+3. Create or import bounded Tasks from `Actions` when needed. Use Bulk Task Import preview before confirming creation.
+
+4. Prepare an executable Task from its row workflow button or from `Actions`:
+
+```text
+Prepare for Codex
+```
+
+5. Execute only the Task scope from `AI_PROJECT/generated/CODEX_PROMPT.md`.
+
+6. Use the Action Result panel and generated prompt package to decide the next step. Refresh context if the current Task or source documents changed.
+
+7. Validate and submit for review from the Task row:
+
+```text
+Submit for Review
+```
+
+8. Wait for review and Human Owner acceptance. If the Human Owner accepts the reviewed result, use `Approve & Done` with explicit owner notes. If the Human Owner requests rework, use `Request Changes` with the required notes.
+
+Do not mark the Task approved, done or archived as accepted unless the Human Owner explicitly accepts the result.
+
+The CLI compatibility flow remains available:
 
 1. Inspect current status.
 
@@ -512,6 +632,8 @@ Do not mark the Task approved, done or archived as accepted unless the Human Own
 ## Bulk Task Import
 
 Use bulk import only when each imported item is already a bounded Task, not an Epic or open-ended idea.
+
+The preferred owner path is the Web Control Center `Actions` page. Paste the JSON payload or upload a `.json` or `.txt` file, preview first, then confirm only after the preview is correct.
 
 Preview first:
 
