@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `367`
-Changes: `16`
+Revision: `434`
+Changes: `18`
 
 ## Summary
 
-- `accepted`: 15
-- `approved`: 1
+- `accepted`: 16
+- `approved`: 2
 
 ## Changes
 
@@ -916,3 +916,136 @@ Impact:
 Linked tasks:
 
 - TASK-034
+
+### CHG-017 — WFA-04 Add Bulk Task Import UI
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-04 requires an explicit Evolution Change Proposal before implementation: Add a grouped task import interface for importing multiple planned tasks from structured text with preview, validation, and confirmation.
+
+Proposal:
+
+Implement the bounded task scope: Define a simple import format, preferably YAML-like or JSON-like text.; Support multiple tasks in one batch.; Support epic, title, summary, description, scope, out_of_scope, allowed_files, acceptance_criteria, review_instructions, notes, dependencies.; Support dry-run/preview.; Validate references before creating anything.; Show generated command plan before confirmation.; Create tasks only after explicit confirmation.; Add UI import page/form if allowed.; Add tests for valid import, invalid import, dependency references, dry-run, and no direct state writes.
+
+Rationale:
+
+Allow Human Owner to paste or upload a batch of tasks in a simple structured format and preview the generated task records before creation. The importer must route all writes through approved command paths and must not edit tasks.json directly.
+
+Approved by: `human_owner` at `2026-06-19T07:12:06Z`  
+Approval notes: Approved for WFA-04 Bulk Task Import UI. Must provide preview/dry-run, validate before writes, create tasks only through governed command paths, and never execute imported content.  
+
+Accepted by: `human_owner` at `2026-06-19T07:45:00Z`  
+Acceptance notes: WFA-04 implemented and accepted. Bulk Task Import UI added with preview, validation, confirmation, and governed command-path creation.  
+
+Affected areas:
+
+- Workflow automation
+- Bulk task import
+- Web Control Center
+- aictl workflow commands
+
+Affected files:
+
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/core/workflows.py
+- ai_project_ctl/core/registry.py
+- scripts/aictl.py
+- tests/**
+
+Risks:
+
+- Boundary risk: Do not import arbitrary Python or shell commands.
+- Boundary risk: Do not execute uploaded files.
+- Boundary risk: Do not auto-start imported tasks.
+- Boundary risk: Do not auto-approve anything.
+- Boundary risk: Do not bypass taskctl validation.
+- Boundary risk: Do not support unrestricted file editing from import payload.
+- Verify parser safety, dry-run behavior, all-or-nothing validation, command-path task creation, protected-file policy, tests, and validation output.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-035.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Define a simple import format, preferably YAML-like or JSON-like text.
+- Support multiple tasks in one batch.
+- Support epic, title, summary, description, scope, out_of_scope, allowed_files, acceptance_criteria, review_instructions, notes, dependencies.
+- Support dry-run/preview.
+- Validate references before creating anything.
+- Owner can paste a batch of task definitions and preview them.
+- Import preview shows tasks, fields, dependencies, and planned commands.
+- Invalid imports fail before any task is created.
+
+Linked tasks:
+
+- TASK-035
+
+### CHG-018 — WFA-05 Add Review And Close Helpers
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-05 requires an explicit Evolution Change Proposal before implementation: Add guarded workflow helpers for closing reviewed tasks, accepting linked Evolution Changes, and optionally closing completed Epics.
+
+Proposal:
+
+Implement the bounded task scope: Add close_task workflow for tasks in in_review.; Require approval notes and explicit confirmation.; Approve task then transition to done through taskctl/aictl path.; Add accept_change workflow only for approved/in_review changes whose linked tasks are done.; Add optional close_epic helper only if all child tasks are done/deferred/archived.; Add tests for confirmation, invalid states, and blocked closure.
+
+Rationale:
+
+Reduce manual closure steps while preserving explicit Human Owner confirmation and approval gates.
+
+Approved by: `human_owner` at `2026-06-19T07:45:45Z`  
+Approval notes: Approved for WFA-05 Review and Close Helpers. Must preserve Human Owner confirmation, lifecycle gates, linked Change completion rules, and reject invalid closure.  
+
+Affected files:
+
+- ai_project_ctl/core/workflows.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/core/registry.py
+- scripts/aictl.py
+- tests/**
+
+Risks:
+
+- Boundary risk: Do not auto-approve without Human Owner confirmation.
+- Boundary risk: Do not close tasks with failing checks unless explicitly allowed by policy.
+- Boundary risk: Do not accept Changes with incomplete linked tasks.
+- Boundary risk: Do not close Epics with active tasks.
+- Boundary risk: Do not bypass lifecycle gates.
+- Verify lifecycle gate preservation, owner confirmation, invalid-state handling, protected-file policy, tests, and validation output.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-036.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add close_task workflow for tasks in in_review.
+- Require approval notes and explicit confirmation.
+- Approve task then transition to done through taskctl/aictl path.
+- Add accept_change workflow only for approved/in_review changes whose linked tasks are done.
+- Add optional close_epic helper only if all child tasks are done/deferred/archived.
+- Owner can close an in_review task with explicit notes and confirmation.
+- Owner can accept an Evolution Change only when linked task completion rules pass.
+- Invalid close/accept attempts are rejected with clear messages.
+
+Linked tasks:
+
+- TASK-036

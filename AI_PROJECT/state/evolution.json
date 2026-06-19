@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 367,
+  "revision": 434,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-19T07:09:16Z",
+  "updated_at": "2026-06-19T07:45:45Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -816,6 +816,132 @@
       "order": 16,
       "created_at": "2026-06-19T06:20:20Z",
       "updated_at": "2026-06-19T07:09:16Z"
+    },
+    {
+      "id": "CHG-017",
+      "title": "WFA-04 Add Bulk Task Import UI",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "Allow Human Owner to paste or upload a batch of tasks in a simple structured format and preview the generated task records before creation. The importer must route all writes through approved command paths and must not edit tasks.json directly.",
+      "problem": "Task WFA-04 requires an explicit Evolution Change Proposal before implementation: Add a grouped task import interface for importing multiple planned tasks from structured text with preview, validation, and confirmation.",
+      "proposal": "Implement the bounded task scope: Define a simple import format, preferably YAML-like or JSON-like text.; Support multiple tasks in one batch.; Support epic, title, summary, description, scope, out_of_scope, allowed_files, acceptance_criteria, review_instructions, notes, dependencies.; Support dry-run/preview.; Validate references before creating anything.; Show generated command plan before confirmation.; Create tasks only after explicit confirmation.; Add UI import page/form if allowed.; Add tests for valid import, invalid import, dependency references, dry-run, and no direct state writes.",
+      "affected_areas": [
+        "Workflow automation",
+        "Bulk task import",
+        "Web Control Center",
+        "aictl workflow commands"
+      ],
+      "affected_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/core/workflows.py",
+        "ai_project_ctl/core/registry.py",
+        "scripts/aictl.py",
+        "tests/**"
+      ],
+      "risks": [
+        "Boundary risk: Do not import arbitrary Python or shell commands.",
+        "Boundary risk: Do not execute uploaded files.",
+        "Boundary risk: Do not auto-start imported tasks.",
+        "Boundary risk: Do not auto-approve anything.",
+        "Boundary risk: Do not bypass taskctl validation.",
+        "Boundary risk: Do not support unrestricted file editing from import payload.",
+        "Verify parser safety, dry-run behavior, all-or-nothing validation, command-path task creation, protected-file policy, tests, and validation output.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-035.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Define a simple import format, preferably YAML-like or JSON-like text.",
+        "Support multiple tasks in one batch.",
+        "Support epic, title, summary, description, scope, out_of_scope, allowed_files, acceptance_criteria, review_instructions, notes, dependencies.",
+        "Support dry-run/preview.",
+        "Validate references before creating anything.",
+        "Owner can paste a batch of task definitions and preview them.",
+        "Import preview shows tasks, fields, dependencies, and planned commands.",
+        "Invalid imports fail before any task is created."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-035"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T07:12:06Z",
+      "approval_notes": "Approved for WFA-04 Bulk Task Import UI. Must provide preview/dry-run, validate before writes, create tasks only through governed command paths, and never execute imported content.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T07:45:00Z",
+      "acceptance_notes": "WFA-04 implemented and accepted. Bulk Task Import UI added with preview, validation, confirmation, and governed command-path creation.",
+      "notes": [],
+      "priority": 1,
+      "order": 17,
+      "created_at": "2026-06-19T07:10:22Z",
+      "updated_at": "2026-06-19T07:45:00Z"
+    },
+    {
+      "id": "CHG-018",
+      "title": "WFA-05 Add Review And Close Helpers",
+      "status": "approved",
+      "change_type": "tooling",
+      "rationale": "Reduce manual closure steps while preserving explicit Human Owner confirmation and approval gates.",
+      "problem": "Task WFA-05 requires an explicit Evolution Change Proposal before implementation: Add guarded workflow helpers for closing reviewed tasks, accepting linked Evolution Changes, and optionally closing completed Epics.",
+      "proposal": "Implement the bounded task scope: Add close_task workflow for tasks in in_review.; Require approval notes and explicit confirmation.; Approve task then transition to done through taskctl/aictl path.; Add accept_change workflow only for approved/in_review changes whose linked tasks are done.; Add optional close_epic helper only if all child tasks are done/deferred/archived.; Add tests for confirmation, invalid states, and blocked closure.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai_project_ctl/core/workflows.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/core/registry.py",
+        "scripts/aictl.py",
+        "tests/**"
+      ],
+      "risks": [
+        "Boundary risk: Do not auto-approve without Human Owner confirmation.",
+        "Boundary risk: Do not close tasks with failing checks unless explicitly allowed by policy.",
+        "Boundary risk: Do not accept Changes with incomplete linked tasks.",
+        "Boundary risk: Do not close Epics with active tasks.",
+        "Boundary risk: Do not bypass lifecycle gates.",
+        "Verify lifecycle gate preservation, owner confirmation, invalid-state handling, protected-file policy, tests, and validation output.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-036.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Add close_task workflow for tasks in in_review.",
+        "Require approval notes and explicit confirmation.",
+        "Approve task then transition to done through taskctl/aictl path.",
+        "Add accept_change workflow only for approved/in_review changes whose linked tasks are done.",
+        "Add optional close_epic helper only if all child tasks are done/deferred/archived.",
+        "Owner can close an in_review task with explicit notes and confirmation.",
+        "Owner can accept an Evolution Change only when linked task completion rules pass.",
+        "Invalid close/accept attempts are rejected with clear messages."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-036"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T07:45:45Z",
+      "approval_notes": "Approved for WFA-05 Review and Close Helpers. Must preserve Human Owner confirmation, lifecycle gates, linked Change completion rules, and reject invalid closure.",
+      "accepted_by": "",
+      "accepted_at": "",
+      "acceptance_notes": "",
+      "notes": [],
+      "priority": 1,
+      "order": 18,
+      "created_at": "2026-06-19T07:45:12Z",
+      "updated_at": "2026-06-19T07:45:45Z"
     }
   ]
 }

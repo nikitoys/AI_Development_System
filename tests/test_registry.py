@@ -20,6 +20,7 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("task.list", names)
         self.assertIn("task.show", names)
         self.assertIn("task.create", names)
+        self.assertIn("task.import", names)
         self.assertIn("task.prepare_for_codex", names)
         self.assertIn("task.refresh_execution_context", names)
         self.assertIn("task.submit_for_review", names)
@@ -92,6 +93,19 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("confirm", argument_names)
         self.assertIn("not auto-started", descriptor["owner_approval"])
         self.assertIn("Create-only", " ".join(descriptor["notes"]))
+
+    def test_task_import_is_registered_as_confirmed_bulk_workflow(self):
+        descriptor = command_describe("task.import")
+        argument_names = [argument["name"] for argument in descriptor["arguments"]]
+
+        self.assertEqual(descriptor["domain"], "task")
+        self.assertEqual(descriptor["kind"], "write")
+        self.assertEqual(descriptor["lock_scope"], "workflow")
+        self.assertTrue(descriptor["dry_run"])
+        self.assertIn("text", argument_names)
+        self.assertIn("confirm", argument_names)
+        self.assertIn("Preview is allowed", descriptor["owner_approval"])
+        self.assertIn("Validates all Epic", " ".join(descriptor["notes"]))
 
     def test_evolution_create_for_task_is_registered_without_approval(self):
         descriptor = command_describe("evolution.create_for_task")

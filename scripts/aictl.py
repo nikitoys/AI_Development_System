@@ -32,7 +32,9 @@ from ai_project_ctl.core.registry import (  # noqa: E402
 )
 from ai_project_ctl.core.result import CommandError, CommandMessage, CommandResult  # noqa: E402
 from ai_project_ctl.core.workflows import (  # noqa: E402
+    TaskBulkImportRequest,
     TaskCreateRequest,
+    run_task_bulk_import_workflow,
     run_workflow,
     run_task_create_workflow,
     workflow_describe,
@@ -1053,6 +1055,42 @@ def cmd_task_create(args: argparse.Namespace) -> int:
     return 0 if result.ok else 1
 
 
+def _task_import_source_text(args: argparse.Namespace) -> str:
+    if args.text is not None:
+        return args.text
+    if args.file is not None:
+        try:
+            return Path(args.file).read_text(encoding="utf-8")
+        except OSError as exc:
+            raise FacadeError(
+                "TASK_IMPORT_FILE_READ_FAILED",
+                "Could not read task import file: {}".format(args.file),
+                details={"file": args.file, "error": str(exc)},
+            ) from exc
+    return sys.stdin.read()
+
+
+def cmd_task_import(args: argparse.Namespace) -> int:
+    _ensure_implemented("task.import")
+    if args.preview and args.confirm:
+        raise FacadeError(
+            "TASK_IMPORT_CONFLICTING_FLAGS",
+            "--preview and --confirm cannot be used together.",
+        )
+    result = run_task_bulk_import_workflow(
+        TaskBulkImportRequest(source_text=_task_import_source_text(args)),
+        root=args.root,
+        actor=args.actor,
+        confirmed=args.confirm,
+    )
+    if args.json:
+        _print_json(result.to_dict())
+        return 0 if result.ok else 1
+
+    _emit_workflow_result(result)
+    return 0 if result.ok else 1
+
+
 def cmd_task_transition(args: argparse.Namespace) -> int:
     _ensure_implemented("task.transition")
     return _run_delegated(
@@ -1407,6 +1445,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--confirm", action="store_true")
     p.set_defaults(func=cmd_task_create, facade_command="task.create")
+
+    p = task_sub.add_parser("import", help="Preview or create multiple tasks from JSON")
+    source = p.add_mutually_exclusive_group(required=True)
+    source.add_argument("--text", help="JSON import payload.")
+    source.add_argument("--file", help="Read JSON import payload from a UTF-8 text file.")
+    p.add_argument(
+        "--preview",
+        action="store_true",
+        help="Validate and show the command plan without creating tasks. This is the default without --confirm.",
+    )
+    p.add_argument("--confirm", action="store_true")
+    p.set_defaults(func=cmd_task_import, facade_command="task.import")
 
     p = task_sub.add_parser("transition", help="Transition a task through taskctl.py")
     p.add_argument("task_ref")

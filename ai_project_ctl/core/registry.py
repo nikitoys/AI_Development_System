@@ -415,6 +415,40 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
             ),
         ),
         CommandDescriptor(
+            name="task.import",
+            domain="task",
+            description="Preview or create multiple bounded Tasks from a JSON import payload.",
+            kind=CommandKind.WRITE,
+            arguments=(
+                _arg("text", "JSON import payload."),
+                _arg("file", "UTF-8 JSON import payload file."),
+                _arg("preview", "Validate and show the command plan without creating tasks.", value_type="boolean"),
+                _arg("confirm", "Required explicit confirmation before creating tasks.", value_type="boolean"),
+            ),
+            reads_state=(state_tasks, state_plan),
+            writes_state=(state_tasks,),
+            event_logs=("AI_PROJECT/events/task-events.jsonl",),
+            generated_files=(
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+            ),
+            output=_output("Bulk task import preview or creation result.", fields=("tasks", "steps", "created_task_ids")),
+            validators=("task_state", "plan_references", "task_dependencies", "generated_output"),
+            lock_scope="workflow",
+            owner_approval=(
+                "Preview is allowed without confirmation; explicit confirmation is required before any task is created."
+            ),
+            dry_run=True,
+            legacy_command=("python scripts/aictl.py task import --text <JSON> --confirm",),
+            notes=(
+                "Accepts JSON only and rejects unknown task fields.",
+                "Validates all Epic and dependency references before creating any task.",
+                "Delegates every created task to the existing create-only task workflow.",
+                "Does not set current task, start tasks, approve tasks, or execute imported content.",
+            ),
+        ),
+        CommandDescriptor(
             name="task.transition",
             domain="task",
             description="Transition a Task through the validated task lifecycle.",

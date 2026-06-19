@@ -408,6 +408,93 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('value="EPIC-006"', body)
         self.assertIn("Workflow Automation", body)
 
+    def test_task_import_web_action_previews_without_confirmation(self):
+        calls = []
+        payload = '{"tasks":[{"epic":"EPIC-006","title":"Imported"}]}'
+
+        def fake_run(argv, **_kwargs):
+            calls.append(argv)
+            return process(
+                stdout=json.dumps(
+                    {
+                        "ok": True,
+                        "data": {
+                            "dry_run": True,
+                            "task_count": 1,
+                            "steps": [],
+                        },
+                    }
+                )
+                + "\n"
+            )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", side_effect=fake_run):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "task.import",
+                    "import_text": payload,
+                }
+            )
+
+        argv = calls[0]
+
+        self.assertTrue(result.ok)
+        self.assertEqual(Path(argv[1]).name, "aictl.py")
+        self.assertIn("--json", argv)
+        tail = argv[argv.index("--json") + 1 :]
+        self.assertEqual(tail[:4], ["task", "import", "--text", payload])
+        self.assertIn("--preview", tail)
+        self.assertNotIn("--confirm", tail)
+
+    def test_task_import_web_action_confirms_before_creation(self):
+        calls = []
+        payload = '{"tasks":[{"epic":"EPIC-006","title":"Imported"}]}'
+
+        def fake_run(argv, **_kwargs):
+            calls.append(argv)
+            return process(
+                stdout=json.dumps(
+                    {
+                        "ok": True,
+                        "data": {
+                            "dry_run": False,
+                            "created_task_ids": ["TASK-099"],
+                            "steps": [],
+                        },
+                    }
+                )
+                + "\n"
+            )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", side_effect=fake_run):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "task.import",
+                    "confirm": "yes",
+                    "import_text": payload,
+                }
+            )
+
+        argv = calls[0]
+        tail = argv[argv.index("--json") + 1 :]
+
+        self.assertTrue(result.ok)
+        self.assertEqual(tail[:4], ["task", "import", "--text", payload])
+        self.assertIn("--confirm", tail)
+        self.assertNotIn("--preview", tail)
+
+    def test_actions_page_renders_bulk_import_form(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            status, _, body = route("/actions", ReadOnlyProjectModel(root, actor="tester"))
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Bulk Task Import", body)
+        self.assertIn('value="task.import"', body)
+        self.assertIn('name="import_text"', body)
+        self.assertIn("Preview / Import", body)
+
     def test_unknown_web_action_does_not_edit_protected_file(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

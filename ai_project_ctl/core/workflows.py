@@ -121,6 +121,16 @@ class TaskCreateRequest:
 
 
 @dataclass(frozen=True)
+class TaskBulkImportRequest:
+    """Structured text payload for previewing or importing multiple Tasks."""
+
+    source_text: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"source_text_bytes": len(self.source_text.encode("utf-8"))}
+
+
+@dataclass(frozen=True)
 class WorkflowStep:
     """Concrete executable workflow step."""
 
@@ -248,6 +258,142 @@ def task_create_preview(
         "create_only": True,
         "steps": [step.preview_dict() for step in steps],
     }
+
+
+def task_bulk_import_preview(
+    request: TaskBulkImportRequest,
+    *,
+    root: str | Path = ".",
+    actor: str = "human_owner",
+    python_executable: str | None = None,
+) -> dict[str, Any]:
+    """Return a non-mutating preview for a bulk task import payload."""
+
+    _requests, preview = _prepare_task_bulk_import(
+        request,
+        root=Path(root).resolve(),
+        actor=actor,
+        python_executable=python_executable or sys.executable,
+    )
+    return preview
+
+
+def run_task_bulk_import_workflow(
+    request: TaskBulkImportRequest,
+    *,
+    root: str | Path = ".",
+    actor: str = "human_owner",
+    confirmed: bool = False,
+    python_executable: str | None = None,
+    runner: Runner | None = None,
+) -> CommandResult:
+    """Preview or create multiple Tasks through the governed task create path."""
+
+    try:
+        task_requests, preview = _prepare_task_bulk_import(
+            request,
+            root=Path(root).resolve(),
+            actor=actor,
+            python_executable=python_executable or sys.executable,
+        )
+    except WorkflowError as exc:
+        result = CommandResult.failure(
+            command="task.import",
+            domain="workflow",
+            message="Bulk task import is invalid.",
+            errors=[exc.to_message()],
+        )
+        result.data = {"request": request.to_dict()}
+        return result
+
+    if not confirmed:
+        result = CommandResult.success(
+            command="task.import",
+            domain="workflow",
+            message="Bulk task import preview is ready. No tasks were created.",
+            data=preview,
+        )
+        result.owner_action_required = (
+            "Review the import preview and rerun with --confirm to create tasks."
+        )
+        return result
+
+    step_results: list[dict[str, Any]] = []
+    child_results: list[dict[str, Any]] = []
+    created_task_ids: list[str] = []
+    for index, task_request in enumerate(task_requests, start=1):
+        child = run_task_create_workflow(
+            task_request,
+            root=root,
+            actor=actor,
+            confirmed=True,
+            python_executable=python_executable,
+            runner=runner,
+        )
+        child_data = child.to_dict()
+        child_data["import_index"] = index
+        child_results.append(child_data)
+        for step in child.data.get("steps") or []:
+            item = dict(step)
+            item["import_index"] = index
+            item["import_title"] = task_request.title
+            step_results.append(item)
+        created_task_id = str(child.data.get("created_task_id") or "")
+        if created_task_id:
+            created_task_ids.append(created_task_id)
+        if not child.ok:
+            result = CommandResult.failure(
+                command="task.import",
+                domain="workflow",
+                message="Bulk task import stopped while creating task {}.".format(index),
+                errors=list(child.errors),
+            )
+            result.data = {
+                **preview,
+                "dry_run": False,
+                "created_task_ids": created_task_ids,
+                "child_results": child_results,
+                "steps": step_results,
+            }
+            result.generated_files = [
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+            ]
+            result.events = ["AI_PROJECT/events/task-events.jsonl"]
+            result.owner_action_required = (
+                "Inspect created tasks and failed step output before retrying."
+            )
+            return result
+
+    result = CommandResult.success(
+        command="task.import",
+        domain="workflow",
+        message="Bulk task import completed. Tasks were created without selecting or starting them.",
+        data={
+            **preview,
+            "dry_run": False,
+            "created_task_ids": created_task_ids,
+            "child_results": child_results,
+            "steps": step_results,
+        },
+    )
+    result.generated_files = [
+        "AI_PROJECT/generated/CODEX_TASKS.md",
+        "AI_PROJECT/generated/CODEX_CURRENT.md",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+    ]
+    result.events = ["AI_PROJECT/events/task-events.jsonl"]
+    result.owner_action_required = (
+        "Review created tasks {}; prepare individual tasks for Codex only when intended."
+    ).format(", ".join(created_task_ids))
+    result.next_actions.extend(
+        "python scripts/aictl.py workflow run task.prepare_for_codex --task {} --confirm".format(
+            task_id
+        )
+        for task_id in created_task_ids
+    )
+    return result
 
 
 def run_task_create_workflow(
@@ -1182,6 +1328,432 @@ def _task_create_result(
             )
         )
     return result
+
+
+BULK_IMPORT_MAX_BYTES = 262_144
+BULK_IMPORT_MAX_TASKS = 50
+BULK_IMPORT_ALLOWED_STATUSES = {"proposed", "planned", "ready"}
+BULK_IMPORT_ALLOWED_VERIFICATION_MODES = {"light", "manual", "none", "standard", "strict"}
+BULK_IMPORT_ALLOWED_FIELDS = {
+    "acceptance",
+    "acceptance_criteria",
+    "active_document",
+    "active_role",
+    "active_stage",
+    "allowed_file",
+    "allowed_files",
+    "dependencies",
+    "dependency_reason",
+    "depends_on",
+    "description",
+    "epic",
+    "expected_result",
+    "notes",
+    "out_of_scope",
+    "priority",
+    "review",
+    "review_instruction",
+    "review_instructions",
+    "scope",
+    "status",
+    "summary",
+    "title",
+    "verification_mode",
+}
+
+
+def _prepare_task_bulk_import(
+    request: TaskBulkImportRequest,
+    *,
+    root: Path,
+    actor: str,
+    python_executable: str,
+) -> tuple[tuple[TaskCreateRequest, ...], dict[str, Any]]:
+    task_requests = _parse_task_bulk_import_requests(request)
+    _validate_task_bulk_import_references(root, task_requests)
+    steps = _task_bulk_import_steps(
+        task_requests,
+        root=root,
+        actor=actor,
+        python_executable=python_executable,
+    )
+    preview_tasks = []
+    for index, task_request in enumerate(task_requests, start=1):
+        preview_tasks.append(
+            {
+                "index": index,
+                "task": task_request.to_dict(),
+                "dependencies": list(task_request.depends_on),
+            }
+        )
+    return task_requests, {
+        "request": request.to_dict(),
+        "format": "json",
+        "task_count": len(task_requests),
+        "create_only": True,
+        "dry_run": True,
+        "tasks": preview_tasks,
+        "steps": steps,
+    }
+
+
+def _parse_task_bulk_import_requests(
+    request: TaskBulkImportRequest,
+) -> tuple[TaskCreateRequest, ...]:
+    text = request.source_text.strip()
+    if not text:
+        raise WorkflowError(
+            "TASK_IMPORT_EMPTY",
+            "Bulk task import payload is empty.",
+        )
+    if len(text.encode("utf-8")) > BULK_IMPORT_MAX_BYTES:
+        raise WorkflowError(
+            "TASK_IMPORT_TOO_LARGE",
+            "Bulk task import payload is too large.",
+            details={"max_bytes": BULK_IMPORT_MAX_BYTES},
+        )
+
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise WorkflowError(
+            "TASK_IMPORT_INVALID_JSON",
+            "Bulk task import payload must be JSON.",
+            details={"error": str(exc)},
+        ) from exc
+
+    if isinstance(payload, list):
+        raw_tasks = payload
+    elif isinstance(payload, dict):
+        if "tasks" in payload:
+            unknown = sorted(set(payload) - {"tasks"})
+            if unknown:
+                raise WorkflowError(
+                    "TASK_IMPORT_UNKNOWN_FIELD",
+                    "Bulk task import top-level object has unsupported fields.",
+                    details={"fields": unknown},
+                )
+            raw_tasks = payload.get("tasks")
+        elif {"epic", "title"}.issubset(payload):
+            raw_tasks = [payload]
+        else:
+            raise WorkflowError(
+                "TASK_IMPORT_MISSING_TASKS",
+                "Bulk task import JSON must be an array or an object with a tasks array.",
+            )
+    else:
+        raise WorkflowError(
+            "TASK_IMPORT_INVALID_SHAPE",
+            "Bulk task import JSON must be an array or object.",
+        )
+
+    if not isinstance(raw_tasks, list):
+        raise WorkflowError(
+            "TASK_IMPORT_INVALID_TASKS",
+            "Bulk task import tasks field must be an array.",
+        )
+    if not raw_tasks:
+        raise WorkflowError(
+            "TASK_IMPORT_EMPTY_TASKS",
+            "Bulk task import must include at least one task.",
+        )
+    if len(raw_tasks) > BULK_IMPORT_MAX_TASKS:
+        raise WorkflowError(
+            "TASK_IMPORT_TOO_MANY_TASKS",
+            "Bulk task import includes too many tasks.",
+            details={"max_tasks": BULK_IMPORT_MAX_TASKS, "task_count": len(raw_tasks)},
+        )
+
+    parsed: list[TaskCreateRequest] = []
+    for index, item in enumerate(raw_tasks, start=1):
+        path = "tasks[{}]".format(index - 1)
+        if not isinstance(item, dict):
+            raise WorkflowError(
+                "TASK_IMPORT_INVALID_TASK",
+                "Imported task must be a JSON object.",
+                path=path,
+            )
+        parsed.append(_parse_task_import_item(item, path=path))
+    return tuple(parsed)
+
+
+def _parse_task_import_item(item: Mapping[str, Any], *, path: str) -> TaskCreateRequest:
+    unknown = sorted(set(item) - BULK_IMPORT_ALLOWED_FIELDS)
+    if unknown:
+        raise WorkflowError(
+            "TASK_IMPORT_UNKNOWN_FIELD",
+            "Imported task has unsupported fields.",
+            path=path,
+            details={"fields": unknown},
+        )
+
+    status = _optional_import_string(item, "status", path=path) or "planned"
+    if status not in BULK_IMPORT_ALLOWED_STATUSES:
+        raise WorkflowError(
+            "TASK_IMPORT_UNSAFE_STATUS",
+            "Bulk import may only create proposed, planned, or ready tasks.",
+            path="{}.status".format(path),
+            details={
+                "status": status,
+                "allowed": sorted(BULK_IMPORT_ALLOWED_STATUSES),
+            },
+        )
+
+    verification_mode = (
+        _optional_import_string(item, "verification_mode", path=path) or "standard"
+    )
+    if verification_mode not in BULK_IMPORT_ALLOWED_VERIFICATION_MODES:
+        raise WorkflowError(
+            "TASK_IMPORT_INVALID_VERIFICATION_MODE",
+            "Bulk import verification mode is not supported.",
+            path="{}.verification_mode".format(path),
+            details={
+                "verification_mode": verification_mode,
+                "allowed": sorted(BULK_IMPORT_ALLOWED_VERIFICATION_MODES),
+            },
+        )
+
+    return TaskCreateRequest(
+        epic=_required_import_string(item, "epic", path=path),
+        title=_required_import_string(item, "title", path=path),
+        summary=_optional_import_string(item, "summary", path=path),
+        description=_optional_import_string(item, "description", path=path),
+        priority=_optional_import_int(item, "priority", path=path, default=1),
+        status=status,
+        active_role=_optional_import_string(item, "active_role", path=path),
+        active_stage=_optional_import_string(item, "active_stage", path=path),
+        active_document=_optional_import_string(item, "active_document", path=path),
+        expected_result=_optional_import_string(item, "expected_result", path=path),
+        verification_mode=verification_mode,
+        scope=_import_string_list(item, path=path, names=("scope",)),
+        out_of_scope=_import_string_list(item, path=path, names=("out_of_scope",)),
+        allowed_files=_import_string_list(
+            item,
+            path=path,
+            names=("allowed_files", "allowed_file"),
+        ),
+        acceptance=_import_string_list(
+            item,
+            path=path,
+            names=("acceptance_criteria", "acceptance"),
+        ),
+        review_instructions=_import_string_list(
+            item,
+            path=path,
+            names=("review_instructions", "review_instruction", "review"),
+        ),
+        notes=_import_string_list(item, path=path, names=("notes",)),
+        depends_on=_import_string_list(
+            item,
+            path=path,
+            names=("dependencies", "depends_on"),
+        ),
+        dependency_reason=_optional_import_string(item, "dependency_reason", path=path),
+    )
+
+
+def _required_import_string(
+    item: Mapping[str, Any],
+    name: str,
+    *,
+    path: str,
+) -> str:
+    value = _optional_import_string(item, name, path=path)
+    if not value:
+        raise WorkflowError(
+            "TASK_IMPORT_MISSING_REQUIRED_FIELD",
+            "Imported task is missing required field: {}".format(name),
+            path="{}.{}".format(path, name),
+        )
+    return value
+
+
+def _optional_import_string(
+    item: Mapping[str, Any],
+    name: str,
+    *,
+    path: str,
+) -> str:
+    if name not in item or item.get(name) is None:
+        return ""
+    value = item.get(name)
+    if not isinstance(value, str):
+        raise WorkflowError(
+            "TASK_IMPORT_INVALID_FIELD_TYPE",
+            "Imported task field must be a string: {}".format(name),
+            path="{}.{}".format(path, name),
+            details={"type": type(value).__name__},
+        )
+    return value.strip()
+
+
+def _optional_import_int(
+    item: Mapping[str, Any],
+    name: str,
+    *,
+    path: str,
+    default: int,
+) -> int:
+    if name not in item or item.get(name) is None:
+        return default
+    value = item.get(name)
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    if isinstance(value, str) and value.strip().isdigit():
+        return int(value.strip())
+    raise WorkflowError(
+        "TASK_IMPORT_INVALID_FIELD_TYPE",
+        "Imported task field must be an integer: {}".format(name),
+        path="{}.{}".format(path, name),
+        details={"type": type(value).__name__},
+    )
+
+
+def _import_string_list(
+    item: Mapping[str, Any],
+    *,
+    path: str,
+    names: Sequence[str],
+) -> tuple[str, ...]:
+    values: list[str] = []
+    for name in names:
+        if name not in item or item.get(name) is None:
+            continue
+        value = item.get(name)
+        field_path = "{}.{}".format(path, name)
+        if isinstance(value, str):
+            values.extend(line.strip() for line in value.splitlines() if line.strip())
+            continue
+        if isinstance(value, list):
+            for list_index, child in enumerate(value):
+                if not isinstance(child, str):
+                    raise WorkflowError(
+                        "TASK_IMPORT_INVALID_FIELD_TYPE",
+                        "Imported list field items must be strings.",
+                        path="{}[{}]".format(field_path, list_index),
+                        details={"type": type(child).__name__},
+                    )
+                text = child.strip()
+                if text:
+                    values.append(text)
+            continue
+        raise WorkflowError(
+            "TASK_IMPORT_INVALID_FIELD_TYPE",
+            "Imported task field must be a string or string array.",
+            path=field_path,
+            details={"type": type(value).__name__},
+        )
+    return tuple(values)
+
+
+def _validate_task_bulk_import_references(
+    root: Path,
+    task_requests: Sequence[TaskCreateRequest],
+) -> None:
+    epic_refs = _load_importable_epic_refs(root)
+    tasks = _load_import_dependency_tasks(root)
+    for index, request in enumerate(task_requests, start=1):
+        path = "tasks[{}]".format(index - 1)
+        if request.epic not in epic_refs:
+            raise WorkflowError(
+                "TASK_IMPORT_UNKNOWN_EPIC",
+                "Imported task references an unknown or inactive Epic.",
+                path="{}.epic".format(path),
+                details={"epic": request.epic},
+            )
+        for dependency in request.depends_on:
+            if not any(_task_matches_ref(task, dependency) for task in tasks):
+                raise WorkflowError(
+                    "TASK_IMPORT_UNKNOWN_DEPENDENCY",
+                    "Imported task dependency does not reference an existing Task.",
+                    path="{}.dependencies".format(path),
+                    details={"dependency": dependency},
+                )
+
+
+def _load_importable_epic_refs(root: Path) -> set[str]:
+    path = root / "AI_PROJECT" / "state" / "plan.json"
+    payload = _load_json_object(path, code_prefix="TASK_IMPORT_PLAN")
+    epics = payload.get("epics")
+    if not isinstance(epics, list):
+        raise WorkflowError(
+            "TASK_IMPORT_PLAN_INVALID_SHAPE",
+            "Plan state must contain an epics list.",
+            details={"path": str(path)},
+        )
+    refs: set[str] = set()
+    for epic in epics:
+        if not isinstance(epic, dict):
+            continue
+        status = str(epic.get("status") or "")
+        if status in {"done", "deferred", "archived"}:
+            continue
+        for field in ("id", "key"):
+            ref = str(epic.get(field) or "").strip()
+            if ref:
+                refs.add(ref)
+    return refs
+
+
+def _load_import_dependency_tasks(root: Path) -> list[dict[str, Any]]:
+    path = root / "AI_PROJECT" / "state" / "tasks.json"
+    payload = _load_json_object(path, code_prefix="TASK_IMPORT_TASK")
+    tasks = payload.get("tasks")
+    if not isinstance(tasks, list):
+        raise WorkflowError(
+            "TASK_IMPORT_TASK_STATE_INVALID_SHAPE",
+            "Task state must contain a tasks list.",
+            details={"path": str(path)},
+        )
+    return [dict(task) for task in tasks if isinstance(task, dict)]
+
+
+def _load_json_object(path: Path, *, code_prefix: str) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise WorkflowError(
+            "{}_STATE_MISSING".format(code_prefix),
+            "Project-control state file is missing: {}".format(path),
+            details={"path": str(path)},
+        ) from exc
+    except json.JSONDecodeError as exc:
+        raise WorkflowError(
+            "{}_STATE_INVALID_JSON".format(code_prefix),
+            "Project-control state file is not valid JSON: {}".format(path),
+            details={"path": str(path), "error": str(exc)},
+        ) from exc
+    if not isinstance(payload, dict):
+        raise WorkflowError(
+            "{}_STATE_INVALID_SHAPE".format(code_prefix),
+            "Project-control state file must contain a JSON object: {}".format(path),
+            details={"path": str(path)},
+        )
+    return payload
+
+
+def _task_bulk_import_steps(
+    task_requests: Sequence[TaskCreateRequest],
+    *,
+    root: Path,
+    actor: str,
+    python_executable: str,
+) -> list[dict[str, Any]]:
+    steps: list[dict[str, Any]] = []
+    for index, task_request in enumerate(task_requests, start=1):
+        task_placeholder = "<TASK_{}>".format(index)
+        for step in _build_task_create_steps(
+            task_request,
+            root=root,
+            actor=actor,
+            python_executable=python_executable,
+            created_task_id=task_placeholder,
+        ):
+            data = step.preview_dict()
+            data["import_index"] = index
+            data["import_title"] = task_request.title
+            steps.append(data)
+    return steps
 
 
 def _load_task_for_preview(root: Path, task_ref: str) -> dict[str, Any] | None:

@@ -3,19 +3,16 @@
 
 # Task Execution Queue
 
-Revision: `320`
+Revision: `327`
 
 ## Executable Now
 
-- `WFA-04 (TASK-035)` [planned] `EPIC-006` priority `1` — WFA-04 Add Bulk Task Import UI
-- `WFA-05 (TASK-036)` [planned] `EPIC-006` priority `1` — WFA-05 Add Review And Close Helpers
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 
 ## Waiting For Dependencies
 
 - `WFA-06 (TASK-037)` [planned] `EPIC-006` priority `1` — WFA-06 Documentation Audit And Cleanup
-  - `dependency_not_done`: depends on WFA-04 (TASK-035) with status planned
-  - `dependency_not_done`: depends on WFA-05 (TASK-036) with status planned
+  - `dependency_not_done`: depends on WFA-05 (TASK-036) with status in_progress
 
 ## Not Executable Due To Status Or Parent State
 
@@ -67,6 +64,10 @@ Revision: `320`
   - `status_not_executable`: status is done
 - `TASK-006` [done] `EPIC-002` priority `1` — Add Two-Level Delegated Agent Execution
   - `status_not_executable`: status is done
+- `WFA-04 (TASK-035)` [done] `EPIC-006` priority `1` — WFA-04 Add Bulk Task Import UI
+  - `status_not_executable`: status is done
+- `WFA-05 (TASK-036)` [in_progress] `EPIC-006` priority `1` — WFA-05 Add Review And Close Helpers
+  - `status_not_executable`: status is in_progress
 - `TASK-008` [done] `EPIC-003` priority `1` — P0 Strengthen docctl metadata and documentation gaps
   - `status_not_executable`: status is done
 - `TASK-009` [done] `EPIC-003` priority `1` — P1 Implement contextctl deterministic retrieval MVP

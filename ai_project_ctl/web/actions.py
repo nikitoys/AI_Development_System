@@ -56,6 +56,7 @@ class WebAction:
     command_name: str
     label: str
     builder: Callable[[Mapping[str, str]], list[str]]
+    confirmation_required: bool = True
 
 
 @dataclass(frozen=True)
@@ -170,13 +171,6 @@ class WebActionExecutor:
                 "Web actions do not accept arbitrary file write arguments.",
                 details={"fields": forbidden_fields, "action": action_id},
             )
-        if _field(fields, "confirm").lower() not in CONFIRM_VALUES:
-            raise WebActionError(
-                "WEB_ACTION_CONFIRMATION_REQUIRED",
-                "Write action requires explicit confirmation.",
-                details={"action": action_id},
-            )
-
         try:
             action = ACTIONS[action_id]
         except KeyError as exc:
@@ -185,6 +179,12 @@ class WebActionExecutor:
                 "Unknown or unsupported web write action: {}".format(action_id),
                 details={"action": action_id},
             ) from exc
+        if action.confirmation_required and _field(fields, "confirm").lower() not in CONFIRM_VALUES:
+            raise WebActionError(
+                "WEB_ACTION_CONFIRMATION_REQUIRED",
+                "Write action requires explicit confirmation.",
+                details={"action": action_id},
+            )
 
         descriptor = require_web_write_command(action.command_name)
         command = [
@@ -290,6 +290,15 @@ def _build_task_create(fields: Mapping[str, str]) -> list[str]:
     return args
 
 
+def _build_task_import(fields: Mapping[str, str]) -> list[str]:
+    args = ["task", "import", "--text", _require_field(fields, "import_text")]
+    if _field(fields, "confirm").lower() in CONFIRM_VALUES:
+        args.append("--confirm")
+    else:
+        args.append("--preview")
+    return args
+
+
 def _build_current_set(fields: Mapping[str, str]) -> list[str]:
     return ["current", "set", _task_ref(fields)]
 
@@ -374,6 +383,13 @@ ACTIONS: dict[str, WebAction] = {
         command_name="task.create",
         label="Create task",
         builder=_build_task_create,
+    ),
+    "task.import": WebAction(
+        action_id="task.import",
+        command_name="task.import",
+        label="Bulk import tasks",
+        builder=_build_task_import,
+        confirmation_required=False,
     ),
     "task.transition": WebAction(
         action_id="task.transition",

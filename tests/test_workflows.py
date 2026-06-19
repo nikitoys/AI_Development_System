@@ -1,11 +1,16 @@
+import json
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
 from ai_project_ctl.core.workflows import (
+    TaskBulkImportRequest,
     TaskCreateRequest,
     run_workflow,
+    run_task_bulk_import_workflow,
     run_task_create_workflow,
+    task_bulk_import_preview,
     workflow_describe,
     workflow_list,
 )
@@ -13,6 +18,48 @@ from ai_project_ctl.core.workflows import (
 
 def completed(stdout="OK\n", returncode=0, stderr=""):
     return subprocess.CompletedProcess(args=[], returncode=returncode, stdout=stdout, stderr=stderr)
+
+
+def write_project_state(root):
+    state_dir = root / "AI_PROJECT" / "state"
+    state_dir.mkdir(parents=True)
+    (state_dir / "plan.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "revision": 1,
+                "epics": [
+                    {
+                        "id": "EPIC-006",
+                        "key": "WFA",
+                        "status": "planned",
+                        "title": "Workflow Automation",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (state_dir / "tasks.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "revision": 1,
+                "current_task_id": None,
+                "tasks": [
+                    {
+                        "id": "TASK-032",
+                        "legacy_id": "TASK-032",
+                        "ref": "WFA-01",
+                        "aliases": ["TASK-032"],
+                        "status": "done",
+                        "title": "Foundation",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
 
 
 class WorkflowTests(unittest.TestCase):
@@ -145,6 +192,136 @@ class WorkflowTests(unittest.TestCase):
         self.assertFalse(any("current set" in tail for tail in command_tails))
         self.assertFalse(any("task transition" in tail for tail in command_tails))
         self.assertTrue(any("task.prepare_for_codex" in action for action in result.next_actions))
+
+    def test_task_bulk_import_preview_validates_and_shows_command_plan(self):
+        payload = {
+            "tasks": [
+                {
+                    "epic": "EPIC-006",
+                    "title": "Imported one",
+                    "scope": ["Do one thing"],
+                    "allowed_files": ["tests/**"],
+                    "acceptance_criteria": ["Validation passes"],
+                    "dependencies": ["TASK-032"],
+                },
+                {
+                    "epic": "WFA",
+                    "title": "Imported two",
+                    "summary": "Second task",
+                },
+            ]
+        }
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root)
+            preview = task_bulk_import_preview(
+                TaskBulkImportRequest(json.dumps(payload)),
+                root=root,
+            )
+
+        commands = [" ".join(step["command"]) for step in preview["steps"]]
+
+        self.assertEqual(preview["task_count"], 2)
+        self.assertTrue(preview["dry_run"])
+        self.assertTrue(any("task create --epic EPIC-006" in command for command in commands))
+        self.assertTrue(any("task deps add <TASK_1> --after TASK-032" in command for command in commands))
+        self.assertTrue(any("task graph validate" in command for command in commands))
+
+    def test_task_bulk_import_without_confirm_returns_preview_without_runner(self):
+        calls = []
+        payload = {"tasks": [{"epic": "EPIC-006", "title": "Imported"}]}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root)
+            result = run_task_bulk_import_workflow(
+                TaskBulkImportRequest(json.dumps(payload)),
+                root=root,
+                confirmed=False,
+                runner=lambda argv: calls.append(argv) or completed(),
+            )
+
+        self.assertTrue(result.ok)
+        self.assertTrue(result.data["dry_run"])
+        self.assertEqual(calls, [])
+        self.assertEqual(result.data["task_count"], 1)
+
+    def test_task_bulk_import_invalid_dependency_stops_before_runner(self):
+        calls = []
+        payload = {
+            "tasks": [
+                {
+                    "epic": "EPIC-006",
+                    "title": "Imported",
+                    "dependencies": ["TASK-999"],
+                }
+            ]
+        }
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root)
+            result = run_task_bulk_import_workflow(
+                TaskBulkImportRequest(json.dumps(payload)),
+                root=root,
+                confirmed=True,
+                runner=lambda argv: calls.append(argv) or completed(),
+            )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.errors[0].code, "TASK_IMPORT_UNKNOWN_DEPENDENCY")
+        self.assertEqual(calls, [])
+
+    def test_task_bulk_import_confirmed_delegates_create_only_workflows(self):
+        calls = []
+        payload = {
+            "tasks": [
+                {
+                    "epic": "EPIC-006",
+                    "title": "Imported one",
+                    "dependencies": ["TASK-032"],
+                },
+                {"epic": "EPIC-006", "title": "Imported two"},
+            ]
+        }
+
+        def fake_run(argv):
+            calls.append(list(argv))
+            task_create_calls = [
+                call
+                for call in calls
+                if Path(call[1]).name == "taskctl.py" and list(call[6:8]) == ["task", "create"]
+            ]
+            if Path(argv[1]).name == "taskctl.py" and list(argv[6:8]) == ["task", "create"]:
+                created_id = "TASK-10{}".format(len(task_create_calls))
+                return completed(
+                    "OK: task.create revision 1 -> 2\nCreated: WFA-{} ({})\n".format(
+                        len(task_create_calls),
+                        created_id,
+                    )
+                )
+            return completed("OK\n")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root)
+            result = run_task_bulk_import_workflow(
+                TaskBulkImportRequest(json.dumps(payload)),
+                root=root,
+                confirmed=True,
+                runner=fake_run,
+            )
+
+        command_tails = [" ".join(call[6:]) for call in calls]
+
+        self.assertTrue(result.ok)
+        self.assertFalse(result.data["dry_run"])
+        self.assertEqual(result.data["created_task_ids"], ["TASK-101", "TASK-102"])
+        self.assertEqual(sum(1 for tail in command_tails if tail.startswith("task create")), 2)
+        self.assertIn("task deps add TASK-101 --after TASK-032 --type hard", command_tails)
+        self.assertFalse(any("current set" in tail for tail in command_tails))
+        self.assertFalse(any("task transition" in tail for tail in command_tails))
 
 
 if __name__ == "__main__":

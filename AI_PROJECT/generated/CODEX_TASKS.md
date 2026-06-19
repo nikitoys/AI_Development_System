@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `320`
-Current task: `none`
+Revision: `327`
+Current task: `TASK-036`
 
 ## Epic `EPIC-001`
 
@@ -613,7 +613,7 @@ Acceptance criteria:
 
 ### WFA-04 (TASK-035) — WFA-04 Add Bulk Task Import UI
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_b1b9da9dd270`, legacy `TASK-035`, aliases `TASK-035`, local `WFA` / `4`
@@ -629,9 +629,9 @@ Acceptance criteria:
 - No direct AI_PROJECT/state/** edits from importer.
 - Tests and validations pass.
 
-### WFA-05 (TASK-036) — WFA-05 Add Review And Close Helpers
+### WFA-05 (TASK-036) — WFA-05 Add Review And Close Helpers ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_78c014419aa9`, legacy `TASK-036`, aliases `TASK-036`, local `WFA` / `5`

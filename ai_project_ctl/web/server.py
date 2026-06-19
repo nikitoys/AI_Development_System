@@ -148,11 +148,11 @@ def make_handler(model: ReadOnlyProjectModel) -> type[BaseHTTPRequestHandler]:
                     "Invalid write request content length.",
                     details={"content_length": length_header},
                 ) from exc
-            if length > 32768:
+            if length > 262144:
                 raise WebActionError(
                     "WEB_ACTION_BODY_TOO_LARGE",
                     "Write request body is too large.",
-                    details={"max_bytes": 32768, "content_length": length},
+                    details={"max_bytes": 262144, "content_length": length},
                 )
 
             raw = self.rfile.read(length).decode("utf-8") if length else ""
@@ -543,6 +543,35 @@ def render_actions(data: Mapping[str, Any]) -> str:
         ),
         "</section>",
         '<section class="panel action-panel">',
+        "<h2>Bulk Task Import</h2>",
+        action_form(
+            "task.import",
+            [
+                textarea_field(
+                    "import_text",
+                    "JSON Payload",
+                    rows=12,
+                    wide=True,
+                    placeholder=(
+                        '{\n'
+                        '  "tasks": [\n'
+                        '    {\n'
+                        '      "epic": "EPIC-006",\n'
+                        '      "title": "New planned task",\n'
+                        '      "scope": ["Do one bounded thing"],\n'
+                        '      "allowed_files": ["tests/**"],\n'
+                        '      "acceptance_criteria": ["Validation passes"]\n'
+                        '    }\n'
+                        '  ]\n'
+                        '}'
+                    ),
+                ),
+            ],
+            confirm_required=False,
+            button_label="Preview / Import",
+        ),
+        "</section>",
+        '<section class="panel action-panel">',
         "<h2>Task Workflows</h2>",
         table(("Workflow", "Command", "Step Preview"), workflow_rows, "No workflows."),
         action_form(
@@ -863,6 +892,9 @@ def render_page(title: str, body: str, *, active: str) -> str:
       width: auto;
       min-height: auto;
     }}
+    .wide-field {{
+      grid-column: 1 / -1;
+    }}
     button {{
       min-height: 36px;
       border: 1px solid #0d5f59;
@@ -1012,12 +1044,23 @@ def _query_enabled(query: Mapping[str, Sequence[str]], name: str) -> bool:
     )
 
 
-def action_form(action_id: str, fields: Sequence[str]) -> str:
+def action_form(
+    action_id: str,
+    fields: Sequence[str],
+    *,
+    confirm_required: bool = True,
+    button_label: str | None = None,
+) -> str:
+    confirm_required_attr = " required" if confirm_required else ""
     controls = [
         '<input type="hidden" name="action" value="{}">'.format(escape(action_id)),
         *fields,
-        '<label class="checkline"><input type="checkbox" name="confirm" value="yes" required>Confirm</label>',
-        "<button type=\"submit\">{}</button>".format(escape(action_id)),
+        '<label class="checkline"><input type="checkbox" name="confirm" value="yes"{}>Confirm</label>'.format(
+            confirm_required_attr
+        ),
+        "<button type=\"submit\">{}</button>".format(
+            escape(button_label or action_id)
+        ),
     ]
     return '<form method="post" action="/actions">{}</form>'.format("".join(controls))
 
@@ -1059,10 +1102,24 @@ def select_field_values(
     )
 
 
-def textarea_field(name: str, label: str) -> str:
-    return '<label>{}<textarea name="{}" rows="3"></textarea></label>'.format(
+def textarea_field(
+    name: str,
+    label: str,
+    *,
+    rows: int = 3,
+    placeholder: str = "",
+    wide: bool = False,
+) -> str:
+    placeholder_attr = (
+        ' placeholder="{}"'.format(escape(placeholder)) if placeholder else ""
+    )
+    class_attr = ' class="wide-field"' if wide else ""
+    return '<label{}>{}<textarea name="{}" rows="{}"{}></textarea></label>'.format(
+        class_attr,
         escape(label),
         escape(name),
+        escape(rows),
+        placeholder_attr,
     )
 
 

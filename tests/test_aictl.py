@@ -20,6 +20,39 @@ def load_aictl():
     return module
 
 
+def write_project_state(root):
+    state_dir = root / "AI_PROJECT" / "state"
+    state_dir.mkdir(parents=True)
+    (state_dir / "plan.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "revision": 1,
+                "epics": [{"id": "EPIC-006", "key": "WFA", "status": "planned"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (state_dir / "tasks.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "revision": 1,
+                "current_task_id": None,
+                "tasks": [
+                    {
+                        "id": "TASK-032",
+                        "legacy_id": "TASK-032",
+                        "ref": "WFA-01",
+                        "aliases": ["TASK-032"],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
 class AictlTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -48,6 +81,7 @@ class AictlTests(unittest.TestCase):
         self.assertIn("command.describe", names)
         self.assertIn("current.set", names)
         self.assertIn("project.render", names)
+        self.assertIn("task.import", names)
         self.assertIn("task.transition", names)
         self.assertIn("workflow.list", names)
 
@@ -303,6 +337,76 @@ class AictlTests(unittest.TestCase):
         )
         self.assertFalse(any("current set" in tail for tail in command_tails))
         self.assertFalse(any("task transition" in tail for tail in command_tails))
+
+    def test_task_import_facade_previews_without_confirmation(self):
+        payload = {"tasks": [{"epic": "EPIC-006", "title": "Imported"}]}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root)
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = self.aictl.main(
+                    [
+                        "--root",
+                        str(root),
+                        "--json",
+                        "task",
+                        "import",
+                        "--text",
+                        json.dumps(payload),
+                    ]
+                )
+
+        output = json.loads(stdout.getvalue())
+
+        self.assertEqual(code, 0)
+        self.assertTrue(output["ok"])
+        self.assertTrue(output["data"]["dry_run"])
+        self.assertEqual(output["data"]["task_count"], 1)
+
+    def test_task_import_facade_confirm_runs_taskctl_create(self):
+        payload = {"tasks": [{"epic": "EPIC-006", "title": "Imported"}]}
+
+        def fake_run(argv, **_kwargs):
+            script = Path(argv[1]).name
+            tail = argv[6:]
+            if script == "taskctl.py" and list(tail[:2]) == ["task", "create"]:
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    "OK: task.create revision 1 -> 2\nCreated: WFA-07 (TASK-099)\n",
+                    "",
+                )
+            return subprocess.CompletedProcess(argv, 0, "OK\n", "")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root)
+            stdout = io.StringIO()
+            with patch("ai_project_ctl.core.workflows.subprocess.run", side_effect=fake_run) as run:
+                with redirect_stdout(stdout):
+                    code = self.aictl.main(
+                        [
+                            "--root",
+                            str(root),
+                            "--json",
+                            "task",
+                            "import",
+                            "--text",
+                            json.dumps(payload),
+                            "--confirm",
+                        ]
+                    )
+
+        output = json.loads(stdout.getvalue())
+        command_tails = [" ".join(call.args[0][6:]) for call in run.call_args_list]
+
+        self.assertEqual(code, 0)
+        self.assertTrue(output["ok"])
+        self.assertFalse(output["data"]["dry_run"])
+        self.assertEqual(output["data"]["created_task_ids"], ["TASK-099"])
+        self.assertTrue(any(tail.startswith("task create --epic EPIC-006") for tail in command_tails))
 
     def test_current_set_delegates_write_without_native_json(self):
         completed = subprocess.CompletedProcess(

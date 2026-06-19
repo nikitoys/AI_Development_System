@@ -1,6 +1,6 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/state/docs.json + AI_PROJECT/state/tasks.json -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-034 WFA-03 Add Task Creation Wizard Add owner-facing CLI/UI workflow for creating individual tasks without long taskctl.py command lines. Provide a guided task creation form/workflow that routes through taskctl.py/aictl command layer and supports scope, out-of-scope, allowed files, acceptance criteria, review instructions, dependencies, and optional Evolution Change hint. AI_PROJECT/generated/CODEX_TASKS.md Task creation wizard is implemented through approved command paths. Add task creation workflow metadata. Add UI form or CLI wizard-like command if allowed. Support Epic selection. Support scope/out-of-scope/allowed-files/acceptance/review fields. Support depends_on selection. Support create-only mode. Optionally offer next action suggestions: prepare for Codex, create Evolution Change. Add tests. Do not implement grouped import in this task. Do not auto-start the created task. Do not auto-create Evolution Change unless explicitly delegated to WFA-02 workflow. Do not bypass taskctl validation. ai_project_ctl/core/workflows.py ai_project_ctl/web/actions.py ai_project_ctl/web/server.py ai_project_ctl/web/read_model.py ai_project_ctl/core/registry.py scripts/aictl.py tests/** Owner can create a single task through workflow/UI without manually writing a long CLI command. Created task is persisted through approved command path. Generated task views are refreshed through owning CLI/facade. Task dependencies can be added where supported. No direct protected-file edits. Tests and validations pass. Verify taskctl/aictl routing, create-only behavior, dependency support, protected-file policy, tests, and validation output.","schema_version":1,"task_id":"TASK-034"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-036 WFA-05 Add Review And Close Helpers Add guarded workflow helpers for closing reviewed tasks, accepting linked Evolution Changes, and optionally closing completed Epics. Reduce manual closure steps while preserving explicit Human Owner confirmation and approval gates. AI_PROJECT/generated/CODEX_TASKS.md Review and close helpers are implemented without bypassing lifecycle gates or owner confirmation. Add close_task workflow for tasks in in_review. Require approval notes and explicit confirmation. Approve task then transition to done through taskctl/aictl path. Add accept_change workflow only for approved/in_review changes whose linked tasks are done. Add optional close_epic helper only if all child tasks are done/deferred/archived. Add tests for confirmation, invalid states, and blocked closure. Do not auto-approve without Human Owner confirmation. Do not close tasks with failing checks unless explicitly allowed by policy. Do not accept Changes with incomplete linked tasks. Do not close Epics with active tasks. Do not bypass lifecycle gates. ai_project_ctl/core/workflows.py ai_project_ctl/web/actions.py ai_project_ctl/web/server.py ai_project_ctl/web/read_model.py ai_project_ctl/core/registry.py scripts/aictl.py tests/** Owner can close an in_review task with explicit notes and confirmation. Owner can accept an Evolution Change only when linked task completion rules pass. Invalid close/accept attempts are rejected with clear messages. Existing lifecycle semantics are preserved. Tests and validations pass. Verify lifecycle gate preservation, owner confirmation, invalid-state handling, protected-file policy, tests, and validation output.","schema_version":1,"task_id":"TASK-036"} -->
 
 # Context Pack
 
@@ -8,32 +8,30 @@ This generated Context Pack is derived output only. It is not source of truth.
 It does not expand task scope, allowed files, out-of-scope items, or acceptance criteria.
 
 Mode: `task`
-Task ID: `TASK-034`
+Task ID: `TASK-036`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `22`
-Tasks revision: `317`
+Tasks revision: `327`
 
 ## Query
 
 ```text
-TASK-034 WFA-03 Add Task Creation Wizard Add owner-facing CLI/UI workflow for creating individual tasks without long taskctl.py command lines. Provide a guided task creation form/workflow that routes through taskctl.py/aictl command layer and supports scope, out-of-scope, allowed files, acceptance criteria, review instructions, dependencies, and optional Evolution Change hint. AI_PROJECT/generated/CODEX_TASKS.md Task creation wizard is implemented through approved command paths. Add task creation workflow metadata. Add UI form or CLI wizard-like command if allowed. Support Epic selection. Support scope/out-of-scope/allowed-files/acceptance/review fields. Support depends_on selection. Support create-only mode. Optionally offer next action suggestions: prepare for Codex, create Evolution Change. Add tests. Do not implement grouped import in this task. Do not auto-start the created task. Do not auto-create Evolution Change unless explicitly delegated to WFA-02 workflow. Do not bypass taskctl validation. ai_project_ctl/core/workflows.py ai_project_ctl/web/actions.py ai_project_ctl/web/server.py ai_project_ctl/web/read_model.py ai_project_ctl/core/registry.py scripts/aictl.py tests/** Owner can create a single task through workflow/UI without manually writing a long CLI command. Created task is persisted through approved command path. Generated task views are refreshed through owning CLI/facade. Task dependencies can be added where supported. No direct protected-file edits. Tests and validations pass. Verify taskctl/aictl routing, create-only behavior, dependency support, protected-file policy, tests, and validation output.
+TASK-036 WFA-05 Add Review And Close Helpers Add guarded workflow helpers for closing reviewed tasks, accepting linked Evolution Changes, and optionally closing completed Epics. Reduce manual closure steps while preserving explicit Human Owner confirmation and approval gates. AI_PROJECT/generated/CODEX_TASKS.md Review and close helpers are implemented without bypassing lifecycle gates or owner confirmation. Add close_task workflow for tasks in in_review. Require approval notes and explicit confirmation. Approve task then transition to done through taskctl/aictl path. Add accept_change workflow only for approved/in_review changes whose linked tasks are done. Add optional close_epic helper only if all child tasks are done/deferred/archived. Add tests for confirmation, invalid states, and blocked closure. Do not auto-approve without Human Owner confirmation. Do not close tasks with failing checks unless explicitly allowed by policy. Do not accept Changes with incomplete linked tasks. Do not close Epics with active tasks. Do not bypass lifecycle gates. ai_project_ctl/core/workflows.py ai_project_ctl/web/actions.py ai_project_ctl/web/server.py ai_project_ctl/web/read_model.py ai_project_ctl/core/registry.py scripts/aictl.py tests/** Owner can close an in_review task with explicit notes and confirmation. Owner can accept an Evolution Change only when linked task completion rules pass. Invalid close/accept attempts are rejected with clear messages. Existing lifecycle semantics are preserved. Tests and validations pass. Verify lifecycle gate preservation, owner confirmation, invalid-state handling, protected-file policy, tests, and validation output.
 ```
 
 ## Task Boundary Snapshot
 
-Task: `TASK-034` - WFA-03 Add Task Creation Wizard
+Task: `TASK-036` - WFA-05 Add Review And Close Helpers
 Status: `in_progress`
 
 Scope:
-- Add task creation workflow metadata.
-- Add UI form or CLI wizard-like command if allowed.
-- Support Epic selection.
-- Support scope/out-of-scope/allowed-files/acceptance/review fields.
-- Support depends_on selection.
-- Support create-only mode.
-- Optionally offer next action suggestions: prepare for Codex, create Evolution Change.
-- Add tests.
+- Add close_task workflow for tasks in in_review.
+- Require approval notes and explicit confirmation.
+- Approve task then transition to done through taskctl/aictl path.
+- Add accept_change workflow only for approved/in_review changes whose linked tasks are done.
+- Add optional close_epic helper only if all child tasks are done/deferred/archived.
+- Add tests for confirmation, invalid states, and blocked closure.
 
 Allowed Files:
 - ai_project_ctl/core/workflows.py
@@ -45,11 +43,10 @@ Allowed Files:
 - tests/**
 
 Acceptance Criteria:
-- Owner can create a single task through workflow/UI without manually writing a long CLI command.
-- Created task is persisted through approved command path.
-- Generated task views are refreshed through owning CLI/facade.
-- Task dependencies can be added where supported.
-- No direct protected-file edits.
+- Owner can close an in_review task with explicit notes and confirmation.
+- Owner can accept an Evolution Change only when linked task completion rules pass.
+- Invalid close/accept attempts are rejected with clear messages.
+- Existing lifecycle semantics are preserved.
 - Tests and validations pass.
 
 ## Index Summary
@@ -65,14 +62,14 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 | Score | Source | Heading | Lines | Content hash | Chunk hash | Reasons |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 172 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: create, layer, to; metadata token match: create, layer, md, to; content token match: a, acceptance, actions, allowed, and, approved, be, bypass |
-| 138 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | heading token match: layer; metadata token match: layer, md; content token match: a, acceptance, actions, add, ai_project, allowed, and, approved |
-| 128 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 64-116 | `a1985ca2f321` | `b755c971df05` | heading token match: command; metadata token match: command, md; content token match: a, acceptance, ai_project, allowed, and, approved, are, be |
-| 126 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 874-906 | `9304e03cf1dd` | `6cf68be89257` | heading token match: and, py, taskctl, to; metadata token match: and, md, py, taskctl, to; content token match: a, and, be, bypass, can, codex, for, generated |
-| 121 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 580-670 | `9304e03cf1dd` | `4b3949b96350` | metadata token match: md; content token match: acceptance, action, ai_project, allowed, and, be, change, cli |
-| 107 | `ai-system/project-control/07-validation-and-tests.md` | 5. Happy Path Test > 5.3 Commands | 395-442 | `035f37bb15d8` | `1e0a62325f1b` | heading token match: path; metadata token match: and, md, path, tests, validation; content token match: a, acceptance, ai_project, are, cli, create, epic, files |
-| 104 | `ai-system/project-control/07-validation-and-tests.md` | 11. Generated Output Drift Tests > 11.1 Task Generated Drift > Command | 956-978 | `035f37bb15d8` | `35d02739836e` | heading token match: command, generated, output, task, tests; metadata token match: and, command, generated, md, output, task, tests, validation; content token match: acceptance, ai_project, codex_tasks, command, create, do, epic, generated |
-| 99 | `ai-system/project-control/06-prompt-package-spec.md` | 3. Current Implementation | 123-162 | `9304e03cf1dd` | `4fe051d2de08` | metadata token match: md; content token match: a, ai_project, and, are, behavior, cli, codex, for |
+| 155 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: to; metadata token match: active, md, to; content token match: accept, actions, active, allowed, and, approval, approved, bypass |
+| 131 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | heading token match: existing; metadata token match: active, existing, md; content token match: actions, active, add, ai_project, allowed, and, approval, approve |
+| 107 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 874-906 | `9304e03cf1dd` | `6cf68be89257` | heading token match: and, py, taskctl, to; metadata token match: active, and, md, py, taskctl, to; content token match: an, and, by, bypass, can, clear, existing, for |
+| 95 | `ai-system/project-control/07-validation-and-tests.md` | 13. Done And Archived Immutability Tests > 13.1 Done Task Mutation > Command | 1113-1133 | `035f37bb15d8` | `693e8700b033` | heading token match: and, archived, done, task, tests; metadata token match: active, and, archived, done, md, task, tests, validation; content token match: approve, approved, done, in_review, notes, py, scripts, task |
+| 94 | `ai-system/project-control/05-lifecycle-rules.md` | 6. Evolution Lifecycle > 6.7 Evolution To Task Rule | 929-953 | `7ac00bfde39d` | `332d638fcec4` | heading token match: evolution, lifecycle, task, to; metadata token match: active, evolution, lifecycle, md, rules, task, to; content token match: add, approve, approved, by, change, evolution, linked, not |
+| 92 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 64-116 | `a1985ca2f321` | `b755c971df05` | metadata token match: active, md; content token match: ai_project, all, allowed, and, approved, are, by, explicitly |
+| 89 | `ai-system/project-control/07-validation-and-tests.md` | 7. Invalid Lifecycle Transition Tests > 7.3 Generic Transition To Approved > Command | 622-641 | `035f37bb15d8` | `be2bad4312d9` | heading token match: approved, invalid, lifecycle, tests, to, transition; metadata token match: active, and, approved, invalid, lifecycle, md, tests, to; content token match: approval, approved, in_review, py, scripts, task, taskctl, to |
+| 88 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 580-670 | `9304e03cf1dd` | `4b3949b96350` | metadata token match: active, md; content token match: active, ai_project, allowed, and, by, change, checks, do |
 
 ## Selected Context
 
@@ -82,10 +79,10 @@ Title: Skills Layer Roadmap
 Status: `active`  Type: `guide`
 Heading: Skills Layer Roadmap > Recommended Skills To Create
 Lines: `80-92`
-Score: `172`
+Score: `155`
 Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
 Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
-Reasons: heading token match: create, layer, to; metadata token match: create, layer, md, to; content token match: a, acceptance, actions, allowed, and, approved, be, bypass
+Reasons: heading token match: to; metadata token match: active, md, to; content token match: accept, actions, active, allowed, and, approval, approved, bypass
 
 ```text
 ## Recommended Skills To Create
@@ -105,10 +102,10 @@ Title: Skills Layer Roadmap
 Status: `active`  Type: `guide`
 Heading: Skills Layer Roadmap > Existing Useful Skills
 Lines: `34-43`
-Score: `138`
+Score: `131`
 Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
 Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
-Reasons: heading token match: layer; metadata token match: layer, md; content token match: a, acceptance, actions, add, ai_project, allowed, and, approved
+Reasons: heading token match: existing; metadata token match: active, existing, md; content token match: actions, active, add, ai_project, allowed, and, approval, approve
 
 ```text
 ## Existing Useful Skills
@@ -122,16 +119,134 @@ Reasons: heading token match: layer; metadata token match: layer, md; content to
 [...truncated by contextctl...]
 ```
 
-### 3. `ai-system/project-control/04-command-catalog.md`
+### 3. `ai-system/project-control/06-prompt-package-spec.md`
+
+Title: Project Control Prompt Package Specification
+Status: `active`  Type: `reference`
+Heading: 17. Relationship To taskctl.py And codexctl.py
+Lines: `874-906`
+Score: `107`
+Content hash: `9304e03cf1dd12bb320887a0e1e1c90bb87259f60bf4a86d63a904b4e7e87210`
+Chunk hash: `6cf68be892579b77502246852781af90dc2942f367d5af5b0a3c4a4ee727323f`
+Reasons: heading token match: and, py, taskctl, to; metadata token match: active, and, md, py, taskctl, to; content token match: an, and, by, bypass, can, clear, existing, for
+
+```text
+# 17. Relationship To taskctl.py And codexctl.py
+
+Task prompt output can be built by `taskctl.py`.
+
+`taskctl.py` owns:
+
+```text id="d2esmn"
+Task state
+Current Task
+Task generated Markdown
+Codex Prompt Package
+Task audit events
+```
+
+`codexctl.py` owns:
+
+```text
+Current Codex execution state
+CODEX_STATUS.md
+Codex prompt build and clear audit events
+Optional read-only Context Pack inclusion in CODEX_PROMPT.md
+```
+
+Prompt Package build must not bypass task validation.
+
+Before building the package, task state must be valid.
+
+`contextctl.py` may read Task state to derive a search query for a Context Pack, but it does not mutate Task state and does not make retrieved context executable scope.
+
+`codexctl.py` may validate and include an existing Context Pack, but it must not build the index or refresh Context Pack content itself.
+
+---
+```
+
+### 4. `ai-system/project-control/07-validation-and-tests.md`
+
+Title: Project Control Validation and Tests
+Status: `active`  Type: `process`
+Heading: 13. Done And Archived Immutability Tests > 13.1 Done Task Mutation > Command
+Lines: `1113-1133`
+Score: `95`
+Content hash: `035f37bb15d8f601aff97abc4f3378961d0524d7a96fae5f03239239e9aee12c`
+Chunk hash: `693e8700b03322e1bb4be11a59bb811e48b5cc92275c4712bfd152ad57902cb3`
+Reasons: heading token match: and, archived, done, task, tests; metadata token match: active, and, archived, done, md, task, tests, validation; content token match: approve, approved, done, in_review, notes, py, scripts, task
+
+```text
+### Command
+
+```bash id="ybpx2n"
+ROOT="$(mktemp -d)"
+
+python scripts/planctl.py --root "$ROOT" init
+python scripts/planctl.py --root "$ROOT" initiative create --title "Project Control"
+python scripts/planctl.py --root "$ROOT" epic create --initiative INIT-001 --title "Task Control"
+
+python scripts/taskctl.py --root "$ROOT" init
+
+python scripts/taskctl.py --root "$ROOT" task create \
+  --epic EPIC-001 \
+  --title "Done Task Test" \
+  --status in_review
+
+python scripts/taskctl.py --root "$ROOT" task approve TASK-001 --notes "Approved"
+python scripts/taskctl.py --root "$ROOT" task transition TASK-001 --to done
+python scripts/taskctl.py --root "$ROOT" task update-summary TASK-001 --text "Should fail"
+```
+```
+
+### 5. `ai-system/project-control/05-lifecycle-rules.md`
+
+Title: Project Control Lifecycle Rules
+Status: `active`  Type: `lifecycle`
+Heading: 6. Evolution Lifecycle > 6.7 Evolution To Task Rule
+Lines: `929-953`
+Score: `94`
+Content hash: `7ac00bfde39da4bc9527f11ad1dc984b993d860fd4bb664498242a32a8b986e3`
+Chunk hash: `332d638fcec4459f88450b15c08d7ce1472f65bfece9ce4aeb54f6a964421acc`
+Reasons: heading token match: evolution, lifecycle, task, to; metadata token match: active, evolution, lifecycle, md, rules, task, to; content token match: add, approve, approved, by, change, evolution, linked, not
+
+```text
+## 6.7 Evolution To Task Rule
+
+Evolution Change Proposal is not executable by itself.
+
+Correct chain:
+
+```text
+Change Proposal created
+-> Change Proposal approved
+-> Implementation Task created
+-> Task linked to Change Proposal
+-> Task executed through taskctl.py
+-> Change Proposal reviewed
+-> Change Proposal accepted
+```
+
+Example future commands:
+
+```bash
+python scripts/evolutionctl.py change create --title "Add protected files check" --type tooling
+python scripts/evolutionctl.py change approve CHG-001
+python scripts/taskctl.py task create --epic EPIC-001 --title "Implement CHG-001"
+python scripts/evolutionctl.py change link-task CHG-001 --task TASK-001
+```
+```
+
+### 6. `ai-system/project-control/04-command-catalog.md`
 
 Title: Project Control Command Catalog
 Status: `active`  Type: `reference`
 Heading: Project Control Command Catalog > Self-Hosted Command Boundary
 Lines: `64-116`
-Score: `128`
+Score: `92`
 Content hash: `a1985ca2f3219254917601872017052dcfc6ae74f1f636fa6fdbe6a6a3227d32`
 Chunk hash: `b755c971df05cf7e6b08835383033a087a162359ce3241ab86018beb96506a9d`
-Reasons: heading token match: command; metadata token match: command, md; content token match: a, acceptance, ai_project, allowed, and, approved, are, be
+Reasons: metadata token match: active, md; content token match: ai_project, all, allowed, and, approved, are, by, explicitly
 
 ```text
 ## Self-Hosted Command Boundary
@@ -170,62 +285,49 @@ python scripts/docctl.py audit --last 20
 [...truncated by contextctl...]
 ```
 
-### 4. `ai-system/project-control/06-prompt-package-spec.md`
+### 7. `ai-system/project-control/07-validation-and-tests.md`
 
-Title: Project Control Prompt Package Specification
-Status: `active`  Type: `reference`
-Heading: 17. Relationship To taskctl.py And codexctl.py
-Lines: `874-906`
-Score: `126`
-Content hash: `9304e03cf1dd12bb320887a0e1e1c90bb87259f60bf4a86d63a904b4e7e87210`
-Chunk hash: `6cf68be892579b77502246852781af90dc2942f367d5af5b0a3c4a4ee727323f`
-Reasons: heading token match: and, py, taskctl, to; metadata token match: and, md, py, taskctl, to; content token match: a, and, be, bypass, can, codex, for, generated
-
-```text
-# 17. Relationship To taskctl.py And codexctl.py
-
-Task prompt output can be built by `taskctl.py`.
-
-`taskctl.py` owns:
-
-```text id="d2esmn"
-Task state
-Current Task
-Task generated Markdown
-Codex Prompt Package
-Task audit events
-```
-
-`codexctl.py` owns:
+Title: Project Control Validation and Tests
+Status: `active`  Type: `process`
+Heading: 7. Invalid Lifecycle Transition Tests > 7.3 Generic Transition To Approved > Command
+Lines: `622-641`
+Score: `89`
+Content hash: `035f37bb15d8f601aff97abc4f3378961d0524d7a96fae5f03239239e9aee12c`
+Chunk hash: `be2bad4312d9c3595fe24712a0f3d26847f2415c2bf3ce3c1611724e730f1401`
+Reasons: heading token match: approved, invalid, lifecycle, tests, to, transition; metadata token match: active, and, approved, invalid, lifecycle, md, tests, to; content token match: approval, approved, in_review, py, scripts, task, taskctl, to
 
 ```text
-Current Codex execution state
-CODEX_STATUS.md
-Codex prompt build and clear audit events
-Optional read-only Context Pack inclusion in CODEX_PROMPT.md
+### Command
+
+```bash id="nv3p2s"
+ROOT="$(mktemp -d)"
+
+python scripts/planctl.py --root "$ROOT" init
+python scripts/planctl.py --root "$ROOT" initiative create --title "Project Control"
+python scripts/planctl.py --root "$ROOT" epic create --initiative INIT-001 --title "Task Control"
+
+python scripts/taskctl.py --root "$ROOT" init
+
+python scripts/taskctl.py --root "$ROOT" task create \
+  --epic EPIC-001 \
+  --title "Approval Test" \
+  --status in_review
+
+python scripts/taskctl.py --root "$ROOT" task transition TASK-001 \
+  --to approved
+```
 ```
 
-Prompt Package build must not bypass task validation.
-
-Before building the package, task state must be valid.
-
-`contextctl.py` may read Task state to derive a search query for a Context Pack, but it does not mutate Task state and does not make retrieved context executable scope.
-
-`codexctl.py` may validate and include an existing Context Pack, but it must not build the index or refresh Context Pack content itself.
-
----
-```
-
-### 5. `ai-system/project-control/06-prompt-package-spec.md`
+### 8. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 12. Prompt Package Template
 Lines: `580-670`
-Score: `121`
+Score: `88`
 Content hash: `9304e03cf1dd12bb320887a0e1e1c90bb87259f60bf4a86d63a904b4e7e87210`
 Chunk hash: `4b3949b963506d03a8ca61d2f28eb70f0cc2ca715a4c20495bab284ca4d8fcb0`
-Reasons: metadata token match: md; content token match: acceptance, action, ai_project, allowed, and, be, change, cli
+Reasons: metadata token match: active, md; content token match: active, ai_project, allowed, and, by, change, checks, do
 
 ```text
 # 12. Prompt Package Template
@@ -296,151 +398,6 @@ Execution Rules:
 - Do not edit AI_PROJECT/events/*.jsonl manually.
 
 [...truncated by contextctl...]
-```
-
-### 6. `ai-system/project-control/07-validation-and-tests.md`
-
-Title: Project Control Validation and Tests
-Status: `active`  Type: `process`
-Heading: 5. Happy Path Test > 5.3 Commands
-Lines: `395-442`
-Score: `107`
-Content hash: `035f37bb15d8f601aff97abc4f3378961d0524d7a96fae5f03239239e9aee12c`
-Chunk hash: `1e0a62325f1be7605fee794f04ca79d11e9ce2814319de415744ba4c9868be25`
-Reasons: heading token match: path; metadata token match: and, md, path, tests, validation; content token match: a, acceptance, ai_project, are, cli, create, epic, files
-
-```text
-## 5.3 Commands
-
-```bash id="pt0ts2"
-ROOT="$(mktemp -d)"
-
-python scripts/planctl.py --root "$ROOT" init \
-  --project-name "AI Development System Smoke Test"
-
-python scripts/planctl.py --root "$ROOT" idea set \
-  --text "Create a controlled AI-assisted development system."
-
-python scripts/planctl.py --root "$ROOT" goal set \
-  --text "Validate Project Control Gateway."
-
-python scripts/planctl.py --root "$ROOT" strategy set-summary \
-  --text "Use CLI commands as the only mutation path."
-
-python scripts/planctl.py --root "$ROOT" initiative create \
-  --title "Project Control Gateway" \
-  --summary "Validate strict project control through CLI."
-
-python scripts/planctl.py --root "$ROOT" epic create \
-  --initiative INIT-001 \
-  --title "Task Control CLI" \
-  --summary "Validate executable task control."
-
-python scripts/taskctl.py --root "$ROOT" init
-
-python scripts/taskctl.py --root "$ROOT" task create \
-  --epic EPIC-001 \
-  --title "Smoke Task" \
-  --summary "Validate end-to-end task workflow." \
-  --scope "Create generated prompt package" \
-  --out-of-scope "No application code changes" \
-  --allowed-file "AI_PROJECT/generated/CODEX_PROMPT.md" \
-  --acceptance "Task validation passes" \
-  --acceptance "Generated task files are up to date" \
-  --verification-mode standard
-
-python scripts/taskctl.py --root "$ROOT" current set TASK-001
-
-[...truncated by contextctl...]
-```
-
-### 7. `ai-system/project-control/07-validation-and-tests.md`
-
-Title: Project Control Validation and Tests
-Status: `active`  Type: `process`
-Heading: 11. Generated Output Drift Tests > 11.1 Task Generated Drift > Command
-Lines: `956-978`
-Score: `104`
-Content hash: `035f37bb15d8f601aff97abc4f3378961d0524d7a96fae5f03239239e9aee12c`
-Chunk hash: `35d02739836ed294dacefe960802fa75a1d06ea39a4e62c872e951eb07b08975`
-Reasons: heading token match: command, generated, output, task, tests; metadata token match: and, command, generated, md, output, task, tests, validation; content token match: acceptance, ai_project, codex_tasks, command, create, do, epic, generated
-
-```text
-### Command
-
-```bash id="ee3uio"
-ROOT="$(mktemp -d)"
-
-python scripts/planctl.py --root "$ROOT" init
-python scripts/planctl.py --root "$ROOT" initiative create --title "Project Control"
-python scripts/planctl.py --root "$ROOT" epic create --initiative INIT-001 --title "Task Control"
-
-python scripts/taskctl.py --root "$ROOT" init
-
-python scripts/taskctl.py --root "$ROOT" task create \
-  --epic EPIC-001 \
-  --title "Generated Drift Test" \
-  --scope "Do one thing" \
-  --allowed-file "README.md" \
-  --acceptance "Generated drift is detected"
-
-echo "manual edit" >> "$ROOT/AI_PROJECT/generated/CODEX_TASKS.md"
-
-python scripts/taskctl.py --root "$ROOT" check-generated
-```
-```
-
-### 8. `ai-system/project-control/06-prompt-package-spec.md`
-
-Title: Project Control Prompt Package Specification
-Status: `active`  Type: `reference`
-Heading: 3. Current Implementation
-Lines: `123-162`
-Score: `99`
-Content hash: `9304e03cf1dd12bb320887a0e1e1c90bb87259f60bf4a86d63a904b4e7e87210`
-Chunk hash: `4fe051d2de08383b0737cc69ca48f864bb8341acd7154ddc8b2d3a70fb1ad30a`
-Reasons: metadata token match: md; content token match: a, ai_project, and, are, behavior, cli, codex, for
-
-```text
-# 3. Current Implementation
-
-Current CLI:
-
-```bash id="55p5jr"
-python scripts/taskctl.py prompt build
-```
-
-Supported options:
-
-```text id="xuo71y"
---task <TASK_ID>       Build prompt for a specific Task.
---write                Write prompt to AI_PROJECT/generated/CODEX_PROMPT.md.
---out <PATH>           Write prompt to custom output path.
---allow-inactive       Allow prompt build for non-executable statuses.
---skip-plan-check      Validate tasks without checking plan references.
-```
-
-Default behavior:
-
-```text id="d56ig6"
-If --task is not provided, taskctl.py uses current_task_id.
-If no current task exists, prompt build fails.
-If task status is not executable and --allow-inactive is not provided, prompt build fails.
-```
-
-Dedicated Codex execution CLI:
-
-```bash
-python scripts/codexctl.py build --task <TASK_ID>
-python scripts/codexctl.py build --task <TASK_ID> --with-context
-python scripts/codexctl.py build --task <TASK_ID> --context-pack AI_PROJECT/generated/CONTEXT_PACK.md
-python scripts/codexctl.py status
-python scripts/codexctl.py clear
-```
-
-`--with-context` uses the default generated Context Pack path. `--context-pack` allows an explicit repository-relative or absolute Context Pack path. Both options are read-only with respect to context generation; `contextctl.py` remains responsible for building and refreshing Context Packs.
-
----
 ```
 
 ## Excluded Source Summary
