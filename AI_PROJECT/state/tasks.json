@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 401,
+  "revision": 406,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-19T10:00:36Z",
+  "updated_at": "2026-06-19T10:25:51Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -3187,7 +3187,7 @@
       "id": "TASK-044",
       "epic_id": "EPIC-006",
       "title": "UIX-07 Add Task Review Done Controls",
-      "status": "planned",
+      "status": "done",
       "summary": "Add UI controls for closing reviewed tasks and requesting changes from the Tasks page while preserving Human Owner review gates.",
       "description": "Expose the task review completion part of the pipeline in the Web Control Center. The owner should be able to approve a task and move it to done, or request changes, directly from the UI when the task is in_review.",
       "priority": 1,
@@ -3257,11 +3257,11 @@
           "created_at": "2026-06-19T09:49:26Z"
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T10:25:51Z",
+      "approval_notes": "Task Review Done Controls accepted. in_review tasks now expose Approve & Done and Request Changes with required confirmation and owner notes, routing through governed workflows.",
       "created_at": "2026-06-19T09:49:26Z",
-      "updated_at": "2026-06-19T09:49:26Z",
+      "updated_at": "2026-06-19T10:25:51Z",
       "uid": "tsk_8995fc393bcb",
       "ref": "WFA-13",
       "legacy_id": "TASK-044",

@@ -105,6 +105,7 @@ class AictlTests(unittest.TestCase):
         self.assertIn("task.submit_for_review", names)
         self.assertIn("evolution.create_for_task", names)
         self.assertIn("task.close_reviewed", names)
+        self.assertIn("task.request_changes", names)
         self.assertIn("evolution.accept_change", names)
         self.assertIn("epic.close_if_complete", names)
 

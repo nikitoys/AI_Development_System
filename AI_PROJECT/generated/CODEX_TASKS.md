@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `401`
+Revision: `406`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -781,7 +781,7 @@ Acceptance criteria:
 
 ### WFA-13 (TASK-044) — UIX-07 Add Task Review Done Controls
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_8995fc393bcb`, legacy `TASK-044`, aliases `TASK-044`, local `WFA` / `13`

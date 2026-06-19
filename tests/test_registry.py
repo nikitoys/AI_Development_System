@@ -25,6 +25,7 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("task.refresh_execution_context", names)
         self.assertIn("task.submit_for_review", names)
         self.assertIn("task.close_reviewed", names)
+        self.assertIn("task.request_changes", names)
         self.assertIn("evolution.create_for_task", names)
         self.assertIn("evolution.accept_change", names)
         self.assertIn("epic.close_if_complete", names)
@@ -124,6 +125,7 @@ class RegistryTests(unittest.TestCase):
 
     def test_review_close_helpers_are_registered_with_owner_gates(self):
         close_task = command_describe("task.close_reviewed")
+        request_changes = command_describe("task.request_changes")
         accept_change = command_describe("evolution.accept_change")
         close_epic = command_describe("epic.close_if_complete")
 
@@ -131,6 +133,12 @@ class RegistryTests(unittest.TestCase):
         self.assertEqual(close_task["lock_scope"], "workflow")
         self.assertIn("approval notes", close_task["owner_approval"])
         self.assertIn("AI_PROJECT/state/tasks.json", close_task["writes_state"])
+
+        self.assertEqual(request_changes["domain"], "task")
+        self.assertEqual(request_changes["lock_scope"], "workflow")
+        self.assertIn("owner notes", request_changes["owner_approval"])
+        self.assertIn("AI_PROJECT/state/tasks.json", request_changes["writes_state"])
+        self.assertIn("task add-note", " ".join(request_changes["notes"]))
 
         self.assertEqual(accept_change["domain"], "evolution")
         self.assertIn("linked Tasks must be complete", accept_change["owner_approval"])

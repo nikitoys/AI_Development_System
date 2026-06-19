@@ -55,6 +55,20 @@ TASK_ROW_WORKFLOWS = (
         "statuses": {"in_progress"},
         "label": "Submit for Review",
     },
+    {
+        "action": "task.close_reviewed",
+        "statuses": {"in_review"},
+        "label": "Approve & Done",
+        "notes_label": "Approval Notes",
+        "notes_placeholder": "Record the Human Owner approval basis.",
+    },
+    {
+        "action": "task.request_changes",
+        "statuses": {"in_review"},
+        "label": "Request Changes",
+        "notes_label": "Change Request Notes",
+        "notes_placeholder": "Describe the required rework.",
+    },
 )
 
 
@@ -634,8 +648,17 @@ def render_actions(data: Mapping[str, Any]) -> str:
             "task.close_reviewed",
             [
                 input_field("task", "Task", default_task),
-                textarea_field("notes", "Approval Notes"),
+                textarea_field("notes", "Approval Notes", required=True),
             ],
+            button_label="Approve & Done",
+        ),
+        action_form(
+            "task.request_changes",
+            [
+                input_field("task", "Task", default_task),
+                textarea_field("notes", "Change Request Notes", required=True),
+            ],
+            button_label="Request Changes",
         ),
         action_form(
             "evolution.create_for_task",
@@ -1837,6 +1860,18 @@ def task_row_action(
     label = str(spec.get("label") or action_id)
     workflow = workflow_by_name(data).get(action_id) or {}
     task_ref = str(task.get("ref") or task.get("id") or "")
+    fields = [hidden_field("task", task_ref)]
+    notes_label = str(spec.get("notes_label") or "")
+    if notes_label:
+        fields.append(
+            textarea_field(
+                "notes",
+                notes_label,
+                rows=2,
+                placeholder=str(spec.get("notes_placeholder") or ""),
+                required=True,
+            )
+        )
     return (
         '<details class="row-action row-action-{}">'
         "<summary>{}</summary>"
@@ -1849,7 +1884,7 @@ def task_row_action(
         workflow_preview_html(workflow),
         action_form(
             action_id,
-            [hidden_field("task", task_ref)],
+            fields,
             button_label=label,
         ),
     )
@@ -2006,17 +2041,20 @@ def textarea_field(
     rows: int = 3,
     placeholder: str = "",
     wide: bool = False,
+    required: bool = False,
 ) -> str:
     placeholder_attr = (
         ' placeholder="{}"'.format(escape(placeholder)) if placeholder else ""
     )
     class_attr = ' class="wide-field"' if wide else ""
-    return '<label{}>{}<textarea name="{}" rows="{}"{}></textarea></label>'.format(
+    required_attr = " required" if required else ""
+    return '<label{}>{}<textarea name="{}" rows="{}"{}{}></textarea></label>'.format(
         class_attr,
         escape(label),
         escape(name),
         escape(rows),
         placeholder_attr,
+        required_attr,
     )
 
 

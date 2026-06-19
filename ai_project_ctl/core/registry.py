@@ -615,6 +615,47 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
             ),
         ),
         CommandDescriptor(
+            name="task.request_changes",
+            domain="task",
+            description=(
+                "Record owner change-request notes and move an in_review Task "
+                "to changes_requested through validated workflow steps."
+            ),
+            kind=CommandKind.WRITE,
+            arguments=(
+                _arg("task", "Task ID, ref, UID, legacy ID, or alias.", required=True),
+                _arg("notes", "Required change-request notes.", required=True),
+                _arg("confirm", "Required explicit confirmation.", value_type="boolean", required=True),
+            ),
+            reads_state=(state_tasks, state_plan, state_execution),
+            writes_state=(state_tasks,),
+            event_logs=("AI_PROJECT/events/task-events.jsonl",),
+            generated_files=(
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+            ),
+            output=_output("Step-by-step workflow result.", fields=("steps",)),
+            validators=(
+                "task_state",
+                "task_lifecycle",
+                "generated_output",
+                "protected_files",
+                "project_doctor",
+            ),
+            lock_scope="workflow",
+            owner_approval=(
+                "Explicit confirmation and non-empty owner notes are required before requesting changes."
+            ),
+            dry_run=True,
+            legacy_command=("python scripts/aictl.py workflow run task.request_changes --task <TASK_ID> --notes <NOTES> --confirm",),
+            notes=(
+                "Preflight rejects tasks that are not in_review.",
+                "Records owner notes through taskctl.py task add-note.",
+                "Delegates the changes_requested transition to the registered task.transition path.",
+            ),
+        ),
+        CommandDescriptor(
             name="evolution.create_for_task",
             domain="evolution",
             description=(

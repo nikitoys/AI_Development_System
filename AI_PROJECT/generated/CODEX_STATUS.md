@@ -5,21 +5,21 @@
 
 Status: `READY`
 Code: `CODEX_READY`
-Updated: `2026-06-19T09:58:02Z`
+Updated: `2026-06-19T10:25:06Z`
 
 Prompt exists: `true`
 Prompt path: `/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md`
 
 Source type: `task`
-Source ID: `TASK-040`
+Source ID: `TASK-044`
 Source status: `in_review`
 
 Context Pack:
 
 - Path: `AI_PROJECT/generated/CONTEXT_PACK.md`
-- SHA-256: `24f13da23630f1b3ef3598e139ae7cc8e9e2fa98d1b10539da6b0d6c56a1ebf8`
+- SHA-256: `2d3ccec95376ddf0e85c7807176074e9252ce451cc701ce810a5d9622a353123`
 - Mode: `task`
-- Task ID: `TASK-040`
+- Task ID: `TASK-044`
 - Docs revision: `23`
-- Tasks revision: `379`
+- Tasks revision: `404`
 - Selected sources: `8`

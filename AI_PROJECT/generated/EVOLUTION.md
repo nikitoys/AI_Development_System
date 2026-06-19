@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `538`
-Changes: `21`
+Revision: `577`
+Changes: `22`
 
 ## Summary
 
-- `accepted`: 20
+- `accepted`: 21
 - `approved`: 1
 
 ## Changes
@@ -1249,3 +1249,74 @@ Impact:
 Linked tasks:
 
 - TASK-040
+
+### CHG-022 — UIX-07 Add Task Review Done Controls
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-13 requires an explicit Evolution Change Proposal before implementation: Add UI controls for closing reviewed tasks and requesting changes from the Tasks page while preserving Human Owner review gates.
+
+Proposal:
+
+Implement the bounded task scope: Add status-aware review controls for tasks in in_review.; Add Approve & Done action routed through the existing task.close_reviewed workflow.; Add Request Changes action routed through an existing governed task transition path or a minimal governed workflow wrapper if needed.; Require explicit confirmation before any review decision.; Require owner notes for Approve & Done and Request Changes.; Show clear success/failure result through the unified action result panel.; After Approve & Done, show next actions such as accepting the linked Evolution Change or preparing the next task.; Do not show Done controls for tasks that are not in_review.; Add tests for valid close, invalid status, missing notes, request changes, and no direct state writes.
+
+Rationale:
+
+Expose the task review completion part of the pipeline in the Web Control Center. The owner should be able to approve a task and move it to done, or request changes, directly from the UI when the task is in_review.
+
+Approved by: `human_owner` at `2026-06-19T10:02:24Z`  
+Approval notes: Approved for WFA-13 Task Review Done Controls. Must expose Approve & Done and Request Changes through governed workflows, require explicit confirmation and owner notes, and not auto-accept linked Changes.  
+
+Accepted by: `human_owner` at `2026-06-19T10:26:52Z`  
+Acceptance notes: Accepted after task WFA-13 review  
+
+Affected files:
+
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/core/workflows.py if a minimal review workflow wrapper is needed
+- ai_project_ctl/core/registry.py if workflow/action metadata needs compatible updates
+- scripts/aictl.py if command routing needs compatible updates
+- tests/test_web_control_center.py
+- tests/test_workflows.py
+- tests/test_aictl.py
+- tests/test_registry.py
+
+Risks:
+
+- Boundary risk: Do not auto-approve tasks.
+- Boundary risk: Do not auto-close tasks without explicit Human Owner confirmation.
+- Boundary risk: Do not accept linked Evolution Changes automatically.
+- Boundary risk: Do not bypass task lifecycle validation.
+- Boundary risk: Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Boundary risk: Do not change task lifecycle semantics except adding a governed UI wrapper if strictly required.
+- Verify that Done cannot be applied to planned, ready, in_progress, or already done tasks.
+- Verify that owner notes are required.
+- Verify that all writes route through governed workflows/commands.
+- Verify that linked Change acceptance remains a separate explicit action.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-044.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add status-aware review controls for tasks in in_review.
+- Add Approve & Done action routed through the existing task.close_reviewed workflow.
+- Add Request Changes action routed through an existing governed task transition path or a minimal governed workflow wrapper if needed.
+- Require explicit confirmation before any review decision.
+- Require owner notes for Approve & Done and Request Changes.
+- Tasks in in_review show Approve & Done and Request Changes controls.
+- Approve & Done requires explicit confirmation and owner notes.
+- Approve & Done routes through task.close_reviewed or another governed workflow path.
+
+Linked tasks:
+
+- TASK-044

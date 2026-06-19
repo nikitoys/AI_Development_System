@@ -153,11 +153,15 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('value="task.refresh_execution_context"', body)
         self.assertIn("Submit for Review", body)
         self.assertIn('value="task.submit_for_review"', body)
+        self.assertIn("Approve &amp; Done", body)
+        self.assertIn('value="task.close_reviewed"', body)
+        self.assertIn("Request Changes", body)
+        self.assertIn('value="task.request_changes"', body)
         self.assertIn("Set current task", body)
         self.assertIn("Build Codex prompt with context", body)
         self.assertIn('name="confirm" value="yes" required', body)
 
-    def test_tasks_page_hides_row_workflows_for_invalid_statuses(self):
+    def test_tasks_page_shows_only_review_decision_workflows_for_in_review_status(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write_web_state(root, **large_task_view_state())
@@ -167,22 +171,37 @@ class WebControlCenterTests(unittest.TestCase):
                 "/tasks?status=in_review&group=none",
                 model,
             )
+
+        self.assertEqual(review_status.value, 200)
+        self.assertIn("Approve &amp; Done", review_body)
+        self.assertIn('value="task.close_reviewed"', review_body)
+        self.assertIn("Approval Notes", review_body)
+        self.assertIn("Request Changes", review_body)
+        self.assertIn('value="task.request_changes"', review_body)
+        self.assertIn("Change Request Notes", review_body)
+        self.assertIn('name="notes" rows="2"', review_body)
+        self.assertNotIn('value="task.prepare_for_codex"', review_body)
+        self.assertNotIn('value="task.refresh_execution_context"', review_body)
+        self.assertNotIn('value="task.submit_for_review"', review_body)
+
+    def test_tasks_page_hides_row_workflows_for_done_status(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root, **large_task_view_state())
+            model = ReadOnlyProjectModel(root, actor="tester")
+
             done_status, _, done_body = route(
                 "/tasks?status=done&show_done=1&group=none",
                 model,
             )
-
-        self.assertEqual(review_status.value, 200)
-        self.assertIn("No row workflows", review_body)
-        self.assertNotIn('value="task.prepare_for_codex"', review_body)
-        self.assertNotIn('value="task.refresh_execution_context"', review_body)
-        self.assertNotIn('value="task.submit_for_review"', review_body)
 
         self.assertEqual(done_status.value, 200)
         self.assertIn("No row workflows", done_body)
         self.assertNotIn('value="task.prepare_for_codex"', done_body)
         self.assertNotIn('value="task.refresh_execution_context"', done_body)
         self.assertNotIn('value="task.submit_for_review"', done_body)
+        self.assertNotIn('value="task.close_reviewed"', done_body)
+        self.assertNotIn('value="task.request_changes"', done_body)
 
     def test_doctor_refresh_runs_diagnostics_and_reuses_cache(self):
         calls = []
@@ -958,6 +977,55 @@ class WebControlCenterTests(unittest.TestCase):
             ],
         )
         self.assertIn("--notes", argv)
+
+    def test_request_changes_web_action_delegates_with_notes(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"ok": true, "data": {"steps": []}}\n',
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process) as run:
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "task.request_changes",
+                    "confirm": "yes",
+                    "task": "WFA-05",
+                    "notes": "Needs rework.",
+                }
+            )
+
+        argv = run.call_args.args[0]
+
+        self.assertTrue(result.ok)
+        self.assertEqual(Path(argv[1]).name, "aictl.py")
+        self.assertEqual(
+            argv[-8:],
+            [
+                "workflow",
+                "run",
+                "task.request_changes",
+                "--task",
+                "WFA-05",
+                "--notes",
+                "Needs rework.",
+                "--confirm",
+            ],
+        )
+
+    def test_request_changes_web_action_requires_notes(self):
+        with self.assertRaises(WebActionError) as context:
+            WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "task.request_changes",
+                    "confirm": "yes",
+                    "task": "WFA-05",
+                }
+            )
+
+        self.assertEqual(context.exception.code, "WEB_MISSING_ACTION_ARGUMENT")
+        self.assertEqual(context.exception.details["argument"], "notes")
 
     def test_accept_change_web_action_delegates_with_change_and_notes(self):
         completed_process = subprocess.CompletedProcess(

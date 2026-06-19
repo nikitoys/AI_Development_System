@@ -118,6 +118,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("task.submit_for_review", names)
         self.assertIn("task.create_single", names)
         self.assertIn("task.close_reviewed", names)
+        self.assertIn("task.request_changes", names)
         self.assertIn("evolution.accept_change", names)
         self.assertIn("epic.close_if_complete", names)
         self.assertTrue(descriptor["confirmation_required"])
@@ -264,28 +265,32 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(result.errors[0].code, "WORKFLOW_APPROVAL_NOTES_REQUIRED")
         self.assertEqual(len(calls), 1)
 
-    def test_close_reviewed_task_rejects_non_review_state(self):
-        calls = []
+    def test_close_reviewed_task_rejects_non_review_states(self):
+        for status in ("planned", "ready", "in_progress", "done"):
+            calls = []
 
-        def fake_run(argv):
-            calls.append(list(argv))
-            if Path(argv[1]).name == "taskctl.py" and "resolve" in argv:
-                return completed(
-                    '{"id": "TASK-032", "ref": "WFA-01", "status": "ready"}\n'
+            def fake_run(argv):
+                calls.append(list(argv))
+                if Path(argv[1]).name == "taskctl.py" and "resolve" in argv:
+                    return completed(
+                        '{{"id": "TASK-032", "ref": "WFA-01", "status": "{}"}}\n'.format(
+                            status
+                        )
+                    )
+                return completed()
+
+            with self.subTest(status=status):
+                result = run_workflow(
+                    "task.close_reviewed",
+                    task_ref="WFA-01",
+                    notes="Reviewed and accepted.",
+                    confirmed=True,
+                    runner=fake_run,
                 )
-            return completed()
 
-        result = run_workflow(
-            "task.close_reviewed",
-            task_ref="WFA-01",
-            notes="Reviewed and accepted.",
-            confirmed=True,
-            runner=fake_run,
-        )
-
-        self.assertFalse(result.ok)
-        self.assertEqual(result.errors[0].code, "WORKFLOW_TASK_NOT_IN_REVIEW")
-        self.assertEqual(len(calls), 1)
+                self.assertFalse(result.ok)
+                self.assertEqual(result.errors[0].code, "WORKFLOW_TASK_NOT_IN_REVIEW")
+                self.assertEqual(len(calls), 1)
 
     def test_close_reviewed_task_approves_then_marks_done(self):
         calls = []
@@ -311,6 +316,78 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(result.ok)
         self.assertTrue(any("task approve TASK-032 --notes Reviewed and accepted." in command for command in commands))
         self.assertTrue(any("task transition TASK-032 --to done" in command for command in commands))
+        self.assertTrue(any("task list --status ready" in action for action in result.next_actions))
+
+    def test_request_changes_task_requires_notes_before_transition(self):
+        calls = []
+
+        def fake_run(argv):
+            calls.append(list(argv))
+            if Path(argv[1]).name == "taskctl.py" and "resolve" in argv:
+                return completed(
+                    '{"id": "TASK-032", "ref": "WFA-01", "status": "in_review"}\n'
+                )
+            return completed()
+
+        result = run_workflow(
+            "task.request_changes",
+            task_ref="WFA-01",
+            confirmed=True,
+            runner=fake_run,
+        )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.errors[0].code, "WORKFLOW_REQUEST_CHANGES_NOTES_REQUIRED")
+        self.assertEqual(len(calls), 1)
+
+    def test_request_changes_task_rejects_non_review_state(self):
+        calls = []
+
+        def fake_run(argv):
+            calls.append(list(argv))
+            if Path(argv[1]).name == "taskctl.py" and "resolve" in argv:
+                return completed(
+                    '{"id": "TASK-032", "ref": "WFA-01", "status": "in_progress"}\n'
+                )
+            return completed()
+
+        result = run_workflow(
+            "task.request_changes",
+            task_ref="WFA-01",
+            notes="Needs rework.",
+            confirmed=True,
+            runner=fake_run,
+        )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.errors[0].code, "WORKFLOW_TASK_NOT_IN_REVIEW")
+        self.assertEqual(len(calls), 1)
+
+    def test_request_changes_task_records_notes_then_marks_changes_requested(self):
+        calls = []
+
+        def fake_run(argv):
+            calls.append(list(argv))
+            if Path(argv[1]).name == "taskctl.py" and "resolve" in argv:
+                return completed(
+                    '{"id": "TASK-032", "ref": "WFA-01", "status": "in_review"}\n'
+                )
+            return completed('{"ok": true}\n')
+
+        result = run_workflow(
+            "task.request_changes",
+            task_ref="WFA-01",
+            notes="Needs rework.",
+            confirmed=True,
+            runner=fake_run,
+        )
+
+        commands = [" ".join(call) for call in calls]
+
+        self.assertTrue(result.ok)
+        self.assertTrue(any("task add-note TASK-032 --text Needs rework." in command for command in commands))
+        self.assertTrue(any("task transition TASK-032 --to changes_requested" in command for command in commands))
+        self.assertTrue(any("task.prepare_for_codex" in action for action in result.next_actions))
 
     def test_accept_change_rejects_incomplete_linked_tasks_before_runner(self):
         calls = []

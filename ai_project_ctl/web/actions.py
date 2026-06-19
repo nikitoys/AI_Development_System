@@ -524,8 +524,14 @@ ACTIONS: dict[str, WebAction] = {
     "task.close_reviewed": WebAction(
         action_id="task.close_reviewed",
         command_name="task.close_reviewed",
-        label="Close reviewed task",
+        label="Approve & Done",
         builder=_build_workflow("task.close_reviewed", include_notes=True),
+    ),
+    "task.request_changes": WebAction(
+        action_id="task.request_changes",
+        command_name="task.request_changes",
+        label="Request Changes",
+        builder=_build_workflow("task.request_changes", include_notes=True),
     ),
     "evolution.create_for_task": WebAction(
         action_id="evolution.create_for_task",

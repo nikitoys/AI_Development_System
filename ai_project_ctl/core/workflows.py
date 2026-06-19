@@ -23,7 +23,8 @@ REGISTERED = "registered"
 VALIDATED_CTL = "validated_ctl"
 READ_ONLY_CTL = "read_only_ctl"
 
-TASK_CLOSE_REQUIRED_STATUS = "in_review"
+TASK_REVIEW_DECISION_REQUIRED_STATUS = "in_review"
+TASK_CLOSE_REQUIRED_STATUS = TASK_REVIEW_DECISION_REQUIRED_STATUS
 CHANGE_ACCEPTABLE_STATUSES = {"approved", "in_review"}
 CHANGE_DONE_TASK_STATUSES = {"done", "archived"}
 EPIC_CLOSED_TASK_STATUSES = {"done", "deferred", "archived"}
@@ -704,8 +705,15 @@ class WorkflowExecutor:
             )
 
         task = _parse_resolved_task(resolve_result.stdout, task_ref=task_ref)
-        if descriptor.name == "task.close_reviewed":
-            preflight = _task_close_preflight_step_result(task, notes)
+        if descriptor.name in {"task.close_reviewed", "task.request_changes"}:
+            if descriptor.name == "task.request_changes":
+                preflight = _task_request_changes_preflight_step_result(task, notes)
+                preflight_error = _task_request_changes_preflight_error(task, notes)
+                stopped_message = "Workflow stopped before request-changes preflight."
+            else:
+                preflight = _task_close_preflight_step_result(task, notes)
+                preflight_error = _task_close_preflight_error(task, notes)
+                stopped_message = "Workflow stopped before task closure preflight."
             step_results.append(preflight)
             if not preflight.ok:
                 return self._preflight_result(
@@ -713,8 +721,8 @@ class WorkflowExecutor:
                     task_ref=task_ref,
                     task=task,
                     step_results=step_results,
-                    error=_task_close_preflight_error(task, notes),
-                    message="Workflow stopped before task closure preflight.",
+                    error=preflight_error,
+                    message=stopped_message,
                 )
         steps = _build_steps(
             descriptor.name,
@@ -737,13 +745,18 @@ class WorkflowExecutor:
                     message="Workflow stopped on blocking step: {}".format(step.title),
                 )
 
-        return self._result(
+        result = self._result(
             descriptor,
             task_ref=task_ref,
             task=task,
             step_results=step_results,
             message="Workflow completed.",
         )
+        if result.ok and descriptor.name == "task.close_reviewed":
+            _add_task_close_next_actions(result, self.root, task)
+        elif result.ok and descriptor.name == "task.request_changes":
+            _add_task_request_changes_next_actions(result, task)
+        return result
 
     def _run_evolution_create_for_task(
         self,
@@ -1240,6 +1253,36 @@ def _workflow_descriptors() -> tuple[WorkflowDescriptor, ...]:
             ),
         ),
         WorkflowDescriptor(
+            name="task.request_changes",
+            label="Request changes",
+            description=(
+                "Record owner change-request notes and transition an in_review "
+                "task to changes_requested through validated commands."
+            ),
+            confirmation_required=True,
+            arguments=(
+                *task_argument,
+                {
+                    "name": "notes",
+                    "description": "Required change-request notes.",
+                    "required": True,
+                },
+            ),
+            steps=(
+                _template("resolve", "Resolve task reference", "taskctl.task.resolve", READ_ONLY_CTL, "python scripts/taskctl.py task resolve <TASK> --json"),
+                _template("preflight", "Check request-changes gates", "task.request_changes.preflight", READ_ONLY_CTL, "check task status and request notes"),
+                _template("task_validate", "Validate task state", "taskctl.validate", VALIDATED_CTL, "python scripts/taskctl.py validate"),
+                _template("task_graph", "Validate task graph", "taskctl.task.graph.validate", VALIDATED_CTL, "python scripts/taskctl.py task graph validate"),
+                _template("task_generated", "Check generated task output", "taskctl.check-generated", VALIDATED_CTL, "python scripts/taskctl.py check-generated"),
+                _template("protected", "Check protected project files", "protected.check", VALIDATED_CTL, "python scripts/check-protected-project-files.py --json"),
+                _template("doctor", "Run project doctor", "project.doctor", REGISTERED, "python scripts/aictl.py project doctor"),
+                _template("task_note", "Record change-request notes", "taskctl.task.add_note", VALIDATED_CTL, "python scripts/taskctl.py task add-note <TASK> --text <NOTES>"),
+                _template("task_changes_requested", "Move task to changes_requested", "task.transition", REGISTERED, "python scripts/aictl.py task transition <TASK> --to changes_requested"),
+                _template("task_validate_after", "Validate task state after request", "taskctl.validate", VALIDATED_CTL, "python scripts/taskctl.py validate"),
+                _template("task_generated_after", "Check generated task output after request", "taskctl.check-generated", VALIDATED_CTL, "python scripts/taskctl.py check-generated"),
+            ),
+        ),
+        WorkflowDescriptor(
             name="evolution.create_for_task",
             label="Create Evolution Change",
             description=(
@@ -1458,6 +1501,22 @@ def _build_steps(
                 _aictl_step("task_done", "Move task to done", "task.transition", root, actor, python_executable, "task", "transition", task_id, "--to", "done"),
                 _ctl_step("task_validate_after", "Validate task state after close", "taskctl.validate", "taskctl.py", root, actor, python_executable, "validate"),
                 _ctl_step("task_generated_after", "Check generated task output after close", "taskctl.check-generated", "taskctl.py", root, actor, python_executable, "check-generated"),
+            ]
+        )
+        return steps
+
+    if workflow_name == "task.request_changes":
+        steps.extend(
+            [
+                _ctl_step("task_validate", "Validate task state", "taskctl.validate", "taskctl.py", root, actor, python_executable, "validate"),
+                _ctl_step("task_graph", "Validate task graph", "taskctl.task.graph.validate", "taskctl.py", root, actor, python_executable, "task", "graph", "validate"),
+                _ctl_step("task_generated", "Check generated task output", "taskctl.check-generated", "taskctl.py", root, actor, python_executable, "check-generated"),
+                _protected_step(root, python_executable),
+                _aictl_step("doctor", "Run project doctor", "project.doctor", root, actor, python_executable, "project", "doctor"),
+                _ctl_step("task_note", "Record change-request notes", "taskctl.task.add_note", "taskctl.py", root, actor, python_executable, "task", "add-note", task_id, "--text", notes),
+                _aictl_step("task_changes_requested", "Move task to changes_requested", "task.transition", root, actor, python_executable, "task", "transition", task_id, "--to", "changes_requested"),
+                _ctl_step("task_validate_after", "Validate task state after request", "taskctl.validate", "taskctl.py", root, actor, python_executable, "validate"),
+                _ctl_step("task_generated_after", "Check generated task output after request", "taskctl.check-generated", "taskctl.py", root, actor, python_executable, "check-generated"),
             ]
         )
         return steps
@@ -2440,6 +2499,64 @@ def _find_task(tasks: Sequence[Mapping[str, Any]], task_ref: str) -> dict[str, A
     return None
 
 
+def _add_task_close_next_actions(
+    result: CommandResult,
+    root: Path,
+    task: Mapping[str, Any],
+) -> None:
+    task_label = _task_label(task)
+    linked_changes = _linked_change_ids_for_task(root, task)
+    if linked_changes:
+        for change_id in linked_changes:
+            result.next_actions.append(
+                'python scripts/aictl.py workflow run evolution.accept_change --change {} --notes "Accepted after task {} review" --confirm'.format(
+                    change_id,
+                    task_label,
+                )
+            )
+        result.owner_action_required = (
+            "Task is done. Accept linked Evolution Changes separately only if the Human Owner agrees."
+        )
+    else:
+        result.owner_action_required = (
+            "Task is done. Review the queue and explicitly select the next task when ready."
+        )
+    result.next_actions.append("python scripts/aictl.py task list --status ready")
+
+
+def _add_task_request_changes_next_actions(
+    result: CommandResult,
+    task: Mapping[str, Any],
+) -> None:
+    task_label = _task_label(task)
+    result.owner_action_required = (
+        "Changes were requested. Rework must be explicitly prepared before another execution attempt."
+    )
+    result.next_actions.append(
+        "python scripts/aictl.py workflow run task.prepare_for_codex --task {} --confirm".format(
+            task_label,
+        )
+    )
+
+
+def _linked_change_ids_for_task(root: Path, task: Mapping[str, Any]) -> list[str]:
+    try:
+        evolution = _load_json_state(root, "evolution.json", expected_list="changes")
+    except WorkflowError:
+        return []
+    task_refs = {str(value) for value in (_task_label(task), _legacy_task_id(task), task.get("id")) if value}
+    linked: list[str] = []
+    for change in evolution.get("changes", []):
+        if not isinstance(change, Mapping):
+            continue
+        linked_tasks = set(_string_list(change.get("linked_tasks")))
+        if task_refs.intersection(linked_tasks):
+            change_id = str(change.get("id") or "")
+            if change_id:
+                linked.append(change_id)
+    return linked
+
+
 def _task_matches_ref(task: Mapping[str, Any], task_ref: str) -> bool:
     for field in ("id", "uid", "ref", "legacy_id"):
         if str(task.get(field) or "") == task_ref:
@@ -2460,6 +2577,7 @@ def _workflow_target_error(
         "task.refresh_execution_context",
         "task.submit_for_review",
         "task.close_reviewed",
+        "task.request_changes",
         "evolution.create_for_task",
     } and not task_ref:
         return WorkflowError(
@@ -2514,6 +2632,41 @@ def _task_close_preflight_step_result(
         "Check task close gates",
         "task.close_reviewed.preflight",
         error=_task_close_preflight_error(task, notes),
+    )
+
+
+def _task_request_changes_preflight_error(
+    task: Mapping[str, Any],
+    notes: str,
+) -> WorkflowError | None:
+    if not notes.strip():
+        return WorkflowError(
+            "WORKFLOW_REQUEST_CHANGES_NOTES_REQUIRED",
+            "Requesting changes for a reviewed Task requires non-empty owner notes.",
+            details={"task": _task_label(task)},
+        )
+    if task.get("status") != TASK_REVIEW_DECISION_REQUIRED_STATUS:
+        return WorkflowError(
+            "WORKFLOW_TASK_NOT_IN_REVIEW",
+            "Task must be in_review before changes can be requested.",
+            details={
+                "task": _task_label(task),
+                "status": str(task.get("status") or ""),
+                "required_status": TASK_REVIEW_DECISION_REQUIRED_STATUS,
+            },
+        )
+    return None
+
+
+def _task_request_changes_preflight_step_result(
+    task: Mapping[str, Any],
+    notes: str,
+) -> WorkflowStepResult:
+    return _local_check_step_result(
+        "task_request_changes_preflight",
+        "Check request-changes gates",
+        "task.request_changes.preflight",
+        error=_task_request_changes_preflight_error(task, notes),
     )
 
 
