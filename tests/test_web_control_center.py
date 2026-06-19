@@ -17,7 +17,13 @@ from ai_project_ctl.web.read_model import (
     WebControlError,
     require_read_only_command,
 )
-from ai_project_ctl.web.server import WebServerError, make_handler, route
+from ai_project_ctl.web.server import (
+    WebServerError,
+    make_handler,
+    render_action_error,
+    render_action_result,
+    route,
+)
 
 
 class WebControlCenterTests(unittest.TestCase):
@@ -291,10 +297,12 @@ class WebControlCenterTests(unittest.TestCase):
                     side_effect=fake_action_run,
                 ):
                     response = urllib.request.urlopen(request, timeout=5)
-                    payload = json.loads(response.read().decode("utf-8"))
+                    body = response.read().decode("utf-8")
 
                 self.assertEqual(response.status, 200)
-                self.assertTrue(payload["ok"])
+                self.assertEqual(response.headers["Content-Type"], "text/html; charset=utf-8")
+                self.assertIn("Action Result", body)
+                self.assertIn("Task transition", body)
                 self.assertFalse(model.doctor()["cache"]["cached"])
             finally:
                 server.shutdown()
@@ -367,12 +375,10 @@ class WebControlCenterTests(unittest.TestCase):
                 with self.assertRaises(urllib.error.HTTPError) as raised:
                     urllib.request.urlopen(request, timeout=5)
 
-                payload = json.loads(raised.exception.read().decode("utf-8"))
+                body = raised.exception.read().decode("utf-8")
                 self.assertEqual(raised.exception.code, 400)
-                self.assertEqual(
-                    payload["error"]["code"],
-                    "WEB_ACTION_CONFIRMATION_REQUIRED",
-                )
+                self.assertIn("Action failed", body)
+                self.assertIn("WEB_ACTION_CONFIRMATION_REQUIRED", body)
             finally:
                 server.shutdown()
                 server.server_close()
@@ -422,10 +428,12 @@ class WebControlCenterTests(unittest.TestCase):
                 )
                 with patch("ai_project_ctl.web.actions.subprocess.run", side_effect=fake_run):
                     response = urllib.request.urlopen(request, timeout=5)
-                    payload = json.loads(response.read().decode("utf-8"))
+                    body = response.read().decode("utf-8")
 
                 self.assertEqual(response.status, 200)
-                self.assertTrue(payload["ok"])
+                self.assertEqual(response.headers["Content-Type"], "text/html; charset=utf-8")
+                self.assertIn("Action Result", body)
+                self.assertIn("Task transition", body)
                 self.assertEqual(Path(calls[0][1]).name, "aictl.py")
                 self.assertEqual(
                     calls[0][-5:],
@@ -761,6 +769,125 @@ class WebControlCenterTests(unittest.TestCase):
             "Read AI_PROJECT/generated/CODEX_PROMPT.md and execute it.",
             payload["summary"]["next_actions"],
         )
+
+    def test_action_result_panel_shows_steps_files_messages_and_copy_instruction(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "ok": True,
+                    "command": "task.prepare_for_codex",
+                    "domain": "workflow",
+                    "message": "Workflow completed.",
+                    "data": {
+                        "workflow": {
+                            "name": "task.prepare_for_codex",
+                            "label": "Prepare for Codex",
+                        },
+                        "task_ref": "WFA-09",
+                        "task": {"id": "TASK-040", "ref": "WFA-09"},
+                        "steps": [
+                            {
+                                "id": "current_set",
+                                "title": "Set current task",
+                                "status": "ok",
+                            },
+                            {
+                                "id": "task_in_progress",
+                                "title": "Move task to in_progress when needed",
+                                "status": "skipped",
+                                "skip_reason": "Task already in progress.",
+                            },
+                        ],
+                    },
+                    "warnings": [
+                        {
+                            "code": "CHECK_WARN",
+                            "message": "Advisory check reported a warning.",
+                        }
+                    ],
+                    "changed_files": ["ai_project_ctl/web/server.py"],
+                    "generated_files": ["AI_PROJECT/generated/CODEX_PROMPT.md"],
+                    "next_actions": [],
+                    "owner_action_required": "Open the generated prompt in Codex.",
+                }
+            )
+            + "\n",
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "task.prepare_for_codex",
+                    "confirm": "yes",
+                    "task": "WFA-09",
+                }
+            )
+
+        body = render_action_result(result)
+
+        self.assertIn("task.prepare_for_codex", body)
+        self.assertIn("Task WFA-09", body)
+        self.assertIn("PASS", body)
+        self.assertIn("WARN", body)
+        self.assertIn("ai_project_ctl/web/server.py", body)
+        self.assertIn("AI_PROJECT/generated/CODEX_PROMPT.md", body)
+        self.assertIn("CHECK_WARN", body)
+        self.assertIn("Open the generated prompt in Codex.", body)
+        self.assertIn("textarea readonly", body)
+        self.assertIn("Read AI_PROJECT/generated/CODEX_PROMPT.md and execute it.", body)
+        self.assertNotIn("scripts/aictl.py", body)
+
+    def test_action_error_panel_keeps_failed_workflow_step_visible(self):
+        error = WebActionError(
+            "WEB_ACTION_COMMAND_FAILED",
+            "Web write action failed through registered command: task.prepare_for_codex",
+            details={
+                "action": "task.prepare_for_codex",
+                "command": ["python", "scripts/aictl.py", "workflow"],
+                "returncode": 2,
+                "result": {
+                    "ok": False,
+                    "command": "task.prepare_for_codex",
+                    "domain": "workflow",
+                    "message": "Workflow stopped on blocking step: Build task Context Pack",
+                    "data": {
+                        "workflow": {"name": "task.prepare_for_codex"},
+                        "task_ref": "WFA-09",
+                        "steps": [
+                            {
+                                "id": "resolve",
+                                "title": "Resolve task reference",
+                                "status": "ok",
+                            },
+                            {
+                                "id": "context_build",
+                                "title": "Build task Context Pack",
+                                "status": "failed",
+                                "command": ["python", "scripts/contextctl.py"],
+                            },
+                        ],
+                    },
+                    "errors": [
+                        {
+                            "code": "WORKFLOW_STEP_FAILED",
+                            "message": "Workflow step failed: Build task Context Pack",
+                        }
+                    ],
+                },
+            },
+        )
+
+        body = render_action_error(error)
+
+        self.assertIn("Action failed", body)
+        self.assertIn("Build task Context Pack", body)
+        self.assertIn("FAIL", body)
+        self.assertIn("WORKFLOW_STEP_FAILED", body)
+        self.assertNotIn("scripts/aictl.py", body)
+        self.assertNotIn("scripts/contextctl.py", body)
 
     def test_evolution_workflow_web_action_delegates_to_confirmed_aictl_workflow(self):
         completed_process = subprocess.CompletedProcess(

@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `368`
+Revision: `401`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -706,7 +706,7 @@ Acceptance criteria:
 
 ### WFA-09 (TASK-040) — UIX-03 Add unified workflow action result panel
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_64618b90c44b`, legacy `TASK-040`, aliases `TASK-040`, local `WFA` / `9`
@@ -778,3 +778,158 @@ Acceptance criteria:
 - Documentation preserves protected-file and generated-output rules.
 - Legacy ctl scripts are documented as compatibility layer.
 - Documentation checks and project-control checks pass.
+
+### WFA-13 (TASK-044) — UIX-07 Add Task Review Done Controls
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_8995fc393bcb`, legacy `TASK-044`, aliases `TASK-044`, local `WFA` / `13`
+
+Add UI controls for closing reviewed tasks and requesting changes from the Tasks page while preserving Human Owner review gates.
+
+Acceptance criteria:
+
+- Tasks in in_review show Approve & Done and Request Changes controls.
+- Approve & Done requires explicit confirmation and owner notes.
+- Approve & Done routes through task.close_reviewed or another governed workflow path.
+- Request Changes requires explicit confirmation and owner notes.
+- Review actions are hidden or disabled for invalid task statuses.
+- UI shows clear result summary and next actions after review decisions.
+- Linked Evolution Change is suggested after task completion but is not accepted automatically.
+- No direct protected-file writes are introduced.
+- Tests and project-control validations pass.
+
+### WFA-14 (TASK-045) — UIX-08 Add Next Action and Blocked Reason Hints
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_7280203fb8a8`, legacy `TASK-045`, aliases `TASK-045`, local `WFA` / `14`
+
+Show actionable next steps and blocked reasons for tasks, changes, and epics in the Web Control Center.
+
+Acceptance criteria:
+
+- Tasks page shows next-action hints for common pipeline states.
+- Unavailable actions show a clear reason instead of disappearing silently.
+- Tasks blocked by dependencies show which dependencies are not done.
+- Tasks requiring an Evolution Change show whether the linked Change is missing, ready, approved, in_review, or accepted.
+- UI suggests the correct next owner action without executing it automatically.
+- Hints are consistent with lifecycle validation and existing workflows.
+- No new unsafe write behavior is introduced.
+- Tests and project-control validations pass.
+
+### WFA-15 (TASK-046) — UIX-09 Add Codex Execution Report Submission
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_6a6615a135ce`, legacy `TASK-046`, aliases `TASK-046`, local `WFA` / `15`
+
+Add a governed way for Codex to submit structured task execution reports through aictl instead of relying on manual pasted summaries.
+
+Acceptance criteria:
+
+- Codex execution report JSON schema is documented or encoded in validation.
+- Report submission command validates task identity and report shape.
+- Valid reports are stored through governed state/events only.
+- Invalid reports fail without partial writes.
+- Task review read model can access the latest report for a task.
+- Submitting a report does not approve, close, or transition the task by itself.
+- Tests and project-control validations pass.
+
+### WFA-16 (TASK-047) — UIX-10 Add Task Review Package View
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_0e3c4d7a0a5d`, legacy `TASK-047`, aliases `TASK-047`, local `WFA` / `16`
+
+Add a task review view that combines task metadata, linked Change, Codex report, changed files, checks, and owner decision controls.
+
+Acceptance criteria:
+
+- Task Review view shows task metadata and acceptance context.
+- Task Review view shows latest Codex execution report when available.
+- Task Review view shows linked Evolution Change status when available.
+- Task Review view shows checks, changed files, warnings, blockers, and notes.
+- Owner can make valid review decisions from the view using governed actions.
+- Review decision controls remain unavailable for invalid statuses.
+- Tests and project-control validations pass.
+
+### WFA-17 (TASK-048) — UIX-11 Add Current Execution Status Panel
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_2c1b0507ab6b`, legacy `TASK-048`, aliases `TASK-048`, local `WFA` / `17`
+
+Add a UI panel showing current task, Context Pack status, Codex prompt status, and safe execution-context actions.
+
+Acceptance criteria:
+
+- UI clearly shows the current task when one is selected.
+- UI clearly shows when no current task exists.
+- UI shows Context Pack and Codex prompt readiness/staleness.
+- Owner can copy the Codex handoff instruction when prompt is ready.
+- Refresh and clear actions route through governed workflows/commands.
+- No direct protected-file writes are introduced.
+- Tests and project-control validations pass.
+
+### WFA-18 (TASK-049) — UIX-12 Add Project Health Repair Actions
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_e878d597769a`, legacy `TASK-049`, aliases `TASK-049`, local `WFA` / `18`
+
+Add UI health and repair actions for doctor, stale generated artifacts, docs render, context/Codex refresh, and protected-file checks.
+
+Acceptance criteria:
+
+- UI shows project doctor health summary.
+- UI shows stale generated artifact warnings in a readable way.
+- Run Doctor action works through governed command routing.
+- Safe repair actions require confirmation and use owning CLIs.
+- Failed health checks remain visible and are not hidden as success.
+- No direct generated-file edits are introduced.
+- Tests and project-control validations pass.
+
+### WFA-19 (TASK-050) — UIX-13 Add Epic Close UI Action
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_32b3ecc1372f`, legacy `TASK-050`, aliases `TASK-050`, local `WFA` / `19`
+
+Expose the epic.close_if_complete workflow in the Web Control Center with clear incomplete-task blocking reasons.
+
+Acceptance criteria:
+
+- UI shows epic completion status and open task counts.
+- Close Epic If Complete is available only when valid or explains why it is blocked.
+- Close action requires explicit confirmation.
+- Close action routes through epic.close_if_complete workflow.
+- Blocked close shows incomplete task refs.
+- No direct plan/task state writes are introduced.
+- Tests and project-control validations pass.
+
+### WFA-20 (TASK-051) — UIX-14 Add Commit Readiness View
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_d2bb13c07d81`, legacy `TASK-051`, aliases `TASK-051`, local `WFA` / `20`
+
+Add a read-only UI view for worktree readiness, changed files, validation status, and suggested commit message.
+
+Acceptance criteria:
+
+- UI shows a read-only commit readiness view.
+- View shows changed files or a safe unavailable message.
+- View shows validation/protected-file/generated artifact readiness.
+- View suggests a commit message without executing git commit.
+- No git write operations are performed.
+- No project-control state mutation is introduced by viewing commit readiness.
+- Tests and project-control validations pass.

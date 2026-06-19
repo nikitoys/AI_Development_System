@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `506`
-Changes: `20`
+Revision: `538`
+Changes: `21`
 
 ## Summary
 
-- `accepted`: 19
+- `accepted`: 20
 - `approved`: 1
 
 ## Changes
@@ -1185,3 +1185,67 @@ Impact:
 Linked tasks:
 
 - TASK-039
+
+### CHG-021 — UIX-03 Add unified workflow action result panel
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-09 requires an explicit Evolution Change Proposal before implementation: Add a reusable result panel for workflow and Web actions showing step status, changed files, warnings, errors, and next actions.
+
+Proposal:
+
+Implement the bounded task scope: Add a reusable action result view/component.; Show workflow name and target task/change/epic.; Show step-by-step PASS/WARN/FAIL status.; Show changed files when available.; Show generated files when available.; Show warnings and errors clearly.; Show next-action hints such as the Codex prompt instruction.; Support copyable text for the Codex instruction.
+
+Rationale:
+
+Improve owner feedback after UI actions by showing what was executed, what changed, what failed, and what to do next.
+
+Approved by: `human_owner` at `2026-06-19T09:43:37Z`  
+Approval notes: Approved for WFA-09 Unified Workflow Action Result Panel. Must make action results human-readable, collapse raw technical details by default, preserve errors/warnings, and not change workflow semantics.  
+
+Accepted by: `human_owner` at `2026-06-19T10:01:38Z`  
+Acceptance notes: WFA-09 implemented and accepted. Unified Web action result panel added while preserving workflow semantics, visible failures, and protected-file boundaries.  
+
+Affected files:
+
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/core/workflows.py if result metadata needs compatible updates
+- tests/test_web_control_center.py
+- tests/test_workflows.py
+
+Risks:
+
+- Boundary risk: Do not change workflow semantics.
+- Boundary risk: Do not add new workflow actions in this task.
+- Boundary risk: Do not auto-run Codex.
+- Boundary risk: Do not weaken confirmation requirements.
+- Boundary risk: Do not directly edit protected project-control files.
+- Verify that failed steps are visible and not hidden behind a generic success message.
+- Verify that result panel does not expose arbitrary command execution.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-040.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add a reusable action result view/component.
+- Show workflow name and target task/change/epic.
+- Show step-by-step PASS/WARN/FAIL status.
+- Show changed files when available.
+- Show generated files when available.
+- After a workflow action, UI shows a clear action result panel.
+- Result panel shows executed steps and status.
+- Result panel shows warnings/errors without hiding failures.
+
+Linked tasks:
+
+- TASK-040

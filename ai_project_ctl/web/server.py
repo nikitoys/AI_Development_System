@@ -153,7 +153,7 @@ def make_handler(model: ReadOnlyProjectModel) -> type[BaseHTTPRequestHandler]:
 
             payload = body.encode("utf-8")
             self.send_response(int(status))
-            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(payload)))
             self.send_header("Cache-Control", "no-store")
             self.end_headers()
@@ -711,23 +711,291 @@ def render_error(error: CommandError) -> str:
 
 
 def render_action_result(result: WebActionResult) -> str:
-    return json.dumps(result.to_dict(), ensure_ascii=False, indent=2, sort_keys=True)
+    return render_page(
+        "Action Result",
+        action_result_panel(result.to_dict()),
+        active="/actions",
+    )
 
 
 def render_action_error(error: WebActionError) -> str:
-    return json.dumps(
-        {
-            "ok": False,
-            "error": {
-                "code": error.code,
-                "message": error.message,
-                "details": error.details,
-            },
+    payload = {
+        "ok": False,
+        "action": error.details.get("action", ""),
+        "command": "",
+        "label": "Action failed",
+        "returncode": error.details.get("returncode"),
+        "result": error.details.get("result"),
+        "stderr": error.details.get("stderr", ""),
+        "error": {
+            "code": error.code,
+            "message": error.message,
+            "details": error.details,
         },
-        ensure_ascii=False,
-        indent=2,
-        sort_keys=True,
+    }
+    return render_page(
+        "Action Failed",
+        action_result_panel(payload),
+        active="/actions",
     )
+
+
+def action_result_panel(payload: Mapping[str, Any]) -> str:
+    ok = bool(payload.get("ok"))
+    result = _mapping(payload.get("result"))
+    summary = _mapping(payload.get("summary"))
+    data = _mapping(result.get("data"))
+    workflow = _mapping(data.get("workflow"))
+    visible_errors = _messages(result.get("errors"))
+    error_info = _mapping(payload.get("error"))
+    if error_info:
+        visible_errors.insert(
+            0,
+            {
+                "code": str(error_info.get("code") or "WEB_ACTION_FAILED"),
+                "message": str(error_info.get("message") or "Action failed."),
+                "path": "",
+                "details": _mapping(error_info.get("details")),
+            },
+        )
+    status_kind = "pass" if ok else "fail"
+    sections = [
+        '<section class="panel action-result action-result-{}">'.format(status_kind),
+        '<div class="action-result-header">',
+        "<div>",
+        "<h2>{}</h2>".format(escape(payload.get("label") or payload.get("action") or "Action result")),
+        '<p class="muted">{}</p>'.format(
+            escape(_result_message(result, error_info) or "Action completed.")
+        ),
+        "</div>",
+        action_result_badge("PASS" if ok else "FAIL", status_kind),
+        "</div>",
+        '<div class="result-meta">',
+        metric("Registered command", str(payload.get("command") or "unknown")),
+        metric("Workflow", _workflow_name(workflow, payload)),
+        metric("Target", _result_target(data)),
+        metric("Return code", str(payload.get("returncode") if payload.get("returncode") is not None else "unknown")),
+        "</div>",
+    ]
+    sections.extend(_step_panel(_result_steps(data, summary)))
+    sections.extend(_file_list_panel("Changed Files", result.get("changed_files")))
+    sections.extend(_file_list_panel("Generated Files", result.get("generated_files")))
+    sections.extend(_message_panel("Warnings", "warn", _messages(result.get("warnings"))))
+    sections.extend(_message_panel("Errors", "fail", visible_errors))
+    sections.extend(_next_actions_panel(result, summary))
+    sections.append(_technical_details(payload))
+    sections.append("</section>")
+    return "".join(sections)
+
+
+def action_result_badge(label: str, kind: str) -> str:
+    return '<span class="badge {}">{}</span>'.format(
+        escape(kind),
+        escape(label),
+    )
+
+
+def _result_message(result: Mapping[str, Any], error_info: Mapping[str, Any]) -> str:
+    if result.get("message"):
+        return str(result.get("message"))
+    return str(error_info.get("message") or "")
+
+
+def _workflow_name(workflow: Mapping[str, Any], payload: Mapping[str, Any]) -> str:
+    return str(
+        workflow.get("name")
+        or workflow.get("label")
+        or payload.get("action")
+        or "none"
+    )
+
+
+def _result_target(data: Mapping[str, Any]) -> str:
+    task = _mapping(data.get("task"))
+    change = _mapping(data.get("change"))
+    epic = _mapping(data.get("epic"))
+    for key, value in (
+        ("Task", data.get("task_ref") or task.get("ref") or task.get("id")),
+        ("Change", data.get("change_ref") or change.get("id")),
+        ("Epic", data.get("epic_ref") or epic.get("id")),
+    ):
+        text = str(value or "").strip()
+        if text:
+            return "{} {}".format(key, text)
+    return "not reported"
+
+
+def _result_steps(
+    data: Mapping[str, Any],
+    summary: Mapping[str, Any],
+) -> list[Mapping[str, Any]]:
+    steps = data.get("steps")
+    if isinstance(steps, list):
+        return [step for step in steps if isinstance(step, Mapping)]
+    summary_steps = summary.get("steps")
+    if isinstance(summary_steps, list):
+        return [step for step in summary_steps if isinstance(step, Mapping)]
+    return []
+
+
+def _step_panel(steps: Sequence[Mapping[str, Any]]) -> list[str]:
+    if not steps:
+        return []
+    rows = []
+    for index, step in enumerate(steps, start=1):
+        kind, label = _step_status(str(step.get("status") or "unknown"))
+        detail_bits = [
+            str(step.get("command_name") or "").strip(),
+            str(step.get("route") or "").strip(),
+        ]
+        details = " / ".join(bit for bit in detail_bits if bit)
+        if step.get("skip_reason"):
+            details = "{}{}".format(
+                "{}; ".format(details) if details else "",
+                step.get("skip_reason"),
+            )
+        rows.append(
+            '<li class="result-step result-step-{}">'
+            "{}"
+            '<div><strong>{}. {}</strong>{}</div>'
+            "</li>".format(
+                escape(kind),
+                action_result_badge(label, kind),
+                index,
+                escape(step.get("title") or step.get("id") or "Step"),
+                '<span class="muted"> {}</span>'.format(escape(details)) if details else "",
+            )
+        )
+    return [
+        '<section class="result-section">',
+        "<h3>Steps</h3>",
+        '<ol class="result-steps">{}</ol>'.format("".join(rows)),
+        "</section>",
+    ]
+
+
+def _step_status(status: str) -> tuple[str, str]:
+    normalized = status.lower()
+    if normalized in {"ok", "pass", "passed", "success", "completed"}:
+        return "pass", "PASS"
+    if normalized in {"failed", "fail", "error"}:
+        return "fail", "FAIL"
+    return "warn", "WARN"
+
+
+def _file_list_panel(title: str, value: Any) -> list[str]:
+    items = _string_items(value)
+    if not items:
+        return []
+    return [
+        '<section class="result-section">',
+        "<h3>{}</h3>".format(escape(title)),
+        '<ul class="result-files">{}</ul>'.format(
+            "".join("<li><code>{}</code></li>".format(escape(item)) for item in items)
+        ),
+        "</section>",
+    ]
+
+
+def _message_panel(
+    title: str,
+    kind: str,
+    messages: Sequence[Mapping[str, Any]],
+) -> list[str]:
+    if not messages:
+        return []
+    items = []
+    for message in messages:
+        code = str(message.get("code") or kind.upper())
+        text = str(message.get("message") or "")
+        path = str(message.get("path") or "")
+        detail = " ".join(bit for bit in (path, text) if bit)
+        items.append(
+            '<li>{} <strong>{}</strong>{}</li>'.format(
+                action_result_badge(kind.upper(), kind),
+                escape(code),
+                ": {}".format(escape(detail)) if detail else "",
+            )
+        )
+    return [
+        '<section class="result-section result-section-{}">'.format(escape(kind)),
+        "<h3>{}</h3>".format(escape(title)),
+        '<ul class="result-messages">{}</ul>'.format("".join(items)),
+        "</section>",
+    ]
+
+
+def _next_actions_panel(
+    result: Mapping[str, Any],
+    summary: Mapping[str, Any],
+) -> list[str]:
+    actions = _string_items(result.get("next_actions")) or _string_items(summary.get("next_actions"))
+    codex_instruction = str(summary.get("next_codex_instruction") or "")
+    owner_action = str(result.get("owner_action_required") or summary.get("owner_action_required") or "")
+    if codex_instruction and codex_instruction not in actions:
+        actions.insert(0, codex_instruction)
+    if not actions and not owner_action and not codex_instruction:
+        return []
+    parts = ['<section class="result-section">', "<h3>Next Actions</h3>"]
+    if owner_action:
+        parts.append('<p class="callout">{}</p>'.format(escape(owner_action)))
+    if codex_instruction:
+        parts.append(
+            '<label class="copy-field">Codex instruction'
+            '<textarea readonly rows="2">{}</textarea></label>'.format(
+                escape(codex_instruction)
+            )
+        )
+    if actions:
+        parts.append(
+            '<ul class="result-actions">{}</ul>'.format(
+                "".join("<li>{}</li>".format(escape(action)) for action in actions)
+            )
+        )
+    parts.append("</section>")
+    return parts
+
+
+def _technical_details(payload: Mapping[str, Any]) -> str:
+    technical = _sanitize_technical(payload)
+    return (
+        '<details class="result-technical">'
+        "<summary>Technical details</summary>"
+        "<pre>{}</pre>"
+        "</details>"
+    ).format(escape(json.dumps(technical, ensure_ascii=False, indent=2, sort_keys=True)))
+
+
+def _sanitize_technical(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        redacted: dict[str, Any] = {}
+        for key, item in value.items():
+            key_text = str(key)
+            if key_text in {"delegate", "registered_command", "stdout", "stderr"}:
+                continue
+            if key_text == "command" and isinstance(item, list):
+                continue
+            redacted[key_text] = _sanitize_technical(item)
+        return redacted
+    if isinstance(value, list):
+        return [_sanitize_technical(item) for item in value]
+    return value
+
+
+def _mapping(value: Any) -> Mapping[str, Any]:
+    return value if isinstance(value, Mapping) else {}
+
+
+def _messages(value: Any) -> list[Mapping[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, Mapping)]
+
+
+def _string_items(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value if str(item).strip()]
 
 
 def render_page(title: str, body: str, *, active: str) -> str:
@@ -983,6 +1251,75 @@ def render_page(title: str, body: str, *, active: str) -> str:
       color: var(--muted);
       font-size: 12px;
     }}
+    .action-result-header {{
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }}
+    .action-result-header h2 {{
+      margin-bottom: 4px;
+    }}
+    .result-meta {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }}
+    .result-section {{
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }}
+    .result-section h3 {{
+      margin: 0 0 8px;
+      font-size: 14px;
+    }}
+    .result-steps, .result-files, .result-messages, .result-actions {{
+      margin: 0;
+      padding-left: 0;
+      list-style: none;
+    }}
+    .result-step {{
+      display: grid;
+      grid-template-columns: 72px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 8px 0;
+      border-top: 1px solid #edf1f6;
+    }}
+    .result-step:first-child {{
+      border-top: 0;
+    }}
+    .result-files li, .result-messages li, .result-actions li {{
+      margin: 6px 0;
+      overflow-wrap: anywhere;
+    }}
+    .callout {{
+      margin: 0 0 10px;
+      padding: 10px 12px;
+      border-left: 4px solid var(--accent);
+      background: #f4fbf9;
+    }}
+    .copy-field {{
+      margin: 8px 0 10px;
+      text-transform: none;
+    }}
+    .copy-field textarea {{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }}
+    .result-technical {{
+      margin-top: 18px;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }}
+    .result-technical summary {{
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 700;
+    }}
     label {{
       display: grid;
       gap: 4px;
@@ -1058,6 +1395,7 @@ def render_page(title: str, body: str, *, active: str) -> str:
       h1 {{ font-size: 21px; }}
       nav a {{ flex: 1 1 auto; text-align: center; }}
       .metric strong {{ font-size: 18px; }}
+      .result-step {{ grid-template-columns: 1fr; }}
     }}
   </style>
 </head>

@@ -3,23 +3,43 @@
 
 # Task Execution Queue
 
-Revision: `368`
+Revision: `401`
 
 ## Executable Now
 
-- `WFA-09 (TASK-040)` [planned] `EPIC-006` priority `1` — UIX-03 Add unified workflow action result panel
+- `WFA-10 (TASK-041)` [planned] `EPIC-006` priority `1` — UIX-04 Add Evolution management UI tab
+- `WFA-11 (TASK-042)` [planned] `EPIC-006` priority `1` — UIX-05 Add Bulk Task Import from file
+- `WFA-13 (TASK-044)` [planned] `EPIC-006` priority `1` — UIX-07 Add Task Review Done Controls
+- `WFA-15 (TASK-046)` [planned] `EPIC-006` priority `1` — UIX-09 Add Codex Execution Report Submission
+- `WFA-17 (TASK-048)` [planned] `EPIC-006` priority `1` — UIX-11 Add Current Execution Status Panel
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 
 ## Waiting For Dependencies
 
-- `WFA-10 (TASK-041)` [planned] `EPIC-006` priority `1` — UIX-04 Add Evolution management UI tab
-  - `dependency_not_done`: depends on WFA-09 (TASK-040) with status planned
-- `WFA-11 (TASK-042)` [planned] `EPIC-006` priority `1` — UIX-05 Add Bulk Task Import from file
-  - `dependency_not_done`: depends on WFA-09 (TASK-040) with status planned
 - `WFA-12 (TASK-043)` [planned] `EPIC-006` priority `1` — UIX-06 Update UI workflow documentation
-  - `dependency_not_done`: depends on WFA-09 (TASK-040) with status planned
   - `dependency_not_done`: depends on WFA-10 (TASK-041) with status planned
   - `dependency_not_done`: depends on WFA-11 (TASK-042) with status planned
+  - `dependency_not_done`: depends on WFA-13 (TASK-044) with status planned
+  - `dependency_not_done`: depends on WFA-14 (TASK-045) with status planned
+  - `dependency_not_done`: depends on WFA-15 (TASK-046) with status planned
+  - `dependency_not_done`: depends on WFA-16 (TASK-047) with status planned
+  - `dependency_not_done`: depends on WFA-17 (TASK-048) with status planned
+  - `dependency_not_done`: depends on WFA-18 (TASK-049) with status planned
+  - `dependency_not_done`: depends on WFA-19 (TASK-050) with status planned
+  - `dependency_not_done`: depends on WFA-20 (TASK-051) with status planned
+- `WFA-14 (TASK-045)` [planned] `EPIC-006` priority `1` — UIX-08 Add Next Action and Blocked Reason Hints
+  - `dependency_not_done`: depends on WFA-10 (TASK-041) with status planned
+  - `dependency_not_done`: depends on WFA-13 (TASK-044) with status planned
+- `WFA-16 (TASK-047)` [planned] `EPIC-006` priority `1` — UIX-10 Add Task Review Package View
+  - `dependency_not_done`: depends on WFA-15 (TASK-046) with status planned
+  - `dependency_not_done`: depends on WFA-13 (TASK-044) with status planned
+- `WFA-18 (TASK-049)` [planned] `EPIC-006` priority `1` — UIX-12 Add Project Health Repair Actions
+  - `dependency_not_done`: depends on WFA-17 (TASK-048) with status planned
+- `WFA-19 (TASK-050)` [planned] `EPIC-006` priority `1` — UIX-13 Add Epic Close UI Action
+  - `dependency_not_done`: depends on WFA-14 (TASK-045) with status planned
+- `WFA-20 (TASK-051)` [planned] `EPIC-006` priority `1` — UIX-14 Add Commit Readiness View
+  - `dependency_not_done`: depends on WFA-18 (TASK-049) with status planned
+  - `dependency_not_done`: depends on WFA-19 (TASK-050) with status planned
 
 ## Not Executable Due To Status Or Parent State
 
@@ -80,6 +100,8 @@ Revision: `368`
 - `WFA-07 (TASK-038)` [done] `EPIC-006` priority `1` — UIX-01 Improve Tasks filtering grouping and collapse
   - `status_not_executable`: status is done
 - `WFA-08 (TASK-039)` [done] `EPIC-006` priority `1` — UIX-02 Add task row workflow buttons
+  - `status_not_executable`: status is done
+- `WFA-09 (TASK-040)` [done] `EPIC-006` priority `1` — UIX-03 Add unified workflow action result panel
   - `status_not_executable`: status is done
 - `TASK-008` [done] `EPIC-003` priority `1` — P0 Strengthen docctl metadata and documentation gaps
   - `status_not_executable`: status is done
