@@ -20,46 +20,46 @@ Owner intent -> allowed command -> Python validation -> state mutation -> audit 
 
 ## Scope
 
-This document describes the first MVP command surface for plan control.
+This document records the command boundary for Project Control Gateway.
 
-The MVP command entry point is:
+The first implemented command surface was plan control:
 
 ```bash
 python scripts/planctl.py <command>
 ```
 
-The future unified entry point may be:
+The current owner-facing facade is:
 
 ```bash
-python scripts/projectctl.py <domain> <command>
+python scripts/aictl.py <domain> <command>
 ```
 
-The first MVP controls only:
+Current implemented control domains include:
 
 ```text
-Project
-Idea
-Goal
-Strategy
-Initiative
-Epic
+plan        Project, Idea, Goal, Strategy, Initiative, Epic
+task        Task, Current Task, generated task views
+codex       current Codex prompt/status package
+context     deterministic Context Pack generated output
+docs        documentation registry and generated doc indexes
+evolution   Evolution Change Proposals
+web         local loopback Web Control Center
 ```
 
-It does not control:
+`aictl.py` is a facade and command registry. Domain ownership still belongs to the owning scripts such as `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py`, `contextctl.py` and `codexctl.py`.
+
+Still-future or partial domains include:
 
 ```text
-Task
-Current Task
-Prompt Package
 Execution Session
 Review
 QA Result
 Decision
-Change Proposal
 Release
+Unified projectctl.py
 ```
 
-These will be added later as separate controlled domains.
+These must not be invented through free-form AI actions. Add them only through approved system evolution and bounded Tasks.
 
 ## Self-Hosted Command Boundary
 
@@ -68,8 +68,10 @@ AI_Development_System now uses root `/AI_PROJECT` as its own self-hosted Project
 Current domain commands include:
 
 ```bash
+python scripts/aictl.py ...
 python scripts/planctl.py ...
 python scripts/taskctl.py ...
+python scripts/codexctl.py ...
 python scripts/docctl.py ...
 python scripts/evolutionctl.py ...
 python scripts/contextctl.py ...
@@ -118,10 +120,16 @@ The command catalog boundary applies to this repository's root `/AI_PROJECT` sta
 
 ## Allowed Mutation Path
 
-Project plan state may be changed only through:
+Project-control state may be changed only through approved gateway commands:
 
 ```bash
+python scripts/aictl.py ...
 python scripts/planctl.py ...
+python scripts/taskctl.py ...
+python scripts/codexctl.py ...
+python scripts/docctl.py ...
+python scripts/evolutionctl.py ...
+python scripts/contextctl.py ...
 ```
 
 ## Protected Files
@@ -2177,48 +2185,55 @@ Owner says:
 Approve this task for Codex execution.
 ```
 
-MVP has no task commands.
+Approval and close actions exist, but they are owner-gated.
 
-AI must report:
+AI must not self-approve. If Human Owner approval is missing, AI must stop or report the owner action needed:
 
 ```text
-NO_ALLOWED_COMMAND
-requested_intent: approve task for Codex execution
-closest_existing_command: none in planctl.py
-missing_capability: task approval command
-required_system_evolution: implement task control domain
+STOPPED:
+reason: Human Owner approval required before task approval/close
+required_owner_action: provide APPROVED decision and approval notes, or request rework
+suggested_command: python scripts/aictl.py workflow run task.close_reviewed --task <TASK> --notes "APPROVED by Human Owner" --confirm
 ```
 
 ---
 
-# 18. Future Command Domains
+# 18. Additional Command Domains
 
-The future unified command interface should use:
+The owner-facing facade uses:
 
 ```bash
-python scripts/projectctl.py <domain> <command>
+python scripts/aictl.py <domain> <command>
 ```
 
-Planned domains:
+Implemented facade/domain areas include:
 
 ```text
-plan
+command
+workflow
 task
 current
-prompt
+epic
 context
-execution
-review
-qa
-decision
-change
-release
-validate
-render
-audit
+codex
+project
+web
 ```
 
-## Future Task Commands
+The legacy domain CLIs remain the compatibility layer and source of domain-specific validation:
+
+```text
+planctl.py
+taskctl.py
+codexctl.py
+docctl.py
+evolutionctl.py
+contextctl.py
+```
+
+Future domains such as execution sessions, review records, QA records, decision records and release records require approved evolution before implementation.
+
+## Task Commands
 
 ```text
 task create
@@ -2233,9 +2248,10 @@ task add-acceptance-criterion
 task transition
 task approve
 task archive
+task import
 ```
 
-## Future Current Task Commands
+## Current Task Commands
 
 ```text
 current show
@@ -2243,7 +2259,7 @@ current set
 current clear
 ```
 
-## Future Prompt Commands
+## Prompt Commands
 
 ```text
 prompt build --task <TASK_ID>

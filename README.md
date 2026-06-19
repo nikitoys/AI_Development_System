@@ -11,6 +11,17 @@ It is not a normal application repository. The primary source of truth for syste
 
 This repository now intentionally uses root-level `/AI_PROJECT` as its self-hosted Project Control Layer. It stores machine-readable state, append-only audit events and generated readable outputs for AI_Development_System's own controlled evolution. Protected files under `/AI_PROJECT/state/**`, `/AI_PROJECT/events/**` and `/AI_PROJECT/generated/**` must be changed only through the project-control CLI gateways.
 
+Owner quickstart for the centralized control plane:
+
+```bash
+python scripts/aictl.py command list
+python scripts/aictl.py workflow list
+python scripts/aictl.py project doctor
+python scripts/aictl.py web --host 127.0.0.1 --port 8765
+```
+
+Use `/ai-system/project-control/10-owner-quickstart.md` for the practical command guide and `/ai-system/project-control/08-usage-guide.md` for the full Project Control Gateway usage guide.
+
 `AI_PROJECT` appears in three distinct contexts:
 
 - `/AI_PROJECT` — the self-hosted project-control layer for this repository itself.
@@ -239,15 +250,16 @@ Project system updates must not modify application code.
 
 Recommended operator loop:
 
-```text
-1. Write goals, roadmap or desired work in AI_PROJECT/OWNER_PLAN.md.
-2. Run: Разобрать план
-3. Review proposed work in AI_PROJECT/CODEX_PLAN.md and AI_PROJECT/CODEX_TASKS.md.
-4. Approve one task: Утверждаю задачу N
-5. Execute one task: Выполняй
-6. Review the result.
-7. Continue with the next task only after approval.
+```bash
+python scripts/aictl.py task list --current
+python scripts/aictl.py task create --confirm --epic EPIC-006 --title "Bounded Task"
+python scripts/aictl.py task import --file tasks.json --preview
+python scripts/aictl.py workflow run task.prepare_for_codex --task WFA-06 --confirm
+python scripts/aictl.py workflow run task.submit_for_review --task WFA-06 --confirm
+python scripts/aictl.py workflow run task.close_reviewed --task WFA-06 --notes "APPROVED by Human Owner" --confirm
 ```
+
+Use `workflow list` and `workflow describe <name>` before running a composed workflow. Confirmed workflows route through registered commands and owning `*ctl.py` scripts; they do not authorize automatic owner acceptance.
 
 `OWNER_PLAN.md` is planning input, not executable scope. Codex must not implement items from it until they are converted into approved tasks with scope, allowed files, verification mode and acceptance criteria.
 
@@ -321,6 +333,10 @@ Documentation records decisions.
 - Role model for product, design, management, implementation, quality, documentation and system evolution.
 - Foldered project integration model with separate `AI_Development_System/`, `AI_PROJECT/` and target app directories.
 - Project control file standard and bootstrap workflow for concrete repositories.
+- Centralized `aictl.py` facade for command discovery, project doctor, task/current/context/Codex prompt commands and local Web Control Center startup.
+- Confirmed workflow automation for preparing Codex execution context, refreshing context, submitting work for review, closing reviewed tasks with owner notes and creating Evolution Changes from bounded Tasks.
+- Bulk Task import through validated JSON preview/confirm flow.
+- Local loopback Web Control Center that delegates controlled actions through registered `aictl.py` commands.
 - Project Control Index for discoverable read order, importance levels and drift reporting in concrete projects.
 - Project Operation Profile for shallow Human Owner-editable AI Dev System behavior defaults.
 - Work Item Hierarchy for connecting goals, initiatives and epics to executable tasks and child Agent Work Packages.

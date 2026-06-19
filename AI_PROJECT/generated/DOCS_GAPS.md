@@ -3,8 +3,8 @@
 
 # Documentation Gaps
 
-Revision: `19`
-Open gaps: `158`
+Revision: `23`
+Open gaps: `160`
 Tracked categories: `Missing File`, `Status Mismatch`, `Active Not Reviewed`, `Active Review Stale`, `Unresolved Placeholder`, `Broken Local Link`, `Stale Content Hash`, `Not Active`
 
 ## Missing File
@@ -29,7 +29,6 @@ _No gaps._
 - `ai-system/evolution/concept-baseline.md` (reference, draft): declared status `Legacy Concept Baseline` from status_field is not supported by docctl
 - `ai-system/templates/foldered/AI_PROJECT/CODEX_CURRENT.md` (template, draft): declared status `idle` from status_field is not supported by docctl
 - `ai-system/templates/project/CODEX_CURRENT.md` (template, draft): declared status `idle` from status_field is not supported by docctl
-- `ai-system/project-control/08-usage-guide.md` (guide, review): registry status `review` differs from declared status `draft` from status_section
 
 ## Active Not Reviewed
 
@@ -58,7 +57,7 @@ _No gaps._
 
 ## Stale Content Hash
 
-- `ai-system/project-control/09-task-identity-and-execution-graph.md` (reference, draft): recorded content hash does not match file content
+_No gaps._
 
 ## Not Active
 
@@ -127,6 +126,9 @@ _No gaps._
 - `ai-system/project-control-connectivity.md` (reference, draft): document is not active
 - `ai-system/project-control-files.md` (reference, draft): document is not active
 - `ai-system/project-control/09-task-identity-and-execution-graph.md` (reference, draft): document is not active
+- `ai-system/project-control/control-plane-architecture.md` (reference, draft): document is not active
+- `ai-system/project-control/control-plane-id-allocation.md` (reference, draft): document is not active
+- `ai-system/project-control/control-plane-inventory.md` (reference, draft): document is not active
 - `ai-system/project-integration-model.md` (reference, draft): document is not active
 - `ai-system/project-operation-profile.md` (reference, draft): document is not active
 - `ai-system/project-system-update.md` (reference, draft): document is not active
@@ -191,4 +193,5 @@ _No gaps._
 - `ai-system/workflow.md` (reference, draft): document is not active
 - `plugins/ai-project-control/skills/project-control-gateway/SKILL.md` (guide, draft): document is not active
 - `ai-system/project-control/08-usage-guide.md` (guide, review): document is not active
+- `ai-system/project-control/10-owner-quickstart.md` (guide, review): document is not active
 

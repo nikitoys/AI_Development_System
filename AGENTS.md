@@ -201,11 +201,16 @@ Codex must not modify these paths directly.
 Allowed project-control commands:
 
 ```text
+python scripts/aictl.py ...
 python scripts/planctl.py ...
 python scripts/taskctl.py ...
+python scripts/codexctl.py ...
+python scripts/contextctl.py ...
 python scripts/evolutionctl.py ...
 python scripts/docctl.py ...
 ```
+
+Prefer `python scripts/aictl.py ...` for command discovery, project doctor, local Web Control Center startup, supported task/current/context/codex/project facade commands and owner-facing quick checks. If a required operation is not exposed through the `aictl.py` facade, use the owning legacy `*ctl.py` script and keep the same protected-file rules.
 
 ## Documentation Control Rule
 
@@ -268,6 +273,18 @@ documentation status
 documentation review records
 documentation index and gap generated files
 documentation validation
+```
+
+Use `aictl.py` for centralized control-plane discovery and supported facade operations:
+
+```text
+command discovery
+project doctor
+local Web Control Center
+supported task and current-task commands
+context build
+Codex prompt build
+project render
 ```
 
 Use `evolutionctl.py` for changes to the AI Development System itself:

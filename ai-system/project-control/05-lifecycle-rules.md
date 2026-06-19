@@ -55,12 +55,9 @@ Current implemented CLIs:
 ```text
 scripts/planctl.py
 scripts/taskctl.py
-```
-
-Future planned CLI:
-
-```text
 scripts/evolutionctl.py
+scripts/contextctl.py
+scripts/codexctl.py
 ```
 
 ---
@@ -85,9 +82,11 @@ Allowed mutation path:
 python scripts/planctl.py ...
 python scripts/taskctl.py ...
 python scripts/evolutionctl.py ...
+python scripts/contextctl.py ...
+python scripts/codexctl.py ...
 ```
 
-`evolutionctl.py` is planned for future system evolution control.
+`aictl.py` may be used as the owner-facing facade when the operation is exposed through the command registry.
 
 ## 1.2 Generated Markdown Is Not State
 
@@ -795,7 +794,7 @@ Prompt Package must not add hidden scope, hidden files or hidden acceptance crit
 
 Evolution lifecycle applies to changes of AI Development System itself.
 
-It should be controlled by future:
+It is controlled by:
 
 ```bash
 python scripts/evolutionctl.py ...
@@ -1146,9 +1145,9 @@ python scripts/projectctl.py validate all
 
 ---
 
-# 11. MVP Lifecycle Coverage
+# 11. Current Lifecycle Coverage
 
-Current MVP covers:
+Current implemented coverage includes:
 
 ```text
 Plan Lifecycle:
@@ -1159,17 +1158,19 @@ Task Lifecycle:
   Task
   Current Task
   Prompt Package
+
+Evolution Lifecycle:
+  Change Proposal
+  linked implementation Tasks
 ```
 
-Current MVP does not yet fully cover:
+Current implementation does not yet fully cover:
 
 ```text
-Evolution Change Proposal
 Review lifecycle
 QA lifecycle
 Decision lifecycle
 Release lifecycle
-Protected files enforcement
 Unified projectctl.py
 ```
 
@@ -1177,31 +1178,9 @@ Unified projectctl.py
 
 # 12. Recommended Next Steps
 
-## 12.1 Add evolutionctl.py
+## 12.1 Strengthen Review And QA Control
 
-Implement:
-
-```text
-AI_PROJECT/state/evolution.json
-AI_PROJECT/events/evolution-events.jsonl
-AI_PROJECT/generated/EVOLUTION.md
-```
-
-First commands:
-
-```bash
-python scripts/evolutionctl.py init
-python scripts/evolutionctl.py change create --title "..."
-python scripts/evolutionctl.py change show CHG-001
-python scripts/evolutionctl.py change list
-python scripts/evolutionctl.py change transition CHG-001 --to ready
-python scripts/evolutionctl.py change approve CHG-001
-python scripts/evolutionctl.py change link-task CHG-001 --task TASK-001
-python scripts/evolutionctl.py change accept CHG-001
-python scripts/evolutionctl.py validate
-python scripts/evolutionctl.py render
-python scripts/evolutionctl.py audit
-```
+Implement dedicated review and QA state only after an approved Evolution Change defines their lifecycle, commands, generated views and owner approval gates.
 
 ## 12.2 Tighten Current Task Rules
 

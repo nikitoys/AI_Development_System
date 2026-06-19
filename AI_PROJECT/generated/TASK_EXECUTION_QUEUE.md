@@ -3,33 +3,101 @@
 
 # Task Execution Queue
 
-Revision: `165`
+Revision: `424`
 
 ## Executable Now
 
+- `WFA-11 (TASK-042)` [planned] `EPIC-006` priority `1` — UIX-05 Add Bulk Task Import from file
+- `WFA-15 (TASK-046)` [planned] `EPIC-006` priority `1` — UIX-09 Add Codex Execution Report Submission
+- `WFA-17 (TASK-048)` [planned] `EPIC-006` priority `1` — UIX-11 Add Current Execution Status Panel
+- `WFA-19 (TASK-050)` [planned] `EPIC-006` priority `1` — UIX-13 Add Epic Close UI Action
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 
 ## Waiting For Dependencies
 
-_No tasks waiting only on dependencies._
+- `WFA-12 (TASK-043)` [planned] `EPIC-006` priority `1` — UIX-06 Update UI workflow documentation
+  - `dependency_not_done`: depends on WFA-11 (TASK-042) with status planned
+  - `dependency_not_done`: depends on WFA-15 (TASK-046) with status planned
+  - `dependency_not_done`: depends on WFA-16 (TASK-047) with status planned
+  - `dependency_not_done`: depends on WFA-17 (TASK-048) with status planned
+  - `dependency_not_done`: depends on WFA-18 (TASK-049) with status planned
+  - `dependency_not_done`: depends on WFA-19 (TASK-050) with status planned
+  - `dependency_not_done`: depends on WFA-20 (TASK-051) with status planned
+- `WFA-16 (TASK-047)` [planned] `EPIC-006` priority `1` — UIX-10 Add Task Review Package View
+  - `dependency_not_done`: depends on WFA-15 (TASK-046) with status planned
+- `WFA-18 (TASK-049)` [planned] `EPIC-006` priority `1` — UIX-12 Add Project Health Repair Actions
+  - `dependency_not_done`: depends on WFA-17 (TASK-048) with status planned
+- `WFA-20 (TASK-051)` [planned] `EPIC-006` priority `1` — UIX-14 Add Commit Readiness View
+  - `dependency_not_done`: depends on WFA-18 (TASK-049) with status planned
+  - `dependency_not_done`: depends on WFA-19 (TASK-050) with status planned
 
 ## Not Executable Due To Status Or Parent State
 
+- `CTL-01 (TASK-019)` [done] `EPIC-005` priority `1` — Task A - Inventory existing ctl commands and state mutation paths
+  - `status_not_executable`: status is done
 - `TASK-001` [done] `EPIC-001` priority `1` — Write Project Control Usage Guide
+  - `status_not_executable`: status is done
+- `CTL-02 (TASK-020)` [done] `EPIC-005` priority `1` — Task B - Design unified control-plane architecture
   - `status_not_executable`: status is done
 - `TASK-004` [done] `EPIC-001` priority `1` — Implement codexctl prompt package generator
   - `status_not_executable`: status is done
+- `CTL-03 (TASK-021)` [done] `EPIC-005` priority `1` — Task C - Add global ID allocation strategy
+  - `status_not_executable`: status is done
 - `TASK-007` [done] `EPIC-001` priority `1` — Record L4 Role-Agent Runtime Architecture
+  - `status_not_executable`: status is done
+- `CTL-04 (TASK-022)` [done] `EPIC-005` priority `1` — Task D - Introduce ai_project_ctl core package
   - `status_not_executable`: status is done
 - `TASK-018` [done] `EPIC-001` priority `1` — Fix documentation generated drift
   - `status_not_executable`: status is done
+- `CTL-05 (TASK-023)` [done] `EPIC-005` priority `1` — Task E - Add command registry
+  - `status_not_executable`: status is done
+- `CTL-06 (TASK-024)` [done] `EPIC-005` priority `1` — Task F - Implement unified CLI facade scripts/aictl.py
+  - `status_not_executable`: status is done
+- `CTL-07 (TASK-025)` [done] `EPIC-005` priority `1` — Task G - Convert old ctl scripts into compatibility wrappers
+  - `status_not_executable`: status is done
+- `CTL-08 (TASK-026)` [done] `EPIC-005` priority `1` — Task H - Add project doctor command
+  - `status_not_executable`: status is done
+- `CTL-09 (TASK-027)` [done] `EPIC-005` priority `1` — Task I - Add locking and atomic write protection
+  - `status_not_executable`: status is done
+- `CTL-10 (TASK-028)` [done] `EPIC-005` priority `1` — Task J - Add read-only local Web Control Center MVP
+  - `status_not_executable`: status is done
+- `CTL-11 (TASK-029)` [done] `EPIC-005` priority `1` — Task K - Add controlled Web write actions
+  - `status_not_executable`: status is done
+- `CTL-12 (TASK-030)` [done] `EPIC-005` priority `1` — Task L - Documentation and owner quickstart
+  - `status_not_executable`: status is done
+- `CTL-13 (TASK-031)` [done] `EPIC-005` priority `1` — CTL-13 Optimize Web Control Center performance
+  - `status_not_executable`: status is done
 - `TASK-002` [done] `EPIC-002` priority `1` — Document Skills Layer Roadmap
+  - `status_not_executable`: status is done
+- `WFA-01 (TASK-032)` [done] `EPIC-006` priority `1` — WFA-01 Add Task Workflow Automation MVP
   - `status_not_executable`: status is done
 - `TASK-003` [done] `EPIC-002` priority `1` — Create Clarification Gate Skill
   - `status_not_executable`: status is done
+- `WFA-02 (TASK-033)` [done] `EPIC-006` priority `1` — WFA-02 Add Evolution Change Wizard
+  - `status_not_executable`: status is done
 - `TASK-005` [done] `EPIC-002` priority `1` — Create Documentation Navigation Skill
   - `status_not_executable`: status is done
+- `WFA-03 (TASK-034)` [done] `EPIC-006` priority `1` — WFA-03 Add Task Creation Wizard
+  - `status_not_executable`: status is done
 - `TASK-006` [done] `EPIC-002` priority `1` — Add Two-Level Delegated Agent Execution
+  - `status_not_executable`: status is done
+- `WFA-04 (TASK-035)` [done] `EPIC-006` priority `1` — WFA-04 Add Bulk Task Import UI
+  - `status_not_executable`: status is done
+- `WFA-05 (TASK-036)` [done] `EPIC-006` priority `1` — WFA-05 Add Review And Close Helpers
+  - `status_not_executable`: status is done
+- `WFA-06 (TASK-037)` [done] `EPIC-006` priority `1` — WFA-06 Documentation Audit And Cleanup
+  - `status_not_executable`: status is done
+- `WFA-07 (TASK-038)` [done] `EPIC-006` priority `1` — UIX-01 Improve Tasks filtering grouping and collapse
+  - `status_not_executable`: status is done
+- `WFA-08 (TASK-039)` [done] `EPIC-006` priority `1` — UIX-02 Add task row workflow buttons
+  - `status_not_executable`: status is done
+- `WFA-09 (TASK-040)` [done] `EPIC-006` priority `1` — UIX-03 Add unified workflow action result panel
+  - `status_not_executable`: status is done
+- `WFA-10 (TASK-041)` [done] `EPIC-006` priority `1` — UIX-04 Add Evolution management UI tab
+  - `status_not_executable`: status is done
+- `WFA-13 (TASK-044)` [done] `EPIC-006` priority `1` — UIX-07 Add Task Review Done Controls
+  - `status_not_executable`: status is done
+- `WFA-14 (TASK-045)` [done] `EPIC-006` priority `1` — UIX-08 Add Next Action and Blocked Reason Hints
   - `status_not_executable`: status is done
 - `TASK-008` [done] `EPIC-003` priority `1` — P0 Strengthen docctl metadata and documentation gaps
   - `status_not_executable`: status is done

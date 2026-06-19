@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 77,
+  "revision": 647,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-16T20:41:26Z",
+  "updated_at": "2026-06-19T11:00:27Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -194,6 +194,1135 @@
       "order": 4,
       "created_at": "2026-06-16T20:35:08Z",
       "updated_at": "2026-06-16T20:41:26Z"
+    },
+    {
+      "id": "CHG-005",
+      "title": "Introduce ai_project_ctl core package foundation",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "CTL-01 inventory, CTL-02 architecture, and CTL-03 ID allocation strategy require a controlled implementation path before adding shared control-plane code.",
+      "problem": "Project control logic is duplicated across ctl scripts and CTL-04 needs a shared core package foundation before future aictl implementation.",
+      "proposal": "Create a minimal ai_project_ctl core package foundation for shared paths, result, store, events, IDs, locks, validation and transaction primitives without changing existing ctl behavior.",
+      "affected_areas": [
+        "Project Control Gateway",
+        "Shared control-plane core",
+        "Future aictl foundation"
+      ],
+      "affected_files": [
+        "ai_project_ctl/__init__.py",
+        "ai_project_ctl/core/__init__.py",
+        "ai_project_ctl/core/paths.py",
+        "ai_project_ctl/core/result.py",
+        "ai_project_ctl/core/store.py",
+        "ai_project_ctl/core/events.py",
+        "ai_project_ctl/core/ids.py",
+        "ai_project_ctl/core/locks.py",
+        "ai_project_ctl/core/validation.py",
+        "ai_project_ctl/core/transactions.py"
+      ],
+      "risks": [
+        "Shared core package could accidentally change existing ctl behavior if wrappers are migrated too early.",
+        "Transaction, lock and event primitives must remain foundation-only until later tasks wire them into ctl scripts."
+      ],
+      "impact": [
+        "Provides controlled foundation for CTL-04 and later aictl/control-plane tasks.",
+        "Does not change existing CLI behavior in this task."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-022"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T13:41:39Z",
+      "approval_notes": "Approved for CTL-04 implementation of ai_project_ctl core package foundation. Existing ctl behavior must remain unchanged.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T13:52:58Z",
+      "acceptance_notes": "CTL-04 implemented and accepted. Core package foundation added without changing existing ctl behavior.",
+      "notes": [],
+      "priority": 1,
+      "order": 5,
+      "created_at": "2026-06-18T13:40:17Z",
+      "updated_at": "2026-06-18T13:52:58Z"
+    },
+    {
+      "id": "CHG-006",
+      "title": "Add command registry foundation",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "CTL-01 inventory found duplicated parser/command behavior, CTL-02 architecture requires a shared command registry, and CTL-05 is the bounded implementation task for that registry foundation.",
+      "problem": "The future unified control plane needs a shared command registry so CLI, wrappers, automation, and future Web UI can discover and invoke the same allowed commands without duplicating command catalog behavior.",
+      "proposal": "Add a minimal ai_project_ctl/core/registry.py foundation for command metadata, command descriptors, read/write classification, argument schema placeholders, affected files metadata, and registry lookup without migrating existing ctl scripts yet.",
+      "affected_areas": [
+        "Project Control Gateway",
+        "Command registry",
+        "Future aictl facade",
+        "Future Web Control Center command routing"
+      ],
+      "affected_files": [
+        "ai_project_ctl/core/registry.py",
+        "ai_project_ctl/core/__init__.py if registry exports are added",
+        "tests/test_registry.py or equivalent registry tests"
+      ],
+      "risks": [
+        "Registry metadata could diverge from existing ctl behavior if legacy commands are migrated before parity tests exist.",
+        "Over-scoping CTL-05 could accidentally start aictl or wrapper migration too early."
+      ],
+      "impact": [
+        "Adds shared registry foundation required by CTL-05 and later aictl tasks.",
+        "Does not change existing ctl script behavior in CTL-05.",
+        "Provides a future source for command discovery, command metadata, and Web UI action routing."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-023"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T14:41:29Z",
+      "approval_notes": "Approved for CTL-05 command registry foundation. Existing ctl behavior must remain unchanged; no aictl facade or wrapper migration in this task.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T14:54:59Z",
+      "acceptance_notes": "CTL-05 implemented and accepted. Command registry foundation added as metadata-only without changing existing ctl behavior.",
+      "notes": [],
+      "priority": 1,
+      "order": 6,
+      "created_at": "2026-06-18T14:40:59Z",
+      "updated_at": "2026-06-18T14:54:59Z"
+    },
+    {
+      "id": "CHG-007",
+      "title": "Add unified aictl CLI facade",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "CTL-02 defines aictl as the preferred facade, CTL-04 introduced core primitives, and CTL-05 introduced the command registry foundation.",
+      "problem": "Project control still requires multiple ctl entrypoints; CTL-06 needs an approved evolution change to introduce scripts/aictl.py as the unified facade.",
+      "proposal": "Add scripts/aictl.py as a facade over the existing command registry and shared core primitives without migrating legacy ctl scripts or changing existing command behavior.",
+      "affected_areas": [
+        "Project Control Gateway",
+        "Unified CLI facade",
+        "Command registry integration"
+      ],
+      "affected_files": [
+        "scripts/aictl.py",
+        "ai_project_ctl/core/registry.py if facade metadata access requires compatible additions",
+        "tests/test_aictl.py or equivalent facade tests"
+      ],
+      "risks": [
+        "aictl could accidentally become an independent implementation instead of a facade.",
+        "aictl output could diverge from existing ctl behavior if it attempts to execute mutations too early."
+      ],
+      "impact": [
+        "Adds the first unified CLI entrypoint for command discovery and safe facade behavior.",
+        "Existing ctl scripts remain unchanged and compatible."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-024"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T14:56:33Z",
+      "approval_notes": "Approved for CTL-06 scripts/aictl.py facade implementation. Must remain facade-only; no wrapper migration or behavior changes.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T15:19:29Z",
+      "acceptance_notes": "Linked CTL task implemented and accepted.",
+      "notes": [],
+      "priority": 1,
+      "order": 7,
+      "created_at": "2026-06-18T14:56:25Z",
+      "updated_at": "2026-06-18T15:19:29Z"
+    },
+    {
+      "id": "CHG-008",
+      "title": "Convert legacy ctl scripts into compatibility wrappers",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "CTL-01 found duplicated ctl logic, CTL-02 defined wrapper migration, CTL-04 introduced shared core primitives, CTL-05 introduced command registry, and CTL-06 introduced the aictl facade.",
+      "problem": "Legacy ctl scripts still contain independent command implementations and duplicated control logic; CTL-07 needs an approved evolution change to migrate them toward compatibility wrappers safely.",
+      "proposal": "Convert legacy ctl scripts into compatibility wrappers only where shared core/domain services make it safe, preserving command syntax, output compatibility, lifecycle gates, protected-file rules, and avoiding circular delegation through aictl.",
+      "affected_areas": [
+        "Project Control Gateway",
+        "Legacy ctl compatibility wrappers",
+        "Shared core/domain service migration"
+      ],
+      "affected_files": [
+        "scripts/planctl.py if allowed by CTL-07",
+        "scripts/taskctl.py if allowed by CTL-07",
+        "scripts/docctl.py if allowed by CTL-07",
+        "scripts/contextctl.py if allowed by CTL-07",
+        "scripts/codexctl.py if allowed by CTL-07",
+        "scripts/evolutionctl.py if allowed by CTL-07",
+        "ai_project_ctl/core/* if compatible shared helpers are needed",
+        "tests/test_*ctl*.py or equivalent wrapper compatibility tests"
+      ],
+      "risks": [
+        "Wrapper migration can create circular delegation if old ctl scripts call aictl while aictl still delegates to old ctl scripts.",
+        "Existing command output, exit codes, lifecycle gates, or protected-file behavior could change unintentionally.",
+        "Migrating all ctl scripts in one task may be too broad if shared domain services are not ready."
+      ],
+      "impact": [
+        "Moves legacy ctl scripts toward shared control-plane architecture.",
+        "Keeps existing CLI commands compatible for current workflows.",
+        "Prepares safer future aictl and web control integration."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-025"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T15:22:20Z",
+      "approval_notes": "Approved for CTL-07 compatibility wrapper migration. Must preserve existing ctl behavior and avoid circular delegation through aictl.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T15:38:01Z",
+      "acceptance_notes": "CTL-07 implemented and accepted. Legacy ctl scripts now share compatibility plumbing without changing command behavior or introducing aictl recursion.",
+      "notes": [],
+      "priority": 1,
+      "order": 8,
+      "created_at": "2026-06-18T15:21:51Z",
+      "updated_at": "2026-06-18T15:38:01Z"
+    },
+    {
+      "id": "CHG-009",
+      "title": "Add project doctor diagnostics",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "CTL-08 is the bounded implementation task for project doctor diagnostics after aictl facade and wrapper compatibility were introduced.",
+      "problem": "The existing aictl project doctor command only delegates to protected-file checks and does not provide explicit PASS/WARN/FAIL project health diagnostics required by CTL-08.",
+      "proposal": "Extend project.doctor with structured project health diagnostics for plan/task/evolution validation, dependency graph, generated-output freshness, protected-file checks, prompt/context status, command registry availability, and current task consistency.",
+      "affected_areas": [
+        "Project Control Gateway",
+        "Project doctor diagnostics",
+        "Validation behavior",
+        "aictl project doctor"
+      ],
+      "affected_files": [
+        "scripts/aictl.py",
+        "ai_project_ctl/** if shared doctor helpers are added",
+        "tests/**",
+        "scripts/check-protected-project-files.py only if CTL-08 explicitly requires it"
+      ],
+      "risks": [
+        "Doctor diagnostics could incorrectly mark warnings as blocking failures.",
+        "Doctor could duplicate validation logic instead of delegating to existing validated CLIs.",
+        "Prompt/context freshness checks may be noisy if ownership between taskctl.py, codexctl.py, and contextctl.py remains ambiguous."
+      ],
+      "impact": [
+        "Adds explicit PASS/WARN/FAIL project health diagnostics.",
+        "Improves owner visibility into stale generated files, prompt/context drift, dependency graph status, and protected-file safety.",
+        "Does not change lifecycle state or approval semantics."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-026"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T15:43:30Z",
+      "approval_notes": "Approved for CTL-08 project doctor diagnostics. Must preserve lifecycle semantics and distinguish PASS, WARN, and FAIL clearly.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T16:38:55Z",
+      "acceptance_notes": "CTL-08 implemented and accepted. Project doctor now reports explicit PASS/WARN/FAIL diagnostics while preserving lifecycle and validation ownership.",
+      "notes": [],
+      "priority": 1,
+      "order": 9,
+      "created_at": "2026-06-18T15:43:15Z",
+      "updated_at": "2026-06-18T16:38:55Z"
+    },
+    {
+      "id": "CHG-010",
+      "title": "Add locking and atomic write protection",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "CTL-02 architecture and CTL-03 ID allocation strategy require lock-protected mutation before future web writes or broader parallel execution are safe.",
+      "problem": "Project-control write operations can still race or partially update state/events/generated outputs without a shared lock and transaction safety model.",
+      "proposal": "Add locking and atomic write protection for shared control-plane write paths, defining safe local lock behavior, stale write protection, and transaction boundaries without changing lifecycle semantics.",
+      "affected_areas": [
+        "Project Control Gateway",
+        "Locking and atomic writes",
+        "Shared transaction safety"
+      ],
+      "affected_files": [
+        "ai_project_ctl/core/locks.py",
+        "ai_project_ctl/core/store.py",
+        "ai_project_ctl/core/transactions.py",
+        "ai_project_ctl/core/legacy.py if legacy ctl plumbing adopts lock helpers",
+        "tests/**"
+      ],
+      "risks": [
+        "Locking could deadlock or leave stale lock files if not implemented conservatively.",
+        "Changing existing ctl write paths too broadly could alter behavior or exit codes.",
+        "Transaction ordering between event append, state write, and generated render must be explicit."
+      ],
+      "impact": [
+        "Improves safety for parallel local execution and future web write actions.",
+        "Prepares the control plane for lock-aware command execution without changing lifecycle semantics."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-027"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T16:39:46Z",
+      "approval_notes": "Approved for CTL-09 locking and atomic write protection. Must preserve existing lifecycle semantics and avoid broad wrapper behavior changes.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T17:12:06Z",
+      "acceptance_notes": "CTL-09 implemented and accepted. Locking and atomic write protection added without changing lifecycle semantics.",
+      "notes": [],
+      "priority": 1,
+      "order": 10,
+      "created_at": "2026-06-18T16:39:17Z",
+      "updated_at": "2026-06-18T17:12:06Z"
+    },
+    {
+      "id": "CHG-011",
+      "title": "Add read-only local Web Control Center MVP",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "CTL-02 architecture defines a future local web shell, CTL-06 introduced aictl, CTL-08 added project doctor diagnostics, and CTL-09 added locking/atomic-write safety. CTL-10 is the bounded read-only UI step before any web write actions.",
+      "problem": "Project control is now available through ctl scripts and aictl, but there is no local read-only UI for observing current task state, executable queue, health diagnostics, events, and generated project-control status.",
+      "proposal": "Add a read-only local Web Control Center MVP over existing aictl/core/registry/project doctor capabilities. The web UI must not mutate JSON, events, generated files, lifecycle state, or approval status.",
+      "affected_areas": [
+        "Project Control Gateway",
+        "Read-only local Web Control Center",
+        "aictl web/dashboard surface"
+      ],
+      "affected_files": [
+        "scripts/aictl.py if web command routing is added",
+        "ai_project_ctl/web/**",
+        "ai_project_ctl/core/** only if read-only web integration requires compatible helpers",
+        "tests/**"
+      ],
+      "risks": [
+        "Web UI could accidentally introduce mutation paths if route handlers bypass the command registry.",
+        "Adding web dependencies could make the project harder to run if dependency policy is unclear.",
+        "Dashboard may display stale generated state unless it clearly labels derived outputs and doctor warnings."
+      ],
+      "impact": [
+        "Adds local read-only visibility for project-control state.",
+        "Keeps all state changes disabled in CTL-10.",
+        "Prepares CTL-11 web write actions without implementing them."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-028"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T17:30:06Z",
+      "approval_notes": "Approved",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T17:43:17Z",
+      "acceptance_notes": "CTL-10 implemented and accepted. Read-only local Web Control Center MVP added without web write actions or direct protected-file mutation.",
+      "notes": [],
+      "priority": 1,
+      "order": 11,
+      "created_at": "2026-06-18T17:12:24Z",
+      "updated_at": "2026-06-18T17:43:17Z"
+    },
+    {
+      "id": "CHG-012",
+      "title": "Add controlled Web write actions",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "CTL-10 established a read-only local Web Control Center. CTL-11 is the bounded next step to add controlled writes using the existing registry, doctor, locking, and protected-file safety model.",
+      "problem": "The local Web Control Center is currently read-only; CTL-11 needs approved governance to add controlled write actions without bypassing command registry, lifecycle validation, locks, audit events, or protected-file rules.",
+      "proposal": "Add a narrow set of confirmed Web write actions routed only through the registered command layer. Web route handlers must not directly edit AI_PROJECT/state, AI_PROJECT/events, or AI_PROJECT/generated files.",
+      "affected_areas": [
+        "Project Control Gateway",
+        "Web Control Center write actions",
+        "Command registry routed mutations",
+        "Lifecycle and audit safety"
+      ],
+      "affected_files": [
+        "ai_project_ctl/web/**",
+        "scripts/aictl.py if web command routing changes are needed",
+        "ai_project_ctl/core/registry.py if write-action metadata changes are needed",
+        "ai_project_ctl/core/transactions.py if web action execution uses shared transaction helpers",
+        "tests/**"
+      ],
+      "risks": [
+        "Web write routes could bypass registered command validation and mutate protected files directly.",
+        "Unsafe web actions could accidentally approve, accept, or close work without Human Owner intent.",
+        "Write actions could weaken loopback-only/read-only safety if method restrictions are not updated carefully.",
+        "Write actions could introduce stale prompt/context artifacts after task state changes."
+      ],
+      "impact": [
+        "Adds controlled local web mutations through the approved command layer.",
+        "Preserves audit events, lifecycle validation, locks, and generated-output regeneration.",
+        "Prepares owner-facing project control without direct JSON editing."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-029"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T17:44:20Z",
+      "approval_notes": "Approved for CTL-11 controlled Web write actions. Writes must route through registered commands only; no direct JSON/event/generated edits; no approval/acceptance automation unless explicitly allowed by CTL-11.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T18:01:06Z",
+      "acceptance_notes": "CTL-11 implemented and accepted. Controlled Web write actions added through confirmed POST /actions and registered command routing without direct protected-file mutation.",
+      "notes": [],
+      "priority": 1,
+      "order": 12,
+      "created_at": "2026-06-18T17:44:05Z",
+      "updated_at": "2026-06-18T18:01:06Z"
+    },
+    {
+      "id": "CHG-013",
+      "title": "Optimize Web Control Center performance",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "Measured timings show /healthz is fast, while project doctor takes about 3.8s, /data.json about 4.9s, and dashboard about 5.8s. The bottleneck is backend read-model/doctor execution, not networking.",
+      "problem": "Web Control Center dashboard and data endpoints are slow because they run full project doctor and heavy CLI checks on normal page/data requests.",
+      "proposal": "Add caching and explicit doctor refresh behavior so normal dashboard/data views are fast while full diagnostics remain available and accurate.",
+      "affected_areas": [
+        "Web Control Center",
+        "Read model performance",
+        "Project doctor caching",
+        "Controlled Web write cache invalidation"
+      ],
+      "affected_files": [
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py if cache invalidation is needed",
+        "scripts/aictl.py if web/doctor flags require compatible updates",
+        "tests/**"
+      ],
+      "risks": [
+        "Caching could hide fresh FAIL diagnostics if refresh behavior is unclear.",
+        "Cache invalidation after POST /actions could be incomplete.",
+        "Optimization could accidentally weaken project doctor or protected-file checks."
+      ],
+      "impact": [
+        "Makes Dashboard and /data.json usable interactively.",
+        "Keeps heavy project doctor diagnostics available through explicit refresh or cached result.",
+        "Preserves loopback-only and controlled Web write safety."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-031"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T18:58:59Z",
+      "approval_notes": "Approved for CTL-13 Web Control Center performance optimization. Must preserve doctor correctness and Web write safety.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T19:20:34Z",
+      "acceptance_notes": "CTL-13 implemented and accepted. Web Control Center dashboard/data performance optimized without weakening doctor diagnostics or write safety.",
+      "notes": [],
+      "priority": 1,
+      "order": 13,
+      "created_at": "2026-06-18T18:58:39Z",
+      "updated_at": "2026-06-18T19:20:34Z"
+    },
+    {
+      "id": "CHG-014",
+      "title": "Add task workflow automation MVP",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "WFA-01 is the bounded first step for reducing manual task execution overhead while preserving the governed command layer introduced by the control plane.",
+      "problem": "Preparing tasks for Codex and submitting tasks for review still requires many manual CLI commands, even though the command registry, aictl facade, context generation, Codex prompt generation, doctor diagnostics, and Web actions already exist.",
+      "proposal": "Add a minimal workflow automation layer that composes existing registered commands for prepare-for-codex, refresh-execution-context, and submit-for-review without bypassing validation, audit, generated-output rules, protected-file policy, or owner gates.",
+      "affected_areas": [
+        "Project Control Gateway",
+        "Workflow automation",
+        "aictl workflow commands",
+        "Web Control Center workflow actions"
+      ],
+      "affected_files": [
+        "ai_project_ctl/core/workflows.py",
+        "ai_project_ctl/web/actions.py if workflow actions are exposed in UI",
+        "ai_project_ctl/web/server.py if workflow routes/buttons are exposed in UI",
+        "ai_project_ctl/web/read_model.py if UI read model needs workflow metadata",
+        "ai_project_ctl/core/registry.py if workflow command metadata is needed",
+        "scripts/aictl.py",
+        "tests/**"
+      ],
+      "risks": [
+        "Workflow automation could accidentally bypass individual command validation if it writes protected files directly.",
+        "Prepare-for-Codex could hide failures if it continues after a failed step.",
+        "Submit-review could incorrectly move a task to in_review when blocking checks fail.",
+        "Web workflow buttons could weaken confirmation or write-safety guarantees."
+      ],
+      "impact": [
+        "Reduces manual command overhead for preparing tasks for Codex and submitting work for review.",
+        "Keeps workflows as compositions of existing registered commands.",
+        "Preserves validation, audit events, generated-output ownership, and protected-file boundaries."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-032"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T19:48:14Z",
+      "approval_notes": "Approved for WFA-01 task workflow automation MVP. Workflows must compose registered/validated commands only and must not directly edit protected project-control files.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T20:07:43Z",
+      "acceptance_notes": "WFA-01 implemented and accepted. Task workflow automation MVP added while preserving validation, generated-output ownership, protected-file rules, and owner gates.",
+      "notes": [],
+      "priority": 1,
+      "order": 14,
+      "created_at": "2026-06-18T19:46:58Z",
+      "updated_at": "2026-06-18T20:07:43Z"
+    },
+    {
+      "id": "CHG-015",
+      "title": "Add Evolution Change Wizard",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "WFA-02 is the bounded next step after WFA-01 workflow automation, reducing governance overhead without removing owner approval gates.",
+      "problem": "Creating Evolution Change records still requires many manual evolutionctl.py commands for affected areas, files, risks, impacts, task linking, and lifecycle preparation.",
+      "proposal": "Add a guided workflow/UI helper that creates and prepares an Evolution Change for a selected task, using task fields to draft problem/proposal/rationale and link the legacy task id, while keeping approval as an explicit Human Owner action.",
+      "affected_areas": [
+        "Workflow automation",
+        "Evolution Change Flow",
+        "Web Control Center",
+        "aictl workflow commands"
+      ],
+      "affected_files": [
+        "ai_project_ctl/core/workflows.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/core/registry.py",
+        "scripts/aictl.py",
+        "tests/**"
+      ],
+      "risks": [
+        "Wizard could over-generate low-quality Change fields if task data is vague.",
+        "Wizard could accidentally approve or accept changes if owner gates are not preserved.",
+        "Wizard must link by legacy task id where evolutionctl.py requires TASK-XXX references."
+      ],
+      "impact": [
+        "Reduces manual overhead for controlled self-evolution.",
+        "Keeps approval as explicit Human Owner action.",
+        "Improves consistency of affected files, risks, impact, and linked task records."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-033"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-18T20:09:47Z",
+      "approval_notes": "Approved for WFA-02 Evolution Change Wizard. Wizard may create and prepare Change records, but must not approve or accept them automatically.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-18T20:34:31Z",
+      "acceptance_notes": "WFA-02 implemented and accepted. Evolution Change Wizard added without bypassing Human Owner approval.",
+      "notes": [],
+      "priority": 1,
+      "order": 15,
+      "created_at": "2026-06-18T20:09:39Z",
+      "updated_at": "2026-06-18T20:34:31Z"
+    },
+    {
+      "id": "CHG-016",
+      "title": "WFA-03 Add Task Creation Wizard",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "Provide a guided task creation form/workflow that routes through taskctl.py/aictl command layer and supports scope, out-of-scope, allowed files, acceptance criteria, review instructions, dependencies, and optional Evolution Change hint.",
+      "problem": "Task WFA-03 requires an explicit Evolution Change Proposal before implementation: Add owner-facing CLI/UI workflow for creating individual tasks without long taskctl.py command lines.",
+      "proposal": "Implement the bounded task scope: Add task creation workflow metadata.; Add UI form or CLI wizard-like command if allowed.; Support Epic selection.; Support scope/out-of-scope/allowed-files/acceptance/review fields.; Support depends_on selection.; Support create-only mode.; Optionally offer next action suggestions: prepare for Codex, create Evolution Change.; Add tests.",
+      "affected_areas": [
+        "Workflow automation",
+        "Task creation wizard",
+        "Web Control Center",
+        "aictl workflow commands"
+      ],
+      "affected_files": [
+        "ai_project_ctl/core/workflows.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/core/registry.py",
+        "scripts/aictl.py",
+        "tests/**"
+      ],
+      "risks": [
+        "Boundary risk: Do not implement grouped import in this task.",
+        "Boundary risk: Do not auto-start the created task.",
+        "Boundary risk: Do not auto-create Evolution Change unless explicitly delegated to WFA-02 workflow.",
+        "Boundary risk: Do not bypass taskctl validation.",
+        "Verify taskctl/aictl routing, create-only behavior, dependency support, protected-file policy, tests, and validation output.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-034.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Add task creation workflow metadata.",
+        "Add UI form or CLI wizard-like command if allowed.",
+        "Support Epic selection.",
+        "Support scope/out-of-scope/allowed-files/acceptance/review fields.",
+        "Support depends_on selection.",
+        "Owner can create a single task through workflow/UI without manually writing a long CLI command.",
+        "Created task is persisted through approved command path.",
+        "Generated task views are refreshed through owning CLI/facade."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-034"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T06:23:46Z",
+      "approval_notes": "Approved for WFA-03 Task Creation Wizard. Must create tasks only through governed command paths, preserve validation/protected-file boundaries, and not implement grouped import or auto-start behavior.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T07:09:16Z",
+      "acceptance_notes": "WFA-03 implemented and accepted. Task Creation Wizard added as create-only governed workflow without auto-starting tasks or bypassing protected-file boundaries.",
+      "notes": [],
+      "priority": 1,
+      "order": 16,
+      "created_at": "2026-06-19T06:20:20Z",
+      "updated_at": "2026-06-19T07:09:16Z"
+    },
+    {
+      "id": "CHG-017",
+      "title": "WFA-04 Add Bulk Task Import UI",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "Allow Human Owner to paste or upload a batch of tasks in a simple structured format and preview the generated task records before creation. The importer must route all writes through approved command paths and must not edit tasks.json directly.",
+      "problem": "Task WFA-04 requires an explicit Evolution Change Proposal before implementation: Add a grouped task import interface for importing multiple planned tasks from structured text with preview, validation, and confirmation.",
+      "proposal": "Implement the bounded task scope: Define a simple import format, preferably YAML-like or JSON-like text.; Support multiple tasks in one batch.; Support epic, title, summary, description, scope, out_of_scope, allowed_files, acceptance_criteria, review_instructions, notes, dependencies.; Support dry-run/preview.; Validate references before creating anything.; Show generated command plan before confirmation.; Create tasks only after explicit confirmation.; Add UI import page/form if allowed.; Add tests for valid import, invalid import, dependency references, dry-run, and no direct state writes.",
+      "affected_areas": [
+        "Workflow automation",
+        "Bulk task import",
+        "Web Control Center",
+        "aictl workflow commands"
+      ],
+      "affected_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/core/workflows.py",
+        "ai_project_ctl/core/registry.py",
+        "scripts/aictl.py",
+        "tests/**"
+      ],
+      "risks": [
+        "Boundary risk: Do not import arbitrary Python or shell commands.",
+        "Boundary risk: Do not execute uploaded files.",
+        "Boundary risk: Do not auto-start imported tasks.",
+        "Boundary risk: Do not auto-approve anything.",
+        "Boundary risk: Do not bypass taskctl validation.",
+        "Boundary risk: Do not support unrestricted file editing from import payload.",
+        "Verify parser safety, dry-run behavior, all-or-nothing validation, command-path task creation, protected-file policy, tests, and validation output.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-035.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Define a simple import format, preferably YAML-like or JSON-like text.",
+        "Support multiple tasks in one batch.",
+        "Support epic, title, summary, description, scope, out_of_scope, allowed_files, acceptance_criteria, review_instructions, notes, dependencies.",
+        "Support dry-run/preview.",
+        "Validate references before creating anything.",
+        "Owner can paste a batch of task definitions and preview them.",
+        "Import preview shows tasks, fields, dependencies, and planned commands.",
+        "Invalid imports fail before any task is created."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-035"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T07:12:06Z",
+      "approval_notes": "Approved for WFA-04 Bulk Task Import UI. Must provide preview/dry-run, validate before writes, create tasks only through governed command paths, and never execute imported content.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T07:45:00Z",
+      "acceptance_notes": "WFA-04 implemented and accepted. Bulk Task Import UI added with preview, validation, confirmation, and governed command-path creation.",
+      "notes": [],
+      "priority": 1,
+      "order": 17,
+      "created_at": "2026-06-19T07:10:22Z",
+      "updated_at": "2026-06-19T07:45:00Z"
+    },
+    {
+      "id": "CHG-018",
+      "title": "WFA-05 Add Review And Close Helpers",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "Reduce manual closure steps while preserving explicit Human Owner confirmation and approval gates.",
+      "problem": "Task WFA-05 requires an explicit Evolution Change Proposal before implementation: Add guarded workflow helpers for closing reviewed tasks, accepting linked Evolution Changes, and optionally closing completed Epics.",
+      "proposal": "Implement the bounded task scope: Add close_task workflow for tasks in in_review.; Require approval notes and explicit confirmation.; Approve task then transition to done through taskctl/aictl path.; Add accept_change workflow only for approved/in_review changes whose linked tasks are done.; Add optional close_epic helper only if all child tasks are done/deferred/archived.; Add tests for confirmation, invalid states, and blocked closure.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai_project_ctl/core/workflows.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/core/registry.py",
+        "scripts/aictl.py",
+        "tests/**"
+      ],
+      "risks": [
+        "Boundary risk: Do not auto-approve without Human Owner confirmation.",
+        "Boundary risk: Do not close tasks with failing checks unless explicitly allowed by policy.",
+        "Boundary risk: Do not accept Changes with incomplete linked tasks.",
+        "Boundary risk: Do not close Epics with active tasks.",
+        "Boundary risk: Do not bypass lifecycle gates.",
+        "Verify lifecycle gate preservation, owner confirmation, invalid-state handling, protected-file policy, tests, and validation output.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-036.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Add close_task workflow for tasks in in_review.",
+        "Require approval notes and explicit confirmation.",
+        "Approve task then transition to done through taskctl/aictl path.",
+        "Add accept_change workflow only for approved/in_review changes whose linked tasks are done.",
+        "Add optional close_epic helper only if all child tasks are done/deferred/archived.",
+        "Owner can close an in_review task with explicit notes and confirmation.",
+        "Owner can accept an Evolution Change only when linked task completion rules pass.",
+        "Invalid close/accept attempts are rejected with clear messages."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-036"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T07:45:45Z",
+      "approval_notes": "Approved for WFA-05 Review and Close Helpers. Must preserve Human Owner confirmation, lifecycle gates, linked Change completion rules, and reject invalid closure.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T08:10:06Z",
+      "acceptance_notes": "WFA-05 implemented and accepted. Review/close helpers added while preserving Human Owner confirmation and lifecycle gates.",
+      "notes": [],
+      "priority": 1,
+      "order": 18,
+      "created_at": "2026-06-19T07:45:12Z",
+      "updated_at": "2026-06-19T08:10:06Z"
+    },
+    {
+      "id": "CHG-019",
+      "title": "UIX-01 Improve Tasks filtering grouping and collapse",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "Improve the Web Control Center Tasks page so the owner can focus on one initiative, one epic, or active tasks only instead of scrolling through the full task history.",
+      "problem": "Task WFA-07 requires an explicit Evolution Change Proposal before implementation: Make the Tasks page usable for large projects by adding initiative/epic/status filters, search, grouping, and collapsible done sections.",
+      "proposal": "Implement the bounded task scope: Add filtering by Initiative.; Add filtering by Epic.; Add filtering by Status.; Add search by task ref, legacy id, title, and summary.; Add grouping by Epic and Status.; Add collapsible groups.; Hide done tasks by default or collapse done groups by default.; Show readable task refs such as WFA-04 alongside legacy TASK-XXX ids.; Preserve read-only/dashboard performance improvements.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py if filter state needs action metadata",
+        "tests/test_web_control_center.py",
+        "tests/test_aictl.py if aictl web routing is touched"
+      ],
+      "risks": [
+        "Boundary risk: Do not add new write actions in this task.",
+        "Boundary risk: Do not change task lifecycle rules.",
+        "Boundary risk: Do not change task identity/ref allocation.",
+        "Boundary risk: Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.",
+        "Verify that filtering and grouping work with EPIC-005/CTL and EPIC-006/WFA.",
+        "Verify that done tasks no longer dominate the default task view.",
+        "Verify that Web write safety is unchanged.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-038.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Add filtering by Initiative.",
+        "Add filtering by Epic.",
+        "Add filtering by Status.",
+        "Add search by task ref, legacy id, title, and summary.",
+        "Add grouping by Epic and Status.",
+        "Tasks page can be filtered by initiative, epic, status, and search text.",
+        "Tasks page can group tasks by epic or status.",
+        "Done tasks are hidden or collapsed by default."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-038"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T09:04:42Z",
+      "approval_notes": "Approved",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T09:20:22Z",
+      "acceptance_notes": "WFA-07 implemented and accepted. Tasks UI filtering, grouping, collapse behavior, and readable task identity display were added while preserving governed write boundaries.",
+      "notes": [],
+      "priority": 1,
+      "order": 19,
+      "created_at": "2026-06-19T09:04:11Z",
+      "updated_at": "2026-06-19T09:20:22Z"
+    },
+    {
+      "id": "CHG-020",
+      "title": "UIX-02 Add task row workflow buttons",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "Make routine task operation possible from the Tasks page by exposing existing workflow automation actions as row-level buttons.",
+      "problem": "Task WFA-08 requires an explicit Evolution Change Proposal before implementation: Add status-aware workflow buttons next to tasks, including Prepare for Codex, Refresh Context, and Submit for Review.",
+      "proposal": "Implement the bounded task scope: Add status-aware task row buttons.; Expose Prepare for Codex for planned/ready tasks.; Expose Refresh Context for current/in-progress tasks.; Expose Submit for Review for in-progress tasks.; Show confirmation preview before workflow execution.; Route all actions through existing workflow runner and aictl command paths.; Show result summary after execution.; Show next Codex instruction after Prepare for Codex.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/core/workflows.py if workflow metadata needs compatible updates",
+        "ai_project_ctl/core/registry.py if workflow metadata needs compatible updates",
+        "scripts/aictl.py if workflow routing needs compatible updates",
+        "tests/test_web_control_center.py",
+        "tests/test_workflows.py",
+        "tests/test_aictl.py",
+        "tests/test_registry.py"
+      ],
+      "risks": [
+        "Boundary risk: Do not auto-run Codex.",
+        "Boundary risk: Do not auto-approve tasks.",
+        "Boundary risk: Do not auto-close tasks.",
+        "Boundary risk: Do not accept Evolution Changes.",
+        "Boundary risk: Do not add arbitrary shell command execution.",
+        "Boundary risk: Do not directly edit protected project-control files.",
+        "Verify that buttons are not shown for invalid task states.",
+        "Verify that every write workflow requires confirmation.",
+        "Verify that Prepare for Codex produces the instruction to send Codex.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-039.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Add status-aware task row buttons.",
+        "Expose Prepare for Codex for planned/ready tasks.",
+        "Expose Refresh Context for current/in-progress tasks.",
+        "Expose Submit for Review for in-progress tasks.",
+        "Show confirmation preview before workflow execution.",
+        "Tasks page shows useful workflow buttons based on task status.",
+        "Prepare for Codex can be launched from a task row with explicit confirmation.",
+        "Refresh Context can be launched from a task row with explicit confirmation."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-039"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T09:22:31Z",
+      "approval_notes": "Approved",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T09:41:49Z",
+      "acceptance_notes": "WFA-08 implemented and accepted. Task row workflow buttons added while preserving confirmation gates and governed command-path execution.",
+      "notes": [],
+      "priority": 1,
+      "order": 20,
+      "created_at": "2026-06-19T09:22:14Z",
+      "updated_at": "2026-06-19T09:41:49Z"
+    },
+    {
+      "id": "CHG-021",
+      "title": "UIX-03 Add unified workflow action result panel",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "Improve owner feedback after UI actions by showing what was executed, what changed, what failed, and what to do next.",
+      "problem": "Task WFA-09 requires an explicit Evolution Change Proposal before implementation: Add a reusable result panel for workflow and Web actions showing step status, changed files, warnings, errors, and next actions.",
+      "proposal": "Implement the bounded task scope: Add a reusable action result view/component.; Show workflow name and target task/change/epic.; Show step-by-step PASS/WARN/FAIL status.; Show changed files when available.; Show generated files when available.; Show warnings and errors clearly.; Show next-action hints such as the Codex prompt instruction.; Support copyable text for the Codex instruction.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/core/workflows.py if result metadata needs compatible updates",
+        "tests/test_web_control_center.py",
+        "tests/test_workflows.py"
+      ],
+      "risks": [
+        "Boundary risk: Do not change workflow semantics.",
+        "Boundary risk: Do not add new workflow actions in this task.",
+        "Boundary risk: Do not auto-run Codex.",
+        "Boundary risk: Do not weaken confirmation requirements.",
+        "Boundary risk: Do not directly edit protected project-control files.",
+        "Verify that failed steps are visible and not hidden behind a generic success message.",
+        "Verify that result panel does not expose arbitrary command execution.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-040.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Add a reusable action result view/component.",
+        "Show workflow name and target task/change/epic.",
+        "Show step-by-step PASS/WARN/FAIL status.",
+        "Show changed files when available.",
+        "Show generated files when available.",
+        "After a workflow action, UI shows a clear action result panel.",
+        "Result panel shows executed steps and status.",
+        "Result panel shows warnings/errors without hiding failures."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-040"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T09:43:37Z",
+      "approval_notes": "Approved for WFA-09 Unified Workflow Action Result Panel. Must make action results human-readable, collapse raw technical details by default, preserve errors/warnings, and not change workflow semantics.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T10:01:38Z",
+      "acceptance_notes": "WFA-09 implemented and accepted. Unified Web action result panel added while preserving workflow semantics, visible failures, and protected-file boundaries.",
+      "notes": [],
+      "priority": 1,
+      "order": 21,
+      "created_at": "2026-06-19T09:43:21Z",
+      "updated_at": "2026-06-19T10:01:38Z"
+    },
+    {
+      "id": "CHG-022",
+      "title": "UIX-07 Add Task Review Done Controls",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "Expose the task review completion part of the pipeline in the Web Control Center. The owner should be able to approve a task and move it to done, or request changes, directly from the UI when the task is in_review.",
+      "problem": "Task WFA-13 requires an explicit Evolution Change Proposal before implementation: Add UI controls for closing reviewed tasks and requesting changes from the Tasks page while preserving Human Owner review gates.",
+      "proposal": "Implement the bounded task scope: Add status-aware review controls for tasks in in_review.; Add Approve & Done action routed through the existing task.close_reviewed workflow.; Add Request Changes action routed through an existing governed task transition path or a minimal governed workflow wrapper if needed.; Require explicit confirmation before any review decision.; Require owner notes for Approve & Done and Request Changes.; Show clear success/failure result through the unified action result panel.; After Approve & Done, show next actions such as accepting the linked Evolution Change or preparing the next task.; Do not show Done controls for tasks that are not in_review.; Add tests for valid close, invalid status, missing notes, request changes, and no direct state writes.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/core/workflows.py if a minimal review workflow wrapper is needed",
+        "ai_project_ctl/core/registry.py if workflow/action metadata needs compatible updates",
+        "scripts/aictl.py if command routing needs compatible updates",
+        "tests/test_web_control_center.py",
+        "tests/test_workflows.py",
+        "tests/test_aictl.py",
+        "tests/test_registry.py"
+      ],
+      "risks": [
+        "Boundary risk: Do not auto-approve tasks.",
+        "Boundary risk: Do not auto-close tasks without explicit Human Owner confirmation.",
+        "Boundary risk: Do not accept linked Evolution Changes automatically.",
+        "Boundary risk: Do not bypass task lifecycle validation.",
+        "Boundary risk: Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.",
+        "Boundary risk: Do not change task lifecycle semantics except adding a governed UI wrapper if strictly required.",
+        "Verify that Done cannot be applied to planned, ready, in_progress, or already done tasks.",
+        "Verify that owner notes are required.",
+        "Verify that all writes route through governed workflows/commands.",
+        "Verify that linked Change acceptance remains a separate explicit action.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-044.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Add status-aware review controls for tasks in in_review.",
+        "Add Approve & Done action routed through the existing task.close_reviewed workflow.",
+        "Add Request Changes action routed through an existing governed task transition path or a minimal governed workflow wrapper if needed.",
+        "Require explicit confirmation before any review decision.",
+        "Require owner notes for Approve & Done and Request Changes.",
+        "Tasks in in_review show Approve & Done and Request Changes controls.",
+        "Approve & Done requires explicit confirmation and owner notes.",
+        "Approve & Done routes through task.close_reviewed or another governed workflow path."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-044"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T10:02:24Z",
+      "approval_notes": "Approved for WFA-13 Task Review Done Controls. Must expose Approve & Done and Request Changes through governed workflows, require explicit confirmation and owner notes, and not auto-accept linked Changes.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T10:26:52Z",
+      "acceptance_notes": "Accepted after task WFA-13 review",
+      "notes": [],
+      "priority": 1,
+      "order": 22,
+      "created_at": "2026-06-19T10:01:57Z",
+      "updated_at": "2026-06-19T10:26:52Z"
+    },
+    {
+      "id": "CHG-023",
+      "title": "UIX-04 Add Evolution management UI tab",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "Make Evolution Change Flow manageable from the Web Control Center while preserving Human Owner approval gates and linked-task completion checks.",
+      "problem": "Task WFA-10 requires an explicit Evolution Change Proposal before implementation: Add an Evolution tab to view and manage Change Proposals, including create-for-task, approve, move to review, and accept actions with confirmation.",
+      "proposal": "Implement the bounded task scope: Add an Evolution tab/page.; List Change Proposals with status, type, title, linked tasks, affected files, risks, and approval/acceptance state.; Add filters by status and type.; Add action to create Change for selected task using existing evolution.create_for_task workflow.; Add action to approve a ready Change with explicit confirmation.; Add action to move approved Change to in_progress/in_review where valid.; Add action to accept a Change only when linked-task rules pass.; Show clear errors for invalid transitions.; Route all mutations through existing governed commands/workflows.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/core/workflows.py if evolution workflow metadata needs compatible updates",
+        "ai_project_ctl/core/registry.py if evolution command metadata needs compatible updates",
+        "scripts/aictl.py if evolution action routing needs compatible updates",
+        "tests/test_web_control_center.py",
+        "tests/test_workflows.py",
+        "tests/test_aictl.py",
+        "tests/test_registry.py"
+      ],
+      "risks": [
+        "Boundary risk: Do not auto-approve Change Proposals.",
+        "Boundary risk: Do not auto-accept Change Proposals.",
+        "Boundary risk: Do not bypass linked-task completion checks.",
+        "Boundary risk: Do not change evolution lifecycle rules.",
+        "Boundary risk: Do not directly edit AI_PROJECT/state/evolution.json or evolution events.",
+        "Verify that approval and acceptance remain explicit Human Owner actions.",
+        "Verify that accepted Changes cannot link incomplete tasks.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-041.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Add an Evolution tab/page.",
+        "List Change Proposals with status, type, title, linked tasks, affected files, risks, and approval/acceptance state.",
+        "Add filters by status and type.",
+        "Add action to create Change for selected task using existing evolution.create_for_task workflow.",
+        "Add action to approve a ready Change with explicit confirmation.",
+        "Evolution tab lists Change Proposals with useful metadata.",
+        "Evolution tab can filter by status and type.",
+        "Owner can create a Change for a task through the existing wizard."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-041"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T10:29:32Z",
+      "approval_notes": "Approved for WFA-10 Evolution Management UI Tab. Must expose create/approve/accept Change actions through governed workflows, require explicit confirmation, and preserve Human Owner approval gates.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T10:51:20Z",
+      "acceptance_notes": "Accepted after WFA-10 review. Evolution management UI implemented and verified.",
+      "notes": [],
+      "priority": 1,
+      "order": 23,
+      "created_at": "2026-06-19T10:29:18Z",
+      "updated_at": "2026-06-19T10:51:20Z"
+    },
+    {
+      "id": "CHG-024",
+      "title": "UIX-08 Add Next Action and Blocked Reason Hints",
+      "status": "approved",
+      "change_type": "tooling",
+      "rationale": "Improve the UI pipeline by explaining what the owner can do next and why an action is unavailable. The Tasks page should not silently hide important actions without showing dependency, lifecycle, current-task, or Evolution Change reasons.",
+      "problem": "Task WFA-14 requires an explicit Evolution Change Proposal before implementation: Show actionable next steps and blocked reasons for tasks, changes, and epics in the Web Control Center.",
+      "proposal": "Implement the bounded task scope: Add next-action hints for task rows and task focus sections.; Show why Prepare for Codex is unavailable, such as unmet dependencies, missing approved Change, invalid status, or another current task.; Show why Submit for Review is unavailable, such as task not in_progress or stale context/Codex state.; Show why Approve & Done is unavailable, such as task not in_review.; Show linked Evolution Change status when available.; Show suggested actions such as Create Change, Approve Change, Prepare for Codex, Refresh Context, Submit for Review, Approve & Done, Accept Change, or Close Epic.; Add blocked reason hints for Evolution actions where useful.; Add blocked reason hints for epic close where useful.; Keep hints read-only; actual writes must remain separate confirmed actions.; Add tests for dependency-blocked tasks, missing Change, invalid status actions, and next action suggestions.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py if action metadata needs compatible updates",
+        "ai_project_ctl/core/workflows.py if workflow metadata needs compatible updates",
+        "ai_project_ctl/core/registry.py if command metadata needs compatible updates",
+        "tests/test_web_control_center.py",
+        "tests/test_workflows.py",
+        "tests/test_registry.py"
+      ],
+      "risks": [
+        "Boundary risk: Do not auto-run any suggested action.",
+        "Boundary risk: Do not auto-create or auto-approve Evolution Changes.",
+        "Boundary risk: Do not auto-close tasks or epics.",
+        "Boundary risk: Do not weaken lifecycle gates.",
+        "Boundary risk: Do not introduce arbitrary command execution.",
+        "Boundary risk: Do not directly edit protected project-control files.",
+        "Verify that WFA tasks with dependencies show useful blocked reasons.",
+        "Verify that missing or unapproved Evolution Changes are explained clearly.",
+        "Verify that hints do not bypass confirmation gates.",
+        "Verify that suggested actions match the actual valid workflow path.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-045.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Add next-action hints for task rows and task focus sections.",
+        "Show why Prepare for Codex is unavailable, such as unmet dependencies, missing approved Change, invalid status, or another current task.",
+        "Show why Submit for Review is unavailable, such as task not in_progress or stale context/Codex state.",
+        "Show why Approve & Done is unavailable, such as task not in_review.",
+        "Show linked Evolution Change status when available.",
+        "Tasks page shows next-action hints for common pipeline states.",
+        "Unavailable actions show a clear reason instead of disappearing silently.",
+        "Tasks blocked by dependencies show which dependencies are not done."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-045"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T11:00:27Z",
+      "approval_notes": "Approved for WFA-14 Next Action and Blocked Reason Hints. Must explain unavailable actions, stale context, missing Change, dependency blockers, and preserve confirmation gates.",
+      "accepted_by": "",
+      "accepted_at": "",
+      "acceptance_notes": "",
+      "notes": [],
+      "priority": 1,
+      "order": 24,
+      "created_at": "2026-06-19T11:00:05Z",
+      "updated_at": "2026-06-19T11:00:27Z"
     }
   ]
 }

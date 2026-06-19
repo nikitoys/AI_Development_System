@@ -53,9 +53,9 @@ Control Layer
   Release
 ```
 
-The first MVP implements only the Planning Layer through `planctl.py`.
+The first MVP implemented only the Planning Layer through `planctl.py`.
 
-Later versions should add Task, Prompt, Execution, Review, QA, Decision and Change control.
+Current self-hosted control also implements Task, Current Task, Prompt Package, Context Pack, Codex execution prompt/status, Documentation Control and Evolution Change Proposal control through the domain CLIs and `aictl.py` facade. Execution Session, Review, QA, Decision and Release control remain future or partial domains until approved evolution adds them.
 
 ## Self-Hosted Project Scope
 
@@ -1098,9 +1098,9 @@ Release is packaging and tracking state.
 
 ---
 
-# MVP Boundary
+# Current Implementation Boundary
 
-The first MVP implements only:
+The first MVP implemented:
 
 ```text
 Project
@@ -1111,21 +1111,29 @@ Initiative
 Epic
 ```
 
-The first MVP does not implement:
+Current self-hosted control also implements:
 
 ```text
 Task
 Current Task
 Prompt Package
+Context Pack
+Codex prompt/status
+Documentation Control
+Change Proposal
+```
+
+Current self-hosted control does not yet fully implement:
+
+```text
 Execution Session
 Review
 QA Result
 Decision
-Change Proposal
 Release
 ```
 
-These are future controlled domains.
+These require approved evolution before they become controlled state domains.
 
 ---
 

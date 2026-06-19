@@ -2,13 +2,19 @@
 
 ## Status
 
-Draft
+Review
 
 ## Purpose
 
 This guide explains how to use Project Control Gateway in daily work.
 
-It is practical by design. Use it when you need to decide which CLI owns a change, when a Task is required, how `CODEX_PROMPT.md` fits into execution, or what Codex must never edit manually.
+It is practical by design. Use it when you need to decide which CLI owns a change, when a Task is required, how `CODEX_PROMPT.md` fits into execution, how the local Web Control Center stays safe, or what Codex must never edit manually.
+
+For a short owner-facing command path, start with:
+
+```text
+ai-system/project-control/10-owner-quickstart.md
+```
 
 Core rule:
 
@@ -39,6 +45,7 @@ AI_PROJECT/generated/**
 Use the CLI that owns the domain:
 
 ```text
+aictl.py       preferred facade for discovery, health checks, supported commands and web
 planctl.py      Initiative, Epic, project plan
 taskctl.py      executable Task, current Task, CODEX_PROMPT.md
 codexctl.py     current Codex execution package and optional Context Pack inclusion
@@ -77,6 +84,78 @@ Generated Markdown is context for humans and AI agents. It must not be treated a
 Context Packs are generated retrieval context. They help focus reading, but they do not replace Task state, source documents or Human Owner decisions.
 
 ## CLI Responsibilities
+
+## `aictl.py`
+
+Use `aictl.py` as the preferred owner and Codex-facing facade for command discovery, common project-control commands, project health checks, generated view rendering, Context Pack builds, Codex prompt builds and the local Web Control Center.
+
+Common commands:
+
+```bash
+python scripts/aictl.py command list
+python scripts/aictl.py command describe task.transition
+python scripts/aictl.py workflow list
+python scripts/aictl.py workflow describe task.prepare_for_codex
+python scripts/aictl.py task list --current
+python scripts/aictl.py task show CTL-12
+python scripts/aictl.py task create --confirm --epic EPIC-005 --title "Bounded Task Title"
+python scripts/aictl.py task import --file tasks.json --preview
+python scripts/aictl.py current set CTL-12
+python scripts/aictl.py task transition CTL-12 --to in_review
+python scripts/aictl.py context build --task CTL-12 --write
+python scripts/aictl.py codex prompt build --task CTL-12 --with-context
+python scripts/aictl.py workflow run task.prepare_for_codex --task CTL-12 --confirm
+python scripts/aictl.py workflow run task.submit_for_review --task CTL-12 --confirm
+python scripts/aictl.py project doctor
+python scripts/aictl.py project render
+python scripts/aictl.py web --host 127.0.0.1 --port 8765
+```
+
+Use `--json` when another tool needs machine-readable output:
+
+```bash
+python scripts/aictl.py --json command list
+python scripts/aictl.py --json project doctor
+```
+
+`aictl.py` does not replace domain ownership. If a needed command is not exposed by the facade parser, use the owning legacy script and keep the same protected-file rules. For example, use `docctl.py` for document registry state, `evolutionctl.py` for Change Proposals and detailed evolution gates, and `taskctl.py` for task creation or task validation commands that are not exposed through `aictl.py`.
+
+The command registry may describe commands that are implemented by a legacy script before they are exposed as an `aictl.py` subcommand. In that case, command discovery tells you the owner and safety metadata; execution still uses the available facade command or the listed legacy command.
+
+## Workflow Automation
+
+Workflow automation is exposed through `aictl.py workflow`.
+
+Use it for multi-step owner-facing operations that already have a registered command contract:
+
+```bash
+python scripts/aictl.py workflow list
+python scripts/aictl.py workflow describe task.prepare_for_codex
+python scripts/aictl.py workflow describe task.refresh_execution_context
+python scripts/aictl.py workflow describe task.submit_for_review
+python scripts/aictl.py workflow describe task.close_reviewed
+python scripts/aictl.py workflow describe evolution.create_for_task
+```
+
+Run workflows only with explicit confirmation:
+
+```bash
+python scripts/aictl.py workflow run task.prepare_for_codex --task CTL-12 --confirm
+python scripts/aictl.py workflow run task.refresh_execution_context --task CTL-12 --confirm
+python scripts/aictl.py workflow run task.submit_for_review --task CTL-12 --confirm
+python scripts/aictl.py workflow run task.close_reviewed --task CTL-12 --notes "APPROVED by Human Owner" --confirm
+python scripts/aictl.py workflow run evolution.create_for_task --task CTL-12 --confirm
+```
+
+`task.prepare_for_codex` sets current Task, validates task state and graph, moves the Task to `in_progress` when needed, builds task context, builds the Codex prompt with context and runs `project doctor`.
+
+`task.refresh_execution_context` rebuilds the task Context Pack and Codex prompt package without changing task lifecycle.
+
+`task.submit_for_review` runs blocking task, context, evolution and protected-file checks before moving the Task to `in_review`.
+
+`task.close_reviewed` is an owner-facing close helper. It requires approval notes, rejects Tasks outside `in_review`, delegates approval to `taskctl.py task approve` and then transitions the Task to `done`.
+
+`evolution.create_for_task` drafts an Evolution Change from a selected Task, adds derived affected files, risks and impact, links the Task, validates evolution state and moves the Change only to `ready`. It does not approve or accept the Change.
 
 ## `planctl.py`
 
@@ -266,6 +345,86 @@ Default retrieval excludes generated, inactive, archived, deprecated, template a
 
 Context Packs must never expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task, the Task remains authoritative.
 
+## Legacy Scripts Versus `aictl.py`
+
+Prefer `aictl.py` for:
+
+```text
+command discovery
+project doctor
+local Web Control Center
+supported task list/show/transition commands
+current task set/clear
+Context Pack build
+Codex prompt build
+project render
+```
+
+Use legacy domain scripts for:
+
+```text
+plan mutations not exposed through aictl.py
+advanced task mutations and detailed task validation
+documentation registry changes
+evolution Change Proposal approval gates
+domain-specific audit and generated-output checks
+commands explicitly required by a Task or lifecycle document
+```
+
+Do not use direct file edits to work around a missing facade command. Use the owning CLI or report an unsupported operation.
+
+## Web Control Center
+
+Run the local Web Control Center with:
+
+```bash
+python scripts/aictl.py web --host 127.0.0.1 --port 8765
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8765/
+```
+
+The Web Control Center is a local loopback surface. Read views display dashboard state, tasks, epics, review information, recent events, generated output previews, project doctor results, command metadata and available actions.
+
+Controlled write actions are submitted only through confirmed `POST` requests to `/actions`. Web route handlers must not edit protected files directly. A Web write action must route through a registered command, delegate through `aictl.py`, and rely on the owning CLI for validation, audit events and generated-output updates.
+
+Current controlled Web actions:
+
+```text
+task.create
+task.import
+task.transition
+current.set
+current.clear
+project.render
+context.build
+codex.prompt.build
+task.prepare_for_codex
+task.refresh_execution_context
+task.submit_for_review
+task.close_reviewed
+evolution.create_for_task
+evolution.accept_change
+epic.close_if_complete
+```
+
+Web task transitions are limited to non-acceptance statuses:
+
+```text
+planned
+ready
+in_progress
+blocked
+in_review
+changes_requested
+deferred
+```
+
+The Web surface must not approve tasks, move tasks to `done`, accept evolution changes, mark documents active, or directly edit `AI_PROJECT/state/**`, `AI_PROJECT/events/**` or `AI_PROJECT/generated/**`.
+
 ## When Do I Need A Task?
 
 Create a Task when the work can change repository files or controlled state.
@@ -304,9 +463,8 @@ Use this flow for ordinary controlled work:
 1. Inspect current status.
 
 ```bash
-python scripts/planctl.py status
-python scripts/taskctl.py status
-python scripts/docctl.py status
+python scripts/aictl.py task list --current
+python scripts/aictl.py project doctor
 ```
 
 2. Create or reuse an Initiative and Epic.
@@ -321,39 +479,101 @@ python scripts/planctl.py epic create --initiative INIT-001 --title "Documentati
 3. Create a bounded Task.
 
 ```bash
-python scripts/taskctl.py task create --epic EPIC-001 --title "Write Project Control Usage Guide" --scope "Create ai-system/project-control/08-usage-guide.md" --allowed-file "ai-system/project-control/08-usage-guide.md" --acceptance "Documentation validation passes"
+python scripts/aictl.py task create --confirm --epic EPIC-001 --title "Write Project Control Usage Guide" --scope "Create ai-system/project-control/08-usage-guide.md" --allowed-file "ai-system/project-control/08-usage-guide.md" --acceptance "Documentation validation passes"
 ```
 
-4. Select the Task and build the prompt package.
+4. Prepare the Task for Codex.
 
 ```bash
-python scripts/taskctl.py current set TASK-001
-python scripts/taskctl.py prompt build --write
+python scripts/aictl.py workflow run task.prepare_for_codex --task TASK-001 --confirm
 ```
 
-5. Execute only the Task scope.
-
-```bash
-python scripts/taskctl.py task transition TASK-001 --to in_progress
-```
+5. Execute only the Task scope from `AI_PROJECT/generated/CODEX_PROMPT.md`.
 
 6. Validate and submit for review.
 
 ```bash
-python scripts/planctl.py validate
-python scripts/planctl.py render
-python scripts/taskctl.py validate
-python scripts/taskctl.py render
-python scripts/taskctl.py check-generated
 python scripts/docctl.py validate
 python scripts/docctl.py render
 python scripts/docctl.py check-generated
-python scripts/taskctl.py task transition TASK-001 --to in_review
+python scripts/aictl.py workflow run task.submit_for_review --task TASK-001 --confirm
 ```
 
 7. Wait for Human Owner acceptance.
 
+If the Human Owner accepts the reviewed result, close it with explicit owner notes:
+
+```bash
+python scripts/aictl.py workflow run task.close_reviewed --task TASK-001 --notes "APPROVED by Human Owner" --confirm
+```
+
 Do not mark the Task approved, done or archived as accepted unless the Human Owner explicitly accepts the result.
+
+## Bulk Task Import
+
+Use bulk import only when each imported item is already a bounded Task, not an Epic or open-ended idea.
+
+Preview first:
+
+```bash
+python scripts/aictl.py task import --file tasks.json --preview
+python scripts/aictl.py task import --file tasks.json --confirm
+```
+
+Accepted JSON shapes are:
+
+```text
+single task object with epic and title
+array of task objects
+object with a tasks array
+```
+
+Task object fields are intentionally limited:
+
+```text
+epic
+title
+summary
+description
+priority
+status
+active_role
+active_stage
+active_document
+expected_result
+verification_mode
+scope
+out_of_scope
+allowed_file / allowed_files
+acceptance / acceptance_criteria
+review / review_instruction / review_instructions
+notes
+dependencies / depends_on
+dependency_reason
+```
+
+Example:
+
+```json
+{
+  "tasks": [
+    {
+      "epic": "EPIC-006",
+      "title": "Document workflow helper",
+      "summary": "Update owner-facing workflow docs.",
+      "scope": ["Update project-control guidance"],
+      "out_of_scope": ["No command behavior changes"],
+      "allowed_files": ["ai-system/project-control/08-usage-guide.md"],
+      "acceptance_criteria": ["Documentation validation passes"],
+      "dependencies": ["WFA-01"],
+      "verification_mode": "standard",
+      "status": "planned"
+    }
+  ]
+}
+```
+
+Bulk import rejects unknown fields, accepts only `proposed`, `planned` or `ready` status, validates Epic and dependency references before creating anything, and delegates each created Task to the same create-only workflow. It does not set current Task, start execution, approve Tasks or execute imported content.
 
 ## Writing Or Changing Documentation
 
@@ -409,6 +629,9 @@ AI_PROJECT/generated/CODEX_PROMPT.md
 Build it with:
 
 ```bash
+python scripts/aictl.py current set TASK-001
+python scripts/aictl.py codex prompt build --task TASK-001
+python scripts/aictl.py workflow run task.prepare_for_codex --task TASK-001 --confirm
 python scripts/taskctl.py current set TASK-001
 python scripts/taskctl.py prompt build --write
 ```
@@ -422,6 +645,8 @@ python scripts/codexctl.py build --task TASK-001
 If a Context Pack should be included, generate or refresh it first, then build the prompt with explicit context:
 
 ```bash
+python scripts/aictl.py context build --task TASK-001 --write
+python scripts/aictl.py codex prompt build --task TASK-001 --with-context
 python scripts/contextctl.py pack build --task TASK-001 --write
 python scripts/codexctl.py build --task TASK-001 --context-pack AI_PROJECT/generated/CONTEXT_PACK.md
 ```
@@ -470,6 +695,14 @@ python scripts/evolutionctl.py change transition CHG-001 --to ready
 ```
 
 Stop at `ready` until the Human Owner approves the Change Proposal.
+
+When a bounded Task already describes the intended system evolution, use the guided workflow to draft and prepare the Change Proposal:
+
+```bash
+python scripts/aictl.py workflow run evolution.create_for_task --task TASK-001 --confirm
+```
+
+This workflow stops at `ready`. It does not approve, accept or close the Change Proposal.
 
 ## Repair Generated Task Output
 
