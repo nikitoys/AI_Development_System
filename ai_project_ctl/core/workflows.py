@@ -25,7 +25,9 @@ READ_ONLY_CTL = "read_only_ctl"
 
 TASK_REVIEW_DECISION_REQUIRED_STATUS = "in_review"
 TASK_CLOSE_REQUIRED_STATUS = TASK_REVIEW_DECISION_REQUIRED_STATUS
+CHANGE_APPROVE_REQUIRED_STATUS = "ready"
 CHANGE_ACCEPTABLE_STATUSES = {"approved", "in_review"}
+CHANGE_REVIEWABLE_STATUSES = {"approved", "in_progress", "in_review"}
 CHANGE_DONE_TASK_STATUSES = {"done", "archived"}
 EPIC_CLOSED_TASK_STATUSES = {"done", "deferred", "archived"}
 EPIC_CLOSABLE_STATUSES = {"active", "done"}
@@ -235,7 +237,22 @@ def workflow_preview(
         change_preview = _derive_evolution_change(task)
     root_path = Path(root).resolve()
     python_bin = python_executable or sys.executable
-    if descriptor.name == "evolution.accept_change":
+    if descriptor.name == "evolution.approve_change":
+        steps = _build_change_approve_steps(
+            change,
+            root=root_path,
+            actor=actor,
+            python_executable=python_bin,
+            notes=notes,
+        )
+    elif descriptor.name == "evolution.move_to_review":
+        steps = _build_change_review_steps(
+            change,
+            root=root_path,
+            actor=actor,
+            python_executable=python_bin,
+        )
+    elif descriptor.name == "evolution.accept_change":
         steps = _build_change_accept_steps(
             change,
             root=root_path,
@@ -270,7 +287,12 @@ def workflow_preview(
         "change": change,
         "epic": epic,
         "notes_required": descriptor.name
-        in {"task.close_reviewed", "evolution.accept_change"},
+        in {
+            "task.close_reviewed",
+            "task.request_changes",
+            "evolution.approve_change",
+            "evolution.accept_change",
+        },
         "steps": [step.preview_dict() for step in steps],
     }
     if change_preview is not None:
@@ -675,6 +697,17 @@ class WorkflowExecutor:
     ) -> CommandResult:
         if descriptor.name == "evolution.create_for_task":
             return self._run_evolution_create_for_task(descriptor, task_ref=task_ref)
+        if descriptor.name == "evolution.approve_change":
+            return self._run_evolution_approve_change(
+                descriptor,
+                change_ref=change_ref,
+                notes=notes,
+            )
+        if descriptor.name == "evolution.move_to_review":
+            return self._run_evolution_move_to_review(
+                descriptor,
+                change_ref=change_ref,
+            )
         if descriptor.name == "evolution.accept_change":
             return self._run_evolution_accept_change(
                 descriptor,
@@ -912,6 +945,130 @@ class WorkflowExecutor:
             )
         )
         return result
+
+    def _run_evolution_approve_change(
+        self,
+        descriptor: WorkflowDescriptor,
+        *,
+        change_ref: str,
+        notes: str,
+    ) -> CommandResult:
+        try:
+            change = _load_change_context(self.root, change_ref)
+            error = _change_approve_preflight_error(change, notes)
+        except WorkflowError as exc:
+            change = {"id": change_ref, "status": ""}
+            error = exc
+
+        preflight = _local_check_step_result(
+            "change_approve_preflight",
+            "Check Change approval gates",
+            "evolution.approve_change.preflight",
+            error=error,
+        )
+        step_results = [preflight]
+        if error is not None:
+            return self._preflight_result(
+                descriptor,
+                task_ref="",
+                task={},
+                step_results=step_results,
+                error=error,
+                message="Workflow stopped before Evolution Change approval.",
+                extra_data={"change_ref": change_ref, "change": dict(change)},
+            )
+
+        steps = _build_change_approve_steps(
+            change,
+            root=self.root,
+            actor=self.actor,
+            python_executable=self.python_executable,
+            notes=notes,
+        )
+        for step in steps:
+            step_result = self._execute_step(step)
+            step_results.append(step_result)
+            if not step_result.ok and step.blocking:
+                return self._result(
+                    descriptor,
+                    task_ref="",
+                    task={},
+                    step_results=step_results,
+                    message="Workflow stopped on blocking step: {}".format(step.title),
+                    extra_data={"change_ref": change_ref, "change": dict(change)},
+                )
+
+        result = self._result(
+            descriptor,
+            task_ref="",
+            task={},
+            step_results=step_results,
+            message="Workflow completed. Evolution Change was approved through evolutionctl.py.",
+            extra_data={"change_ref": change_ref, "change": dict(change)},
+        )
+        result.owner_action_required = (
+            "Approved Change remains separate from implementation and acceptance; continue only through governed task/evolution workflows."
+        )
+        return result
+
+    def _run_evolution_move_to_review(
+        self,
+        descriptor: WorkflowDescriptor,
+        *,
+        change_ref: str,
+    ) -> CommandResult:
+        try:
+            change = _load_change_context(self.root, change_ref)
+            error = _change_review_preflight_error(change)
+        except WorkflowError as exc:
+            change = {"id": change_ref, "status": ""}
+            error = exc
+
+        preflight = _local_check_step_result(
+            "change_review_preflight",
+            "Check Change review gates",
+            "evolution.move_to_review.preflight",
+            error=error,
+        )
+        step_results = [preflight]
+        if error is not None:
+            return self._preflight_result(
+                descriptor,
+                task_ref="",
+                task={},
+                step_results=step_results,
+                error=error,
+                message="Workflow stopped before Evolution Change review transition.",
+                extra_data={"change_ref": change_ref, "change": dict(change)},
+            )
+
+        steps = _build_change_review_steps(
+            change,
+            root=self.root,
+            actor=self.actor,
+            python_executable=self.python_executable,
+        )
+        for step in steps:
+            step_result = self._execute_step(step)
+            step_results.append(step_result)
+            if not step_result.ok and step.blocking:
+                return self._result(
+                    descriptor,
+                    task_ref="",
+                    task={},
+                    step_results=step_results,
+                    message="Workflow stopped on blocking step: {}".format(step.title),
+                    extra_data={"change_ref": change_ref, "change": dict(change)},
+                )
+
+        return self._result(
+            descriptor,
+            task_ref="",
+            task={},
+            step_results=step_results,
+            message="Workflow completed. Evolution Change was moved toward review through evolutionctl.py.",
+            extra_data={"change_ref": change_ref, "change": dict(change)},
+        )
 
     def _run_evolution_accept_change(
         self,
@@ -1274,7 +1431,6 @@ def _workflow_descriptors() -> tuple[WorkflowDescriptor, ...]:
                 _template("task_validate", "Validate task state", "taskctl.validate", VALIDATED_CTL, "python scripts/taskctl.py validate"),
                 _template("task_graph", "Validate task graph", "taskctl.task.graph.validate", VALIDATED_CTL, "python scripts/taskctl.py task graph validate"),
                 _template("task_generated", "Check generated task output", "taskctl.check-generated", VALIDATED_CTL, "python scripts/taskctl.py check-generated"),
-                _template("protected", "Check protected project files", "protected.check", VALIDATED_CTL, "python scripts/check-protected-project-files.py --json"),
                 _template("doctor", "Run project doctor", "project.doctor", REGISTERED, "python scripts/aictl.py project doctor"),
                 _template("task_note", "Record change-request notes", "taskctl.task.add_note", VALIDATED_CTL, "python scripts/taskctl.py task add-note <TASK> --text <NOTES>"),
                 _template("task_changes_requested", "Move task to changes_requested", "task.transition", REGISTERED, "python scripts/aictl.py task transition <TASK> --to changes_requested"),
@@ -1303,6 +1459,58 @@ def _workflow_descriptors() -> tuple[WorkflowDescriptor, ...]:
                 _template("ready", "Move Change Proposal to ready", "evolutionctl.change.transition", VALIDATED_CTL, "python scripts/evolutionctl.py change transition <CHANGE> --to ready"),
                 _template("validate", "Validate evolution state", "evolutionctl.validate", VALIDATED_CTL, "python scripts/evolutionctl.py validate"),
                 _template("check_generated", "Check generated evolution output", "evolutionctl.check-generated", VALIDATED_CTL, "python scripts/evolutionctl.py check-generated"),
+            ),
+        ),
+        WorkflowDescriptor(
+            name="evolution.approve_change",
+            label="Approve Evolution Change",
+            description=(
+                "Approve a ready Evolution Change with explicit owner notes "
+                "through evolutionctl.py."
+            ),
+            confirmation_required=True,
+            arguments=(
+                {
+                    "name": "change",
+                    "description": "Evolution Change ID.",
+                    "required": True,
+                },
+                {
+                    "name": "notes",
+                    "description": "Required approval notes.",
+                    "required": True,
+                },
+            ),
+            steps=(
+                _template("preflight", "Check Change approval gates", "evolution.approve_change.preflight", READ_ONLY_CTL, "check change status and approval notes"),
+                _template("evolution_validate", "Validate evolution state", "evolutionctl.validate", VALIDATED_CTL, "python scripts/evolutionctl.py validate"),
+                _template("change_approve", "Approve Evolution Change", "evolutionctl.change.approve", VALIDATED_CTL, "python scripts/evolutionctl.py change approve <CHANGE> --notes <NOTES>"),
+                _template("evolution_validate_after", "Validate evolution state after approval", "evolutionctl.validate", VALIDATED_CTL, "python scripts/evolutionctl.py validate"),
+                _template("evolution_generated_after", "Check generated evolution output after approval", "evolutionctl.check-generated", VALIDATED_CTL, "python scripts/evolutionctl.py check-generated"),
+            ),
+        ),
+        WorkflowDescriptor(
+            name="evolution.move_to_review",
+            label="Move Evolution Change to review",
+            description=(
+                "Move an approved or in_progress Evolution Change toward "
+                "in_review through valid evolutionctl.py transitions."
+            ),
+            confirmation_required=True,
+            arguments=(
+                {
+                    "name": "change",
+                    "description": "Evolution Change ID.",
+                    "required": True,
+                },
+            ),
+            steps=(
+                _template("preflight", "Check Change review gates", "evolution.move_to_review.preflight", READ_ONLY_CTL, "check change status"),
+                _template("evolution_validate", "Validate evolution state", "evolutionctl.validate", VALIDATED_CTL, "python scripts/evolutionctl.py validate"),
+                _template("change_in_progress", "Move approved Change to in_progress if needed", "evolutionctl.change.transition", VALIDATED_CTL, "python scripts/evolutionctl.py change transition <CHANGE> --to in_progress"),
+                _template("change_in_review", "Move Change to in_review if needed", "evolutionctl.change.transition", VALIDATED_CTL, "python scripts/evolutionctl.py change transition <CHANGE> --to in_review"),
+                _template("evolution_validate_after", "Validate evolution state after review transition", "evolutionctl.validate", VALIDATED_CTL, "python scripts/evolutionctl.py validate"),
+                _template("evolution_generated_after", "Check generated evolution output after review transition", "evolutionctl.check-generated", VALIDATED_CTL, "python scripts/evolutionctl.py check-generated"),
             ),
         ),
         WorkflowDescriptor(
@@ -1511,7 +1719,6 @@ def _build_steps(
                 _ctl_step("task_validate", "Validate task state", "taskctl.validate", "taskctl.py", root, actor, python_executable, "validate"),
                 _ctl_step("task_graph", "Validate task graph", "taskctl.task.graph.validate", "taskctl.py", root, actor, python_executable, "task", "graph", "validate"),
                 _ctl_step("task_generated", "Check generated task output", "taskctl.check-generated", "taskctl.py", root, actor, python_executable, "check-generated"),
-                _protected_step(root, python_executable),
                 _aictl_step("doctor", "Run project doctor", "project.doctor", root, actor, python_executable, "project", "doctor"),
                 _ctl_step("task_note", "Record change-request notes", "taskctl.task.add_note", "taskctl.py", root, actor, python_executable, "task", "add-note", task_id, "--text", notes),
                 _aictl_step("task_changes_requested", "Move task to changes_requested", "task.transition", root, actor, python_executable, "task", "transition", task_id, "--to", "changes_requested"),
@@ -1545,6 +1752,140 @@ def _build_steps(
         return steps
 
     raise WorkflowError("WORKFLOW_NOT_FOUND", "Unknown workflow: {}".format(workflow_name))
+
+
+def _build_change_approve_steps(
+    change: Mapping[str, Any],
+    *,
+    root: Path,
+    actor: str,
+    python_executable: str,
+    notes: str,
+) -> list[WorkflowStep]:
+    change_id = str(change.get("id") or "<change>")
+    return [
+        _ctl_step(
+            "evolution_validate",
+            "Validate evolution state",
+            "evolutionctl.validate",
+            "evolutionctl.py",
+            root,
+            actor,
+            python_executable,
+            "validate",
+        ),
+        _ctl_step(
+            "change_approve",
+            "Approve Evolution Change",
+            "evolutionctl.change.approve",
+            "evolutionctl.py",
+            root,
+            actor,
+            python_executable,
+            "change",
+            "approve",
+            change_id,
+            "--notes",
+            notes,
+        ),
+        _ctl_step(
+            "evolution_validate_after",
+            "Validate evolution state after approval",
+            "evolutionctl.validate",
+            "evolutionctl.py",
+            root,
+            actor,
+            python_executable,
+            "validate",
+        ),
+        _ctl_step(
+            "evolution_generated_after",
+            "Check generated evolution output after approval",
+            "evolutionctl.check-generated",
+            "evolutionctl.py",
+            root,
+            actor,
+            python_executable,
+            "check-generated",
+        ),
+    ]
+
+
+def _build_change_review_steps(
+    change: Mapping[str, Any],
+    *,
+    root: Path,
+    actor: str,
+    python_executable: str,
+) -> list[WorkflowStep]:
+    change_id = str(change.get("id") or "<change>")
+    status = str(change.get("status") or "")
+    return [
+        _ctl_step(
+            "evolution_validate",
+            "Validate evolution state",
+            "evolutionctl.validate",
+            "evolutionctl.py",
+            root,
+            actor,
+            python_executable,
+            "validate",
+        ),
+        _ctl_step(
+            "change_in_progress",
+            "Move approved Change to in_progress",
+            "evolutionctl.change.transition",
+            "evolutionctl.py",
+            root,
+            actor,
+            python_executable,
+            "change",
+            "transition",
+            change_id,
+            "--to",
+            "in_progress",
+            skip_reason=(
+                "Change is already in_progress or in_review."
+                if status in {"in_progress", "in_review"}
+                else ""
+            ),
+        ),
+        _ctl_step(
+            "change_in_review",
+            "Move Change to in_review",
+            "evolutionctl.change.transition",
+            "evolutionctl.py",
+            root,
+            actor,
+            python_executable,
+            "change",
+            "transition",
+            change_id,
+            "--to",
+            "in_review",
+            skip_reason="Change is already in_review." if status == "in_review" else "",
+        ),
+        _ctl_step(
+            "evolution_validate_after",
+            "Validate evolution state after review transition",
+            "evolutionctl.validate",
+            "evolutionctl.py",
+            root,
+            actor,
+            python_executable,
+            "validate",
+        ),
+        _ctl_step(
+            "evolution_generated_after",
+            "Check generated evolution output after review transition",
+            "evolutionctl.check-generated",
+            "evolutionctl.py",
+            root,
+            actor,
+            python_executable,
+            "check-generated",
+        ),
+    ]
 
 
 def _build_change_accept_steps(
@@ -2453,6 +2794,14 @@ def _load_change_accept_context(
     return change, tasks
 
 
+def _load_change_context(
+    root: Path,
+    change_ref: str,
+) -> dict[str, Any]:
+    evolution = _load_json_state(root, "evolution.json", expected_list="changes")
+    return _find_change(evolution.get("changes", []), change_ref)
+
+
 def _load_epic_close_context(
     root: Path,
     epic_ref: str,
@@ -2585,7 +2934,11 @@ def _workflow_target_error(
             "Workflow requires --task.",
             details={"workflow": workflow_name},
         )
-    if workflow_name == "evolution.accept_change" and not change_ref:
+    if workflow_name in {
+        "evolution.approve_change",
+        "evolution.move_to_review",
+        "evolution.accept_change",
+    } and not change_ref:
         return WorkflowError(
             "WORKFLOW_CHANGE_REQUIRED",
             "Workflow requires --change.",
@@ -2668,6 +3021,47 @@ def _task_request_changes_preflight_step_result(
         "task.request_changes.preflight",
         error=_task_request_changes_preflight_error(task, notes),
     )
+
+
+def _change_approve_preflight_error(
+    change: Mapping[str, Any],
+    notes: str,
+) -> WorkflowError | None:
+    if not notes.strip():
+        return WorkflowError(
+            "WORKFLOW_CHANGE_APPROVAL_NOTES_REQUIRED",
+            "Approving an Evolution Change requires non-empty approval notes.",
+            details={"change": str(change.get("id") or "")},
+        )
+    status = str(change.get("status") or "")
+    if status != CHANGE_APPROVE_REQUIRED_STATUS:
+        return WorkflowError(
+            "WORKFLOW_CHANGE_NOT_READY",
+            "Evolution Change must be ready before approval.",
+            details={
+                "change": str(change.get("id") or ""),
+                "status": status,
+                "required_status": CHANGE_APPROVE_REQUIRED_STATUS,
+            },
+        )
+    return None
+
+
+def _change_review_preflight_error(
+    change: Mapping[str, Any],
+) -> WorkflowError | None:
+    status = str(change.get("status") or "")
+    if status not in CHANGE_REVIEWABLE_STATUSES:
+        return WorkflowError(
+            "WORKFLOW_CHANGE_NOT_REVIEWABLE",
+            "Evolution Change must be approved, in_progress, or in_review before moving to review.",
+            details={
+                "change": str(change.get("id") or ""),
+                "status": status,
+                "allowed_statuses": sorted(CHANGE_REVIEWABLE_STATUSES),
+            },
+        )
+    return None
 
 
 def _change_accept_preflight_error(
@@ -3167,6 +3561,7 @@ def _ctl_step(
     actor: str,
     python_executable: str,
     *args: str,
+    skip_reason: str = "",
 ) -> WorkflowStep:
     return WorkflowStep(
         step_id=step_id,
@@ -3182,6 +3577,7 @@ def _ctl_step(
             actor,
             *args,
         ),
+        skip_reason=skip_reason,
     )
 
 

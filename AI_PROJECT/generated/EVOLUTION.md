@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `577`
-Changes: `22`
+Revision: `647`
+Changes: `24`
 
 ## Summary
 
-- `accepted`: 21
-- `approved`: 1
+- `accepted`: 22
+- `approved`: 2
 
 ## Changes
 
@@ -1320,3 +1320,137 @@ Impact:
 Linked tasks:
 
 - TASK-044
+
+### CHG-023 — UIX-04 Add Evolution management UI tab
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-10 requires an explicit Evolution Change Proposal before implementation: Add an Evolution tab to view and manage Change Proposals, including create-for-task, approve, move to review, and accept actions with confirmation.
+
+Proposal:
+
+Implement the bounded task scope: Add an Evolution tab/page.; List Change Proposals with status, type, title, linked tasks, affected files, risks, and approval/acceptance state.; Add filters by status and type.; Add action to create Change for selected task using existing evolution.create_for_task workflow.; Add action to approve a ready Change with explicit confirmation.; Add action to move approved Change to in_progress/in_review where valid.; Add action to accept a Change only when linked-task rules pass.; Show clear errors for invalid transitions.; Route all mutations through existing governed commands/workflows.
+
+Rationale:
+
+Make Evolution Change Flow manageable from the Web Control Center while preserving Human Owner approval gates and linked-task completion checks.
+
+Approved by: `human_owner` at `2026-06-19T10:29:32Z`  
+Approval notes: Approved for WFA-10 Evolution Management UI Tab. Must expose create/approve/accept Change actions through governed workflows, require explicit confirmation, and preserve Human Owner approval gates.  
+
+Accepted by: `human_owner` at `2026-06-19T10:51:20Z`  
+Acceptance notes: Accepted after WFA-10 review. Evolution management UI implemented and verified.  
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/core/workflows.py if evolution workflow metadata needs compatible updates
+- ai_project_ctl/core/registry.py if evolution command metadata needs compatible updates
+- scripts/aictl.py if evolution action routing needs compatible updates
+- tests/test_web_control_center.py
+- tests/test_workflows.py
+- tests/test_aictl.py
+- tests/test_registry.py
+
+Risks:
+
+- Boundary risk: Do not auto-approve Change Proposals.
+- Boundary risk: Do not auto-accept Change Proposals.
+- Boundary risk: Do not bypass linked-task completion checks.
+- Boundary risk: Do not change evolution lifecycle rules.
+- Boundary risk: Do not directly edit AI_PROJECT/state/evolution.json or evolution events.
+- Verify that approval and acceptance remain explicit Human Owner actions.
+- Verify that accepted Changes cannot link incomplete tasks.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-041.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add an Evolution tab/page.
+- List Change Proposals with status, type, title, linked tasks, affected files, risks, and approval/acceptance state.
+- Add filters by status and type.
+- Add action to create Change for selected task using existing evolution.create_for_task workflow.
+- Add action to approve a ready Change with explicit confirmation.
+- Evolution tab lists Change Proposals with useful metadata.
+- Evolution tab can filter by status and type.
+- Owner can create a Change for a task through the existing wizard.
+
+Linked tasks:
+
+- TASK-041
+
+### CHG-024 — UIX-08 Add Next Action and Blocked Reason Hints
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-14 requires an explicit Evolution Change Proposal before implementation: Show actionable next steps and blocked reasons for tasks, changes, and epics in the Web Control Center.
+
+Proposal:
+
+Implement the bounded task scope: Add next-action hints for task rows and task focus sections.; Show why Prepare for Codex is unavailable, such as unmet dependencies, missing approved Change, invalid status, or another current task.; Show why Submit for Review is unavailable, such as task not in_progress or stale context/Codex state.; Show why Approve & Done is unavailable, such as task not in_review.; Show linked Evolution Change status when available.; Show suggested actions such as Create Change, Approve Change, Prepare for Codex, Refresh Context, Submit for Review, Approve & Done, Accept Change, or Close Epic.; Add blocked reason hints for Evolution actions where useful.; Add blocked reason hints for epic close where useful.; Keep hints read-only; actual writes must remain separate confirmed actions.; Add tests for dependency-blocked tasks, missing Change, invalid status actions, and next action suggestions.
+
+Rationale:
+
+Improve the UI pipeline by explaining what the owner can do next and why an action is unavailable. The Tasks page should not silently hide important actions without showing dependency, lifecycle, current-task, or Evolution Change reasons.
+
+Approved by: `human_owner` at `2026-06-19T11:00:27Z`  
+Approval notes: Approved for WFA-14 Next Action and Blocked Reason Hints. Must explain unavailable actions, stale context, missing Change, dependency blockers, and preserve confirmation gates.  
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py if action metadata needs compatible updates
+- ai_project_ctl/core/workflows.py if workflow metadata needs compatible updates
+- ai_project_ctl/core/registry.py if command metadata needs compatible updates
+- tests/test_web_control_center.py
+- tests/test_workflows.py
+- tests/test_registry.py
+
+Risks:
+
+- Boundary risk: Do not auto-run any suggested action.
+- Boundary risk: Do not auto-create or auto-approve Evolution Changes.
+- Boundary risk: Do not auto-close tasks or epics.
+- Boundary risk: Do not weaken lifecycle gates.
+- Boundary risk: Do not introduce arbitrary command execution.
+- Boundary risk: Do not directly edit protected project-control files.
+- Verify that WFA tasks with dependencies show useful blocked reasons.
+- Verify that missing or unapproved Evolution Changes are explained clearly.
+- Verify that hints do not bypass confirmation gates.
+- Verify that suggested actions match the actual valid workflow path.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-045.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add next-action hints for task rows and task focus sections.
+- Show why Prepare for Codex is unavailable, such as unmet dependencies, missing approved Change, invalid status, or another current task.
+- Show why Submit for Review is unavailable, such as task not in_progress or stale context/Codex state.
+- Show why Approve & Done is unavailable, such as task not in_review.
+- Show linked Evolution Change status when available.
+- Tasks page shows next-action hints for common pipeline states.
+- Unavailable actions show a clear reason instead of disappearing silently.
+- Tasks blocked by dependencies show which dependencies are not done.
+
+Linked tasks:
+
+- TASK-045

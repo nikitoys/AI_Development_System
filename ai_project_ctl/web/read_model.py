@@ -17,7 +17,15 @@ from typing import Any, Mapping, Sequence
 from ai_project_ctl.core.paths import ProjectPaths
 from ai_project_ctl.core.registry import command_describe, command_list
 from ai_project_ctl.core.result import CommandError
-from ai_project_ctl.core.workflows import workflow_list
+from ai_project_ctl.core.workflows import (
+    CHANGE_ACCEPTABLE_STATUSES,
+    CHANGE_APPROVE_REQUIRED_STATUS,
+    CHANGE_DONE_TASK_STATUSES,
+    CHANGE_REVIEWABLE_STATUSES,
+    EPIC_CLOSED_TASK_STATUSES,
+    EPIC_CLOSABLE_STATUSES,
+    workflow_list,
+)
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[2]
@@ -55,6 +63,9 @@ EXECUTABLE_QUEUE_STATUSES = (
     "in_review",
     "changes_requested",
 )
+TASK_PREPARE_STATUSES = {"planned", "ready", "changes_requested"}
+TASK_DEPENDENCY_SATISFIED_STATUSES = {"done"}
+TASK_APPROVED_CHANGE_STATUSES = {"approved", "in_review", "accepted"}
 
 
 class WebControlError(CommandError):
@@ -166,6 +177,13 @@ def _initiative_sort_key(initiative: Mapping[str, Any]) -> tuple[int, str]:
     )
 
 
+def _change_sort_key(change: Mapping[str, Any]) -> tuple[int, str]:
+    return (
+        int(change.get("order") or 0),
+        str(change.get("id") or ""),
+    )
+
+
 class ReadOnlyProjectModel:
     """Build page data without writing protected project-control files."""
 
@@ -198,6 +216,21 @@ class ReadOnlyProjectModel:
         current_task = self.current_task(tasks)
         initiatives = self.initiatives()
         epics = self.epics()
+        changes = self.changes()
+        execution = self.execution_status()
+        tasks_revision = self._state_revision("tasks.json")
+        docs_revision = self._state_revision("docs.json")
+        tasks = task_hints(
+            tasks,
+            current_task=current_task,
+            changes=changes,
+            execution=execution,
+            tasks_revision=tasks_revision,
+            docs_revision=docs_revision,
+        )
+        current_task = _enriched_current_task(current_task, tasks)
+        epics = epic_hints(epics, tasks)
+        changes = change_hints(changes, tasks)
         doctor = self.doctor(refresh=refresh_doctor)
         generated = self.generated_views()
         events = self.audit_events(last=5) if include_events else []
@@ -211,7 +244,12 @@ class ReadOnlyProjectModel:
             "initiatives": initiatives,
             "epics": epics,
             "epic_counts": dict(Counter(epic.get("status", "unknown") for epic in epics)),
+            "changes": changes,
+            "change_counts": dict(
+                Counter(change.get("status", "unknown") for change in changes)
+            ),
             "doctor": doctor,
+            "execution": execution,
             "generated": generated,
             "events": events,
             "events_loaded": include_events,
@@ -269,6 +307,38 @@ class ReadOnlyProjectModel:
             [dict(initiative) for initiative in initiatives if isinstance(initiative, dict)],
             key=_initiative_sort_key,
         )
+
+    def changes(self) -> list[dict[str, Any]]:
+        try:
+            state = self._state_json("evolution.json")
+        except WebControlError as exc:
+            if exc.code == "WEB_STATE_FILE_MISSING":
+                return []
+            raise
+        changes = state.get("changes")
+        if not isinstance(changes, list):
+            return []
+        return sorted(
+            [dict(change) for change in changes if isinstance(change, dict)],
+            key=_change_sort_key,
+        )
+
+    def execution_status(self) -> dict[str, Any]:
+        try:
+            return self._state_json("current_execution.json")
+        except WebControlError as exc:
+            if exc.code == "WEB_STATE_FILE_MISSING":
+                return {
+                    "status": "missing",
+                    "code": "CODEX_STATUS_MISSING",
+                    "prompt_exists": False,
+                    "source_type": "",
+                    "source_id": "",
+                    "source_status": "",
+                    "blocked_reason": "No current Codex prompt state exists.",
+                    "context_pack": {},
+                }
+            raise
 
     def doctor(self, *, refresh: bool = False) -> dict[str, Any]:
         if refresh:
@@ -352,6 +422,15 @@ class ReadOnlyProjectModel:
                 details={"path": str(path)},
             )
         return payload
+
+    def _state_revision(self, name: str) -> int | None:
+        try:
+            revision = self._state_json(name).get("revision")
+        except WebControlError as exc:
+            if exc.code == "WEB_STATE_FILE_MISSING":
+                return None
+            raise
+        return int(revision) if isinstance(revision, int) else None
 
     def executable_queue(
         self,
@@ -477,3 +556,589 @@ def _read_text(path: Path) -> str:
         return path.read_text(encoding="utf-8")
     except (FileNotFoundError, UnicodeDecodeError):
         return ""
+
+
+def task_hints(
+    tasks: Sequence[Mapping[str, Any]],
+    *,
+    current_task: Mapping[str, Any],
+    changes: Sequence[Mapping[str, Any]],
+    execution: Mapping[str, Any],
+    tasks_revision: int | None,
+    docs_revision: int | None,
+) -> list[dict[str, Any]]:
+    tasks_by_ref = _tasks_by_ref(tasks)
+    enriched = []
+    for task in tasks:
+        item = dict(task)
+        item["pipeline_hints"] = _task_pipeline_hints(
+            item,
+            tasks_by_ref=tasks_by_ref,
+            current_task=current_task,
+            changes=changes,
+            execution=execution,
+            tasks_revision=tasks_revision,
+            docs_revision=docs_revision,
+        )
+        enriched.append(item)
+    return enriched
+
+
+def change_hints(
+    changes: Sequence[Mapping[str, Any]],
+    tasks: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    tasks_by_ref = _tasks_by_ref(tasks)
+    enriched = []
+    for change in changes:
+        item = dict(change)
+        item["pipeline_hints"] = _change_pipeline_hints(item, tasks_by_ref)
+        enriched.append(item)
+    return enriched
+
+
+def epic_hints(
+    epics: Sequence[Mapping[str, Any]],
+    tasks: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    enriched = []
+    for epic in epics:
+        item = dict(epic)
+        child_tasks = [
+            task
+            for task in tasks
+            if str(task.get("epic_id") or "") == str(epic.get("id") or "")
+        ]
+        item["pipeline_hints"] = _epic_pipeline_hints(item, child_tasks)
+        enriched.append(item)
+    return enriched
+
+
+def _task_pipeline_hints(
+    task: Mapping[str, Any],
+    *,
+    tasks_by_ref: Mapping[str, Mapping[str, Any]],
+    current_task: Mapping[str, Any],
+    changes: Sequence[Mapping[str, Any]],
+    execution: Mapping[str, Any],
+    tasks_revision: int | None,
+    docs_revision: int | None,
+) -> dict[str, Any]:
+    status = str(task.get("status") or "unknown")
+    blockers = _blocking_dependencies(task, tasks_by_ref)
+    linked_changes = _linked_changes_for_task(task, changes)
+    requires_change = _task_requires_change(task, linked_changes)
+    change_blocker = _task_change_blocker(requires_change, linked_changes)
+    current_blocker = _current_task_blocker(task, current_task)
+    context_reason = _execution_stale_reason(
+        task,
+        execution,
+        tasks_revision=tasks_revision,
+        docs_revision=docs_revision,
+    )
+
+    prepare_reasons = []
+    if status not in TASK_PREPARE_STATUSES:
+        prepare_reasons.append("task status is {}".format(status))
+    prepare_reasons.extend(blockers)
+    if change_blocker:
+        prepare_reasons.append(change_blocker)
+    if current_blocker:
+        prepare_reasons.append(current_blocker)
+
+    submit_reasons = []
+    if status != "in_progress":
+        submit_reasons.append("task status is {}".format(status))
+    elif context_reason:
+        submit_reasons.append(context_reason)
+
+    close_reasons = []
+    if status != "in_review":
+        close_reasons.append("task status is {}".format(status))
+
+    refresh_available = status == "in_progress" or (
+        status == "in_review"
+        and bool(context_reason)
+        and _is_same_task(task, current_task)
+    )
+    refresh_reason = ""
+    if not refresh_available:
+        if status not in {"in_progress", "in_review"}:
+            refresh_reason = "task status is {}".format(status)
+        elif not _is_same_task(task, current_task):
+            refresh_reason = current_blocker or "no current task is selected"
+        else:
+            refresh_reason = "execution context is ready"
+
+    actions = [
+        _action_hint(
+            "Create Change",
+            "evolution.create_for_task",
+            requires_change and not linked_changes,
+            _create_change_reason(requires_change, linked_changes),
+        ),
+        _action_hint(
+            "Approve Change",
+            "evolution.approve_change",
+            any(str(change.get("status") or "") == "ready" for change in linked_changes),
+            _approve_change_reason(requires_change, linked_changes),
+        ),
+        _action_hint(
+            "Prepare for Codex",
+            "task.prepare_for_codex",
+            not prepare_reasons,
+            "; ".join(prepare_reasons),
+        ),
+        _action_hint(
+            "Refresh Context",
+            "task.refresh_execution_context",
+            refresh_available,
+            refresh_reason,
+        ),
+        _action_hint(
+            "Submit for Review",
+            "task.submit_for_review",
+            not submit_reasons,
+            "; ".join(submit_reasons),
+        ),
+        _action_hint(
+            "Approve & Done",
+            "task.close_reviewed",
+            not close_reasons,
+            "; ".join(close_reasons),
+        ),
+        _action_hint(
+            "Accept Change",
+            "evolution.accept_change",
+            status == "done"
+            and any(
+                str(change.get("status") or "") in CHANGE_ACCEPTABLE_STATUSES
+                for change in linked_changes
+            ),
+            _task_accept_change_reason(status, linked_changes, requires_change),
+        ),
+    ]
+    blocked_reasons = [
+        "{} unavailable: {}".format(action["label"], action["reason"])
+        for action in actions
+        if not action["available"] and action["reason"]
+    ]
+    next_actions = _task_next_actions(
+        task,
+        actions,
+        linked_changes,
+        requires_change=requires_change,
+        context_reason=context_reason,
+    )
+    return {
+        "next_actions": next_actions,
+        "blocked_reasons": blocked_reasons,
+        "actions": actions,
+        "dependencies": {
+            "blocked": bool(blockers),
+            "blocking": blockers,
+        },
+        "linked_changes": [_change_summary(change) for change in linked_changes],
+        "requires_evolution_change": requires_change,
+        "context": {
+            "stale": bool(context_reason),
+            "reason": context_reason,
+        },
+    }
+
+
+def _change_pipeline_hints(
+    change: Mapping[str, Any],
+    tasks_by_ref: Mapping[str, Mapping[str, Any]],
+) -> dict[str, Any]:
+    status = str(change.get("status") or "unknown")
+    linked_task_reasons = _change_linked_task_blockers(change, tasks_by_ref)
+    approve_reason = (
+        "" if status == CHANGE_APPROVE_REQUIRED_STATUS else "change status is {}".format(status)
+    )
+    move_reason = (
+        ""
+        if status in CHANGE_REVIEWABLE_STATUSES and status != "in_review"
+        else "change status is {}".format(status)
+    )
+    accept_reasons = []
+    if status not in CHANGE_ACCEPTABLE_STATUSES:
+        accept_reasons.append("change status is {}".format(status))
+    accept_reasons.extend(linked_task_reasons)
+    actions = [
+        _action_hint(
+            "Approve Change",
+            "evolution.approve_change",
+            status == CHANGE_APPROVE_REQUIRED_STATUS,
+            approve_reason,
+        ),
+        _action_hint(
+            "Move to Review",
+            "evolution.move_to_review",
+            status in CHANGE_REVIEWABLE_STATUSES and status != "in_review",
+            move_reason,
+        ),
+        _action_hint(
+            "Accept Change",
+            "evolution.accept_change",
+            status in CHANGE_ACCEPTABLE_STATUSES and not linked_task_reasons,
+            "; ".join(accept_reasons),
+        ),
+    ]
+    blocked_reasons = [
+        "{} unavailable: {}".format(action["label"], action["reason"])
+        for action in actions
+        if not action["available"] and action["reason"]
+    ]
+    return {
+        "next_actions": [action["label"] for action in actions if action["available"]],
+        "blocked_reasons": blocked_reasons,
+        "actions": actions,
+        "linked_task_blockers": linked_task_reasons,
+    }
+
+
+def _epic_pipeline_hints(
+    epic: Mapping[str, Any],
+    child_tasks: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    status = str(epic.get("status") or "unknown")
+    blockers = []
+    if status not in EPIC_CLOSABLE_STATUSES:
+        blockers.append("epic status is {}".format(status))
+    for task in child_tasks:
+        task_status = str(task.get("status") or "unknown")
+        if task_status not in EPIC_CLOSED_TASK_STATUSES:
+            blockers.append("{} status is {}".format(_task_display_ref(task), task_status))
+    action = _action_hint(
+        "Close Epic",
+        "epic.close_if_complete",
+        not blockers,
+        "; ".join(blockers),
+    )
+    return {
+        "next_actions": ["Close Epic"] if action["available"] else [],
+        "blocked_reasons": [
+            "Close Epic unavailable: {}".format(action["reason"])
+        ]
+        if action["reason"]
+        else [],
+        "actions": [action],
+    }
+
+
+def _task_next_actions(
+    task: Mapping[str, Any],
+    actions: Sequence[Mapping[str, Any]],
+    linked_changes: Sequence[Mapping[str, Any]],
+    *,
+    requires_change: bool,
+    context_reason: str,
+) -> list[str]:
+    available = {str(action["label"]): bool(action["available"]) for action in actions}
+    status = str(task.get("status") or "")
+    if requires_change and not linked_changes and available.get("Create Change"):
+        return ["Create Change"]
+    if available.get("Approve Change"):
+        return ["Approve Change"]
+    if available.get("Prepare for Codex"):
+        return ["Prepare for Codex"]
+    if status == "in_progress":
+        if context_reason and available.get("Refresh Context"):
+            return ["Refresh Context"]
+        if available.get("Submit for Review"):
+            return ["Submit for Review"]
+    if status == "in_review" and context_reason and available.get("Refresh Context"):
+        return ["Refresh Context"]
+    if available.get("Approve & Done"):
+        return ["Approve & Done"]
+    if available.get("Accept Change"):
+        return ["Accept Change"]
+    return []
+
+
+def _action_hint(label: str, action: str, available: bool, reason: str) -> dict[str, Any]:
+    return {
+        "label": label,
+        "action": action,
+        "available": bool(available),
+        "reason": reason,
+    }
+
+
+def _blocking_dependencies(
+    task: Mapping[str, Any],
+    tasks_by_ref: Mapping[str, Mapping[str, Any]],
+) -> list[str]:
+    blockers = []
+    for dependency in _dependency_refs(task):
+        dep_task = tasks_by_ref.get(dependency)
+        if dep_task is None:
+            blockers.append("{} missing".format(dependency))
+            continue
+        status = str(dep_task.get("status") or "unknown")
+        if status not in TASK_DEPENDENCY_SATISFIED_STATUSES:
+            blockers.append("{} status is {}".format(_task_display_ref(dep_task), status))
+    return blockers
+
+
+def _dependency_refs(task: Mapping[str, Any]) -> list[str]:
+    refs = []
+    for key in ("depends_on", "dependencies"):
+        value = task.get(key)
+        if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
+            continue
+        for dependency in value:
+            if isinstance(dependency, Mapping):
+                ref = str(
+                    dependency.get("task_id")
+                    or dependency.get("task")
+                    or dependency.get("id")
+                    or dependency.get("ref")
+                    or ""
+                )
+            else:
+                ref = str(dependency or "")
+            if ref:
+                refs.append(ref)
+    return refs
+
+
+def _linked_changes_for_task(
+    task: Mapping[str, Any],
+    changes: Sequence[Mapping[str, Any]],
+) -> list[Mapping[str, Any]]:
+    refs = _task_refs(task)
+    linked = []
+    for change in changes:
+        linked_tasks = set(_string_list(change.get("linked_tasks")))
+        if refs.intersection(linked_tasks):
+            linked.append(change)
+    return linked
+
+
+def _task_requires_change(
+    task: Mapping[str, Any],
+    linked_changes: Sequence[Mapping[str, Any]],
+) -> bool:
+    if linked_changes:
+        return True
+    text_parts = []
+    for key in ("title", "summary", "description", "active_document", "expected_result"):
+        text_parts.append(str(task.get(key) or ""))
+    for key in ("notes", "scope", "acceptance_criteria"):
+        text_parts.extend(_string_list(task.get(key)))
+    text = " ".join(text_parts).lower()
+    return (
+        "requires approved evolution change" in text
+        or "requires an approved evolution change" in text
+        or "requires an explicit evolution change" in text
+        or "evolution change proposal before implementation" in text
+    )
+
+
+def _task_change_blocker(
+    requires_change: bool,
+    linked_changes: Sequence[Mapping[str, Any]],
+) -> str:
+    if not requires_change:
+        return ""
+    if not linked_changes:
+        return "linked Evolution Change is missing"
+    approved = [
+        change
+        for change in linked_changes
+        if str(change.get("status") or "") in TASK_APPROVED_CHANGE_STATUSES
+    ]
+    if approved:
+        return ""
+    return "linked Change {} needs approval".format(
+        ", ".join(
+            "{} {}".format(change.get("id") or "", change.get("status") or "unknown").strip()
+            for change in linked_changes
+        )
+    )
+
+
+def _create_change_reason(
+    requires_change: bool,
+    linked_changes: Sequence[Mapping[str, Any]],
+) -> str:
+    if not requires_change:
+        return ""
+    if linked_changes:
+        return "linked Evolution Change already exists"
+    return ""
+
+
+def _approve_change_reason(
+    requires_change: bool,
+    linked_changes: Sequence[Mapping[str, Any]],
+) -> str:
+    if not requires_change and not linked_changes:
+        return ""
+    if not linked_changes:
+        return "linked Evolution Change is missing"
+    statuses = ", ".join(
+        "{} {}".format(change.get("id") or "", change.get("status") or "unknown").strip()
+        for change in linked_changes
+    )
+    return "no linked Change is ready for approval ({})".format(statuses)
+
+
+def _task_accept_change_reason(
+    task_status: str,
+    linked_changes: Sequence[Mapping[str, Any]],
+    requires_change: bool,
+) -> str:
+    if not requires_change and not linked_changes:
+        return ""
+    if task_status != "done":
+        return "task status is {}".format(task_status)
+    if not linked_changes:
+        return "linked Evolution Change is missing"
+    statuses = ", ".join(
+        "{} {}".format(change.get("id") or "", change.get("status") or "unknown").strip()
+        for change in linked_changes
+    )
+    return "no linked Change is ready for acceptance ({})".format(statuses)
+
+
+def _current_task_blocker(
+    task: Mapping[str, Any],
+    current_task: Mapping[str, Any],
+) -> str:
+    current_id = str(current_task.get("id") or "")
+    task_id = str(task.get("id") or "")
+    if not current_id or not task_id or current_id == task_id:
+        return ""
+    return "another current task is {}".format(_task_display_ref(current_task))
+
+
+def _is_same_task(task: Mapping[str, Any], other: Mapping[str, Any]) -> bool:
+    return bool(_task_refs(task).intersection(_task_refs(other)))
+
+
+def _execution_stale_reason(
+    task: Mapping[str, Any],
+    execution: Mapping[str, Any],
+    *,
+    tasks_revision: int | None,
+    docs_revision: int | None,
+) -> str:
+    if not execution or str(execution.get("status") or "") == "missing":
+        return "no current Codex prompt state exists"
+    if str(execution.get("status") or "").lower() != "ready":
+        return str(execution.get("blocked_reason") or "Codex prompt status is {}".format(execution.get("status")))
+    if not bool(execution.get("prompt_exists")):
+        return "Codex prompt file is missing"
+    refs = _task_refs(task)
+    source_id = str(execution.get("source_id") or "")
+    if source_id not in refs:
+        return "Codex prompt targets {}".format(source_id or "another task")
+    source_status = str(execution.get("source_status") or "")
+    task_status = str(task.get("status") or "")
+    if source_status and source_status != task_status:
+        return "Codex prompt has task status {}, current status is {}".format(
+            source_status,
+            task_status,
+        )
+    context_pack = execution.get("context_pack") if isinstance(execution.get("context_pack"), Mapping) else {}
+    if not context_pack:
+        return "Context Pack is missing"
+    context_task = str(context_pack.get("task_id") or "")
+    if context_task and context_task not in refs:
+        return "Context Pack targets {}".format(context_task)
+    context_tasks_revision = context_pack.get("tasks_revision")
+    if (
+        tasks_revision is not None
+        and isinstance(context_tasks_revision, int)
+        and context_tasks_revision != tasks_revision
+    ):
+        return "Context Pack tasks revision is {} but current is {}".format(
+            context_tasks_revision,
+            tasks_revision,
+        )
+    context_docs_revision = context_pack.get("docs_revision")
+    if (
+        docs_revision is not None
+        and isinstance(context_docs_revision, int)
+        and context_docs_revision != docs_revision
+    ):
+        return "Context Pack docs revision is {} but current is {}".format(
+            context_docs_revision,
+            docs_revision,
+        )
+    return ""
+
+
+def _change_linked_task_blockers(
+    change: Mapping[str, Any],
+    tasks_by_ref: Mapping[str, Mapping[str, Any]],
+) -> list[str]:
+    linked_tasks = _string_list(change.get("linked_tasks"))
+    if not linked_tasks:
+        return ["linked Tasks are missing"]
+    blockers = []
+    for task_ref in linked_tasks:
+        task = tasks_by_ref.get(task_ref)
+        if task is None:
+            blockers.append("{} missing".format(task_ref))
+            continue
+        status = str(task.get("status") or "unknown")
+        if status not in CHANGE_DONE_TASK_STATUSES:
+            blockers.append("{} status is {}".format(_task_display_ref(task), status))
+    return blockers
+
+
+def _change_summary(change: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "id": str(change.get("id") or ""),
+        "status": str(change.get("status") or "unknown"),
+        "title": str(change.get("title") or ""),
+    }
+
+
+def _enriched_current_task(
+    current_task: Mapping[str, Any],
+    tasks: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    current_id = str(current_task.get("id") or "")
+    if current_id:
+        for task in tasks:
+            if str(task.get("id") or "") == current_id:
+                return dict(task)
+    return dict(current_task)
+
+
+def _tasks_by_ref(tasks: Sequence[Mapping[str, Any]]) -> dict[str, Mapping[str, Any]]:
+    mapped = {}
+    for task in tasks:
+        for ref in _task_refs(task):
+            mapped[ref] = task
+    return mapped
+
+
+def _task_refs(task: Mapping[str, Any]) -> set[str]:
+    refs = {
+        str(task.get(field) or "")
+        for field in ("id", "uid", "ref", "legacy_id")
+        if task.get(field)
+    }
+    refs.update(_string_list(task.get("aliases")))
+    return {ref for ref in refs if ref}
+
+
+def _task_display_ref(task: Mapping[str, Any]) -> str:
+    return str(
+        task.get("ref")
+        or task.get("legacy_id")
+        or task.get("id")
+        or "unknown task"
+    )
+
+
+def _string_list(value: Any) -> list[str]:
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
+        return []
+    return [str(item) for item in value if str(item).strip()]

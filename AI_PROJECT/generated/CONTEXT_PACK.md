@@ -1,6 +1,6 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/state/docs.json + AI_PROJECT/state/tasks.json -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-044 UIX-07 Add Task Review Done Controls Add UI controls for closing reviewed tasks and requesting changes from the Tasks page while preserving Human Owner review gates. Expose the task review completion part of the pipeline in the Web Control Center. The owner should be able to approve a task and move it to done, or request changes, directly from the UI when the task is in_review. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add status-aware review controls for tasks in in_review. Add Approve & Done action routed through the existing task.close_reviewed workflow. Add Request Changes action routed through an existing governed task transition path or a minimal governed workflow wrapper if needed. Require explicit confirmation before any review decision. Require owner notes for Approve & Done and Request Changes. Show clear success/failure result through the unified action result panel. After Approve & Done, show next actions such as accepting the linked Evolution Change or preparing the next task. Do not show Done controls for tasks that are not in_review. Add tests for valid close, invalid status, missing notes, request changes, and no direct state writes. Do not auto-approve tasks. Do not auto-close tasks without explicit Human Owner confirmation. Do not accept linked Evolution Changes automatically. Do not bypass task lifecycle validation. Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**. Do not change task lifecycle semantics except adding a governed UI wrapper if strictly required. ai_project_ctl/web/actions.py ai_project_ctl/web/server.py ai_project_ctl/web/read_model.py ai_project_ctl/core/workflows.py if a minimal review workflow wrapper is needed ai_project_ctl/core/registry.py if workflow/action metadata needs compatible updates scripts/aictl.py if command routing needs compatible updates tests/test_web_control_center.py tests/test_workflows.py tests/test_aictl.py tests/test_registry.py Tasks in in_review show Approve & Done and Request Changes controls. Approve & Done requires explicit confirmation and owner notes. Approve & Done routes through task.close_reviewed or another governed workflow path. Request Changes requires explicit confirmation and owner notes. Review actions are hidden or disabled for invalid task statuses. UI shows clear result summary and next actions after review decisions. Linked Evolution Change is suggested after task completion but is not accepted automatically. No direct protected-file writes are introduced. Tests and project-control validations pass. Verify that Done cannot be applied to planned, ready, in_progress, or already done tasks. Verify that owner notes are required. Verify that all writes route through governed workflows/commands. Verify that linked Change acceptance remains a separate explicit action.","schema_version":1,"task_id":"TASK-044"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-045 UIX-08 Add Next Action and Blocked Reason Hints Show actionable next steps and blocked reasons for tasks, changes, and epics in the Web Control Center. Improve the UI pipeline by explaining what the owner can do next and why an action is unavailable. The Tasks page should not silently hide important actions without showing dependency, lifecycle, current-task, or Evolution Change reasons. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add next-action hints for task rows and task focus sections. Show why Prepare for Codex is unavailable, such as unmet dependencies, missing approved Change, invalid status, or another current task. Show why Submit for Review is unavailable, such as task not in_progress or stale context/Codex state. Show why Approve & Done is unavailable, such as task not in_review. Show linked Evolution Change status when available. Show suggested actions such as Create Change, Approve Change, Prepare for Codex, Refresh Context, Submit for Review, Approve & Done, Accept Change, or Close Epic. Add blocked reason hints for Evolution actions where useful. Add blocked reason hints for epic close where useful. Keep hints read-only; actual writes must remain separate confirmed actions. Add tests for dependency-blocked tasks, missing Change, invalid status actions, and next action suggestions. Do not auto-run any suggested action. Do not auto-create or auto-approve Evolution Changes. Do not auto-close tasks or epics. Do not weaken lifecycle gates. Do not introduce arbitrary command execution. Do not directly edit protected project-control files. ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py ai_project_ctl/web/actions.py if action metadata needs compatible updates ai_project_ctl/core/workflows.py if workflow metadata needs compatible updates ai_project_ctl/core/registry.py if command metadata needs compatible updates tests/test_web_control_center.py tests/test_workflows.py tests/test_registry.py Tasks page shows next-action hints for common pipeline states. Unavailable actions show a clear reason instead of disappearing silently. Tasks blocked by dependencies show which dependencies are not done. Tasks requiring an Evolution Change show whether the linked Change is missing, ready, approved, in_review, or accepted. UI suggests the correct next owner action without executing it automatically. Hints are consistent with lifecycle validation and existing workflows. No new unsafe write behavior is introduced. Tests and project-control validations pass. Evolution Change Proposal rows remain readable in normal viewport widths by using compact summaries, collapsed details, or horizontal overflow protection. Long affected files, risks, impacts, and metadata do not make the main Evolution table unusable. Verify that WFA tasks with dependencies show useful blocked reasons. Verify that missing or unapproved Evolution Changes are explained clearly. Verify that hints do not bypass confirmation gates. Verify that suggested actions match the actual valid workflow path.","schema_version":1,"task_id":"TASK-045"} -->
 
 # Context Pack
 
@@ -8,56 +8,56 @@ This generated Context Pack is derived output only. It is not source of truth.
 It does not expand task scope, allowed files, out-of-scope items, or acceptance criteria.
 
 Mode: `task`
-Task ID: `TASK-044`
+Task ID: `TASK-045`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `23`
-Tasks revision: `404`
+Tasks revision: `422`
 
 ## Query
 
 ```text
-TASK-044 UIX-07 Add Task Review Done Controls Add UI controls for closing reviewed tasks and requesting changes from the Tasks page while preserving Human Owner review gates. Expose the task review completion part of the pipeline in the Web Control Center. The owner should be able to approve a task and move it to done, or request changes, directly from the UI when the task is in_review. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add status-aware review controls for tasks in in_review. Add Approve & Done action routed through the existing task.close_reviewed workflow. Add Request Changes action routed through an existing governed task transition path or a minimal governed workflow wrapper if needed. Require explicit confirmation before any review decision. Require owner notes for Approve & Done and Request Changes. Show clear success/failure result through the unified action result panel. After Approve & Done, show next actions such as accepting the linked Evolution Change or preparing the next task. Do not show Done controls for tasks that are not in_review. Add tests for valid close, invalid status, missing notes, request changes, and no direct state writes. Do not auto-approve tasks. Do not auto-close tasks without explicit Human Owner confirmation. Do not accept linked Evolution Changes automatically. Do not bypass task lifecycle validation. Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**. Do not change task lifecycle semantics except adding a governed UI wrapper if strictly required. ai_project_ctl/web/actions.py ai_project_ctl/web/server.py ai_project_ctl/web/read_model.py ai_project_ctl/core/workflows.py if a minimal review workflow wrapper is needed ai_project_ctl/core/registry.py if workflow/action metadata needs compatible updates scripts/aictl.py if command routing needs compatible updates tests/test_web_control_center.py tests/test_workflows.py tests/test_aictl.py tests/test_registry.py Tasks in in_review show Approve & Done and Request Changes controls. Approve & Done requires explicit confirmation and owner notes. Approve & Done routes through task.close_reviewed or another governed workflow path. Request Changes requires explicit confirmation and owner notes. Review actions are hidden or disabled for invalid task statuses. UI shows clear result summary and next actions after review decisions. Linked Evolution Change is suggested after task completion but is not accepted automatically. No direct protected-file writes are introduced. Tests and project-control validations pass. Verify that Done cannot be applied to planned, ready, in_progress, or already done tasks. Verify that owner notes are required. Verify that all writes route through governed workflows/commands. Verify that linked Change acceptance remains a separate explicit action.
+TASK-045 UIX-08 Add Next Action and Blocked Reason Hints Show actionable next steps and blocked reasons for tasks, changes, and epics in the Web Control Center. Improve the UI pipeline by explaining what the owner can do next and why an action is unavailable. The Tasks page should not silently hide important actions without showing dependency, lifecycle, current-task, or Evolution Change reasons. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add next-action hints for task rows and task focus sections. Show why Prepare for Codex is unavailable, such as unmet dependencies, missing approved Change, invalid status, or another current task. Show why Submit for Review is unavailable, such as task not in_progress or stale context/Codex state. Show why Approve & Done is unavailable, such as task not in_review. Show linked Evolution Change status when available. Show suggested actions such as Create Change, Approve Change, Prepare for Codex, Refresh Context, Submit for Review, Approve & Done, Accept Change, or Close Epic. Add blocked reason hints for Evolution actions where useful. Add blocked reason hints for epic close where useful. Keep hints read-only; actual writes must remain separate confirmed actions. Add tests for dependency-blocked tasks, missing Change, invalid status actions, and next action suggestions. Do not auto-run any suggested action. Do not auto-create or auto-approve Evolution Changes. Do not auto-close tasks or epics. Do not weaken lifecycle gates. Do not introduce arbitrary command execution. Do not directly edit protected project-control files. ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py ai_project_ctl/web/actions.py if action metadata needs compatible updates ai_project_ctl/core/workflows.py if workflow metadata needs compatible updates ai_project_ctl/core/registry.py if command metadata needs compatible updates tests/test_web_control_center.py tests/test_workflows.py tests/test_registry.py Tasks page shows next-action hints for common pipeline states. Unavailable actions show a clear reason instead of disappearing silently. Tasks blocked by dependencies show which dependencies are not done. Tasks requiring an Evolution Change show whether the linked Change is missing, ready, approved, in_review, or accepted. UI suggests the correct next owner action without executing it automatically. Hints are consistent with lifecycle validation and existing workflows. No new unsafe write behavior is introduced. Tests and project-control validations pass. Evolution Change Proposal rows remain readable in normal viewport widths by using compact summaries, collapsed details, or horizontal overflow protection. Long affected files, risks, impacts, and metadata do not make the main Evolution table unusable. Verify that WFA tasks with dependencies show useful blocked reasons. Verify that missing or unapproved Evolution Changes are explained clearly. Verify that hints do not bypass confirmation gates. Verify that suggested actions match the actual valid workflow path.
 ```
 
 ## Task Boundary Snapshot
 
-Task: `TASK-044` - UIX-07 Add Task Review Done Controls
+Task: `TASK-045` - UIX-08 Add Next Action and Blocked Reason Hints
 Status: `in_review`
 
 Scope:
-- Add status-aware review controls for tasks in in_review.
-- Add Approve & Done action routed through the existing task.close_reviewed workflow.
-- Add Request Changes action routed through an existing governed task transition path or a minimal governed workflow wrapper if needed.
-- Require explicit confirmation before any review decision.
-- Require owner notes for Approve & Done and Request Changes.
-- Show clear success/failure result through the unified action result panel.
-- After Approve & Done, show next actions such as accepting the linked Evolution Change or preparing the next task.
-- Do not show Done controls for tasks that are not in_review.
-- Add tests for valid close, invalid status, missing notes, request changes, and no direct state writes.
+- Add next-action hints for task rows and task focus sections.
+- Show why Prepare for Codex is unavailable, such as unmet dependencies, missing approved Change, invalid status, or another current task.
+- Show why Submit for Review is unavailable, such as task not in_progress or stale context/Codex state.
+- Show why Approve & Done is unavailable, such as task not in_review.
+- Show linked Evolution Change status when available.
+- Show suggested actions such as Create Change, Approve Change, Prepare for Codex, Refresh Context, Submit for Review, Approve & Done, Accept Change, or Close Epic.
+- Add blocked reason hints for Evolution actions where useful.
+- Add blocked reason hints for epic close where useful.
+- Keep hints read-only; actual writes must remain separate confirmed actions.
+- Add tests for dependency-blocked tasks, missing Change, invalid status actions, and next action suggestions.
 
 Allowed Files:
-- ai_project_ctl/web/actions.py
-- ai_project_ctl/web/server.py
 - ai_project_ctl/web/read_model.py
-- ai_project_ctl/core/workflows.py if a minimal review workflow wrapper is needed
-- ai_project_ctl/core/registry.py if workflow/action metadata needs compatible updates
-- scripts/aictl.py if command routing needs compatible updates
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py if action metadata needs compatible updates
+- ai_project_ctl/core/workflows.py if workflow metadata needs compatible updates
+- ai_project_ctl/core/registry.py if command metadata needs compatible updates
 - tests/test_web_control_center.py
 - tests/test_workflows.py
-- tests/test_aictl.py
 - tests/test_registry.py
 
 Acceptance Criteria:
-- Tasks in in_review show Approve & Done and Request Changes controls.
-- Approve & Done requires explicit confirmation and owner notes.
-- Approve & Done routes through task.close_reviewed or another governed workflow path.
-- Request Changes requires explicit confirmation and owner notes.
-- Review actions are hidden or disabled for invalid task statuses.
-- UI shows clear result summary and next actions after review decisions.
-- Linked Evolution Change is suggested after task completion but is not accepted automatically.
-- No direct protected-file writes are introduced.
+- Tasks page shows next-action hints for common pipeline states.
+- Unavailable actions show a clear reason instead of disappearing silently.
+- Tasks blocked by dependencies show which dependencies are not done.
+- Tasks requiring an Evolution Change show whether the linked Change is missing, ready, approved, in_review, or accepted.
+- UI suggests the correct next owner action without executing it automatically.
+- Hints are consistent with lifecycle validation and existing workflows.
+- No new unsafe write behavior is introduced.
 - Tests and project-control validations pass.
+- Evolution Change Proposal rows remain readable in normal viewport widths by using compact summaries, collapsed details, or horizontal overflow protection.
+- Long affected files, risks, impacts, and metadata do not make the main Evolution table unusable.
 
 ## Index Summary
 
@@ -72,14 +72,14 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 | Score | Source | Heading | Lines | Content hash | Chunk hash | Reasons |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 224 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: to; metadata token match: md, to; content token match: a, accept, acceptance, accepted, actions, and, as, automatically |
-| 210 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | heading token match: existing; metadata token match: existing, md; content token match: a, acceptance, accepted, actions, add, after, ai_project, and |
-| 156 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 64-118 | `d6bfbf03256d` | `749381be335a` | heading token match: command, control; metadata token match: command, control, md, project-control; content token match: a, acceptance, ai_project, aictl, all, and, are, as |
-| 145 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 580-670 | `3444e8d40e40` | `4b3949b96350` | metadata token match: control, md, project-control; content token match: acceptance, action, ai_project, and, be, change, command, commands |
-| 137 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: control, state; metadata token match: control, md, project-control, state; content token match: a, acceptance, adding, ai_project, and, are, be, control |
-| 135 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 874-906 | `3444e8d40e40` | `6cf68be89257` | heading token match: and, py, to; metadata token match: and, control, md, project-control, py, to; content token match: a, an, and, be, before, but, bypass, clear |
-| 132 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Scope | 21-63 | `d6bfbf03256d` | `d914c61786e4` | heading token match: command, control; metadata token match: command, control, md, project-control; content token match: a, actions, add, aictl, and, as, be, center |
-| 131 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 797-833 | `3444e8d40e40` | `24706f89c068` | metadata token match: control, md, project-control; content token match: a, acceptance, add, and, before, but, change, criteria |
+| 211 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: create, to; metadata token match: create, md, to; content token match: a, accept, acceptance, accepted, actions, and, approved, as |
+| 199 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | heading token match: existing, useful; metadata token match: existing, md, useful; content token match: a, acceptance, accepted, actions, add, ai_project, and, approve |
+| 155 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 797-833 | `3444e8d40e40` | `24706f89c068` | heading token match: context; metadata token match: context, control, md, project-control; content token match: a, acceptance, add, and, by, change, clearly, codex |
+| 149 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 64-118 | `d6bfbf03256d` | `749381be335a` | heading token match: command, control; metadata token match: command, control, md, project-control; content token match: a, acceptance, ai_project, and, approved, are, as, by |
+| 139 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 874-906 | `3444e8d40e40` | `6cf68be89257` | heading token match: and, py, to; metadata token match: and, control, md, project-control, py, to; content token match: a, an, and, by, bypass, can, clear, codex |
+| 135 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: context, control, state; metadata token match: context, control, md, project-control, state; content token match: a, acceptance, ai_project, and, are, by, context, control |
+| 135 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 580-670 | `3444e8d40e40` | `4b3949b96350` | metadata token match: control, md, project-control; content token match: acceptance, action, ai_project, and, by, change, command, context |
+| 133 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Scope | 21-63 | `d6bfbf03256d` | `d914c61786e4` | heading token match: command, control; metadata token match: command, control, md, project-control; content token match: a, actions, add, and, approved, as, center, change |
 
 ## Selected Context
 
@@ -89,10 +89,10 @@ Title: Skills Layer Roadmap
 Status: `active`  Type: `guide`
 Heading: Skills Layer Roadmap > Recommended Skills To Create
 Lines: `80-92`
-Score: `224`
+Score: `211`
 Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
 Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
-Reasons: heading token match: to; metadata token match: md, to; content token match: a, accept, acceptance, accepted, actions, and, as, automatically
+Reasons: heading token match: create, to; metadata token match: create, md, to; content token match: a, accept, acceptance, accepted, actions, and, approved, as
 
 ```text
 ## Recommended Skills To Create
@@ -112,10 +112,10 @@ Title: Skills Layer Roadmap
 Status: `active`  Type: `guide`
 Heading: Skills Layer Roadmap > Existing Useful Skills
 Lines: `34-43`
-Score: `210`
+Score: `199`
 Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
 Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
-Reasons: heading token match: existing; metadata token match: existing, md; content token match: a, acceptance, accepted, actions, add, after, ai_project, and
+Reasons: heading token match: existing, useful; metadata token match: existing, md, useful; content token match: a, acceptance, accepted, actions, add, ai_project, and, approve
 
 ```text
 ## Existing Useful Skills
@@ -129,16 +129,66 @@ Reasons: heading token match: existing; metadata token match: existing, md; cont
 [...truncated by contextctl...]
 ```
 
-### 3. `ai-system/project-control/04-command-catalog.md`
+### 3. `ai-system/project-control/06-prompt-package-spec.md`
+
+Title: Project Control Prompt Package Specification
+Status: `active`  Type: `reference`
+Heading: 14. Context Budget Rules > Context Pack Boundary
+Lines: `797-833`
+Score: `155`
+Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
+Chunk hash: `24706f89c068bb280d5630a712f0d9b260c02079a14823cc0a350875c71ba831`
+Reasons: heading token match: context; metadata token match: context, control, md, project-control; content token match: a, acceptance, add, and, by, change, clearly, codex
+
+```text
+## Context Pack Boundary
+
+When Codex needs additional documentation context, use `contextctl.py` to generate a bounded Context Pack:
+
+```bash
+python scripts/contextctl.py pack build --task <TASK_ID> --write
+```
+
+Context Pack output is derived retrieval context. It may help Codex decide which source sections to inspect, but it must not change the Prompt Package contract.
+
+Context Pack must not:
+
+```text
+- expand Task scope;
+- add allowed files;
+- add acceptance criteria;
+- override out-of-scope items;
+- replace source documents or Task state;
+- include full tasks.json, full docs.json or full audit logs by default.
+```
+
+The default retrieval policy excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless explicitly allowed by a `contextctl.py` include flag.
+
+Before `codexctl.py` includes a Context Pack in `CODEX_PROMPT.md`, it must validate that the pack:
+
+```text
+- exists;
+- has the generated-file header;
+- has valid Context Pack metadata;
+- matches the requested Task when the pack is task-scoped;
+- was generated from the current docs/task revisions recorded in project-control state.
+```
+
+If validation fails, `codexctl.py` must fail clearly and must not include stale or invalid retrieved context in the prompt package.
+
+---
+```
+
+### 4. `ai-system/project-control/04-command-catalog.md`
 
 Title: Project Control Command Catalog
 Status: `active`  Type: `reference`
 Heading: Project Control Command Catalog > Self-Hosted Command Boundary
 Lines: `64-118`
-Score: `156`
+Score: `149`
 Content hash: `d6bfbf03256d4d5a7f005184d36c94434a45640595c0d654fc463065a1428adf`
 Chunk hash: `749381be335ac66aa70d957f55a95f190d998afd70c4347643a6c88c059f6587`
-Reasons: heading token match: command, control; metadata token match: command, control, md, project-control; content token match: a, acceptance, ai_project, aictl, all, and, are, as
+Reasons: heading token match: command, control; metadata token match: command, control, md, project-control; content token match: a, acceptance, ai_project, and, approved, are, as, by
 
 ```text
 ## Self-Hosted Command Boundary
@@ -179,16 +229,97 @@ python scripts/docctl.py audit --last 20
 [...truncated by contextctl...]
 ```
 
-### 4. `ai-system/project-control/06-prompt-package-spec.md`
+### 5. `ai-system/project-control/06-prompt-package-spec.md`
+
+Title: Project Control Prompt Package Specification
+Status: `active`  Type: `reference`
+Heading: 17. Relationship To taskctl.py And codexctl.py
+Lines: `874-906`
+Score: `139`
+Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
+Chunk hash: `6cf68be892579b77502246852781af90dc2942f367d5af5b0a3c4a4ee727323f`
+Reasons: heading token match: and, py, to; metadata token match: and, control, md, project-control, py, to; content token match: a, an, and, by, bypass, can, clear, codex
+
+```text
+# 17. Relationship To taskctl.py And codexctl.py
+
+Task prompt output can be built by `taskctl.py`.
+
+`taskctl.py` owns:
+
+```text id="d2esmn"
+Task state
+Current Task
+Task generated Markdown
+Codex Prompt Package
+Task audit events
+```
+
+`codexctl.py` owns:
+
+```text
+Current Codex execution state
+CODEX_STATUS.md
+Codex prompt build and clear audit events
+Optional read-only Context Pack inclusion in CODEX_PROMPT.md
+```
+
+Prompt Package build must not bypass task validation.
+
+Before building the package, task state must be valid.
+
+`contextctl.py` may read Task state to derive a search query for a Context Pack, but it does not mutate Task state and does not make retrieved context executable scope.
+
+`codexctl.py` may validate and include an existing Context Pack, but it must not build the index or refresh Context Pack content itself.
+
+---
+```
+
+### 6. `ai-system/project-control/03-state-model.md`
+
+Title: Project Control State Model
+Status: `active`  Type: `reference`
+Heading: Project Control State Model > Context Control State
+Lines: `104-125`
+Score: `135`
+Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
+Chunk hash: `0cd80bdf0d55e5284fa6355477f50005896398136bf33b7e1a181718f309f8b4`
+Reasons: heading token match: context, control, state; metadata token match: context, control, md, project-control, state; content token match: a, acceptance, ai_project, and, are, by, context, control
+
+```text
+## Context Control State
+
+Context control uses the state/events/generated model without adding a new source-of-truth state file:
+
+```text
+AI_PROJECT/state/docs.json
+AI_PROJECT/state/tasks.json
+AI_PROJECT/events/context-events.jsonl
+AI_PROJECT/generated/CONTEXT_PACK.md
+AI_PROJECT/generated/CONTEXT_STATUS.md
+```
+
+`scripts/contextctl.py` builds a deterministic derived index in memory from registered documents in `docs.json` and optional Task context from `tasks.json`.
+
+The derived index and Context Pack are not source of truth. They must not expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task or source documents, the Task and source documents remain authoritative.
+
+By default, context control indexes registered active source documents only. It excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless the operator explicitly enables the relevant include flag.
+
+`CONTEXT_PACK.md` includes selected source paths, headings, line ranges, source content hashes, chunk hashes, deterministic keyword scores and selection reasons. `CONTEXT_STATUS.md` summarizes the current generated pack, selected paths and exclusion reasons. Both files are generated output and must be regenerated through `contextctl.py`.
+
+---
+```
+
+### 7. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 12. Prompt Package Template
 Lines: `580-670`
-Score: `145`
+Score: `135`
 Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
 Chunk hash: `4b3949b963506d03a8ca61d2f28eb70f0cc2ca715a4c20495bab284ca4d8fcb0`
-Reasons: metadata token match: control, md, project-control; content token match: acceptance, action, ai_project, and, be, change, command, commands
+Reasons: metadata token match: control, md, project-control; content token match: acceptance, action, ai_project, and, by, change, command, context
 
 ```text
 # 12. Prompt Package Template
@@ -261,97 +392,16 @@ Execution Rules:
 [...truncated by contextctl...]
 ```
 
-### 5. `ai-system/project-control/03-state-model.md`
-
-Title: Project Control State Model
-Status: `active`  Type: `reference`
-Heading: Project Control State Model > Context Control State
-Lines: `104-125`
-Score: `137`
-Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
-Chunk hash: `0cd80bdf0d55e5284fa6355477f50005896398136bf33b7e1a181718f309f8b4`
-Reasons: heading token match: control, state; metadata token match: control, md, project-control, state; content token match: a, acceptance, adding, ai_project, and, are, be, control
-
-```text
-## Context Control State
-
-Context control uses the state/events/generated model without adding a new source-of-truth state file:
-
-```text
-AI_PROJECT/state/docs.json
-AI_PROJECT/state/tasks.json
-AI_PROJECT/events/context-events.jsonl
-AI_PROJECT/generated/CONTEXT_PACK.md
-AI_PROJECT/generated/CONTEXT_STATUS.md
-```
-
-`scripts/contextctl.py` builds a deterministic derived index in memory from registered documents in `docs.json` and optional Task context from `tasks.json`.
-
-The derived index and Context Pack are not source of truth. They must not expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task or source documents, the Task and source documents remain authoritative.
-
-By default, context control indexes registered active source documents only. It excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless the operator explicitly enables the relevant include flag.
-
-`CONTEXT_PACK.md` includes selected source paths, headings, line ranges, source content hashes, chunk hashes, deterministic keyword scores and selection reasons. `CONTEXT_STATUS.md` summarizes the current generated pack, selected paths and exclusion reasons. Both files are generated output and must be regenerated through `contextctl.py`.
-
----
-```
-
-### 6. `ai-system/project-control/06-prompt-package-spec.md`
-
-Title: Project Control Prompt Package Specification
-Status: `active`  Type: `reference`
-Heading: 17. Relationship To taskctl.py And codexctl.py
-Lines: `874-906`
-Score: `135`
-Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
-Chunk hash: `6cf68be892579b77502246852781af90dc2942f367d5af5b0a3c4a4ee727323f`
-Reasons: heading token match: and, py, to; metadata token match: and, control, md, project-control, py, to; content token match: a, an, and, be, before, but, bypass, clear
-
-```text
-# 17. Relationship To taskctl.py And codexctl.py
-
-Task prompt output can be built by `taskctl.py`.
-
-`taskctl.py` owns:
-
-```text id="d2esmn"
-Task state
-Current Task
-Task generated Markdown
-Codex Prompt Package
-Task audit events
-```
-
-`codexctl.py` owns:
-
-```text
-Current Codex execution state
-CODEX_STATUS.md
-Codex prompt build and clear audit events
-Optional read-only Context Pack inclusion in CODEX_PROMPT.md
-```
-
-Prompt Package build must not bypass task validation.
-
-Before building the package, task state must be valid.
-
-`contextctl.py` may read Task state to derive a search query for a Context Pack, but it does not mutate Task state and does not make retrieved context executable scope.
-
-`codexctl.py` may validate and include an existing Context Pack, but it must not build the index or refresh Context Pack content itself.
-
----
-```
-
-### 7. `ai-system/project-control/04-command-catalog.md`
+### 8. `ai-system/project-control/04-command-catalog.md`
 
 Title: Project Control Command Catalog
 Status: `active`  Type: `reference`
 Heading: Project Control Command Catalog > Scope
 Lines: `21-63`
-Score: `132`
+Score: `133`
 Content hash: `d6bfbf03256d4d5a7f005184d36c94434a45640595c0d654fc463065a1428adf`
 Chunk hash: `d914c61786e4b852b59e3a000d5c0b85638a7e8731366116abd8c8b8e9591815`
-Reasons: heading token match: command, control; metadata token match: command, control, md, project-control; content token match: a, actions, add, aictl, and, as, be, center
+Reasons: heading token match: command, control; metadata token match: command, control, md, project-control; content token match: a, actions, add, and, approved, as, center, change
 
 ```text
 ## Scope
@@ -396,56 +446,6 @@ Unified projectctl.py
 ```
 
 These must not be invented through free-form AI actions. Add them only through approved system evolution and bounded Tasks.
-```
-
-### 8. `ai-system/project-control/06-prompt-package-spec.md`
-
-Title: Project Control Prompt Package Specification
-Status: `active`  Type: `reference`
-Heading: 14. Context Budget Rules > Context Pack Boundary
-Lines: `797-833`
-Score: `131`
-Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
-Chunk hash: `24706f89c068bb280d5630a712f0d9b260c02079a14823cc0a350875c71ba831`
-Reasons: metadata token match: control, md, project-control; content token match: a, acceptance, add, and, before, but, change, criteria
-
-```text
-## Context Pack Boundary
-
-When Codex needs additional documentation context, use `contextctl.py` to generate a bounded Context Pack:
-
-```bash
-python scripts/contextctl.py pack build --task <TASK_ID> --write
-```
-
-Context Pack output is derived retrieval context. It may help Codex decide which source sections to inspect, but it must not change the Prompt Package contract.
-
-Context Pack must not:
-
-```text
-- expand Task scope;
-- add allowed files;
-- add acceptance criteria;
-- override out-of-scope items;
-- replace source documents or Task state;
-- include full tasks.json, full docs.json or full audit logs by default.
-```
-
-The default retrieval policy excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless explicitly allowed by a `contextctl.py` include flag.
-
-Before `codexctl.py` includes a Context Pack in `CODEX_PROMPT.md`, it must validate that the pack:
-
-```text
-- exists;
-- has the generated-file header;
-- has valid Context Pack metadata;
-- matches the requested Task when the pack is task-scoped;
-- was generated from the current docs/task revisions recorded in project-control state.
-```
-
-If validation fails, `codexctl.py` must fail clearly and must not include stale or invalid retrieved context in the prompt package.
-
----
 ```
 
 ## Excluded Source Summary

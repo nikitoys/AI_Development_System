@@ -27,6 +27,8 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("task.close_reviewed", names)
         self.assertIn("task.request_changes", names)
         self.assertIn("evolution.create_for_task", names)
+        self.assertIn("evolution.approve_change", names)
+        self.assertIn("evolution.move_to_review", names)
         self.assertIn("evolution.accept_change", names)
         self.assertIn("epic.close_if_complete", names)
         self.assertIn("task.transition", names)
@@ -126,6 +128,8 @@ class RegistryTests(unittest.TestCase):
     def test_review_close_helpers_are_registered_with_owner_gates(self):
         close_task = command_describe("task.close_reviewed")
         request_changes = command_describe("task.request_changes")
+        approve_change = command_describe("evolution.approve_change")
+        move_change = command_describe("evolution.move_to_review")
         accept_change = command_describe("evolution.accept_change")
         close_epic = command_describe("epic.close_if_complete")
 
@@ -144,6 +148,16 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("linked Tasks must be complete", accept_change["owner_approval"])
         self.assertIn("AI_PROJECT/state/evolution.json", accept_change["writes_state"])
         self.assertIn("Does not use task waivers", " ".join(accept_change["notes"]))
+
+        self.assertEqual(approve_change["domain"], "evolution")
+        self.assertIn("approval notes", approve_change["owner_approval"])
+        self.assertIn("AI_PROJECT/state/evolution.json", approve_change["writes_state"])
+        self.assertIn("change approve", " ".join(approve_change["notes"]))
+
+        self.assertEqual(move_change["domain"], "evolution")
+        self.assertIn("in_review", move_change["description"])
+        self.assertIn("AI_PROJECT/state/evolution.json", move_change["writes_state"])
+        self.assertIn("Does not accept", " ".join(move_change["notes"]))
 
         self.assertEqual(close_epic["domain"], "epic")
         self.assertIn("active child Tasks block", close_epic["owner_approval"])

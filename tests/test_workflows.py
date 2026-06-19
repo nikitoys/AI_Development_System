@@ -119,6 +119,8 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("task.create_single", names)
         self.assertIn("task.close_reviewed", names)
         self.assertIn("task.request_changes", names)
+        self.assertIn("evolution.approve_change", names)
+        self.assertIn("evolution.move_to_review", names)
         self.assertIn("evolution.accept_change", names)
         self.assertIn("epic.close_if_complete", names)
         self.assertTrue(descriptor["confirmation_required"])
@@ -385,6 +387,7 @@ class WorkflowTests(unittest.TestCase):
         commands = [" ".join(call) for call in calls]
 
         self.assertTrue(result.ok)
+        self.assertFalse(any("check-protected-project-files.py" in command for command in commands))
         self.assertTrue(any("task add-note TASK-032 --text Needs rework." in command for command in commands))
         self.assertTrue(any("task transition TASK-032 --to changes_requested" in command for command in commands))
         self.assertTrue(any("task.prepare_for_codex" in action for action in result.next_actions))
@@ -415,6 +418,82 @@ class WorkflowTests(unittest.TestCase):
         self.assertFalse(result.ok)
         self.assertEqual(result.errors[0].code, "WORKFLOW_LINKED_TASKS_NOT_COMPLETE")
         self.assertEqual(calls, [])
+
+    def test_approve_change_requires_ready_status_and_notes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_evolution_state(
+                root,
+                [{"id": "CHG-041", "status": "draft"}],
+            )
+
+            result = run_workflow(
+                "evolution.approve_change",
+                change_ref="CHG-041",
+                notes="Approved.",
+                root=root,
+                confirmed=True,
+                runner=lambda argv: self.fail("runner should not be called"),
+            )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.errors[0].code, "WORKFLOW_CHANGE_NOT_READY")
+
+    def test_approve_change_delegates_to_evolutionctl_approve(self):
+        calls = []
+
+        def fake_run(argv):
+            calls.append(list(argv))
+            return completed("OK\n")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_evolution_state(
+                root,
+                [{"id": "CHG-041", "status": "ready"}],
+            )
+
+            result = run_workflow(
+                "evolution.approve_change",
+                change_ref="CHG-041",
+                notes="Approved by owner.",
+                root=root,
+                confirmed=True,
+                runner=fake_run,
+            )
+
+        commands = [" ".join(call) for call in calls]
+
+        self.assertTrue(result.ok)
+        self.assertTrue(any("change approve CHG-041 --notes Approved by owner." in command for command in commands))
+
+    def test_move_change_to_review_moves_approved_through_in_progress(self):
+        calls = []
+
+        def fake_run(argv):
+            calls.append(list(argv))
+            return completed("OK\n")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_evolution_state(
+                root,
+                [{"id": "CHG-041", "status": "approved"}],
+            )
+
+            result = run_workflow(
+                "evolution.move_to_review",
+                change_ref="CHG-041",
+                root=root,
+                confirmed=True,
+                runner=fake_run,
+            )
+
+        commands = [" ".join(call) for call in calls]
+
+        self.assertTrue(result.ok)
+        self.assertTrue(any("change transition CHG-041 --to in_progress" in command for command in commands))
+        self.assertTrue(any("change transition CHG-041 --to in_review" in command for command in commands))
 
     def test_accept_change_moves_approved_change_through_review_then_accepts(self):
         calls = []

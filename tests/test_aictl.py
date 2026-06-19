@@ -104,6 +104,8 @@ class AictlTests(unittest.TestCase):
         self.assertIn("task.refresh_execution_context", names)
         self.assertIn("task.submit_for_review", names)
         self.assertIn("evolution.create_for_task", names)
+        self.assertIn("evolution.approve_change", names)
+        self.assertIn("evolution.move_to_review", names)
         self.assertIn("task.close_reviewed", names)
         self.assertIn("task.request_changes", names)
         self.assertIn("evolution.accept_change", names)
@@ -343,6 +345,47 @@ class AictlTests(unittest.TestCase):
         self.assertTrue(payload["ok"])
         self.assertTrue(
             any(command[-5:] == ["change", "accept", "CHG-018", "--notes", "Accepted after review."] for command in commands)
+        )
+
+    def test_approve_change_workflow_delegates_with_change_target_and_notes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            state = root / "AI_PROJECT" / "state"
+            state.mkdir(parents=True)
+            (state / "evolution.json").write_text(
+                json.dumps({"changes": [{"id": "CHG-041", "status": "ready"}]}),
+                encoding="utf-8",
+            )
+
+            def fake_run(argv, **_kwargs):
+                return subprocess.CompletedProcess(argv, 0, "OK\n", "")
+
+            stdout = io.StringIO()
+            with patch("ai_project_ctl.core.workflows.subprocess.run", side_effect=fake_run) as run:
+                with redirect_stdout(stdout):
+                    code = self.aictl.main(
+                        [
+                            "--root",
+                            str(root),
+                            "--json",
+                            "workflow",
+                            "run",
+                            "evolution.approve_change",
+                            "--change",
+                            "CHG-041",
+                            "--notes",
+                            "Approved by owner.",
+                            "--confirm",
+                        ]
+                    )
+
+        payload = json.loads(stdout.getvalue())
+        commands = [call.args[0] for call in run.call_args_list]
+
+        self.assertEqual(code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertTrue(
+            any(command[-5:] == ["change", "approve", "CHG-041", "--notes", "Approved by owner."] for command in commands)
         )
 
     def test_task_list_delegates_with_native_json(self):

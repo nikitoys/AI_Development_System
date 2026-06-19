@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `406`
+Revision: `424`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -725,7 +725,7 @@ Acceptance criteria:
 
 ### WFA-10 (TASK-041) — UIX-04 Add Evolution management UI tab
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_642286708abd`, legacy `TASK-041`, aliases `TASK-041`, local `WFA` / `10`
@@ -802,7 +802,7 @@ Acceptance criteria:
 
 ### WFA-14 (TASK-045) — UIX-08 Add Next Action and Blocked Reason Hints
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_7280203fb8a8`, legacy `TASK-045`, aliases `TASK-045`, local `WFA` / `14`
@@ -819,6 +819,8 @@ Acceptance criteria:
 - Hints are consistent with lifecycle validation and existing workflows.
 - No new unsafe write behavior is introduced.
 - Tests and project-control validations pass.
+- Evolution Change Proposal rows remain readable in normal viewport widths by using compact summaries, collapsed details, or horizontal overflow protection.
+- Long affected files, risks, impacts, and metadata do not make the main Evolution table unusable.
 
 ### WFA-15 (TASK-046) — UIX-09 Add Codex Execution Report Submission
 

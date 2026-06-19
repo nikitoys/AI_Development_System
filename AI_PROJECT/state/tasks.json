@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 406,
+  "revision": 424,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-19T10:25:51Z",
+  "updated_at": "2026-06-19T12:27:35Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -2866,7 +2866,7 @@
       "id": "TASK-041",
       "epic_id": "EPIC-006",
       "title": "UIX-04 Add Evolution management UI tab",
-      "status": "planned",
+      "status": "done",
       "summary": "Add an Evolution tab to view and manage Change Proposals, including create-for-task, approve, move to review, and accept actions with confirmation.",
       "description": "Make Evolution Change Flow manageable from the Web Control Center while preserving Human Owner approval gates and linked-task completion checks.",
       "priority": 1,
@@ -2933,11 +2933,11 @@
           "reason": "Evolution UI should reuse the action result UX."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T10:50:28Z",
+      "approval_notes": "Evolution management UI tab accepted. Web Control Center now supports Change Proposal listing, filters, metadata, create-for-task, approve, move-to-review, and accept actions through governed workflows.",
       "created_at": "2026-06-19T09:02:33Z",
-      "updated_at": "2026-06-19T09:03:48Z",
+      "updated_at": "2026-06-19T10:50:29Z",
       "uid": "tsk_642286708abd",
       "ref": "WFA-10",
       "legacy_id": "TASK-041",
@@ -3275,7 +3275,7 @@
       "id": "TASK-045",
       "epic_id": "EPIC-006",
       "title": "UIX-08 Add Next Action and Blocked Reason Hints",
-      "status": "planned",
+      "status": "done",
       "summary": "Show actionable next steps and blocked reasons for tasks, changes, and epics in the Web Control Center.",
       "description": "Improve the UI pipeline by explaining what the owner can do next and why an action is unavailable. The Tasks page should not silently hide important actions without showing dependency, lifecycle, current-task, or Evolution Change reasons.",
       "priority": 1,
@@ -3323,7 +3323,9 @@
         "UI suggests the correct next owner action without executing it automatically.",
         "Hints are consistent with lifecycle validation and existing workflows.",
         "No new unsafe write behavior is introduced.",
-        "Tests and project-control validations pass."
+        "Tests and project-control validations pass.",
+        "Evolution Change Proposal rows remain readable in normal viewport widths by using compact summaries, collapsed details, or horizontal overflow protection.",
+        "Long affected files, risks, impacts, and metadata do not make the main Evolution table unusable."
       ],
       "review_instructions": [
         "Verify that WFA tasks with dependencies show useful blocked reasons.",
@@ -3335,7 +3337,9 @@
         "Logical label: UIX-08",
         "Depends logically on UIX-03 / WFA-09 and UIX-04 / WFA-10.",
         "After import, add dependency on UIX-07 once its generated WFA ref is known.",
-        "Requires approved Evolution Change before execution because Web pipeline guidance behavior changes."
+        "Requires approved Evolution Change before execution because Web pipeline guidance behavior changes.",
+        "Evolution tab layout issue observed after WFA-10 acceptance: Change Proposals table does not fit practical viewport width. Long fields such as affected files and risks should be summarized in the table and moved into collapsible details.",
+        "WFA-14 needs changes. In in_review state, Approve & Done can fail on stale contextctl.check-generated, but the UI marks Refresh Context unavailable because task status is in_review. Also Request Changes was blocked by protected.check, which prevents owner review feedback from being recorded. The hint/action model should expose safe repair actions and Request Changes should not be unnecessarily blocked by stale generated/protected context artifacts."
       ],
       "depends_on": [
         {
@@ -3355,11 +3359,11 @@
           "reason": "Next action hints should include review Done/Request Changes controls."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T12:27:35Z",
+      "approval_notes": "WFA-14 accepted. Next-action/blocker hints now show actionable repair paths for stale in-review context, and Request Changes is no longer blocked by protected-file/generated checks.",
       "created_at": "2026-06-19T09:49:27Z",
-      "updated_at": "2026-06-19T09:49:58Z",
+      "updated_at": "2026-06-19T12:27:35Z",
       "uid": "tsk_7280203fb8a8",
       "ref": "WFA-14",
       "legacy_id": "TASK-045",

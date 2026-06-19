@@ -27,6 +27,7 @@ LOCAL_ADDRESSES = {"127.0.0.1", "::1"}
 NAV_ITEMS = (
     ("/", "Dashboard"),
     ("/tasks", "Tasks"),
+    ("/evolution", "Evolution"),
     ("/epics", "Epics"),
     ("/reviews", "Reviews"),
     ("/events", "Events"),
@@ -38,10 +39,11 @@ NAV_ITEMS = (
 
 TASK_FOCUS_STATUSES = {"ready", "in_progress", "in_review", "changes_requested"}
 TASK_GROUP_OPTIONS = {"none", "epic", "status"}
+CHANGE_ACTION_STATUSES = {"ready", "approved", "in_progress", "in_review"}
 TASK_ROW_WORKFLOWS = (
     {
         "action": "task.prepare_for_codex",
-        "statuses": {"planned", "ready"},
+        "statuses": {"planned", "ready", "changes_requested"},
         "label": "Prepare for Codex",
     },
     {
@@ -268,6 +270,7 @@ def route(
     pages: dict[str, Callable[[], str]] = {
         "/": lambda: render_dashboard(model.dashboard()),
         "/tasks": lambda: render_tasks(model.dashboard(), query=query),
+        "/evolution": lambda: render_evolution(model.dashboard(), query=query),
         "/epics": lambda: render_epics(model.dashboard()),
         "/reviews": lambda: render_reviews(model.dashboard()),
         "/events": lambda: render_events(model.dashboard(include_events=True)),
@@ -293,11 +296,13 @@ def render_dashboard(data: Mapping[str, Any]) -> str:
     summary = doctor.get("summary") or {}
     queue = data.get("queue") or []
     generated = data.get("generated") or []
+    changes = data.get("changes") or []
     body = [
         '<section class="summary-grid">',
         metric("Doctor", str(doctor.get("overall_status") or "UNKNOWN")),
         metric("Current Task", task_label(current)),
         metric("Queue", "{} executable".format(len(queue))),
+        metric("Changes", "{} proposals".format(len(changes))),
         metric("Generated", "{} derived views".format(sum(1 for item in generated if item.get("exists")))),
         "</section>",
         '<section class="panel">',
@@ -362,21 +367,63 @@ def render_tasks(
     return render_page("Tasks", "".join(body), active="/tasks")
 
 
+def render_evolution(
+    data: Mapping[str, Any],
+    *,
+    query: Mapping[str, Sequence[str]] | None = None,
+) -> str:
+    counts = data.get("change_counts") or {}
+    query = query or {}
+    filters = change_filter_state(data, query)
+    changes = filter_changes(data.get("changes") or [], filters)
+    current = data.get("current_task") or {}
+    default_task = current.get("ref") or current.get("id") or ""
+    task_options = task_select_options(data)
+    body = [
+        '<section class="summary-grid">',
+        *[metric(str(status), str(count)) for status, count in sorted(counts.items(), key=lambda item: status_sort_key(str(item[0])))],
+        metric("Visible", str(len(changes))),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Evolution Filters</h2>",
+        change_filter_form(data, filters),
+        change_filter_summary(filters),
+        "</section>",
+        '<section class="panel action-panel">',
+        "<h2>Create Change For Task</h2>",
+        action_form(
+            "evolution.create_for_task",
+            [
+                select_field_values("task", "Task", task_options)
+                if task_options
+                else input_field("task", "Task", default_task),
+            ],
+            button_label="Create Evolution Change",
+        ),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Change Proposals</h2>",
+        change_table(changes, data, empty_text="No Change Proposals match the filters."),
+        "</section>",
+    ]
+    return render_page("Evolution", "".join(body), active="/evolution")
+
+
 def render_epics(data: Mapping[str, Any]) -> str:
     rows = []
     for epic in data.get("epics") or []:
-        rows.append(
-            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
-                escape(epic.get("key") or epic.get("id")),
-                status_badge(str(epic.get("status") or "unknown")),
-                escape(epic.get("initiative_id", "")),
-                escape(epic.get("title", "")),
-            )
-        )
+        cells = [
+            escape(epic.get("key") or epic.get("id")),
+            status_badge(str(epic.get("status") or "unknown")),
+            escape(epic.get("initiative_id", "")),
+            escape(epic.get("title", "")),
+            pipeline_hint_cell(epic),
+        ]
+        rows.append("<tr>{}</tr>".format("".join("<td>{}</td>".format(cell) for cell in cells)))
     body = [
         '<section class="panel">',
         "<h2>Epics</h2>",
-        table(("Epic", "Status", "Initiative", "Title"), rows, "No epics."),
+        table(("Epic", "Status", "Initiative", "Title", "Next / Blockers"), rows, "No epics."),
         "</section>",
     ]
     return render_page("Epics", "".join(body), active="/epics")
@@ -1169,7 +1216,7 @@ def render_page(title: str, body: str, *, active: str) -> str:
       color: #334155;
       white-space: nowrap;
     }}
-    .badge.pass, .badge.ready, .badge.in_progress, .badge.implemented, .badge.read, .badge.validation {{
+    .badge.pass, .badge.ready, .badge.in_progress, .badge.approved, .badge.accepted, .badge.implemented, .badge.read, .badge.validation {{
       background: var(--accent-soft);
       color: var(--accent);
     }}
@@ -1201,6 +1248,34 @@ def render_page(title: str, body: str, *, active: str) -> str:
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: 12px;
       word-break: break-word;
+    }}
+    .compact-list {{
+      margin: 0;
+      padding-left: 16px;
+    }}
+    .compact-list li {{
+      margin: 2px 0;
+    }}
+    .pipeline-hints {{
+      display: grid;
+      gap: 6px;
+      min-width: 190px;
+      max-width: 320px;
+    }}
+    .hint-next strong, .hint-change strong {{
+      color: var(--text);
+    }}
+    .hint-list {{
+      margin: 0;
+      padding-left: 16px;
+      color: var(--warn);
+      overflow-wrap: anywhere;
+    }}
+    .hint-list li {{
+      margin: 3px 0;
+    }}
+    .muted {{
+      color: var(--muted);
     }}
     .action-panel form {{
       display: grid;
@@ -1637,6 +1712,281 @@ def focus_tasks(
     return selected
 
 
+def task_select_options(data: Mapping[str, Any]) -> list[tuple[str, str]]:
+    options = []
+    for task in data.get("tasks") or []:
+        if not isinstance(task, Mapping):
+            continue
+        task_ref = str(task.get("ref") or task.get("id") or "")
+        if not task_ref:
+            continue
+        status = str(task.get("status") or "unknown")
+        label = "{} - {} ({})".format(
+            task_ref,
+            task.get("title") or "",
+            status,
+        ).strip(" -")
+        options.append((task_ref, label))
+    return options
+
+
+def change_filter_state(
+    data: Mapping[str, Any],
+    query: Mapping[str, Sequence[str]],
+) -> dict[str, Any]:
+    return {
+        "status": _query_value(query, "status"),
+        "type": _query_value(query, "type"),
+        "q": _query_value(query, "q"),
+    }
+
+
+def change_filter_form(data: Mapping[str, Any], filters: Mapping[str, Any]) -> str:
+    statuses = sorted(
+        {
+            str(change.get("status") or "unknown")
+            for change in data.get("changes") or []
+            if isinstance(change, Mapping)
+        },
+        key=status_sort_key,
+    )
+    types = sorted(
+        {
+            str(change.get("change_type") or change.get("type") or "unknown")
+            for change in data.get("changes") or []
+            if isinstance(change, Mapping)
+        }
+    )
+    status_options = [("", "All statuses"), *[(status, status) for status in statuses]]
+    type_options = [("", "All types"), *[(item, item) for item in types]]
+    return (
+        '<form class="task-controls" method="get" action="/evolution">'
+        "{}{}{}"
+        '<button type="submit">Apply</button>'
+        '<a class="button-link secondary" href="/evolution">Reset</a>'
+        "</form>"
+    ).format(
+        filter_select(
+            "status",
+            "Status",
+            status_options,
+            str(filters.get("status") or ""),
+        ),
+        filter_select("type", "Type", type_options, str(filters.get("type") or "")),
+        input_field("q", "Search", str(filters.get("q") or ""), required=False),
+    )
+
+
+def change_filter_summary(filters: Mapping[str, Any]) -> str:
+    pills = []
+    if filters.get("status"):
+        pills.append("status {}".format(filters.get("status")))
+    if filters.get("type"):
+        pills.append("type {}".format(filters.get("type")))
+    if filters.get("q"):
+        pills.append('search "{}"'.format(filters.get("q")))
+    if not pills:
+        pills.append("all changes")
+    return '<div class="filter-summary">{}</div>'.format(
+        "".join('<span class="pill">{}</span>'.format(escape(pill)) for pill in pills)
+    )
+
+
+def filter_changes(
+    changes: Sequence[Mapping[str, Any]],
+    filters: Mapping[str, Any],
+) -> list[Mapping[str, Any]]:
+    selected_status = str(filters.get("status") or "")
+    selected_type = str(filters.get("type") or "")
+    search = str(filters.get("q") or "").strip().lower()
+    selected = []
+    for change in changes:
+        status = str(change.get("status") or "unknown")
+        change_type = str(change.get("change_type") or change.get("type") or "unknown")
+        if selected_status and status != selected_status:
+            continue
+        if selected_type and change_type != selected_type:
+            continue
+        if search and search not in change_search_text(change):
+            continue
+        selected.append(change)
+    return selected
+
+
+def change_search_text(change: Mapping[str, Any]) -> str:
+    values = [
+        change.get("id"),
+        change.get("title"),
+        change.get("status"),
+        change.get("change_type"),
+        change.get("problem"),
+        change.get("proposal"),
+    ]
+    for field in ("linked_tasks", "affected_files", "risks", "impact"):
+        value = change.get(field)
+        if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+            values.extend(value)
+    return " ".join(str(value or "") for value in values).lower()
+
+
+def change_table(
+    changes: Sequence[Mapping[str, Any]],
+    data: Mapping[str, Any],
+    *,
+    empty_text: str,
+) -> str:
+    rows = []
+    for change in changes:
+        cells = [
+            change_identity_cell(change),
+            status_badge(str(change.get("status") or "unknown")),
+            escape(change.get("change_type") or change.get("type") or ""),
+            escape(change.get("title", "")),
+            change_list_cell(change.get("linked_tasks")),
+            change_list_cell(change.get("affected_files")),
+            change_list_cell(change.get("risks")),
+            change_approval_cell(change),
+            change_acceptance_cell(change),
+            pipeline_hint_cell(change),
+            change_row_actions(change, data),
+        ]
+        rows.append(
+            "<tr>{}</tr>".format(
+                "".join("<td>{}</td>".format(cell) for cell in cells)
+            )
+        )
+    return table(
+        (
+            "Change",
+            "Status",
+            "Type",
+            "Title",
+            "Linked Tasks",
+            "Affected Files",
+            "Risks",
+            "Approval",
+            "Acceptance",
+            "Next / Blockers",
+            "Actions",
+        ),
+        rows,
+        empty_text,
+    )
+
+
+def change_identity_cell(change: Mapping[str, Any]) -> str:
+    return "<strong>{}</strong>".format(escape(change.get("id") or ""))
+
+
+def change_list_cell(value: Any, *, limit: int = 3) -> str:
+    items = _string_items(value)
+    if not items:
+        return '<span class="muted">none</span>'
+    visible = items[:limit]
+    remainder = len(items) - len(visible)
+    html_items = "".join("<li>{}</li>".format(escape(item)) for item in visible)
+    if remainder > 0:
+        html_items += "<li>+{} more</li>".format(escape(remainder))
+    return '<ul class="compact-list">{}</ul>'.format(html_items)
+
+
+def change_approval_cell(change: Mapping[str, Any]) -> str:
+    approved_by = str(change.get("owner_approved_by") or "")
+    approved_at = str(change.get("owner_approved_at") or "")
+    if approved_by or approved_at:
+        return "{}<br>{}".format(escape(approved_by or "approved"), escape(approved_at))
+    return '<span class="muted">not approved</span>'
+
+
+def change_acceptance_cell(change: Mapping[str, Any]) -> str:
+    accepted_by = str(change.get("accepted_by") or "")
+    accepted_at = str(change.get("accepted_at") or "")
+    if accepted_by or accepted_at:
+        return "{}<br>{}".format(escape(accepted_by or "accepted"), escape(accepted_at))
+    return '<span class="muted">not accepted</span>'
+
+
+def change_row_actions(change: Mapping[str, Any], data: Mapping[str, Any]) -> str:
+    specs = change_row_action_specs(change)
+    if not specs:
+        return '<span class="pill">No change actions</span>'
+    return '<div class="row-actions">{}</div>'.format(
+        "".join(change_row_action(change, data, spec) for spec in specs)
+    )
+
+
+def change_row_action_specs(change: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+    status = str(change.get("status") or "")
+    if status not in CHANGE_ACTION_STATUSES:
+        return []
+    specs: list[Mapping[str, Any]] = []
+    if status == "ready":
+        spec = {
+            "action": "evolution.approve_change",
+            "label": "Approve Change",
+            "notes_label": "Approval Notes",
+            "notes_placeholder": "Record the Human Owner approval basis.",
+        }
+        if entity_action_available(change, spec["action"]) is not False:
+            specs.append(spec)
+    if status in {"approved", "in_progress"}:
+        spec = {
+            "action": "evolution.move_to_review",
+            "label": "Move to Review",
+        }
+        if entity_action_available(change, spec["action"]) is not False:
+            specs.append(spec)
+    if status in {"approved", "in_review"}:
+        spec = {
+            "action": "evolution.accept_change",
+            "label": "Accept Change",
+            "notes_label": "Acceptance Notes",
+            "notes_placeholder": "Record Human Owner acceptance after linked tasks are complete.",
+        }
+        if entity_action_available(change, spec["action"]) is not False:
+            specs.append(spec)
+    return specs
+
+
+def change_row_action(
+    change: Mapping[str, Any],
+    data: Mapping[str, Any],
+    spec: Mapping[str, Any],
+) -> str:
+    action_id = str(spec.get("action") or "")
+    label = str(spec.get("label") or action_id)
+    workflow = workflow_by_name(data).get(action_id) or {}
+    change_id = str(change.get("id") or "")
+    fields = [hidden_field("change", change_id)]
+    notes_label = str(spec.get("notes_label") or "")
+    if notes_label:
+        fields.append(
+            textarea_field(
+                "notes",
+                notes_label,
+                rows=2,
+                placeholder=str(spec.get("notes_placeholder") or ""),
+                required=True,
+            )
+        )
+    return (
+        '<details class="row-action row-action-{}">'
+        "<summary>{}</summary>"
+        "{}"
+        "{}"
+        "</details>"
+    ).format(
+        escape(css_token(action_id)),
+        escape(label),
+        workflow_preview_html(workflow),
+        action_form(
+            action_id,
+            fields,
+            button_label=label,
+        ),
+    )
+
+
 def task_grouped_table(
     tasks: Sequence[Mapping[str, Any]],
     data: Mapping[str, Any],
@@ -1778,11 +2128,13 @@ def task_detail(task: Mapping[str, Any]) -> str:
     return (
         '<div class="status-row">{}<strong>{}</strong><span>{}</span></div>'
         "<p>{}</p>"
+        "{}"
     ).format(
         status_badge(str(task.get("status") or "unknown")),
         escape(task.get("ref") or task.get("id") or ""),
         escape(task.get("title") or ""),
         escape(task.get("summary") or task.get("description") or ""),
+        pipeline_hint_cell(task),
     )
 
 
@@ -1802,6 +2154,7 @@ def task_table(
             escape(task.get("title", "")),
             escape(task.get("summary", "")),
             escape(task.get("active_stage", "")),
+            pipeline_hint_cell(task),
         ]
         if include_actions:
             cells.append(task_row_actions(task, data or {}))
@@ -1810,7 +2163,7 @@ def task_table(
                 "".join("<td>{}</td>".format(cell) for cell in cells)
             )
         )
-    headers = ["Task", "Status", "Epic", "Title", "Summary", "Stage"]
+    headers = ["Task", "Status", "Epic", "Title", "Summary", "Stage", "Next / Blockers"]
     if include_actions:
         headers.append("Actions")
     return table(tuple(headers), rows, empty_text)
@@ -1847,6 +2200,8 @@ def task_row_action_specs(
     for spec in TASK_ROW_WORKFLOWS:
         statuses = spec.get("statuses") or set()
         if status in statuses or (spec.get("current") and is_current):
+            if entity_action_available(task, str(spec.get("action") or "")) is False:
+                continue
             specs.append(spec)
     return specs
 
@@ -1909,6 +2264,65 @@ def workflow_preview_html(workflow: Mapping[str, Any]) -> str:
     return '<ol class="action-preview">{}</ol>'.format(
         "".join("<li>{}</li>".format(escape(step)) for step in steps)
     )
+
+
+def pipeline_hint_cell(item: Mapping[str, Any]) -> str:
+    hints = _mapping(item.get("pipeline_hints"))
+    next_actions = _string_items(hints.get("next_actions"))
+    blocked_reasons = _string_items(hints.get("blocked_reasons"))
+    linked_changes = [
+        change
+        for change in hints.get("linked_changes") or []
+        if isinstance(change, Mapping)
+    ]
+    if not next_actions and not blocked_reasons and not linked_changes:
+        return '<span class="muted">No next action hints</span>'
+
+    parts = ['<div class="pipeline-hints">']
+    if next_actions:
+        parts.append(
+            '<div class="hint-next"><strong>Next:</strong> {}</div>'.format(
+                escape(", ".join(next_actions))
+            )
+        )
+    if linked_changes:
+        change_bits = []
+        for change in linked_changes:
+            change_id = str(change.get("id") or "")
+            status = str(change.get("status") or "unknown")
+            change_bits.append("{} {}".format(change_id, status).strip())
+        parts.append(
+            '<div class="hint-change"><strong>Linked Change:</strong> {}</div>'.format(
+                escape(", ".join(change_bits))
+            )
+        )
+    context = _mapping(hints.get("context"))
+    context_reason = str(context.get("reason") or "")
+    if context_reason and "Refresh Context" in next_actions:
+        parts.append(
+            '<div class="hint-change"><strong>Context:</strong> {}</div>'.format(
+                escape(context_reason)
+            )
+        )
+    if blocked_reasons:
+        parts.append(
+            '<ul class="hint-list">{}</ul>'.format(
+                "".join("<li>{}</li>".format(escape(reason)) for reason in blocked_reasons)
+            )
+        )
+    parts.append("</div>")
+    return "".join(parts)
+
+
+def entity_action_available(item: Mapping[str, Any], action_id: str) -> bool | None:
+    hints = _mapping(item.get("pipeline_hints"))
+    actions = hints.get("actions")
+    if not isinstance(actions, Sequence) or isinstance(actions, (str, bytes)):
+        return None
+    for action in actions:
+        if isinstance(action, Mapping) and str(action.get("action") or "") == action_id:
+            return bool(action.get("available"))
+    return None
 
 
 def table(headers: Sequence[str], rows: Sequence[str], empty_text: str) -> str:

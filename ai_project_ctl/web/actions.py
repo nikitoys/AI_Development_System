@@ -539,6 +539,22 @@ ACTIONS: dict[str, WebAction] = {
         label="Create Evolution Change",
         builder=_build_workflow("evolution.create_for_task"),
     ),
+    "evolution.approve_change": WebAction(
+        action_id="evolution.approve_change",
+        command_name="evolution.approve_change",
+        label="Approve Evolution Change",
+        builder=_build_workflow(
+            "evolution.approve_change",
+            target_field="change",
+            include_notes=True,
+        ),
+    ),
+    "evolution.move_to_review": WebAction(
+        action_id="evolution.move_to_review",
+        command_name="evolution.move_to_review",
+        label="Move Evolution Change to Review",
+        builder=_build_workflow("evolution.move_to_review", target_field="change"),
+    ),
     "evolution.accept_change": WebAction(
         action_id="evolution.accept_change",
         command_name="evolution.accept_change",

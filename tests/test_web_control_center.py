@@ -147,19 +147,139 @@ class WebControlCenterTests(unittest.TestCase):
 
         self.assertEqual(status.value, 200)
         self.assertIn("Prepare for Codex", body)
-        self.assertIn('value="task.prepare_for_codex"', body)
-        self.assertIn('value="DOC-01"', body)
+        self.assertIn("Prepare for Codex unavailable: another current task is WFA-07", body)
+        self.assertNotIn('value="task.prepare_for_codex"', body)
         self.assertIn("Refresh Context", body)
         self.assertIn('value="task.refresh_execution_context"', body)
         self.assertIn("Submit for Review", body)
-        self.assertIn('value="task.submit_for_review"', body)
+        self.assertIn("Submit for Review unavailable: no current Codex prompt state exists", body)
+        self.assertNotIn('value="task.submit_for_review"', body)
         self.assertIn("Approve &amp; Done", body)
         self.assertIn('value="task.close_reviewed"', body)
         self.assertIn("Request Changes", body)
         self.assertIn('value="task.request_changes"', body)
-        self.assertIn("Set current task", body)
         self.assertIn("Build Codex prompt with context", body)
         self.assertIn('name="confirm" value="yes" required', body)
+
+    def test_tasks_page_shows_dependency_and_missing_change_blockers(self):
+        tasks = [
+            {
+                "id": "TASK-099",
+                "ref": "WFA-09",
+                "legacy_id": "TASK-099",
+                "status": "in_progress",
+                "title": "Dependency task",
+                "epic_id": "EPIC-006",
+                "epic_key": "WFA",
+            },
+            {
+                "id": "TASK-100",
+                "ref": "WFA-10",
+                "legacy_id": "TASK-100",
+                "status": "ready",
+                "title": "Needs change and dependency",
+                "summary": "Ready but blocked.",
+                "epic_id": "EPIC-006",
+                "epic_key": "WFA",
+                "notes": ["Requires approved Evolution Change before execution."],
+                "depends_on": [{"task_id": "TASK-099", "type": "hard"}],
+            },
+            {
+                "id": "TASK-200",
+                "ref": "WFA-20",
+                "legacy_id": "TASK-200",
+                "status": "in_progress",
+                "title": "Current task",
+                "epic_id": "EPIC-006",
+                "epic_key": "WFA",
+            },
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=tasks,
+                current_task_id="TASK-200",
+                epics=[{"id": "EPIC-006", "key": "WFA", "status": "active"}],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/tasks?status=ready&group=none", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Next:</strong> Create Change", body)
+        self.assertIn("Prepare for Codex unavailable", body)
+        self.assertIn("WFA-09 status is in_progress", body)
+        self.assertIn("linked Evolution Change is missing", body)
+        self.assertIn("another current task is WFA-20", body)
+        self.assertNotIn('value="task.prepare_for_codex"', body)
+
+    def test_tasks_page_shows_linked_change_status_and_approval_hint(self):
+        tasks = [
+            {
+                "id": "TASK-100",
+                "ref": "WFA-10",
+                "legacy_id": "TASK-100",
+                "status": "ready",
+                "title": "Needs approved change",
+                "epic_id": "EPIC-006",
+                "epic_key": "WFA",
+                "notes": ["Requires approved Evolution Change before execution."],
+            }
+        ]
+        changes = [
+            {
+                "id": "CHG-050",
+                "status": "ready",
+                "change_type": "tooling",
+                "title": "Ready task change",
+                "linked_tasks": ["TASK-100"],
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=tasks,
+                changes=changes,
+                epics=[{"id": "EPIC-006", "key": "WFA", "status": "active"}],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/tasks?group=none", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Next:</strong> Approve Change", body)
+        self.assertIn("Linked Change:</strong> CHG-050 ready", body)
+        self.assertIn("linked Change CHG-050 ready needs approval", body)
+        self.assertNotIn('value="task.prepare_for_codex"', body)
+
+    def test_tasks_page_suggests_prepare_for_changes_requested(self):
+        tasks = [
+            {
+                "id": "TASK-100",
+                "ref": "WFA-10",
+                "legacy_id": "TASK-100",
+                "status": "changes_requested",
+                "title": "Needs rework",
+                "epic_id": "EPIC-006",
+                "epic_key": "WFA",
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=tasks,
+                epics=[{"id": "EPIC-006", "key": "WFA", "status": "active"}],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/tasks?group=none", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Next:</strong> Prepare for Codex", body)
+        self.assertIn('value="task.prepare_for_codex"', body)
 
     def test_tasks_page_shows_only_review_decision_workflows_for_in_review_status(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -184,6 +304,49 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertNotIn('value="task.refresh_execution_context"', review_body)
         self.assertNotIn('value="task.submit_for_review"', review_body)
 
+    def test_tasks_page_suggests_refresh_for_current_review_task_with_stale_context(self):
+        tasks = [
+            {
+                "id": "TASK-100",
+                "ref": "WFA-10",
+                "legacy_id": "TASK-100",
+                "status": "in_review",
+                "title": "Review task with stale context",
+                "epic_id": "EPIC-006",
+                "epic_key": "WFA",
+            }
+        ]
+        execution = {
+            "status": "READY",
+            "code": "CODEX_READY",
+            "prompt_exists": True,
+            "source_type": "task",
+            "source_id": "TASK-100",
+            "source_status": "in_review",
+            "context_pack": {
+                "task_id": "TASK-100",
+                "tasks_revision": 0,
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=tasks,
+                current_task_id="TASK-100",
+                epics=[{"id": "EPIC-006", "key": "WFA", "status": "active"}],
+                execution=execution,
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/tasks?status=in_review&group=none", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Next:</strong> Refresh Context", body)
+        self.assertIn('value="task.refresh_execution_context"', body)
+        self.assertIn("Context Pack tasks revision is 0 but current is 1", body)
+        self.assertNotIn("Refresh Context unavailable: task status is in_review", body)
+
     def test_tasks_page_hides_row_workflows_for_done_status(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -202,6 +365,123 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertNotIn('value="task.submit_for_review"', done_body)
         self.assertNotIn('value="task.close_reviewed"', done_body)
         self.assertNotIn('value="task.request_changes"', done_body)
+
+    def test_evolution_page_filters_and_shows_change_actions(self):
+        changes = [
+            {
+                "id": "CHG-041",
+                "status": "ready",
+                "change_type": "tooling",
+                "title": "Ready change",
+                "linked_tasks": ["TASK-041"],
+                "affected_files": ["ai_project_ctl/web/server.py"],
+                "risks": ["Needs owner approval."],
+            },
+            {
+                "id": "CHG-042",
+                "status": "accepted",
+                "change_type": "docs",
+                "title": "Accepted docs change",
+            },
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root, **large_task_view_state(), changes=changes)
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route(
+                "/evolution?status=ready&type=tooling&q=server",
+                model,
+            )
+            data_status, _, data_body = route("/data.json", model)
+
+        payload = json.loads(data_body)
+
+        self.assertEqual(status.value, 200)
+        self.assertEqual(data_status.value, 200)
+        self.assertEqual(len(payload["changes"]), 2)
+        self.assertIn("Evolution Filters", body)
+        self.assertIn("CHG-041", body)
+        self.assertIn("Ready change", body)
+        self.assertIn("TASK-041", body)
+        self.assertIn("ai_project_ctl/web/server.py", body)
+        self.assertIn('value="evolution.create_for_task"', body)
+        self.assertIn('value="evolution.approve_change"', body)
+        self.assertIn("Approval Notes", body)
+        self.assertNotIn("Accepted docs change", body)
+
+    def test_evolution_page_shows_review_and_accept_actions(self):
+        state = large_task_view_state()
+        state["tasks"].append(
+            {
+                "id": "TASK-044",
+                "ref": "WFA-13",
+                "legacy_id": "TASK-044",
+                "status": "done",
+                "title": "Done review controls",
+                "epic_id": "EPIC-006",
+                "epic_key": "WFA",
+            }
+        )
+        changes = [
+            {
+                "id": "CHG-043",
+                "status": "approved",
+                "change_type": "tooling",
+                "title": "Approved change",
+                "linked_tasks": ["TASK-037"],
+            },
+            {
+                "id": "CHG-044",
+                "status": "in_review",
+                "change_type": "tooling",
+                "title": "Review change",
+                "linked_tasks": ["TASK-044"],
+            },
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root, **state, changes=changes)
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/evolution", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn('value="evolution.move_to_review"', body)
+        self.assertIn("Move to Review", body)
+        self.assertIn("Accept Change unavailable: WFA-06 status is in_review", body)
+        self.assertIn('value="evolution.accept_change"', body)
+        self.assertIn("Acceptance Notes", body)
+
+    def test_epics_page_shows_close_hints_and_blockers(self):
+        tasks = [
+            {
+                "id": "TASK-100",
+                "ref": "WFA-10",
+                "status": "in_progress",
+                "epic_id": "EPIC-006",
+            },
+            {
+                "id": "TASK-200",
+                "ref": "DOC-02",
+                "status": "done",
+                "epic_id": "EPIC-001",
+            },
+        ]
+        epics = [
+            {"id": "EPIC-001", "key": "DOC", "status": "active", "title": "Docs"},
+            {"id": "EPIC-006", "key": "WFA", "status": "active", "title": "Workflow"},
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root, tasks=tasks, epics=epics)
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/epics", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Next:</strong> Close Epic", body)
+        self.assertIn("Close Epic unavailable: WFA-10 status is in_progress", body)
 
     def test_doctor_refresh_runs_diagnostics_and_reuses_cache(self):
         calls = []
@@ -1054,6 +1334,75 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("CHG-018", argv)
         self.assertIn("--notes", argv)
 
+    def test_approve_change_web_action_delegates_with_change_and_notes(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"ok": true, "data": {"steps": []}}\n',
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process) as run:
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "evolution.approve_change",
+                    "confirm": "yes",
+                    "change": "CHG-041",
+                    "notes": "Approved by owner.",
+                }
+            )
+
+        argv = run.call_args.args[0]
+
+        self.assertTrue(result.ok)
+        self.assertEqual(Path(argv[1]).name, "aictl.py")
+        self.assertEqual(
+            argv[-8:],
+            [
+                "workflow",
+                "run",
+                "evolution.approve_change",
+                "--change",
+                "CHG-041",
+                "--notes",
+                "Approved by owner.",
+                "--confirm",
+            ],
+        )
+
+    def test_move_change_to_review_web_action_delegates_with_change_target(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"ok": true, "data": {"steps": []}}\n',
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process) as run:
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "evolution.move_to_review",
+                    "confirm": "yes",
+                    "change": "CHG-041",
+                }
+            )
+
+        argv = run.call_args.args[0]
+
+        self.assertTrue(result.ok)
+        self.assertEqual(Path(argv[1]).name, "aictl.py")
+        self.assertEqual(
+            argv[-6:],
+            [
+                "workflow",
+                "run",
+                "evolution.move_to_review",
+                "--change",
+                "CHG-041",
+                "--confirm",
+            ],
+        )
+
     def test_close_epic_web_action_delegates_with_epic_target(self):
         completed_process = subprocess.CompletedProcess(
             args=[],
@@ -1220,6 +1569,8 @@ def write_web_state(
     current_task_id=None,
     epics=None,
     initiatives=None,
+    changes=None,
+    execution=None,
 ):
     state_dir = root / "AI_PROJECT" / "state"
     state_dir.mkdir(parents=True, exist_ok=True)
@@ -1230,6 +1581,21 @@ def write_web_state(
                 "revision": 1,
                 "current_task_id": current_task_id,
                 "tasks": tasks or [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    if execution is not None:
+        (state_dir / "current_execution.json").write_text(
+            json.dumps(execution),
+            encoding="utf-8",
+        )
+    (state_dir / "evolution.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "revision": 1,
+                "changes": changes or [],
             }
         ),
         encoding="utf-8",

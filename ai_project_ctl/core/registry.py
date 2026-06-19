@@ -686,6 +686,61 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
             ),
         ),
         CommandDescriptor(
+            name="evolution.approve_change",
+            domain="evolution",
+            description="Approve a ready Evolution Change with explicit owner notes.",
+            kind=CommandKind.WRITE,
+            arguments=(
+                _arg("change", "Evolution Change ID.", required=True),
+                _arg("notes", "Required approval notes.", required=True),
+                _arg("confirm", "Required explicit confirmation.", value_type="boolean", required=True),
+            ),
+            reads_state=(state_evolution, state_tasks),
+            writes_state=(state_evolution,),
+            event_logs=("AI_PROJECT/events/evolution-events.jsonl",),
+            generated_files=("AI_PROJECT/generated/EVOLUTION.md",),
+            output=_output("Step-by-step workflow result.", fields=("steps", "change")),
+            validators=("evolution_state", "linked_task_references", "evolution_lifecycle"),
+            lock_scope="workflow",
+            owner_approval=(
+                "Explicit confirmation and non-empty approval notes are required; Change must be ready."
+            ),
+            dry_run=True,
+            legacy_command=("python scripts/aictl.py workflow run evolution.approve_change --change <CHANGE_ID> --notes <NOTES> --confirm",),
+            notes=(
+                "Delegates approval to evolutionctl.py change approve.",
+                "Does not start implementation or accept the Change.",
+            ),
+        ),
+        CommandDescriptor(
+            name="evolution.move_to_review",
+            domain="evolution",
+            description=(
+                "Move an approved or in_progress Evolution Change toward in_review through validated lifecycle transitions."
+            ),
+            kind=CommandKind.WRITE,
+            arguments=(
+                _arg("change", "Evolution Change ID.", required=True),
+                _arg("confirm", "Required explicit confirmation.", value_type="boolean", required=True),
+            ),
+            reads_state=(state_evolution,),
+            writes_state=(state_evolution,),
+            event_logs=("AI_PROJECT/events/evolution-events.jsonl",),
+            generated_files=("AI_PROJECT/generated/EVOLUTION.md",),
+            output=_output("Step-by-step workflow result.", fields=("steps", "change")),
+            validators=("evolution_state", "evolution_lifecycle"),
+            lock_scope="workflow",
+            owner_approval=(
+                "Explicit confirmation is required; only valid approved/in_progress/in_review Changes can move toward review."
+            ),
+            dry_run=True,
+            legacy_command=("python scripts/aictl.py workflow run evolution.move_to_review --change <CHANGE_ID> --confirm",),
+            notes=(
+                "Approved Changes are moved to in_progress and then in_review.",
+                "Does not accept the Change.",
+            ),
+        ),
+        CommandDescriptor(
             name="evolution.accept_change",
             domain="evolution",
             description=(
