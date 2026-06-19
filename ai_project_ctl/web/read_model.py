@@ -231,6 +231,13 @@ class ReadOnlyProjectModel:
             docs_revision=docs_revision,
         )
         current_task = _enriched_current_task(current_task, tasks)
+        execution_context = execution_context_summary(
+            current_task,
+            execution,
+            tasks_revision=tasks_revision,
+            docs_revision=docs_revision,
+            root=self.root,
+        )
         epics = epic_hints(epics, tasks)
         changes = change_hints(changes, tasks)
         doctor = self.doctor(refresh=refresh_doctor)
@@ -253,6 +260,7 @@ class ReadOnlyProjectModel:
             ),
             "doctor": doctor,
             "execution": execution,
+            "execution_context": execution_context,
             "generated": generated,
             "events": events,
             "events_loaded": include_events,
@@ -1130,6 +1138,154 @@ def _execution_stale_reason(
             docs_revision,
         )
     return ""
+
+
+def execution_context_summary(
+    current_task: Mapping[str, Any],
+    execution: Mapping[str, Any],
+    *,
+    tasks_revision: int | None,
+    docs_revision: int | None,
+    root: Path,
+) -> dict[str, Any]:
+    """Return UI-focused status for the current Codex handoff context."""
+
+    current = dict(current_task)
+    prompt_path = _display_project_path(
+        root,
+        str(execution.get("prompt_path") or ""),
+        fallback="AI_PROJECT/generated/CODEX_PROMPT.md",
+    )
+    context_pack = (
+        execution.get("context_pack")
+        if isinstance(execution.get("context_pack"), Mapping)
+        else {}
+    )
+    context_path = _display_project_path(
+        root,
+        str(context_pack.get("path") or ""),
+        fallback="AI_PROJECT/generated/CONTEXT_PACK.md",
+    )
+    prompt_status, prompt_reason = _prompt_readiness(current, execution)
+    context_status, context_reason = _context_readiness(
+        current,
+        context_pack,
+        tasks_revision=tasks_revision,
+        docs_revision=docs_revision,
+    )
+    warnings = [
+        reason
+        for reason in (prompt_reason, context_reason)
+        if reason and reason not in {"No current task selected."}
+    ]
+    copy_instruction = (
+        "Read {} and execute it.".format(prompt_path)
+        if prompt_status == "ready"
+        else ""
+    )
+    return {
+        "current_task": current,
+        "prompt": {
+            "status": prompt_status,
+            "reason": prompt_reason,
+            "path": prompt_path,
+            "raw_status": str(execution.get("status") or "unknown"),
+            "code": str(execution.get("code") or ""),
+            "exists": bool(execution.get("prompt_exists")),
+            "copy_instruction": copy_instruction,
+        },
+        "context_pack": {
+            "status": context_status,
+            "reason": context_reason,
+            "path": context_path,
+            "sha256": str(context_pack.get("sha256") or context_pack.get("sha_256") or ""),
+            "task_id": str(context_pack.get("task_id") or ""),
+            "docs_revision": context_pack.get("docs_revision"),
+            "tasks_revision": context_pack.get("tasks_revision"),
+            "selected_sources": context_pack.get("selected_sources"),
+        },
+        "warnings": warnings,
+        "updated_at": str(execution.get("updated_at") or ""),
+    }
+
+
+def _prompt_readiness(
+    current_task: Mapping[str, Any],
+    execution: Mapping[str, Any],
+) -> tuple[str, str]:
+    if not current_task:
+        return "unknown", "No current task selected."
+    if not execution or str(execution.get("status") or "") == "missing":
+        return "missing", "No current Codex prompt state exists."
+    raw_status = str(execution.get("status") or "").lower()
+    if raw_status != "ready":
+        return "blocked", str(
+            execution.get("blocked_reason")
+            or "Codex prompt status is {}".format(execution.get("status") or "unknown")
+        )
+    if not bool(execution.get("prompt_exists")):
+        return "missing", "Codex prompt file is missing."
+    refs = _task_refs(current_task)
+    source_id = str(execution.get("source_id") or "")
+    if source_id not in refs:
+        return "stale", "Codex prompt targets {}".format(source_id or "another task")
+    source_status = str(execution.get("source_status") or "")
+    task_status = str(current_task.get("status") or "")
+    if source_status and task_status and source_status != task_status:
+        return "stale", "Codex prompt has task status {}, current status is {}".format(
+            source_status,
+            task_status,
+        )
+    return "ready", ""
+
+
+def _context_readiness(
+    current_task: Mapping[str, Any],
+    context_pack: Mapping[str, Any],
+    *,
+    tasks_revision: int | None,
+    docs_revision: int | None,
+) -> tuple[str, str]:
+    if not current_task:
+        return "unknown", "No current task selected."
+    if not context_pack:
+        return "missing", "No Context Pack metadata exists."
+    refs = _task_refs(current_task)
+    context_task = str(context_pack.get("task_id") or "")
+    if context_task and context_task not in refs:
+        return "stale", "Context Pack targets {}".format(context_task)
+    context_tasks_revision = context_pack.get("tasks_revision")
+    if (
+        tasks_revision is not None
+        and isinstance(context_tasks_revision, int)
+        and context_tasks_revision != tasks_revision
+    ):
+        return "stale", "Context Pack tasks revision is {} but current is {}".format(
+            context_tasks_revision,
+            tasks_revision,
+        )
+    context_docs_revision = context_pack.get("docs_revision")
+    if (
+        docs_revision is not None
+        and isinstance(context_docs_revision, int)
+        and context_docs_revision != docs_revision
+    ):
+        return "stale", "Context Pack docs revision is {} but current is {}".format(
+            context_docs_revision,
+            docs_revision,
+        )
+    return "ready", ""
+
+
+def _display_project_path(root: Path, value: str, *, fallback: str) -> str:
+    text = value.strip() or fallback
+    path = Path(text)
+    if path.is_absolute():
+        try:
+            return path.resolve().relative_to(root.resolve()).as_posix()
+        except ValueError:
+            return path.as_posix()
+    return path.as_posix()
 
 
 def _change_linked_task_blockers(

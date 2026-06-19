@@ -161,6 +161,204 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("Build Codex prompt with context", body)
         self.assertIn('name="confirm" value="yes" required', body)
 
+    def test_current_execution_panel_shows_ready_prompt_and_copy_instruction(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            prompt_path = root / "AI_PROJECT/generated/CODEX_PROMPT.md"
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-048",
+                        "ref": "WFA-17",
+                        "legacy_id": "TASK-048",
+                        "status": "in_progress",
+                        "title": "Current execution panel",
+                        "summary": "Show execution status.",
+                        "epic_id": "EPIC-006",
+                        "epic_key": "WFA",
+                    }
+                ],
+                current_task_id="TASK-048",
+                epics=[{"id": "EPIC-006", "key": "WFA", "status": "active"}],
+                execution={
+                    "status": "READY",
+                    "code": "CODEX_READY",
+                    "updated_at": "2026-06-19T13:35:28Z",
+                    "prompt_exists": True,
+                    "prompt_path": str(prompt_path),
+                    "source_type": "task",
+                    "source_id": "TASK-048",
+                    "source_status": "in_progress",
+                    "context_pack": {
+                        "path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+                        "task_id": "TASK-048",
+                        "tasks_revision": 1,
+                        "docs_revision": 23,
+                    },
+                },
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            data_status, _, data_body = route("/data.json", model)
+            dashboard_status, _, dashboard_body = route("/", model)
+            tasks_status, _, tasks_body = route("/tasks?q=WFA-17", model)
+
+        payload = json.loads(data_body)
+
+        self.assertEqual(data_status.value, 200)
+        self.assertEqual(dashboard_status.value, 200)
+        self.assertEqual(tasks_status.value, 200)
+        self.assertEqual(payload["execution_context"]["prompt"]["status"], "ready")
+        self.assertEqual(payload["execution_context"]["context_pack"]["status"], "ready")
+        self.assertIn("Current Execution", dashboard_body)
+        self.assertIn("Codex Prompt", dashboard_body)
+        self.assertIn("Context Pack", dashboard_body)
+        self.assertIn("Copy Codex Instruction", dashboard_body)
+        self.assertIn(
+            "Read AI_PROJECT/generated/CODEX_PROMPT.md and execute it.",
+            dashboard_body,
+        )
+        self.assertIn("Refresh Context", dashboard_body)
+        self.assertIn("Refresh Prompt", dashboard_body)
+        self.assertIn("Clear Current", dashboard_body)
+        self.assertIn("Current Execution", tasks_body)
+
+    def test_current_execution_panel_shows_stale_prompt_context_and_selection_warning(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-048",
+                        "ref": "WFA-17",
+                        "legacy_id": "TASK-048",
+                        "status": "in_progress",
+                        "title": "Current task",
+                        "epic_id": "EPIC-006",
+                        "epic_key": "WFA",
+                    },
+                    {
+                        "id": "TASK-049",
+                        "ref": "WFA-18",
+                        "legacy_id": "TASK-049",
+                        "status": "ready",
+                        "title": "Selected task",
+                        "epic_id": "EPIC-006",
+                        "epic_key": "WFA",
+                    },
+                ],
+                current_task_id="TASK-048",
+                epics=[{"id": "EPIC-006", "key": "WFA", "status": "active"}],
+                execution={
+                    "status": "READY",
+                    "code": "CODEX_READY",
+                    "prompt_exists": True,
+                    "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+                    "source_type": "task",
+                    "source_id": "TASK-999",
+                    "source_status": "in_progress",
+                    "context_pack": {
+                        "path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+                        "task_id": "TASK-048",
+                        "tasks_revision": 0,
+                    },
+                },
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            data_status, _, data_body = route("/data.json", model)
+            tasks_status, _, tasks_body = route("/tasks?q=WFA-18&group=none", model)
+
+        payload = json.loads(data_body)
+
+        self.assertEqual(data_status.value, 200)
+        self.assertEqual(tasks_status.value, 200)
+        self.assertEqual(payload["execution_context"]["prompt"]["status"], "stale")
+        self.assertEqual(payload["execution_context"]["context_pack"]["status"], "stale")
+        self.assertIn("Codex prompt targets TASK-999", tasks_body)
+        self.assertIn("Context Pack tasks revision is 0 but current is 1", tasks_body)
+        self.assertIn(
+            "Selected task WFA-18 differs from current task WFA-17.",
+            tasks_body,
+        )
+        self.assertNotIn("Copy Codex Instruction", tasks_body)
+
+    def test_current_execution_panel_shows_missing_prompt_and_context(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-048",
+                        "ref": "WFA-17",
+                        "legacy_id": "TASK-048",
+                        "status": "in_progress",
+                        "title": "Missing execution state",
+                        "epic_id": "EPIC-006",
+                    }
+                ],
+                current_task_id="TASK-048",
+                epics=[{"id": "EPIC-006", "status": "active"}],
+            )
+
+            data_status, _, data_body = route(
+                "/data.json",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
+            dashboard_status, _, dashboard_body = route(
+                "/",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
+
+        payload = json.loads(data_body)
+
+        self.assertEqual(data_status.value, 200)
+        self.assertEqual(dashboard_status.value, 200)
+        self.assertEqual(payload["execution_context"]["prompt"]["status"], "missing")
+        self.assertEqual(payload["execution_context"]["context_pack"]["status"], "missing")
+        self.assertIn("No current Codex prompt state exists.", dashboard_body)
+        self.assertIn("No Context Pack metadata exists.", dashboard_body)
+        self.assertNotIn("Copy Codex Instruction", dashboard_body)
+
+    def test_current_execution_panel_shows_no_current_task_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "DOC-01",
+                        "legacy_id": "TASK-001",
+                        "status": "ready",
+                        "title": "Ready but not current",
+                        "epic_id": "EPIC-001",
+                    }
+                ],
+                epics=[{"id": "EPIC-001", "status": "active"}],
+            )
+
+            data_status, _, data_body = route(
+                "/data.json",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
+            dashboard_status, _, dashboard_body = route(
+                "/",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
+
+        payload = json.loads(data_body)
+
+        self.assertEqual(data_status.value, 200)
+        self.assertEqual(dashboard_status.value, 200)
+        self.assertEqual(payload["execution_context"]["prompt"]["status"], "unknown")
+        self.assertEqual(payload["execution_context"]["context_pack"]["status"], "unknown")
+        self.assertIn("No current task selected.", dashboard_body)
+        self.assertNotIn('value="current.clear"', dashboard_body)
+
     def test_dashboard_exposes_latest_task_execution_report(self):
         report_state = {
             "schema_version": 1,

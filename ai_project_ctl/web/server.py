@@ -309,6 +309,10 @@ def render_dashboard(data: Mapping[str, Any]) -> str:
         "<h2>Current Task</h2>",
         task_detail(current),
         "</section>",
+        '<section class="panel execution-panel">',
+        "<h2>Current Execution</h2>",
+        execution_status_panel(data),
+        "</section>",
         '<section class="panel">',
         "<h2>Executable Queue</h2>",
         task_table(queue[:12], empty_text="No executable queue items."),
@@ -340,6 +344,7 @@ def render_tasks(
     filters = task_filter_state(data, query)
     tasks = filter_tasks(data.get("tasks") or [], data, filters)
     focused = focus_tasks(data, tasks)
+    selected_task = tasks[0] if len(tasks) == 1 else {}
     body = [
         '<section class="summary-grid">',
         *[metric(str(status), str(count)) for status, count in sorted(counts.items())],
@@ -349,6 +354,10 @@ def render_tasks(
         "<h2>Task Filters</h2>",
         task_filter_form(data, filters),
         task_filter_summary(filters),
+        "</section>",
+        '<section class="panel execution-panel">',
+        "<h2>Current Execution</h2>",
+        execution_status_panel(data, selected_task=selected_task, show_actions=False),
         "</section>",
         '<section class="panel">',
         "<h2>Focus Tasks</h2>",
@@ -1551,11 +1560,11 @@ def render_page(title: str, body: str, *, active: str) -> str:
       background: var(--accent-soft);
       color: var(--accent);
     }}
-    .badge.warn, .badge.planned, .badge.blocked, .badge.in_review {{
+    .badge.warn, .badge.planned, .badge.blocked, .badge.in_review, .badge.stale, .badge.unknown {{
       background: var(--warn-soft);
       color: var(--warn);
     }}
-    .badge.fail, .badge.changes_requested, .badge.write {{
+    .badge.fail, .badge.changes_requested, .badge.write, .badge.missing {{
       background: var(--fail-soft);
       color: var(--fail);
     }}
@@ -1569,6 +1578,59 @@ def render_page(title: str, body: str, *, active: str) -> str:
       flex-wrap: wrap;
       gap: 12px;
       align-items: center;
+    }}
+    .execution-status {{
+      display: grid;
+      gap: 14px;
+    }}
+    .execution-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+    }}
+    .execution-item {{
+      display: grid;
+      gap: 6px;
+      align-content: start;
+      min-height: 92px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      background: #fbfcfe;
+    }}
+    .execution-item > span {{
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }}
+    .execution-item code {{
+      overflow-wrap: anywhere;
+    }}
+    .execution-item p {{
+      margin: 0;
+    }}
+    .execution-actions {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }}
+    .execution-actions form {{
+      display: grid;
+      gap: 8px;
+      align-content: end;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      background: #f8fafc;
+    }}
+    .execution-warnings {{
+      margin: 0;
+      padding-left: 18px;
+      color: var(--warn);
+    }}
+    .execution-warnings li {{
+      margin: 4px 0;
     }}
     .event-list {{
       margin: 0;
@@ -2527,6 +2589,160 @@ def task_detail(task: Mapping[str, Any]) -> str:
         escape(task.get("summary") or task.get("description") or ""),
         pipeline_hint_cell(task),
     )
+
+
+def execution_status_panel(
+    data: Mapping[str, Any],
+    *,
+    selected_task: Mapping[str, Any] | None = None,
+    show_actions: bool = True,
+) -> str:
+    context = _mapping(data.get("execution_context"))
+    current = _mapping(context.get("current_task") or data.get("current_task"))
+    prompt = _mapping(context.get("prompt"))
+    pack = _mapping(context.get("context_pack"))
+    warnings = _string_items(context.get("warnings"))
+    selected_warning = _selected_task_warning(current, selected_task or {})
+    if selected_warning:
+        warnings.insert(0, selected_warning)
+
+    parts = ['<div class="execution-status">']
+    parts.append(current_execution_task_line(current))
+    parts.append(
+        '<div class="execution-grid">{}{}{}{} </div>'.format(
+            execution_status_item(
+                "Codex Prompt",
+                str(prompt.get("status") or "unknown"),
+                str(prompt.get("path") or "AI_PROJECT/generated/CODEX_PROMPT.md"),
+                str(prompt.get("reason") or ""),
+            ),
+            execution_status_item(
+                "Context Pack",
+                str(pack.get("status") or "unknown"),
+                str(pack.get("path") or "AI_PROJECT/generated/CONTEXT_PACK.md"),
+                str(pack.get("reason") or ""),
+            ),
+            execution_status_item(
+                "Prompt Code",
+                str(prompt.get("code") or prompt.get("raw_status") or "unknown"),
+                str(context.get("updated_at") or ""),
+                "",
+            ),
+            execution_status_item(
+                "Context Task",
+                str(pack.get("task_id") or "unknown"),
+                _revision_detail(pack),
+                "",
+            ),
+        )
+    )
+    copy_instruction = str(prompt.get("copy_instruction") or "")
+    if copy_instruction:
+        parts.append(
+            '<label class="copy-field">Copy Codex Instruction'
+            '<textarea readonly rows="2">{}</textarea></label>'.format(
+                escape(copy_instruction)
+            )
+        )
+    if current and show_actions:
+        parts.append(execution_action_controls(current))
+    if warnings:
+        parts.append(
+            '<ul class="execution-warnings">{}</ul>'.format(
+                "".join("<li>{}</li>".format(escape(warning)) for warning in warnings)
+            )
+        )
+    parts.append("</div>")
+    return "".join(parts)
+
+
+def current_execution_task_line(task: Mapping[str, Any]) -> str:
+    if not task:
+        return '<p class="empty">No current task selected.</p>'
+    return (
+        '<div class="status-row execution-current">{}'
+        '<strong>{}</strong><code>{}</code><span>{}</span></div>'
+    ).format(
+        status_badge(str(task.get("status") or "unknown")),
+        escape(task.get("ref") or task.get("id") or ""),
+        escape(task.get("legacy_id") or task.get("id") or ""),
+        escape(task.get("title") or ""),
+    )
+
+
+def execution_status_item(
+    label: str,
+    status: str,
+    detail: str,
+    reason: str,
+) -> str:
+    return (
+        '<div class="execution-item">'
+        "<span>{}</span>{}<code>{}</code>{}"
+        "</div>"
+    ).format(
+        escape(label),
+        status_badge(status),
+        escape(detail),
+        '<p class="muted">{}</p>'.format(escape(reason)) if reason else "",
+    )
+
+
+def execution_action_controls(current: Mapping[str, Any]) -> str:
+    task_ref = str(current.get("ref") or current.get("id") or "")
+    return (
+        '<div class="execution-actions">'
+        "{}{}{}"
+        "</div>"
+    ).format(
+        action_form(
+            "task.refresh_execution_context",
+            [hidden_field("task", task_ref)],
+            button_label="Refresh Context",
+        ),
+        action_form(
+            "codex.prompt.build",
+            [
+                hidden_field("task", task_ref),
+                hidden_field("with_context", "yes"),
+            ],
+            button_label="Refresh Prompt",
+        ),
+        action_form(
+            "current.clear",
+            [],
+            button_label="Clear Current",
+        ),
+    )
+
+
+def _selected_task_warning(
+    current: Mapping[str, Any],
+    selected_task: Mapping[str, Any],
+) -> str:
+    if not selected_task:
+        return ""
+    selected_label = str(selected_task.get("ref") or selected_task.get("id") or "")
+    if not current:
+        return "Selected task {} is not the current task; no current task is selected.".format(
+            selected_label
+        )
+    if task_ref_matches(current, selected_label):
+        return ""
+    current_label = str(current.get("ref") or current.get("id") or "")
+    return "Selected task {} differs from current task {}.".format(
+        selected_label,
+        current_label,
+    )
+
+
+def _revision_detail(pack: Mapping[str, Any]) -> str:
+    parts = []
+    if pack.get("tasks_revision") is not None:
+        parts.append("tasks rev {}".format(pack.get("tasks_revision")))
+    if pack.get("docs_revision") is not None:
+        parts.append("docs rev {}".format(pack.get("docs_revision")))
+    return ", ".join(parts) or "not reported"
 
 
 def task_table(

@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `757`
-Changes: `27`
+Revision: `825`
+Changes: `29`
 
 ## Summary
 
-- `accepted`: 26
+- `accepted`: 28
 - `approved`: 1
 
 ## Changes
@@ -1660,3 +1660,135 @@ Impact:
 Linked tasks:
 
 - TASK-047
+
+### CHG-028 — UIX-10 Add Task Review Package View
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-16 requires an explicit Evolution Change Proposal before implementation: Add a task review view that combines task metadata, linked Change, Codex report, changed files, checks, and owner decision controls.
+
+Proposal:
+
+Implement the bounded task scope: Add a Task Review view or drawer in the Web Control Center.; Show task ref, legacy id, title, status, summary, scope, and acceptance criteria.; Show linked Evolution Change status when available.; Show latest Codex execution report when available.; Show changed source files and generated/project-control files from the report.; Show checks and their pass/fail/warn status.; Show warnings, blockers, and notes from the report.; Expose Approve & Done and Request Changes controls when valid.; Use the unified action result panel for review decisions.; Add tests for review view with report, without report, with linked Change, and invalid states.
+
+Rationale:
+
+Create a review-oriented UI view for tasks in review. The owner should be able to see what Codex changed, what checks passed, what blockers remain, and then make a review decision from one place.
+
+Approved by: `human_owner` at `2026-06-19T13:34:03Z`  
+Approval notes: Accept  
+
+Accepted by: `human_owner` at `2026-06-19T13:34:18Z`  
+Acceptance notes: Accept  
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/core/workflows.py if review action metadata needs compatible updates
+- tests/test_web_control_center.py
+- tests/test_workflows.py
+
+Risks:
+
+- Boundary risk: Do not auto-approve tasks.
+- Boundary risk: Do not auto-accept Evolution Changes.
+- Boundary risk: Do not replace Human Owner review.
+- Boundary risk: Do not execute tests from the review view in this task.
+- Boundary risk: Do not edit source or generated files from the review view.
+- Verify that the owner can understand what is being accepted before pressing Done.
+- Verify that missing Codex report is shown clearly and does not crash the view.
+- Verify that review controls still require confirmation and notes.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-047.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add a Task Review view or drawer in the Web Control Center.
+- Show task ref, legacy id, title, status, summary, scope, and acceptance criteria.
+- Show linked Evolution Change status when available.
+- Show latest Codex execution report when available.
+- Show changed source files and generated/project-control files from the report.
+- Task Review view shows task metadata and acceptance context.
+- Task Review view shows latest Codex execution report when available.
+- Task Review view shows linked Evolution Change status when available.
+
+Linked tasks:
+
+- TASK-047
+
+### CHG-029 — UIX-11 Add Current Execution Status Panel
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-17 requires an explicit Evolution Change Proposal before implementation: Add a UI panel showing current task, Context Pack status, Codex prompt status, and safe execution-context actions.
+
+Proposal:
+
+Implement the bounded task scope: Show current task ref/id/title/status in the dashboard and task pages.; Show Context Pack status: ready, stale, missing, or unknown.; Show Codex prompt/status: ready, stale, missing, or blocked.; Show generated prompt path and context pack path.; Add Copy Codex Instruction action when prompt is ready.; Expose safe Refresh Context and Refresh Prompt actions through existing governed workflows.; Expose Clear Current action only with explicit confirmation.; Show warnings when current task differs from selected task.; Add tests for ready, stale, missing, and no-current-task states.
+
+Rationale:
+
+Make the current execution state visible in the Web Control Center so the owner knows which task is prepared for Codex and whether the context/prompt artifacts are ready or stale.
+
+Approved by: `human_owner` at `2026-06-19T13:35:14Z`  
+Approval notes: Approved for WFA-17 Current Execution Status Panel. Must expose current task, Context Pack/Codex prompt readiness, stale states, and safe refresh/clear actions through governed workflows while preserving protected-file boundaries and Human Owner gates.  
+
+Accepted by: `human_owner` at `2026-06-19T13:56:08Z`  
+Acceptance notes: Accepted after WFA-17 review. Current Execution Status Panel implemented and accepted; linked task is done and required checks passed.  
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/core/workflows.py if execution-context workflow metadata needs compatible updates
+- ai_project_ctl/core/registry.py if action metadata needs compatible updates
+- tests/test_web_control_center.py
+- tests/test_workflows.py
+- tests/test_registry.py
+
+Risks:
+
+- Boundary risk: Do not auto-run Codex.
+- Boundary risk: Do not auto-switch current task without confirmation.
+- Boundary risk: Do not directly edit current_execution.json.
+- Boundary risk: Do not directly edit generated context or Codex files.
+- Boundary risk: Do not weaken protected-file checks.
+- Verify that stale context/prompt states are visible.
+- Verify that the current task cannot be changed silently.
+- Verify that Copy Codex Instruction matches the generated prompt path.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-048.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Show current task ref/id/title/status in the dashboard and task pages.
+- Show Context Pack status: ready, stale, missing, or unknown.
+- Show Codex prompt/status: ready, stale, missing, or blocked.
+- Show generated prompt path and context pack path.
+- Add Copy Codex Instruction action when prompt is ready.
+- UI clearly shows the current task when one is selected.
+- UI clearly shows when no current task exists.
+- UI shows Context Pack and Codex prompt readiness/staleness.
+
+Linked tasks:
+
+- TASK-048

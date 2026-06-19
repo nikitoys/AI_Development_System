@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `434`
+Revision: `444`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -862,7 +862,7 @@ Acceptance criteria:
 
 ### WFA-17 (TASK-048) — UIX-11 Add Current Execution Status Panel
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_2c1b0507ab6b`, legacy `TASK-048`, aliases `TASK-048`, local `WFA` / `17`
