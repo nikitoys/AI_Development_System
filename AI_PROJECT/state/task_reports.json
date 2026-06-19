@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 2,
+  "revision": 3,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-19T13:07:34Z",
+  "updated_at": "2026-06-19T13:26:39Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -235,9 +235,108 @@
         ],
         "owner_decision_required": true
       }
+    },
+    {
+      "id": "RPT-003",
+      "task_id": "TASK-047",
+      "task_ref": "WFA-16",
+      "submitted_at": "2026-06-19T13:26:39Z",
+      "submitted_by": "human_owner",
+      "source_file": "/tmp/codex-task-047-report.json",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-047",
+        "task_ref": "WFA-16",
+        "reported_task_id": "TASK-047",
+        "reported_task_ref": "WFA-16",
+        "implementation_summary": "Added a Task Review Packages view to the Web Control Center /reviews page, combining task metadata, linked Evolution Change status, latest Codex execution report details, checks, changed files, warnings, blockers, notes, and governed owner decision controls.",
+        "changed_files": [
+          "ai_project_ctl/web/server.py",
+          "tests/test_web_control_center.py"
+        ],
+        "generated_files": [
+          "AI_PROJECT/state/task_reports.json",
+          "AI_PROJECT/events/task-report-events.jsonl"
+        ],
+        "checks": [
+          {
+            "name": "py_compile",
+            "command": "python -m py_compile ai_project_ctl/web/server.py tests/test_web_control_center.py",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "review package tests",
+            "command": "python -m unittest tests.test_web_control_center.WebControlCenterTests.test_reviews_page_shows_task_review_package_with_report tests.test_web_control_center.WebControlCenterTests.test_reviews_page_shows_missing_report_clearly tests.test_web_control_center.WebControlCenterTests.test_reviews_page_shows_linked_change_status tests.test_web_control_center.WebControlCenterTests.test_reviews_page_hides_decision_controls_for_invalid_status",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "web and workflow tests",
+            "command": "python -m unittest tests.test_web_control_center tests.test_workflows",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "full test suite",
+            "command": "python -m unittest discover -s tests",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "task validation",
+            "command": "python scripts/taskctl.py validate && python scripts/taskctl.py check-generated",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "evolution validation",
+            "command": "python scripts/evolutionctl.py validate && python scripts/evolutionctl.py check-generated",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "project doctor",
+            "command": "python scripts/aictl.py project doctor",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "protected files",
+            "command": "python scripts/check-protected-project-files.py --verbose",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": ""
+          }
+        ],
+        "warnings": [],
+        "blockers": [],
+        "notes": [
+          "Review decision forms still require confirmation and owner notes.",
+          "The default python -m unittest discover command found zero tests in this repo, so explicit discovery with -s tests was used and passed.",
+          "Report submission itself is expected to write AI_PROJECT/state/task_reports.json and AI_PROJECT/events/task-report-events.jsonl through the governed CLI."
+        ],
+        "owner_decision_required": true
+      }
     }
   ],
   "latest_by_task": {
-    "TASK-046": "RPT-002"
+    "TASK-046": "RPT-002",
+    "TASK-047": "RPT-003"
   }
 }

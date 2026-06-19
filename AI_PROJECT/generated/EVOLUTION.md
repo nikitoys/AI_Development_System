@@ -3,14 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `720`
-Changes: `26`
+Revision: `757`
+Changes: `27`
 
 ## Summary
 
-- `accepted`: 24
+- `accepted`: 26
 - `approved`: 1
-- `ready`: 1
 
 ## Changes
 
@@ -1534,7 +1533,7 @@ Linked tasks:
 
 ### CHG-026 — UIX-10 Add Task Review Package View
 
-Status: `ready`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -1551,6 +1550,77 @@ Implement the bounded task scope: Add a Task Review view or drawer in the Web Co
 Rationale:
 
 Create a review-oriented UI view for tasks in review. The owner should be able to see what Codex changed, what checks passed, what blockers remain, and then make a review decision from one place.
+
+Approved by: `human_owner` at `2026-06-19T13:16:29Z`  
+Approval notes: Approved for WFA-16 Task Review Package View. Must expose review information readably in the UI, preserve Human Owner review gates, and route all write actions through governed workflows.  
+
+Accepted by: `human_owner` at `2026-06-19T13:32:04Z`  
+Acceptance notes: Accepted after WFA-16 review. Task Review Package View implemented and accepted; linked task is done and required checks passed.  
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/core/workflows.py if review action metadata needs compatible updates
+- tests/test_web_control_center.py
+- tests/test_workflows.py
+
+Risks:
+
+- Boundary risk: Do not auto-approve tasks.
+- Boundary risk: Do not auto-accept Evolution Changes.
+- Boundary risk: Do not replace Human Owner review.
+- Boundary risk: Do not execute tests from the review view in this task.
+- Boundary risk: Do not edit source or generated files from the review view.
+- Verify that the owner can understand what is being accepted before pressing Done.
+- Verify that missing Codex report is shown clearly and does not crash the view.
+- Verify that review controls still require confirmation and notes.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-047.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add a Task Review view or drawer in the Web Control Center.
+- Show task ref, legacy id, title, status, summary, scope, and acceptance criteria.
+- Show linked Evolution Change status when available.
+- Show latest Codex execution report when available.
+- Show changed source files and generated/project-control files from the report.
+- Task Review view shows task metadata and acceptance context.
+- Task Review view shows latest Codex execution report when available.
+- Task Review view shows linked Evolution Change status when available.
+
+Linked tasks:
+
+- TASK-047
+
+### CHG-027 — UIX-10 Add Task Review Package View
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-16 requires an explicit Evolution Change Proposal before implementation: Add a task review view that combines task metadata, linked Change, Codex report, changed files, checks, and owner decision controls.
+
+Proposal:
+
+Implement the bounded task scope: Add a Task Review view or drawer in the Web Control Center.; Show task ref, legacy id, title, status, summary, scope, and acceptance criteria.; Show linked Evolution Change status when available.; Show latest Codex execution report when available.; Show changed source files and generated/project-control files from the report.; Show checks and their pass/fail/warn status.; Show warnings, blockers, and notes from the report.; Expose Approve & Done and Request Changes controls when valid.; Use the unified action result panel for review decisions.; Add tests for review view with report, without report, with linked Change, and invalid states.
+
+Rationale:
+
+Create a review-oriented UI view for tasks in review. The owner should be able to see what Codex changed, what checks passed, what blockers remain, and then make a review decision from one place.
+
+Approved by: `human_owner` at `2026-06-19T13:16:38Z`  
+Approval notes: Approved for WFA-16 Task Review Package View. Must expose review information readably in the UI, preserve Human Owner review gates, and route all write actions through governed workflows.  
+
+Accepted by: `human_owner` at `2026-06-19T13:32:15Z`  
+Acceptance notes: Accepted after WFA-16 review. Task Review Package View implemented and accepted; linked task is done and required checks passed.  
 
 Affected files:
 

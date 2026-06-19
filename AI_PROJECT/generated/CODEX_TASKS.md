@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `429`
+Revision: `434`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -843,7 +843,7 @@ Acceptance criteria:
 
 ### WFA-16 (TASK-047) — UIX-10 Add Task Review Package View
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_0e3c4d7a0a5d`, legacy `TASK-047`, aliases `TASK-047`, local `WFA` / `16`

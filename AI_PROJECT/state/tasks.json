@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 429,
+  "revision": 434,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-19T13:12:06Z",
+  "updated_at": "2026-06-19T13:31:33Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -3466,7 +3466,7 @@
       "id": "TASK-047",
       "epic_id": "EPIC-006",
       "title": "UIX-10 Add Task Review Package View",
-      "status": "planned",
+      "status": "done",
       "summary": "Add a task review view that combines task metadata, linked Change, Codex report, changed files, checks, and owner decision controls.",
       "description": "Create a review-oriented UI view for tasks in review. The owner should be able to see what Codex changed, what checks passed, what blockers remain, and then make a review decision from one place.",
       "priority": 1,
@@ -3536,11 +3536,11 @@
           "reason": "Task Review Package should include review Done/Request Changes controls."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T13:31:33Z",
+      "approval_notes": "WFA-16 accepted. Task Review Package View implemented and verified. UI now shows task metadata, linked Change status, latest Codex report, changed/generated files, checks, warnings, blockers, notes, and governed review controls without bypassing Human Owner gates.",
       "created_at": "2026-06-19T09:59:24Z",
-      "updated_at": "2026-06-19T09:59:48Z",
+      "updated_at": "2026-06-19T13:31:33Z",
       "uid": "tsk_0e3c4d7a0a5d",
       "ref": "WFA-16",
       "legacy_id": "TASK-047",

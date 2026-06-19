@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 720,
+  "revision": 757,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-19T13:13:13Z",
+  "updated_at": "2026-06-19T13:32:15Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -1396,7 +1396,7 @@
     {
       "id": "CHG-026",
       "title": "UIX-10 Add Task Review Package View",
-      "status": "ready",
+      "status": "accepted",
       "change_type": "tooling",
       "rationale": "Create a review-oriented UI view for tasks in review. The owner should be able to see what Codex changed, what checks passed, what blockers remain, and then make a review decision from one place.",
       "problem": "Task WFA-16 requires an explicit Evolution Change Proposal before implementation: Add a task review view that combines task metadata, linked Change, Codex report, changed files, checks, and owner decision controls.",
@@ -1442,17 +1442,78 @@
       "implementation_waived": false,
       "implementation_waiver_reason": "",
       "superseded_by": "",
-      "owner_approved_by": "",
-      "owner_approved_at": "",
-      "approval_notes": "",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T13:16:29Z",
+      "approval_notes": "Approved for WFA-16 Task Review Package View. Must expose review information readably in the UI, preserve Human Owner review gates, and route all write actions through governed workflows.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T13:32:04Z",
+      "acceptance_notes": "Accepted after WFA-16 review. Task Review Package View implemented and accepted; linked task is done and required checks passed.",
       "notes": [],
       "priority": 1,
       "order": 26,
       "created_at": "2026-06-19T12:53:00Z",
-      "updated_at": "2026-06-19T12:53:12Z"
+      "updated_at": "2026-06-19T13:32:04Z"
+    },
+    {
+      "id": "CHG-027",
+      "title": "UIX-10 Add Task Review Package View",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "Create a review-oriented UI view for tasks in review. The owner should be able to see what Codex changed, what checks passed, what blockers remain, and then make a review decision from one place.",
+      "problem": "Task WFA-16 requires an explicit Evolution Change Proposal before implementation: Add a task review view that combines task metadata, linked Change, Codex report, changed files, checks, and owner decision controls.",
+      "proposal": "Implement the bounded task scope: Add a Task Review view or drawer in the Web Control Center.; Show task ref, legacy id, title, status, summary, scope, and acceptance criteria.; Show linked Evolution Change status when available.; Show latest Codex execution report when available.; Show changed source files and generated/project-control files from the report.; Show checks and their pass/fail/warn status.; Show warnings, blockers, and notes from the report.; Expose Approve & Done and Request Changes controls when valid.; Use the unified action result panel for review decisions.; Add tests for review view with report, without report, with linked Change, and invalid states.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/core/workflows.py if review action metadata needs compatible updates",
+        "tests/test_web_control_center.py",
+        "tests/test_workflows.py"
+      ],
+      "risks": [
+        "Boundary risk: Do not auto-approve tasks.",
+        "Boundary risk: Do not auto-accept Evolution Changes.",
+        "Boundary risk: Do not replace Human Owner review.",
+        "Boundary risk: Do not execute tests from the review view in this task.",
+        "Boundary risk: Do not edit source or generated files from the review view.",
+        "Verify that the owner can understand what is being accepted before pressing Done.",
+        "Verify that missing Codex report is shown clearly and does not crash the view.",
+        "Verify that review controls still require confirmation and notes.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-047.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Add a Task Review view or drawer in the Web Control Center.",
+        "Show task ref, legacy id, title, status, summary, scope, and acceptance criteria.",
+        "Show linked Evolution Change status when available.",
+        "Show latest Codex execution report when available.",
+        "Show changed source files and generated/project-control files from the report.",
+        "Task Review view shows task metadata and acceptance context.",
+        "Task Review view shows latest Codex execution report when available.",
+        "Task Review view shows linked Evolution Change status when available."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-047"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T13:16:38Z",
+      "approval_notes": "Approved for WFA-16 Task Review Package View. Must expose review information readably in the UI, preserve Human Owner review gates, and route all write actions through governed workflows.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T13:32:15Z",
+      "acceptance_notes": "Accepted after WFA-16 review. Task Review Package View implemented and accepted; linked task is done and required checks passed.",
+      "notes": [],
+      "priority": 1,
+      "order": 27,
+      "created_at": "2026-06-19T13:13:44Z",
+      "updated_at": "2026-06-19T13:32:15Z"
     }
   ]
 }

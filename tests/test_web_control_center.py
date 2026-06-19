@@ -225,6 +225,157 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(latest["check_counts"]["pass"], 1)
         self.assertTrue(latest["owner_decision_required"])
 
+    def test_reviews_page_shows_task_review_package_with_report(self):
+        task = {
+            "id": "TASK-047",
+            "ref": "WFA-16",
+            "legacy_id": "TASK-047",
+            "status": "in_review",
+            "title": "UIX-10 Add Task Review Package View",
+            "summary": "Review task changes in one place.",
+            "epic_id": "EPIC-006",
+            "epic_key": "WFA",
+            "active_stage": "Task Execution",
+            "scope": ["Show review metadata.", "Show report details."],
+            "acceptance_criteria": ["Owner can understand the decision."],
+            "order": 16,
+        }
+        report_state = review_report_state(
+            task_id="TASK-047",
+            task_ref="WFA-16",
+            summary="Implemented the review package.",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[task],
+                epics=[{"id": "EPIC-006", "status": "active", "order": 1}],
+                task_reports=report_state,
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/reviews", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Task Review Packages", body)
+        self.assertIn("UIX-10 Add Task Review Package View", body)
+        self.assertIn("WFA-16", body)
+        self.assertIn("TASK-047", body)
+        self.assertIn("Review task changes in one place.", body)
+        self.assertIn("Show review metadata.", body)
+        self.assertIn("Owner can understand the decision.", body)
+        self.assertIn("Implemented the review package.", body)
+        self.assertIn("ai_project_ctl/web/server.py", body)
+        self.assertIn("AI_PROJECT/generated/CODEX_PROMPT.md", body)
+        self.assertIn("unit", body)
+        self.assertIn("warn", body)
+        self.assertIn("Review warning.", body)
+        self.assertIn("Manual blocker.", body)
+        self.assertIn("Ready for owner decision.", body)
+        self.assertIn("Approve &amp; Done", body)
+        self.assertIn('value="task.close_reviewed"', body)
+        self.assertIn("Request Changes", body)
+        self.assertIn('value="task.request_changes"', body)
+        self.assertIn('name="confirm" value="yes" required', body)
+        self.assertIn('textarea name="notes" rows="2"', body)
+
+    def test_reviews_page_shows_missing_report_clearly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-047",
+                        "ref": "WFA-16",
+                        "legacy_id": "TASK-047",
+                        "status": "in_review",
+                        "title": "Review without report",
+                        "summary": "No report yet.",
+                        "epic_id": "EPIC-006",
+                        "order": 16,
+                    }
+                ],
+                epics=[{"id": "EPIC-006", "status": "active", "order": 1}],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/reviews", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Review without report", body)
+        self.assertIn("No Codex execution report submitted for this task.", body)
+
+    def test_reviews_page_shows_linked_change_status(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-047",
+                        "ref": "WFA-16",
+                        "legacy_id": "TASK-047",
+                        "status": "in_review",
+                        "title": "Review with change",
+                        "epic_id": "EPIC-006",
+                        "order": 16,
+                    }
+                ],
+                epics=[{"id": "EPIC-006", "status": "active", "order": 1}],
+                changes=[
+                    {
+                        "id": "CHG-026",
+                        "status": "approved",
+                        "title": "UIX-10 Add Task Review Package View",
+                        "linked_tasks": ["TASK-047"],
+                        "order": 26,
+                    }
+                ],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/reviews", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Linked Evolution Change", body)
+        self.assertIn("CHG-026", body)
+        self.assertIn("approved", body)
+        self.assertIn("UIX-10 Add Task Review Package View", body)
+
+    def test_reviews_page_hides_decision_controls_for_invalid_status(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "DOC-01",
+                        "legacy_id": "TASK-001",
+                        "status": "ready",
+                        "title": "Ready task",
+                        "epic_id": "EPIC-001",
+                        "order": 1,
+                    }
+                ],
+                epics=[{"id": "EPIC-001", "status": "active", "order": 1}],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/reviews?task=DOC-01", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Ready task", body)
+        self.assertIn(
+            "Review decision controls unavailable: task status is ready.",
+            body,
+        )
+        self.assertNotIn('value="task.close_reviewed"', body)
+        self.assertNotIn('value="task.request_changes"', body)
+
     def test_tasks_page_shows_dependency_and_missing_change_blockers(self):
         tasks = [
             {
@@ -1905,6 +2056,52 @@ def write_execution_report(path, *, task_id="TASK-001"):
         encoding="utf-8",
     )
     return path
+
+
+def review_report_state(*, task_id, task_ref, summary):
+    return {
+        "schema_version": 1,
+        "revision": 1,
+        "created_at": "2026-06-19T12:00:00Z",
+        "updated_at": "2026-06-19T12:00:00Z",
+        "latest_by_task": {task_id: "RPT-001"},
+        "reports": [
+            {
+                "id": "RPT-001",
+                "task_id": task_id,
+                "task_ref": task_ref,
+                "submitted_at": "2026-06-19T12:00:00Z",
+                "submitted_by": "codex",
+                "source_file": "/tmp/report.json",
+                "report": {
+                    "task_id": task_id,
+                    "task_ref": task_ref,
+                    "implementation_summary": summary,
+                    "changed_files": ["ai_project_ctl/web/server.py"],
+                    "generated_files": ["AI_PROJECT/generated/CODEX_PROMPT.md"],
+                    "checks": [
+                        {
+                            "name": "unit",
+                            "command": "python -m unittest",
+                            "result": "pass",
+                            "duration_sec": 1.0,
+                            "blocking": True,
+                        },
+                        {
+                            "name": "docs",
+                            "details": "Documentation warning.",
+                            "result": "warn",
+                            "blocking": False,
+                        },
+                    ],
+                    "warnings": ["Review warning."],
+                    "blockers": ["Manual blocker."],
+                    "notes": ["Ready for owner decision."],
+                    "owner_decision_required": True,
+                },
+            }
+        ],
+    }
 
 
 if __name__ == "__main__":

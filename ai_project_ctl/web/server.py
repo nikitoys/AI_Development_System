@@ -272,7 +272,7 @@ def route(
         "/tasks": lambda: render_tasks(model.dashboard(), query=query),
         "/evolution": lambda: render_evolution(model.dashboard(), query=query),
         "/epics": lambda: render_epics(model.dashboard()),
-        "/reviews": lambda: render_reviews(model.dashboard()),
+        "/reviews": lambda: render_reviews(model.dashboard(), query=query),
         "/events": lambda: render_events(model.dashboard(include_events=True)),
         "/generated": lambda: render_generated(model.dashboard()),
         "/doctor": lambda: render_doctor(
@@ -429,11 +429,14 @@ def render_epics(data: Mapping[str, Any]) -> str:
     return render_page("Epics", "".join(body), active="/epics")
 
 
-def render_reviews(data: Mapping[str, Any]) -> str:
+def render_reviews(
+    data: Mapping[str, Any],
+    *,
+    query: Mapping[str, Sequence[str]] | None = None,
+) -> str:
     review_commands = data.get("review_commands") or []
-    in_review = [
-        task for task in data.get("tasks") or [] if task.get("status") == "in_review"
-    ]
+    selected_task = _query_value(query or {}, "task")
+    review_tasks = task_review_candidates(data, selected_task)
     command_rows = [
         "<tr><td>{}</td><td>{}</td><td>{}</td></tr>".format(
             escape(command.get("name")),
@@ -444,8 +447,9 @@ def render_reviews(data: Mapping[str, Any]) -> str:
     ]
     body = [
         '<section class="panel">',
-        "<h2>Tasks In Review</h2>",
-        task_table(in_review, empty_text="No tasks are currently in review."),
+        "<h2>Task Review Packages</h2>",
+        review_task_selector(data, selected_task),
+        task_review_packages(review_tasks, data, selected_task=selected_task),
         "</section>",
         '<section class="panel">',
         "<h2>Review Registry</h2>",
@@ -1052,6 +1056,333 @@ def _sanitize_technical(value: Any) -> Any:
     return value
 
 
+def task_review_candidates(
+    data: Mapping[str, Any],
+    selected_task: str = "",
+) -> list[Mapping[str, Any]]:
+    tasks = [
+        task
+        for task in data.get("tasks") or []
+        if isinstance(task, Mapping)
+    ]
+    if selected_task:
+        return [task for task in tasks if task_ref_matches(task, selected_task)]
+    return [task for task in tasks if str(task.get("status") or "") == "in_review"]
+
+
+def review_task_selector(data: Mapping[str, Any], selected_task: str) -> str:
+    options = [("", "Tasks in review"), *task_select_options(data)]
+    return (
+        '<form class="task-controls" method="get" action="/reviews">'
+        "{}"
+        '<button type="submit">Open</button>'
+        '<a class="button-link secondary" href="/reviews">Reset</a>'
+        "</form>"
+    ).format(
+        filter_select("task", "Task", options, selected_task),
+    )
+
+
+def task_review_packages(
+    tasks: Sequence[Mapping[str, Any]],
+    data: Mapping[str, Any],
+    *,
+    selected_task: str = "",
+) -> str:
+    if not tasks:
+        if selected_task:
+            return '<p class="empty">No task matches {}.</p>'.format(
+                escape(selected_task)
+            )
+        return '<p class="empty">No tasks are currently in review.</p>'
+    return "".join(task_review_package(task, data) for task in tasks)
+
+
+def task_review_package(task: Mapping[str, Any], data: Mapping[str, Any]) -> str:
+    status = str(task.get("status") or "unknown")
+    report = _mapping(task.get("latest_report"))
+    task_ref = str(task.get("ref") or task.get("id") or "")
+    parts = [
+        '<section class="review-package review-package-{}">'.format(
+            escape(css_token(status))
+        ),
+        '<div class="review-package-header">',
+        "<div>",
+        '<h3>{}</h3>'.format(escape(task.get("title") or task_ref or "Task")),
+        '<div class="status-row">{}{}{}{}</div>'.format(
+            status_badge(status),
+            '<strong>{}</strong>'.format(escape(task_ref)) if task_ref else "",
+            '<code>{}</code>'.format(escape(task.get("legacy_id") or task.get("id") or "")),
+            '<span>{}</span>'.format(escape(task.get("active_stage") or "")),
+        ),
+        "</div>",
+        "</div>",
+        task_review_context(task),
+        linked_change_panel(task, data),
+        codex_report_panel(report),
+        review_decision_controls(task, data),
+        "</section>",
+    ]
+    return "".join(parts)
+
+
+def task_review_context(task: Mapping[str, Any]) -> str:
+    rows = [
+        ("Ref", escape(task.get("ref") or task.get("id") or "")),
+        ("Legacy ID", escape(task.get("legacy_id") or task.get("id") or "")),
+        ("Task ID", escape(task.get("id") or "")),
+        ("Status", status_badge(str(task.get("status") or "unknown"))),
+        ("Summary", escape(task.get("summary") or task.get("description") or "")),
+        ("Scope", text_list(task.get("scope"), empty_text="No scope recorded.")),
+        (
+            "Acceptance",
+            text_list(
+                task.get("acceptance_criteria"),
+                empty_text="No acceptance criteria recorded.",
+            ),
+        ),
+    ]
+    return '<div class="review-grid">{}</div>'.format(
+        "".join(
+            '<div class="review-field"><span>{}</span><div>{}</div></div>'.format(
+                escape(label),
+                value,
+            )
+            for label, value in rows
+        )
+    )
+
+
+def linked_change_panel(task: Mapping[str, Any], data: Mapping[str, Any]) -> str:
+    changes = linked_changes_for_task(task, data)
+    if not changes:
+        return (
+            '<section class="review-section">'
+            "<h3>Linked Evolution Change</h3>"
+            '<p class="empty">No linked Evolution Change.</p>'
+            "</section>"
+        )
+    rows = []
+    for change in changes:
+        rows.append(
+            "<tr><td><code>{}</code></td><td>{}</td><td>{}</td></tr>".format(
+                escape(change.get("id") or ""),
+                status_badge(str(change.get("status") or "unknown")),
+                escape(change.get("title") or ""),
+            )
+        )
+    return (
+        '<section class="review-section">'
+        "<h3>Linked Evolution Change</h3>"
+        "{}"
+        "</section>"
+    ).format(
+        table(("Change", "Status", "Title"), rows, "No linked Evolution Change."),
+    )
+
+
+def codex_report_panel(report: Mapping[str, Any]) -> str:
+    if not report:
+        return (
+            '<section class="review-section">'
+            "<h3>Codex Execution Report</h3>"
+            '<p class="empty">No Codex execution report submitted for this task.</p>'
+            "</section>"
+        )
+    summary = str(report.get("implementation_summary") or "")
+    return (
+        '<section class="review-section">'
+        "<h3>Codex Execution Report</h3>"
+        '<div class="review-grid">'
+        '<div class="review-field"><span>Report</span><div><code>{}</code></div></div>'
+        '<div class="review-field"><span>Submitted</span><div>{}</div></div>'
+        '<div class="review-field"><span>Owner Decision</span><div>{}</div></div>'
+        '<div class="review-field wide-field"><span>Summary</span><div>{}</div></div>'
+        "</div>"
+        "{}{}{}{}"
+        "</section>"
+    ).format(
+        escape(report.get("id") or ""),
+        escape(report.get("submitted_at") or "not reported"),
+        "required" if report.get("owner_decision_required") else "not required",
+        escape(summary or "No implementation summary recorded."),
+        report_file_panel("Changed Source Files", report.get("changed_files")),
+        report_file_panel(
+            "Generated / Project-Control Files",
+            report.get("generated_files"),
+        ),
+        report_checks_panel(report.get("checks")),
+        report_messages_panel(report),
+    )
+
+
+def report_file_panel(title: str, value: Any) -> str:
+    return (
+        '<section class="review-subsection">'
+        "<h4>{}</h4>"
+        "{}"
+        "</section>"
+    ).format(
+        escape(title),
+        text_list(value, empty_text="None reported.", code=True),
+    )
+
+
+def report_checks_panel(value: Any) -> str:
+    checks = [check for check in value or [] if isinstance(check, Mapping)]
+    rows = []
+    for check in checks:
+        blocking = "blocking" if check.get("blocking") else "advisory"
+        detail = str(check.get("details") or check.get("command") or "")
+        rows.append(
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                escape(check.get("name") or "check"),
+                status_badge(str(check.get("result") or "unknown")),
+                escape(blocking),
+                escape(detail),
+            )
+        )
+    return (
+        '<section class="review-subsection">'
+        "<h4>Checks</h4>"
+        "{}"
+        "</section>"
+    ).format(
+        table(("Check", "Result", "Type", "Details"), rows, "No checks reported."),
+    )
+
+
+def report_messages_panel(report: Mapping[str, Any]) -> str:
+    sections = []
+    for title, field in (
+        ("Warnings", "warnings"),
+        ("Blockers", "blockers"),
+        ("Notes", "notes"),
+    ):
+        sections.append(
+            '<section class="review-subsection">'
+            "<h4>{}</h4>"
+            "{}"
+            "</section>".format(
+                escape(title),
+                text_list(report.get(field), empty_text="None reported."),
+            )
+        )
+    return "".join(sections)
+
+
+def review_decision_controls(
+    task: Mapping[str, Any],
+    data: Mapping[str, Any],
+) -> str:
+    status = str(task.get("status") or "")
+    if status != "in_review":
+        return (
+            '<section class="review-section">'
+            "<h3>Review Decision</h3>"
+            '<p class="empty">Review decision controls unavailable: task status is {}.</p>'
+            "</section>"
+        ).format(escape(status or "unknown"))
+
+    task_ref = str(task.get("ref") or task.get("id") or "")
+    workflows = workflow_by_name(data)
+    controls = []
+    for action_id, label, notes_label, placeholder in (
+        (
+            "task.close_reviewed",
+            "Approve & Done",
+            "Approval Notes",
+            "Record the Human Owner approval basis.",
+        ),
+        (
+            "task.request_changes",
+            "Request Changes",
+            "Change Request Notes",
+            "Describe the required rework.",
+        ),
+    ):
+        controls.append(
+            '<div class="review-action">'
+            "<h4>{}</h4>"
+            "{}"
+            "{}"
+            "</div>".format(
+                escape(label),
+                workflow_preview_html(workflows.get(action_id) or {}),
+                action_form(
+                    action_id,
+                    [
+                        hidden_field("task", task_ref),
+                        textarea_field(
+                            "notes",
+                            notes_label,
+                            rows=2,
+                            placeholder=placeholder,
+                            required=True,
+                        ),
+                    ],
+                    button_label=label,
+                ),
+            )
+        )
+    return (
+        '<section class="review-section">'
+        "<h3>Review Decision</h3>"
+        '<div class="review-actions">{}</div>'
+        "</section>"
+    ).format("".join(controls))
+
+
+def linked_changes_for_task(
+    task: Mapping[str, Any],
+    data: Mapping[str, Any],
+) -> list[Mapping[str, Any]]:
+    refs = set(task_ref_values(task))
+    matches = []
+    for change in data.get("changes") or []:
+        if not isinstance(change, Mapping):
+            continue
+        linked = set(_string_items(change.get("linked_tasks")))
+        if refs.intersection(linked):
+            matches.append(change)
+    return matches
+
+
+def task_ref_matches(task: Mapping[str, Any], value: str) -> bool:
+    needle = str(value or "").strip()
+    return bool(needle) and needle in set(task_ref_values(task))
+
+
+def task_ref_values(task: Mapping[str, Any]) -> list[str]:
+    values = [
+        str(task.get("id") or ""),
+        str(task.get("ref") or ""),
+        str(task.get("legacy_id") or ""),
+    ]
+    aliases = task.get("aliases")
+    if isinstance(aliases, Sequence) and not isinstance(aliases, (str, bytes)):
+        values.extend(str(alias or "") for alias in aliases)
+    return [value for value in values if value]
+
+
+def text_list(
+    value: Any,
+    *,
+    empty_text: str,
+    code: bool = False,
+) -> str:
+    items = _string_items(value)
+    if not items:
+        return '<p class="empty">{}</p>'.format(escape(empty_text))
+    if code:
+        return '<ul class="compact-list">{}</ul>'.format(
+            "".join("<li><code>{}</code></li>".format(escape(item)) for item in items)
+        )
+    return '<ul class="compact-list">{}</ul>'.format(
+        "".join("<li>{}</li>".format(escape(item)) for item in items)
+    )
+
+
 def _mapping(value: Any) -> Mapping[str, Any]:
     return value if isinstance(value, Mapping) else {}
 
@@ -1348,6 +1679,66 @@ def render_page(title: str, body: str, *, active: str) -> str:
       padding-left: 18px;
       color: var(--muted);
       font-size: 12px;
+    }}
+    .review-package {{
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+      margin-top: 16px;
+    }}
+    .review-package:first-of-type {{
+      border-top: 0;
+      margin-top: 0;
+    }}
+    .review-package-header {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }}
+    .review-package h3 {{
+      margin: 0 0 8px;
+      font-size: 16px;
+    }}
+    .review-package h4 {{
+      margin: 0 0 8px;
+      font-size: 13px;
+    }}
+    .review-section {{
+      border-top: 1px solid var(--line);
+      margin-top: 16px;
+      padding-top: 14px;
+    }}
+    .review-subsection {{
+      margin-top: 12px;
+    }}
+    .review-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 10px;
+    }}
+    .review-field {{
+      min-width: 0;
+    }}
+    .review-field span {{
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }}
+    .review-field div {{
+      overflow-wrap: anywhere;
+    }}
+    .review-actions {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }}
+    .review-action form {{
+      display: grid;
+      gap: 8px;
     }}
     .action-result-header {{
       display: flex;
