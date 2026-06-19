@@ -66,6 +66,7 @@ EXECUTABLE_QUEUE_STATUSES = (
 TASK_PREPARE_STATUSES = {"planned", "ready", "changes_requested"}
 TASK_DEPENDENCY_SATISFIED_STATUSES = {"done"}
 TASK_APPROVED_CHANGE_STATUSES = {"approved", "in_review", "accepted"}
+CHANGE_CLOSED_STATUSES = {"accepted", "rejected", "archived"}
 
 
 class WebControlError(CommandError):
@@ -238,7 +239,7 @@ class ReadOnlyProjectModel:
             docs_revision=docs_revision,
             root=self.root,
         )
-        epics = epic_hints(epics, tasks)
+        epics = epic_hints(epics, tasks, changes)
         changes = change_hints(changes, tasks)
         doctor = self.doctor(refresh=refresh_doctor)
         generated = self.generated_views()
@@ -675,6 +676,7 @@ def change_hints(
 def epic_hints(
     epics: Sequence[Mapping[str, Any]],
     tasks: Sequence[Mapping[str, Any]],
+    changes: Sequence[Mapping[str, Any]] = (),
 ) -> list[dict[str, Any]]:
     enriched = []
     for epic in epics:
@@ -684,7 +686,9 @@ def epic_hints(
             for task in tasks
             if str(task.get("epic_id") or "") == str(epic.get("id") or "")
         ]
-        item["pipeline_hints"] = _epic_pipeline_hints(item, child_tasks)
+        hints = _epic_pipeline_hints(item, child_tasks, changes)
+        item["pipeline_hints"] = hints
+        item["task_completion"] = hints["completion"]
         enriched.append(item)
     return enriched
 
@@ -876,30 +880,87 @@ def _change_pipeline_hints(
 def _epic_pipeline_hints(
     epic: Mapping[str, Any],
     child_tasks: Sequence[Mapping[str, Any]],
+    changes: Sequence[Mapping[str, Any]] = (),
 ) -> dict[str, Any]:
     status = str(epic.get("status") or "unknown")
+    completion = _epic_task_completion(child_tasks)
+    open_changes = _epic_open_changes(child_tasks, changes)
     blockers = []
     if status not in EPIC_CLOSABLE_STATUSES:
         blockers.append("epic status is {}".format(status))
-    for task in child_tasks:
-        task_status = str(task.get("status") or "unknown")
-        if task_status not in EPIC_CLOSED_TASK_STATUSES:
-            blockers.append("{} status is {}".format(_task_display_ref(task), task_status))
+    blockers.extend(
+        "{} status is {}".format(task["ref"], task["status"])
+        for task in completion["incomplete_tasks"]
+    )
     action = _action_hint(
-        "Close Epic",
+        "Close Epic If Complete",
         "epic.close_if_complete",
         not blockers,
         "; ".join(blockers),
     )
     return {
-        "next_actions": ["Close Epic"] if action["available"] else [],
+        "next_actions": ["Close Epic If Complete"] if action["available"] else [],
         "blocked_reasons": [
-            "Close Epic unavailable: {}".format(action["reason"])
+            "Close Epic If Complete unavailable: {}".format(action["reason"])
         ]
         if action["reason"]
         else [],
         "actions": [action],
+        "completion": completion,
+        "linked_changes": [_change_summary(change) for change in open_changes],
     }
+
+
+def _epic_task_completion(
+    child_tasks: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    counts = Counter(str(task.get("status") or "unknown") for task in child_tasks)
+    closed = sum(counts.get(status, 0) for status in EPIC_CLOSED_TASK_STATUSES)
+    incomplete = [
+        {
+            "id": str(task.get("id") or ""),
+            "ref": _task_display_ref(task),
+            "status": str(task.get("status") or "unknown"),
+            "title": str(task.get("title") or ""),
+        }
+        for task in child_tasks
+        if str(task.get("status") or "") not in EPIC_CLOSED_TASK_STATUSES
+    ]
+    total = len(child_tasks)
+    return {
+        "total": total,
+        "closed": closed,
+        "open": total - closed,
+        "counts": dict(counts),
+        "incomplete_tasks": incomplete,
+    }
+
+
+def _epic_open_changes(
+    child_tasks: Sequence[Mapping[str, Any]],
+    changes: Sequence[Mapping[str, Any]],
+) -> list[Mapping[str, Any]]:
+    child_refs: set[str] = set()
+    for task in child_tasks:
+        child_refs.update(_task_refs(task))
+    if not child_refs:
+        return []
+
+    linked = []
+    seen: set[str] = set()
+    for change in changes:
+        status = str(change.get("status") or "unknown")
+        if status in CHANGE_CLOSED_STATUSES:
+            continue
+        if not child_refs.intersection(_string_list(change.get("linked_tasks"))):
+            continue
+        change_id = str(change.get("id") or "")
+        dedupe_key = change_id or repr(sorted(change.items()))
+        if dedupe_key in seen:
+            continue
+        seen.add(dedupe_key)
+        linked.append(change)
+    return linked
 
 
 def _task_next_actions(

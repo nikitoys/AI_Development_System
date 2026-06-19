@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `895`
-Changes: `31`
+Revision: `994`
+Changes: `34`
 
 ## Summary
 
-- `accepted`: 29
-- `approved`: 2
+- `accepted`: 30
+- `approved`: 4
 
 ## Changes
 
@@ -1864,7 +1864,7 @@ Linked tasks:
 
 ### CHG-031 — UIX-05 Add Bulk Task Import from file
 
-Status: `approved`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -1884,6 +1884,9 @@ Allow the owner to import task batches from a local JSON file while preserving p
 
 Approved by: `human_owner` at `2026-06-19T14:31:08Z`  
 Approval notes: Approve  
+
+Accepted by: `human_owner` at `2026-06-19T14:48:32Z`  
+Acceptance notes: Extend Bulk Task Import to support uploading JSON files in addition to pasted JSON text.  
 
 Affected files:
 
@@ -1926,3 +1929,195 @@ Impact:
 Linked tasks:
 
 - TASK-042
+
+### CHG-032 — UIX-06 Update UI workflow documentation
+
+Status: `approved`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-12 requires an explicit Evolution Change Proposal before implementation: Update owner-facing documentation for the improved UI cockpit, task filters, workflow buttons, Evolution tab, and bulk file import.
+
+Proposal:
+
+Implement the bounded task scope: Update owner quickstart with UI-first daily workflow.; Document Tasks filtering/grouping/collapse.; Document task row workflow buttons.; Document action result panel.; Document Evolution management tab.; Document Bulk Task Import from paste and file.; Clarify that legacy ctl scripts remain compatibility tools.; Clarify that UI writes route through governed workflows/commands.; Run docctl validation/render/check-generated if documentation registry is used.
+
+Rationale:
+
+Document the new owner workflow after UI cockpit improvements so daily operation is clear and old manual command-heavy instructions are de-emphasized.
+
+Approved by: `human_owner` at `2026-06-19T14:51:12Z`  
+Approval notes: Approve Change  
+
+Affected files:
+
+- README.md
+- AGENTS.md
+- ai-system/project-control/08-usage-guide.md
+- ai-system/project-control/10-owner-quickstart.md
+- ai-system/project-control/** if documentation index or appendix updates are needed
+- AI_PROJECT/state/docs.json via docctl.py only
+- AI_PROJECT/events/doc-events.jsonl via docctl.py only
+- AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only
+- AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only
+
+Risks:
+
+- Boundary risk: Do not change command behavior.
+- Boundary risk: Do not add new UI actions.
+- Boundary risk: Do not edit generated docs manually.
+- Boundary risk: Do not mark docs accepted without Human Owner approval.
+- Verify that documentation matches the implemented UI behavior.
+- Verify that outdated command-heavy workflow is not presented as the preferred path.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-043.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Update owner quickstart with UI-first daily workflow.
+- Document Tasks filtering/grouping/collapse.
+- Document task row workflow buttons.
+- Document action result panel.
+- Document Evolution management tab.
+- Documentation describes the UI-first daily workflow.
+- Documentation explains task filters, workflow buttons, Evolution tab, and bulk file import.
+- Documentation preserves protected-file and generated-output rules.
+
+Linked tasks:
+
+- TASK-043
+
+### CHG-033 — UIX-13 Add Epic Close UI Action
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-19 requires an explicit Evolution Change Proposal before implementation: Expose the epic.close_if_complete workflow in the Web Control Center with clear incomplete-task blocking reasons.
+
+Proposal:
+
+Implement the bounded task scope: Add Close Epic If Complete action to Epic or Dashboard views.; Route close action through existing epic.close_if_complete workflow.; Require explicit confirmation before closing an epic.; Show incomplete tasks when close is blocked.; Show linked open Changes if they prevent closure or should be reviewed.; Show task completion counts by status.; Use unified result panel for success/failure output.; Add tests for closable epic, incomplete epic, invalid epic, and no direct state writes.
+
+Rationale:
+
+Allow the owner to close an epic from the UI when all required child tasks are complete, while showing clear reasons when the epic cannot be closed.
+
+Approved by: `human_owner` at `2026-06-19T14:51:19Z`  
+Approval notes: Approve Change  
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/core/workflows.py if epic workflow metadata needs compatible updates
+- ai_project_ctl/core/registry.py if command metadata needs compatible updates
+- tests/test_web_control_center.py
+- tests/test_workflows.py
+- tests/test_registry.py
+
+Risks:
+
+- Boundary risk: Do not auto-close epics.
+- Boundary risk: Do not close epics with incomplete tasks.
+- Boundary risk: Do not auto-accept linked Changes.
+- Boundary risk: Do not change epic lifecycle rules.
+- Boundary risk: Do not directly edit plan.json or task state.
+- Verify that incomplete epics cannot be closed.
+- Verify that blocking tasks are shown clearly.
+- Verify that closing an epic does not auto-close tasks or Changes.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-050.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add Close Epic If Complete action to Epic or Dashboard views.
+- Route close action through existing epic.close_if_complete workflow.
+- Require explicit confirmation before closing an epic.
+- Show incomplete tasks when close is blocked.
+- Show linked open Changes if they prevent closure or should be reviewed.
+- UI shows epic completion status and open task counts.
+- Close Epic If Complete is available only when valid or explains why it is blocked.
+- Close action requires explicit confirmation.
+
+Linked tasks:
+
+- TASK-050
+
+### CHG-034 — UIX-14 Add Commit Readiness View
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-20 requires an explicit Evolution Change Proposal before implementation: Add a read-only UI view for worktree readiness, changed files, validation status, and suggested commit message.
+
+Proposal:
+
+Implement the bounded task scope: Add Commit Readiness view to the Web Control Center.; Show git status or changed files where safely available.; Show project-control validation status.; Show protected-file check status.; Show stale generated artifact warnings if present.; Show linked completed tasks and accepted Changes since last check where available.; Suggest a commit message based on completed tasks/Changes.; Do not perform git commit, git push, or destructive git commands.; Add tests for read-only rendering and safe command boundaries.
+
+Rationale:
+
+After tasks and Changes are closed, the owner needs a final view that answers whether the worktree is ready to commit. This task adds a read-only commit readiness view without performing git commits automatically.
+
+Approved by: `human_owner` at `2026-06-19T14:51:27Z`  
+Approval notes: Approve Change  
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py if read-only command routing is needed
+- ai_project_ctl/core/registry.py if read-only command metadata is needed
+- scripts/aictl.py if read-only routing is needed
+- tests/test_web_control_center.py
+- tests/test_aictl.py
+- tests/test_registry.py
+
+Risks:
+
+- Boundary risk: Do not run git commit.
+- Boundary risk: Do not run git push.
+- Boundary risk: Do not stage files automatically.
+- Boundary risk: Do not discard or reset changes.
+- Boundary risk: Do not hide uncommitted generated/protected-file warnings.
+- Boundary risk: Do not require network access.
+- Verify that no git write commands are executed.
+- Verify that warnings remain visible.
+- Verify that suggested commit message is clearly only a suggestion.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-051.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add Commit Readiness view to the Web Control Center.
+- Show git status or changed files where safely available.
+- Show project-control validation status.
+- Show protected-file check status.
+- Show stale generated artifact warnings if present.
+- UI shows a read-only commit readiness view.
+- View shows changed files or a safe unavailable message.
+- View shows validation/protected-file/generated artifact readiness.
+
+Linked tasks:
+
+- TASK-051

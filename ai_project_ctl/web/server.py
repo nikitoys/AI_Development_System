@@ -443,13 +443,29 @@ def render_epics(data: Mapping[str, Any]) -> str:
             status_badge(str(epic.get("status") or "unknown")),
             escape(epic.get("initiative_id", "")),
             escape(epic.get("title", "")),
+            epic_completion_cell(epic),
+            epic_open_changes_cell(epic),
             pipeline_hint_cell(epic),
+            epic_row_actions(epic, data),
         ]
         rows.append("<tr>{}</tr>".format("".join("<td>{}</td>".format(cell) for cell in cells)))
     body = [
         '<section class="panel">',
         "<h2>Epics</h2>",
-        table(("Epic", "Status", "Initiative", "Title", "Next / Blockers"), rows, "No epics."),
+        table(
+            (
+                "Epic",
+                "Status",
+                "Initiative",
+                "Title",
+                "Tasks",
+                "Open Changes",
+                "Next / Blockers",
+                "Actions",
+            ),
+            rows,
+            "No epics.",
+        ),
         "</section>",
     ]
     return render_page("Epics", "".join(body), active="/epics")
@@ -774,6 +790,7 @@ def render_actions(data: Mapping[str, Any]) -> str:
                 if epic_options
                 else input_field("epic", "Epic"),
             ],
+            button_label="Close Epic If Complete",
         ),
         "</section>",
         '<section class="panel action-panel">',
@@ -2484,6 +2501,94 @@ def change_table(
 
 def change_identity_cell(change: Mapping[str, Any]) -> str:
     return "<strong>{}</strong>".format(escape(change.get("id") or ""))
+
+
+def epic_completion_cell(epic: Mapping[str, Any]) -> str:
+    completion = _mapping(epic.get("task_completion"))
+    counts = _mapping(completion.get("counts"))
+    total = int(completion.get("total") or 0)
+    closed = int(completion.get("closed") or 0)
+    open_count = int(completion.get("open") or 0)
+    incomplete_tasks = [
+        task
+        for task in completion.get("incomplete_tasks") or []
+        if isinstance(task, Mapping)
+    ]
+    count_items = [
+        "<li>{} {}</li>".format(escape(status), escape(count))
+        for status, count in sorted(counts.items(), key=lambda item: status_sort_key(str(item[0])))
+    ]
+    parts = [
+        '<div class="epic-completion">',
+        "<strong>{} / {} closed</strong>".format(escape(closed), escape(total)),
+        '<span class="muted">{} open</span>'.format(escape(open_count)),
+    ]
+    if count_items:
+        parts.append('<ul class="compact-list">{}</ul>'.format("".join(count_items)))
+    if incomplete_tasks:
+        parts.append(
+            '<ul class="compact-list">{}</ul>'.format(
+                "".join(
+                    "<li>{} {}</li>".format(
+                        escape(task.get("ref") or task.get("id") or ""),
+                        status_badge(str(task.get("status") or "unknown")),
+                    )
+                    for task in incomplete_tasks[:5]
+                )
+            )
+        )
+    parts.append("</div>")
+    return "".join(parts)
+
+
+def epic_open_changes_cell(epic: Mapping[str, Any]) -> str:
+    hints = _mapping(epic.get("pipeline_hints"))
+    changes = [
+        change
+        for change in hints.get("linked_changes") or []
+        if isinstance(change, Mapping)
+    ]
+    if not changes:
+        return '<span class="muted">none</span>'
+    items = []
+    for change in changes[:5]:
+        label = "{} {}".format(
+            change.get("id") or "",
+            change.get("status") or "unknown",
+        ).strip()
+        title = str(change.get("title") or "")
+        items.append(
+            "<li><strong>{}</strong>{}</li>".format(
+                escape(label),
+                " {}".format(escape(title)) if title else "",
+            )
+        )
+    if len(changes) > 5:
+        items.append("<li>+{} more</li>".format(escape(len(changes) - 5)))
+    return '<ul class="compact-list">{}</ul>'.format("".join(items))
+
+
+def epic_row_actions(epic: Mapping[str, Any], data: Mapping[str, Any]) -> str:
+    action_id = "epic.close_if_complete"
+    if entity_action_available(epic, action_id) is not True:
+        return '<span class="pill">No row workflows</span>'
+    epic_ref = str(epic.get("key") or epic.get("id") or "")
+    workflow = workflow_by_name(data).get(action_id) or {}
+    return (
+        '<details class="row-action row-action-{}">'
+        "<summary>Close Epic If Complete</summary>"
+        "{}"
+        "{}"
+        "</details>"
+    ).format(
+        escape(css_token(action_id)),
+        workflow_preview_html(workflow),
+        action_form(
+            action_id,
+            [hidden_field("epic", epic_ref)],
+            button_label="Close Epic If Complete",
+        ),
+    )
 
 
 def change_list_cell(value: Any, *, limit: int = 3) -> str:

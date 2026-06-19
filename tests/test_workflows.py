@@ -555,6 +555,29 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(result.errors[0].code, "WORKFLOW_EPIC_HAS_ACTIVE_TASKS")
         self.assertEqual(calls, [])
 
+    def test_close_epic_rejects_unknown_epic_before_runner(self):
+        calls = []
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_plan_state(
+                root,
+                [{"id": "EPIC-006", "key": "WFA", "status": "active"}],
+            )
+            write_tasks_state(root, [])
+
+            result = run_workflow(
+                "epic.close_if_complete",
+                epic_ref="MISSING",
+                root=root,
+                confirmed=True,
+                runner=lambda argv: calls.append(argv) or completed(),
+            )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.errors[0].code, "WORKFLOW_EPIC_NOT_FOUND")
+        self.assertEqual(calls, [])
+
     def test_close_epic_moves_active_epic_to_done_when_children_are_inactive(self):
         calls = []
 

@@ -882,20 +882,43 @@ class WebControlCenterTests(unittest.TestCase):
                 "epic_id": "EPIC-001",
             },
         ]
+        changes = [
+            {
+                "id": "CHG-050",
+                "status": "ready",
+                "title": "Review WFA close blockers",
+                "linked_tasks": ["TASK-100"],
+            }
+        ]
         epics = [
             {"id": "EPIC-001", "key": "DOC", "status": "active", "title": "Docs"},
             {"id": "EPIC-006", "key": "WFA", "status": "active", "title": "Workflow"},
         ]
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            write_web_state(root, tasks=tasks, epics=epics)
+            write_web_state(root, tasks=tasks, epics=epics, changes=changes)
             model = ReadOnlyProjectModel(root, actor="tester")
 
             status, _, body = route("/epics", model)
 
         self.assertEqual(status.value, 200)
-        self.assertIn("Next:</strong> Close Epic", body)
-        self.assertIn("Close Epic unavailable: WFA-10 status is in_progress", body)
+        self.assertIn("Tasks", body)
+        self.assertIn("Open Changes", body)
+        self.assertIn("1 / 1 closed", body)
+        self.assertIn("0 / 1 closed", body)
+        self.assertIn("1 open", body)
+        self.assertIn("done 1", body)
+        self.assertIn("in_progress 1", body)
+        self.assertIn("Next:</strong> Close Epic If Complete", body)
+        self.assertIn('value="epic.close_if_complete"', body)
+        self.assertIn('name="epic" value="DOC"', body)
+        self.assertIn("Confirm", body)
+        self.assertIn(
+            "Close Epic If Complete unavailable: WFA-10 status is in_progress",
+            body,
+        )
+        self.assertIn("CHG-050 ready", body)
+        self.assertIn("Review WFA close blockers", body)
 
     def test_doctor_refresh_runs_diagnostics_and_reuses_cache(self):
         calls = []
@@ -1571,6 +1594,30 @@ class WebControlCenterTests(unittest.TestCase):
 
             self.assertEqual(raised.exception.code, "WEB_FILE_WRITE_ARGUMENT_REJECTED")
             self.assertEqual(protected.read_text(encoding="utf-8"), "sentinel\n")
+
+    def test_close_epic_web_action_rejects_direct_file_write_fields(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            protected = root / "AI_PROJECT/state/plan.json"
+            protected.parent.mkdir(parents=True)
+            protected.write_text("sentinel\n", encoding="utf-8")
+
+            executor = WebActionExecutor(root, actor="tester")
+            with patch("ai_project_ctl.web.actions.subprocess.run") as run:
+                with self.assertRaises(WebActionError) as raised:
+                    executor.execute(
+                        {
+                            "action": "epic.close_if_complete",
+                            "confirm": "yes",
+                            "epic": "WFA",
+                            "path": "AI_PROJECT/state/plan.json",
+                            "content": "{}",
+                        }
+                    )
+
+                self.assertEqual(raised.exception.code, "WEB_FILE_WRITE_ARGUMENT_REJECTED")
+                self.assertEqual(protected.read_text(encoding="utf-8"), "sentinel\n")
+                run.assert_not_called()
 
     def test_unsafe_task_transition_target_is_rejected_before_subprocess(self):
         executor = WebActionExecutor(".", actor="tester")
