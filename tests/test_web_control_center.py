@@ -161,6 +161,70 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("Build Codex prompt with context", body)
         self.assertIn('name="confirm" value="yes" required', body)
 
+    def test_dashboard_exposes_latest_task_execution_report(self):
+        report_state = {
+            "schema_version": 1,
+            "revision": 1,
+            "created_at": "2026-06-19T12:00:00Z",
+            "updated_at": "2026-06-19T12:00:00Z",
+            "latest_by_task": {"TASK-001": "RPT-001"},
+            "reports": [
+                {
+                    "id": "RPT-001",
+                    "task_id": "TASK-001",
+                    "task_ref": "DOC-01",
+                    "submitted_at": "2026-06-19T12:00:00Z",
+                    "submitted_by": "codex",
+                    "source_file": "/tmp/report.json",
+                    "report": {
+                        "task_id": "TASK-001",
+                        "task_ref": "DOC-01",
+                        "implementation_summary": "Implemented report flow.",
+                        "changed_files": ["scripts/taskctl.py"],
+                        "generated_files": [],
+                        "checks": [
+                            {
+                                "name": "unit",
+                                "result": "pass",
+                                "blocking": True,
+                                "duration_sec": 1.2,
+                            }
+                        ],
+                        "warnings": [],
+                        "blockers": [],
+                        "notes": ["Ready for review."],
+                        "owner_decision_required": True,
+                    },
+                }
+            ],
+        }
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "DOC-01",
+                        "status": "in_review",
+                        "title": "Task with report",
+                        "epic_id": "EPIC-001",
+                        "order": 1,
+                    }
+                ],
+                epics=[{"id": "EPIC-001", "status": "active", "order": 1}],
+                task_reports=report_state,
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+            data = model.dashboard()
+
+        latest = data["tasks"][0]["latest_report"]
+        self.assertEqual(latest["id"], "RPT-001")
+        self.assertEqual(latest["implementation_summary"], "Implemented report flow.")
+        self.assertEqual(latest["check_counts"]["pass"], 1)
+        self.assertTrue(latest["owner_decision_required"])
+
     def test_tasks_page_shows_dependency_and_missing_change_blockers(self):
         tasks = [
             {
@@ -982,6 +1046,130 @@ class WebControlCenterTests(unittest.TestCase):
             self.assertTrue(result.ok)
             self.assertIn("task.transition", [event.get("command") for event in events])
 
+    def test_task_report_submit_stores_report_without_touching_tasks_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            init_basic_task_project(root)
+            report_file = write_execution_report(root / "report.json", task_id="TASK-001")
+            tasks_path = root / "AI_PROJECT/state/tasks.json"
+            tasks_before = tasks_path.read_text(encoding="utf-8")
+
+            completed = run_ctl(
+                root,
+                "taskctl.py",
+                "task",
+                "report",
+                "submit",
+                "--task",
+                "TASK-001",
+                "--file",
+                str(report_file),
+                "--confirm",
+                "--json",
+            )
+
+            payload = json.loads(completed.stdout)
+            reports_state = json.loads(
+                (root / "AI_PROJECT/state/task_reports.json").read_text(encoding="utf-8")
+            )
+            events = [
+                json.loads(line)
+                for line in (root / "AI_PROJECT/events/task-report-events.jsonl")
+                .read_text(encoding="utf-8")
+                .splitlines()
+                if line.strip()
+            ]
+            model = ReadOnlyProjectModel(root, actor="tester")
+            task = model.dashboard()["tasks"][0]
+            tasks_after = tasks_path.read_text(encoding="utf-8")
+
+        self.assertEqual(payload["report_id"], "RPT-001")
+        self.assertEqual(reports_state["latest_by_task"]["TASK-001"], "RPT-001")
+        self.assertEqual(events[-1]["command"], "task.report.submit")
+        self.assertEqual(tasks_after, tasks_before)
+        self.assertEqual(task["latest_report"]["id"], "RPT-001")
+
+    def test_task_report_submit_rejects_invalid_task_without_persistent_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            init_basic_task_project(root)
+            report_file = write_execution_report(root / "report.json", task_id="TASK-999")
+
+            completed = run_ctl_raw(
+                root,
+                "taskctl.py",
+                "task",
+                "report",
+                "submit",
+                "--task",
+                "TASK-001",
+                "--file",
+                str(report_file),
+                "--confirm",
+            )
+            report_state_exists = (root / "AI_PROJECT/state/task_reports.json").exists()
+
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("INVALID_REPORT_SCHEMA", completed.stderr)
+        self.assertFalse(report_state_exists)
+
+    def test_task_report_submit_rejects_invalid_schema_without_persistent_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            init_basic_task_project(root)
+            report_file = root / "bad-report.json"
+            report_file.write_text(
+                json.dumps(
+                    {
+                        "task_id": "TASK-001",
+                        "implementation_summary": "Missing required lists.",
+                        "commands": ["python scripts/taskctl.py task transition TASK-001 --to done"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            completed = run_ctl_raw(
+                root,
+                "taskctl.py",
+                "task",
+                "report",
+                "submit",
+                "--task",
+                "TASK-001",
+                "--file",
+                str(report_file),
+                "--confirm",
+            )
+            report_state_exists = (root / "AI_PROJECT/state/task_reports.json").exists()
+
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("INVALID_REPORT_SCHEMA", completed.stderr)
+        self.assertFalse(report_state_exists)
+
+    def test_task_report_submit_rejects_missing_file_without_persistent_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            init_basic_task_project(root)
+
+            completed = run_ctl_raw(
+                root,
+                "taskctl.py",
+                "task",
+                "report",
+                "submit",
+                "--task",
+                "TASK-001",
+                "--file",
+                str(root / "missing-report.json"),
+                "--confirm",
+            )
+            report_state_exists = (root / "AI_PROJECT/state/task_reports.json").exists()
+
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("REPORT_FILE_NOT_FOUND", completed.stderr)
+        self.assertFalse(report_state_exists)
+
     def test_workflow_web_action_delegates_to_confirmed_aictl_workflow(self):
         completed_process = subprocess.CompletedProcess(
             args=[],
@@ -1571,6 +1759,7 @@ def write_web_state(
     initiatives=None,
     changes=None,
     execution=None,
+    task_reports=None,
 ):
     state_dir = root / "AI_PROJECT" / "state"
     state_dir.mkdir(parents=True, exist_ok=True)
@@ -1611,6 +1800,11 @@ def write_web_state(
         ),
         encoding="utf-8",
     )
+    if task_reports is not None:
+        (state_dir / "task_reports.json").write_text(
+            json.dumps(task_reports),
+            encoding="utf-8",
+        )
 
 
 def run_ctl(root, script, *args):
@@ -1638,6 +1832,79 @@ def run_ctl(root, script, *args):
             )
         )
     return completed
+
+
+def run_ctl_raw(root, script, *args):
+    return subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).resolve().parents[1] / "scripts" / script),
+            "--root",
+            str(root),
+            "--actor",
+            "tester",
+            *args,
+        ],
+        cwd=str(Path(__file__).resolve().parents[1]),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+
+def init_basic_task_project(root):
+    run_ctl(root, "planctl.py", "init")
+    run_ctl(root, "planctl.py", "initiative", "create", "--title", "Control")
+    run_ctl(root, "planctl.py", "epic", "create", "--initiative", "INIT-001", "--title", "Tasks")
+    run_ctl(root, "taskctl.py", "init")
+    run_ctl(
+        root,
+        "taskctl.py",
+        "task",
+        "create",
+        "--epic",
+        "EPIC-001",
+        "--title",
+        "Report task",
+        "--status",
+        "in_progress",
+        "--scope",
+        "Submit report",
+        "--allowed-file",
+        "scripts/taskctl.py",
+        "--acceptance",
+        "Report state exists",
+    )
+
+
+def write_execution_report(path, *, task_id="TASK-001"):
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "task_id": task_id,
+                "implementation_summary": "Implemented structured report submission.",
+                "changed_files": ["scripts/taskctl.py"],
+                "generated_files": [],
+                "checks": [
+                    {
+                        "name": "unit",
+                        "command": "python -m unittest",
+                        "result": "pass",
+                        "duration_sec": 1.0,
+                        "blocking": True,
+                        "details": "Selected tests passed.",
+                    }
+                ],
+                "warnings": [],
+                "blockers": [],
+                "notes": ["Submitted through CLI."],
+                "owner_decision_required": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    return path
 
 
 if __name__ == "__main__":

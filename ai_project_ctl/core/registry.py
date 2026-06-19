@@ -303,6 +303,7 @@ def _output(description: str, *, fields: tuple[str, ...] = ()) -> OutputSpec:
 
 def _default_descriptors() -> tuple[CommandDescriptor, ...]:
     state_tasks = "AI_PROJECT/state/tasks.json"
+    state_task_reports = "AI_PROJECT/state/task_reports.json"
     state_plan = "AI_PROJECT/state/plan.json"
     state_evolution = "AI_PROJECT/state/evolution.json"
     state_docs = "AI_PROJECT/state/docs.json"
@@ -471,6 +472,38 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
             owner_approval="Approval and done states remain Human Owner/review gates.",
             dry_run=True,
             legacy_command=("python scripts/taskctl.py task transition <TASK_ID> --to <STATUS>",),
+        ),
+        CommandDescriptor(
+            name="task.report.submit",
+            domain="task",
+            description="Submit a structured Codex execution report for one Task.",
+            kind=CommandKind.WRITE,
+            arguments=(
+                _arg("task", "Task ID, ref, UID, legacy ID, or alias.", required=True),
+                _arg("file", "UTF-8 JSON execution report file.", required=True),
+                _arg("confirm", "Required explicit confirmation.", value_type="boolean", required=True),
+            ),
+            reads_state=(state_tasks, state_plan, state_task_reports),
+            writes_state=(state_task_reports,),
+            event_logs=("AI_PROJECT/events/task-report-events.jsonl",),
+            output=_output(
+                "Stored execution report result.",
+                fields=("report_id", "task_id", "owner_decision_required"),
+            ),
+            validators=("task_state", "plan_references", "execution_report_schema"),
+            lock_scope="task_report",
+            owner_approval=(
+                "Explicit confirmation is required; submitted reports do not approve, close, or accept tasks."
+            ),
+            dry_run=True,
+            legacy_command=(
+                "python scripts/aictl.py task report submit --task <TASK_ID> --file <REPORT.json> --confirm",
+            ),
+            notes=(
+                "Delegates storage to taskctl.py and writes task_reports.json plus task-report-events.jsonl.",
+                "Validates report schema and task identity before storing anything.",
+                "Does not modify tasks.json and does not change task lifecycle status.",
+            ),
         ),
         CommandDescriptor(
             name="task.prepare_for_codex",

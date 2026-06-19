@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 424,
+  "revision": 429,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-19T12:27:35Z",
+  "updated_at": "2026-06-19T13:12:06Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -3377,7 +3377,7 @@
       "id": "TASK-046",
       "epic_id": "EPIC-006",
       "title": "UIX-09 Add Codex Execution Report Submission",
-      "status": "planned",
+      "status": "done",
       "summary": "Add a governed way for Codex to submit structured task execution reports through aictl instead of relying on manual pasted summaries.",
       "description": "Introduce a machine-readable Codex execution report flow. At the end of task execution, Codex should be able to write a structured JSON report and submit it through a governed CLI command. The report must be validated, stored through project-control state/events, and made available to the Web Control Center for task review.",
       "priority": 1,
@@ -3448,11 +3448,11 @@
           "reason": "Codex execution report submission should use the unified result/action foundation."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T13:12:05Z",
+      "approval_notes": "WFA-15 accepted. Codex Execution Report Submission implemented and verified. Structured task reports can now be submitted through governed CLI paths, stored in task_reports state/events, exposed to the Web read model, and do not replace Human Owner review.",
       "created_at": "2026-06-19T09:59:23Z",
-      "updated_at": "2026-06-19T09:59:48Z",
+      "updated_at": "2026-06-19T13:12:06Z",
       "uid": "tsk_6a6615a135ce",
       "ref": "WFA-15",
       "legacy_id": "TASK-046",

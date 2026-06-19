@@ -21,6 +21,7 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("task.show", names)
         self.assertIn("task.create", names)
         self.assertIn("task.import", names)
+        self.assertIn("task.report.submit", names)
         self.assertIn("task.prepare_for_codex", names)
         self.assertIn("task.refresh_execution_context", names)
         self.assertIn("task.submit_for_review", names)
@@ -112,6 +113,22 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("confirm", argument_names)
         self.assertIn("Preview is allowed", descriptor["owner_approval"])
         self.assertIn("Validates all Epic", " ".join(descriptor["notes"]))
+
+    def test_task_report_submit_is_registered_as_separate_report_write(self):
+        descriptor = command_describe("task.report.submit")
+        argument_names = [argument["name"] for argument in descriptor["arguments"]]
+
+        self.assertEqual(descriptor["domain"], "task")
+        self.assertEqual(descriptor["kind"], "write")
+        self.assertTrue(descriptor["read_write"]["mutates_state"])
+        self.assertTrue(descriptor["read_write"]["writes_events"])
+        self.assertFalse(descriptor["read_write"]["renders_generated"])
+        self.assertIn("AI_PROJECT/state/task_reports.json", descriptor["writes_state"])
+        self.assertNotIn("AI_PROJECT/state/tasks.json", descriptor["writes_state"])
+        self.assertIn("AI_PROJECT/events/task-report-events.jsonl", descriptor["event_logs"])
+        self.assertEqual(argument_names, ["task", "file", "confirm"])
+        self.assertIn("do not approve", descriptor["owner_approval"])
+        self.assertIn("Does not modify tasks.json", " ".join(descriptor["notes"]))
 
     def test_evolution_create_for_task_is_registered_without_approval(self):
         descriptor = command_describe("evolution.create_for_task")

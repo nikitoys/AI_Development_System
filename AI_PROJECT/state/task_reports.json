@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "revision": 2,
+  "created_at": "2026-06-19T13:05:16Z",
+  "updated_at": "2026-06-19T13:07:34Z",
+  "reports": [
+    {
+      "id": "RPT-001",
+      "task_id": "TASK-046",
+      "task_ref": "WFA-15",
+      "submitted_at": "2026-06-19T13:05:16Z",
+      "submitted_by": "human_owner",
+      "source_file": "/tmp/codex-task-046-report.json",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-046",
+        "task_ref": "WFA-15",
+        "reported_task_id": "TASK-046",
+        "reported_task_ref": "WFA-15",
+        "implementation_summary": "Added governed Codex execution report submission through taskctl and aictl, with strict JSON validation, separate report state/events, Web read-model exposure, prompt guidance, and regression tests.",
+        "changed_files": [
+          "ai_project_ctl/core/registry.py",
+          "ai_project_ctl/web/read_model.py",
+          "scripts/aictl.py",
+          "scripts/taskctl.py",
+          "tests/test_aictl.py",
+          "tests/test_registry.py",
+          "tests/test_web_control_center.py"
+        ],
+        "generated_files": [
+          "AI_PROJECT/generated/CODEX_CURRENT.md",
+          "AI_PROJECT/generated/CODEX_TASKS.md",
+          "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md"
+        ],
+        "checks": [
+          {
+            "name": "Python compile",
+            "command": "python -m py_compile scripts/taskctl.py scripts/aictl.py ai_project_ctl/core/registry.py ai_project_ctl/web/read_model.py",
+            "result": "pass",
+            "duration_sec": 1.038,
+            "blocking": true,
+            "details": "Touched Python modules compiled successfully."
+          },
+          {
+            "name": "Focused unit tests",
+            "command": "python -m unittest tests.test_registry tests.test_aictl tests.test_web_control_center",
+            "result": "pass",
+            "duration_sec": 6.946,
+            "blocking": true,
+            "details": "Registry, facade, report submission, and Web read-model tests passed."
+          },
+          {
+            "name": "Workflow unit tests",
+            "command": "python -m unittest tests.test_workflows",
+            "result": "pass",
+            "duration_sec": 0.539,
+            "blocking": true,
+            "details": "Existing workflow tests passed."
+          },
+          {
+            "name": "Full unittest discovery",
+            "command": "python -m unittest discover -s tests",
+            "result": "pass",
+            "duration_sec": 12.756,
+            "blocking": true,
+            "details": "All 125 discovered tests passed."
+          },
+          {
+            "name": "Project doctor",
+            "command": "python scripts/aictl.py project doctor --json",
+            "result": "pass",
+            "duration_sec": 2.843,
+            "blocking": true,
+            "details": "Project doctor reported 13 PASS, 0 WARN, 0 FAIL."
+          },
+          {
+            "name": "Protected files check",
+            "command": "python scripts/check-protected-project-files.py --verbose",
+            "result": "pass",
+            "duration_sec": 0.241,
+            "blocking": true,
+            "details": "Protected project files check passed."
+          },
+          {
+            "name": "Documentation validation",
+            "command": "python scripts/docctl.py validate",
+            "result": "warning",
+            "duration_sec": 1.208,
+            "blocking": false,
+            "details": "Command exited successfully with pre-existing documentation status/hash warnings."
+          }
+        ],
+        "warnings": [
+          "python -m unittest discover from the repository root found no tests; reran with -s tests and all discovered tests passed.",
+          "docctl validate reported pre-existing documentation registry/status/hash warnings but exited OK."
+        ],
+        "blockers": [],
+        "notes": [
+          "The report command stores data in AI_PROJECT/state/task_reports.json and AI_PROJECT/events/task-report-events.jsonl through the governed CLI only.",
+          "Submitting a report does not modify tasks.json and does not approve, close, or transition the task."
+        ],
+        "owner_decision_required": true
+      }
+    },
+    {
+      "id": "RPT-002",
+      "task_id": "TASK-046",
+      "task_ref": "WFA-15",
+      "submitted_at": "2026-06-19T13:07:34Z",
+      "submitted_by": "codex",
+      "source_file": "/tmp/codex-task-046-report.json",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-046",
+        "task_ref": "WFA-15",
+        "reported_task_id": "TASK-046",
+        "reported_task_ref": "WFA-15",
+        "implementation_summary": "Added governed Codex execution report submission through taskctl and aictl, with strict JSON validation, separate report state/events, Web read-model exposure, prompt guidance, regression tests, a submitted execution report, and TASK-046 moved to in_review through the governed workflow.",
+        "changed_files": [
+          "ai_project_ctl/core/registry.py",
+          "ai_project_ctl/web/read_model.py",
+          "scripts/aictl.py",
+          "scripts/taskctl.py",
+          "tests/test_aictl.py",
+          "tests/test_registry.py",
+          "tests/test_web_control_center.py",
+          "AI_PROJECT/state/task_reports.json",
+          "AI_PROJECT/events/task-report-events.jsonl",
+          "AI_PROJECT/state/tasks.json",
+          "AI_PROJECT/events/task-events.jsonl",
+          "AI_PROJECT/state/current_execution.json",
+          "AI_PROJECT/events/context-events.jsonl",
+          "AI_PROJECT/events/codex-events.jsonl"
+        ],
+        "generated_files": [
+          "AI_PROJECT/generated/CODEX_CURRENT.md",
+          "AI_PROJECT/generated/CODEX_TASKS.md",
+          "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+          "AI_PROJECT/generated/CONTEXT_PACK.md",
+          "AI_PROJECT/generated/CONTEXT_STATUS.md",
+          "AI_PROJECT/generated/CODEX_PROMPT.md",
+          "AI_PROJECT/generated/CODEX_STATUS.md"
+        ],
+        "checks": [
+          {
+            "name": "Python compile",
+            "command": "python -m py_compile scripts/taskctl.py scripts/aictl.py ai_project_ctl/core/registry.py ai_project_ctl/web/read_model.py",
+            "result": "pass",
+            "duration_sec": 1.038,
+            "blocking": true,
+            "details": "Touched Python modules compiled successfully."
+          },
+          {
+            "name": "Focused unit tests",
+            "command": "python -m unittest tests.test_registry tests.test_aictl tests.test_web_control_center",
+            "result": "pass",
+            "duration_sec": 6.946,
+            "blocking": true,
+            "details": "Registry, facade, report submission, and Web read-model tests passed."
+          },
+          {
+            "name": "Workflow unit tests",
+            "command": "python -m unittest tests.test_workflows",
+            "result": "pass",
+            "duration_sec": 0.539,
+            "blocking": true,
+            "details": "Existing workflow tests passed."
+          },
+          {
+            "name": "Full unittest discovery",
+            "command": "python -m unittest discover -s tests",
+            "result": "pass",
+            "duration_sec": 12.756,
+            "blocking": true,
+            "details": "All 125 discovered tests passed."
+          },
+          {
+            "name": "Task validation",
+            "command": "python scripts/taskctl.py validate && python scripts/taskctl.py check-generated",
+            "result": "pass",
+            "duration_sec": 1.334,
+            "blocking": true,
+            "details": "Task state and generated task files are valid after report submission and review transition."
+          },
+          {
+            "name": "Context validation",
+            "command": "python scripts/contextctl.py validate && python scripts/contextctl.py check-generated",
+            "result": "pass",
+            "duration_sec": 3.242,
+            "blocking": true,
+            "details": "Context files are valid and up to date after refresh."
+          },
+          {
+            "name": "Evolution validation",
+            "command": "python scripts/evolutionctl.py validate && python scripts/evolutionctl.py check-generated",
+            "result": "pass",
+            "duration_sec": 2.315,
+            "blocking": true,
+            "details": "Evolution state and generated output are valid."
+          },
+          {
+            "name": "Project doctor",
+            "command": "python scripts/aictl.py project doctor --json",
+            "result": "pass",
+            "duration_sec": 4.956,
+            "blocking": true,
+            "details": "Final project doctor reported 13 PASS, 0 WARN, 0 FAIL."
+          },
+          {
+            "name": "Protected files check",
+            "command": "python scripts/check-protected-project-files.py --verbose",
+            "result": "pass",
+            "duration_sec": 1.092,
+            "blocking": true,
+            "details": "Final protected project files check passed."
+          },
+          {
+            "name": "Documentation validation",
+            "command": "python scripts/docctl.py validate",
+            "result": "warning",
+            "duration_sec": 1.208,
+            "blocking": false,
+            "details": "Command exited successfully with pre-existing documentation status/hash warnings."
+          }
+        ],
+        "warnings": [
+          "python -m unittest discover from the repository root found no tests; reran with -s tests and all discovered tests passed.",
+          "docctl validate reported pre-existing documentation registry/status/hash warnings but exited OK."
+        ],
+        "blockers": [],
+        "notes": [
+          "The report command stores data in AI_PROJECT/state/task_reports.json and AI_PROJECT/events/task-report-events.jsonl through the governed CLI only.",
+          "Submitting a report does not modify tasks.json and does not approve, close, or transition the task.",
+          "TASK-046 was submitted for review through task.submit_for_review; Human Owner approval/closure remains separate."
+        ],
+        "owner_decision_required": true
+      }
+    }
+  ],
+  "latest_by_task": {
+    "TASK-046": "RPT-002"
+  }
+}

@@ -213,6 +213,8 @@ class ReadOnlyProjectModel:
         include_events: bool = False,
     ) -> dict[str, Any]:
         tasks = self.tasks()
+        latest_reports = self.latest_task_reports_by_task()
+        tasks = attach_latest_task_reports(tasks, latest_reports)
         current_task = self.current_task(tasks)
         initiatives = self.initiatives()
         epics = self.epics()
@@ -239,6 +241,7 @@ class ReadOnlyProjectModel:
             "root": str(self.root),
             "current_task": current_task,
             "tasks": tasks,
+            "task_reports": self.task_reports(),
             "task_counts": dict(Counter(task.get("status", "unknown") for task in tasks)),
             "queue": self.executable_queue(tasks),
             "initiatives": initiatives,
@@ -322,6 +325,49 @@ class ReadOnlyProjectModel:
             [dict(change) for change in changes if isinstance(change, dict)],
             key=_change_sort_key,
         )
+
+    def task_reports(self) -> list[dict[str, Any]]:
+        try:
+            state = self._state_json("task_reports.json")
+        except WebControlError as exc:
+            if exc.code == "WEB_STATE_FILE_MISSING":
+                return []
+            raise
+        reports = state.get("reports")
+        if not isinstance(reports, list):
+            return []
+        return [dict(report) for report in reports if isinstance(report, dict)]
+
+    def latest_task_reports_by_task(self) -> dict[str, dict[str, Any]]:
+        try:
+            state = self._state_json("task_reports.json")
+        except WebControlError as exc:
+            if exc.code == "WEB_STATE_FILE_MISSING":
+                return {}
+            raise
+        reports = [
+            dict(report)
+            for report in state.get("reports", [])
+            if isinstance(report, dict)
+        ]
+        reports_by_id = {
+            str(report.get("id") or ""): report
+            for report in reports
+            if str(report.get("id") or "")
+        }
+        latest: dict[str, dict[str, Any]] = {}
+        latest_by_task = state.get("latest_by_task")
+        if isinstance(latest_by_task, Mapping):
+            for task_id, report_id in latest_by_task.items():
+                report = reports_by_id.get(str(report_id or ""))
+                if report:
+                    latest[str(task_id)] = _task_report_summary(report)
+
+        for report in reports:
+            task_id = str(report.get("task_id") or "")
+            if task_id and task_id not in latest:
+                latest[task_id] = _task_report_summary(report)
+        return latest
 
     def execution_status(self) -> dict[str, Any]:
         try:
@@ -580,6 +626,20 @@ def task_hints(
             tasks_revision=tasks_revision,
             docs_revision=docs_revision,
         )
+        enriched.append(item)
+    return enriched
+
+
+def attach_latest_task_reports(
+    tasks: Sequence[Mapping[str, Any]],
+    latest_reports: Mapping[str, Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    enriched = []
+    for task in tasks:
+        item = dict(task)
+        report = latest_reports.get(str(task.get("id") or ""))
+        if report:
+            item["latest_report"] = dict(report)
         enriched.append(item)
     return enriched
 
@@ -1096,6 +1156,42 @@ def _change_summary(change: Mapping[str, Any]) -> dict[str, Any]:
         "id": str(change.get("id") or ""),
         "status": str(change.get("status") or "unknown"),
         "title": str(change.get("title") or ""),
+    }
+
+
+def _task_report_summary(report_record: Mapping[str, Any]) -> dict[str, Any]:
+    report = report_record.get("report")
+    report_data = report if isinstance(report, Mapping) else {}
+    checks = [
+        dict(check)
+        for check in report_data.get("checks", [])
+        if isinstance(check, Mapping)
+    ]
+    check_counts = Counter(str(check.get("result") or "unknown") for check in checks)
+    blocking_failures = [
+        check
+        for check in checks
+        if bool(check.get("blocking"))
+        and str(check.get("result") or "").lower() in {"fail", "failed", "error"}
+    ]
+    return {
+        "id": str(report_record.get("id") or ""),
+        "task_id": str(report_record.get("task_id") or ""),
+        "task_ref": str(report_record.get("task_ref") or ""),
+        "submitted_at": str(report_record.get("submitted_at") or ""),
+        "submitted_by": str(report_record.get("submitted_by") or ""),
+        "source_file": str(report_record.get("source_file") or ""),
+        "implementation_summary": str(report_data.get("implementation_summary") or ""),
+        "changed_files": _string_list(report_data.get("changed_files")),
+        "generated_files": _string_list(report_data.get("generated_files")),
+        "warnings": _string_list(report_data.get("warnings")),
+        "blockers": _string_list(report_data.get("blockers")),
+        "notes": _string_list(report_data.get("notes")),
+        "owner_decision_required": bool(report_data.get("owner_decision_required")),
+        "checks": checks,
+        "check_counts": dict(check_counts),
+        "blocking_failures": len(blocking_failures),
+        "has_blockers": bool(_string_list(report_data.get("blockers")) or blocking_failures),
     }
 
 

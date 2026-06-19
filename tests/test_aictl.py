@@ -82,6 +82,7 @@ class AictlTests(unittest.TestCase):
         self.assertIn("current.set", names)
         self.assertIn("project.render", names)
         self.assertIn("task.import", names)
+        self.assertIn("task.report.submit", names)
         self.assertIn("task.transition", names)
         self.assertIn("workflow.list", names)
 
@@ -431,6 +432,50 @@ class AictlTests(unittest.TestCase):
         self.assertNotIn("--json", argv)
         self.assertTrue(payload["ok"])
         self.assertIn("transitioned CTL-06", payload["data"]["stdout"])
+
+    def test_task_report_submit_delegates_with_native_json(self):
+        completed = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"report_id": "RPT-001", "task_id": "TASK-046"}\n',
+            stderr="",
+        )
+
+        code, stdout, run = self.run_main(
+            [
+                "--json",
+                "task",
+                "report",
+                "submit",
+                "--task",
+                "WFA-15",
+                "--file",
+                "/tmp/report.json",
+                "--confirm",
+            ],
+            completed,
+        )
+
+        argv = run.call_args.args[0]
+        payload = json.loads(stdout)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            argv[-9:],
+            [
+                "task",
+                "report",
+                "submit",
+                "--task",
+                "WFA-15",
+                "--file",
+                "/tmp/report.json",
+                "--confirm",
+                "--json",
+            ],
+        )
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["data"]["result"]["report_id"], "RPT-001")
 
     def test_task_create_facade_runs_create_only_workflow(self):
         def fake_run(argv, **_kwargs):

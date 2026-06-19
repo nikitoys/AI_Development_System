@@ -3,12 +3,12 @@
 
 # Task Execution Queue
 
-Revision: `424`
+Revision: `429`
 
 ## Executable Now
 
 - `WFA-11 (TASK-042)` [planned] `EPIC-006` priority `1` — UIX-05 Add Bulk Task Import from file
-- `WFA-15 (TASK-046)` [planned] `EPIC-006` priority `1` — UIX-09 Add Codex Execution Report Submission
+- `WFA-16 (TASK-047)` [planned] `EPIC-006` priority `1` — UIX-10 Add Task Review Package View
 - `WFA-17 (TASK-048)` [planned] `EPIC-006` priority `1` — UIX-11 Add Current Execution Status Panel
 - `WFA-19 (TASK-050)` [planned] `EPIC-006` priority `1` — UIX-13 Add Epic Close UI Action
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
@@ -17,14 +17,11 @@ Revision: `424`
 
 - `WFA-12 (TASK-043)` [planned] `EPIC-006` priority `1` — UIX-06 Update UI workflow documentation
   - `dependency_not_done`: depends on WFA-11 (TASK-042) with status planned
-  - `dependency_not_done`: depends on WFA-15 (TASK-046) with status planned
   - `dependency_not_done`: depends on WFA-16 (TASK-047) with status planned
   - `dependency_not_done`: depends on WFA-17 (TASK-048) with status planned
   - `dependency_not_done`: depends on WFA-18 (TASK-049) with status planned
   - `dependency_not_done`: depends on WFA-19 (TASK-050) with status planned
   - `dependency_not_done`: depends on WFA-20 (TASK-051) with status planned
-- `WFA-16 (TASK-047)` [planned] `EPIC-006` priority `1` — UIX-10 Add Task Review Package View
-  - `dependency_not_done`: depends on WFA-15 (TASK-046) with status planned
 - `WFA-18 (TASK-049)` [planned] `EPIC-006` priority `1` — UIX-12 Add Project Health Repair Actions
   - `dependency_not_done`: depends on WFA-17 (TASK-048) with status planned
 - `WFA-20 (TASK-051)` [planned] `EPIC-006` priority `1` — UIX-14 Add Commit Readiness View
@@ -98,6 +95,8 @@ Revision: `424`
 - `WFA-13 (TASK-044)` [done] `EPIC-006` priority `1` — UIX-07 Add Task Review Done Controls
   - `status_not_executable`: status is done
 - `WFA-14 (TASK-045)` [done] `EPIC-006` priority `1` — UIX-08 Add Next Action and Blocked Reason Hints
+  - `status_not_executable`: status is done
+- `WFA-15 (TASK-046)` [done] `EPIC-006` priority `1` — UIX-09 Add Codex Execution Report Submission
   - `status_not_executable`: status is done
 - `TASK-008` [done] `EPIC-003` priority `1` — P0 Strengthen docctl metadata and documentation gaps
   - `status_not_executable`: status is done

@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `424`
+Revision: `429`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -824,7 +824,7 @@ Acceptance criteria:
 
 ### WFA-15 (TASK-046) — UIX-09 Add Codex Execution Report Submission
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_6a6615a135ce`, legacy `TASK-046`, aliases `TASK-046`, local `WFA` / `15`

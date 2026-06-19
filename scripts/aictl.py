@@ -1119,6 +1119,29 @@ def cmd_task_transition(args: argparse.Namespace) -> int:
     )
 
 
+def cmd_task_report_submit(args: argparse.Namespace) -> int:
+    _ensure_implemented("task.report.submit")
+    command_args = [
+        "task",
+        "report",
+        "submit",
+        "--task",
+        args.task,
+        "--file",
+        args.file,
+    ]
+    if args.confirm:
+        command_args.append("--confirm")
+    if args.json:
+        command_args.append("--json")
+    return _run_delegated(
+        "task.report.submit",
+        "task",
+        args,
+        _script_argv("taskctl.py", args, command_args),
+    )
+
+
 def cmd_current_set(args: argparse.Namespace) -> int:
     _ensure_implemented("current.set")
     return _run_delegated(
@@ -1482,6 +1505,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("task_ref")
     p.add_argument("--to", required=True)
     p.set_defaults(func=cmd_task_transition, facade_command="task.transition")
+
+    report = task_sub.add_parser("report", help="Task execution report facade commands")
+    report_sub = report.add_subparsers(dest="task_report_action", required=True)
+
+    p = report_sub.add_parser("submit", help="Submit a structured execution report through taskctl.py")
+    p.add_argument("--task", required=True)
+    p.add_argument("--file", required=True)
+    p.add_argument("--confirm", action="store_true")
+    p.set_defaults(func=cmd_task_report_submit, facade_command="task.report.submit")
 
     current = sub.add_parser("current", help="Current task facade commands")
     current_sub = current.add_subparsers(dest="current_action", required=True)
