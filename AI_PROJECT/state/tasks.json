@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 332,
-  "current_task_id": "TASK-037",
+  "revision": 361,
+  "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-19T08:10:17Z",
+  "updated_at": "2026-06-19T09:19:40Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -2509,7 +2509,7 @@
       "id": "TASK-037",
       "epic_id": "EPIC-006",
       "title": "WFA-06 Documentation Audit And Cleanup",
-      "status": "in_progress",
+      "status": "in_review",
       "summary": "Audit and update documentation after workflow automation and UI improvements are implemented.",
       "description": "Update owner-facing and system documentation so aictl, Web Control Center, workflows, Evolution Change wizard, task creation wizard, bulk import, review helpers, protected-file rules, and generated-output rules are current and non-contradictory.",
       "priority": 1,
@@ -2550,7 +2550,14 @@
         "AI_PROJECT/events/task-events.jsonl via taskctl.py only",
         "AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only",
         "AI_PROJECT/generated/CODEX_CURRENT.md via taskctl.py only",
-        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only"
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only",
+        "AI_PROJECT/generated/CONTEXT_PACK.md via contextctl.py/aictl.py only",
+        "AI_PROJECT/generated/CONTEXT_STATUS.md via contextctl.py/aictl.py only",
+        "AI_PROJECT/events/context-events.jsonl via contextctl.py/aictl.py only",
+        "AI_PROJECT/generated/CODEX_PROMPT.md via codexctl.py/aictl.py/taskctl.py only",
+        "AI_PROJECT/generated/CODEX_STATUS.md via codexctl.py/aictl.py only",
+        "AI_PROJECT/events/codex-events.jsonl via codexctl.py/aictl.py only",
+        "AI_PROJECT/state/current_execution.json via codexctl.py/aictl.py only if the command updates it"
       ],
       "acceptance_criteria": [
         "Documentation reflects the current aictl/web/workflow model.",
@@ -2570,7 +2577,8 @@
         "Depends on WFA-03.",
         "Depends on WFA-04.",
         "Depends on WFA-05.",
-        "Documentation cleanup should happen after workflow features are implemented."
+        "Documentation cleanup should happen after workflow features are implemented.",
+        "Human Owner approved refreshing context/Codex generated execution artifacts for WFA-06 closure only, through owning CLIs. No source behavior changes are allowed."
       ],
       "depends_on": [
         {
@@ -2608,7 +2616,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-18T19:38:18Z",
-      "updated_at": "2026-06-19T08:10:17Z",
+      "updated_at": "2026-06-19T08:37:22Z",
       "uid": "tsk_c4ef4282293c",
       "ref": "WFA-06",
       "legacy_id": "TASK-037",
@@ -2617,6 +2625,515 @@
       ],
       "epic_key": "WFA",
       "local_seq": 6
+    },
+    {
+      "id": "TASK-038",
+      "epic_id": "EPIC-006",
+      "title": "UIX-01 Improve Tasks filtering grouping and collapse",
+      "status": "done",
+      "summary": "Make the Tasks page usable for large projects by adding initiative/epic/status filters, search, grouping, and collapsible done sections.",
+      "description": "Improve the Web Control Center Tasks page so the owner can focus on one initiative, one epic, or active tasks only instead of scrolling through the full task history.",
+      "priority": 1,
+      "order": 7,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Add filtering by Initiative.",
+        "Add filtering by Epic.",
+        "Add filtering by Status.",
+        "Add search by task ref, legacy id, title, and summary.",
+        "Add grouping by Epic and Status.",
+        "Add collapsible groups.",
+        "Hide done tasks by default or collapse done groups by default.",
+        "Show readable task refs such as WFA-04 alongside legacy TASK-XXX ids.",
+        "Preserve read-only/dashboard performance improvements."
+      ],
+      "out_of_scope": [
+        "Do not add new write actions in this task.",
+        "Do not change task lifecycle rules.",
+        "Do not change task identity/ref allocation.",
+        "Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py if filter state needs action metadata",
+        "tests/test_web_control_center.py",
+        "tests/test_aictl.py if aictl web routing is touched"
+      ],
+      "acceptance_criteria": [
+        "Tasks page can be filtered by initiative, epic, status, and search text.",
+        "Tasks page can group tasks by epic or status.",
+        "Done tasks are hidden or collapsed by default.",
+        "Current task, in-progress tasks, and review tasks remain easy to find.",
+        "GET / and GET /data.json remain fast and do not run full doctor on every request.",
+        "No new write behavior is introduced.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify that filtering and grouping work with EPIC-005/CTL and EPIC-006/WFA.",
+        "Verify that done tasks no longer dominate the default task view.",
+        "Verify that Web write safety is unchanged."
+      ],
+      "notes": [
+        "Logical label: UIX-01",
+        "Requires approved Evolution Change before execution because Web UI behavior changes."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-19T09:19:40Z",
+      "approval_notes": "Tasks filtering/grouping/collapse accepted. UI now supports initiative, epic, status, search, focus section, grouping, collapsible groups, default done hiding, and readable WFA/TASK identity display.",
+      "created_at": "2026-06-19T09:02:31Z",
+      "updated_at": "2026-06-19T09:19:40Z",
+      "uid": "tsk_2b313c6e127e",
+      "ref": "WFA-07",
+      "legacy_id": "TASK-038",
+      "aliases": [
+        "TASK-038"
+      ],
+      "epic_key": "WFA",
+      "local_seq": 7
+    },
+    {
+      "id": "TASK-039",
+      "epic_id": "EPIC-006",
+      "title": "UIX-02 Add task row workflow buttons",
+      "status": "planned",
+      "summary": "Add status-aware workflow buttons next to tasks, including Prepare for Codex, Refresh Context, and Submit for Review.",
+      "description": "Make routine task operation possible from the Tasks page by exposing existing workflow automation actions as row-level buttons.",
+      "priority": 1,
+      "order": 8,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Add status-aware task row buttons.",
+        "Expose Prepare for Codex for planned/ready tasks.",
+        "Expose Refresh Context for current/in-progress tasks.",
+        "Expose Submit for Review for in-progress tasks.",
+        "Show confirmation preview before workflow execution.",
+        "Route all actions through existing workflow runner and aictl command paths.",
+        "Show result summary after execution.",
+        "Show next Codex instruction after Prepare for Codex."
+      ],
+      "out_of_scope": [
+        "Do not auto-run Codex.",
+        "Do not auto-approve tasks.",
+        "Do not auto-close tasks.",
+        "Do not accept Evolution Changes.",
+        "Do not add arbitrary shell command execution.",
+        "Do not directly edit protected project-control files."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/core/workflows.py if workflow metadata needs compatible updates",
+        "ai_project_ctl/core/registry.py if workflow metadata needs compatible updates",
+        "scripts/aictl.py if workflow routing needs compatible updates",
+        "tests/test_web_control_center.py",
+        "tests/test_workflows.py",
+        "tests/test_aictl.py",
+        "tests/test_registry.py"
+      ],
+      "acceptance_criteria": [
+        "Tasks page shows useful workflow buttons based on task status.",
+        "Prepare for Codex can be launched from a task row with explicit confirmation.",
+        "Refresh Context can be launched from a task row with explicit confirmation.",
+        "Submit for Review can be launched from a task row with explicit confirmation.",
+        "Workflow actions route through governed workflow/aictl paths.",
+        "UI displays clear success/failure output and next action hints.",
+        "No direct protected-file writes are introduced.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify that buttons are not shown for invalid task states.",
+        "Verify that every write workflow requires confirmation.",
+        "Verify that Prepare for Codex produces the instruction to send Codex."
+      ],
+      "notes": [
+        "Logical label: UIX-02",
+        "Depends logically on UIX-01.",
+        "Requires approved Evolution Change before execution because Web write/action behavior changes."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-038",
+          "type": "hard",
+          "created_at": "2026-06-19T09:03:48Z",
+          "reason": "Row workflow buttons depend on improved task filtering/grouping UX."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T09:02:31Z",
+      "updated_at": "2026-06-19T09:03:48Z",
+      "uid": "tsk_ba9070900730",
+      "ref": "WFA-08",
+      "legacy_id": "TASK-039",
+      "aliases": [
+        "TASK-039"
+      ],
+      "epic_key": "WFA",
+      "local_seq": 8
+    },
+    {
+      "id": "TASK-040",
+      "epic_id": "EPIC-006",
+      "title": "UIX-03 Add unified workflow action result panel",
+      "status": "planned",
+      "summary": "Add a reusable result panel for workflow and Web actions showing step status, changed files, warnings, errors, and next actions.",
+      "description": "Improve owner feedback after UI actions by showing what was executed, what changed, what failed, and what to do next.",
+      "priority": 1,
+      "order": 9,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Add a reusable action result view/component.",
+        "Show workflow name and target task/change/epic.",
+        "Show step-by-step PASS/WARN/FAIL status.",
+        "Show changed files when available.",
+        "Show generated files when available.",
+        "Show warnings and errors clearly.",
+        "Show next-action hints such as the Codex prompt instruction.",
+        "Support copyable text for the Codex instruction."
+      ],
+      "out_of_scope": [
+        "Do not change workflow semantics.",
+        "Do not add new workflow actions in this task.",
+        "Do not auto-run Codex.",
+        "Do not weaken confirmation requirements.",
+        "Do not directly edit protected project-control files."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/core/workflows.py if result metadata needs compatible updates",
+        "tests/test_web_control_center.py",
+        "tests/test_workflows.py"
+      ],
+      "acceptance_criteria": [
+        "After a workflow action, UI shows a clear action result panel.",
+        "Result panel shows executed steps and status.",
+        "Result panel shows warnings/errors without hiding failures.",
+        "Result panel includes next action hints when available.",
+        "Prepare for Codex result includes a copyable Codex instruction.",
+        "Existing workflow safety is preserved.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify that failed steps are visible and not hidden behind a generic success message.",
+        "Verify that result panel does not expose arbitrary command execution."
+      ],
+      "notes": [
+        "Logical label: UIX-03",
+        "Depends logically on UIX-02.",
+        "Requires approved Evolution Change before execution because Web action UX behavior changes."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-039",
+          "type": "hard",
+          "created_at": "2026-06-19T09:03:48Z",
+          "reason": "Action result panel depends on task row workflow buttons."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T09:02:32Z",
+      "updated_at": "2026-06-19T09:03:48Z",
+      "uid": "tsk_64618b90c44b",
+      "ref": "WFA-09",
+      "legacy_id": "TASK-040",
+      "aliases": [
+        "TASK-040"
+      ],
+      "epic_key": "WFA",
+      "local_seq": 9
+    },
+    {
+      "id": "TASK-041",
+      "epic_id": "EPIC-006",
+      "title": "UIX-04 Add Evolution management UI tab",
+      "status": "planned",
+      "summary": "Add an Evolution tab to view and manage Change Proposals, including create-for-task, approve, move to review, and accept actions with confirmation.",
+      "description": "Make Evolution Change Flow manageable from the Web Control Center while preserving Human Owner approval gates and linked-task completion checks.",
+      "priority": 1,
+      "order": 10,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Add an Evolution tab/page.",
+        "List Change Proposals with status, type, title, linked tasks, affected files, risks, and approval/acceptance state.",
+        "Add filters by status and type.",
+        "Add action to create Change for selected task using existing evolution.create_for_task workflow.",
+        "Add action to approve a ready Change with explicit confirmation.",
+        "Add action to move approved Change to in_progress/in_review where valid.",
+        "Add action to accept a Change only when linked-task rules pass.",
+        "Show clear errors for invalid transitions.",
+        "Route all mutations through existing governed commands/workflows."
+      ],
+      "out_of_scope": [
+        "Do not auto-approve Change Proposals.",
+        "Do not auto-accept Change Proposals.",
+        "Do not bypass linked-task completion checks.",
+        "Do not change evolution lifecycle rules.",
+        "Do not directly edit AI_PROJECT/state/evolution.json or evolution events."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/core/workflows.py if evolution workflow metadata needs compatible updates",
+        "ai_project_ctl/core/registry.py if evolution command metadata needs compatible updates",
+        "scripts/aictl.py if evolution action routing needs compatible updates",
+        "tests/test_web_control_center.py",
+        "tests/test_workflows.py",
+        "tests/test_aictl.py",
+        "tests/test_registry.py"
+      ],
+      "acceptance_criteria": [
+        "Evolution tab lists Change Proposals with useful metadata.",
+        "Evolution tab can filter by status and type.",
+        "Owner can create a Change for a task through the existing wizard.",
+        "Owner can approve a ready Change only with explicit confirmation.",
+        "Owner can accept a Change only when linked task completion rules pass.",
+        "Invalid transitions are rejected clearly.",
+        "All writes route through governed commands/workflows.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify that approval and acceptance remain explicit Human Owner actions.",
+        "Verify that accepted Changes cannot link incomplete tasks."
+      ],
+      "notes": [
+        "Logical label: UIX-04",
+        "Depends logically on UIX-03.",
+        "Requires approved Evolution Change before execution because Evolution UI write behavior changes."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-040",
+          "type": "hard",
+          "created_at": "2026-06-19T09:03:48Z",
+          "reason": "Evolution UI should reuse the action result UX."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T09:02:33Z",
+      "updated_at": "2026-06-19T09:03:48Z",
+      "uid": "tsk_642286708abd",
+      "ref": "WFA-10",
+      "legacy_id": "TASK-041",
+      "aliases": [
+        "TASK-041"
+      ],
+      "epic_key": "WFA",
+      "local_seq": 10
+    },
+    {
+      "id": "TASK-042",
+      "epic_id": "EPIC-006",
+      "title": "UIX-05 Add Bulk Task Import from file",
+      "status": "planned",
+      "summary": "Extend Bulk Task Import to support uploading JSON files in addition to pasted JSON text.",
+      "description": "Allow the owner to import task batches from a local JSON file while preserving preview, validation, confirmation, and governed command-path creation.",
+      "priority": 1,
+      "order": 11,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Add file upload support for Bulk Task Import.",
+        "Support UTF-8 .json or .txt files containing JSON import payloads.",
+        "Enforce conservative file size limit.",
+        "Parse file content as data only.",
+        "Reuse existing preview/dry-run behavior.",
+        "Reuse existing validation before writes.",
+        "Reuse existing confirmed command-path task creation.",
+        "Show clear parse/validation errors.",
+        "Keep paste-based import working."
+      ],
+      "out_of_scope": [
+        "Do not execute uploaded files.",
+        "Do not support Python, shell scripts, or unrestricted executable formats.",
+        "Do not add YAML dependency unless already allowed by existing project dependency policy.",
+        "Do not auto-start imported tasks.",
+        "Do not auto-approve anything.",
+        "Do not write tasks.json directly."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/core/workflows.py if import payload handling needs compatible updates",
+        "scripts/aictl.py if import routing needs compatible updates",
+        "tests/test_web_control_center.py",
+        "tests/test_workflows.py",
+        "tests/test_aictl.py"
+      ],
+      "acceptance_criteria": [
+        "Owner can import a task batch by uploading a JSON/text file.",
+        "Paste-based JSON import still works.",
+        "Importer shows preview before creation.",
+        "Invalid file type, invalid JSON, invalid refs, or oversized file fails before creation.",
+        "Confirmed import creates tasks only through governed command paths.",
+        "No direct tasks.json writes are introduced.",
+        "Tests and project-control validations pass."
+      ],
+      "review_instructions": [
+        "Verify that uploaded file content is parsed as data only.",
+        "Verify that no executable content is run.",
+        "Verify that invalid imports create no tasks."
+      ],
+      "notes": [
+        "Logical label: UIX-05",
+        "Depends logically on WFA-04 and UIX-03.",
+        "Requires approved Evolution Change before execution because Web import behavior changes."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-040",
+          "type": "hard",
+          "created_at": "2026-06-19T09:03:48Z",
+          "reason": "Bulk file import should reuse the action result UX."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T09:02:34Z",
+      "updated_at": "2026-06-19T09:03:48Z",
+      "uid": "tsk_82ea27760cf4",
+      "ref": "WFA-11",
+      "legacy_id": "TASK-042",
+      "aliases": [
+        "TASK-042"
+      ],
+      "epic_key": "WFA",
+      "local_seq": 11
+    },
+    {
+      "id": "TASK-043",
+      "epic_id": "EPIC-006",
+      "title": "UIX-06 Update UI workflow documentation",
+      "status": "planned",
+      "summary": "Update owner-facing documentation for the improved UI cockpit, task filters, workflow buttons, Evolution tab, and bulk file import.",
+      "description": "Document the new owner workflow after UI cockpit improvements so daily operation is clear and old manual command-heavy instructions are de-emphasized.",
+      "priority": 1,
+      "order": 12,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Update owner quickstart with UI-first daily workflow.",
+        "Document Tasks filtering/grouping/collapse.",
+        "Document task row workflow buttons.",
+        "Document action result panel.",
+        "Document Evolution management tab.",
+        "Document Bulk Task Import from paste and file.",
+        "Clarify that legacy ctl scripts remain compatibility tools.",
+        "Clarify that UI writes route through governed workflows/commands.",
+        "Run docctl validation/render/check-generated if documentation registry is used."
+      ],
+      "out_of_scope": [
+        "Do not change command behavior.",
+        "Do not add new UI actions.",
+        "Do not edit generated docs manually.",
+        "Do not mark docs accepted without Human Owner approval."
+      ],
+      "allowed_files": [
+        "README.md",
+        "AGENTS.md",
+        "ai-system/project-control/08-usage-guide.md",
+        "ai-system/project-control/10-owner-quickstart.md",
+        "ai-system/project-control/** if documentation index or appendix updates are needed",
+        "AI_PROJECT/state/docs.json via docctl.py only",
+        "AI_PROJECT/events/doc-events.jsonl via docctl.py only",
+        "AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only",
+        "AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only"
+      ],
+      "acceptance_criteria": [
+        "Documentation describes the UI-first daily workflow.",
+        "Documentation explains task filters, workflow buttons, Evolution tab, and bulk file import.",
+        "Documentation preserves protected-file and generated-output rules.",
+        "Legacy ctl scripts are documented as compatibility layer.",
+        "Documentation checks and project-control checks pass."
+      ],
+      "review_instructions": [
+        "Verify that documentation matches the implemented UI behavior.",
+        "Verify that outdated command-heavy workflow is not presented as the preferred path."
+      ],
+      "notes": [
+        "Logical label: UIX-06",
+        "Depends logically on UIX-01 through UIX-05.",
+        "Documentation cleanup should happen after UI workflow improvements are implemented."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-038",
+          "type": "hard",
+          "created_at": "2026-06-19T09:03:49Z",
+          "reason": "Documentation should cover completed task filtering/grouping UX."
+        },
+        {
+          "task_id": "TASK-039",
+          "type": "hard",
+          "created_at": "2026-06-19T09:03:49Z",
+          "reason": "Documentation should cover completed task row workflow buttons."
+        },
+        {
+          "task_id": "TASK-040",
+          "type": "hard",
+          "created_at": "2026-06-19T09:03:49Z",
+          "reason": "Documentation should cover completed action result panel."
+        },
+        {
+          "task_id": "TASK-041",
+          "type": "hard",
+          "created_at": "2026-06-19T09:03:49Z",
+          "reason": "Documentation should cover completed Evolution UI tab."
+        },
+        {
+          "task_id": "TASK-042",
+          "type": "hard",
+          "created_at": "2026-06-19T09:03:49Z",
+          "reason": "Documentation should cover completed bulk file import."
+        }
+      ],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-19T09:02:35Z",
+      "updated_at": "2026-06-19T09:03:49Z",
+      "uid": "tsk_ed5d17298252",
+      "ref": "WFA-12",
+      "legacy_id": "TASK-043",
+      "aliases": [
+        "TASK-043"
+      ],
+      "epic_key": "WFA",
+      "local_seq": 12
     }
   ]
 }

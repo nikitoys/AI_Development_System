@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `437`
-Changes: `18`
+Revision: `468`
+Changes: `19`
 
 ## Summary
 
-- `accepted`: 17
+- `accepted`: 18
 - `approved`: 1
 
 ## Changes
@@ -1052,3 +1052,66 @@ Impact:
 Linked tasks:
 
 - TASK-036
+
+### CHG-019 — UIX-01 Improve Tasks filtering grouping and collapse
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-07 requires an explicit Evolution Change Proposal before implementation: Make the Tasks page usable for large projects by adding initiative/epic/status filters, search, grouping, and collapsible done sections.
+
+Proposal:
+
+Implement the bounded task scope: Add filtering by Initiative.; Add filtering by Epic.; Add filtering by Status.; Add search by task ref, legacy id, title, and summary.; Add grouping by Epic and Status.; Add collapsible groups.; Hide done tasks by default or collapse done groups by default.; Show readable task refs such as WFA-04 alongside legacy TASK-XXX ids.; Preserve read-only/dashboard performance improvements.
+
+Rationale:
+
+Improve the Web Control Center Tasks page so the owner can focus on one initiative, one epic, or active tasks only instead of scrolling through the full task history.
+
+Approved by: `human_owner` at `2026-06-19T09:04:42Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-19T09:20:22Z`  
+Acceptance notes: WFA-07 implemented and accepted. Tasks UI filtering, grouping, collapse behavior, and readable task identity display were added while preserving governed write boundaries.  
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py if filter state needs action metadata
+- tests/test_web_control_center.py
+- tests/test_aictl.py if aictl web routing is touched
+
+Risks:
+
+- Boundary risk: Do not add new write actions in this task.
+- Boundary risk: Do not change task lifecycle rules.
+- Boundary risk: Do not change task identity/ref allocation.
+- Boundary risk: Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Verify that filtering and grouping work with EPIC-005/CTL and EPIC-006/WFA.
+- Verify that done tasks no longer dominate the default task view.
+- Verify that Web write safety is unchanged.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-038.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add filtering by Initiative.
+- Add filtering by Epic.
+- Add filtering by Status.
+- Add search by task ref, legacy id, title, and summary.
+- Add grouping by Epic and Status.
+- Tasks page can be filtered by initiative, epic, status, and search text.
+- Tasks page can group tasks by epic or status.
+- Done tasks are hidden or collapsed by default.
+
+Linked tasks:
+
+- TASK-038

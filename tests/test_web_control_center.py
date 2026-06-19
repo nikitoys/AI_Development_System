@@ -80,6 +80,57 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(payload["doctor"]["overall_status"], "UNKNOWN")
         self.assertFalse(payload["doctor"]["cache"]["cached"])
 
+    def test_tasks_page_filters_searches_groups_and_shows_readable_refs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root, **large_task_view_state())
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route(
+                "/tasks?initiative=INIT-002&epic=EPIC-006&status=in_progress&q=TASK-038&group=status",
+                model,
+            )
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("WFA-07", body)
+        self.assertIn("TASK-038", body)
+        self.assertIn("UIX-01 Improve Tasks filtering grouping and collapse", body)
+        self.assertIn('<details class="task-group task-group-in-progress" open>', body)
+        self.assertIn('value="INIT-002" selected', body)
+        self.assertIn('value="EPIC-006" selected', body)
+        self.assertNotIn("WFA-06 Documentation Audit", body)
+        self.assertNotIn("CTL-10 Completed Control Task", body)
+        self.assertNotIn("DOC-01 Usage Guide", body)
+
+    def test_tasks_page_groups_epic_005_and_006_and_hides_done_by_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root, **large_task_view_state())
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            default_status, _, default_body = route("/tasks", model)
+            grouped_status, _, grouped_body = route(
+                "/tasks?initiative=INIT-002&show_done=1&group=epic",
+                model,
+            )
+            done_status, _, done_body = route("/tasks?status=done&group=status", model)
+
+        self.assertEqual(default_status.value, 200)
+        self.assertIn("WFA-07", default_body)
+        self.assertIn("WFA-06", default_body)
+        self.assertIn("done hidden", default_body)
+        self.assertNotIn("CTL-10 Completed Control Task", default_body)
+
+        self.assertEqual(grouped_status.value, 200)
+        self.assertIn("CTL (EPIC-005) - Implement unified aictl", grouped_body)
+        self.assertIn("WFA (EPIC-006) - Control Plane Workflow Automation", grouped_body)
+        self.assertIn("CTL-10 Completed Control Task", grouped_body)
+
+        self.assertEqual(done_status.value, 200)
+        self.assertIn("CTL-10 Completed Control Task", done_body)
+        self.assertIn('<details class="task-group task-group-done">', done_body)
+        self.assertIn("done visible", done_body)
+
     def test_doctor_refresh_runs_diagnostics_and_reuses_cache(self):
         calls = []
 
@@ -769,7 +820,111 @@ def process(stdout="", stderr="", returncode=0):
     return item
 
 
-def write_web_state(root, *, tasks=None, current_task_id=None, epics=None):
+def large_task_view_state():
+    return {
+        "initiatives": [
+            {
+                "id": "INIT-001",
+                "title": "AI Development System Evolution",
+                "status": "active",
+                "order": 1,
+            },
+            {
+                "id": "INIT-002",
+                "title": "Centralized AI Project Control Plane",
+                "status": "planned",
+                "order": 2,
+            },
+        ],
+        "epics": [
+            {
+                "id": "EPIC-001",
+                "key": "DOC",
+                "initiative_id": "INIT-001",
+                "status": "active",
+                "title": "Documentation Rails",
+                "order": 1,
+            },
+            {
+                "id": "EPIC-005",
+                "key": "CTL",
+                "initiative_id": "INIT-002",
+                "status": "planned",
+                "title": "Implement unified aictl",
+                "order": 1,
+            },
+            {
+                "id": "EPIC-006",
+                "key": "WFA",
+                "initiative_id": "INIT-002",
+                "status": "planned",
+                "title": "Control Plane Workflow Automation",
+                "order": 2,
+            },
+        ],
+        "tasks": [
+            {
+                "id": "TASK-001",
+                "ref": "DOC-01",
+                "legacy_id": "TASK-001",
+                "status": "ready",
+                "title": "DOC-01 Usage Guide",
+                "summary": "Write the missing practical usage guide.",
+                "epic_id": "EPIC-001",
+                "epic_key": "DOC",
+                "order": 1,
+                "local_seq": 1,
+            },
+            {
+                "id": "TASK-028",
+                "ref": "CTL-10",
+                "legacy_id": "TASK-028",
+                "status": "done",
+                "title": "CTL-10 Completed Control Task",
+                "summary": "Add read-only local Web Control Center MVP.",
+                "epic_id": "EPIC-005",
+                "epic_key": "CTL",
+                "order": 10,
+                "local_seq": 10,
+            },
+            {
+                "id": "TASK-037",
+                "ref": "WFA-06",
+                "legacy_id": "TASK-037",
+                "status": "in_review",
+                "title": "WFA-06 Documentation Audit",
+                "summary": "Audit workflow automation documentation.",
+                "epic_id": "EPIC-006",
+                "epic_key": "WFA",
+                "order": 6,
+                "local_seq": 6,
+            },
+            {
+                "id": "TASK-038",
+                "ref": "WFA-07",
+                "legacy_id": "TASK-038",
+                "aliases": ["TASK-038"],
+                "status": "in_progress",
+                "title": "UIX-01 Improve Tasks filtering grouping and collapse",
+                "summary": "Make the Tasks page usable for large projects.",
+                "epic_id": "EPIC-006",
+                "epic_key": "WFA",
+                "order": 7,
+                "local_seq": 7,
+            },
+        ],
+        "current_task_id": "TASK-038",
+    }
+
+
+def write_web_state(
+    root,
+    *,
+    tasks=None,
+    current_task_id=None,
+    epics=None,
+    initiatives=None,
+):
     state_dir = root / "AI_PROJECT" / "state"
     state_dir.mkdir(parents=True, exist_ok=True)
     (state_dir / "tasks.json").write_text(
@@ -788,6 +943,7 @@ def write_web_state(root, *, tasks=None, current_task_id=None, epics=None):
             {
                 "schema_version": 1,
                 "revision": 1,
+                "initiatives": initiatives or [],
                 "epics": epics or [],
             }
         ),

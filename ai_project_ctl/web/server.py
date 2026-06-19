@@ -36,6 +36,9 @@ NAV_ITEMS = (
     ("/actions", "Actions"),
 )
 
+TASK_FOCUS_STATUSES = {"ready", "in_progress", "in_review", "changes_requested"}
+TASK_GROUP_OPTIONS = {"none", "epic", "status"}
+
 
 class WebServerError(CommandError):
     """Stable web server error."""
@@ -232,7 +235,7 @@ def route(
 
     pages: dict[str, Callable[[], str]] = {
         "/": lambda: render_dashboard(model.dashboard()),
-        "/tasks": lambda: render_tasks(model.dashboard()),
+        "/tasks": lambda: render_tasks(model.dashboard(), query=query),
         "/epics": lambda: render_epics(model.dashboard()),
         "/reviews": lambda: render_reviews(model.dashboard()),
         "/events": lambda: render_events(model.dashboard(include_events=True)),
@@ -290,15 +293,33 @@ def render_dashboard(data: Mapping[str, Any]) -> str:
     return render_page("Dashboard", "".join(body), active="/")
 
 
-def render_tasks(data: Mapping[str, Any]) -> str:
+def render_tasks(
+    data: Mapping[str, Any],
+    *,
+    query: Mapping[str, Sequence[str]] | None = None,
+) -> str:
     counts = data.get("task_counts") or {}
+    query = query or {}
+    filters = task_filter_state(data, query)
+    tasks = filter_tasks(data.get("tasks") or [], data, filters)
+    focused = focus_tasks(data, tasks)
     body = [
         '<section class="summary-grid">',
         *[metric(str(status), str(count)) for status, count in sorted(counts.items())],
+        metric("Visible", str(len(tasks))),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Task Filters</h2>",
+        task_filter_form(data, filters),
+        task_filter_summary(filters),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Focus Tasks</h2>",
+        task_table(focused, empty_text="No current, in-progress, or review tasks match the filters."),
         "</section>",
         '<section class="panel">',
         "<h2>Tasks</h2>",
-        task_table(data.get("tasks") or [], empty_text="No tasks."),
+        task_grouped_table(tasks, data, filters, empty_text="No tasks match the filters."),
         "</section>",
     ]
     return render_page("Tasks", "".join(body), active="/tasks")
@@ -796,7 +817,7 @@ def render_page(title: str, body: str, *, active: str) -> str:
     table {{
       width: 100%;
       border-collapse: collapse;
-      min-width: 720px;
+      min-width: 860px;
     }}
     th, td {{
       border-bottom: 1px solid var(--line);
@@ -879,6 +900,37 @@ def render_page(title: str, body: str, *, active: str) -> str:
       border-top: 0;
       padding-top: 0;
     }}
+    .task-controls {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      align-items: end;
+    }}
+    .filter-summary {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }}
+    .task-group {{
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin-top: 10px;
+      background: #fff;
+      overflow: hidden;
+    }}
+    .task-group summary {{
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      background: #f1f4f8;
+    }}
+    .task-group table {{
+      border-top: 1px solid var(--line);
+    }}
     label {{
       display: grid;
       gap: 4px;
@@ -931,6 +983,7 @@ def render_page(title: str, body: str, *, active: str) -> str:
     .button-link {{
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       min-height: 32px;
       border: 1px solid #0d5f59;
       border-radius: 6px;
@@ -939,6 +992,10 @@ def render_page(title: str, body: str, *, active: str) -> str:
       color: #fff;
       font-weight: 700;
       text-decoration: none;
+    }}
+    .button-link.secondary {{
+      background: #fff;
+      color: #0d5f59;
     }}
     .empty {{
       color: var(--muted);
@@ -1001,6 +1058,291 @@ def doctor_cache_detail(doctor: Mapping[str, Any]) -> str:
     )
 
 
+def task_filter_state(
+    data: Mapping[str, Any],
+    query: Mapping[str, Sequence[str]],
+) -> dict[str, Any]:
+    group = _query_value(query, "group") or "epic"
+    if group not in TASK_GROUP_OPTIONS:
+        group = "epic"
+    status = _query_value(query, "status")
+    return {
+        "initiative": _query_value(query, "initiative"),
+        "epic": _query_value(query, "epic"),
+        "status": status,
+        "q": _query_value(query, "q"),
+        "group": group,
+        "show_done": _query_enabled(query, "show_done") or status == "done",
+    }
+
+
+def task_filter_form(data: Mapping[str, Any], filters: Mapping[str, Any]) -> str:
+    initiatives = data.get("initiatives") or []
+    epics = data.get("epics") or []
+    statuses = sorted(
+        {
+            str(task.get("status") or "unknown")
+            for task in data.get("tasks") or []
+            if isinstance(task, Mapping)
+        },
+        key=status_sort_key,
+    )
+    initiative_options = [
+        ("", "All initiatives"),
+        *[
+            (
+                str(initiative.get("id") or ""),
+                "{} - {}".format(
+                    initiative.get("id") or "",
+                    initiative.get("title") or "",
+                ).strip(" -"),
+            )
+            for initiative in initiatives
+            if initiative.get("id")
+        ],
+    ]
+    epic_options = [
+        ("", "All epics"),
+        *[
+            (
+                str(epic.get("id") or ""),
+                "{} ({}) - {}".format(
+                    epic.get("key") or epic.get("id") or "",
+                    epic.get("id") or "",
+                    epic.get("title") or "",
+                ).strip(" -"),
+            )
+            for epic in epics
+            if epic.get("id")
+        ],
+    ]
+    status_options = [("", "All active statuses"), *[(status, status) for status in statuses]]
+    group_options = (
+        ("epic", "Epic"),
+        ("status", "Status"),
+        ("none", "None"),
+    )
+    checked = " checked" if filters.get("show_done") else ""
+    return (
+        '<form class="task-controls" method="get" action="/tasks">'
+        "{}{}{}{}{}"
+        '<label class="checkline"><input type="checkbox" name="show_done" value="1"{}>Show done</label>'
+        '<button type="submit">Apply</button>'
+        '<a class="button-link secondary" href="/tasks">Reset</a>'
+        "</form>"
+    ).format(
+        filter_select(
+            "initiative",
+            "Initiative",
+            initiative_options,
+            str(filters.get("initiative") or ""),
+        ),
+        filter_select("epic", "Epic", epic_options, str(filters.get("epic") or "")),
+        filter_select(
+            "status",
+            "Status",
+            status_options,
+            str(filters.get("status") or ""),
+        ),
+        input_field("q", "Search", str(filters.get("q") or ""), required=False),
+        filter_select("group", "Group", group_options, str(filters.get("group") or "")),
+        checked,
+    )
+
+
+def task_filter_summary(filters: Mapping[str, Any]) -> str:
+    pills = []
+    if filters.get("initiative"):
+        pills.append("initiative {}".format(filters.get("initiative")))
+    if filters.get("epic"):
+        pills.append("epic {}".format(filters.get("epic")))
+    if filters.get("status"):
+        pills.append("status {}".format(filters.get("status")))
+    if filters.get("q"):
+        pills.append('search "{}"'.format(filters.get("q")))
+    pills.append("grouped by {}".format(filters.get("group") or "epic"))
+    if filters.get("show_done"):
+        pills.append("done visible")
+    else:
+        pills.append("done hidden")
+    return '<div class="filter-summary">{}</div>'.format(
+        "".join('<span class="pill">{}</span>'.format(escape(pill)) for pill in pills)
+    )
+
+
+def filter_tasks(
+    tasks: Sequence[Mapping[str, Any]],
+    data: Mapping[str, Any],
+    filters: Mapping[str, Any],
+) -> list[Mapping[str, Any]]:
+    epics_by_id = epics_by_id_map(data)
+    selected_initiative = str(filters.get("initiative") or "")
+    selected_epic = str(filters.get("epic") or "")
+    selected_status = str(filters.get("status") or "")
+    search = str(filters.get("q") or "").strip().lower()
+    show_done = bool(filters.get("show_done"))
+    selected: list[Mapping[str, Any]] = []
+
+    for task in tasks:
+        status = str(task.get("status") or "unknown")
+        epic_id = str(task.get("epic_id") or "")
+        epic = epics_by_id.get(epic_id) or {}
+        initiative_id = str(epic.get("initiative_id") or "")
+
+        if selected_initiative and initiative_id != selected_initiative:
+            continue
+        if selected_epic and epic_id != selected_epic:
+            continue
+        if selected_status and status != selected_status:
+            continue
+        if status == "done" and not show_done and not selected_status:
+            continue
+        if search and search not in task_search_text(task):
+            continue
+        selected.append(task)
+
+    return selected
+
+
+def focus_tasks(
+    data: Mapping[str, Any],
+    tasks: Sequence[Mapping[str, Any]],
+) -> list[Mapping[str, Any]]:
+    by_id = {str(task.get("id") or ""): task for task in tasks}
+    selected: list[Mapping[str, Any]] = []
+    seen: set[str] = set()
+    current = data.get("current_task") or {}
+    current_id = str(current.get("id") or "")
+    if current_id in by_id:
+        selected.append(by_id[current_id])
+        seen.add(current_id)
+    for task in tasks:
+        task_id = str(task.get("id") or "")
+        if task_id not in seen and task.get("status") in TASK_FOCUS_STATUSES:
+            selected.append(task)
+            seen.add(task_id)
+    return selected
+
+
+def task_grouped_table(
+    tasks: Sequence[Mapping[str, Any]],
+    data: Mapping[str, Any],
+    filters: Mapping[str, Any],
+    *,
+    empty_text: str,
+) -> str:
+    if not tasks:
+        return '<p class="empty">{}</p>'.format(escape(empty_text))
+    group_by = str(filters.get("group") or "epic")
+    if group_by == "none":
+        return task_table(tasks, empty_text=empty_text)
+
+    epics_by_id = epics_by_id_map(data)
+    groups: dict[str, list[Mapping[str, Any]]] = {}
+    for task in tasks:
+        if group_by == "status":
+            key = str(task.get("status") or "unknown")
+        else:
+            key = str(task.get("epic_id") or "unassigned")
+        groups.setdefault(key, []).append(task)
+
+    if group_by == "status":
+        ordered_keys = sorted(groups, key=status_sort_key)
+    else:
+        ordered_keys = sorted(groups, key=lambda key: epic_group_sort_key(key, epics_by_id))
+
+    sections = []
+    for key in ordered_keys:
+        items = groups[key]
+        label = (
+            key
+            if group_by == "status"
+            else epic_group_label(key, epics_by_id)
+        )
+        collapsed = group_by == "status" and key == "done"
+        open_attr = "" if collapsed else " open"
+        sections.append(
+            '<details class="task-group task-group-{}"{}>'
+            "<summary><strong>{}</strong><span>{} tasks</span></summary>"
+            "{}"
+            "</details>".format(
+                escape(css_token(key)),
+                open_attr,
+                escape(label),
+                escape(len(items)),
+                task_table(items, empty_text=empty_text),
+            )
+        )
+    return "".join(sections)
+
+
+def epics_by_id_map(data: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
+    return {
+        str(epic.get("id") or ""): epic
+        for epic in data.get("epics") or []
+        if isinstance(epic, Mapping) and epic.get("id")
+    }
+
+
+def epic_group_label(key: str, epics_by_id: Mapping[str, Mapping[str, Any]]) -> str:
+    epic = epics_by_id.get(key) or {}
+    if not epic:
+        return key or "Unassigned"
+    label = str(epic.get("key") or key)
+    if label != key:
+        label = "{} ({})".format(label, key)
+    title = str(epic.get("title") or "")
+    return "{} - {}".format(label, title).strip(" -")
+
+
+def epic_group_sort_key(
+    key: str,
+    epics_by_id: Mapping[str, Mapping[str, Any]],
+) -> tuple[str, int, str]:
+    epic = epics_by_id.get(key) or {}
+    return (
+        str(epic.get("initiative_id") or ""),
+        int(epic.get("order") or 0),
+        key,
+    )
+
+
+def task_search_text(task: Mapping[str, Any]) -> str:
+    values = [
+        task.get("id"),
+        task.get("ref"),
+        task.get("legacy_id"),
+        task.get("title"),
+        task.get("summary"),
+    ]
+    aliases = task.get("aliases")
+    if isinstance(aliases, Sequence) and not isinstance(aliases, (str, bytes)):
+        values.extend(aliases)
+    return " ".join(str(value or "") for value in values).lower()
+
+
+def status_sort_key(status: str) -> tuple[int, str]:
+    order = {
+        "in_progress": 0,
+        "in_review": 1,
+        "changes_requested": 2,
+        "ready": 3,
+        "blocked": 4,
+        "planned": 5,
+        "proposed": 6,
+        "deferred": 7,
+        "done": 8,
+    }
+    return (order.get(status, 50), status)
+
+
+def css_token(value: str) -> str:
+    return "".join(
+        char.lower() if char.isalnum() else "-"
+        for char in str(value or "unknown")
+    ).strip("-") or "unknown"
+
+
 def task_label(task: Mapping[str, Any]) -> str:
     if not task:
         return "None"
@@ -1029,15 +1371,27 @@ def task_table(
     rows = []
     for task in tasks:
         rows.append(
-            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
-                escape(task.get("ref") or task.get("id")),
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                task_identity_cell(task),
                 status_badge(str(task.get("status") or "unknown")),
                 escape(task.get("epic_key") or task.get("epic_id") or ""),
                 escape(task.get("title", "")),
+                escape(task.get("summary", "")),
                 escape(task.get("active_stage", "")),
             )
         )
-    return table(("Task", "Status", "Epic", "Title", "Stage"), rows, empty_text)
+    return table(("Task", "Status", "Epic", "Title", "Summary", "Stage"), rows, empty_text)
+
+
+def task_identity_cell(task: Mapping[str, Any]) -> str:
+    primary = str(task.get("ref") or task.get("id") or "")
+    legacy = str(task.get("legacy_id") or task.get("id") or "")
+    if legacy and legacy != primary:
+        return '<strong>{}</strong><br><code>{}</code>'.format(
+            escape(primary),
+            escape(legacy),
+        )
+    return "<strong>{}</strong>".format(escape(primary))
 
 
 def table(headers: Sequence[str], rows: Sequence[str], empty_text: str) -> str:
@@ -1064,6 +1418,15 @@ def _query_enabled(query: Mapping[str, Sequence[str]], name: str) -> bool:
     return any(
         str(value).lower() in {"1", "true", "yes", "refresh"} for value in values
     )
+
+
+def _query_value(query: Mapping[str, Sequence[str]], name: str) -> str:
+    values = query.get(name) or ()
+    for value in values:
+        text = str(value).strip()
+        if text:
+            return text
+    return ""
 
 
 def action_form(
@@ -1121,6 +1484,29 @@ def select_field_values(
         escape(label),
         escape(name),
         choices,
+    )
+
+
+def filter_select(
+    name: str,
+    label: str,
+    options: Sequence[tuple[str, str]],
+    selected: str,
+) -> str:
+    choices = []
+    for value, text in options:
+        selected_attr = ' selected' if value == selected else ""
+        choices.append(
+            '<option value="{}"{}>{}</option>'.format(
+                escape(value),
+                selected_attr,
+                escape(text),
+            )
+        )
+    return '<label>{}<select name="{}">{}</select></label>'.format(
+        escape(label),
+        escape(name),
+        "".join(choices),
     )
 
 

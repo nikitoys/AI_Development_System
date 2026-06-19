@@ -261,7 +261,7 @@ Epic[]
 
 It does not store Tasks.
 
-Tasks are executable units and must be managed by a separate future state file:
+Tasks are executable units and are managed by:
 
 ```text id="00s4wb"
 AI_PROJECT/state/tasks.json
@@ -953,11 +953,11 @@ Context Pack is derived retrieval context.
 
 ---
 
-# 14. MVP Boundaries
+# 14. Current State Boundaries
 
-## Included In MVP
+## First MVP State
 
-The first state model includes:
+The first state model included:
 
 ```text id="lnthg3"
 AI_PROJECT/state/plan.json
@@ -976,31 +976,28 @@ Initiative
 Epic
 ```
 
-## Excluded From MVP
+## Current Implemented State
 
-The first MVP does not include:
+Current self-hosted control also includes:
 
 ```text id="1hqy14"
 tasks.json
-current.json
-prompts.json
-executions.json
-reviews.json
-qa.json
-decisions.json
 changes.json
-releases.json
+docs.json
+current_execution.json
+task, codex, context, documentation and evolution event logs
+task, context, codex, documentation and evolution generated views
 ```
 
-These are future controlled domains.
+Current self-hosted control does not yet fully include dedicated state domains for execution sessions, review records, QA records, decisions or releases.
 
 ---
 
-# 15. Future State Files
+# 15. State Files
 
 ## tasks.json
 
-Future file for executable work items.
+Current file for executable work items.
 
 ```text id="9xo3ef"
 AI_PROJECT/state/tasks.json
@@ -1014,7 +1011,7 @@ Task[]
 
 ## current.json
 
-Future file for the selected execution target.
+Historical planned file for the selected execution target. Current task selection is stored in `AI_PROJECT/state/tasks.json.current_task_id`.
 
 ```text id="xpx2ol"
 AI_PROJECT/state/current.json
@@ -1030,7 +1027,7 @@ set at
 
 ## prompts.json
 
-Future file for generated prompt package metadata.
+Future file for generated prompt package metadata if prompt history becomes a separate state domain.
 
 ```text id="eumfjz"
 AI_PROJECT/state/prompts.json

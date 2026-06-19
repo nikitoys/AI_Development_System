@@ -1390,13 +1390,12 @@ Current known gaps:
 
 ```text id="c59tai"
 - planctl.py does not yet have check-generated;
-- protected-files check is not implemented yet;
-- evolutionctl.py is not implemented yet;
 - done task does not yet require verification evidence;
 - prompt build does not yet require non-empty scope/allowed_files/acceptance_criteria;
 - current task allowed statuses are still broad;
 - no unified projectctl.py exists yet;
 - no CI job is defined yet.
+- dedicated review and QA state domains are not implemented yet.
 ```
 
 These gaps should be tracked as future Tasks or Evolution Change Proposals.
@@ -1408,13 +1407,11 @@ These gaps should be tracked as future Tasks or Evolution Change Proposals.
 Recommended implementation tasks:
 
 ```text id="ydl81h"
-1. Add scripts/smoke-project-control.py.
-2. Add planctl.py check-generated.
-3. Add scripts/check-protected-project-files.py.
-4. Add CI job for smoke test.
-5. Add stricter prompt build validation.
-6. Add evolutionctl.py.
-7. Add AGENTS.md rule requiring planctl/taskctl/evolutionctl usage.
+1. Add planctl.py check-generated.
+2. Add CI job for project-control smoke and generated-output checks.
+3. Add stricter prompt build validation.
+4. Add dedicated review and QA control domains after approved evolution.
+5. Add unified projectctl.py only after facade and domain command coverage is stable.
 ```
 
 ---

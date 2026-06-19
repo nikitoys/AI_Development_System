@@ -906,7 +906,7 @@ Before building the package, task state must be valid.
 
 # 18. Relationship To evolutionctl.py
 
-If a task changes AI Development System rules, lifecycle, schemas, command catalog, prompt behavior or protected files policy, it must be linked to an approved Evolution Change in future `evolutionctl.py`.
+If a task changes AI Development System rules, lifecycle, schemas, command catalog, prompt behavior or protected files policy, it must be linked to an approved Evolution Change through `evolutionctl.py`.
 
 Prompt Package for such work should include:
 
@@ -918,7 +918,7 @@ Migration impact
 Owner approval
 ```
 
-Until `evolutionctl.py` exists, such requirements should be represented in Task fields:
+The task prompt should still represent execution boundaries in Task fields:
 
 ```text id="odmb91"
 scope

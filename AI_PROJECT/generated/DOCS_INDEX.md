@@ -3,20 +3,20 @@
 
 # Documentation Index
 
-Revision: `22`
+Revision: `23`
 Documents: `144`
 
 | Path | Title | Type | Status | Declared | Required | Content hash | Last reviewed | Reviewed hash |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `ai-system/agent-delegation.md` | Agent Delegation | `reference` | `active` | `draft` | `false` | `32bd223e6d3c` | 2026-06-16T19:17:48Z | `-` |
 | `ai-system/l4-role-agent-runtime.md` | L4 Role-Agent Runtime Architecture | `reference` | `active` | `review` | `true` | `9d5efa6f1a9a` | 2026-06-17T21:28:33Z | `-` |
-| `ai-system/project-control/01-overview.md` | Project Control Gateway Overview | `overview` | `active` | `draft` | `true` | `a6b78d2c0560` | - | `-` |
-| `ai-system/project-control/02-domain-model.md` | Project Control Domain Model | `reference` | `active` | `draft` | `true` | `92cd36c1cb69` | - | `-` |
-| `ai-system/project-control/03-state-model.md` | Project Control State Model | `reference` | `active` | `draft` | `true` | `b69e6c6ad9ac` | - | `-` |
-| `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog | `reference` | `active` | `draft` | `true` | `a1985ca2f321` | - | `-` |
-| `ai-system/project-control/05-lifecycle-rules.md` | Project Control Lifecycle Rules | `lifecycle` | `active` | `draft` | `true` | `7ac00bfde39d` | - | `-` |
-| `ai-system/project-control/06-prompt-package-spec.md` | Project Control Prompt Package Specification | `reference` | `active` | `draft` | `true` | `9304e03cf1dd` | - | `-` |
-| `ai-system/project-control/07-validation-and-tests.md` | Project Control Validation and Tests | `process` | `active` | `draft` | `true` | `035f37bb15d8` | - | `-` |
+| `ai-system/project-control/01-overview.md` | Project Control Gateway Overview | `overview` | `active` | `draft` | `true` | `0cbfa209a6a4` | - | `-` |
+| `ai-system/project-control/02-domain-model.md` | Project Control Domain Model | `reference` | `active` | `draft` | `true` | `5378a4daa79a` | - | `-` |
+| `ai-system/project-control/03-state-model.md` | Project Control State Model | `reference` | `active` | `draft` | `true` | `9e818e514763` | - | `-` |
+| `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog | `reference` | `active` | `draft` | `true` | `d6bfbf03256d` | - | `-` |
+| `ai-system/project-control/05-lifecycle-rules.md` | Project Control Lifecycle Rules | `lifecycle` | `active` | `draft` | `true` | `69165d09d150` | - | `-` |
+| `ai-system/project-control/06-prompt-package-spec.md` | Project Control Prompt Package Specification | `reference` | `active` | `draft` | `true` | `3444e8d40e40` | - | `-` |
+| `ai-system/project-control/07-validation-and-tests.md` | Project Control Validation and Tests | `process` | `active` | `draft` | `true` | `61710bd7deee` | - | `-` |
 | `ai-system/skills/README.md` | Skills Layer Roadmap | `guide` | `active` | `draft` | `false` | `dbf637225bec` | 2026-06-16T16:17:31Z | `-` |
 | `ai-system/templates/agent-worker-prompt.md` | Worker Agent Prompt Package Template | `template` | `active` | - | `false` | `f00861055a4f` | 2026-06-16T19:17:53Z | `-` |
 | `.agents/skills/agent-delegation/SKILL.md` | Skill | `guide` | `draft` | - | `false` | `5c432d691644` | - | `-` |
@@ -24,7 +24,7 @@ Documents: `144`
 | `.agents/skills/documentation-navigation/SKILL.md` | Skill | `guide` | `draft` | - | `false` | `64ca93923e7d` | - | `-` |
 | `.agents/skills/project-control-gateway/SKILL.md` | Skill | `guide` | `draft` | - | `false` | `880e4a5b6b09` | - | `-` |
 | `AGENTS.md` | Agents | `reference` | `draft` | `draft` | `false` | `7d1440de6021` | - | `-` |
-| `README.md` | Readme | `reference` | `draft` | `draft` | `false` | `ec59ec8c56ab` | - | `-` |
+| `README.md` | Readme | `reference` | `draft` | `draft` | `false` | `acffc50e1479` | - | `-` |
 | `README.ru.md` | Readme.Ru | `reference` | `draft` | - | `false` | `06ef242455e3` | - | `-` |
 | `ai-system/README.md` | Readme | `reference` | `draft` | `draft` | `false` | `088eb0b5b89b` | - | `-` |
 | `ai-system/agent-result-intake.md` | Agent Result Intake | `reference` | `draft` | `draft` | `false` | `380fdf66798e` | - | `-` |
@@ -84,7 +84,7 @@ Documents: `144`
 | `ai-system/project-control-connectivity.md` | Project Control Connectivity | `reference` | `draft` | `draft` | `false` | `3b6e938568b2` | - | `-` |
 | `ai-system/project-control-files.md` | Project Control Files | `reference` | `draft` | `draft` | `false` | `c3ab0549e8bb` | - | `-` |
 | `ai-system/project-control/09-task-identity-and-execution-graph.md` | Task Identity and Execution Graph | `reference` | `draft` | `draft` | `false` | `6cc7a2a365c8` | - | `-` |
-| `ai-system/project-control/control-plane-architecture.md` | Control Plane Architecture | `reference` | `draft` | `draft` | `false` | `565ffa004ad3` | - | `-` |
+| `ai-system/project-control/control-plane-architecture.md` | Control Plane Architecture | `reference` | `draft` | `draft` | `false` | `236962a4f1e3` | - | `-` |
 | `ai-system/project-control/control-plane-id-allocation.md` | Control Plane Id Allocation | `reference` | `draft` | `draft` | `false` | `50dc65164bbe` | - | `-` |
 | `ai-system/project-control/control-plane-inventory.md` | Control Plane Inventory | `reference` | `draft` | `draft` | `false` | `ee423af14cfd` | - | `-` |
 | `ai-system/project-integration-model.md` | Project Integration Model | `reference` | `draft` | `draft` | `false` | `4146b7a5d3a9` | - | `-` |
@@ -150,5 +150,5 @@ Documents: `144`
 | `ai-system/work-item-hierarchy.md` | Work Item Hierarchy | `reference` | `draft` | `draft` | `false` | `1ff8ca9832b1` | - | `-` |
 | `ai-system/workflow.md` | Workflow | `reference` | `draft` | `draft` | `false` | `6b18b7d5f515` | - | `-` |
 | `plugins/ai-project-control/skills/project-control-gateway/SKILL.md` | Skill | `guide` | `draft` | - | `false` | `880e4a5b6b09` | - | `-` |
-| `ai-system/project-control/08-usage-guide.md` | Project Control Usage Guide | `guide` | `review` | `review` | `false` | `6663bd3baabb` | - | `-` |
-| `ai-system/project-control/10-owner-quickstart.md` | Project Control Owner Quickstart | `guide` | `review` | `review` | `false` | `356887dffa2c` | - | `-` |
+| `ai-system/project-control/08-usage-guide.md` | Project Control Usage Guide | `guide` | `review` | `review` | `false` | `e6463b152c8e` | - | `-` |
+| `ai-system/project-control/10-owner-quickstart.md` | Project Control Owner Quickstart | `guide` | `review` | `review` | `false` | `94619d84fb32` | - | `-` |

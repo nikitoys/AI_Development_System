@@ -318,25 +318,25 @@ Human Owner remains the final authority for:
 
 AI may propose changes, but must not silently evolve the control model.
 
-## MVP Non-Goals
+## Current Non-Goals
 
-The first Project Control Gateway MVP does not include:
+The current Project Control Gateway does not authorize:
 
 ```text
-- UI;
 - MCP server;
 - Codex plugin;
 - automatic multi-agent execution;
 - automatic merge;
 - automatic task acceptance;
 - automatic deployment;
-- full task lifecycle;
-- review lifecycle;
-- QA lifecycle;
-- decision lifecycle.
+- automatic review or QA closure;
+- dedicated review lifecycle state;
+- dedicated QA lifecycle state;
+- decision lifecycle state;
+- release lifecycle state.
 ```
 
-These may be added later as separate controlled domains.
+The local Web Control Center and task lifecycle helpers are implemented, but they remain command-gated and do not bypass Human Owner approval.
 
 ## Success Criteria
 

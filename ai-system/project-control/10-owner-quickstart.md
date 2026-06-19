@@ -38,6 +38,8 @@ python scripts/aictl.py command list
 python scripts/aictl.py command describe project.doctor
 python scripts/aictl.py command describe web.serve
 python scripts/aictl.py command describe task.transition
+python scripts/aictl.py workflow list
+python scripts/aictl.py workflow describe task.prepare_for_codex
 ```
 
 Use `--json` when another tool needs machine-readable output:
@@ -82,16 +84,17 @@ python scripts/aictl.py task list
 python scripts/aictl.py task list --epic EPIC-005
 python scripts/aictl.py task list --status in_progress
 python scripts/aictl.py task show CTL-12
+python scripts/aictl.py task create --confirm --epic EPIC-005 --title "Bounded Task Title"
+python scripts/aictl.py task import --file tasks.json --preview
 python scripts/aictl.py current set CTL-12
 python scripts/aictl.py task transition CTL-12 --to in_progress
 python scripts/aictl.py task transition CTL-12 --to in_review
 python scripts/aictl.py current clear
 ```
 
-Use `taskctl.py` when the needed task operation is not exposed through the `aictl.py` parser:
+Use `taskctl.py` when the needed task operation is not exposed through the `aictl.py` parser or when you need detailed task validation/audit commands:
 
 ```bash
-python scripts/taskctl.py task create --epic EPIC-005 --title "Bounded Task Title"
 python scripts/taskctl.py task show CTL-12
 python scripts/taskctl.py current show --json
 python scripts/taskctl.py validate
@@ -101,6 +104,70 @@ python scripts/taskctl.py check-generated
 ```
 
 Codex may transition a completed execution task to `in_review` when the Task scope says to do so. Codex must not approve a Task, move it to `done`, or treat validation success as Human Owner acceptance.
+
+## Workflow Automation Helpers
+
+Use `workflow list` to discover confirmed composed workflows:
+
+```bash
+python scripts/aictl.py workflow list
+python scripts/aictl.py workflow describe task.prepare_for_codex
+python scripts/aictl.py workflow describe task.submit_for_review
+python scripts/aictl.py workflow describe task.close_reviewed
+python scripts/aictl.py workflow describe evolution.create_for_task
+```
+
+Common workflow runs:
+
+```bash
+python scripts/aictl.py workflow run task.prepare_for_codex --task CTL-12 --confirm
+python scripts/aictl.py workflow run task.refresh_execution_context --task CTL-12 --confirm
+python scripts/aictl.py workflow run task.submit_for_review --task CTL-12 --confirm
+python scripts/aictl.py workflow run task.close_reviewed --task CTL-12 --notes "APPROVED by Human Owner" --confirm
+python scripts/aictl.py workflow run evolution.create_for_task --task CTL-12 --confirm
+```
+
+`task.prepare_for_codex` sets the current Task, moves it to `in_progress` when needed, rebuilds the Context Pack, rebuilds the Codex prompt with context and runs `project doctor`.
+
+`task.refresh_execution_context` rebuilds only the task Context Pack and Codex prompt package.
+
+`task.submit_for_review` runs blocking validation and freshness checks before moving the Task to `in_review`.
+
+`task.close_reviewed` is an owner-facing close helper. It requires explicit approval notes, rejects Tasks that are not `in_review`, delegates approval to `taskctl.py task approve` and then moves the Task to `done`.
+
+`evolution.create_for_task` drafts an Evolution Change from a bounded Task, adds derived affected files, risks and impact, links the Task, validates evolution state and moves the Change only to `ready`. It does not approve or accept the Change.
+
+## Bulk Task Import
+
+Use bulk import when several bounded Tasks already have clear scope. Preview first:
+
+```bash
+python scripts/aictl.py task import --file tasks.json --preview
+python scripts/aictl.py task import --file tasks.json --confirm
+```
+
+Accepted JSON shapes are either an array of task objects, a single task object with `epic` and `title`, or an object with a `tasks` array:
+
+```json
+{
+  "tasks": [
+    {
+      "epic": "EPIC-006",
+      "title": "Document workflow helper",
+      "summary": "Update owner-facing workflow docs.",
+      "scope": ["Update project-control guidance"],
+      "out_of_scope": ["No command behavior changes"],
+      "allowed_files": ["ai-system/project-control/10-owner-quickstart.md"],
+      "acceptance_criteria": ["Documentation validation passes"],
+      "dependencies": ["WFA-01"],
+      "verification_mode": "standard",
+      "status": "planned"
+    }
+  ]
+}
+```
+
+Bulk import accepts only known task fields, allows `proposed`, `planned` or `ready` statuses, validates Epic and dependency references before creating anything, and delegates every created Task to the same create-only workflow. It does not set current Task, start work, approve Tasks or execute imported content.
 
 ## ID Allocation And Task References
 
@@ -163,6 +230,14 @@ python scripts/evolutionctl.py check-generated
 
 Codex must not approve, accept, archive or supersede evolution changes for the Human Owner.
 
+For a Task that already describes a system evolution item, the guided wizard can draft and prepare a Change Proposal:
+
+```bash
+python scripts/aictl.py workflow run evolution.create_for_task --task CTL-12 --confirm
+```
+
+The wizard stops at `ready`. The Human Owner must still approve or reject the Change Proposal with `evolutionctl.py`; Codex must not treat the wizard result as approval.
+
 ## Legacy Scripts Versus aictl.py
 
 Use `aictl.py` first for:
@@ -206,12 +281,21 @@ Read views are loaded through `GET` routes. Controlled write actions use confirm
 Current controlled Web actions are:
 
 ```text
+task.create
+task.import
 task.transition
 current.set
 current.clear
 project.render
 context.build
 codex.prompt.build
+task.prepare_for_codex
+task.refresh_execution_context
+task.submit_for_review
+task.close_reviewed
+evolution.create_for_task
+evolution.accept_change
+epic.close_if_complete
 ```
 
 Every Web write action must:
@@ -329,7 +413,13 @@ python scripts/docctl.py check-generated
 If acceptance criteria are satisfied, submit the Task for review:
 
 ```bash
-python scripts/taskctl.py task transition CTL-12 --to in_review
+python scripts/aictl.py workflow run task.submit_for_review --task CTL-12 --confirm
 ```
 
-Stop there. The Human Owner decides `APPROVED`, `REWORK`, `REJECTED`, `DEFERRED` or `EXPERIMENT`.
+Stop there until review and Human Owner decision. If the Human Owner decides `APPROVED`, close the reviewed Task with explicit notes:
+
+```bash
+python scripts/aictl.py workflow run task.close_reviewed --task CTL-12 --notes "APPROVED by Human Owner" --confirm
+```
+
+The Human Owner decides `APPROVED`, `REWORK`, `REJECTED`, `DEFERRED` or `EXPERIMENT`.

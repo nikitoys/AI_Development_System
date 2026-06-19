@@ -9,10 +9,11 @@ Draft
 This document defines the target architecture for a unified local control plane for
 AI Development System project control.
 
-It is the design artifact for `TASK-020`. It does not implement
-`scripts/aictl.py`, create an `ai_project_ctl/` package, refactor existing
-`*ctl.py` scripts, change command behavior, create web files, or authorize any
-future behavior change without controlled evolution approval.
+It began as the design artifact for `TASK-020`. Later bounded Tasks implemented
+`scripts/aictl.py`, the `ai_project_ctl/` package, command registry support,
+workflow helpers and the local Web Control Center. This document remains an
+architecture reference and does not authorize future behavior change without
+controlled evolution approval.
 
 ## Source Documents
 
@@ -33,28 +34,25 @@ This design is based on:
 
 This architecture covers:
 
-- `scripts/aictl.py` as the future preferred unified CLI facade.
+- `scripts/aictl.py` as the preferred unified CLI facade.
 - `ai_project_ctl/core` as the shared command, store, event, validation,
   rendering, ID, lock, result, and transaction layer.
 - `ai_project_ctl/domains` as domain services for plan, epics, tasks, docs,
   changes, reviews, evolution, Codex execution, and context.
 - A shared command registry used by CLI wrappers, the unified facade, tests,
-  and future local Web Control Center.
+  workflows and the local Web Control Center.
 - A shared state, event, generated-output, validation, error/result, locking,
   and atomic-write model.
 - A compatibility strategy for the existing `planctl.py`, `taskctl.py`,
   `docctl.py`, `contextctl.py`, `codexctl.py`, and `evolutionctl.py` scripts.
-- Boundaries for a future local Web Control Center.
+- Boundaries for the local Web Control Center.
 
 ## Out Of Scope
 
-This design does not authorize:
+This reference does not authorize:
 
-- creating `scripts/aictl.py`;
-- creating `ai_project_ctl/`;
-- refactoring existing ctl scripts;
-- changing existing command behavior;
-- creating web files;
+- new command behavior outside registered commands;
+- refactoring existing ctl scripts outside approved Tasks;
 - changing lifecycle states or approval semantics;
 - changing protected file policy;
 - changing task identity behavior;
@@ -62,7 +60,7 @@ This design does not authorize:
 - automatic execution, dispatch, merge, pull request creation, review closure,
   QA closure, approval, acceptance, or task completion.
 
-Any future implementation of this architecture must be represented as approved
+Any future expansion of this architecture must be represented as approved
 Evolution Change and bounded executable Tasks before source behavior changes.
 
 ## Current Inventory Summary
@@ -92,7 +90,9 @@ The inventory found these key risks:
 - `taskctl.py` and `codexctl.py` can both write `CODEX_PROMPT.md`.
 - Context Pack freshness can block `codexctl.py` while other prompt paths still
   remain available.
-- There is no shared command registry for CLI, automation, or future web use.
+- Shared command registry coverage now exists for `aictl.py`, workflow helpers
+  and Web Control Center actions, but future domains still need explicit
+  registered command contracts.
 
 The target architecture keeps current scripts stable while moving future writes
 behind one shared control kernel.
@@ -124,7 +124,7 @@ Target structure:
 
 ```text
 scripts/
-  aictl.py                    # future unified CLI facade
+  aictl.py                    # unified CLI facade
   planctl.py                  # legacy-compatible wrapper
   taskctl.py                  # legacy-compatible wrapper
   docctl.py                   # legacy-compatible wrapper
@@ -162,19 +162,21 @@ ai_project_ctl/
     releases.py               # future release records
 
   web/
-    server.py                 # future local-only web shell
+    server.py                 # local-only Web Control Center
     views.py                  # read models over registry queries
     actions.py                # write actions routed through registry
 ```
 
-This tree is a target design only. `TASK-020` does not create these files.
+This tree is both the original target design and, for implemented areas, the
+current package layout. New domains or behavior still require bounded Tasks.
 
 ## `scripts/aictl.py` Facade
 
-`scripts/aictl.py` should become the preferred unified entrypoint after the
-shared services are implemented and validated.
+`scripts/aictl.py` is the preferred unified entrypoint for command discovery,
+project doctor, supported task/current/context/Codex commands, workflow helpers
+and local Web Control Center startup.
 
-Target responsibilities:
+Responsibilities:
 
 - Parse common global options such as `--root`, `--actor`, `--json`,
   `--dry-run`, and `--verbose`.
@@ -636,10 +638,10 @@ Wrapper constraints:
 - Wrappers must not invent behavior that `aictl.py` cannot invoke.
 - Wrappers must preserve Human Owner gates.
 
-## Future Local Web Control Center
+## Local Web Control Center
 
-The future Web Control Center should be a local UI over the same command
-registry and domain services.
+The Web Control Center is a local loopback UI over the same command registry
+and facade commands.
 
 It should provide readable views for:
 
@@ -660,11 +662,10 @@ The Web UI must not edit `AI_PROJECT/state/*.json`,
 actions must route through the same command registry used by `aictl.py` and the
 legacy wrappers.
 
-Web write actions must:
+Controlled Web write actions must:
 
 - show the registered command that will run;
 - validate preconditions before mutation;
-- acquire the same locks as CLI commands;
 - write the same audit events;
 - regenerate the same generated views;
 - return the same structured results;
@@ -674,8 +675,11 @@ Generated Markdown displayed in the Web UI must be read-only and labeled as
 derived output. If it is stale, the UI may offer a registered regenerate command,
 but it must not patch generated Markdown directly.
 
-The initial Web Control Center should be read-only until the command registry,
-locks, result model, generated checks, and protected-file checks are stable.
+The implemented Web Control Center has read views and confirmed write actions
+for registered commands such as task creation/import, task transitions, current
+task selection, project render, context build, Codex prompt build, Prepare for
+Codex, submit/close review helpers, Evolution Change creation/acceptance and
+Epic close-if-complete. It must continue to reject arbitrary file write fields.
 
 ## Security And Authority Boundaries
 
@@ -720,11 +724,12 @@ Recommended migration order:
 7. Convert `planctl.py` to shared services.
 8. Convert `taskctl.py` to shared services.
 9. Convert `docctl.py`, `contextctl.py`, `codexctl.py`, and `evolutionctl.py`.
-10. Add `scripts/aictl.py` as a facade after registry coverage is sufficient.
-11. Add cross-domain doctor and generated checks.
-12. Add read-only local Web Control Center.
-13. Add controlled web write actions only after Human Owner approval and after
-    locking, audit, validation, and protected-file checks prove stable.
+10. Keep expanding `scripts/aictl.py` facade coverage after registry coverage is sufficient.
+11. Keep cross-domain doctor and generated checks current.
+12. Maintain the local Web Control Center as a command-gated surface.
+13. Add new controlled web write actions only after Human Owner approval and
+    after audit, validation and protected-file checks prove stable for the
+    underlying command.
 
 Each implementation phase must be a separate bounded Task or task group under an
 approved Evolution Change.
@@ -737,7 +742,7 @@ approved Evolution Change.
 3. Domain services should own project-control behavior without parsing CLI
    arguments or writing files directly.
 4. The command registry should be the allowed-command catalog for CLI, wrappers,
-   tests, and future Web UI.
+   tests, workflows and Web UI actions.
 5. `AI_PROJECT/state/*.json` remains canonical current state.
 6. `AI_PROJECT/events/*.jsonl` remains append-only audit history.
 7. `AI_PROJECT/generated/*.md` remains derived output and must not be edited
@@ -753,7 +758,7 @@ Command -> Validate -> Append Event -> Mutate State -> Regenerate Views -> Retur
 10. Existing ctl scripts remain compatibility wrappers during migration.
 11. The Web Control Center must route all mutations through the command registry.
 12. The Web UI must not edit JSON directly.
-13. Future implementation still requires controlled evolution approval where
+13. Future expansion still requires controlled evolution approval where
     command behavior, lifecycle rules, protected-file policy, or system behavior
     changes.
 
@@ -766,12 +771,10 @@ Command -> Validate -> Append Event -> Mutate State -> Regenerate Views -> Retur
 - `CODEX_PROMPT.md` currently has two write paths; future ownership should be
   settled before wrapper migration.
 - `planctl.py` still lacks a dedicated `check-generated` command.
-- Context Pack refresh behavior should be clarified before Codex prompt
-  workflows become unified.
-- Web writes should remain disabled until lock, audit, result, and validation
-  behavior are proven by tests.
-- Epic keys and task refs should be stabilized before expanding web task
-  creation or large-scale parallel planning.
+- New or unregistered Web write actions should remain disabled until audit,
+  result, validation and protected-file behavior are proven by tests.
+- Review, QA, decision and release domains still need separate approved designs
+  before implementation.
 
 ## Review Checklist
 

@@ -159,6 +159,13 @@ def _epic_sort_key(epic: Mapping[str, Any]) -> tuple[str, int, str]:
     )
 
 
+def _initiative_sort_key(initiative: Mapping[str, Any]) -> tuple[int, str]:
+    return (
+        int(initiative.get("order") or 0),
+        str(initiative.get("id") or ""),
+    )
+
+
 class ReadOnlyProjectModel:
     """Build page data without writing protected project-control files."""
 
@@ -189,6 +196,7 @@ class ReadOnlyProjectModel:
     ) -> dict[str, Any]:
         tasks = self.tasks()
         current_task = self.current_task(tasks)
+        initiatives = self.initiatives()
         epics = self.epics()
         doctor = self.doctor(refresh=refresh_doctor)
         generated = self.generated_views()
@@ -200,6 +208,7 @@ class ReadOnlyProjectModel:
             "tasks": tasks,
             "task_counts": dict(Counter(task.get("status", "unknown") for task in tasks)),
             "queue": self.executable_queue(tasks),
+            "initiatives": initiatives,
             "epics": epics,
             "epic_counts": dict(Counter(epic.get("status", "unknown") for epic in epics)),
             "doctor": doctor,
@@ -249,6 +258,16 @@ class ReadOnlyProjectModel:
         return sorted(
             [dict(epic) for epic in epics if isinstance(epic, dict)],
             key=_epic_sort_key,
+        )
+
+    def initiatives(self) -> list[dict[str, Any]]:
+        state = self._state_json("plan.json")
+        initiatives = state.get("initiatives")
+        if not isinstance(initiatives, list):
+            return []
+        return sorted(
+            [dict(initiative) for initiative in initiatives if isinstance(initiative, dict)],
+            key=_initiative_sort_key,
         )
 
     def doctor(self, *, refresh: bool = False) -> dict[str, Any]:

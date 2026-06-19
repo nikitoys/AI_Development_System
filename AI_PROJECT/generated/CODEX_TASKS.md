@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `332`
-Current task: `TASK-037`
+Revision: `361`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -646,9 +646,9 @@ Acceptance criteria:
 - Existing lifecycle semantics are preserved.
 - Tests and validations pass.
 
-### WFA-06 (TASK-037) — WFA-06 Documentation Audit And Cleanup ⭐
+### WFA-06 (TASK-037) — WFA-06 Documentation Audit And Cleanup
 
-Status: `in_progress`
+Status: `in_review`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_c4ef4282293c`, legacy `TASK-037`, aliases `TASK-037`, local `WFA` / `6`
@@ -663,4 +663,118 @@ Acceptance criteria:
 - Evolution Change Flow is documented as controlled self-evolution.
 - Generated files are clearly described as derived output.
 - Protected-file rules are current.
+- Documentation checks and project-control checks pass.
+
+### WFA-07 (TASK-038) — UIX-01 Improve Tasks filtering grouping and collapse
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_2b313c6e127e`, legacy `TASK-038`, aliases `TASK-038`, local `WFA` / `7`
+
+Make the Tasks page usable for large projects by adding initiative/epic/status filters, search, grouping, and collapsible done sections.
+
+Acceptance criteria:
+
+- Tasks page can be filtered by initiative, epic, status, and search text.
+- Tasks page can group tasks by epic or status.
+- Done tasks are hidden or collapsed by default.
+- Current task, in-progress tasks, and review tasks remain easy to find.
+- GET / and GET /data.json remain fast and do not run full doctor on every request.
+- No new write behavior is introduced.
+- Tests and project-control validations pass.
+
+### WFA-08 (TASK-039) — UIX-02 Add task row workflow buttons
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_ba9070900730`, legacy `TASK-039`, aliases `TASK-039`, local `WFA` / `8`
+
+Add status-aware workflow buttons next to tasks, including Prepare for Codex, Refresh Context, and Submit for Review.
+
+Acceptance criteria:
+
+- Tasks page shows useful workflow buttons based on task status.
+- Prepare for Codex can be launched from a task row with explicit confirmation.
+- Refresh Context can be launched from a task row with explicit confirmation.
+- Submit for Review can be launched from a task row with explicit confirmation.
+- Workflow actions route through governed workflow/aictl paths.
+- UI displays clear success/failure output and next action hints.
+- No direct protected-file writes are introduced.
+- Tests and project-control validations pass.
+
+### WFA-09 (TASK-040) — UIX-03 Add unified workflow action result panel
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_64618b90c44b`, legacy `TASK-040`, aliases `TASK-040`, local `WFA` / `9`
+
+Add a reusable result panel for workflow and Web actions showing step status, changed files, warnings, errors, and next actions.
+
+Acceptance criteria:
+
+- After a workflow action, UI shows a clear action result panel.
+- Result panel shows executed steps and status.
+- Result panel shows warnings/errors without hiding failures.
+- Result panel includes next action hints when available.
+- Prepare for Codex result includes a copyable Codex instruction.
+- Existing workflow safety is preserved.
+- Tests and project-control validations pass.
+
+### WFA-10 (TASK-041) — UIX-04 Add Evolution management UI tab
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_642286708abd`, legacy `TASK-041`, aliases `TASK-041`, local `WFA` / `10`
+
+Add an Evolution tab to view and manage Change Proposals, including create-for-task, approve, move to review, and accept actions with confirmation.
+
+Acceptance criteria:
+
+- Evolution tab lists Change Proposals with useful metadata.
+- Evolution tab can filter by status and type.
+- Owner can create a Change for a task through the existing wizard.
+- Owner can approve a ready Change only with explicit confirmation.
+- Owner can accept a Change only when linked task completion rules pass.
+- Invalid transitions are rejected clearly.
+- All writes route through governed commands/workflows.
+- Tests and project-control validations pass.
+
+### WFA-11 (TASK-042) — UIX-05 Add Bulk Task Import from file
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_82ea27760cf4`, legacy `TASK-042`, aliases `TASK-042`, local `WFA` / `11`
+
+Extend Bulk Task Import to support uploading JSON files in addition to pasted JSON text.
+
+Acceptance criteria:
+
+- Owner can import a task batch by uploading a JSON/text file.
+- Paste-based JSON import still works.
+- Importer shows preview before creation.
+- Invalid file type, invalid JSON, invalid refs, or oversized file fails before creation.
+- Confirmed import creates tasks only through governed command paths.
+- No direct tasks.json writes are introduced.
+- Tests and project-control validations pass.
+
+### WFA-12 (TASK-043) — UIX-06 Update UI workflow documentation
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_ed5d17298252`, legacy `TASK-043`, aliases `TASK-043`, local `WFA` / `12`
+
+Update owner-facing documentation for the improved UI cockpit, task filters, workflow buttons, Evolution tab, and bulk file import.
+
+Acceptance criteria:
+
+- Documentation describes the UI-first daily workflow.
+- Documentation explains task filters, workflow buttons, Evolution tab, and bulk file import.
+- Documentation preserves protected-file and generated-output rules.
+- Legacy ctl scripts are documented as compatibility layer.
 - Documentation checks and project-control checks pass.
