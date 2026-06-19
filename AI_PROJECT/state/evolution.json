@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 330,
+  "revision": 367,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-18T20:34:31Z",
+  "updated_at": "2026-06-19T07:09:16Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -752,6 +752,70 @@
       "order": 15,
       "created_at": "2026-06-18T20:09:39Z",
       "updated_at": "2026-06-18T20:34:31Z"
+    },
+    {
+      "id": "CHG-016",
+      "title": "WFA-03 Add Task Creation Wizard",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "Provide a guided task creation form/workflow that routes through taskctl.py/aictl command layer and supports scope, out-of-scope, allowed files, acceptance criteria, review instructions, dependencies, and optional Evolution Change hint.",
+      "problem": "Task WFA-03 requires an explicit Evolution Change Proposal before implementation: Add owner-facing CLI/UI workflow for creating individual tasks without long taskctl.py command lines.",
+      "proposal": "Implement the bounded task scope: Add task creation workflow metadata.; Add UI form or CLI wizard-like command if allowed.; Support Epic selection.; Support scope/out-of-scope/allowed-files/acceptance/review fields.; Support depends_on selection.; Support create-only mode.; Optionally offer next action suggestions: prepare for Codex, create Evolution Change.; Add tests.",
+      "affected_areas": [
+        "Workflow automation",
+        "Task creation wizard",
+        "Web Control Center",
+        "aictl workflow commands"
+      ],
+      "affected_files": [
+        "ai_project_ctl/core/workflows.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/core/registry.py",
+        "scripts/aictl.py",
+        "tests/**"
+      ],
+      "risks": [
+        "Boundary risk: Do not implement grouped import in this task.",
+        "Boundary risk: Do not auto-start the created task.",
+        "Boundary risk: Do not auto-create Evolution Change unless explicitly delegated to WFA-02 workflow.",
+        "Boundary risk: Do not bypass taskctl validation.",
+        "Verify taskctl/aictl routing, create-only behavior, dependency support, protected-file policy, tests, and validation output.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-034.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Add task creation workflow metadata.",
+        "Add UI form or CLI wizard-like command if allowed.",
+        "Support Epic selection.",
+        "Support scope/out-of-scope/allowed-files/acceptance/review fields.",
+        "Support depends_on selection.",
+        "Owner can create a single task through workflow/UI without manually writing a long CLI command.",
+        "Created task is persisted through approved command path.",
+        "Generated task views are refreshed through owning CLI/facade."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "compatible",
+      "linked_tasks": [
+        "TASK-034"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-19T06:23:46Z",
+      "approval_notes": "Approved for WFA-03 Task Creation Wizard. Must create tasks only through governed command paths, preserve validation/protected-file boundaries, and not implement grouped import or auto-start behavior.",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T07:09:16Z",
+      "acceptance_notes": "WFA-03 implemented and accepted. Task Creation Wizard added as create-only governed workflow without auto-starting tasks or bypassing protected-file boundaries.",
+      "notes": [],
+      "priority": 1,
+      "order": 16,
+      "created_at": "2026-06-19T06:20:20Z",
+      "updated_at": "2026-06-19T07:09:16Z"
     }
   ]
 }

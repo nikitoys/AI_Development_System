@@ -32,7 +32,9 @@ from ai_project_ctl.core.registry import (  # noqa: E402
 )
 from ai_project_ctl.core.result import CommandError, CommandMessage, CommandResult  # noqa: E402
 from ai_project_ctl.core.workflows import (  # noqa: E402
+    TaskCreateRequest,
     run_workflow,
+    run_task_create_workflow,
     workflow_describe,
     workflow_list,
     workflow_preview,
@@ -947,7 +949,13 @@ def _emit_workflow_result(result: CommandResult) -> None:
     print("{}: {}".format("OK" if result.ok else "ERROR", result.message))
     print("Workflow: {}".format(result.command))
     task = result.data.get("task") or {}
-    task_label = task.get("ref") or task.get("id") or result.data.get("task_ref") or ""
+    task_label = (
+        task.get("ref")
+        or task.get("id")
+        or result.data.get("task_ref")
+        or result.data.get("created_task_id")
+        or ""
+    )
     if task_label:
         print("Task: {}".format(task_label))
 
@@ -966,6 +974,10 @@ def _emit_workflow_result(result: CommandResult) -> None:
         print("ERROR: {}: {}".format(error.code, error.message), file=sys.stderr)
     if result.owner_action_required:
         print("Owner action required: {}".format(result.owner_action_required))
+    if result.next_actions:
+        print("Next actions:")
+        for action in result.next_actions:
+            print("  - {}".format(action))
 
 
 def cmd_task_list(args: argparse.Namespace) -> int:
@@ -995,6 +1007,50 @@ def cmd_task_show(args: argparse.Namespace) -> int:
         args,
         _script_argv("taskctl.py", args, ["task", "show", args.task_ref]),
     )
+
+
+def _tuple_or_empty(values: Sequence[str] | None) -> tuple[str, ...]:
+    return tuple(str(value).strip() for value in values or () if str(value).strip())
+
+
+def _task_create_request(args: argparse.Namespace) -> TaskCreateRequest:
+    return TaskCreateRequest(
+        epic=args.epic,
+        title=args.title,
+        summary=args.summary or "",
+        description=args.description or "",
+        priority=args.priority,
+        status=args.status,
+        active_role=args.active_role or "",
+        active_stage=args.active_stage or "",
+        active_document=args.active_document or "",
+        expected_result=args.expected_result or "",
+        verification_mode=args.verification_mode,
+        scope=_tuple_or_empty(args.scope),
+        out_of_scope=_tuple_or_empty(args.out_of_scope),
+        allowed_files=_tuple_or_empty(args.allowed_file),
+        acceptance=_tuple_or_empty(args.acceptance),
+        review_instructions=_tuple_or_empty(args.review_instruction),
+        notes=_tuple_or_empty(args.note),
+        depends_on=_tuple_or_empty(args.depends_on),
+        dependency_reason=args.dependency_reason or "",
+    )
+
+
+def cmd_task_create(args: argparse.Namespace) -> int:
+    _ensure_implemented("task.create")
+    result = run_task_create_workflow(
+        _task_create_request(args),
+        root=args.root,
+        actor=args.actor,
+        confirmed=args.confirm,
+    )
+    if args.json:
+        _print_json(result.to_dict())
+        return 0 if result.ok else 1
+
+    _emit_workflow_result(result)
+    return 0 if result.ok else 1
 
 
 def cmd_task_transition(args: argparse.Namespace) -> int:
@@ -1303,6 +1359,54 @@ def build_parser() -> argparse.ArgumentParser:
     p = task_sub.add_parser("show", help="Show a task through taskctl.py")
     p.add_argument("task_ref")
     p.set_defaults(func=cmd_task_show, facade_command="task.show")
+
+    p = task_sub.add_parser("create", help="Create one task through the governed create-only workflow")
+    p.add_argument("--epic", required=True)
+    p.add_argument("--title", required=True)
+    p.add_argument("--summary")
+    p.add_argument("--description")
+    p.add_argument("--priority", type=int, default=1)
+    p.add_argument(
+        "--status",
+        default="planned",
+        choices=(
+            "proposed",
+            "planned",
+            "ready",
+            "in_progress",
+            "blocked",
+            "in_review",
+            "changes_requested",
+            "approved",
+            "done",
+            "deferred",
+            "archived",
+        ),
+    )
+    p.add_argument("--active-role")
+    p.add_argument("--active-stage")
+    p.add_argument("--active-document")
+    p.add_argument("--expected-result")
+    p.add_argument(
+        "--verification-mode",
+        default="standard",
+        choices=("light", "manual", "none", "standard", "strict"),
+    )
+    p.add_argument("--scope", action="append")
+    p.add_argument("--out-of-scope", action="append", dest="out_of_scope")
+    p.add_argument("--allowed-file", action="append")
+    p.add_argument("--acceptance", action="append")
+    p.add_argument("--review-instruction", action="append")
+    p.add_argument("--note", action="append")
+    p.add_argument("--depends-on", action="append")
+    p.add_argument("--dependency-reason")
+    p.add_argument(
+        "--create-only",
+        action="store_true",
+        help="Document intent: create the task without selecting or starting it. This is the default behavior.",
+    )
+    p.add_argument("--confirm", action="store_true")
+    p.set_defaults(func=cmd_task_create, facade_command="task.create")
 
     p = task_sub.add_parser("transition", help="Transition a task through taskctl.py")
     p.add_argument("task_ref")

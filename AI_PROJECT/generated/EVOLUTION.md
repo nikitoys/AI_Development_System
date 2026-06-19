@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `330`
-Changes: `15`
+Revision: `367`
+Changes: `16`
 
 ## Summary
 
-- `accepted`: 14
+- `accepted`: 15
 - `approved`: 1
 
 ## Changes
@@ -846,3 +846,73 @@ Impact:
 Linked tasks:
 
 - TASK-033
+
+### CHG-016 — WFA-03 Add Task Creation Wizard
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-03 requires an explicit Evolution Change Proposal before implementation: Add owner-facing CLI/UI workflow for creating individual tasks without long taskctl.py command lines.
+
+Proposal:
+
+Implement the bounded task scope: Add task creation workflow metadata.; Add UI form or CLI wizard-like command if allowed.; Support Epic selection.; Support scope/out-of-scope/allowed-files/acceptance/review fields.; Support depends_on selection.; Support create-only mode.; Optionally offer next action suggestions: prepare for Codex, create Evolution Change.; Add tests.
+
+Rationale:
+
+Provide a guided task creation form/workflow that routes through taskctl.py/aictl command layer and supports scope, out-of-scope, allowed files, acceptance criteria, review instructions, dependencies, and optional Evolution Change hint.
+
+Approved by: `human_owner` at `2026-06-19T06:23:46Z`  
+Approval notes: Approved for WFA-03 Task Creation Wizard. Must create tasks only through governed command paths, preserve validation/protected-file boundaries, and not implement grouped import or auto-start behavior.  
+
+Accepted by: `human_owner` at `2026-06-19T07:09:16Z`  
+Acceptance notes: WFA-03 implemented and accepted. Task Creation Wizard added as create-only governed workflow without auto-starting tasks or bypassing protected-file boundaries.  
+
+Affected areas:
+
+- Workflow automation
+- Task creation wizard
+- Web Control Center
+- aictl workflow commands
+
+Affected files:
+
+- ai_project_ctl/core/workflows.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/core/registry.py
+- scripts/aictl.py
+- tests/**
+
+Risks:
+
+- Boundary risk: Do not implement grouped import in this task.
+- Boundary risk: Do not auto-start the created task.
+- Boundary risk: Do not auto-create Evolution Change unless explicitly delegated to WFA-02 workflow.
+- Boundary risk: Do not bypass taskctl validation.
+- Verify taskctl/aictl routing, create-only behavior, dependency support, protected-file policy, tests, and validation output.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-034.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add task creation workflow metadata.
+- Add UI form or CLI wizard-like command if allowed.
+- Support Epic selection.
+- Support scope/out-of-scope/allowed-files/acceptance/review fields.
+- Support depends_on selection.
+- Owner can create a single task through workflow/UI without manually writing a long CLI command.
+- Created task is persisted through approved command path.
+- Generated task views are refreshed through owning CLI/facade.
+
+Linked tasks:
+
+- TASK-034

@@ -252,6 +252,44 @@ def _build_task_transition(fields: Mapping[str, str]) -> list[str]:
     return ["task", "transition", task_ref, "--to", target]
 
 
+def _build_task_create(fields: Mapping[str, str]) -> list[str]:
+    args = [
+        "task",
+        "create",
+        "--confirm",
+        "--epic",
+        _require_field(fields, "epic"),
+        "--title",
+        _require_field(fields, "title"),
+    ]
+    for field_name, flag in (
+        ("summary", "--summary"),
+        ("description", "--description"),
+        ("status", "--status"),
+        ("active_role", "--active-role"),
+        ("active_stage", "--active-stage"),
+        ("active_document", "--active-document"),
+        ("expected_result", "--expected-result"),
+        ("verification_mode", "--verification-mode"),
+        ("dependency_reason", "--dependency-reason"),
+    ):
+        value = _field(fields, field_name)
+        if value:
+            args.extend([flag, value])
+    for field_name, flag in (
+        ("scope", "--scope"),
+        ("out_of_scope", "--out-of-scope"),
+        ("allowed_file", "--allowed-file"),
+        ("acceptance", "--acceptance"),
+        ("review_instruction", "--review-instruction"),
+        ("note", "--note"),
+        ("depends_on", "--depends-on"),
+    ):
+        for value in _multiline_values(fields, field_name):
+            args.extend([flag, value])
+    return args
+
+
 def _build_current_set(fields: Mapping[str, str]) -> list[str]:
     return ["current", "set", _task_ref(fields)]
 
@@ -312,6 +350,14 @@ def _field(fields: Mapping[str, str], name: str) -> str:
     return str(fields.get(name) or "").strip()
 
 
+def _multiline_values(fields: Mapping[str, str], name: str) -> list[str]:
+    return [
+        line.strip()
+        for line in _field(fields, name).splitlines()
+        if line.strip()
+    ]
+
+
 def _parse_json(text: str) -> Any | None:
     stripped = text.strip()
     if not stripped:
@@ -323,6 +369,12 @@ def _parse_json(text: str) -> Any | None:
 
 
 ACTIONS: dict[str, WebAction] = {
+    "task.create": WebAction(
+        action_id="task.create",
+        command_name="task.create",
+        label="Create task",
+        builder=_build_task_create,
+    ),
     "task.transition": WebAction(
         action_id="task.transition",
         command_name="task.transition",

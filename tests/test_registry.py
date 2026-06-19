@@ -80,6 +80,19 @@ class RegistryTests(unittest.TestCase):
         self.assertEqual(descriptor["lock_scope"], "workflow")
         self.assertIn("Explicit confirmation", descriptor["owner_approval"])
 
+    def test_task_create_is_registered_as_create_only_workflow(self):
+        descriptor = command_describe("task.create")
+
+        argument_names = [argument["name"] for argument in descriptor["arguments"]]
+
+        self.assertEqual(descriptor["domain"], "task")
+        self.assertEqual(descriptor["kind"], "write")
+        self.assertEqual(descriptor["lock_scope"], "workflow")
+        self.assertIn("depends_on", argument_names)
+        self.assertIn("confirm", argument_names)
+        self.assertIn("not auto-started", descriptor["owner_approval"])
+        self.assertIn("Create-only", " ".join(descriptor["notes"]))
+
     def test_evolution_create_for_task_is_registered_without_approval(self):
         descriptor = command_describe("evolution.create_for_task")
 

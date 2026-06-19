@@ -3,20 +3,17 @@
 
 # Task Execution Queue
 
-Revision: `314`
+Revision: `320`
 
 ## Executable Now
 
-- `WFA-03 (TASK-034)` [planned] `EPIC-006` priority `1` — WFA-03 Add Task Creation Wizard
+- `WFA-04 (TASK-035)` [planned] `EPIC-006` priority `1` — WFA-04 Add Bulk Task Import UI
 - `WFA-05 (TASK-036)` [planned] `EPIC-006` priority `1` — WFA-05 Add Review And Close Helpers
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 
 ## Waiting For Dependencies
 
-- `WFA-04 (TASK-035)` [planned] `EPIC-006` priority `1` — WFA-04 Add Bulk Task Import UI
-  - `dependency_not_done`: depends on WFA-03 (TASK-034) with status planned
 - `WFA-06 (TASK-037)` [planned] `EPIC-006` priority `1` — WFA-06 Documentation Audit And Cleanup
-  - `dependency_not_done`: depends on WFA-03 (TASK-034) with status planned
   - `dependency_not_done`: depends on WFA-04 (TASK-035) with status planned
   - `dependency_not_done`: depends on WFA-05 (TASK-036) with status planned
 
@@ -65,6 +62,8 @@ Revision: `314`
 - `WFA-02 (TASK-033)` [done] `EPIC-006` priority `1` — WFA-02 Add Evolution Change Wizard
   - `status_not_executable`: status is done
 - `TASK-005` [done] `EPIC-002` priority `1` — Create Documentation Navigation Skill
+  - `status_not_executable`: status is done
+- `WFA-03 (TASK-034)` [done] `EPIC-006` priority `1` — WFA-03 Add Task Creation Wizard
   - `status_not_executable`: status is done
 - `TASK-006` [done] `EPIC-002` priority `1` — Add Two-Level Delegated Agent Execution
   - `status_not_executable`: status is done

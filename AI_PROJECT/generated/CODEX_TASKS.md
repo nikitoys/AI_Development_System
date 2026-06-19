@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `314`
+Revision: `320`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -595,7 +595,7 @@ Acceptance criteria:
 
 ### WFA-03 (TASK-034) — WFA-03 Add Task Creation Wizard
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_95ae4203c49f`, legacy `TASK-034`, aliases `TASK-034`, local `WFA` / `3`

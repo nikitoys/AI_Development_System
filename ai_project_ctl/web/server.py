@@ -148,11 +148,11 @@ def make_handler(model: ReadOnlyProjectModel) -> type[BaseHTTPRequestHandler]:
                     "Invalid write request content length.",
                     details={"content_length": length_header},
                 ) from exc
-            if length > 8192:
+            if length > 32768:
                 raise WebActionError(
                     "WEB_ACTION_BODY_TOO_LARGE",
                     "Write request body is too large.",
-                    details={"max_bytes": 8192, "content_length": length},
+                    details={"max_bytes": 32768, "content_length": length},
                 )
 
             raw = self.rfile.read(length).decode("utf-8") if length else ""
@@ -454,6 +454,17 @@ def render_commands(model: ReadOnlyProjectModel) -> str:
 def render_actions(data: Mapping[str, Any]) -> str:
     current = data.get("current_task") or {}
     default_task = current.get("ref") or current.get("id") or ""
+    epic_options = [
+        (
+            str(epic.get("id") or ""),
+            "{} — {}".format(
+                epic.get("key") or epic.get("id") or "",
+                epic.get("title") or "",
+            ).strip(" —"),
+        )
+        for epic in data.get("epics") or []
+        if epic.get("id")
+    ]
     workflow_rows = []
     for workflow in data.get("workflows") or []:
         step_titles = [
@@ -488,6 +499,48 @@ def render_actions(data: Mapping[str, Any]) -> str:
         '<section class="panel action-panel">',
         "<h2>Write Actions</h2>",
         table(("Action", "Registered Command", "Effect"), action_rows, "No write actions."),
+        "</section>",
+        '<section class="panel action-panel">',
+        "<h2>Create Task</h2>",
+        action_form(
+            "task.create",
+            [
+                select_field_values("epic", "Epic", epic_options)
+                if epic_options
+                else input_field("epic", "Epic"),
+                input_field("title", "Title"),
+                input_field("summary", "Summary", required=False),
+                textarea_field("description", "Description"),
+                select_field(
+                    "status",
+                    "Status",
+                    (
+                        "planned",
+                        "ready",
+                        "proposed",
+                    ),
+                ),
+                select_field(
+                    "verification_mode",
+                    "Verification",
+                    (
+                        "standard",
+                        "light",
+                        "manual",
+                        "none",
+                        "strict",
+                    ),
+                ),
+                textarea_field("scope", "Scope"),
+                textarea_field("out_of_scope", "Out of Scope"),
+                textarea_field("allowed_file", "Allowed Files"),
+                textarea_field("acceptance", "Acceptance"),
+                textarea_field("review_instruction", "Review"),
+                textarea_field("depends_on", "Depends On"),
+                textarea_field("note", "Notes"),
+                input_field("dependency_reason", "Dependency Reason", required=False),
+            ],
+        ),
         "</section>",
         '<section class="panel action-panel">',
         "<h2>Task Workflows</h2>",
@@ -783,7 +836,7 @@ def render_page(title: str, body: str, *, active: str) -> str:
       text-transform: uppercase;
       letter-spacing: 0;
     }}
-    input, select {{
+    input, select, textarea {{
       width: 100%;
       min-height: 36px;
       border: 1px solid var(--line);
@@ -793,6 +846,9 @@ def render_page(title: str, body: str, *, active: str) -> str:
       background: #fff;
       font: inherit;
       text-transform: none;
+    }}
+    textarea {{
+      resize: vertical;
     }}
     .checkline {{
       display: flex;
@@ -966,11 +1022,13 @@ def action_form(action_id: str, fields: Sequence[str]) -> str:
     return '<form method="post" action="/actions">{}</form>'.format("".join(controls))
 
 
-def input_field(name: str, label: str, value: str = "") -> str:
-    return '<label>{}<input name="{}" value="{}" required></label>'.format(
+def input_field(name: str, label: str, value: str = "", *, required: bool = True) -> str:
+    required_attr = " required" if required else ""
+    return '<label>{}<input name="{}" value="{}"{}></label>'.format(
         escape(label),
         escape(name),
         escape(value),
+        required_attr,
     )
 
 
@@ -982,6 +1040,29 @@ def select_field(name: str, label: str, options: Sequence[str]) -> str:
         escape(label),
         escape(name),
         choices,
+    )
+
+
+def select_field_values(
+    name: str,
+    label: str,
+    options: Sequence[tuple[str, str]],
+) -> str:
+    choices = "".join(
+        '<option value="{}">{}</option>'.format(escape(value), escape(text))
+        for value, text in options
+    )
+    return '<label>{}<select name="{}">{}</select></label>'.format(
+        escape(label),
+        escape(name),
+        choices,
+    )
+
+
+def textarea_field(name: str, label: str) -> str:
+    return '<label>{}<textarea name="{}" rows="3"></textarea></label>'.format(
+        escape(label),
+        escape(name),
     )
 
 

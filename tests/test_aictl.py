@@ -250,6 +250,60 @@ class AictlTests(unittest.TestCase):
         self.assertTrue(payload["ok"])
         self.assertIn("transitioned CTL-06", payload["data"]["stdout"])
 
+    def test_task_create_facade_runs_create_only_workflow(self):
+        def fake_run(argv, **_kwargs):
+            script = Path(argv[1]).name
+            tail = argv[6:]
+            if script == "taskctl.py" and list(tail[:2]) == ["task", "create"]:
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    "OK: task.create revision 1 -> 2\nCreated: WFA-07 (TASK-099)\n",
+                    "",
+                )
+            return subprocess.CompletedProcess(argv, 0, "OK\n", "")
+
+        stdout = io.StringIO()
+        with patch("ai_project_ctl.core.workflows.subprocess.run", side_effect=fake_run) as run:
+            with redirect_stdout(stdout):
+                code = self.aictl.main(
+                    [
+                        "--json",
+                        "task",
+                        "create",
+                        "--epic",
+                        "EPIC-006",
+                        "--title",
+                        "Create from aictl",
+                        "--scope",
+                        "Do one thing",
+                        "--allowed-file",
+                        "README.md",
+                        "--acceptance",
+                        "Validation passes",
+                        "--depends-on",
+                        "TASK-032",
+                        "--dependency-reason",
+                        "Needs WFA-01.",
+                        "--confirm",
+                    ]
+                )
+
+        payload = json.loads(stdout.getvalue())
+        command_tails = [" ".join(call.args[0][6:]) for call in run.call_args_list]
+
+        self.assertEqual(code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["data"]["created_task_id"], "TASK-099")
+        self.assertTrue(payload["data"]["create_only"])
+        self.assertTrue(any(tail.startswith("task create --epic EPIC-006") for tail in command_tails))
+        self.assertIn(
+            "task deps add TASK-099 --after TASK-032 --type hard --reason Needs WFA-01.",
+            command_tails,
+        )
+        self.assertFalse(any("current set" in tail for tail in command_tails))
+        self.assertFalse(any("task transition" in tail for tail in command_tails))
+
     def test_current_set_delegates_write_without_native_json(self):
         completed = subprocess.CompletedProcess(
             args=[],

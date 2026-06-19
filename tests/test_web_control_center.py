@@ -338,6 +338,76 @@ class WebControlCenterTests(unittest.TestCase):
                 server.server_close()
                 thread.join(timeout=5)
 
+    def test_task_create_web_action_delegates_to_aictl_create_only_workflow(self):
+        calls = []
+
+        def fake_run(argv, **_kwargs):
+            calls.append(argv)
+            return process(
+                stdout=json.dumps(
+                    {
+                        "ok": True,
+                        "data": {
+                            "created_task_id": "TASK-099",
+                            "create_only": True,
+                            "steps": [],
+                        },
+                    }
+                )
+                + "\n"
+            )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", side_effect=fake_run):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "task.create",
+                    "confirm": "yes",
+                    "epic": "EPIC-006",
+                    "title": "Create task from web",
+                    "summary": "Short summary",
+                    "scope": "Do one thing\nDo another thing",
+                    "allowed_file": "README.md",
+                    "acceptance": "Validation passes",
+                    "depends_on": "TASK-032",
+                    "dependency_reason": "Needs WFA-01.",
+                }
+            )
+
+        argv = calls[0]
+
+        self.assertTrue(result.ok)
+        self.assertEqual(Path(argv[1]).name, "aictl.py")
+        self.assertIn("--json", argv)
+        self.assertEqual(argv[argv.index("--json") + 1 : argv.index("--json") + 4], ["task", "create", "--confirm"])
+        self.assertIn("--scope", argv)
+        self.assertIn("Do one thing", argv)
+        self.assertIn("Do another thing", argv)
+        self.assertIn("--depends-on", argv)
+        self.assertIn("TASK-032", argv)
+
+    def test_actions_page_renders_task_create_form_with_epic_selection(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                epics=[
+                    {
+                        "id": "EPIC-006",
+                        "key": "WFA",
+                        "status": "active",
+                        "title": "Workflow Automation",
+                    }
+                ],
+            )
+            status, _, body = route("/actions", ReadOnlyProjectModel(root, actor="tester"))
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Create Task", body)
+        self.assertIn('value="task.create"', body)
+        self.assertIn('name="epic"', body)
+        self.assertIn('value="EPIC-006"', body)
+        self.assertIn("Workflow Automation", body)
+
     def test_unknown_web_action_does_not_edit_protected_file(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -68,6 +69,54 @@ class WorkflowDescriptor:
             "confirmation_required": self.confirmation_required,
             "arguments": [dict(argument) for argument in self.arguments],
             "steps": [step.to_dict() for step in self.steps],
+        }
+
+
+@dataclass(frozen=True)
+class TaskCreateRequest:
+    """Owner-facing task creation fields for the create-only workflow."""
+
+    epic: str
+    title: str
+    summary: str = ""
+    description: str = ""
+    priority: int = 1
+    status: str = "planned"
+    active_role: str = ""
+    active_stage: str = ""
+    active_document: str = ""
+    expected_result: str = ""
+    verification_mode: str = "standard"
+    scope: tuple[str, ...] = ()
+    out_of_scope: tuple[str, ...] = ()
+    allowed_files: tuple[str, ...] = ()
+    acceptance: tuple[str, ...] = ()
+    review_instructions: tuple[str, ...] = ()
+    notes: tuple[str, ...] = ()
+    depends_on: tuple[str, ...] = ()
+    dependency_reason: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "epic": self.epic,
+            "title": self.title,
+            "summary": self.summary,
+            "description": self.description,
+            "priority": self.priority,
+            "status": self.status,
+            "active_role": self.active_role,
+            "active_stage": self.active_stage,
+            "active_document": self.active_document,
+            "expected_result": self.expected_result,
+            "verification_mode": self.verification_mode,
+            "scope": list(self.scope),
+            "out_of_scope": list(self.out_of_scope),
+            "allowed_files": list(self.allowed_files),
+            "acceptance": list(self.acceptance),
+            "review_instructions": list(self.review_instructions),
+            "notes": list(self.notes),
+            "depends_on": list(self.depends_on),
+            "dependency_reason": self.dependency_reason,
         }
 
 
@@ -174,6 +223,167 @@ def workflow_preview(
     if change_preview is not None:
         payload["change_preview"] = change_preview
     return payload
+
+
+def task_create_preview(
+    request: TaskCreateRequest,
+    *,
+    root: str | Path = ".",
+    actor: str = "human_owner",
+    python_executable: str | None = None,
+) -> dict[str, Any]:
+    """Return a non-mutating preview for the create-only task workflow."""
+
+    descriptor = _get_workflow_descriptor("task.create_single")
+    steps = _build_task_create_steps(
+        request,
+        root=Path(root).resolve(),
+        actor=actor,
+        python_executable=python_executable or sys.executable,
+        created_task_id="<CREATED_TASK>",
+    )
+    return {
+        "workflow": descriptor.to_dict(),
+        "request": request.to_dict(),
+        "create_only": True,
+        "steps": [step.preview_dict() for step in steps],
+    }
+
+
+def run_task_create_workflow(
+    request: TaskCreateRequest,
+    *,
+    root: str | Path = ".",
+    actor: str = "human_owner",
+    confirmed: bool = False,
+    python_executable: str | None = None,
+    runner: Runner | None = None,
+) -> CommandResult:
+    """Create one task through taskctl.py and optional dependency commands."""
+
+    descriptor = _get_workflow_descriptor("task.create_single")
+    preview = task_create_preview(
+        request,
+        root=root,
+        actor=actor,
+        python_executable=python_executable,
+    )
+    if descriptor.confirmation_required and not confirmed:
+        result = CommandResult.failure(
+            command=descriptor.name,
+            domain="workflow",
+            message="Workflow requires explicit confirmation.",
+            errors=[
+                CommandMessage(
+                    code="WORKFLOW_CONFIRMATION_REQUIRED",
+                    message="Rerun with --confirm after reviewing the task creation preview.",
+                    details={"workflow": descriptor.name},
+                )
+            ],
+        )
+        result.data = preview
+        result.owner_action_required = "Review the task creation preview and rerun with --confirm."
+        return result
+
+    executor = WorkflowExecutor(
+        root=root,
+        actor=actor,
+        python_executable=python_executable,
+        runner=runner,
+    )
+    step_results: list[WorkflowStepResult] = []
+    create_step = _task_create_step(
+        request,
+        executor.root,
+        executor.actor,
+        executor.python_executable,
+    )
+    create_result = executor._execute_step(create_step)
+    step_results.append(create_result)
+    created_task_id = ""
+
+    if create_result.ok:
+        try:
+            created_task_id = _parse_created_task_id(create_result.stdout)
+        except WorkflowError as exc:
+            failed_step = WorkflowStep(
+                step_id="parse_task_id",
+                title="Parse created Task ID",
+                command_name="task.create.parse_task_id",
+                route=READ_ONLY_CTL,
+                argv=("parse", "taskctl output"),
+            )
+            step_results.append(
+                WorkflowStepResult(
+                    step=failed_step,
+                    status="failed",
+                    returncode=1,
+                    stderr=exc.message,
+                )
+            )
+            result = _task_create_result(
+                descriptor,
+                request,
+                created_task_id=created_task_id,
+                step_results=step_results,
+                message="Workflow stopped after creating a Task because its ID could not be parsed.",
+            )
+            result.errors.append(exc.to_message())
+            result.owner_action_required = (
+                "Inspect taskctl output and continue manually through taskctl.py if needed."
+            )
+            return result
+
+    if not create_result.ok:
+        return _task_create_result(
+            descriptor,
+            request,
+            created_task_id=created_task_id,
+            step_results=step_results,
+            message="Workflow stopped while creating the Task.",
+        )
+
+    followup_steps = _build_task_create_steps(
+        request,
+        root=executor.root,
+        actor=executor.actor,
+        python_executable=executor.python_executable,
+        created_task_id=created_task_id,
+        include_create=False,
+    )
+    for step in followup_steps:
+        step_result = executor._execute_step(step)
+        step_results.append(step_result)
+        if not step_result.ok and step.blocking:
+            return _task_create_result(
+                descriptor,
+                request,
+                created_task_id=created_task_id,
+                step_results=step_results,
+                message="Workflow stopped on blocking step: {}".format(step.title),
+            )
+
+    result = _task_create_result(
+        descriptor,
+        request,
+        created_task_id=created_task_id,
+        step_results=step_results,
+        message="Workflow completed. Task was created without selecting or starting it.",
+    )
+    result.next_actions.extend(
+        [
+            "python scripts/aictl.py workflow run task.prepare_for_codex --task {} --confirm".format(
+                created_task_id
+            ),
+            "python scripts/aictl.py workflow run evolution.create_for_task --task {} --confirm".format(
+                created_task_id
+            ),
+        ]
+    )
+    result.owner_action_required = (
+        "Review created task {}; run a prepare or evolution workflow only when intended."
+    ).format(created_task_id)
+    return result
 
 
 def run_workflow(
@@ -514,6 +724,40 @@ def _workflow_descriptors() -> tuple[WorkflowDescriptor, ...]:
     )
     return (
         WorkflowDescriptor(
+            name="task.create_single",
+            label="Create task",
+            description=(
+                "Create one Task through taskctl.py, optionally add dependencies, "
+                "validate task state, and leave the task unselected and unstarted."
+            ),
+            confirmation_required=True,
+            arguments=(
+                {
+                    "name": "epic",
+                    "description": "Parent Epic ID or key.",
+                    "required": True,
+                },
+                {
+                    "name": "title",
+                    "description": "Task title.",
+                    "required": True,
+                },
+                {
+                    "name": "depends_on",
+                    "description": "Optional dependency task refs.",
+                    "required": False,
+                    "repeatable": True,
+                },
+            ),
+            steps=(
+                _template("task_create", "Create task", "task.create", VALIDATED_CTL, "python scripts/taskctl.py task create --epic <EPIC> --title <TITLE>"),
+                _template("add_dependencies", "Add dependencies", "taskctl.task.deps.add", VALIDATED_CTL, "python scripts/taskctl.py task deps add <CREATED_TASK> --after <DEPENDENCY>"),
+                _template("task_validate", "Validate task state", "taskctl.validate", VALIDATED_CTL, "python scripts/taskctl.py validate"),
+                _template("task_graph", "Validate task graph", "taskctl.task.graph.validate", VALIDATED_CTL, "python scripts/taskctl.py task graph validate"),
+                _template("task_generated", "Check generated task output", "taskctl.check-generated", VALIDATED_CTL, "python scripts/taskctl.py check-generated"),
+            ),
+        ),
+        WorkflowDescriptor(
             name="task.prepare_for_codex",
             label="Prepare for Codex",
             description=(
@@ -741,6 +985,204 @@ def _build_steps(
         return steps
 
     raise WorkflowError("WORKFLOW_NOT_FOUND", "Unknown workflow: {}".format(workflow_name))
+
+
+def _build_task_create_steps(
+    request: TaskCreateRequest,
+    *,
+    root: Path,
+    actor: str,
+    python_executable: str,
+    created_task_id: str,
+    include_create: bool = True,
+) -> list[WorkflowStep]:
+    steps: list[WorkflowStep] = []
+    if include_create:
+        steps.append(_task_create_step(request, root, actor, python_executable))
+    for index, dependency in enumerate(request.depends_on, start=1):
+        steps.append(
+            _task_dependency_step(
+                request,
+                created_task_id,
+                dependency,
+                index,
+                root,
+                actor,
+                python_executable,
+            )
+        )
+    steps.extend(
+        [
+            _ctl_step(
+                "task_validate",
+                "Validate task state",
+                "taskctl.validate",
+                "taskctl.py",
+                root,
+                actor,
+                python_executable,
+                "validate",
+            ),
+            _ctl_step(
+                "task_graph",
+                "Validate task graph",
+                "taskctl.task.graph.validate",
+                "taskctl.py",
+                root,
+                actor,
+                python_executable,
+                "task",
+                "graph",
+                "validate",
+            ),
+            _ctl_step(
+                "task_generated",
+                "Check generated task output",
+                "taskctl.check-generated",
+                "taskctl.py",
+                root,
+                actor,
+                python_executable,
+                "check-generated",
+            ),
+        ]
+    )
+    return steps
+
+
+def _task_create_step(
+    request: TaskCreateRequest,
+    root: Path,
+    actor: str,
+    python_executable: str,
+) -> WorkflowStep:
+    args = [
+        "task",
+        "create",
+        "--epic",
+        request.epic,
+        "--title",
+        request.title,
+        "--priority",
+        str(request.priority),
+        "--status",
+        request.status,
+        "--verification-mode",
+        request.verification_mode,
+    ]
+    for flag, value in (
+        ("--summary", request.summary),
+        ("--description", request.description),
+        ("--active-role", request.active_role),
+        ("--active-stage", request.active_stage),
+        ("--active-document", request.active_document),
+        ("--expected-result", request.expected_result),
+    ):
+        if value:
+            args.extend([flag, value])
+    _extend_repeated(args, "--scope", request.scope)
+    _extend_repeated(args, "--out-of-scope", request.out_of_scope)
+    _extend_repeated(args, "--allowed-file", request.allowed_files)
+    _extend_repeated(args, "--acceptance", request.acceptance)
+    _extend_repeated(args, "--review-instruction", request.review_instructions)
+    _extend_repeated(args, "--note", request.notes)
+
+    return _ctl_step(
+        "task_create",
+        "Create task",
+        "task.create",
+        "taskctl.py",
+        root,
+        actor,
+        python_executable,
+        *args,
+    )
+
+
+def _task_dependency_step(
+    request: TaskCreateRequest,
+    created_task_id: str,
+    dependency: str,
+    index: int,
+    root: Path,
+    actor: str,
+    python_executable: str,
+) -> WorkflowStep:
+    args = [
+        "task",
+        "deps",
+        "add",
+        created_task_id,
+        "--after",
+        dependency,
+        "--type",
+        "hard",
+    ]
+    if request.dependency_reason:
+        args.extend(["--reason", request.dependency_reason])
+    return _ctl_step(
+        "task_dependency_{}".format(index),
+        "Add task dependency",
+        "taskctl.task.deps.add",
+        "taskctl.py",
+        root,
+        actor,
+        python_executable,
+        *args,
+    )
+
+
+def _extend_repeated(args: list[str], flag: str, values: Sequence[str]) -> None:
+    for value in values:
+        text = str(value).strip()
+        if text:
+            args.extend([flag, text])
+
+
+def _task_create_result(
+    descriptor: WorkflowDescriptor,
+    request: TaskCreateRequest,
+    *,
+    created_task_id: str,
+    step_results: Sequence[WorkflowStepResult],
+    message: str,
+) -> CommandResult:
+    failed = next((item for item in step_results if not item.ok), None)
+    result = CommandResult(
+        ok=failed is None,
+        command=descriptor.name,
+        domain="workflow",
+        message=message,
+        data={
+            "workflow": descriptor.to_dict(),
+            "request": request.to_dict(),
+            "created_task_id": created_task_id,
+            "create_only": True,
+            "steps": [item.to_dict() for item in step_results],
+        },
+        generated_files=[
+            "AI_PROJECT/generated/CODEX_TASKS.md",
+            "AI_PROJECT/generated/CODEX_CURRENT.md",
+            "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+        ],
+        events=["AI_PROJECT/events/task-events.jsonl"],
+    )
+    if failed is not None:
+        result.errors.append(
+            CommandMessage(
+                code="WORKFLOW_STEP_FAILED",
+                message="Workflow step failed: {}".format(failed.step.title),
+                details={
+                    "step": failed.step.step_id,
+                    "command_name": failed.step.command_name,
+                    "returncode": failed.returncode,
+                    "stdout": failed.stdout,
+                    "stderr": failed.stderr,
+                },
+            )
+        )
+    return result
+
 
 def _load_task_for_preview(root: Path, task_ref: str) -> dict[str, Any] | None:
     try:
@@ -1106,6 +1548,20 @@ def _parse_created_change_id(stdout: str) -> str:
     raise WorkflowError(
         "WORKFLOW_CHANGE_ID_NOT_FOUND",
         "Could not find created Change ID in evolutionctl output.",
+        details={"stdout": stdout},
+    )
+
+
+def _parse_created_task_id(stdout: str) -> str:
+    match = re.search(r"\((TASK-\d+)\)", stdout)
+    if match:
+        return match.group(1)
+    match = re.search(r"\bTASK-\d+\b", stdout)
+    if match:
+        return match.group(0)
+    raise WorkflowError(
+        "WORKFLOW_TASK_ID_NOT_FOUND",
+        "Could not find created Task ID in taskctl output.",
         details={"stdout": stdout},
     )
 
