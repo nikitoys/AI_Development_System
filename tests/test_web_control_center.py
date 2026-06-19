@@ -945,6 +945,87 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(payload["doctor"]["overall_status"], "WARN")
         self.assertTrue(payload["doctor"]["cache"]["cached"])
 
+    def test_project_health_panel_shows_warn_fail_and_repair_actions(self):
+        def fake_run(argv, **_kwargs):
+            tail = argv[argv.index("--json") + 1 :] if "--json" in argv else argv[-3:]
+            if Path(argv[1]).name == "aictl.py" and tail == ["project", "doctor"]:
+                return completed(
+                    {
+                        "data": {
+                            "overall_status": "FAIL",
+                            "summary": {"PASS": 1, "WARN": 1, "FAIL": 1},
+                            "findings": [
+                                {
+                                    "status": "WARN",
+                                    "check": "docs generated output",
+                                    "message": "Generated docs are stale.",
+                                },
+                                {
+                                    "status": "FAIL",
+                                    "check": "protected project files",
+                                    "message": "Protected-file check failed.",
+                                },
+                            ],
+                        }
+                    }
+                )
+            raise AssertionError("unexpected command: {}".format(argv))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            model = ReadOnlyProjectModel(root, actor="tester")
+            with patch("ai_project_ctl.web.read_model.subprocess.run", side_effect=fake_run):
+                status, _, body = route("/doctor?refresh=1", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Project Health", body)
+        self.assertIn("Generated docs are stale.", body)
+        self.assertIn("Protected-file check failed.", body)
+        self.assertIn("Render Docs", body)
+        self.assertIn('value="docs.render"', body)
+        self.assertIn("Check Protected Files", body)
+        self.assertIn('value="project.protected_check"', body)
+        self.assertIn("FAIL", body)
+
+    def test_tasks_page_health_actions_use_single_selected_task(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-049",
+                        "ref": "WFA-18",
+                        "legacy_id": "TASK-049",
+                        "status": "ready",
+                        "title": "Selected repair target",
+                        "epic_id": "EPIC-006",
+                    }
+                ],
+                epics=[{"id": "EPIC-006", "key": "WFA", "status": "active"}],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/tasks?q=WFA-18", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Refresh Context/Codex", body)
+        self.assertIn('value="task.refresh_execution_context"', body)
+        self.assertIn('name="task" value="WFA-18"', body)
+
+    def test_dashboard_health_actions_reject_missing_task_target(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("No safe target task exists.", body)
+        self.assertNotIn('value="task.refresh_execution_context"', body)
+
     def test_post_action_invalidates_doctor_cache(self):
         def fake_doctor_run(argv, **_kwargs):
             tail = argv[argv.index("--json") + 1 :] if "--json" in argv else argv[-3:]
@@ -1551,6 +1632,38 @@ class WebControlCenterTests(unittest.TestCase):
                 "--confirm",
             ],
         )
+
+    def test_health_repair_web_actions_delegate_to_aictl(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"ok": true, "data": {"delegate": ["python"]}}\n',
+            stderr="",
+        )
+
+        cases = [
+            ("project.doctor", ["project", "doctor"]),
+            ("project.protected_check", ["project", "protected-check"]),
+            ("docs.render", ["docs", "render"]),
+        ]
+        for action, expected_tail in cases:
+            with self.subTest(action=action):
+                with patch(
+                    "ai_project_ctl.web.actions.subprocess.run",
+                    return_value=completed_process,
+                ) as run:
+                    result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                        {
+                            "action": action,
+                            "confirm": "yes",
+                        }
+                    )
+
+                argv = run.call_args.args[0]
+
+                self.assertTrue(result.ok)
+                self.assertEqual(Path(argv[1]).name, "aictl.py")
+                self.assertEqual(argv[-len(expected_tail) :], expected_tail)
 
     def test_prepare_for_codex_action_result_includes_next_instruction(self):
         completed_process = subprocess.CompletedProcess(

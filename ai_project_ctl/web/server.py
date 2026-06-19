@@ -40,6 +40,7 @@ NAV_ITEMS = (
 TASK_FOCUS_STATUSES = {"ready", "in_progress", "in_review", "changes_requested"}
 TASK_GROUP_OPTIONS = {"none", "epic", "status"}
 CHANGE_ACTION_STATUSES = {"ready", "approved", "in_progress", "in_review"}
+TASK_REPAIR_STATUSES = {"ready", "in_progress", "in_review", "changes_requested"}
 TASK_ROW_WORKFLOWS = (
     {
         "action": "task.prepare_for_codex",
@@ -305,6 +306,7 @@ def render_dashboard(data: Mapping[str, Any]) -> str:
         metric("Changes", "{} proposals".format(len(changes))),
         metric("Generated", "{} derived views".format(sum(1 for item in generated if item.get("exists")))),
         "</section>",
+        project_health_panel(data),
         '<section class="panel">',
         "<h2>Current Task</h2>",
         task_detail(current),
@@ -359,6 +361,7 @@ def render_tasks(
         "<h2>Current Execution</h2>",
         execution_status_panel(data, selected_task=selected_task, show_actions=False),
         "</section>",
+        project_health_panel(data, selected_task=selected_task),
         '<section class="panel">',
         "<h2>Focus Tasks</h2>",
         task_table(
@@ -498,6 +501,7 @@ def render_generated(data: Mapping[str, Any]) -> str:
             )
         )
     body = [
+        project_health_panel(data),
         '<section class="panel">',
         "<h2>Generated Views</h2>",
         table(("File", "Source", "Exists", "Updated", "First Line"), rows, "No generated views."),
@@ -534,6 +538,7 @@ def render_doctor(data: Mapping[str, Any]) -> str:
         "</div>",
         table(("Status", "Check", "Message", "Command"), rows, "No doctor findings."),
         "</section>",
+        project_health_panel(data),
     ]
     return render_page("Doctor", "".join(body), active="/doctor")
 
@@ -549,6 +554,8 @@ def render_commands(model: ReadOnlyProjectModel) -> str:
             flags.append("writes events")
         if read_write.get("renders_generated"):
             flags.append("renders generated")
+        if read_write.get("validates"):
+            flags.append("validates")
         if not flags:
             flags.append("read-only")
         rows.append(
@@ -606,6 +613,8 @@ def render_actions(data: Mapping[str, Any]) -> str:
             flags.append("writes events")
         if read_write.get("renders_generated"):
             flags.append("renders generated")
+        if read_write.get("validates"):
+            flags.append("validates")
         action_rows.append(
             "<tr><td>{}</td><td><code>{}</code></td><td>{}</td></tr>".format(
                 escape(action.get("label", "")),
@@ -690,6 +699,13 @@ def render_actions(data: Mapping[str, Any]) -> str:
         ),
         "</section>",
         '<section class="panel action-panel">',
+        "<h2>Health & Repair</h2>",
+        action_form("project.doctor", [], button_label="Run Doctor"),
+        action_form("project.protected_check", [], button_label="Check Protected Files"),
+        action_form("docs.render", [], button_label="Render Docs"),
+        action_form("project.render", [], button_label="Render Project Views"),
+        "</section>",
+        '<section class="panel action-panel">',
         "<h2>Task Workflows</h2>",
         table(("Workflow", "Command", "Step Preview"), workflow_rows, "No workflows."),
         action_form(
@@ -769,6 +785,8 @@ def render_actions(data: Mapping[str, Any]) -> str:
         '<section class="panel action-panel">',
         "<h2>Generated Output</h2>",
         action_form("project.render", []),
+        action_form("docs.render", [], button_label="Render Docs"),
+        action_form("project.protected_check", [], button_label="Check Protected Files"),
         action_form("context.build", [input_field("task", "Task", default_task)]),
         action_form(
             "codex.prompt.build",
@@ -1632,6 +1650,20 @@ def render_page(title: str, body: str, *, active: str) -> str:
     .execution-warnings li {{
       margin: 4px 0;
     }}
+    .health-message {{
+      min-width: 260px;
+      overflow-wrap: anywhere;
+    }}
+    .health-actions form {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      min-width: 220px;
+    }}
+    .health-actions button {{
+      min-width: 120px;
+    }}
     .event-list {{
       margin: 0;
       padding-left: 18px;
@@ -1997,6 +2029,109 @@ def doctor_cache_detail(doctor: Mapping[str, Any]) -> str:
         escape(state),
         escape(age_text),
     )
+
+
+def project_health_panel(
+    data: Mapping[str, Any],
+    *,
+    selected_task: Mapping[str, Any] | None = None,
+) -> str:
+    health = _mapping(data.get("health"))
+    doctor = _mapping(health.get("doctor"))
+    artifacts = [
+        artifact
+        for artifact in health.get("artifacts") or []
+        if isinstance(artifact, Mapping)
+    ]
+    items = ([doctor] if doctor else []) + artifacts
+    rows = []
+    for item in items:
+        detail = str(item.get("message") or item.get("reason") or "")
+        path = str(item.get("path") or "")
+        if path:
+            detail = "{}{}".format(
+                "{} ".format(detail) if detail else "",
+                path,
+            ).strip()
+        rows.append(
+            "<tr><td>{}</td><td>{}</td><td class=\"health-message\">{}</td><td class=\"health-actions\">{}</td></tr>".format(
+                escape(item.get("label") or item.get("key") or ""),
+                status_badge(str(item.get("status") or "UNKNOWN")),
+                escape(detail),
+                health_action_control(item, selected_task=selected_task),
+            )
+        )
+    return (
+        '<section class="panel health-panel">'
+        "<h2>Project Health</h2>"
+        "{}"
+        "</section>"
+    ).format(
+        table(("Area", "Status", "Signal", "Repair / Check"), rows, "No health signals.")
+    )
+
+
+def health_action_control(
+    item: Mapping[str, Any],
+    *,
+    selected_task: Mapping[str, Any] | None = None,
+) -> str:
+    action = str(item.get("action") or "")
+    if not action:
+        return '<p class="empty">No action.</p>'
+    target_action = action in {
+        "task.refresh_execution_context",
+        "codex.prompt.build",
+        "context.build",
+    }
+    if item.get("available") is False and not target_action:
+        return '<p class="empty">{}</p>'.format(
+            escape(item.get("reason") or "Action unavailable.")
+        )
+
+    fields: list[str] = []
+    if target_action:
+        task_ref, reason = health_action_task_ref(item, selected_task=selected_task)
+        if not task_ref:
+            return '<p class="empty">{}</p>'.format(escape(reason))
+        fields.append(hidden_field("task", task_ref))
+        if action == "codex.prompt.build":
+            fields.append(hidden_field("with_context", "yes"))
+
+    return action_form(
+        action,
+        fields,
+        button_label=str(item.get("action_label") or action),
+    )
+
+
+def health_action_task_ref(
+    item: Mapping[str, Any],
+    *,
+    selected_task: Mapping[str, Any] | None = None,
+) -> tuple[str, str]:
+    item_task = str(item.get("task") or "")
+    if selected_task is not None:
+        selected_ref = str(selected_task.get("ref") or selected_task.get("id") or "")
+        if not selected_ref:
+            return "", "No safe target task exists."
+
+        status = str(selected_task.get("status") or "")
+        if status not in TASK_REPAIR_STATUSES:
+            return "", "No safe target task exists."
+
+        selected_refs = {
+            str(selected_task.get(field) or "")
+            for field in ("id", "ref", "legacy_id")
+            if selected_task.get(field)
+        }
+        if status == "in_review" and item_task not in selected_refs:
+            return "", "No safe target task exists."
+        return selected_ref, ""
+
+    if item_task:
+        return item_task, ""
+    return "", "No safe target task exists."
 
 
 def task_filter_state(

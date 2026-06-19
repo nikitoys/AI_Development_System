@@ -16,7 +16,7 @@ from ai_project_ctl.core.result import CommandError
 PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = PACKAGE_ROOT / "scripts"
 
-WRITE_KINDS = {"write", "render"}
+ACTION_KINDS = {"write", "render", "validation"}
 CONFIRM_VALUES = {"yes", "true", "confirmed"}
 FORBIDDEN_FILE_WRITE_FIELDS = {"content", "file", "filename", "path"}
 TASK_TRANSITION_ALLOWED_TARGETS = {
@@ -129,10 +129,10 @@ def require_web_write_command(command_name: str) -> dict[str, Any]:
             "Web action cannot execute planned command: {}".format(command_name),
             details={"command": command_name},
         )
-    if descriptor.get("kind") not in WRITE_KINDS:
+    if descriptor.get("kind") not in ACTION_KINDS:
         raise WebActionError(
-            "WEB_ACTION_COMMAND_NOT_WRITE",
-            "Web action command is not a registered write/render command: {}".format(
+            "WEB_ACTION_COMMAND_NOT_ACTION",
+            "Web action command is not a registered write/render/validation command: {}".format(
                 command_name
             ),
             details={"command": command_name, "kind": descriptor.get("kind")},
@@ -141,13 +141,14 @@ def require_web_write_command(command_name: str) -> dict[str, Any]:
         bool(read_write.get(flag))
         for flag in ("mutates_state", "writes_events", "renders_generated")
     ):
-        raise WebActionError(
-            "WEB_ACTION_COMMAND_HAS_NO_WRITE_EFFECT",
-            "Web action command does not declare a controlled write effect: {}".format(
-                command_name
-            ),
-            details={"command": command_name, "read_write": read_write},
-        )
+        if descriptor.get("kind") != "validation" or not bool(read_write.get("validates")):
+            raise WebActionError(
+                "WEB_ACTION_COMMAND_HAS_NO_CONTROL_EFFECT",
+                "Web action command does not declare a controlled effect: {}".format(
+                    command_name
+                ),
+                details={"command": command_name, "read_write": read_write},
+            )
     return descriptor
 
 
@@ -314,6 +315,18 @@ def _build_current_clear(fields: Mapping[str, str]) -> list[str]:
 
 def _build_project_render(fields: Mapping[str, str]) -> list[str]:
     return ["project", "render"]
+
+
+def _build_project_doctor(fields: Mapping[str, str]) -> list[str]:
+    return ["project", "doctor"]
+
+
+def _build_project_protected_check(fields: Mapping[str, str]) -> list[str]:
+    return ["project", "protected-check"]
+
+
+def _build_docs_render(fields: Mapping[str, str]) -> list[str]:
+    return ["docs", "render"]
 
 
 def _build_context_build(fields: Mapping[str, str]) -> list[str]:
@@ -490,6 +503,24 @@ ACTIONS: dict[str, WebAction] = {
         command_name="project.render",
         label="Regenerate project views",
         builder=_build_project_render,
+    ),
+    "project.doctor": WebAction(
+        action_id="project.doctor",
+        command_name="project.doctor",
+        label="Run Doctor",
+        builder=_build_project_doctor,
+    ),
+    "project.protected_check": WebAction(
+        action_id="project.protected_check",
+        command_name="project.protected_check",
+        label="Check protected files",
+        builder=_build_project_protected_check,
+    ),
+    "docs.render": WebAction(
+        action_id="docs.render",
+        command_name="docs.render",
+        label="Render docs",
+        builder=_build_docs_render,
     ),
     "context.build": WebAction(
         action_id="context.build",

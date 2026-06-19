@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `444`
+Revision: `449`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -881,7 +881,7 @@ Acceptance criteria:
 
 ### WFA-18 (TASK-049) — UIX-12 Add Project Health Repair Actions
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_e878d597769a`, legacy `TASK-049`, aliases `TASK-049`, local `WFA` / `18`

@@ -949,6 +949,25 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
             notes=("Context inclusion is read-only and validated by codexctl.py.",),
         ),
         CommandDescriptor(
+            name="docs.render",
+            domain="docs",
+            description="Render generated documentation-control views through docctl.py.",
+            kind=CommandKind.RENDER,
+            reads_state=(state_docs,),
+            generated_files=(
+                "AI_PROJECT/generated/DOCS_INDEX.md",
+                "AI_PROJECT/generated/DOCS_GAPS.md",
+            ),
+            output=_output("Documentation render result.", fields=("delegate", "returncode")),
+            validators=("docs_state", "generated_output"),
+            lock_scope="docs",
+            legacy_command=("python scripts/docctl.py render",),
+            notes=(
+                "Delegates rendering to docctl.py.",
+                "Does not edit documentation source files.",
+            ),
+        ),
+        CommandDescriptor(
             name="project.doctor",
             domain="project",
             description="Run cross-domain project-control health checks.",
@@ -967,6 +986,29 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
                 "Aggregates existing validation commands and protected-file checks.",
                 "Reports explicit PASS/WARN/FAIL diagnostics.",
                 "Does not mutate project-control state.",
+            ),
+        ),
+        CommandDescriptor(
+            name="project.protected_check",
+            domain="project",
+            description="Run protected project-control file validation.",
+            kind=CommandKind.VALIDATION,
+            reads_state=(
+                state_plan,
+                state_tasks,
+                state_evolution,
+                state_docs,
+                state_execution,
+            ),
+            output=_output(
+                "Protected-file validation result.",
+                fields=("checked", "warnings", "errors"),
+            ),
+            validators=("protected_files", "generated_output"),
+            legacy_command=("python scripts/check-protected-project-files.py --verbose",),
+            notes=(
+                "Validation-only action; does not mutate protected files.",
+                "Does not accept an audit actor because the protected-file checker is read-only.",
             ),
         ),
         CommandDescriptor(

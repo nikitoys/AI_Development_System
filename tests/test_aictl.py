@@ -692,6 +692,15 @@ class AictlTests(unittest.TestCase):
                     '{"id": "TASK-026", "status": "in_progress"}\n',
                     "",
                 )
+            if script == "docctl.py" and tail[-1] == "validate":
+                return subprocess.CompletedProcess(argv, 0, "OK: docs are valid\n", "")
+            if script == "docctl.py" and tail[-1] == "check-generated":
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    "OK: generated documentation files are up to date\n",
+                    "",
+                )
             if script == "evolutionctl.py" and tail[-1] == "validate":
                 return subprocess.CompletedProcess(argv, 0, "OK: evolution is valid\n", "")
             if script == "evolutionctl.py" and tail[-1] == "check-generated":
@@ -814,7 +823,51 @@ class AictlTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("Project Doctor: PASS", output)
         self.assertIn("PASS  plan validation", output)
+        self.assertIn("PASS  docs validation", output)
         self.assertIn("PASS  protected project files", output)
+
+    def test_docs_render_facade_delegates_to_docctl(self):
+        completed = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="OK: rendered docs\n",
+            stderr="",
+        )
+        stdout = io.StringIO()
+
+        with patch.object(self.aictl.subprocess, "run", return_value=completed) as run:
+            with redirect_stdout(stdout):
+                code = self.aictl.main(["--json", "docs", "render"])
+
+        payload = json.loads(stdout.getvalue())
+        argv = run.call_args.args[0]
+
+        self.assertEqual(code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(Path(argv[1]).name, "docctl.py")
+        self.assertEqual(argv[-1], "render")
+
+    def test_protected_check_facade_delegates_without_actor(self):
+        completed = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"ok": true, "errors": [], "warnings": [], "checked": ["x"]}\n',
+            stderr="",
+        )
+        stdout = io.StringIO()
+
+        with patch.object(self.aictl.subprocess, "run", return_value=completed) as run:
+            with redirect_stdout(stdout):
+                code = self.aictl.main(["--json", "project", "protected-check"])
+
+        payload = json.loads(stdout.getvalue())
+        argv = run.call_args.args[0]
+
+        self.assertEqual(code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(Path(argv[1]).name, "check-protected-project-files.py")
+        self.assertNotIn("--actor", argv)
+        self.assertEqual(argv[-2:], ["--verbose", "--json"])
 
     def test_project_render_runs_legacy_render_steps(self):
         completed = [

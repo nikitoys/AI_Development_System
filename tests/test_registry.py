@@ -39,7 +39,9 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("change.create", names)
         self.assertIn("context.build", names)
         self.assertIn("codex.prompt.build", names)
+        self.assertIn("docs.render", names)
         self.assertIn("project.doctor", names)
+        self.assertIn("project.protected_check", names)
         self.assertIn("project.render", names)
         self.assertIn("web.serve", names)
         self.assertIn("command.list", names)
@@ -190,8 +192,28 @@ class RegistryTests(unittest.TestCase):
             for command in command_list(domain="project", include_planned=True)
         ]
 
-        self.assertEqual(implemented_names, ["project.doctor", "project.render"])
-        self.assertEqual(all_project_names, ["project.doctor", "project.render"])
+        self.assertEqual(
+            implemented_names,
+            ["project.doctor", "project.protected_check", "project.render"],
+        )
+        self.assertEqual(
+            all_project_names,
+            ["project.doctor", "project.protected_check", "project.render"],
+        )
+
+    def test_health_repair_commands_are_registered_with_safe_effects(self):
+        docs_render = command_describe("docs.render")
+        protected_check = command_describe("project.protected_check")
+
+        self.assertEqual(docs_render["kind"], "render")
+        self.assertTrue(docs_render["read_write"]["renders_generated"])
+        self.assertFalse(docs_render["read_write"]["mutates_state"])
+        self.assertIn("AI_PROJECT/generated/DOCS_INDEX.md", docs_render["generated_files"])
+
+        self.assertEqual(protected_check["kind"], "validation")
+        self.assertTrue(protected_check["read_write"]["validates"])
+        self.assertFalse(protected_check["read_write"]["mutates_state"])
+        self.assertFalse(protected_check["read_write"]["renders_generated"])
 
     def test_registry_rejects_duplicate_commands(self):
         descriptor = CommandDescriptor(

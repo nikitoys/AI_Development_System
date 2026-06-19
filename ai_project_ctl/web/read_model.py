@@ -242,6 +242,12 @@ class ReadOnlyProjectModel:
         changes = change_hints(changes, tasks)
         doctor = self.doctor(refresh=refresh_doctor)
         generated = self.generated_views()
+        health = project_health_summary(
+            doctor,
+            generated,
+            execution_context=execution_context,
+            current_task=current_task,
+        )
         events = self.audit_events(last=5) if include_events else []
         commands = command_list(include_planned=True)
         return {
@@ -259,6 +265,7 @@ class ReadOnlyProjectModel:
                 Counter(change.get("status", "unknown") for change in changes)
             ),
             "doctor": doctor,
+            "health": health,
             "execution": execution,
             "execution_context": execution_context,
             "generated": generated,
@@ -1277,6 +1284,206 @@ def _context_readiness(
     return "ready", ""
 
 
+def project_health_summary(
+    doctor: Mapping[str, Any],
+    generated: Sequence[Mapping[str, Any]],
+    *,
+    execution_context: Mapping[str, Any],
+    current_task: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Return UI-focused health and repair hints without running checks."""
+
+    generated_by_name = {
+        str(item.get("name") or ""): item
+        for item in generated
+        if isinstance(item, Mapping)
+    }
+    doctor_status = str(doctor.get("overall_status") or "UNKNOWN")
+    doctor_cached = bool(_mapping(doctor.get("cache")).get("cached"))
+    task_ref = str(current_task.get("ref") or current_task.get("id") or "")
+    return {
+        "doctor": {
+            "label": "Project Doctor",
+            "status": doctor_status,
+            "message": _doctor_health_message(doctor, doctor_cached),
+            "action": "project.doctor",
+            "action_label": "Run Doctor",
+            "available": True,
+            "reason": "",
+        },
+        "artifacts": [
+            _doctor_backed_artifact(
+                doctor,
+                generated_by_name,
+                key="task_generated",
+                label="Task generated views",
+                checks=("task generated output",),
+                files=("CODEX_TASKS.md", "CODEX_CURRENT.md", "TASK_EXECUTION_QUEUE.md"),
+                action="project.render",
+                action_label="Render project views",
+                doctor_cached=doctor_cached,
+            ),
+            _doctor_backed_artifact(
+                doctor,
+                generated_by_name,
+                key="docs_generated",
+                label="Docs generated views",
+                checks=("docs generated output", "docs validation"),
+                files=("DOCS_INDEX.md", "DOCS_GAPS.md"),
+                action="docs.render",
+                action_label="Render Docs",
+                doctor_cached=doctor_cached,
+            ),
+            _execution_artifact(
+                key="context_pack",
+                label="Context Pack",
+                status=str(_mapping(execution_context.get("context_pack")).get("status") or "unknown"),
+                reason=str(_mapping(execution_context.get("context_pack")).get("reason") or ""),
+                path=str(_mapping(execution_context.get("context_pack")).get("path") or ""),
+                task_ref=task_ref,
+                action="task.refresh_execution_context",
+                action_label="Refresh Context/Codex",
+            ),
+            _execution_artifact(
+                key="codex_prompt",
+                label="Codex prompt",
+                status=str(_mapping(execution_context.get("prompt")).get("status") or "unknown"),
+                reason=str(_mapping(execution_context.get("prompt")).get("reason") or ""),
+                path=str(_mapping(execution_context.get("prompt")).get("path") or ""),
+                task_ref=task_ref,
+                action="codex.prompt.build",
+                action_label="Refresh Codex Prompt",
+            ),
+            _doctor_backed_artifact(
+                doctor,
+                generated_by_name,
+                key="evolution_generated",
+                label="Evolution generated view",
+                checks=("evolution generated output", "evolution validation"),
+                files=("EVOLUTION.md",),
+                action="project.render",
+                action_label="Render project views",
+                doctor_cached=doctor_cached,
+            ),
+            _doctor_backed_artifact(
+                doctor,
+                generated_by_name,
+                key="protected_files",
+                label="Protected files",
+                checks=("protected project files",),
+                files=(),
+                action="project.protected_check",
+                action_label="Check Protected Files",
+                doctor_cached=doctor_cached,
+            ),
+        ],
+    }
+
+
+def _doctor_health_message(doctor: Mapping[str, Any], cached: bool) -> str:
+    if not cached:
+        return "Doctor has not been run in this web session."
+    summary = _mapping(doctor.get("summary"))
+    return "{} PASS, {} WARN, {} FAIL".format(
+        summary.get("PASS", 0),
+        summary.get("WARN", 0),
+        summary.get("FAIL", 0),
+    )
+
+
+def _doctor_backed_artifact(
+    doctor: Mapping[str, Any],
+    generated_by_name: Mapping[str, Mapping[str, Any]],
+    *,
+    key: str,
+    label: str,
+    checks: Sequence[str],
+    files: Sequence[str],
+    action: str,
+    action_label: str,
+    doctor_cached: bool,
+) -> dict[str, Any]:
+    finding = _doctor_finding(doctor, checks)
+    missing = [
+        "AI_PROJECT/generated/{}".format(name)
+        for name in files
+        if not bool(_mapping(generated_by_name.get(name)).get("exists"))
+    ]
+    if finding:
+        status = str(finding.get("status") or "UNKNOWN")
+        message = str(finding.get("message") or "")
+    elif missing:
+        status = "WARN"
+        message = "Missing generated view(s): {}".format(", ".join(missing))
+    elif doctor_cached:
+        status = "PASS"
+        message = "No stale state detected by the latest doctor run."
+    else:
+        status = "UNKNOWN"
+        message = "Run Doctor to detect stale or failed generated output."
+    return {
+        "key": key,
+        "label": label,
+        "status": status,
+        "message": message,
+        "files": list(files),
+        "action": action,
+        "action_label": action_label,
+        "available": True,
+        "reason": "",
+    }
+
+
+def _execution_artifact(
+    *,
+    key: str,
+    label: str,
+    status: str,
+    reason: str,
+    path: str,
+    task_ref: str,
+    action: str,
+    action_label: str,
+) -> dict[str, Any]:
+    available = bool(task_ref)
+    if not available:
+        reason = "No current task selected."
+    return {
+        "key": key,
+        "label": label,
+        "status": _execution_health_status(status),
+        "message": reason or "Ready for the current task.",
+        "path": path,
+        "task": task_ref,
+        "action": action,
+        "action_label": action_label,
+        "available": available,
+        "reason": "" if available else reason,
+    }
+
+
+def _execution_health_status(status: str) -> str:
+    normalized = status.lower()
+    if normalized == "ready":
+        return "PASS"
+    if normalized in {"stale", "missing", "blocked"}:
+        return "WARN"
+    return "UNKNOWN"
+
+
+def _doctor_finding(
+    doctor: Mapping[str, Any],
+    checks: Sequence[str],
+) -> Mapping[str, Any]:
+    wanted = {check.lower() for check in checks}
+    for finding in doctor.get("findings") or []:
+        if not isinstance(finding, Mapping):
+            continue
+        if str(finding.get("check") or "").lower() in wanted:
+            return finding
+    return {}
+
+
 def _display_project_path(root: Path, value: str, *, fallback: str) -> str:
     text = value.strip() or fallback
     path = Path(text)
@@ -1394,3 +1601,9 @@ def _string_list(value: Any) -> list[str]:
     if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
         return []
     return [str(item) for item in value if str(item).strip()]
+
+
+def _mapping(value: Any) -> Mapping[str, Any]:
+    if isinstance(value, Mapping):
+        return value
+    return {}

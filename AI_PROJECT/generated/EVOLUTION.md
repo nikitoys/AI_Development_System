@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `825`
-Changes: `29`
+Revision: `895`
+Changes: `31`
 
 ## Summary
 
-- `accepted`: 28
-- `approved`: 1
+- `accepted`: 29
+- `approved`: 2
 
 ## Changes
 
@@ -1792,3 +1792,137 @@ Impact:
 Linked tasks:
 
 - TASK-048
+
+### CHG-030 — UIX-12 Add Project Health Repair Actions
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-18 requires an explicit Evolution Change Proposal before implementation: Add UI health and repair actions for doctor, stale generated artifacts, docs render, context/Codex refresh, and protected-file checks.
+
+Proposal:
+
+Implement the bounded task scope: Show project doctor summary in the Web Control Center.; Show stale context, Codex, docs, task generated, and evolution generated states where detectable.; Add Run Doctor action.; Add Refresh Context/Codex action for current or selected task where valid.; Add Render Docs action through docctl where valid.; Add Check Protected Files action.; Show before/after action result through the unified result panel.; Reject repair actions when no safe target task exists.; Add tests for doctor pass/warn/fail display and safe repair action routing.
+
+Rationale:
+
+Turn common project-control warnings into visible UI health signals with safe repair buttons that route through owning CLIs. The owner should be able to diagnose and fix stale generated artifacts without remembering individual commands.
+
+Approved by: `human_owner` at `2026-06-19T13:58:24Z`  
+Approval notes: Approved for WFA-18 Project Health Repair Actions. Must expose doctor/generated/protected health signals and safe repair actions through governed workflows/commands, require confirmation for repairs, and preserve protected-file boundaries.  
+
+Accepted by: `human_owner` at `2026-06-19T14:29:56Z`  
+Acceptance notes: Accept Change  
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/core/workflows.py if repair workflow metadata needs compatible updates
+- ai_project_ctl/core/registry.py if command metadata needs compatible updates
+- scripts/aictl.py if routing needs compatible updates
+- tests/test_web_control_center.py
+- tests/test_workflows.py
+- tests/test_aictl.py
+- tests/test_registry.py
+
+Risks:
+
+- Boundary risk: Do not auto-repair without owner confirmation.
+- Boundary risk: Do not manually edit generated files.
+- Boundary risk: Do not suppress doctor failures.
+- Boundary risk: Do not bypass owning CLIs.
+- Boundary risk: Do not add network or external service dependencies.
+- Verify that repair actions do not run silently.
+- Verify that stale context/Codex and docs cases are shown clearly.
+- Verify that doctor FAIL is not converted into OK by UI formatting.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-049.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Show project doctor summary in the Web Control Center.
+- Show stale context, Codex, docs, task generated, and evolution generated states where detectable.
+- Add Run Doctor action.
+- Add Refresh Context/Codex action for current or selected task where valid.
+- Add Render Docs action through docctl where valid.
+- UI shows project doctor health summary.
+- UI shows stale generated artifact warnings in a readable way.
+- Run Doctor action works through governed command routing.
+
+Linked tasks:
+
+- TASK-049
+
+### CHG-031 — UIX-05 Add Bulk Task Import from file
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task WFA-11 requires an explicit Evolution Change Proposal before implementation: Extend Bulk Task Import to support uploading JSON files in addition to pasted JSON text.
+
+Proposal:
+
+Implement the bounded task scope: Add file upload support for Bulk Task Import.; Support UTF-8 .json or .txt files containing JSON import payloads.; Enforce conservative file size limit.; Parse file content as data only.; Reuse existing preview/dry-run behavior.; Reuse existing validation before writes.; Reuse existing confirmed command-path task creation.; Show clear parse/validation errors.; Keep paste-based import working.
+
+Rationale:
+
+Allow the owner to import task batches from a local JSON file while preserving preview, validation, confirmation, and governed command-path creation.
+
+Approved by: `human_owner` at `2026-06-19T14:31:08Z`  
+Approval notes: Approve  
+
+Affected files:
+
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/core/workflows.py if import payload handling needs compatible updates
+- scripts/aictl.py if import routing needs compatible updates
+- tests/test_web_control_center.py
+- tests/test_workflows.py
+- tests/test_aictl.py
+
+Risks:
+
+- Boundary risk: Do not execute uploaded files.
+- Boundary risk: Do not support Python, shell scripts, or unrestricted executable formats.
+- Boundary risk: Do not add YAML dependency unless already allowed by existing project dependency policy.
+- Boundary risk: Do not auto-start imported tasks.
+- Boundary risk: Do not auto-approve anything.
+- Boundary risk: Do not write tasks.json directly.
+- Verify that uploaded file content is parsed as data only.
+- Verify that no executable content is run.
+- Verify that invalid imports create no tasks.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-042.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add file upload support for Bulk Task Import.
+- Support UTF-8 .json or .txt files containing JSON import payloads.
+- Enforce conservative file size limit.
+- Parse file content as data only.
+- Reuse existing preview/dry-run behavior.
+- Owner can import a task batch by uploading a JSON/text file.
+- Paste-based JSON import still works.
+- Importer shows preview before creation.
+
+Linked tasks:
+
+- TASK-042

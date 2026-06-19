@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 3,
+  "revision": 4,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-19T13:26:39Z",
+  "updated_at": "2026-06-19T14:21:56Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -333,10 +333,138 @@
         ],
         "owner_decision_required": true
       }
+    },
+    {
+      "id": "RPT-004",
+      "task_id": "TASK-049",
+      "task_ref": "WFA-18",
+      "submitted_at": "2026-06-19T14:21:56Z",
+      "submitted_by": "human_owner",
+      "source_file": "/tmp/codex-task-049-report.json",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-049",
+        "task_ref": "WFA-18",
+        "reported_task_id": "TASK-049",
+        "reported_task_ref": "WFA-18",
+        "implementation_summary": "Added Project Health signals and governed repair actions to the Web Control Center, including doctor summary, generated artifact health, docs render, context/Codex refresh, protected-file checks, safe target rejection, and facade command routing.",
+        "changed_files": [
+          "ai_project_ctl/core/registry.py",
+          "ai_project_ctl/web/actions.py",
+          "ai_project_ctl/web/read_model.py",
+          "ai_project_ctl/web/server.py",
+          "scripts/aictl.py",
+          "tests/test_aictl.py",
+          "tests/test_registry.py",
+          "tests/test_web_control_center.py"
+        ],
+        "generated_files": [
+          "AI_PROJECT/generated/CODEX_CURRENT.md",
+          "AI_PROJECT/generated/CODEX_PROMPT.md",
+          "AI_PROJECT/generated/CODEX_STATUS.md",
+          "AI_PROJECT/generated/CODEX_TASKS.md",
+          "AI_PROJECT/generated/CONTEXT_PACK.md",
+          "AI_PROJECT/generated/CONTEXT_STATUS.md",
+          "AI_PROJECT/generated/EVOLUTION.md",
+          "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md"
+        ],
+        "checks": [
+          {
+            "name": "Python compile",
+            "command": "python -m py_compile ai_project_ctl/core/registry.py ai_project_ctl/web/actions.py ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py scripts/aictl.py",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Touched Python modules compiled successfully."
+          },
+          {
+            "name": "Focused unit tests",
+            "command": "python -m unittest tests.test_registry tests.test_aictl tests.test_web_control_center",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Registry, facade, and Web Control Center tests passed: 99 tests."
+          },
+          {
+            "name": "Workflow unit tests",
+            "command": "python -m unittest tests.test_workflows",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Workflow tests passed: 23 tests."
+          },
+          {
+            "name": "Full unittest discovery",
+            "command": "python -m unittest discover -s tests",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "All discovered tests passed: 140 tests."
+          },
+          {
+            "name": "Project-control validation",
+            "command": "python scripts/planctl.py validate; python scripts/taskctl.py validate; python scripts/docctl.py validate; python scripts/evolutionctl.py validate; python scripts/contextctl.py validate",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Plan, task, docs, evolution, and context validations passed. docctl reported existing registry/review warnings while exiting successfully."
+          },
+          {
+            "name": "Generated output checks",
+            "command": "python scripts/taskctl.py check-generated; python scripts/docctl.py check-generated; python scripts/evolutionctl.py check-generated; python scripts/contextctl.py check-generated",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Task, docs, evolution, and context generated outputs are up to date after controlled renders."
+          },
+          {
+            "name": "Protected files check",
+            "command": "python scripts/check-protected-project-files.py --verbose",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Protected project-control files are valid and generated outputs are up to date."
+          },
+          {
+            "name": "Project doctor",
+            "command": "python scripts/aictl.py project doctor",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Project Doctor reported 15 PASS, 0 WARN, 0 FAIL after TASK-049 moved to in_review."
+          },
+          {
+            "name": "Facade smoke checks",
+            "command": "python scripts/aictl.py docs render; python scripts/aictl.py project protected-check",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "New docs render and protected-check facade commands executed successfully."
+          },
+          {
+            "name": "Manual-edit diff whitespace",
+            "command": "git diff --check -- ai_project_ctl/core/registry.py ai_project_ctl/web/actions.py ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py scripts/aictl.py tests/test_aictl.py tests/test_registry.py tests/test_web_control_center.py",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": false,
+            "details": "No whitespace errors in manually edited source or test files."
+          }
+        ],
+        "warnings": [
+          "Full git diff --check reports trailing whitespace in generated AI_PROJECT/generated/EVOLUTION.md emitted by the governed renderer; protected-file checks and Project Doctor pass, and the generated file was not manually edited."
+        ],
+        "blockers": [],
+        "notes": [
+          "TASK-049 was transitioned to in_review through python scripts/aictl.py task transition TASK-049 --to in_review.",
+          "Project-control state, events, and generated files were changed only through owning CLIs."
+        ],
+        "owner_decision_required": true
+      }
     }
   ],
   "latest_by_task": {
     "TASK-046": "RPT-002",
-    "TASK-047": "RPT-003"
+    "TASK-047": "RPT-003",
+    "TASK-049": "RPT-004"
   }
 }
