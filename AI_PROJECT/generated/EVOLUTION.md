@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `434`
+Revision: `437`
 Changes: `18`
 
 ## Summary
 
-- `accepted`: 16
-- `approved`: 2
+- `accepted`: 17
+- `approved`: 1
 
 ## Changes
 
@@ -991,7 +991,7 @@ Linked tasks:
 
 ### CHG-018 — WFA-05 Add Review And Close Helpers
 
-Status: `approved`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -1011,6 +1011,9 @@ Reduce manual closure steps while preserving explicit Human Owner confirmation a
 
 Approved by: `human_owner` at `2026-06-19T07:45:45Z`  
 Approval notes: Approved for WFA-05 Review and Close Helpers. Must preserve Human Owner confirmation, lifecycle gates, linked Change completion rules, and reject invalid closure.  
+
+Accepted by: `human_owner` at `2026-06-19T08:10:06Z`  
+Acceptance notes: WFA-05 implemented and accepted. Review/close helpers added while preserving Human Owner confirmation and lifecycle gates.  
 
 Affected files:
 

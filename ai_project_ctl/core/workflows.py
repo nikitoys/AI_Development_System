@@ -23,6 +23,12 @@ REGISTERED = "registered"
 VALIDATED_CTL = "validated_ctl"
 READ_ONLY_CTL = "read_only_ctl"
 
+TASK_CLOSE_REQUIRED_STATUS = "in_review"
+CHANGE_ACCEPTABLE_STATUSES = {"approved", "in_review"}
+CHANGE_DONE_TASK_STATUSES = {"done", "archived"}
+EPIC_CLOSED_TASK_STATUSES = {"done", "deferred", "archived"}
+EPIC_CLOSABLE_STATUSES = {"active", "done"}
+
 
 class WorkflowError(CommandError):
     """Stable workflow orchestration error."""
@@ -200,6 +206,9 @@ def workflow_preview(
     name: str,
     *,
     task_ref: str | None = None,
+    change_ref: str | None = None,
+    epic_ref: str | None = None,
+    notes: str = "",
     root: str | Path = ".",
     actor: str = "human_owner",
     python_executable: str | None = None,
@@ -211,23 +220,56 @@ def workflow_preview(
         "id": task_ref or "<task>",
         "status": "<resolved-status>",
     }
+    change = {
+        "id": change_ref or "<change>",
+        "status": "<resolved-status>",
+    }
+    epic = {
+        "id": epic_ref or "<epic>",
+        "status": "<resolved-status>",
+    }
     change_preview: dict[str, Any] | None = None
     if descriptor.name == "evolution.create_for_task" and task_ref:
         task = _load_task_for_preview(Path(root).resolve(), task_ref) or task
         change_preview = _derive_evolution_change(task)
-    steps = _build_steps(
-        descriptor.name,
-        task=task,
-        root=Path(root).resolve(),
-        actor=actor,
-        python_executable=python_executable or sys.executable,
-        include_resolve=True,
-        change_preview=change_preview,
-    )
+    root_path = Path(root).resolve()
+    python_bin = python_executable or sys.executable
+    if descriptor.name == "evolution.accept_change":
+        steps = _build_change_accept_steps(
+            change,
+            root=root_path,
+            actor=actor,
+            python_executable=python_bin,
+            notes=notes,
+        )
+    elif descriptor.name == "epic.close_if_complete":
+        steps = _build_epic_close_steps(
+            epic,
+            root=root_path,
+            actor=actor,
+            python_executable=python_bin,
+        )
+    else:
+        steps = _build_steps(
+            descriptor.name,
+            task=task,
+            root=root_path,
+            actor=actor,
+            python_executable=python_bin,
+            include_resolve=True,
+            change_preview=change_preview,
+            notes=notes,
+        )
     payload = {
         "workflow": descriptor.to_dict(),
         "task_ref": task_ref or "",
+        "change_ref": change_ref or "",
+        "epic_ref": epic_ref or "",
         "task": task,
+        "change": change,
+        "epic": epic,
+        "notes_required": descriptor.name
+        in {"task.close_reviewed", "evolution.accept_change"},
         "steps": [step.preview_dict() for step in steps],
     }
     if change_preview is not None:
@@ -535,7 +577,10 @@ def run_task_create_workflow(
 def run_workflow(
     name: str,
     *,
-    task_ref: str,
+    task_ref: str = "",
+    change_ref: str = "",
+    epic_ref: str = "",
+    notes: str = "",
     root: str | Path = ".",
     actor: str = "human_owner",
     confirmed: bool = False,
@@ -547,11 +592,29 @@ def run_workflow(
     descriptor = _get_workflow_descriptor(name)
     preview = workflow_preview(
         name,
-        task_ref=task_ref,
+        task_ref=task_ref or None,
+        change_ref=change_ref or None,
+        epic_ref=epic_ref or None,
+        notes=notes,
         root=root,
         actor=actor,
         python_executable=python_executable,
     )
+    target_error = _workflow_target_error(
+        descriptor.name,
+        task_ref=task_ref,
+        change_ref=change_ref,
+        epic_ref=epic_ref,
+    )
+    if target_error is not None:
+        result = CommandResult.failure(
+            command=descriptor.name,
+            domain="workflow",
+            message="Workflow target is missing.",
+            errors=[target_error.to_message()],
+        )
+        result.data = preview
+        return result
     if descriptor.confirmation_required and not confirmed:
         result = CommandResult.failure(
             command=descriptor.name,
@@ -575,7 +638,13 @@ def run_workflow(
         python_executable=python_executable,
         runner=runner,
     )
-    return executor.run(descriptor, task_ref=task_ref)
+    return executor.run(
+        descriptor,
+        task_ref=task_ref,
+        change_ref=change_ref,
+        epic_ref=epic_ref,
+        notes=notes,
+    )
 
 
 class WorkflowExecutor:
@@ -594,9 +663,28 @@ class WorkflowExecutor:
         self.python_executable = python_executable or sys.executable
         self.runner = runner or self._run_subprocess
 
-    def run(self, descriptor: WorkflowDescriptor, *, task_ref: str) -> CommandResult:
+    def run(
+        self,
+        descriptor: WorkflowDescriptor,
+        *,
+        task_ref: str = "",
+        change_ref: str = "",
+        epic_ref: str = "",
+        notes: str = "",
+    ) -> CommandResult:
         if descriptor.name == "evolution.create_for_task":
             return self._run_evolution_create_for_task(descriptor, task_ref=task_ref)
+        if descriptor.name == "evolution.accept_change":
+            return self._run_evolution_accept_change(
+                descriptor,
+                change_ref=change_ref,
+                notes=notes,
+            )
+        if descriptor.name == "epic.close_if_complete":
+            return self._run_epic_close_if_complete(
+                descriptor,
+                epic_ref=epic_ref,
+            )
 
         resolve_step = _resolve_step(
             task_ref,
@@ -616,6 +704,18 @@ class WorkflowExecutor:
             )
 
         task = _parse_resolved_task(resolve_result.stdout, task_ref=task_ref)
+        if descriptor.name == "task.close_reviewed":
+            preflight = _task_close_preflight_step_result(task, notes)
+            step_results.append(preflight)
+            if not preflight.ok:
+                return self._preflight_result(
+                    descriptor,
+                    task_ref=task_ref,
+                    task=task,
+                    step_results=step_results,
+                    error=_task_close_preflight_error(task, notes),
+                    message="Workflow stopped before task closure preflight.",
+                )
         steps = _build_steps(
             descriptor.name,
             task=task,
@@ -623,6 +723,7 @@ class WorkflowExecutor:
             actor=self.actor,
             python_executable=self.python_executable,
             include_resolve=False,
+            notes=notes,
         )
         for step in steps:
             step_result = self._execute_step(step)
@@ -799,6 +900,126 @@ class WorkflowExecutor:
         )
         return result
 
+    def _run_evolution_accept_change(
+        self,
+        descriptor: WorkflowDescriptor,
+        *,
+        change_ref: str,
+        notes: str,
+    ) -> CommandResult:
+        try:
+            change, tasks = _load_change_accept_context(self.root, change_ref)
+            error = _change_accept_preflight_error(change, tasks, notes)
+        except WorkflowError as exc:
+            change = {"id": change_ref, "status": ""}
+            error = exc
+
+        preflight = _local_check_step_result(
+            "change_accept_preflight",
+            "Check Change acceptance gates",
+            "evolution.accept_change.preflight",
+            error=error,
+        )
+        step_results = [preflight]
+        if error is not None:
+            return self._preflight_result(
+                descriptor,
+                task_ref="",
+                task={},
+                step_results=step_results,
+                error=error,
+                message="Workflow stopped before Evolution Change acceptance.",
+                extra_data={"change_ref": change_ref, "change": dict(change)},
+            )
+
+        steps = _build_change_accept_steps(
+            change,
+            root=self.root,
+            actor=self.actor,
+            python_executable=self.python_executable,
+            notes=notes,
+        )
+        for step in steps:
+            step_result = self._execute_step(step)
+            step_results.append(step_result)
+            if not step_result.ok and step.blocking:
+                return self._result(
+                    descriptor,
+                    task_ref="",
+                    task={},
+                    step_results=step_results,
+                    message="Workflow stopped on blocking step: {}".format(step.title),
+                    extra_data={"change_ref": change_ref, "change": dict(change)},
+                )
+
+        return self._result(
+            descriptor,
+            task_ref="",
+            task={},
+            step_results=step_results,
+            message="Workflow completed. Evolution Change was accepted through evolutionctl.py.",
+            extra_data={"change_ref": change_ref, "change": dict(change)},
+        )
+
+    def _run_epic_close_if_complete(
+        self,
+        descriptor: WorkflowDescriptor,
+        *,
+        epic_ref: str,
+    ) -> CommandResult:
+        try:
+            epic, child_tasks = _load_epic_close_context(self.root, epic_ref)
+            error = _epic_close_preflight_error(epic, child_tasks)
+        except WorkflowError as exc:
+            epic = {"id": epic_ref, "status": ""}
+            error = exc
+
+        preflight = _local_check_step_result(
+            "epic_close_preflight",
+            "Check Epic closure gates",
+            "epic.close_if_complete.preflight",
+            error=error,
+        )
+        step_results = [preflight]
+        if error is not None:
+            return self._preflight_result(
+                descriptor,
+                task_ref="",
+                task={},
+                step_results=step_results,
+                error=error,
+                message="Workflow stopped before Epic closure.",
+                extra_data={"epic_ref": epic_ref, "epic": dict(epic)},
+            )
+
+        steps = _build_epic_close_steps(
+            epic,
+            root=self.root,
+            actor=self.actor,
+            python_executable=self.python_executable,
+        )
+        for step in steps:
+            step_result = self._execute_step(step)
+            step_results.append(step_result)
+            if not step_result.ok and step.blocking:
+                return self._result(
+                    descriptor,
+                    task_ref="",
+                    task={},
+                    step_results=step_results,
+                    message="Workflow stopped on blocking step: {}".format(step.title),
+                    extra_data={"epic_ref": epic_ref, "epic": dict(epic)},
+                )
+
+        return self._result(
+            descriptor,
+            task_ref="",
+            task={},
+            step_results=step_results,
+            message="Workflow completed. Epic closure checks passed.",
+            extra_data={"epic_ref": epic_ref, "epic": dict(epic)},
+        )
+
     def _execute_step(self, step: WorkflowStep) -> WorkflowStepResult:
         if step.skip_reason:
             return WorkflowStepResult(step=step, status="skipped")
@@ -829,6 +1050,7 @@ class WorkflowExecutor:
         task: Mapping[str, Any],
         step_results: Sequence[WorkflowStepResult],
         message: str,
+        extra_data: Mapping[str, Any] | None = None,
     ) -> CommandResult:
         failed = next((item for item in step_results if not item.ok), None)
         result = CommandResult(
@@ -843,6 +1065,8 @@ class WorkflowExecutor:
                 "steps": [item.to_dict() for item in step_results],
             },
         )
+        if extra_data:
+            result.data.update(dict(extra_data))
         if failed is not None:
             result.errors.append(
                 CommandMessage(
@@ -857,6 +1081,28 @@ class WorkflowExecutor:
                     },
                 )
             )
+        return result
+
+    def _preflight_result(
+        self,
+        descriptor: WorkflowDescriptor,
+        *,
+        task_ref: str,
+        task: Mapping[str, Any],
+        step_results: Sequence[WorkflowStepResult],
+        error: WorkflowError,
+        message: str,
+        extra_data: Mapping[str, Any] | None = None,
+    ) -> CommandResult:
+        result = self._result(
+            descriptor,
+            task_ref=task_ref,
+            task=task,
+            step_results=step_results,
+            message=message,
+            extra_data=extra_data,
+        )
+        result.errors.insert(0, error.to_message())
         return result
 
 
@@ -960,6 +1206,40 @@ def _workflow_descriptors() -> tuple[WorkflowDescriptor, ...]:
             ),
         ),
         WorkflowDescriptor(
+            name="task.close_reviewed",
+            label="Close reviewed task",
+            description=(
+                "Run blocking close checks, approve an in_review task with explicit "
+                "owner notes, and transition it to done through validated commands."
+            ),
+            confirmation_required=True,
+            arguments=(
+                *task_argument,
+                {
+                    "name": "notes",
+                    "description": "Required approval notes.",
+                    "required": True,
+                },
+            ),
+            steps=(
+                _template("resolve", "Resolve task reference", "taskctl.task.resolve", READ_ONLY_CTL, "python scripts/taskctl.py task resolve <TASK> --json"),
+                _template("preflight", "Check task close gates", "task.close_reviewed.preflight", READ_ONLY_CTL, "check task status and approval notes"),
+                _template("task_validate", "Validate task state", "taskctl.validate", VALIDATED_CTL, "python scripts/taskctl.py validate"),
+                _template("task_graph", "Validate task graph", "taskctl.task.graph.validate", VALIDATED_CTL, "python scripts/taskctl.py task graph validate"),
+                _template("task_generated", "Check generated task output", "taskctl.check-generated", VALIDATED_CTL, "python scripts/taskctl.py check-generated"),
+                _template("context_validate", "Validate context control", "contextctl.validate", VALIDATED_CTL, "python scripts/contextctl.py validate"),
+                _template("context_generated", "Check generated context output", "contextctl.check-generated", VALIDATED_CTL, "python scripts/contextctl.py check-generated"),
+                _template("evolution_validate", "Validate evolution state", "evolutionctl.validate", VALIDATED_CTL, "python scripts/evolutionctl.py validate"),
+                _template("evolution_generated", "Check generated evolution output", "evolutionctl.check-generated", VALIDATED_CTL, "python scripts/evolutionctl.py check-generated"),
+                _template("protected", "Check protected project files", "protected.check", VALIDATED_CTL, "python scripts/check-protected-project-files.py --json"),
+                _template("doctor", "Run project doctor", "project.doctor", REGISTERED, "python scripts/aictl.py project doctor"),
+                _template("task_approve", "Approve task with owner notes", "taskctl.task.approve", VALIDATED_CTL, "python scripts/taskctl.py task approve <TASK> --notes <NOTES>"),
+                _template("task_done", "Move task to done", "task.transition", REGISTERED, "python scripts/aictl.py task transition <TASK> --to done"),
+                _template("task_validate_after", "Validate task state after close", "taskctl.validate", VALIDATED_CTL, "python scripts/taskctl.py validate"),
+                _template("task_generated_after", "Check generated task output after close", "taskctl.check-generated", VALIDATED_CTL, "python scripts/taskctl.py check-generated"),
+            ),
+        ),
+        WorkflowDescriptor(
             name="evolution.create_for_task",
             label="Create Evolution Change",
             description=(
@@ -980,6 +1260,60 @@ def _workflow_descriptors() -> tuple[WorkflowDescriptor, ...]:
                 _template("ready", "Move Change Proposal to ready", "evolutionctl.change.transition", VALIDATED_CTL, "python scripts/evolutionctl.py change transition <CHANGE> --to ready"),
                 _template("validate", "Validate evolution state", "evolutionctl.validate", VALIDATED_CTL, "python scripts/evolutionctl.py validate"),
                 _template("check_generated", "Check generated evolution output", "evolutionctl.check-generated", VALIDATED_CTL, "python scripts/evolutionctl.py check-generated"),
+            ),
+        ),
+        WorkflowDescriptor(
+            name="evolution.accept_change",
+            label="Accept Evolution Change",
+            description=(
+                "Accept an approved or in_review Evolution Change only after linked "
+                "task completion checks pass; no task waivers or skip-task-check are used."
+            ),
+            confirmation_required=True,
+            arguments=(
+                {
+                    "name": "change",
+                    "description": "Evolution Change ID.",
+                    "required": True,
+                },
+                {
+                    "name": "notes",
+                    "description": "Required acceptance notes.",
+                    "required": True,
+                },
+            ),
+            steps=(
+                _template("preflight", "Check Change acceptance gates", "evolution.accept_change.preflight", READ_ONLY_CTL, "check change status and linked tasks"),
+                _template("evolution_validate", "Validate evolution state", "evolutionctl.validate", VALIDATED_CTL, "python scripts/evolutionctl.py validate"),
+                _template("change_in_progress", "Move approved Change to in_progress if needed", "evolutionctl.change.transition", VALIDATED_CTL, "python scripts/evolutionctl.py change transition <CHANGE> --to in_progress"),
+                _template("change_in_review", "Move Change to in_review if needed", "evolutionctl.change.transition", VALIDATED_CTL, "python scripts/evolutionctl.py change transition <CHANGE> --to in_review"),
+                _template("change_accept", "Accept Evolution Change", "evolutionctl.change.accept", VALIDATED_CTL, "python scripts/evolutionctl.py change accept <CHANGE> --notes <NOTES>"),
+                _template("evolution_validate_after", "Validate evolution state after acceptance", "evolutionctl.validate", VALIDATED_CTL, "python scripts/evolutionctl.py validate"),
+                _template("evolution_generated_after", "Check generated evolution output after acceptance", "evolutionctl.check-generated", VALIDATED_CTL, "python scripts/evolutionctl.py check-generated"),
+            ),
+        ),
+        WorkflowDescriptor(
+            name="epic.close_if_complete",
+            label="Close Epic if complete",
+            description=(
+                "Transition an active Epic to done only when all child Tasks are "
+                "done, deferred, or archived."
+            ),
+            confirmation_required=True,
+            arguments=(
+                {
+                    "name": "epic",
+                    "description": "Epic ID or key.",
+                    "required": True,
+                },
+            ),
+            steps=(
+                _template("preflight", "Check Epic closure gates", "epic.close_if_complete.preflight", READ_ONLY_CTL, "check epic child task statuses"),
+                _template("plan_validate", "Validate plan state", "planctl.validate", VALIDATED_CTL, "python scripts/planctl.py validate"),
+                _template("task_validate", "Validate task state", "taskctl.validate", VALIDATED_CTL, "python scripts/taskctl.py validate"),
+                _template("epic_done", "Move Epic to done", "planctl.epic.status", VALIDATED_CTL, "python scripts/planctl.py epic status <EPIC> --to done"),
+                _template("plan_validate_after", "Validate plan state after close", "planctl.validate", VALIDATED_CTL, "python scripts/planctl.py validate"),
+                _template("plan_render", "Render plan generated output", "planctl.render", VALIDATED_CTL, "python scripts/planctl.py render"),
             ),
         ),
     )
@@ -1018,6 +1352,7 @@ def _build_steps(
     include_resolve: bool,
     change_preview: Mapping[str, Any] | None = None,
     change_id: str = "<CHANGE>",
+    notes: str = "",
 ) -> list[WorkflowStep]:
     task_id = str(task.get("id") or "<task>")
     status = str(task.get("status") or "")
@@ -1107,6 +1442,26 @@ def _build_steps(
         )
         return steps
 
+    if workflow_name == "task.close_reviewed":
+        steps.extend(
+            [
+                _ctl_step("task_validate", "Validate task state", "taskctl.validate", "taskctl.py", root, actor, python_executable, "validate"),
+                _ctl_step("task_graph", "Validate task graph", "taskctl.task.graph.validate", "taskctl.py", root, actor, python_executable, "task", "graph", "validate"),
+                _ctl_step("task_generated", "Check generated task output", "taskctl.check-generated", "taskctl.py", root, actor, python_executable, "check-generated"),
+                _ctl_step("context_validate", "Validate context control", "contextctl.validate", "contextctl.py", root, actor, python_executable, "validate"),
+                _ctl_step("context_generated", "Check generated context output", "contextctl.check-generated", "contextctl.py", root, actor, python_executable, "check-generated"),
+                _ctl_step("evolution_validate", "Validate evolution state", "evolutionctl.validate", "evolutionctl.py", root, actor, python_executable, "validate"),
+                _ctl_step("evolution_generated", "Check generated evolution output", "evolutionctl.check-generated", "evolutionctl.py", root, actor, python_executable, "check-generated"),
+                _protected_step(root, python_executable),
+                _aictl_step("doctor", "Run project doctor", "project.doctor", root, actor, python_executable, "project", "doctor"),
+                _ctl_step("task_approve", "Approve task with owner notes", "taskctl.task.approve", "taskctl.py", root, actor, python_executable, "task", "approve", task_id, "--notes", notes),
+                _aictl_step("task_done", "Move task to done", "task.transition", root, actor, python_executable, "task", "transition", task_id, "--to", "done"),
+                _ctl_step("task_validate_after", "Validate task state after close", "taskctl.validate", "taskctl.py", root, actor, python_executable, "validate"),
+                _ctl_step("task_generated_after", "Check generated task output after close", "taskctl.check-generated", "taskctl.py", root, actor, python_executable, "check-generated"),
+            ]
+        )
+        return steps
+
     if workflow_name == "evolution.create_for_task":
         preview = dict(change_preview or _derive_evolution_change(task))
         steps.append(
@@ -1131,6 +1486,190 @@ def _build_steps(
         return steps
 
     raise WorkflowError("WORKFLOW_NOT_FOUND", "Unknown workflow: {}".format(workflow_name))
+
+
+def _build_change_accept_steps(
+    change: Mapping[str, Any],
+    *,
+    root: Path,
+    actor: str,
+    python_executable: str,
+    notes: str,
+) -> list[WorkflowStep]:
+    change_id = str(change.get("id") or "<change>")
+    status = str(change.get("status") or "")
+    steps = [
+        _ctl_step(
+            "evolution_validate",
+            "Validate evolution state",
+            "evolutionctl.validate",
+            "evolutionctl.py",
+            root,
+            actor,
+            python_executable,
+            "validate",
+        )
+    ]
+    if status == "approved":
+        steps.extend(
+            [
+                _ctl_step(
+                    "change_in_progress",
+                    "Move approved Change to in_progress",
+                    "evolutionctl.change.transition",
+                    "evolutionctl.py",
+                    root,
+                    actor,
+                    python_executable,
+                    "change",
+                    "transition",
+                    change_id,
+                    "--to",
+                    "in_progress",
+                ),
+                _ctl_step(
+                    "change_in_review",
+                    "Move Change to in_review",
+                    "evolutionctl.change.transition",
+                    "evolutionctl.py",
+                    root,
+                    actor,
+                    python_executable,
+                    "change",
+                    "transition",
+                    change_id,
+                    "--to",
+                    "in_review",
+                ),
+            ]
+        )
+    steps.extend(
+        [
+            _ctl_step(
+                "change_accept",
+                "Accept Evolution Change",
+                "evolutionctl.change.accept",
+                "evolutionctl.py",
+                root,
+                actor,
+                python_executable,
+                "change",
+                "accept",
+                change_id,
+                "--notes",
+                notes,
+            ),
+            _ctl_step(
+                "evolution_validate_after",
+                "Validate evolution state after acceptance",
+                "evolutionctl.validate",
+                "evolutionctl.py",
+                root,
+                actor,
+                python_executable,
+                "validate",
+            ),
+            _ctl_step(
+                "evolution_generated_after",
+                "Check generated evolution output after acceptance",
+                "evolutionctl.check-generated",
+                "evolutionctl.py",
+                root,
+                actor,
+                python_executable,
+                "check-generated",
+            ),
+        ]
+    )
+    return steps
+
+
+def _build_epic_close_steps(
+    epic: Mapping[str, Any],
+    *,
+    root: Path,
+    actor: str,
+    python_executable: str,
+) -> list[WorkflowStep]:
+    epic_id = str(epic.get("id") or "<epic>")
+    status = str(epic.get("status") or "")
+    return [
+        _ctl_step(
+            "plan_validate",
+            "Validate plan state",
+            "planctl.validate",
+            "planctl.py",
+            root,
+            actor,
+            python_executable,
+            "validate",
+        ),
+        _ctl_step(
+            "task_validate",
+            "Validate task state",
+            "taskctl.validate",
+            "taskctl.py",
+            root,
+            actor,
+            python_executable,
+            "validate",
+        ),
+        _ctl_step(
+            "epic_done",
+            "Move Epic to done",
+            "planctl.epic.status",
+            "planctl.py",
+            root,
+            actor,
+            python_executable,
+            "epic",
+            "status",
+            epic_id,
+            "--to",
+            "done",
+        )
+        if status != "done"
+        else WorkflowStep(
+            step_id="epic_done",
+            title="Move Epic to done",
+            command_name="planctl.epic.status",
+            route=VALIDATED_CTL,
+            argv=(
+                python_executable,
+                str(root / "scripts" / "planctl.py"),
+                "--root",
+                str(root),
+                "--actor",
+                actor,
+                "epic",
+                "status",
+                epic_id,
+                "--to",
+                "done",
+            ),
+            skip_reason="Epic is already done.",
+        ),
+        _ctl_step(
+            "plan_validate_after",
+            "Validate plan state after close",
+            "planctl.validate",
+            "planctl.py",
+            root,
+            actor,
+            python_executable,
+            "validate",
+        ),
+        _ctl_step(
+            "plan_render",
+            "Render plan generated output",
+            "planctl.render",
+            "planctl.py",
+            root,
+            actor,
+            python_executable,
+            "render",
+        ),
+    ]
 
 
 def _build_task_create_steps(
@@ -1812,12 +2351,284 @@ def _load_task_from_state(
     )
 
 
+def _load_json_state(root: Path, filename: str, *, expected_list: str) -> dict[str, Any]:
+    path = root / "AI_PROJECT" / "state" / filename
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise WorkflowError(
+            "WORKFLOW_STATE_MISSING",
+            "Project-control state is missing: {}".format(path),
+            details={"path": str(path)},
+        ) from exc
+    except json.JSONDecodeError as exc:
+        raise WorkflowError(
+            "WORKFLOW_STATE_INVALID_JSON",
+            "Project-control state is not valid JSON: {}".format(path),
+            details={"path": str(path), "error": str(exc)},
+        ) from exc
+    if not isinstance(payload.get(expected_list), list):
+        raise WorkflowError(
+            "WORKFLOW_STATE_INVALID_SHAPE",
+            "Project-control state must contain a {} list: {}".format(
+                expected_list,
+                path,
+            ),
+            details={"path": str(path), "field": expected_list},
+        )
+    return payload
+
+
+def _load_change_accept_context(
+    root: Path,
+    change_ref: str,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    evolution = _load_json_state(root, "evolution.json", expected_list="changes")
+    tasks_state = _load_json_state(root, "tasks.json", expected_list="tasks")
+    change = _find_change(evolution.get("changes", []), change_ref)
+    tasks = [
+        dict(task)
+        for task in tasks_state.get("tasks", [])
+        if isinstance(task, dict)
+    ]
+    return change, tasks
+
+
+def _load_epic_close_context(
+    root: Path,
+    epic_ref: str,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    plan = _load_json_state(root, "plan.json", expected_list="epics")
+    tasks_state = _load_json_state(root, "tasks.json", expected_list="tasks")
+    epic = _find_epic(plan.get("epics", []), epic_ref)
+    child_tasks = [
+        dict(task)
+        for task in tasks_state.get("tasks", [])
+        if isinstance(task, dict) and task.get("epic_id") == epic.get("id")
+    ]
+    return epic, child_tasks
+
+
+def _find_change(changes: Sequence[Any], change_ref: str) -> dict[str, Any]:
+    for change in changes:
+        if isinstance(change, dict) and str(change.get("id") or "") == change_ref:
+            return dict(change)
+    raise WorkflowError(
+        "WORKFLOW_CHANGE_NOT_FOUND",
+        "Evolution Change was not found: {}".format(change_ref),
+        details={"change": change_ref},
+    )
+
+
+def _find_epic(epics: Sequence[Any], epic_ref: str) -> dict[str, Any]:
+    for epic in epics:
+        if not isinstance(epic, dict):
+            continue
+        if str(epic.get("id") or "") == epic_ref or str(epic.get("key") or "") == epic_ref:
+            return dict(epic)
+    raise WorkflowError(
+        "WORKFLOW_EPIC_NOT_FOUND",
+        "Epic was not found: {}".format(epic_ref),
+        details={"epic": epic_ref},
+    )
+
+
+def _find_task(tasks: Sequence[Mapping[str, Any]], task_ref: str) -> dict[str, Any] | None:
+    for task in tasks:
+        if _task_matches_ref(task, task_ref):
+            return dict(task)
+    return None
+
+
 def _task_matches_ref(task: Mapping[str, Any], task_ref: str) -> bool:
     for field in ("id", "uid", "ref", "legacy_id"):
         if str(task.get(field) or "") == task_ref:
             return True
     aliases = task.get("aliases") or []
     return isinstance(aliases, list) and task_ref in [str(alias) for alias in aliases]
+
+
+def _workflow_target_error(
+    workflow_name: str,
+    *,
+    task_ref: str,
+    change_ref: str,
+    epic_ref: str,
+) -> WorkflowError | None:
+    if workflow_name in {
+        "task.prepare_for_codex",
+        "task.refresh_execution_context",
+        "task.submit_for_review",
+        "task.close_reviewed",
+        "evolution.create_for_task",
+    } and not task_ref:
+        return WorkflowError(
+            "WORKFLOW_TASK_REQUIRED",
+            "Workflow requires --task.",
+            details={"workflow": workflow_name},
+        )
+    if workflow_name == "evolution.accept_change" and not change_ref:
+        return WorkflowError(
+            "WORKFLOW_CHANGE_REQUIRED",
+            "Workflow requires --change.",
+            details={"workflow": workflow_name},
+        )
+    if workflow_name == "epic.close_if_complete" and not epic_ref:
+        return WorkflowError(
+            "WORKFLOW_EPIC_REQUIRED",
+            "Workflow requires --epic.",
+            details={"workflow": workflow_name},
+        )
+    return None
+
+
+def _task_close_preflight_error(
+    task: Mapping[str, Any],
+    notes: str,
+) -> WorkflowError | None:
+    if not notes.strip():
+        return WorkflowError(
+            "WORKFLOW_APPROVAL_NOTES_REQUIRED",
+            "Closing a reviewed Task requires non-empty approval notes.",
+            details={"task": _task_label(task)},
+        )
+    if task.get("status") != TASK_CLOSE_REQUIRED_STATUS:
+        return WorkflowError(
+            "WORKFLOW_TASK_NOT_IN_REVIEW",
+            "Task must be in_review before it can be closed.",
+            details={
+                "task": _task_label(task),
+                "status": str(task.get("status") or ""),
+                "required_status": TASK_CLOSE_REQUIRED_STATUS,
+            },
+        )
+    return None
+
+
+def _task_close_preflight_step_result(
+    task: Mapping[str, Any],
+    notes: str,
+) -> WorkflowStepResult:
+    return _local_check_step_result(
+        "task_close_preflight",
+        "Check task close gates",
+        "task.close_reviewed.preflight",
+        error=_task_close_preflight_error(task, notes),
+    )
+
+
+def _change_accept_preflight_error(
+    change: Mapping[str, Any],
+    tasks: Sequence[Mapping[str, Any]],
+    notes: str,
+) -> WorkflowError | None:
+    if not notes.strip():
+        return WorkflowError(
+            "WORKFLOW_ACCEPTANCE_NOTES_REQUIRED",
+            "Accepting an Evolution Change requires non-empty acceptance notes.",
+            details={"change": str(change.get("id") or "")},
+        )
+    status = str(change.get("status") or "")
+    if status not in CHANGE_ACCEPTABLE_STATUSES:
+        return WorkflowError(
+            "WORKFLOW_CHANGE_NOT_ACCEPTABLE",
+            "Evolution Change must be approved or in_review before acceptance.",
+            details={
+                "change": str(change.get("id") or ""),
+                "status": status,
+                "allowed_statuses": sorted(CHANGE_ACCEPTABLE_STATUSES),
+            },
+        )
+    linked_tasks = _string_list(change.get("linked_tasks"))
+    if not linked_tasks:
+        return WorkflowError(
+            "WORKFLOW_CHANGE_HAS_NO_LINKED_TASKS",
+            "Evolution Change acceptance requires linked completed Tasks.",
+            details={"change": str(change.get("id") or "")},
+        )
+    blocking: list[str] = []
+    for task_ref in linked_tasks:
+        task = _find_task(tasks, task_ref)
+        if task is None:
+            blocking.append("{} missing".format(task_ref))
+        elif str(task.get("status") or "") not in CHANGE_DONE_TASK_STATUSES:
+            blocking.append("{} status is {}".format(task_ref, task.get("status")))
+    if blocking:
+        return WorkflowError(
+            "WORKFLOW_LINKED_TASKS_NOT_COMPLETE",
+            "Evolution Change linked Tasks must be complete before acceptance.",
+            details={
+                "change": str(change.get("id") or ""),
+                "blocking": blocking,
+                "done_statuses": sorted(CHANGE_DONE_TASK_STATUSES),
+            },
+        )
+    return None
+
+
+def _epic_close_preflight_error(
+    epic: Mapping[str, Any],
+    child_tasks: Sequence[Mapping[str, Any]],
+) -> WorkflowError | None:
+    status = str(epic.get("status") or "")
+    if status not in EPIC_CLOSABLE_STATUSES:
+        return WorkflowError(
+            "WORKFLOW_EPIC_NOT_CLOSABLE",
+            "Epic must be active or already done before the close helper can run.",
+            details={
+                "epic": str(epic.get("id") or ""),
+                "status": status,
+                "allowed_statuses": sorted(EPIC_CLOSABLE_STATUSES),
+            },
+        )
+    active_children = [
+        "{} status is {}".format(
+            task.get("ref") or task.get("legacy_id") or task.get("id"),
+            task.get("status"),
+        )
+        for task in child_tasks
+        if str(task.get("status") or "") not in EPIC_CLOSED_TASK_STATUSES
+    ]
+    if active_children:
+        return WorkflowError(
+            "WORKFLOW_EPIC_HAS_ACTIVE_TASKS",
+            "Epic can close only when all child Tasks are done, deferred, or archived.",
+            details={
+                "epic": str(epic.get("id") or ""),
+                "blocking": active_children,
+                "closed_statuses": sorted(EPIC_CLOSED_TASK_STATUSES),
+            },
+        )
+    return None
+
+
+def _local_check_step_result(
+    step_id: str,
+    title: str,
+    command_name: str,
+    *,
+    error: WorkflowError | None,
+) -> WorkflowStepResult:
+    step = WorkflowStep(
+        step_id=step_id,
+        title=title,
+        command_name=command_name,
+        route=READ_ONLY_CTL,
+        argv=("read", "project-control state"),
+    )
+    if error is None:
+        return WorkflowStepResult(
+            step=step,
+            status="ok",
+            returncode=0,
+            stdout="OK\n",
+        )
+    return WorkflowStepResult(
+        step=step,
+        status="failed",
+        returncode=1,
+        stderr="{}: {}\n".format(error.code, error.message),
+    )
 
 
 def _derive_evolution_change(task: Mapping[str, Any]) -> dict[str, Any]:

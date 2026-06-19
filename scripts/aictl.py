@@ -899,10 +899,13 @@ def cmd_workflow_describe(args: argparse.Namespace) -> int:
         workflow_preview(
             args.name,
             task_ref=args.task,
+            change_ref=args.change,
+            epic_ref=args.epic,
+            notes=args.notes or "",
             root=args.root,
             actor=args.actor,
         )
-        if args.task
+        if args.task or args.change or args.epic or args.notes
         else {"workflow": workflow_describe(args.name)}
     )
     if args.json:
@@ -934,7 +937,10 @@ def cmd_workflow_run(args: argparse.Namespace) -> int:
     _ensure_implemented(args.name)
     result = run_workflow(
         args.name,
-        task_ref=args.task,
+        task_ref=args.task or "",
+        change_ref=args.change or "",
+        epic_ref=args.epic or "",
+        notes=args.notes or "",
         root=args.root,
         actor=args.actor,
         confirmed=args.confirm,
@@ -960,6 +966,14 @@ def _emit_workflow_result(result: CommandResult) -> None:
     )
     if task_label:
         print("Task: {}".format(task_label))
+    change = result.data.get("change") or {}
+    change_label = change.get("id") or result.data.get("change_ref") or ""
+    if change_label:
+        print("Change: {}".format(change_label))
+    epic = result.data.get("epic") or {}
+    epic_label = epic.get("key") or epic.get("id") or result.data.get("epic_ref") or ""
+    if epic_label:
+        print("Epic: {}".format(epic_label))
 
     steps = result.data.get("steps") or result.data.get("preview") or []
     if steps:
@@ -1377,11 +1391,17 @@ def build_parser() -> argparse.ArgumentParser:
     p = workflow_sub.add_parser("describe", help="Describe a workflow")
     p.add_argument("name")
     p.add_argument("--task", help="Optional task ref for concrete step preview.")
+    p.add_argument("--change", help="Optional Change ID for concrete step preview.")
+    p.add_argument("--epic", help="Optional Epic ID or key for concrete step preview.")
+    p.add_argument("--notes", help="Optional notes for concrete step preview.")
     p.set_defaults(func=cmd_workflow_describe, facade_command="workflow.describe")
 
     p = workflow_sub.add_parser("run", help="Run a confirmed workflow")
     p.add_argument("name")
-    p.add_argument("--task", required=True)
+    p.add_argument("--task")
+    p.add_argument("--change")
+    p.add_argument("--epic")
+    p.add_argument("--notes")
     p.add_argument("--confirm", action="store_true")
     p.set_defaults(func=cmd_workflow_run, facade_command="workflow.run")
 

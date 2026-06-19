@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `327`
+Revision: `332`
 
 ## Executable Now
 
@@ -11,8 +11,7 @@ Revision: `327`
 
 ## Waiting For Dependencies
 
-- `WFA-06 (TASK-037)` [planned] `EPIC-006` priority `1` — WFA-06 Documentation Audit And Cleanup
-  - `dependency_not_done`: depends on WFA-05 (TASK-036) with status in_progress
+_No tasks waiting only on dependencies._
 
 ## Not Executable Due To Status Or Parent State
 
@@ -66,7 +65,9 @@ Revision: `327`
   - `status_not_executable`: status is done
 - `WFA-04 (TASK-035)` [done] `EPIC-006` priority `1` — WFA-04 Add Bulk Task Import UI
   - `status_not_executable`: status is done
-- `WFA-05 (TASK-036)` [in_progress] `EPIC-006` priority `1` — WFA-05 Add Review And Close Helpers
+- `WFA-05 (TASK-036)` [done] `EPIC-006` priority `1` — WFA-05 Add Review And Close Helpers
+  - `status_not_executable`: status is done
+- `WFA-06 (TASK-037)` [in_progress] `EPIC-006` priority `1` — WFA-06 Documentation Audit And Cleanup
   - `status_not_executable`: status is in_progress
 - `TASK-008` [done] `EPIC-003` priority `1` — P0 Strengthen docctl metadata and documentation gaps
   - `status_not_executable`: status is done

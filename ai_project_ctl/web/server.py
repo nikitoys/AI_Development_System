@@ -587,8 +587,30 @@ def render_actions(data: Mapping[str, Any]) -> str:
             [input_field("task", "Task", default_task)],
         ),
         action_form(
+            "task.close_reviewed",
+            [
+                input_field("task", "Task", default_task),
+                textarea_field("notes", "Approval Notes"),
+            ],
+        ),
+        action_form(
             "evolution.create_for_task",
             [input_field("task", "Task", default_task)],
+        ),
+        action_form(
+            "evolution.accept_change",
+            [
+                input_field("change", "Change", "CHG-000"),
+                textarea_field("notes", "Acceptance Notes"),
+            ],
+        ),
+        action_form(
+            "epic.close_if_complete",
+            [
+                select_field_values("epic", "Epic", epic_options)
+                if epic_options
+                else input_field("epic", "Epic"),
+            ],
         ),
         "</section>",
         '<section class="panel action-panel">',

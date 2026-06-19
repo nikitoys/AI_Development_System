@@ -643,6 +643,103 @@ class WebControlCenterTests(unittest.TestCase):
             ],
         )
 
+    def test_close_reviewed_web_action_delegates_with_notes(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"ok": true, "data": {"steps": []}}\n',
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process) as run:
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "task.close_reviewed",
+                    "confirm": "yes",
+                    "task": "WFA-05",
+                    "notes": "Reviewed and accepted.",
+                }
+            )
+
+        argv = run.call_args.args[0]
+
+        self.assertTrue(result.ok)
+        self.assertEqual(Path(argv[1]).name, "aictl.py")
+        self.assertEqual(
+            argv[-8:],
+            [
+                "workflow",
+                "run",
+                "task.close_reviewed",
+                "--task",
+                "WFA-05",
+                "--notes",
+                "Reviewed and accepted.",
+                "--confirm",
+            ],
+        )
+        self.assertIn("--notes", argv)
+
+    def test_accept_change_web_action_delegates_with_change_and_notes(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"ok": true, "data": {"steps": []}}\n',
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process) as run:
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "evolution.accept_change",
+                    "confirm": "yes",
+                    "change": "CHG-018",
+                    "notes": "Accepted after review.",
+                }
+            )
+
+        argv = run.call_args.args[0]
+
+        self.assertTrue(result.ok)
+        self.assertEqual(Path(argv[1]).name, "aictl.py")
+        self.assertIn("evolution.accept_change", argv)
+        self.assertIn("--change", argv)
+        self.assertIn("CHG-018", argv)
+        self.assertIn("--notes", argv)
+
+    def test_close_epic_web_action_delegates_with_epic_target(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"ok": true, "data": {"steps": []}}\n',
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process) as run:
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "epic.close_if_complete",
+                    "confirm": "yes",
+                    "epic": "WFA",
+                }
+            )
+
+        argv = run.call_args.args[0]
+
+        self.assertTrue(result.ok)
+        self.assertEqual(Path(argv[1]).name, "aictl.py")
+        self.assertEqual(
+            argv[-6:],
+            [
+                "workflow",
+                "run",
+                "epic.close_if_complete",
+                "--epic",
+                "WFA",
+                "--confirm",
+            ],
+        )
+
     def test_health_route_is_json_read_only(self):
         status, content_type, body = route("/healthz", object())
 

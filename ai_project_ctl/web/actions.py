@@ -333,9 +333,28 @@ def _build_codex_prompt_build(fields: Mapping[str, str]) -> list[str]:
     return args
 
 
-def _build_workflow(workflow_name: str) -> Callable[[Mapping[str, str]], list[str]]:
+def _build_workflow(
+    workflow_name: str,
+    *,
+    target_field: str = "task",
+    include_notes: bool = False,
+) -> Callable[[Mapping[str, str]], list[str]]:
     def build(fields: Mapping[str, str]) -> list[str]:
-        return ["workflow", "run", workflow_name, "--task", _task_ref(fields), "--confirm"]
+        if target_field == "task":
+            target = _task_ref(fields)
+        else:
+            target = _require_field(fields, target_field)
+        args = [
+            "workflow",
+            "run",
+            workflow_name,
+            "--{}".format(target_field),
+            target,
+        ]
+        if include_notes:
+            args.extend(["--notes", _require_field(fields, "notes")])
+        args.append("--confirm")
+        return args
 
     return build
 
@@ -445,10 +464,32 @@ ACTIONS: dict[str, WebAction] = {
         label="Submit for review",
         builder=_build_workflow("task.submit_for_review"),
     ),
+    "task.close_reviewed": WebAction(
+        action_id="task.close_reviewed",
+        command_name="task.close_reviewed",
+        label="Close reviewed task",
+        builder=_build_workflow("task.close_reviewed", include_notes=True),
+    ),
     "evolution.create_for_task": WebAction(
         action_id="evolution.create_for_task",
         command_name="evolution.create_for_task",
         label="Create Evolution Change",
         builder=_build_workflow("evolution.create_for_task"),
+    ),
+    "evolution.accept_change": WebAction(
+        action_id="evolution.accept_change",
+        command_name="evolution.accept_change",
+        label="Accept Evolution Change",
+        builder=_build_workflow(
+            "evolution.accept_change",
+            target_field="change",
+            include_notes=True,
+        ),
+    ),
+    "epic.close_if_complete": WebAction(
+        action_id="epic.close_if_complete",
+        command_name="epic.close_if_complete",
+        label="Close Epic if complete",
+        builder=_build_workflow("epic.close_if_complete", target_field="epic"),
     ),
 }

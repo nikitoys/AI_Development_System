@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 434,
+  "revision": 437,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-19T07:45:45Z",
+  "updated_at": "2026-06-19T08:10:06Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -886,7 +886,7 @@
     {
       "id": "CHG-018",
       "title": "WFA-05 Add Review And Close Helpers",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "tooling",
       "rationale": "Reduce manual closure steps while preserving explicit Human Owner confirmation and approval gates.",
       "problem": "Task WFA-05 requires an explicit Evolution Change Proposal before implementation: Add guarded workflow helpers for closing reviewed tasks, accepting linked Evolution Changes, and optionally closing completed Epics.",
@@ -934,14 +934,14 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-19T07:45:45Z",
       "approval_notes": "Approved for WFA-05 Review and Close Helpers. Must preserve Human Owner confirmation, lifecycle gates, linked Change completion rules, and reject invalid closure.",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T08:10:06Z",
+      "acceptance_notes": "WFA-05 implemented and accepted. Review/close helpers added while preserving Human Owner confirmation and lifecycle gates.",
       "notes": [],
       "priority": 1,
       "order": 18,
       "created_at": "2026-06-19T07:45:12Z",
-      "updated_at": "2026-06-19T07:45:45Z"
+      "updated_at": "2026-06-19T08:10:06Z"
     }
   ]
 }

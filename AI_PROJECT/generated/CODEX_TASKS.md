@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `327`
-Current task: `TASK-036`
+Revision: `332`
+Current task: `TASK-037`
 
 ## Epic `EPIC-001`
 
@@ -629,9 +629,9 @@ Acceptance criteria:
 - No direct AI_PROJECT/state/** edits from importer.
 - Tests and validations pass.
 
-### WFA-05 (TASK-036) — WFA-05 Add Review And Close Helpers ⭐
+### WFA-05 (TASK-036) — WFA-05 Add Review And Close Helpers
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_78c014419aa9`, legacy `TASK-036`, aliases `TASK-036`, local `WFA` / `5`
@@ -646,9 +646,9 @@ Acceptance criteria:
 - Existing lifecycle semantics are preserved.
 - Tests and validations pass.
 
-### WFA-06 (TASK-037) — WFA-06 Documentation Audit And Cleanup
+### WFA-06 (TASK-037) — WFA-06 Documentation Audit And Cleanup ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_c4ef4282293c`, legacy `TASK-037`, aliases `TASK-037`, local `WFA` / `6`

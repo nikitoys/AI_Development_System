@@ -24,7 +24,10 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("task.prepare_for_codex", names)
         self.assertIn("task.refresh_execution_context", names)
         self.assertIn("task.submit_for_review", names)
+        self.assertIn("task.close_reviewed", names)
         self.assertIn("evolution.create_for_task", names)
+        self.assertIn("evolution.accept_change", names)
+        self.assertIn("epic.close_if_complete", names)
         self.assertIn("task.transition", names)
         self.assertIn("current.set", names)
         self.assertIn("current.clear", names)
@@ -118,6 +121,25 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("AI_PROJECT/state/evolution.json", descriptor["writes_state"])
         self.assertIn("separate Human Owner action", descriptor["owner_approval"])
         self.assertIn("does not approve", " ".join(descriptor["notes"]))
+
+    def test_review_close_helpers_are_registered_with_owner_gates(self):
+        close_task = command_describe("task.close_reviewed")
+        accept_change = command_describe("evolution.accept_change")
+        close_epic = command_describe("epic.close_if_complete")
+
+        self.assertEqual(close_task["domain"], "task")
+        self.assertEqual(close_task["lock_scope"], "workflow")
+        self.assertIn("approval notes", close_task["owner_approval"])
+        self.assertIn("AI_PROJECT/state/tasks.json", close_task["writes_state"])
+
+        self.assertEqual(accept_change["domain"], "evolution")
+        self.assertIn("linked Tasks must be complete", accept_change["owner_approval"])
+        self.assertIn("AI_PROJECT/state/evolution.json", accept_change["writes_state"])
+        self.assertIn("Does not use task waivers", " ".join(accept_change["notes"]))
+
+        self.assertEqual(close_epic["domain"], "epic")
+        self.assertIn("active child Tasks block", close_epic["owner_approval"])
+        self.assertIn("AI_PROJECT/state/plan.json", close_epic["writes_state"])
 
     def test_command_list_filters_domain_and_planned_commands(self):
         implemented_names = [

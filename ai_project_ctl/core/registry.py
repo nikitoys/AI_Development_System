@@ -575,6 +575,46 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
             ),
         ),
         CommandDescriptor(
+            name="task.close_reviewed",
+            domain="task",
+            description=(
+                "Run close checks, approve an in_review Task with owner notes, "
+                "and transition it to done."
+            ),
+            kind=CommandKind.WRITE,
+            arguments=(
+                _arg("task", "Task ID, ref, UID, legacy ID, or alias.", required=True),
+                _arg("notes", "Required approval notes.", required=True),
+                _arg("confirm", "Required explicit confirmation.", value_type="boolean", required=True),
+            ),
+            reads_state=(state_tasks, state_plan, state_docs, state_evolution, state_execution),
+            writes_state=(state_tasks,),
+            event_logs=("AI_PROJECT/events/task-events.jsonl",),
+            generated_files=(
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+            ),
+            output=_output("Step-by-step workflow result.", fields=("steps",)),
+            validators=(
+                "task_state",
+                "task_lifecycle",
+                "generated_output",
+                "protected_files",
+                "project_doctor",
+            ),
+            lock_scope="workflow",
+            owner_approval=(
+                "Explicit confirmation and non-empty approval notes are required before approval and done transition."
+            ),
+            dry_run=True,
+            legacy_command=("python scripts/aictl.py workflow run task.close_reviewed --task <TASK_ID> --notes <NOTES> --confirm",),
+            notes=(
+                "Preflight rejects tasks that are not in_review.",
+                "Delegates approval to taskctl.py task approve and done transition to the registered task.transition path.",
+            ),
+        ),
+        CommandDescriptor(
             name="evolution.create_for_task",
             domain="evolution",
             description=(
@@ -602,6 +642,61 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
             notes=(
                 "Composes evolutionctl.py change create/add/link/transition commands.",
                 "Moves the Change Proposal only to ready; it does not approve, accept, or close the Change.",
+            ),
+        ),
+        CommandDescriptor(
+            name="evolution.accept_change",
+            domain="evolution",
+            description=(
+                "Accept an approved or in_review Evolution Change only when linked Tasks are complete."
+            ),
+            kind=CommandKind.WRITE,
+            arguments=(
+                _arg("change", "Evolution Change ID.", required=True),
+                _arg("notes", "Required acceptance notes.", required=True),
+                _arg("confirm", "Required explicit confirmation.", value_type="boolean", required=True),
+            ),
+            reads_state=(state_evolution, state_tasks),
+            writes_state=(state_evolution,),
+            event_logs=("AI_PROJECT/events/evolution-events.jsonl",),
+            generated_files=("AI_PROJECT/generated/EVOLUTION.md",),
+            output=_output("Step-by-step workflow result.", fields=("steps", "change")),
+            validators=("evolution_state", "linked_task_references", "task_completion"),
+            lock_scope="workflow",
+            owner_approval=(
+                "Explicit confirmation and non-empty acceptance notes are required; linked Tasks must be complete."
+            ),
+            dry_run=True,
+            legacy_command=("python scripts/aictl.py workflow run evolution.accept_change --change <CHANGE_ID> --notes <NOTES> --confirm",),
+            notes=(
+                "Does not use task waivers or --skip-task-check.",
+                "Approved Changes are moved through in_progress and in_review before acceptance.",
+            ),
+        ),
+        CommandDescriptor(
+            name="epic.close_if_complete",
+            domain="epic",
+            description="Close an Epic only when all child Tasks are done, deferred, or archived.",
+            kind=CommandKind.WRITE,
+            arguments=(
+                _arg("epic", "Epic ID or key.", required=True),
+                _arg("confirm", "Required explicit confirmation.", value_type="boolean", required=True),
+            ),
+            reads_state=(state_plan, state_tasks),
+            writes_state=(state_plan,),
+            event_logs=("AI_PROJECT/events/plan-events.jsonl",),
+            generated_files=("AI_PROJECT/generated/CODEX_PLAN.md",),
+            output=_output("Step-by-step workflow result.", fields=("steps", "epic")),
+            validators=("plan_state", "task_state", "child_task_completion"),
+            lock_scope="workflow",
+            owner_approval=(
+                "Explicit confirmation is required; active child Tasks block Epic closure."
+            ),
+            dry_run=True,
+            legacy_command=("python scripts/aictl.py workflow run epic.close_if_complete --epic <EPIC_ID> --confirm",),
+            notes=(
+                "Preflight rejects Epics with active child Tasks.",
+                "Delegates closure to planctl.py epic status <EPIC> --to done.",
             ),
         ),
         CommandDescriptor(

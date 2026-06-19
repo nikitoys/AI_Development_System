@@ -104,6 +104,9 @@ class AictlTests(unittest.TestCase):
         self.assertIn("task.refresh_execution_context", names)
         self.assertIn("task.submit_for_review", names)
         self.assertIn("evolution.create_for_task", names)
+        self.assertIn("task.close_reviewed", names)
+        self.assertIn("evolution.accept_change", names)
+        self.assertIn("epic.close_if_complete", names)
 
     def test_workflow_run_without_confirm_returns_preview(self):
         code, stdout, _run = self.run_main(
@@ -239,6 +242,107 @@ class AictlTests(unittest.TestCase):
         )
         self.assertFalse(any("approve" in command for command in commands))
         self.assertFalse(any("accept" in command for command in commands))
+
+    def test_close_reviewed_task_workflow_requires_notes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+
+            def fake_run(argv, **_kwargs):
+                if Path(argv[1]).name == "taskctl.py" and "resolve" in argv:
+                    return subprocess.CompletedProcess(
+                        argv,
+                        0,
+                        '{"id": "TASK-032", "ref": "WFA-01", "status": "in_review"}\n',
+                        "",
+                    )
+                return subprocess.CompletedProcess(argv, 0, "OK\n", "")
+
+            stdout = io.StringIO()
+            with patch("ai_project_ctl.core.workflows.subprocess.run", side_effect=fake_run):
+                with redirect_stdout(stdout):
+                    code = self.aictl.main(
+                        [
+                            "--root",
+                            str(root),
+                            "--json",
+                            "workflow",
+                            "run",
+                            "task.close_reviewed",
+                            "--task",
+                            "WFA-01",
+                            "--confirm",
+                        ]
+                    )
+
+        payload = json.loads(stdout.getvalue())
+
+        self.assertEqual(code, 1)
+        self.assertEqual(payload["errors"][0]["code"], "WORKFLOW_APPROVAL_NOTES_REQUIRED")
+
+    def test_accept_change_workflow_delegates_with_change_target(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            state = root / "AI_PROJECT" / "state"
+            state.mkdir(parents=True)
+            (state / "evolution.json").write_text(
+                json.dumps(
+                    {
+                        "changes": [
+                            {
+                                "id": "CHG-018",
+                                "status": "in_review",
+                                "linked_tasks": ["TASK-036"],
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (state / "tasks.json").write_text(
+                json.dumps(
+                    {
+                        "tasks": [
+                            {
+                                "id": "TASK-036",
+                                "legacy_id": "TASK-036",
+                                "status": "done",
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            def fake_run(argv, **_kwargs):
+                return subprocess.CompletedProcess(argv, 0, "OK\n", "")
+
+            stdout = io.StringIO()
+            with patch("ai_project_ctl.core.workflows.subprocess.run", side_effect=fake_run) as run:
+                with redirect_stdout(stdout):
+                    code = self.aictl.main(
+                        [
+                            "--root",
+                            str(root),
+                            "--json",
+                            "workflow",
+                            "run",
+                            "evolution.accept_change",
+                            "--change",
+                            "CHG-018",
+                            "--notes",
+                            "Accepted after review.",
+                            "--confirm",
+                        ]
+                    )
+
+        payload = json.loads(stdout.getvalue())
+        commands = [call.args[0] for call in run.call_args_list]
+
+        self.assertEqual(code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertTrue(
+            any(command[-5:] == ["change", "accept", "CHG-018", "--notes", "Accepted after review."] for command in commands)
+        )
 
     def test_task_list_delegates_with_native_json(self):
         completed = subprocess.CompletedProcess(
