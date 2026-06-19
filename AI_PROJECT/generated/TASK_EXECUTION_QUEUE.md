@@ -3,18 +3,17 @@
 
 # Task Execution Queue
 
-Revision: `449`
+Revision: `451`
 
 ## Executable Now
 
-- `WFA-11 (TASK-042)` [planned] `EPIC-006` priority `1` — UIX-05 Add Bulk Task Import from file
 - `WFA-19 (TASK-050)` [planned] `EPIC-006` priority `1` — UIX-13 Add Epic Close UI Action
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 
 ## Waiting For Dependencies
 
 - `WFA-12 (TASK-043)` [planned] `EPIC-006` priority `1` — UIX-06 Update UI workflow documentation
-  - `dependency_not_done`: depends on WFA-11 (TASK-042) with status planned
+  - `dependency_not_done`: depends on WFA-11 (TASK-042) with status in_progress
   - `dependency_not_done`: depends on WFA-19 (TASK-050) with status planned
   - `dependency_not_done`: depends on WFA-20 (TASK-051) with status planned
 - `WFA-20 (TASK-051)` [planned] `EPIC-006` priority `1` — UIX-14 Add Commit Readiness View
@@ -84,6 +83,8 @@ Revision: `449`
   - `status_not_executable`: status is done
 - `WFA-10 (TASK-041)` [done] `EPIC-006` priority `1` — UIX-04 Add Evolution management UI tab
   - `status_not_executable`: status is done
+- `WFA-11 (TASK-042)` [in_progress] `EPIC-006` priority `1` — UIX-05 Add Bulk Task Import from file
+  - `status_not_executable`: status is in_progress
 - `WFA-13 (TASK-044)` [done] `EPIC-006` priority `1` — UIX-07 Add Task Review Done Controls
   - `status_not_executable`: status is done
 - `WFA-14 (TASK-045)` [done] `EPIC-006` priority `1` — UIX-08 Add Next Action and Blocked Reason Hints

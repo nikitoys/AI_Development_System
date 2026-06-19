@@ -5,6 +5,8 @@ from __future__ import annotations
 import html
 import ipaddress
 import json
+from email.parser import BytesParser
+from email.policy import default as email_policy
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -12,6 +14,7 @@ from typing import Any, Callable, Mapping, Sequence
 from urllib.parse import parse_qs, urlparse
 
 from ai_project_ctl.core.result import CommandError
+from ai_project_ctl.core.workflows import BULK_IMPORT_MAX_BYTES
 from ai_project_ctl.web.actions import (
     WebActionError,
     WebActionExecutor,
@@ -23,6 +26,10 @@ from ai_project_ctl.web.read_model import ReadOnlyProjectModel
 
 LOCAL_HOSTS = {"localhost"}
 LOCAL_ADDRESSES = {"127.0.0.1", "::1"}
+WEB_IMPORT_FILE_FIELD = "import_file"
+WEB_IMPORT_ALLOWED_SUFFIXES = {".json", ".txt"}
+WEB_IMPORT_FILE_MAX_BYTES = BULK_IMPORT_MAX_BYTES
+WEB_ACTION_BODY_MAX_BYTES = WEB_IMPORT_FILE_MAX_BYTES + 16_384
 
 NAV_ITEMS = (
     ("/", "Dashboard"),
@@ -186,15 +193,22 @@ def make_handler(model: ReadOnlyProjectModel) -> type[BaseHTTPRequestHandler]:
                     "Invalid write request content length.",
                     details={"content_length": length_header},
                 ) from exc
-            if length > 262144:
+            if length > WEB_ACTION_BODY_MAX_BYTES:
                 raise WebActionError(
                     "WEB_ACTION_BODY_TOO_LARGE",
                     "Write request body is too large.",
-                    details={"max_bytes": 262144, "content_length": length},
+                    details={
+                        "max_bytes": WEB_ACTION_BODY_MAX_BYTES,
+                        "content_length": length,
+                    },
                 )
 
-            raw = self.rfile.read(length).decode("utf-8") if length else ""
+            raw_bytes = self.rfile.read(length) if length else b""
             content_type = self.headers.get("Content-Type", "")
+            if "multipart/form-data" in content_type:
+                return parse_multipart_action_fields(content_type, raw_bytes)
+
+            raw = raw_bytes.decode("utf-8") if raw_bytes else ""
             if "application/json" in content_type:
                 try:
                     payload = json.loads(raw or "{}")
@@ -674,6 +688,11 @@ def render_actions(data: Mapping[str, Any]) -> str:
         action_form(
             "task.import",
             [
+                file_input_field(
+                    WEB_IMPORT_FILE_FIELD,
+                    "JSON/Text File",
+                    accept=".json,.txt,application/json,text/plain",
+                ),
                 textarea_field(
                     "import_text",
                     "JSON Payload",
@@ -696,6 +715,7 @@ def render_actions(data: Mapping[str, Any]) -> str:
             ],
             confirm_required=False,
             button_label="Preview / Import",
+            multipart=True,
         ),
         "</section>",
         '<section class="panel action-panel">',
@@ -3108,8 +3128,10 @@ def action_form(
     *,
     confirm_required: bool = True,
     button_label: str | None = None,
+    multipart: bool = False,
 ) -> str:
     confirm_required_attr = " required" if confirm_required else ""
+    enctype_attr = ' enctype="multipart/form-data"' if multipart else ""
     controls = [
         '<input type="hidden" name="action" value="{}">'.format(escape(action_id)),
         *fields,
@@ -3120,7 +3142,10 @@ def action_form(
             escape(button_label or action_id)
         ),
     ]
-    return '<form method="post" action="/actions">{}</form>'.format("".join(controls))
+    return '<form method="post" action="/actions"{}>{}</form>'.format(
+        enctype_attr,
+        "".join(controls),
+    )
 
 
 def hidden_field(name: str, value: str) -> str:
@@ -3137,6 +3162,15 @@ def input_field(name: str, label: str, value: str = "", *, required: bool = True
         escape(name),
         escape(value),
         required_attr,
+    )
+
+
+def file_input_field(name: str, label: str, *, accept: str = "") -> str:
+    accept_attr = ' accept="{}"'.format(escape(accept)) if accept else ""
+    return '<label>{}<input type="file" name="{}"{}></label>'.format(
+        escape(label),
+        escape(name),
+        accept_attr,
     )
 
 
@@ -3219,6 +3253,124 @@ def checkbox_field(name: str, label: str) -> str:
         escape(name),
         escape(label),
     )
+
+
+def parse_multipart_action_fields(content_type: str, body: bytes) -> dict[str, str]:
+    """Parse a bounded multipart web action body without executing uploaded content."""
+
+    header = "Content-Type: {}\r\nMIME-Version: 1.0\r\n\r\n".format(content_type)
+    message = BytesParser(policy=email_policy).parsebytes(
+        header.encode("utf-8", "replace") + body
+    )
+    if not message.is_multipart():
+        raise WebActionError(
+            "WEB_INVALID_MULTIPART_BODY",
+            "Multipart write request body is invalid.",
+        )
+
+    fields: dict[str, str] = {}
+    uploads: list[tuple[str, str, bytes]] = []
+    for part in message.iter_parts():
+        if part.get_content_disposition() != "form-data":
+            continue
+        name = part.get_param("name", header="content-disposition")
+        if not name:
+            continue
+        payload = part.get_payload(decode=True) or b""
+        filename = part.get_filename()
+        if filename is None:
+            try:
+                fields[str(name)] = payload.decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise WebActionError(
+                    "WEB_MULTIPART_FIELD_NOT_UTF8",
+                    "Multipart form field is not valid UTF-8.",
+                    details={"field": str(name)},
+                ) from exc
+            continue
+        if filename or payload:
+            uploads.append((str(name), str(filename), payload))
+
+    apply_import_upload(fields, uploads)
+    return fields
+
+
+def apply_import_upload(
+    fields: dict[str, str],
+    uploads: Sequence[tuple[str, str, bytes]],
+) -> None:
+    """Map a validated Bulk Task Import upload onto the existing import_text field."""
+
+    if not uploads:
+        return
+    action = fields.get("action", "")
+    if action != "task.import":
+        raise WebActionError(
+            "WEB_UNSUPPORTED_FILE_UPLOAD",
+            "File uploads are supported only by Bulk Task Import.",
+            details={"action": action or "missing"},
+        )
+    unexpected = sorted(
+        name
+        for name, _filename, _payload in uploads
+        if name != WEB_IMPORT_FILE_FIELD
+    )
+    if unexpected:
+        raise WebActionError(
+            "WEB_UNSUPPORTED_FILE_UPLOAD",
+            "Unsupported file upload field.",
+            details={"fields": unexpected},
+        )
+
+    import_uploads = [
+        (filename, payload)
+        for name, filename, payload in uploads
+        if name == WEB_IMPORT_FILE_FIELD
+    ]
+    if len(import_uploads) > 1:
+        raise WebActionError(
+            "WEB_IMPORT_MULTIPLE_FILES",
+            "Bulk Task Import accepts one uploaded file.",
+        )
+    filename, payload = import_uploads[0]
+    if not filename:
+        raise WebActionError(
+            "WEB_IMPORT_FILE_NAME_REQUIRED",
+            "Uploaded import file must have a filename.",
+        )
+    suffix = Path(filename).suffix.lower()
+    if suffix not in WEB_IMPORT_ALLOWED_SUFFIXES:
+        raise WebActionError(
+            "WEB_IMPORT_FILE_TYPE_REJECTED",
+            "Bulk Task Import accepts only .json or .txt files.",
+            details={
+                "filename": filename,
+                "allowed_suffixes": sorted(WEB_IMPORT_ALLOWED_SUFFIXES),
+            },
+        )
+    if len(payload) > WEB_IMPORT_FILE_MAX_BYTES:
+        raise WebActionError(
+            "WEB_IMPORT_FILE_TOO_LARGE",
+            "Uploaded import file is too large.",
+            details={
+                "filename": filename,
+                "max_bytes": WEB_IMPORT_FILE_MAX_BYTES,
+                "actual_bytes": len(payload),
+            },
+        )
+    if fields.get("import_text", "").strip():
+        raise WebActionError(
+            "WEB_IMPORT_SOURCE_CONFLICT",
+            "Use either pasted JSON or an uploaded file for Bulk Task Import.",
+        )
+    try:
+        fields["import_text"] = payload.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise WebActionError(
+            "WEB_IMPORT_FILE_NOT_UTF8",
+            "Uploaded import file must be valid UTF-8 text.",
+            details={"filename": filename},
+        ) from exc
 
 
 def escape(value: Any) -> str:

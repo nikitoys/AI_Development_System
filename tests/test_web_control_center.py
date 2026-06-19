@@ -18,6 +18,7 @@ from ai_project_ctl.web.read_model import (
     require_read_only_command,
 )
 from ai_project_ctl.web.server import (
+    WEB_IMPORT_FILE_MAX_BYTES,
     WebServerError,
     make_handler,
     render_action_error,
@@ -1298,7 +1299,10 @@ class WebControlCenterTests(unittest.TestCase):
                     }
                 ],
             )
-            status, _, body = route("/actions", ReadOnlyProjectModel(root, actor="tester"))
+            status, _, body = route(
+                "/actions",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
 
         self.assertEqual(status.value, 200)
         self.assertIn("Create Task", body)
@@ -1382,6 +1386,156 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("--confirm", tail)
         self.assertNotIn("--preview", tail)
 
+    def test_task_import_multipart_file_upload_previews_via_text_payload(self):
+        calls = []
+        payload = '{"tasks":[{"epic":"EPIC-006","title":"Imported from file"}]}'
+
+        def fake_run(argv, **_kwargs):
+            calls.append(argv)
+            return process(
+                stdout=json.dumps(
+                    {
+                        "ok": True,
+                        "data": {
+                            "dry_run": True,
+                            "task_count": 1,
+                            "steps": [],
+                        },
+                    }
+                )
+                + "\n"
+            )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            server = ThreadingHTTPServer(
+                ("127.0.0.1", 0),
+                make_handler(ReadOnlyProjectModel(tmp, actor="tester")),
+            )
+            thread = threading.Thread(target=server.serve_forever)
+            thread.daemon = True
+            thread.start()
+            try:
+                url = "http://127.0.0.1:{}/actions".format(server.server_address[1])
+                boundary, body = multipart_body(
+                    {"action": "task.import"},
+                    {"import_file": ("tasks.json", "application/json", payload)},
+                )
+                request = urllib.request.Request(
+                    url,
+                    data=body,
+                    method="POST",
+                    headers={
+                        "Content-Type": "multipart/form-data; boundary={}".format(
+                            boundary
+                        )
+                    },
+                )
+                with patch(
+                    "ai_project_ctl.web.actions.subprocess.run",
+                    side_effect=fake_run,
+                ):
+                    response = urllib.request.urlopen(request, timeout=5)
+                    body_html = response.read().decode("utf-8")
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+
+        tail = calls[0][calls[0].index("--json") + 1 :]
+
+        self.assertEqual(response.status, 200)
+        self.assertIn("Bulk import tasks", body_html)
+        self.assertEqual(tail[:4], ["task", "import", "--text", payload])
+        self.assertIn("--preview", tail)
+        self.assertNotIn("--file", tail)
+
+    def test_task_import_upload_rejects_unsupported_file_type_before_delegating(self):
+        calls = []
+
+        with tempfile.TemporaryDirectory() as tmp:
+            server = ThreadingHTTPServer(
+                ("127.0.0.1", 0),
+                make_handler(ReadOnlyProjectModel(tmp, actor="tester")),
+            )
+            thread = threading.Thread(target=server.serve_forever)
+            thread.daemon = True
+            thread.start()
+            try:
+                url = "http://127.0.0.1:{}/actions".format(server.server_address[1])
+                boundary, body = multipart_body(
+                    {"action": "task.import"},
+                    {"import_file": ("tasks.py", "text/x-python", '{"tasks": []}')},
+                )
+                request = urllib.request.Request(
+                    url,
+                    data=body,
+                    method="POST",
+                    headers={
+                        "Content-Type": "multipart/form-data; boundary={}".format(
+                            boundary
+                        )
+                    },
+                )
+                with patch(
+                    "ai_project_ctl.web.actions.subprocess.run",
+                    side_effect=calls.append,
+                ):
+                    with self.assertRaises(urllib.error.HTTPError) as raised:
+                        urllib.request.urlopen(request, timeout=5)
+                    body_html = raised.exception.read().decode("utf-8")
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+
+        self.assertEqual(raised.exception.code, 400)
+        self.assertIn("WEB_IMPORT_FILE_TYPE_REJECTED", body_html)
+        self.assertEqual(calls, [])
+
+    def test_task_import_upload_rejects_oversized_file_before_delegating(self):
+        calls = []
+        oversized = b"[" + b" " * WEB_IMPORT_FILE_MAX_BYTES + b"]"
+
+        with tempfile.TemporaryDirectory() as tmp:
+            server = ThreadingHTTPServer(
+                ("127.0.0.1", 0),
+                make_handler(ReadOnlyProjectModel(tmp, actor="tester")),
+            )
+            thread = threading.Thread(target=server.serve_forever)
+            thread.daemon = True
+            thread.start()
+            try:
+                url = "http://127.0.0.1:{}/actions".format(server.server_address[1])
+                boundary, body = multipart_body(
+                    {"action": "task.import"},
+                    {"import_file": ("tasks.json", "application/json", oversized)},
+                )
+                request = urllib.request.Request(
+                    url,
+                    data=body,
+                    method="POST",
+                    headers={
+                        "Content-Type": "multipart/form-data; boundary={}".format(
+                            boundary
+                        )
+                    },
+                )
+                with patch(
+                    "ai_project_ctl.web.actions.subprocess.run",
+                    side_effect=calls.append,
+                ):
+                    with self.assertRaises(urllib.error.HTTPError) as raised:
+                        urllib.request.urlopen(request, timeout=5)
+                    body_html = raised.exception.read().decode("utf-8")
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+
+        self.assertEqual(raised.exception.code, 400)
+        self.assertIn("WEB_IMPORT_FILE_TOO_LARGE", body_html)
+        self.assertEqual(calls, [])
+
     def test_actions_page_renders_bulk_import_form(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -1392,6 +1546,9 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("Bulk Task Import", body)
         self.assertIn('value="task.import"', body)
         self.assertIn('name="import_text"', body)
+        self.assertIn('enctype="multipart/form-data"', body)
+        self.assertIn('type="file" name="import_file"', body)
+        self.assertIn('accept=".json,.txt,application/json,text/plain"', body)
         self.assertIn("Preview / Import", body)
 
     def test_unknown_web_action_does_not_edit_protected_file(self):
@@ -2267,6 +2424,39 @@ def write_web_state(
             json.dumps(task_reports),
             encoding="utf-8",
         )
+
+
+def multipart_body(fields, files):
+    boundary = "ai-project-test-boundary"
+    chunks = []
+    for name, value in fields.items():
+        chunks.extend(
+            [
+                "--{}\r\n".format(boundary).encode("utf-8"),
+                'Content-Disposition: form-data; name="{}"\r\n\r\n'.format(
+                    name
+                ).encode("utf-8"),
+                str(value).encode("utf-8"),
+                b"\r\n",
+            ]
+        )
+    for name, (filename, content_type, content) in files.items():
+        payload = (
+            content if isinstance(content, bytes) else str(content).encode("utf-8")
+        )
+        chunks.extend(
+            [
+                "--{}\r\n".format(boundary).encode("utf-8"),
+                (
+                    'Content-Disposition: form-data; name="{}"; filename="{}"\r\n'
+                ).format(name, filename).encode("utf-8"),
+                "Content-Type: {}\r\n\r\n".format(content_type).encode("utf-8"),
+                payload,
+                b"\r\n",
+            ]
+        )
+    chunks.append("--{}--\r\n".format(boundary).encode("utf-8"))
+    return boundary, b"".join(chunks)
 
 
 def run_ctl(root, script, *args):

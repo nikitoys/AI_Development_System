@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `449`
-Current task: `none`
+Revision: `451`
+Current task: `TASK-042`
 
 ## Epic `EPIC-001`
 
@@ -743,9 +743,9 @@ Acceptance criteria:
 - All writes route through governed commands/workflows.
 - Tests and project-control validations pass.
 
-### WFA-11 (TASK-042) — UIX-05 Add Bulk Task Import from file
+### WFA-11 (TASK-042) — UIX-05 Add Bulk Task Import from file ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_82ea27760cf4`, legacy `TASK-042`, aliases `TASK-042`, local `WFA` / `11`

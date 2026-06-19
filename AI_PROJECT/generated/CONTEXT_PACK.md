@@ -1,6 +1,6 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/state/docs.json + AI_PROJECT/state/tasks.json -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-049 UIX-12 Add Project Health Repair Actions Add UI health and repair actions for doctor, stale generated artifacts, docs render, context/Codex refresh, and protected-file checks. Turn common project-control warnings into visible UI health signals with safe repair buttons that route through owning CLIs. The owner should be able to diagnose and fix stale generated artifacts without remembering individual commands. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Show project doctor summary in the Web Control Center. Show stale context, Codex, docs, task generated, and evolution generated states where detectable. Add Run Doctor action. Add Refresh Context/Codex action for current or selected task where valid. Add Render Docs action through docctl where valid. Add Check Protected Files action. Show before/after action result through the unified result panel. Reject repair actions when no safe target task exists. Add tests for doctor pass/warn/fail display and safe repair action routing. Do not auto-repair without owner confirmation. Do not manually edit generated files. Do not suppress doctor failures. Do not bypass owning CLIs. Do not add network or external service dependencies. ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py ai_project_ctl/web/actions.py ai_project_ctl/core/workflows.py if repair workflow metadata needs compatible updates ai_project_ctl/core/registry.py if command metadata needs compatible updates scripts/aictl.py if routing needs compatible updates tests/test_web_control_center.py tests/test_workflows.py tests/test_aictl.py tests/test_registry.py UI shows project doctor health summary. UI shows stale generated artifact warnings in a readable way. Run Doctor action works through governed command routing. Safe repair actions require confirmation and use owning CLIs. Failed health checks remain visible and are not hidden as success. No direct generated-file edits are introduced. Tests and project-control validations pass. Verify that repair actions do not run silently. Verify that stale context/Codex and docs cases are shown clearly. Verify that doctor FAIL is not converted into OK by UI formatting.","schema_version":1,"task_id":"TASK-049"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-042 UIX-05 Add Bulk Task Import from file Extend Bulk Task Import to support uploading JSON files in addition to pasted JSON text. Allow the owner to import task batches from a local JSON file while preserving preview, validation, confirmation, and governed command-path creation. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add file upload support for Bulk Task Import. Support UTF-8 .json or .txt files containing JSON import payloads. Enforce conservative file size limit. Parse file content as data only. Reuse existing preview/dry-run behavior. Reuse existing validation before writes. Reuse existing confirmed command-path task creation. Show clear parse/validation errors. Keep paste-based import working. Do not execute uploaded files. Do not support Python, shell scripts, or unrestricted executable formats. Do not add YAML dependency unless already allowed by existing project dependency policy. Do not auto-start imported tasks. Do not auto-approve anything. Do not write tasks.json directly. ai_project_ctl/web/actions.py ai_project_ctl/web/server.py ai_project_ctl/web/read_model.py ai_project_ctl/core/workflows.py if import payload handling needs compatible updates scripts/aictl.py if import routing needs compatible updates tests/test_web_control_center.py tests/test_workflows.py tests/test_aictl.py Owner can import a task batch by uploading a JSON/text file. Paste-based JSON import still works. Importer shows preview before creation. Invalid file type, invalid JSON, invalid refs, or oversized file fails before creation. Confirmed import creates tasks only through governed command paths. No direct tasks.json writes are introduced. Tests and project-control validations pass. Verify that uploaded file content is parsed as data only. Verify that no executable content is run. Verify that invalid imports create no tasks.","schema_version":1,"task_id":"TASK-042"} -->
 
 # Context Pack
 
@@ -8,53 +8,51 @@ This generated Context Pack is derived output only. It is not source of truth.
 It does not expand task scope, allowed files, out-of-scope items, or acceptance criteria.
 
 Mode: `task`
-Task ID: `TASK-049`
+Task ID: `TASK-042`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `23`
-Tasks revision: `449`
+Tasks revision: `451`
 
 ## Query
 
 ```text
-TASK-049 UIX-12 Add Project Health Repair Actions Add UI health and repair actions for doctor, stale generated artifacts, docs render, context/Codex refresh, and protected-file checks. Turn common project-control warnings into visible UI health signals with safe repair buttons that route through owning CLIs. The owner should be able to diagnose and fix stale generated artifacts without remembering individual commands. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Show project doctor summary in the Web Control Center. Show stale context, Codex, docs, task generated, and evolution generated states where detectable. Add Run Doctor action. Add Refresh Context/Codex action for current or selected task where valid. Add Render Docs action through docctl where valid. Add Check Protected Files action. Show before/after action result through the unified result panel. Reject repair actions when no safe target task exists. Add tests for doctor pass/warn/fail display and safe repair action routing. Do not auto-repair without owner confirmation. Do not manually edit generated files. Do not suppress doctor failures. Do not bypass owning CLIs. Do not add network or external service dependencies. ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py ai_project_ctl/web/actions.py ai_project_ctl/core/workflows.py if repair workflow metadata needs compatible updates ai_project_ctl/core/registry.py if command metadata needs compatible updates scripts/aictl.py if routing needs compatible updates tests/test_web_control_center.py tests/test_workflows.py tests/test_aictl.py tests/test_registry.py UI shows project doctor health summary. UI shows stale generated artifact warnings in a readable way. Run Doctor action works through governed command routing. Safe repair actions require confirmation and use owning CLIs. Failed health checks remain visible and are not hidden as success. No direct generated-file edits are introduced. Tests and project-control validations pass. Verify that repair actions do not run silently. Verify that stale context/Codex and docs cases are shown clearly. Verify that doctor FAIL is not converted into OK by UI formatting.
+TASK-042 UIX-05 Add Bulk Task Import from file Extend Bulk Task Import to support uploading JSON files in addition to pasted JSON text. Allow the owner to import task batches from a local JSON file while preserving preview, validation, confirmation, and governed command-path creation. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add file upload support for Bulk Task Import. Support UTF-8 .json or .txt files containing JSON import payloads. Enforce conservative file size limit. Parse file content as data only. Reuse existing preview/dry-run behavior. Reuse existing validation before writes. Reuse existing confirmed command-path task creation. Show clear parse/validation errors. Keep paste-based import working. Do not execute uploaded files. Do not support Python, shell scripts, or unrestricted executable formats. Do not add YAML dependency unless already allowed by existing project dependency policy. Do not auto-start imported tasks. Do not auto-approve anything. Do not write tasks.json directly. ai_project_ctl/web/actions.py ai_project_ctl/web/server.py ai_project_ctl/web/read_model.py ai_project_ctl/core/workflows.py if import payload handling needs compatible updates scripts/aictl.py if import routing needs compatible updates tests/test_web_control_center.py tests/test_workflows.py tests/test_aictl.py Owner can import a task batch by uploading a JSON/text file. Paste-based JSON import still works. Importer shows preview before creation. Invalid file type, invalid JSON, invalid refs, or oversized file fails before creation. Confirmed import creates tasks only through governed command paths. No direct tasks.json writes are introduced. Tests and project-control validations pass. Verify that uploaded file content is parsed as data only. Verify that no executable content is run. Verify that invalid imports create no tasks.
 ```
 
 ## Task Boundary Snapshot
 
-Task: `TASK-049` - UIX-12 Add Project Health Repair Actions
-Status: `done`
+Task: `TASK-042` - UIX-05 Add Bulk Task Import from file
+Status: `in_progress`
 
 Scope:
-- Show project doctor summary in the Web Control Center.
-- Show stale context, Codex, docs, task generated, and evolution generated states where detectable.
-- Add Run Doctor action.
-- Add Refresh Context/Codex action for current or selected task where valid.
-- Add Render Docs action through docctl where valid.
-- Add Check Protected Files action.
-- Show before/after action result through the unified result panel.
-- Reject repair actions when no safe target task exists.
-- Add tests for doctor pass/warn/fail display and safe repair action routing.
+- Add file upload support for Bulk Task Import.
+- Support UTF-8 .json or .txt files containing JSON import payloads.
+- Enforce conservative file size limit.
+- Parse file content as data only.
+- Reuse existing preview/dry-run behavior.
+- Reuse existing validation before writes.
+- Reuse existing confirmed command-path task creation.
+- Show clear parse/validation errors.
+- Keep paste-based import working.
 
 Allowed Files:
-- ai_project_ctl/web/read_model.py
-- ai_project_ctl/web/server.py
 - ai_project_ctl/web/actions.py
-- ai_project_ctl/core/workflows.py if repair workflow metadata needs compatible updates
-- ai_project_ctl/core/registry.py if command metadata needs compatible updates
-- scripts/aictl.py if routing needs compatible updates
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/core/workflows.py if import payload handling needs compatible updates
+- scripts/aictl.py if import routing needs compatible updates
 - tests/test_web_control_center.py
 - tests/test_workflows.py
 - tests/test_aictl.py
-- tests/test_registry.py
 
 Acceptance Criteria:
-- UI shows project doctor health summary.
-- UI shows stale generated artifact warnings in a readable way.
-- Run Doctor action works through governed command routing.
-- Safe repair actions require confirmation and use owning CLIs.
-- Failed health checks remain visible and are not hidden as success.
-- No direct generated-file edits are introduced.
+- Owner can import a task batch by uploading a JSON/text file.
+- Paste-based JSON import still works.
+- Importer shows preview before creation.
+- Invalid file type, invalid JSON, invalid refs, or oversized file fails before creation.
+- Confirmed import creates tasks only through governed command paths.
+- No direct tasks.json writes are introduced.
 - Tests and project-control validations pass.
 
 ## Index Summary
@@ -70,27 +68,50 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 | Score | Source | Heading | Lines | Content hash | Chunk hash | Reasons |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 179 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 64-118 | `d6bfbf03256d` | `749381be335a` | heading token match: command, control, project; metadata token match: command, control, md, project, project-control; content token match: a, acceptance, ai_project, aictl, and, are, as, be |
-| 178 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: to; metadata token match: md, to; content token match: a, acceptance, actions, and, as, be, before, bypass |
-| 173 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | metadata token match: md; content token match: a, acceptance, actions, add, after, ai_project, and, as |
-| 149 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Scope | 21-63 | `d6bfbf03256d` | `d914c61786e4` | heading token match: command, control, project; metadata token match: command, control, md, project, project-control; content token match: a, actions, add, aictl, and, as, be, center |
-| 144 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 797-833 | `3444e8d40e40` | `24706f89c068` | heading token match: context; metadata token match: context, control, md, project, project-control; content token match: a, acceptance, add, and, before, by, clearly, codex |
-| 138 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: context, control, project; metadata token match: context, control, md, project, project-control; content token match: a, acceptance, ai_project, and, are, be, by, context |
-| 126 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 874-906 | `3444e8d40e40` | `6cf68be89257` | heading token match: and, py, to; metadata token match: and, control, md, project, project-control, py, to; content token match: a, and, be, before, by, bypass, codex, context |
-| 124 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 580-670 | `3444e8d40e40` | `4b3949b96350` | metadata token match: control, md, project, project-control; content token match: acceptance, action, ai_project, and, be, by, checks, command |
+| 139 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: create, to; metadata token match: create, md, to; content token match: a, acceptance, actions, allowed, and, as, before, can |
+| 134 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 64-118 | `d6bfbf03256d` | `749381be335a` | heading token match: command, project; metadata token match: command, md, project, project-control; content token match: a, acceptance, ai_project, aictl, allowed, and, are, as |
+| 124 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | heading token match: existing; metadata token match: existing, md; content token match: a, acceptance, actions, add, ai_project, allow, allowed, and |
+| 123 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 797-833 | `3444e8d40e40` | `24706f89c068` | metadata token match: md, project, project-control; content token match: a, acceptance, add, allowed, and, before, by, criteria |
+| 117 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 874-906 | `3444e8d40e40` | `6cf68be89257` | heading token match: and, py, to; metadata token match: and, md, project, project-control, py, to; content token match: a, and, before, by, can, clear, content, executable |
+| 111 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 580-670 | `3444e8d40e40` | `4b3949b96350` | metadata token match: md, project, project-control; content token match: acceptance, ai_project, allowed, and, by, command, content, criteria |
+| 105 | `ai-system/project-control/06-prompt-package-spec.md` | 3. Current Implementation | 123-162 | `3444e8d40e40` | `4fe051d2de08` | metadata token match: md, project, project-control; content token match: a, ai_project, allow, and, are, behavior, clear, executable |
+| 102 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Scope | 21-63 | `d6bfbf03256d` | `d914c61786e4` | heading token match: command, project; metadata token match: command, md, project, project-control; content token match: a, actions, add, aictl, and, as, command, for |
 
 ## Selected Context
 
-### 1. `ai-system/project-control/04-command-catalog.md`
+### 1. `ai-system/skills/README.md`
+
+Title: Skills Layer Roadmap
+Status: `active`  Type: `guide`
+Heading: Skills Layer Roadmap > Recommended Skills To Create
+Lines: `80-92`
+Score: `139`
+Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
+Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
+Reasons: heading token match: create, to; metadata token match: create, md, to; content token match: a, acceptance, actions, allowed, and, as, before, can
+
+```text
+## Recommended Skills To Create
+
+| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
+| --- | --- | --- | --- | --- | --- |
+| Documentation Control Skill | Guide documentation registration, status changes, generated indexes and documentation validation. | `docctl.py` | P0 | Register documents, set draft/review status, render/check generated docs, explain documentation lifecycle. | Mark documents active without Human Owner approval; manually edit `docs.json`, doc events or generated doc indexes. |
+| Protected Files Skill | Keep agents inside the protected-files boundary and detect unsafe project-control edits. | `check-protected-project-files.py`, `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Explain protected paths, run protected-files checks, route repairs through CLIs. | Edit protected state/events/generated files manually; use ad hoc scripts to mutate protected files; hide drift. |
+| Review Gate Skill | Guide review intake before a Task can be accepted or closed. | `taskctl.py`; future review control CLI if approved | P1 | Check scope, allowed files, acceptance criteria, validation output and review status; recommend APPROVED, REWORK, REJECTED or DEFERRED. | Self-approve work; mark a Task done without the required approval path; ignore Critical or Major findings. |
+
+[...truncated by contextctl...]
+```
+
+### 2. `ai-system/project-control/04-command-catalog.md`
 
 Title: Project Control Command Catalog
 Status: `active`  Type: `reference`
 Heading: Project Control Command Catalog > Self-Hosted Command Boundary
 Lines: `64-118`
-Score: `179`
+Score: `134`
 Content hash: `d6bfbf03256d4d5a7f005184d36c94434a45640595c0d654fc463065a1428adf`
 Chunk hash: `749381be335ac66aa70d957f55a95f190d998afd70c4347643a6c88c059f6587`
-Reasons: heading token match: command, control, project; metadata token match: command, control, md, project, project-control; content token match: a, acceptance, ai_project, aictl, and, are, as, be
+Reasons: heading token match: command, project; metadata token match: command, md, project, project-control; content token match: a, acceptance, ai_project, aictl, allowed, and, are, as
 
 ```text
 ## Self-Hosted Command Boundary
@@ -131,39 +152,16 @@ python scripts/docctl.py audit --last 20
 [...truncated by contextctl...]
 ```
 
-### 2. `ai-system/skills/README.md`
-
-Title: Skills Layer Roadmap
-Status: `active`  Type: `guide`
-Heading: Skills Layer Roadmap > Recommended Skills To Create
-Lines: `80-92`
-Score: `178`
-Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
-Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
-Reasons: heading token match: to; metadata token match: md, to; content token match: a, acceptance, actions, and, as, be, before, bypass
-
-```text
-## Recommended Skills To Create
-
-| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
-| --- | --- | --- | --- | --- | --- |
-| Documentation Control Skill | Guide documentation registration, status changes, generated indexes and documentation validation. | `docctl.py` | P0 | Register documents, set draft/review status, render/check generated docs, explain documentation lifecycle. | Mark documents active without Human Owner approval; manually edit `docs.json`, doc events or generated doc indexes. |
-| Protected Files Skill | Keep agents inside the protected-files boundary and detect unsafe project-control edits. | `check-protected-project-files.py`, `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Explain protected paths, run protected-files checks, route repairs through CLIs. | Edit protected state/events/generated files manually; use ad hoc scripts to mutate protected files; hide drift. |
-| Review Gate Skill | Guide review intake before a Task can be accepted or closed. | `taskctl.py`; future review control CLI if approved | P1 | Check scope, allowed files, acceptance criteria, validation output and review status; recommend APPROVED, REWORK, REJECTED or DEFERRED. | Self-approve work; mark a Task done without the required approval path; ignore Critical or Major findings. |
-
-[...truncated by contextctl...]
-```
-
 ### 3. `ai-system/skills/README.md`
 
 Title: Skills Layer Roadmap
 Status: `active`  Type: `guide`
 Heading: Skills Layer Roadmap > Existing Useful Skills
 Lines: `34-43`
-Score: `173`
+Score: `124`
 Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
 Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
-Reasons: metadata token match: md; content token match: a, acceptance, actions, add, after, ai_project, and, as
+Reasons: heading token match: existing; metadata token match: existing, md; content token match: a, acceptance, actions, add, ai_project, allow, allowed, and
 
 ```text
 ## Existing Useful Skills
@@ -177,72 +175,16 @@ Reasons: metadata token match: md; content token match: a, acceptance, actions, 
 [...truncated by contextctl...]
 ```
 
-### 4. `ai-system/project-control/04-command-catalog.md`
-
-Title: Project Control Command Catalog
-Status: `active`  Type: `reference`
-Heading: Project Control Command Catalog > Scope
-Lines: `21-63`
-Score: `149`
-Content hash: `d6bfbf03256d4d5a7f005184d36c94434a45640595c0d654fc463065a1428adf`
-Chunk hash: `d914c61786e4b852b59e3a000d5c0b85638a7e8731366116abd8c8b8e9591815`
-Reasons: heading token match: command, control, project; metadata token match: command, control, md, project, project-control; content token match: a, actions, add, aictl, and, as, be, center
-
-```text
-## Scope
-
-This document records the command boundary for Project Control Gateway.
-
-The first implemented command surface was plan control:
-
-```bash
-python scripts/planctl.py <command>
-```
-
-The current owner-facing facade is:
-
-```bash
-python scripts/aictl.py <domain> <command>
-```
-
-Current implemented control domains include:
-
-```text
-plan        Project, Idea, Goal, Strategy, Initiative, Epic
-task        Task, Current Task, generated task views
-codex       current Codex prompt/status package
-context     deterministic Context Pack generated output
-docs        documentation registry and generated doc indexes
-evolution   Evolution Change Proposals
-web         local loopback Web Control Center
-```
-
-`aictl.py` is a facade and command registry. Domain ownership still belongs to the owning scripts such as `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py`, `contextctl.py` and `codexctl.py`.
-
-Still-future or partial domains include:
-
-```text
-Execution Session
-Review
-QA Result
-Decision
-Release
-Unified projectctl.py
-```
-
-These must not be invented through free-form AI actions. Add them only through approved system evolution and bounded Tasks.
-```
-
-### 5. `ai-system/project-control/06-prompt-package-spec.md`
+### 4. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 14. Context Budget Rules > Context Pack Boundary
 Lines: `797-833`
-Score: `144`
+Score: `123`
 Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
 Chunk hash: `24706f89c068bb280d5630a712f0d9b260c02079a14823cc0a350875c71ba831`
-Reasons: heading token match: context; metadata token match: context, control, md, project, project-control; content token match: a, acceptance, add, and, before, by, clearly, codex
+Reasons: metadata token match: md, project, project-control; content token match: a, acceptance, add, allowed, and, before, by, criteria
 
 ```text
 ## Context Pack Boundary
@@ -283,51 +225,16 @@ If validation fails, `codexctl.py` must fail clearly and must not include stale 
 ---
 ```
 
-### 6. `ai-system/project-control/03-state-model.md`
-
-Title: Project Control State Model
-Status: `active`  Type: `reference`
-Heading: Project Control State Model > Context Control State
-Lines: `104-125`
-Score: `138`
-Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
-Chunk hash: `0cd80bdf0d55e5284fa6355477f50005896398136bf33b7e1a181718f309f8b4`
-Reasons: heading token match: context, control, project; metadata token match: context, control, md, project, project-control; content token match: a, acceptance, ai_project, and, are, be, by, context
-
-```text
-## Context Control State
-
-Context control uses the state/events/generated model without adding a new source-of-truth state file:
-
-```text
-AI_PROJECT/state/docs.json
-AI_PROJECT/state/tasks.json
-AI_PROJECT/events/context-events.jsonl
-AI_PROJECT/generated/CONTEXT_PACK.md
-AI_PROJECT/generated/CONTEXT_STATUS.md
-```
-
-`scripts/contextctl.py` builds a deterministic derived index in memory from registered documents in `docs.json` and optional Task context from `tasks.json`.
-
-The derived index and Context Pack are not source of truth. They must not expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task or source documents, the Task and source documents remain authoritative.
-
-By default, context control indexes registered active source documents only. It excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless the operator explicitly enables the relevant include flag.
-
-`CONTEXT_PACK.md` includes selected source paths, headings, line ranges, source content hashes, chunk hashes, deterministic keyword scores and selection reasons. `CONTEXT_STATUS.md` summarizes the current generated pack, selected paths and exclusion reasons. Both files are generated output and must be regenerated through `contextctl.py`.
-
----
-```
-
-### 7. `ai-system/project-control/06-prompt-package-spec.md`
+### 5. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 17. Relationship To taskctl.py And codexctl.py
 Lines: `874-906`
-Score: `126`
+Score: `117`
 Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
 Chunk hash: `6cf68be892579b77502246852781af90dc2942f367d5af5b0a3c4a4ee727323f`
-Reasons: heading token match: and, py, to; metadata token match: and, control, md, project, project-control, py, to; content token match: a, and, be, before, by, bypass, codex, context
+Reasons: heading token match: and, py, to; metadata token match: and, md, project, project-control, py, to; content token match: a, and, before, by, can, clear, content, executable
 
 ```text
 # 17. Relationship To taskctl.py And codexctl.py
@@ -364,16 +271,16 @@ Before building the package, task state must be valid.
 ---
 ```
 
-### 8. `ai-system/project-control/06-prompt-package-spec.md`
+### 6. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 12. Prompt Package Template
 Lines: `580-670`
-Score: `124`
+Score: `111`
 Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
 Chunk hash: `4b3949b963506d03a8ca61d2f28eb70f0cc2ca715a4c20495bab284ca4d8fcb0`
-Reasons: metadata token match: control, md, project, project-control; content token match: acceptance, action, ai_project, and, be, by, checks, command
+Reasons: metadata token match: md, project, project-control; content token match: acceptance, ai_project, allowed, and, by, command, content, criteria
 
 ```text
 # 12. Prompt Package Template
@@ -444,6 +351,115 @@ Execution Rules:
 - Do not edit AI_PROJECT/events/*.jsonl manually.
 
 [...truncated by contextctl...]
+```
+
+### 7. `ai-system/project-control/06-prompt-package-spec.md`
+
+Title: Project Control Prompt Package Specification
+Status: `active`  Type: `reference`
+Heading: 3. Current Implementation
+Lines: `123-162`
+Score: `105`
+Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
+Chunk hash: `4fe051d2de08383b0737cc69ca48f864bb8341acd7154ddc8b2d3a70fb1ad30a`
+Reasons: metadata token match: md, project, project-control; content token match: a, ai_project, allow, and, are, behavior, clear, executable
+
+```text
+# 3. Current Implementation
+
+Current CLI:
+
+```bash id="55p5jr"
+python scripts/taskctl.py prompt build
+```
+
+Supported options:
+
+```text id="xuo71y"
+--task <TASK_ID>       Build prompt for a specific Task.
+--write                Write prompt to AI_PROJECT/generated/CODEX_PROMPT.md.
+--out <PATH>           Write prompt to custom output path.
+--allow-inactive       Allow prompt build for non-executable statuses.
+--skip-plan-check      Validate tasks without checking plan references.
+```
+
+Default behavior:
+
+```text id="d56ig6"
+If --task is not provided, taskctl.py uses current_task_id.
+If no current task exists, prompt build fails.
+If task status is not executable and --allow-inactive is not provided, prompt build fails.
+```
+
+Dedicated Codex execution CLI:
+
+```bash
+python scripts/codexctl.py build --task <TASK_ID>
+python scripts/codexctl.py build --task <TASK_ID> --with-context
+python scripts/codexctl.py build --task <TASK_ID> --context-pack AI_PROJECT/generated/CONTEXT_PACK.md
+python scripts/codexctl.py status
+python scripts/codexctl.py clear
+```
+
+`--with-context` uses the default generated Context Pack path. `--context-pack` allows an explicit repository-relative or absolute Context Pack path. Both options are read-only with respect to context generation; `contextctl.py` remains responsible for building and refreshing Context Packs.
+
+---
+```
+
+### 8. `ai-system/project-control/04-command-catalog.md`
+
+Title: Project Control Command Catalog
+Status: `active`  Type: `reference`
+Heading: Project Control Command Catalog > Scope
+Lines: `21-63`
+Score: `102`
+Content hash: `d6bfbf03256d4d5a7f005184d36c94434a45640595c0d654fc463065a1428adf`
+Chunk hash: `d914c61786e4b852b59e3a000d5c0b85638a7e8731366116abd8c8b8e9591815`
+Reasons: heading token match: command, project; metadata token match: command, md, project, project-control; content token match: a, actions, add, aictl, and, as, command, for
+
+```text
+## Scope
+
+This document records the command boundary for Project Control Gateway.
+
+The first implemented command surface was plan control:
+
+```bash
+python scripts/planctl.py <command>
+```
+
+The current owner-facing facade is:
+
+```bash
+python scripts/aictl.py <domain> <command>
+```
+
+Current implemented control domains include:
+
+```text
+plan        Project, Idea, Goal, Strategy, Initiative, Epic
+task        Task, Current Task, generated task views
+codex       current Codex prompt/status package
+context     deterministic Context Pack generated output
+docs        documentation registry and generated doc indexes
+evolution   Evolution Change Proposals
+web         local loopback Web Control Center
+```
+
+`aictl.py` is a facade and command registry. Domain ownership still belongs to the owning scripts such as `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py`, `contextctl.py` and `codexctl.py`.
+
+Still-future or partial domains include:
+
+```text
+Execution Session
+Review
+QA Result
+Decision
+Release
+Unified projectctl.py
+```
+
+These must not be invented through free-form AI actions. Add them only through approved system evolution and bounded Tasks.
 ```
 
 ## Excluded Source Summary
