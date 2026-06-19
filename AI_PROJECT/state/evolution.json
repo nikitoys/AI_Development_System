@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 994,
+  "revision": 1003,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-19T14:51:27Z",
+  "updated_at": "2026-06-19T15:39:48Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -1771,7 +1771,7 @@
     {
       "id": "CHG-032",
       "title": "UIX-06 Update UI workflow documentation",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "docs",
       "rationale": "Document the new owner workflow after UI cockpit improvements so daily operation is clear and old manual command-heavy instructions are de-emphasized.",
       "problem": "Task WFA-12 requires an explicit Evolution Change Proposal before implementation: Update owner-facing documentation for the improved UI cockpit, task filters, workflow buttons, Evolution tab, and bulk file import.",
@@ -1821,19 +1821,19 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-19T14:51:12Z",
       "approval_notes": "Approve Change",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T15:39:48Z",
+      "acceptance_notes": "Update owner-facing documentation for the improved UI cockpit, task filters, workflow buttons, Evolution tab, and bulk file import.",
       "notes": [],
       "priority": 1,
       "order": 32,
       "created_at": "2026-06-19T14:50:21Z",
-      "updated_at": "2026-06-19T14:51:12Z"
+      "updated_at": "2026-06-19T15:39:48Z"
     },
     {
       "id": "CHG-033",
       "title": "UIX-13 Add Epic Close UI Action",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "tooling",
       "rationale": "Allow the owner to close an epic from the UI when all required child tasks are complete, while showing clear reasons when the epic cannot be closed.",
       "problem": "Task WFA-19 requires an explicit Evolution Change Proposal before implementation: Expose the epic.close_if_complete workflow in the Web Control Center with clear incomplete-task blocking reasons.",
@@ -1884,19 +1884,19 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-19T14:51:19Z",
       "approval_notes": "Approve Change",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T15:07:51Z",
+      "acceptance_notes": "Expose the epic.close_if_complete workflow in the Web Control Center with clear incomplete-task blocking reasons.",
       "notes": [],
       "priority": 1,
       "order": 33,
       "created_at": "2026-06-19T14:50:37Z",
-      "updated_at": "2026-06-19T14:51:19Z"
+      "updated_at": "2026-06-19T15:07:51Z"
     },
     {
       "id": "CHG-034",
       "title": "UIX-14 Add Commit Readiness View",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "tooling",
       "rationale": "After tasks and Changes are closed, the owner needs a final view that answers whether the worktree is ready to commit. This task adds a read-only commit readiness view without performing git commits automatically.",
       "problem": "Task WFA-20 requires an explicit Evolution Change Proposal before implementation: Add a read-only UI view for worktree readiness, changed files, validation status, and suggested commit message.",
@@ -1948,14 +1948,14 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-19T14:51:27Z",
       "approval_notes": "Approve Change",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T15:27:07Z",
+      "acceptance_notes": "Add a read-only UI view for worktree readiness, changed files, validation status, and suggested commit message.",
       "notes": [],
       "priority": 1,
       "order": 34,
       "created_at": "2026-06-19T14:50:50Z",
-      "updated_at": "2026-06-19T14:51:27Z"
+      "updated_at": "2026-06-19T15:27:07Z"
     }
   ]
 }

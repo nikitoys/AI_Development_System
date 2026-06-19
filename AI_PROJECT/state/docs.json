@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 23,
+  "revision": 24,
   "created_at": "2026-06-15T21:36:58Z",
-  "updated_at": "2026-06-19T08:27:39Z",
+  "updated_at": "2026-06-19T15:34:40Z",
   "docs": [
     {
       "id": "DOC-001",
@@ -151,7 +151,7 @@
       "created_at": "2026-06-15T21:36:58Z",
       "updated_at": "2026-06-15T21:49:57Z",
       "last_reviewed_content_hash": "",
-      "content_hash": "e6463b152c8e91d4683199a152006cb24336e5c08ad4bde3e5e27a5c2ded4624",
+      "content_hash": "e5e442e6c124a030e2671476911fe040fa898372da3868fc61bfea7a9007da7e",
       "declared_status": "review",
       "declared_status_raw": "Review",
       "declared_status_source": "status_section"
@@ -2610,7 +2610,7 @@
       "owner": "AI System Maintainer",
       "last_reviewed_at": "",
       "last_reviewed_by": "",
-      "content_hash": "acffc50e1479e15ca3705a731a0e676a7afbd354b09fffdc37b8994492a52308",
+      "content_hash": "c94f7ff1cddb7b6b4ea07dfa2b62667822140c3301cae5b7a100096f76315e38",
       "last_reviewed_content_hash": "",
       "declared_status": "draft",
       "declared_status_raw": "Draft",
@@ -2688,7 +2688,7 @@
       "owner": "AI System Maintainer / Technical Writer AI",
       "last_reviewed_at": "",
       "last_reviewed_by": "",
-      "content_hash": "94619d84fb320f6852db281e22bf246bfe1975a4713b0e6120641fca0f48d565",
+      "content_hash": "7622f907549b93ea554a797842b8a2e54843cc816d32e3ed135eb15cc53e2dee",
       "last_reviewed_content_hash": "",
       "declared_status": "review",
       "declared_status_raw": "Review",

@@ -14,13 +14,20 @@ This repository now intentionally uses root-level `/AI_PROJECT` as its self-host
 Owner quickstart for the centralized control plane:
 
 ```bash
-python scripts/aictl.py command list
-python scripts/aictl.py workflow list
-python scripts/aictl.py project doctor
 python scripts/aictl.py web --host 127.0.0.1 --port 8765
 ```
 
-Use `/ai-system/project-control/10-owner-quickstart.md` for the practical command guide and `/ai-system/project-control/08-usage-guide.md` for the full Project Control Gateway usage guide.
+Open `http://127.0.0.1:8765/` and use the local Web Control Center as the daily cockpit for dashboard health, Tasks, Evolution Changes, generated output, commands and governed actions. The UI delegates writes through registered `aictl.py` workflows and owning `*ctl.py` scripts; it does not make protected `AI_PROJECT` files editable.
+
+Command-line equivalents remain available for compatibility, automation and recovery:
+
+```bash
+python scripts/aictl.py command list
+python scripts/aictl.py workflow list
+python scripts/aictl.py project doctor
+```
+
+Use `/ai-system/project-control/10-owner-quickstart.md` for the practical UI-first owner workflow and `/ai-system/project-control/08-usage-guide.md` for the full Project Control Gateway usage guide.
 
 `AI_PROJECT` appears in three distinct contexts:
 
@@ -249,6 +256,23 @@ Project system updates must not modify application code.
 ### Use Day to Day
 
 Recommended operator loop:
+
+1. Start the local Web Control Center.
+
+```bash
+python scripts/aictl.py web --host 127.0.0.1 --port 8765
+```
+
+2. Use the browser cockpit for daily work.
+
+```text
+Dashboard -> check health and current execution
+Tasks -> filter, group, prepare, refresh, submit or request review
+Evolution -> create, approve, review or accept Change Proposals with owner notes
+Actions -> create Tasks, bulk import Tasks, run repair/check workflows and inspect action results
+```
+
+3. Use command-line equivalents when the UI does not expose the needed operation or when a runbook requires an exact command.
 
 ```bash
 python scripts/aictl.py task list --current

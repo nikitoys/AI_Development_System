@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `994`
+Revision: `1003`
 Changes: `34`
 
 ## Summary
 
-- `accepted`: 30
-- `approved`: 4
+- `accepted`: 33
+- `approved`: 1
 
 ## Changes
 
@@ -1932,7 +1932,7 @@ Linked tasks:
 
 ### CHG-032 — UIX-06 Update UI workflow documentation
 
-Status: `approved`  
+Status: `accepted`  
 Type: `docs`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -1952,6 +1952,9 @@ Document the new owner workflow after UI cockpit improvements so daily operation
 
 Approved by: `human_owner` at `2026-06-19T14:51:12Z`  
 Approval notes: Approve Change  
+
+Accepted by: `human_owner` at `2026-06-19T15:39:48Z`  
+Acceptance notes: Update owner-facing documentation for the improved UI cockpit, task filters, workflow buttons, Evolution tab, and bulk file import.  
 
 Affected files:
 
@@ -1995,7 +1998,7 @@ Linked tasks:
 
 ### CHG-033 — UIX-13 Add Epic Close UI Action
 
-Status: `approved`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -2015,6 +2018,9 @@ Allow the owner to close an epic from the UI when all required child tasks are c
 
 Approved by: `human_owner` at `2026-06-19T14:51:19Z`  
 Approval notes: Approve Change  
+
+Accepted by: `human_owner` at `2026-06-19T15:07:51Z`  
+Acceptance notes: Expose the epic.close_if_complete workflow in the Web Control Center with clear incomplete-task blocking reasons.  
 
 Affected files:
 
@@ -2059,7 +2065,7 @@ Linked tasks:
 
 ### CHG-034 — UIX-14 Add Commit Readiness View
 
-Status: `approved`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -2079,6 +2085,9 @@ After tasks and Changes are closed, the owner needs a final view that answers wh
 
 Approved by: `human_owner` at `2026-06-19T14:51:27Z`  
 Approval notes: Approve Change  
+
+Accepted by: `human_owner` at `2026-06-19T15:27:07Z`  
+Acceptance notes: Add a read-only UI view for worktree readiness, changed files, validation status, and suggested commit message.  
 
 Affected files:
 

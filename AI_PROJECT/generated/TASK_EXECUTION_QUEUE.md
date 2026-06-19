@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `456`
+Revision: `470`
 
 ## Executable Now
 
@@ -11,11 +11,7 @@ Revision: `456`
 
 ## Waiting For Dependencies
 
-- `WFA-12 (TASK-043)` [planned] `EPIC-006` priority `1` — UIX-06 Update UI workflow documentation
-  - `dependency_not_done`: depends on WFA-19 (TASK-050) with status in_progress
-  - `dependency_not_done`: depends on WFA-20 (TASK-051) with status planned
-- `WFA-20 (TASK-051)` [planned] `EPIC-006` priority `1` — UIX-14 Add Commit Readiness View
-  - `dependency_not_done`: depends on WFA-19 (TASK-050) with status in_progress
+_No tasks waiting only on dependencies._
 
 ## Not Executable Due To Status Or Parent State
 
@@ -83,6 +79,8 @@ Revision: `456`
   - `status_not_executable`: status is done
 - `WFA-11 (TASK-042)` [done] `EPIC-006` priority `1` — UIX-05 Add Bulk Task Import from file
   - `status_not_executable`: status is done
+- `WFA-12 (TASK-043)` [done] `EPIC-006` priority `1` — UIX-06 Update UI workflow documentation
+  - `status_not_executable`: status is done
 - `WFA-13 (TASK-044)` [done] `EPIC-006` priority `1` — UIX-07 Add Task Review Done Controls
   - `status_not_executable`: status is done
 - `WFA-14 (TASK-045)` [done] `EPIC-006` priority `1` — UIX-08 Add Next Action and Blocked Reason Hints
@@ -95,8 +93,10 @@ Revision: `456`
   - `status_not_executable`: status is done
 - `WFA-18 (TASK-049)` [done] `EPIC-006` priority `1` — UIX-12 Add Project Health Repair Actions
   - `status_not_executable`: status is done
-- `WFA-19 (TASK-050)` [in_progress] `EPIC-006` priority `1` — UIX-13 Add Epic Close UI Action
-  - `status_not_executable`: status is in_progress
+- `WFA-19 (TASK-050)` [done] `EPIC-006` priority `1` — UIX-13 Add Epic Close UI Action
+  - `status_not_executable`: status is done
+- `WFA-20 (TASK-051)` [done] `EPIC-006` priority `1` — UIX-14 Add Commit Readiness View
+  - `status_not_executable`: status is done
 - `TASK-008` [done] `EPIC-003` priority `1` — P0 Strengthen docctl metadata and documentation gaps
   - `status_not_executable`: status is done
 - `TASK-009` [done] `EPIC-003` priority `1` — P1 Implement contextctl deterministic retrieval MVP

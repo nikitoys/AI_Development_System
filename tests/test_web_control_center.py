@@ -1012,6 +1012,121 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('value="project.protected_check"', body)
         self.assertIn("FAIL", body)
 
+    def test_commit_readiness_view_shows_read_only_status_checks_and_suggestion(self):
+        calls = []
+
+        def fake_run(argv, **_kwargs):
+            calls.append(argv)
+            if argv[0] == "git":
+                return process(
+                    stdout=(
+                        " M ai_project_ctl/web/server.py\n"
+                        "?? tests/test_web_control_center.py\n"
+                    )
+                )
+            tail = argv[argv.index("--json") + 1 :] if "--json" in argv else []
+            if Path(argv[1]).name == "aictl.py" and tail == ["project", "doctor"]:
+                return completed(
+                    {
+                        "data": {
+                            "overall_status": "WARN",
+                            "summary": {"PASS": 2, "WARN": 1, "FAIL": 0},
+                            "findings": [
+                                {
+                                    "status": "PASS",
+                                    "check": "task validation",
+                                    "message": "Task state is valid.",
+                                },
+                                {
+                                    "status": "WARN",
+                                    "check": "task generated output",
+                                    "message": "Generated task files are stale.",
+                                },
+                                {
+                                    "status": "PASS",
+                                    "check": "protected project files",
+                                    "message": "Protected-file check passed.",
+                                },
+                            ],
+                        }
+                    }
+                )
+            raise AssertionError("unexpected command: {}".format(argv))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-051",
+                        "ref": "WFA-20",
+                        "legacy_id": "TASK-051",
+                        "status": "done",
+                        "title": "UIX-14 Add Commit Readiness View",
+                        "epic_id": "EPIC-006",
+                        "updated_at": "2026-06-19T15:50:00Z",
+                    }
+                ],
+                epics=[{"id": "EPIC-006", "key": "WFA", "status": "active"}],
+                changes=[
+                    {
+                        "id": "CHG-034",
+                        "status": "accepted",
+                        "title": "UIX-14 Add Commit Readiness View",
+                        "linked_tasks": ["TASK-051", "WFA-20"],
+                        "accepted_at": "2026-06-19T15:55:00Z",
+                    }
+                ],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+            with patch("ai_project_ctl.web.read_model.subprocess.run", side_effect=fake_run):
+                status, _, body = route("/commit?refresh=1", model)
+
+        git_calls = [call for call in calls if call and call[0] == "git"]
+
+        self.assertEqual(status.value, 200)
+        self.assertEqual(git_calls, [["git", "status", "--short", "--untracked-files=all"]])
+        self.assertIn("Commit Readiness", body)
+        self.assertIn("ai_project_ctl/web/server.py", body)
+        self.assertIn("tests/test_web_control_center.py", body)
+        self.assertIn("Read command", body)
+        self.assertIn("Project validation", body)
+        self.assertIn("Protected files", body)
+        self.assertIn("Generated artifacts", body)
+        self.assertIn("Generated task files are stale.", body)
+        self.assertIn("WFA-20", body)
+        self.assertIn("CHG-034", body)
+        self.assertIn("Suggested Commit Message (not executed)", body)
+        self.assertIn("Add Commit Readiness View", body)
+        self.assertNotIn("git commit", " ".join(" ".join(call) for call in calls))
+        self.assertNotIn("git push", " ".join(" ".join(call) for call in calls))
+        self.assertNotIn("git add", " ".join(" ".join(call) for call in calls))
+        self.assertNotIn("git reset", " ".join(" ".join(call) for call in calls))
+
+    def test_commit_readiness_handles_git_unavailable_without_refreshing_doctor(self):
+        calls = []
+
+        def fake_run(argv, **_kwargs):
+            calls.append(argv)
+            if argv[0] == "git":
+                return process(stderr="fatal: not a git repository\n", returncode=128)
+            raise AssertionError("unexpected command: {}".format(argv))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            model = ReadOnlyProjectModel(root, actor="tester")
+            with patch("ai_project_ctl.web.read_model.subprocess.run", side_effect=fake_run):
+                data = model.commit_readiness()
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0], ["git", "status", "--short", "--untracked-files=all"])
+        self.assertEqual(data["git"]["status"], "unavailable")
+        self.assertEqual(data["status"], "WARN")
+        self.assertIn("not a git repository", data["git"]["message"])
+        self.assertFalse(data["doctor"]["cache"]["cached"])
+
     def test_tasks_page_health_actions_use_single_selected_task(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

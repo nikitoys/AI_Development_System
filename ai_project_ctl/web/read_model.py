@@ -48,6 +48,9 @@ GENERATED_VIEW_FILES = (
     "DOCS_GAPS.md",
 )
 
+COMMIT_COMPLETED_TASK_STATUSES = {"done"}
+COMMIT_ACCEPTED_CHANGE_STATUSES = {"accepted"}
+
 AUDIT_COMMANDS = (
     ("plan", "planctl.py", ("audit",)),
     ("task", "taskctl.py", ("audit",)),
@@ -557,6 +560,61 @@ class ReadOnlyProjectModel:
     def command_catalog(self) -> list[dict[str, Any]]:
         return command_list(include_planned=True)
 
+    def commit_readiness(self, *, refresh_doctor: bool = False) -> dict[str, Any]:
+        """Return a read-only readiness snapshot for a human-run git commit."""
+
+        tasks = self.tasks()
+        changes = self.changes()
+        doctor = self.doctor(refresh=refresh_doctor)
+        git = self.git_status()
+        completed_tasks = _recent_completed_tasks(tasks)
+        accepted_changes = _recent_accepted_changes(changes)
+        validation = _commit_validation_sections(doctor)
+        status, message = _commit_readiness_status(git, doctor, validation)
+        return {
+            "root": str(self.root),
+            "status": status,
+            "message": message,
+            "git": git,
+            "doctor": doctor,
+            "validation": validation,
+            "completed_tasks": completed_tasks,
+            "accepted_changes": accepted_changes,
+            "suggested_commit_message": _suggest_commit_message(
+                completed_tasks,
+                accepted_changes,
+            ),
+        }
+
+    def git_status(self) -> dict[str, Any]:
+        """Read git porcelain status without running any write-capable git command."""
+
+        command = ["git", "status", "--short", "--untracked-files=all"]
+        result = self._run_at_root(command, cwd=self.root)
+        if not result.ok:
+            return {
+                "status": "unavailable",
+                "message": result.stderr.strip()
+                or result.stdout.strip()
+                or "Git status is unavailable.",
+                "changed_files": [],
+                "command": " ".join(command),
+            }
+        changed_files = _parse_git_short_status(result.stdout)
+        if changed_files:
+            return {
+                "status": "changed",
+                "message": "{} changed file(s).".format(len(changed_files)),
+                "changed_files": changed_files,
+                "command": " ".join(command),
+            }
+        return {
+            "status": "clean",
+            "message": "No changed files reported by git status.",
+            "changed_files": [],
+            "command": " ".join(command),
+        }
+
     def _facade_json(self, command_name: str, args: Sequence[str]) -> Any:
         require_read_only_command(command_name)
         result = self._run(
@@ -598,9 +656,12 @@ class ReadOnlyProjectModel:
         )
 
     def _run(self, command: Sequence[str]) -> ProcessResult:
+        return self._run_at_root(command, cwd=PACKAGE_ROOT)
+
+    def _run_at_root(self, command: Sequence[str], *, cwd: Path) -> ProcessResult:
         completed = subprocess.run(
             list(command),
-            cwd=str(PACKAGE_ROOT),
+            cwd=str(cwd),
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -1668,3 +1729,215 @@ def _mapping(value: Any) -> Mapping[str, Any]:
     if isinstance(value, Mapping):
         return value
     return {}
+
+
+def _parse_git_short_status(stdout: str) -> list[dict[str, str]]:
+    files = []
+    for line in stdout.splitlines():
+        if not line.strip():
+            continue
+        status = line[:2].strip() or line[:2]
+        path = line[3:].strip() if len(line) > 3 else ""
+        if not path:
+            continue
+        files.append({"status": status, "path": path})
+    return files
+
+
+def _recent_completed_tasks(tasks: Sequence[Mapping[str, Any]]) -> list[dict[str, str]]:
+    completed = [
+        task
+        for task in tasks
+        if str(task.get("status") or "") in COMMIT_COMPLETED_TASK_STATUSES
+    ]
+    return [
+        {
+            "id": str(task.get("id") or ""),
+            "ref": _task_display_ref(task),
+            "title": str(task.get("title") or ""),
+            "updated_at": str(task.get("updated_at") or ""),
+        }
+        for task in sorted(
+            completed,
+            key=lambda task: (
+                str(task.get("updated_at") or ""),
+                int(task.get("order") or 0),
+                str(task.get("id") or ""),
+            ),
+            reverse=True,
+        )[:8]
+    ]
+
+
+def _recent_accepted_changes(
+    changes: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    accepted = [
+        change
+        for change in changes
+        if str(change.get("status") or "") in COMMIT_ACCEPTED_CHANGE_STATUSES
+    ]
+    return [
+        {
+            "id": str(change.get("id") or ""),
+            "title": str(change.get("title") or ""),
+            "accepted_at": str(change.get("accepted_at") or ""),
+            "updated_at": str(change.get("updated_at") or ""),
+            "linked_tasks": _string_list(change.get("linked_tasks")),
+        }
+        for change in sorted(
+            accepted,
+            key=lambda change: (
+                str(change.get("accepted_at") or change.get("updated_at") or ""),
+                int(change.get("order") or 0),
+                str(change.get("id") or ""),
+            ),
+            reverse=True,
+        )[:8]
+    ]
+
+
+def _commit_validation_sections(doctor: Mapping[str, Any]) -> dict[str, Any]:
+    findings = [
+        finding
+        for finding in doctor.get("findings") or []
+        if isinstance(finding, Mapping)
+    ]
+    return {
+        "project": _commit_finding_group(
+            findings,
+            (
+                "plan validation",
+                "task validation",
+                "task dependency graph",
+                "docs validation",
+                "evolution validation",
+                "context validation",
+            ),
+            empty_label="Project validation",
+        ),
+        "generated": _commit_finding_group(
+            findings,
+            (
+                "task generated output",
+                "docs generated output",
+                "evolution generated output",
+                "context generated output",
+            ),
+            empty_label="Generated artifacts",
+        ),
+        "protected_files": _commit_finding_group(
+            findings,
+            ("protected project files",),
+            empty_label="Protected files",
+        ),
+    }
+
+
+def _commit_finding_group(
+    findings: Sequence[Mapping[str, Any]],
+    checks: Sequence[str],
+    *,
+    empty_label: str,
+) -> dict[str, Any]:
+    wanted = {check.lower() for check in checks}
+    selected = [
+        _commit_finding_summary(finding)
+        for finding in findings
+        if str(finding.get("check") or "").lower() in wanted
+    ]
+    if selected:
+        status = _worst_commit_status([item["status"] for item in selected])
+        message = _commit_group_message(status)
+    else:
+        status = "UNKNOWN"
+        message = "Run readiness checks to populate {}.".format(empty_label.lower())
+    return {
+        "label": empty_label,
+        "status": status,
+        "message": message,
+        "findings": selected,
+    }
+
+
+def _commit_finding_summary(finding: Mapping[str, Any]) -> dict[str, str]:
+    return {
+        "check": str(finding.get("check") or ""),
+        "status": str(finding.get("status") or "UNKNOWN"),
+        "message": str(finding.get("message") or ""),
+    }
+
+
+def _worst_commit_status(statuses: Sequence[str]) -> str:
+    rank = {"FAIL": 3, "WARN": 2, "UNKNOWN": 1, "PASS": 0}
+    worst = "PASS"
+    for status in statuses:
+        normalized = str(status or "UNKNOWN").upper()
+        if rank.get(normalized, 1) > rank.get(worst, 0):
+            worst = normalized
+    return worst
+
+
+def _commit_group_message(status: str) -> str:
+    if status == "PASS":
+        return "Checks are passing."
+    if status == "WARN":
+        return "Warnings are visible."
+    if status == "FAIL":
+        return "Blocking failures are visible."
+    return "Run readiness checks to populate this status."
+
+
+def _commit_readiness_status(
+    git: Mapping[str, Any],
+    doctor: Mapping[str, Any],
+    validation: Mapping[str, Any],
+) -> tuple[str, str]:
+    if str(git.get("status") or "") == "unavailable":
+        return "WARN", "Git status is unavailable; no commit command was run."
+
+    statuses = [
+        str(group.get("status") or "UNKNOWN")
+        for group in validation.values()
+        if isinstance(group, Mapping)
+    ]
+    doctor_cached = bool(_mapping(doctor.get("cache")).get("cached"))
+    if not doctor_cached:
+        return "UNKNOWN", "Run readiness checks before committing."
+    worst = _worst_commit_status(statuses)
+    if worst == "FAIL":
+        return "FAIL", "Resolve blocking project-control failures before committing."
+    if worst == "WARN":
+        return "WARN", "Review warnings before committing."
+    if str(git.get("status") or "") == "clean":
+        return "PASS", "Project checks pass; git reports no changed files."
+    return "PASS", "Project checks pass and changed files are visible."
+
+
+def _suggest_commit_message(
+    completed_tasks: Sequence[Mapping[str, Any]],
+    accepted_changes: Sequence[Mapping[str, Any]],
+) -> str:
+    subject = ""
+    if accepted_changes:
+        change = accepted_changes[0]
+        subject = str(change.get("title") or change.get("id") or "").strip()
+    elif completed_tasks:
+        task = completed_tasks[0]
+        subject = str(task.get("title") or task.get("ref") or "").strip()
+    if not subject:
+        return "Update project control worktree"
+    normalized = _trim_commit_subject(subject)
+    if normalized.lower().startswith(("add ", "fix ", "update ", "implement ")):
+        return normalized
+    return "Update {}".format(normalized[:1].lower() + normalized[1:])
+
+
+def _trim_commit_subject(value: str) -> str:
+    subject = " ".join(str(value or "").split())
+    for prefix in ("UIX-", "WFA-", "CTL-", "TIG-", "DOC-"):
+        if subject.startswith(prefix):
+            parts = subject.split(" ", 1)
+            if len(parts) == 2:
+                return parts[1]
+    return subject

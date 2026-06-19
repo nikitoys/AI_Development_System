@@ -37,6 +37,7 @@ NAV_ITEMS = (
     ("/evolution", "Evolution"),
     ("/epics", "Epics"),
     ("/reviews", "Reviews"),
+    ("/commit", "Commit"),
     ("/events", "Events"),
     ("/generated", "Generated"),
     ("/doctor", "Doctor"),
@@ -288,6 +289,9 @@ def route(
         "/evolution": lambda: render_evolution(model.dashboard(), query=query),
         "/epics": lambda: render_epics(model.dashboard()),
         "/reviews": lambda: render_reviews(model.dashboard(), query=query),
+        "/commit": lambda: render_commit_readiness(
+            model.commit_readiness(refresh_doctor=refresh_doctor)
+        ),
         "/events": lambda: render_events(model.dashboard(include_events=True)),
         "/generated": lambda: render_generated(model.dashboard()),
         "/doctor": lambda: render_doctor(
@@ -499,6 +503,157 @@ def render_reviews(
         "</section>",
     ]
     return render_page("Reviews", "".join(body), active="/reviews")
+
+
+def render_commit_readiness(data: Mapping[str, Any]) -> str:
+    git = _mapping(data.get("git"))
+    doctor = _mapping(data.get("doctor"))
+    changed_files = [
+        item
+        for item in git.get("changed_files") or []
+        if isinstance(item, Mapping)
+    ]
+    body = [
+        '<section class="summary-grid">',
+        metric("Readiness", str(data.get("status") or "UNKNOWN")),
+        metric("Changed Files", str(len(changed_files))),
+        metric("Validation", str(doctor.get("overall_status") or "UNKNOWN")),
+        metric("Git", str(git.get("status") or "unknown")),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Commit Readiness</h2>",
+        '<div class="status-row">',
+        status_badge(str(data.get("status") or "UNKNOWN")),
+        "<span>{}</span>".format(escape(data.get("message") or "")),
+        doctor_cache_detail(doctor),
+        '<a class="button-link" href="/commit?refresh=1">Refresh readiness checks</a>',
+        "</div>",
+        "</section>",
+        '<section class="panel">',
+        "<h2>Changed Files</h2>",
+        commit_changed_files_table(git),
+        '<p class="muted">Read command: <code>{}</code></p>'.format(
+            escape(git.get("command") or "git status --short --untracked-files=all")
+        ),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Readiness Checks</h2>",
+        commit_validation_table(_mapping(data.get("validation"))),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Completed Tasks</h2>",
+        commit_task_table(data.get("completed_tasks")),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Accepted Changes</h2>",
+        commit_change_table(data.get("accepted_changes")),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Suggested Commit Message (not executed)</h2>",
+        '<textarea readonly rows="2">{}</textarea>'.format(
+            escape(data.get("suggested_commit_message") or "")
+        ),
+        '<p class="muted">Suggestion only. This view does not run git commit, git push, staging, reset, restore, or checkout commands.</p>',
+        "</section>",
+    ]
+    return render_page("Commit Readiness", "".join(body), active="/commit")
+
+
+def commit_changed_files_table(git: Mapping[str, Any]) -> str:
+    rows = []
+    for item in git.get("changed_files") or []:
+        if not isinstance(item, Mapping):
+            continue
+        rows.append(
+            "<tr><td>{}</td><td><code>{}</code></td></tr>".format(
+                escape(item.get("status") or ""),
+                escape(item.get("path") or ""),
+            )
+        )
+    return table(
+        ("Status", "Path"),
+        rows,
+        str(git.get("message") or "No changed files available."),
+    )
+
+
+def commit_validation_table(validation: Mapping[str, Any]) -> str:
+    groups = [
+        _mapping(validation.get("project")),
+        _mapping(validation.get("protected_files")),
+        _mapping(validation.get("generated")),
+    ]
+    rows = []
+    for group in groups:
+        if not group:
+            continue
+        rows.append(
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                escape(group.get("label") or ""),
+                status_badge(str(group.get("status") or "UNKNOWN")),
+                escape(group.get("message") or ""),
+                commit_finding_list(group.get("findings")),
+            )
+        )
+    return table(
+        ("Area", "Status", "Signal", "Findings"),
+        rows,
+        "No readiness checks available.",
+    )
+
+
+def commit_finding_list(value: Any) -> str:
+    findings = [item for item in value or [] if isinstance(item, Mapping)]
+    if not findings:
+        return '<p class="empty">No findings yet.</p>'
+    items = []
+    for finding in findings:
+        label = "{}: {}".format(
+            finding.get("check") or "check",
+            finding.get("message") or "",
+        ).strip()
+        items.append(
+            "<li>{} {}</li>".format(
+                status_badge(str(finding.get("status") or "UNKNOWN")),
+                escape(label),
+            )
+        )
+    return '<ul class="compact-list">{}</ul>'.format("".join(items))
+
+
+def commit_task_table(value: Any) -> str:
+    tasks = [item for item in value or [] if isinstance(item, Mapping)]
+    rows = [
+        "<tr><td><code>{}</code></td><td>{}</td><td>{}</td></tr>".format(
+            escape(task.get("ref") or task.get("id") or ""),
+            escape(task.get("title") or ""),
+            escape(task.get("updated_at") or ""),
+        )
+        for task in tasks
+    ]
+    return table(
+        ("Task", "Title", "Updated"),
+        rows,
+        "No completed task records available.",
+    )
+
+
+def commit_change_table(value: Any) -> str:
+    changes = [item for item in value or [] if isinstance(item, Mapping)]
+    rows = [
+        "<tr><td><code>{}</code></td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+            escape(change.get("id") or ""),
+            escape(change.get("title") or ""),
+            escape(change.get("accepted_at") or change.get("updated_at") or ""),
+            escape(", ".join(_string_items(change.get("linked_tasks")))),
+        )
+        for change in changes
+    ]
+    return table(
+        ("Change", "Title", "Accepted", "Linked Tasks"),
+        rows,
+        "No accepted Change records available.",
+    )
 
 
 def render_events(data: Mapping[str, Any]) -> str:

@@ -22,16 +22,64 @@ Never edit protected AI_PROJECT files directly.
 
 ## Five-Minute Start
 
-1. Inspect the current task.
+1. Open the local Web Control Center.
+
+```bash
+python scripts/aictl.py web --host 127.0.0.1 --port 8765
+```
+
+Open `http://127.0.0.1:8765/`. The Web Control Center is local and loopback-only. Use it as the daily cockpit; use command lines when a runbook requires an exact command or when the UI does not expose the needed operation.
+
+2. Check the dashboard and health.
+
+```text
+Dashboard  current execution, queue, project doctor summary
+Doctor     detailed PASS, WARN and FAIL findings
+Generated  read-only generated outputs
+Commands   registered command metadata
+```
+
+`project doctor` aggregates registered command checks, plan/task/evolution validation, task graph validation, generated-output freshness, context and Codex prompt status, and protected-file checks. It reports explicit `PASS`, `WARN` and `FAIL` findings and does not mutate project-control state.
+
+3. Work from the Tasks cockpit.
+
+Use `Tasks` to filter by Initiative, Epic, Status and search text. Choose Group by `Epic`, `Status` or `None`; `done` Tasks are hidden by default unless `Show done` is selected or `status=done` is selected. Task groups are collapsible, and done status groups start collapsed.
+
+The `Focus Tasks` section keeps the current Task plus ready, in-progress, review and changes-requested Tasks visible. Task references such as `CTL-12` are human-readable aliases. The same Task may also resolve by legacy ID such as `TASK-030`, immutable UID, or alias when `taskctl.py` supports that resolver. Use the readable ref in chat and prompts, but remember that state in `AI_PROJECT/state/tasks.json` remains the source of truth.
+
+4. Use row workflow buttons for normal Task movement.
+
+Task rows show only workflows that apply to the current status and pipeline hints:
+
+```text
+Prepare for Codex  planned, ready or changes_requested Tasks
+Refresh Context    current or in_progress Tasks when available
+Submit for Review  in_progress Tasks
+Approve & Done     in_review Tasks with Human Owner approval notes
+Request Changes    in_review Tasks with rework notes
+No row workflows   done or otherwise unavailable actions
+```
+
+Each workflow posts to `/actions`, delegates through registered `aictl.py` workflows and owning `*ctl.py` scripts, and then opens an Action Result panel. Read that panel before continuing. It shows PASS/FAIL, registered command, workflow, target, return code, step results, changed and generated files, warnings, errors, next actions, any Codex instruction to copy into a session, and technical details.
+
+5. Use Evolution and Actions when needed.
+
+`Evolution` lets you filter Change Proposals by Status, Type and search text, create a Change for a Task, and run owner-facing change workflows such as approve, move to review and accept when the proposal state allows them. Human Owner approval or acceptance notes are still required where the lifecycle requires them; Codex must not provide those notes on its own.
+
+`Actions` contains direct forms for Task creation, Bulk Task Import, health and repair checks, Task workflows, Task transitions, current Task changes, generated-output refreshes, and Codex/context builds. Bulk Task Import supports pasted JSON and `.json` or `.txt` file upload; leave Confirm unchecked for preview and check Confirm only when the preview is ready to create Tasks.
+
+## Command-Line Equivalents
+
+The UI is the preferred daily path, but the same control plane remains available from the shell.
+
+Inspect current work:
 
 ```bash
 python scripts/aictl.py task list --current
 python scripts/aictl.py task show CTL-12
 ```
 
-Task references such as `CTL-12` are human-readable aliases. The same Task may also resolve by legacy ID such as `TASK-030`, immutable UID, or alias when `taskctl.py` supports that resolver. Use the readable ref in chat and prompts, but remember that state in `AI_PROJECT/state/tasks.json` remains the source of truth.
-
-2. Discover the command surface.
+Discover commands and workflows:
 
 ```bash
 python scripts/aictl.py command list
@@ -48,23 +96,13 @@ Use `--json` when another tool needs machine-readable output:
 python scripts/aictl.py --json command list
 ```
 
-3. Run the owner health check.
+Run the owner health check:
 
 ```bash
 python scripts/aictl.py project doctor
 ```
 
-`project doctor` aggregates registered command checks, plan/task/evolution validation, task graph validation, generated-output freshness, context and Codex prompt status, and protected-file checks. It reports explicit `PASS`, `WARN` and `FAIL` findings and does not mutate project-control state.
-
-4. Open the local Web Control Center.
-
-```bash
-python scripts/aictl.py web --host 127.0.0.1 --port 8765
-```
-
-Open `http://127.0.0.1:8765/` in a browser. The Web Control Center is local and loopback-only. Its read views show dashboard, tasks, epics, review state, recent events, generated output, doctor status, registered commands and actions.
-
-5. Build task context and a Codex prompt package.
+Build task context and a Codex prompt package:
 
 ```bash
 python scripts/aictl.py context build --task CTL-12 --write
@@ -76,6 +114,8 @@ The Context Pack and Codex prompt package are generated output. They are read-on
 ## Task Lifecycle Commands
 
 Only a Task is executable. Initiative and Epic organize work; they are not execution scope.
+
+For daily operation, prefer the Tasks cockpit and its row workflow buttons. Use these commands as compatibility tools, automation targets or recovery paths.
 
 Common `aictl.py` task commands:
 
@@ -139,7 +179,11 @@ python scripts/aictl.py workflow run evolution.create_for_task --task CTL-12 --c
 
 ## Bulk Task Import
 
-Use bulk import when several bounded Tasks already have clear scope. Preview first:
+Use bulk import when several bounded Tasks already have clear scope. In the Web Control Center, open `Actions`, use `Bulk Task Import`, and either paste JSON into `JSON Payload` or upload a `.json` or `.txt` file. Use one input method at a time.
+
+Leave Confirm unchecked to preview the import. Check Confirm only after the preview is ready to create Tasks. The Action Result panel reports the registered command, step status, warnings, errors and created or generated files.
+
+The CLI compatibility path is still available:
 
 ```bash
 python scripts/aictl.py task import --file tasks.json --preview
@@ -203,6 +247,16 @@ Task references do not create execution order by themselves. Dependency records 
 ## Evolution Approval Gates
 
 Use `evolutionctl.py` for AI Development System changes, including rules, lifecycle documents, workflow, prompt behavior, command catalog, protected-file policy, ctl scripts, `AGENTS.md`, `ai-system/**`, templates, skills and plugins.
+
+In the Web Control Center, use the `Evolution` tab for day-to-day Change Proposal management. It shows counts, Status and Type filters, search, linked Tasks, affected files, risks, approval state, acceptance state, next-action hints and available owner-facing row actions. Available actions depend on lifecycle status:
+
+```text
+ready                 Approve Change
+approved/in_progress  Move to Review
+approved/in_review    Accept Change
+```
+
+Approval and acceptance actions require explicit Human Owner notes. They route through registered workflows and `evolutionctl.py`; the UI must not bypass the lifecycle, and Codex must not provide owner approval or acceptance on its own.
 
 Create and prepare a Change Proposal:
 
@@ -287,13 +341,19 @@ task.transition
 current.set
 current.clear
 project.render
+project.doctor
+project.protected_check
+docs.render
 context.build
 codex.prompt.build
 task.prepare_for_codex
 task.refresh_execution_context
 task.submit_for_review
 task.close_reviewed
+task.request_changes
 evolution.create_for_task
+evolution.approve_change
+evolution.move_to_review
 evolution.accept_change
 epic.close_if_complete
 ```
@@ -318,7 +378,7 @@ changes_requested
 deferred
 ```
 
-The Web surface must not directly edit `AI_PROJECT/state/**`, `AI_PROJECT/events/**` or `AI_PROJECT/generated/**`. It must not approve tasks, accept tasks, accept evolution changes, or mark documents active without Human Owner approval.
+The Web surface must not directly edit `AI_PROJECT/state/**`, `AI_PROJECT/events/**` or `AI_PROJECT/generated/**`. It must not silently approve tasks, accept tasks, accept evolution changes, or mark documents active. Owner-facing approval and acceptance actions require explicit notes, route through registered commands and remain Human Owner decisions.
 
 ## Protected Files And Generated Output
 
