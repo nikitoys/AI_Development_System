@@ -16,8 +16,12 @@ from ai_project_ctl.core.store import read_json_file
 from ai_project_ctl.core.workflows import Runner, run_workflow
 
 from .codex_adapter import CodexAdapterResult, run_codex_adapter
+from .machine_review import FAIL as MACHINE_REVIEW_FAIL
+from .machine_review import evaluate_machine_review
 from .policy import CodexExecutionMode, PipelinePolicy
 from .queue import QueuePlannerRequest, QueuePreview, QueuePreviewItem, preview_queue
+from .report_gate import FAIL as REPORT_GATE_FAIL
+from .report_gate import evaluate_report_gate
 from .session import (
     complete_session,
     record_step_result,
@@ -434,17 +438,113 @@ def run_next(
                 side_effects,
             )
 
+        report_gate = evaluate_report_gate(
+            root=root_path,
+            task=_task_by_id(tasks_state, task_id),
+            policy=policy,
+        )
+        report_gate_details = {
+            **adapter_details,
+            "report_gate": report_gate.to_dict(),
+            "report_id": report_gate.report_id or adapter_result.report_id,
+        }
+        if report_gate.status == REPORT_GATE_FAIL:
+            return _record_stop(
+                selected_session_id,
+                stop_code="CODEX_REPORT_GATE_FAILURE",
+                stop_reason="Codex Report Gate failed: {}".format(report_gate.reason),
+                result_status="blocked",
+                gate_name="codex_report_gate",
+                gate_status=report_gate.status,
+                gate_details=report_gate_details,
+                selected_task=selected,
+                policy_name=policy.name,
+                queue_preview=queue_preview,
+                side_effects=side_effects,
+                root=root_path,
+                actor=actor,
+            )
+
+        report_recorded = record_step_result(
+            selected_session_id,
+            RUN_NEXT_STEP,
+            "passed",
+            root=root_path,
+            actor=actor,
+            task_id=task_id,
+            gate_name="codex_report_gate",
+            gate_status=report_gate.status,
+            gate_details=report_gate_details,
+            report_ids=(report_gate.report_id,) if report_gate.report_id else (),
+        )
+        side_effects.append(report_recorded)
+        if not report_recorded.ok:
+            return _aggregate_failure(
+                "pipeline.run_next",
+                "Failed to record Codex Report Gate result.",
+                selected_session_id,
+                side_effects,
+            )
+
+        machine_review = evaluate_machine_review(
+            root=root_path,
+            task=_task_by_id(tasks_state, task_id),
+            policy=policy,
+            report_gate=report_gate,
+            runner=execution_runner,
+            python_executable=python_bin,
+            run_report_declared_tests=True,
+        )
+        machine_review_details = {
+            **report_gate_details,
+            "machine_review": machine_review.to_dict(),
+        }
+        if machine_review.status == MACHINE_REVIEW_FAIL:
+            return _record_stop(
+                selected_session_id,
+                stop_code="MACHINE_REVIEW_FAILURE",
+                stop_reason="Machine Review Gate failed: {}".format(machine_review.reason),
+                result_status="blocked",
+                gate_name="machine_review_gate",
+                gate_status=machine_review.status,
+                gate_details=machine_review_details,
+                selected_task=selected,
+                policy_name=policy.name,
+                queue_preview=queue_preview,
+                side_effects=side_effects,
+                root=root_path,
+                actor=actor,
+            )
+
+        machine_review_recorded = record_step_result(
+            selected_session_id,
+            RUN_NEXT_STEP,
+            "passed",
+            root=root_path,
+            actor=actor,
+            task_id=task_id,
+            gate_name="machine_review_gate",
+            gate_status=machine_review.status,
+            gate_details=machine_review_details,
+            report_ids=(machine_review.report_id,) if machine_review.report_id else (),
+        )
+        side_effects.append(machine_review_recorded)
+        if not machine_review_recorded.ok:
+            return _aggregate_failure(
+                "pipeline.run_next",
+                "Failed to record Machine Review Gate result.",
+                selected_session_id,
+                side_effects,
+            )
+
         return _record_stop(
             selected_session_id,
             stop_code="NOT_IMPLEMENTED",
-            stop_reason="Codex Report Gate is not implemented yet.",
+            stop_reason="Codex Review Gate is not implemented yet.",
             result_status="blocked",
-            gate_name="codex_report_gate",
+            gate_name="codex_review_gate",
             gate_status="blocked",
-            gate_details={
-                **adapter_details,
-                "report_id": adapter_result.report_id,
-            },
+            gate_details=machine_review_details,
             selected_task=selected,
             policy_name=policy.name,
             queue_preview=queue_preview,
@@ -725,7 +825,13 @@ def _safe_stop_result(
         },
     )
     _merge_effects(result, side_effects)
-    if stop_code in {"NOT_IMPLEMENTED", "BLOCKED", "TOKEN_BUDGET_FAILURE"}:
+    if stop_code in {
+        "NOT_IMPLEMENTED",
+        "BLOCKED",
+        "TOKEN_BUDGET_FAILURE",
+        "CODEX_REPORT_GATE_FAILURE",
+        "MACHINE_REVIEW_FAILURE",
+    }:
         result.owner_action_required = stop_reason
     return result
 
@@ -814,6 +920,13 @@ def _load_plan(root: Path) -> Mapping[str, Any] | None:
         return None
     data = read_json_file(path, missing_code="PLAN_NOT_INITIALIZED")
     return data if isinstance(data, Mapping) else None
+
+
+def _task_by_id(tasks_state: Mapping[str, Any], task_id: str) -> Mapping[str, Any]:
+    for task in tasks_state.get("tasks", []):
+        if isinstance(task, Mapping) and task.get("id") == task_id:
+            return task
+    return {"id": task_id}
 
 
 def _mapping(value: Any, name: str) -> Mapping[str, Any]:

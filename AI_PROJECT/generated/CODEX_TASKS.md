@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `529`
-Current task: `TASK-058`
+Revision: `539`
+Current task: `TASK-060`
 
 ## Epic `EPIC-001`
 
@@ -1048,9 +1048,9 @@ Acceptance criteria:
 - Gate result includes measurable evidence and stable failure codes.
 - Tests and project-control validations pass.
 
-### PIPE-07 (TASK-058) — PIPE-07 Codex Execution Adapter ⭐
+### PIPE-07 (TASK-058) — PIPE-07 Codex Execution Adapter
 
-Status: `in_review`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_98b7b78bc079`, legacy `TASK-058`, aliases `TASK-058`, local `PIPE` / `7`
@@ -1068,7 +1068,7 @@ Acceptance criteria:
 
 ### PIPE-08 (TASK-059) — PIPE-08 Codex Report Gate
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_c59152e998be`, legacy `TASK-059`, aliases `TASK-059`, local `PIPE` / `8`
@@ -1083,9 +1083,9 @@ Acceptance criteria:
 - Report Gate result is stored or exposed for pipeline session audit.
 - Tests and project-control validations pass.
 
-### PIPE-09 (TASK-060) — PIPE-09 Machine Review Gate
+### PIPE-09 (TASK-060) — PIPE-09 Machine Review Gate ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_2b44723c1bdb`, legacy `TASK-060`, aliases `TASK-060`, local `PIPE` / `9`

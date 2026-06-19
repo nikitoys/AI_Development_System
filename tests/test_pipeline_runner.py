@@ -57,6 +57,10 @@ def write_project_state(root: Path, *, change_status: str | None = "approved") -
                         "order": 1,
                         "local_seq": 1,
                         "depends_on": [],
+                        "allowed_files": [
+                            "ai_project_ctl/pipeline/report_gate.py",
+                            "tests/**",
+                        ],
                     }
                 ],
             }
@@ -111,7 +115,43 @@ def successful_workflow_runner(
     return fake_run
 
 
-def write_report_state(root: Path, task_id: str, report_id: str) -> None:
+def valid_report(task_id: str) -> dict:
+    return {
+        "schema_version": 1,
+        "task_id": task_id,
+        "task_ref": "APP-01",
+        "reported_task_id": task_id,
+        "reported_task_ref": "APP-01",
+        "implementation_summary": "Implemented the selected task.",
+        "changed_files": ["ai_project_ctl/pipeline/report_gate.py"],
+        "generated_files": ["AI_PROJECT/generated/PIPELINE_STATUS.md"],
+        "checks": [
+            {
+                "name": "unit",
+                "command": "python -m unittest tests.test_pipeline_runner",
+                "result": "pass",
+                "duration_sec": 0.1,
+                "blocking": True,
+                "details": "",
+            }
+        ],
+        "warnings": [],
+        "blockers": [],
+        "notes": [],
+        "owner_decision_required": False,
+        "token_usage": {
+            "prompt_tokens": 100,
+            "context_tokens": 20,
+            "remaining_tokens": 1000,
+            "token_count_strategy": "local_byte_estimate",
+            "token_count_estimated": True,
+            "token_count_unavailable": False,
+        },
+    }
+
+
+def write_report_state(root: Path, task_id: str, report_id: str, report: dict | None = None) -> None:
+    report_data = report or valid_report(task_id)
     state_dir = root / "AI_PROJECT" / "state"
     state_dir.mkdir(parents=True, exist_ok=True)
     (state_dir / "task_reports.json").write_text(
@@ -126,7 +166,11 @@ def write_report_state(root: Path, task_id: str, report_id: str) -> None:
                     {
                         "id": report_id,
                         "task_id": task_id,
+                        "task_ref": "APP-01",
                         "submitted_at": "2026-06-19T00:00:00Z",
+                        "submitted_by": "tester",
+                        "source_file": "/tmp/report.json",
+                        "report": report_data,
                     }
                 ],
             }
@@ -247,7 +291,7 @@ class PipelineRunnerTests(unittest.TestCase):
                 "CODEX_ADAPTER_MANUAL_HANDOFF_REQUIRED",
             )
 
-    def test_run_codex_local_adapter_records_report_then_stops_at_report_gate(self):
+    def test_run_codex_local_adapter_records_report_gate_pass_then_stops_at_review_gate(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write_project_state(root, change_status="approved")
@@ -285,7 +329,99 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(gates[1]["status"], "pass")
             self.assertEqual(gates[1]["details"]["adapter"]["report_id"], "RPT-001")
             self.assertEqual(gates[2]["name"], "codex_report_gate")
+            self.assertEqual(gates[2]["status"], "pass")
+            self.assertEqual(gates[2]["details"]["report_gate"]["report_id"], "RPT-001")
+            self.assertEqual(gates[3]["name"], "machine_review_gate")
+            self.assertEqual(gates[3]["status"], "pass")
+            self.assertEqual(gates[4]["name"], "codex_review_gate")
             self.assertEqual(latest["report_ids"], ["RPT-001"])
+            self.assertIn(["codex", "exec"], calls)
+
+    def test_run_codex_blocks_downstream_when_machine_review_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_machine_review_failure_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+            base_runner = successful_workflow_runner(
+                calls,
+                root=root,
+                report_on_local_codex=True,
+            )
+
+            def fake_runner(argv):
+                if tuple(argv)[-2:] == ("project", "protected-check"):
+                    return completed(returncode=1, stderr="protected drift\n")
+                return base_runner(argv)
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=fake_runner,
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "MACHINE_REVIEW_FAILURE")
+            self.assertEqual(gates[3]["name"], "machine_review_gate")
+            self.assertEqual(gates[3]["status"], "fail")
+            self.assertNotIn("codex_review_gate", [gate["name"] for gate in gates])
+
+    def test_run_codex_blocks_downstream_when_report_gate_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_report_gate_failure_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+            report = valid_report("TASK-001")
+            report["blockers"] = ["Manual blocker."]
+            base_runner = successful_workflow_runner(calls, root=root)
+
+            def fake_runner(argv):
+                if list(argv) == ["codex", "exec"]:
+                    calls.append(list(argv))
+                    write_report_state(root, "TASK-001", "RPT-001", report=report)
+                    return completed(stdout="report submitted\n")
+                return base_runner(argv)
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=fake_runner,
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "CODEX_REPORT_GATE_FAILURE")
+            self.assertEqual(gates[2]["name"], "codex_report_gate")
+            self.assertEqual(gates[2]["status"], "fail")
+            self.assertNotIn("codex_review_gate", [gate["name"] for gate in gates])
             self.assertIn(["codex", "exec"], calls)
 
     def test_run_codex_stops_on_token_budget_failure_before_adapter(self):

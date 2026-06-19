@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `529`
+Revision: `539`
 
 ## Executable Now
 
@@ -13,12 +13,8 @@ Revision: `529`
 
 - `PIPE-05 (TASK-056)` [planned] `EPIC-007` priority `1` — PIPE-05 Batch Runner Run Until Blocker
   - `dependency_not_done`: depends on PIPE-12 (TASK-063) with status planned
-- `PIPE-08 (TASK-059)` [planned] `EPIC-007` priority `1` — PIPE-08 Codex Report Gate
-  - `dependency_not_done`: depends on PIPE-07 (TASK-058) with status in_review
-- `PIPE-09 (TASK-060)` [planned] `EPIC-007` priority `1` — PIPE-09 Machine Review Gate
-  - `dependency_not_done`: depends on PIPE-08 (TASK-059) with status planned
 - `PIPE-10 (TASK-061)` [planned] `EPIC-007` priority `1` — PIPE-10 Codex Review Gate
-  - `dependency_not_done`: depends on PIPE-09 (TASK-060) with status planned
+  - `dependency_not_done`: depends on PIPE-09 (TASK-060) with status in_progress
 - `PIPE-11 (TASK-062)` [planned] `EPIC-007` priority `1` — PIPE-11 Auto Review Auto Close Policy
   - `dependency_not_done`: depends on PIPE-10 (TASK-061) with status planned
 - `PIPE-12 (TASK-063)` [planned] `EPIC-007` priority `1` — PIPE-12 Controlled Git Commit Action
@@ -131,8 +127,12 @@ Revision: `529`
   - `status_not_executable`: status is done
 - `PIPE-06 (TASK-057)` [done] `EPIC-007` priority `1` — PIPE-06 Token Budget Gate
   - `status_not_executable`: status is done
-- `PIPE-07 (TASK-058)` [in_review] `EPIC-007` priority `1` — PIPE-07 Codex Execution Adapter
-  - `status_not_executable`: status is in_review
+- `PIPE-07 (TASK-058)` [done] `EPIC-007` priority `1` — PIPE-07 Codex Execution Adapter
+  - `status_not_executable`: status is done
+- `PIPE-08 (TASK-059)` [done] `EPIC-007` priority `1` — PIPE-08 Codex Report Gate
+  - `status_not_executable`: status is done
+- `PIPE-09 (TASK-060)` [in_progress] `EPIC-007` priority `1` — PIPE-09 Machine Review Gate
+  - `status_not_executable`: status is in_progress
 - `TIG-01 (TASK-012)` [done] `EPIC-004` priority `1` — TIG-01 Document task identity and execution graph design
   - `status_not_executable`: status is done
 - `TIG-02 (TASK-013)` [done] `EPIC-004` priority `1` — TIG-02 Add epic keys to plan model

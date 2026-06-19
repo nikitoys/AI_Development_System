@@ -3,86 +3,86 @@
 
 # Current Codex Task
 
-Revision: `529`
+Revision: `539`
 
-Task: `PIPE-07 (TASK-058)` — **PIPE-07 Codex Execution Adapter**
+Task: `PIPE-09 (TASK-060)` — **PIPE-09 Machine Review Gate**
 Epic: `EPIC-007`
-Status: `in_review`
+Status: `in_progress`
 Verification: `strict`
-Ref: `PIPE-07`
-UID: `tsk_98b7b78bc079`
-Legacy ID: `TASK-058`
-Aliases: `TASK-058`
-Epic Key / Local Seq: `PIPE` / `7`
+Ref: `PIPE-09`
+UID: `tsk_2b44723c1bdb`
+Legacy ID: `TASK-060`
+Aliases: `TASK-060`
+Epic Key / Local Seq: `PIPE` / `9`
 
 ## Prompt Control Fields
 
-Active Role: `AI System Maintainer / Codex Integration Engineer`
-Active Stage: `Codex Execution Adapter Implementation`
-Active Document: `ai_project_ctl/pipeline/codex_adapter.py`
-Expected Result: `Pipeline can safely invoke or prepare Codex execution through a controlled adapter only when all pre-execution gates pass.`
+Active Role: `QA Engineer AI / Project Control Maintainer`
+Active Stage: `Machine Review Gate Implementation`
+Active Document: `ai_project_ctl/pipeline/machine_review.py`
+Expected Result: `Pipeline has a deterministic Machine Review PASS/WARN/FAIL gate before semantic review and auto-close.`
 
 ## Summary
 
-Launch or hand off Codex Executor only after policy and Token Budget Gate PASS, then capture execution metadata.
+Run deterministic machine checks for tests, doctor, protected files, generated outputs, allowed_files, token usage, and blockers.
 
 ## Description
 
-Add a controlled Codex execution adapter with dry-run/manual default behavior, explicit policy enablement, timeout, command allowlist, captured output, and report handoff instructions.
+Implement the machine review gate that collects deterministic evidence before Codex semantic review or auto-close decisions.
 
 ## Scope
 
-- Define Codex Execution Adapter interface with dry-run, manual-handoff, and configured-local-command modes if appropriate.
-- Require policy permission before any non-dry-run execution.
-- Require Token Budget Gate PASS before execution.
-- Pass only the generated Codex prompt path/payload and bounded task context.
-- Capture start/end time, return code, stdout/stderr references, timeout, and adapter mode.
-- Require Codex to submit a structured execution report through the existing report path before downstream gates can pass.
-- Stop safely on timeout, non-zero exit, missing prompt, stale prompt, or missing report.
-- Add tests with a fake adapter/runner; do not require real Codex in normal test runs.
+- Run or collect project-control validation checks: task validate, task graph validate, generated checks, evolution validate/check-generated, context validate/check-generated, project doctor, and protected-file check.
+- Run task/report-declared tests or configured test commands only when policy allows and commands are safe.
+- Check changed files against task allowed_files and protected-file rules.
+- Check report blockers and token usage against policy.
+- Return PASS only when all blocking checks pass.
+- Return structured evidence with command, result, duration if available, stdout/stderr summaries, and failure reasons.
+- Add tests with fake command runners and representative pass/fail cases.
 
 ## Out of Scope
 
-- Do not bypass task allowed_files.
-- Do not give Codex permission to push, merge, or approve owner decisions.
-- Do not require external Codex services for local tests.
-- Do not auto-close tasks based only on adapter success.
+- Do not do semantic acceptance review.
+- Do not close tasks.
+- Do not accept Changes.
+- Do not commit.
+- Do not suppress doctor/protected-file failures.
 
 ## Allowed Files
 
-- ai_project_ctl/pipeline/codex_adapter.py
+- ai_project_ctl/pipeline/machine_review.py
+- ai_project_ctl/pipeline/report_gate.py if integration is needed
 - ai_project_ctl/pipeline/runner.py if integration is needed
-- ai_project_ctl/pipeline/policy.py if policy compatibility is needed
 - ai_project_ctl/core/registry.py if command metadata is needed
-- scripts/aictl.py if adapter command routing is needed
+- scripts/aictl.py if gate command routing is needed
 - tests/**
-- ai-system/project-control/** if adapter documentation is needed
+- ai-system/project-control/** if machine review documentation is needed
 
 ## Acceptance Criteria
 
-- Adapter default mode is safe and does not unexpectedly launch external tools.
-- Adapter refuses execution unless policy allows it and Token Budget Gate PASS is present.
-- Adapter captures execution metadata and exposes it to pipeline session state.
-- Adapter failure stops the pipeline with a clear blocker.
-- Normal tests use a fake adapter and do not require a real Codex binary/service.
+- Machine Review PASS requires all blocking checks to pass.
+- Machine Review FAIL stops the pipeline.
+- Protected-file and allowed_files violations are blocking.
+- Token usage and report blockers are checked according to policy.
+- Gate output is structured and auditable.
 - Tests and project-control validations pass.
 
 ## Review Instructions
 
-- Verify no external execution happens by default.
-- Verify adapter cannot run before Token Budget Gate PASS.
+- Verify that deterministic checks are actually blocking.
+- Verify that allowed_files/protected-file checks cannot be bypassed by report wording.
 
 ## Notes
 
-- Requires approved Evolution Change before execution because this can launch Codex when policy allows.
+- Requires approved Evolution Change before execution because this adds a pipeline review gate.
 
 ## Useful CLI
 
 ```bash
-python scripts/taskctl.py task transition TASK-058 --to in_progress
-python scripts/taskctl.py task transition TASK-058 --to in_review
-python scripts/taskctl.py task approve TASK-058 --notes "..."
-python scripts/taskctl.py task transition TASK-058 --to done
-python scripts/aictl.py task report submit --task TASK-058 --file /path/to/report.json --confirm
+python scripts/taskctl.py task transition TASK-060 --to in_progress
+python scripts/taskctl.py task transition TASK-060 --to in_review
+python scripts/taskctl.py task approve TASK-060 --notes "..."
+python scripts/taskctl.py task transition TASK-060 --to done
+python scripts/aictl.py task report submit --task TASK-060 --file /path/to/report.json --confirm
 python scripts/taskctl.py prompt build --write
 ```

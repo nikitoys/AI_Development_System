@@ -144,6 +144,7 @@ REPORT_TOP_LEVEL_KEYS = {
     "blockers",
     "notes",
     "owner_decision_required",
+    "token_usage",
 }
 REPORT_REQUIRED_KEYS = {
     "task_id",
@@ -175,6 +176,31 @@ REPORT_CHECK_RESULTS = {
     "skipped",
     "error",
 }
+REPORT_TOKEN_USAGE_NUMBER_KEYS = {
+    "prompt_tokens",
+    "context_tokens",
+    "completion_tokens",
+    "output_tokens",
+    "total_tokens",
+    "remaining_tokens",
+    "model_context_limit",
+    "max_context_tokens",
+    "reserved_output_tokens",
+    "min_remaining_tokens",
+}
+REPORT_TOKEN_USAGE_BOOL_KEYS = {
+    "token_count_estimated",
+    "token_count_unavailable",
+}
+REPORT_TOKEN_USAGE_STRING_KEYS = {
+    "token_count_strategy",
+    "token_count_unavailable_reason",
+}
+REPORT_TOKEN_USAGE_KEYS = (
+    REPORT_TOKEN_USAGE_NUMBER_KEYS
+    | REPORT_TOKEN_USAGE_BOOL_KEYS
+    | REPORT_TOKEN_USAGE_STRING_KEYS
+)
 
 
 class TaskError(Exception):
@@ -537,6 +563,39 @@ def read_report_payload(path_text):
     return payload
 
 
+def normalize_report_token_usage(value, errors, path="report.token_usage"):
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        errors.append("{} must be an object".format(path))
+        return {}
+
+    unknown = sorted(set(value.keys()) - REPORT_TOKEN_USAGE_KEYS)
+    if unknown:
+        errors.append("{} has unknown field(s): {}".format(path, ", ".join(unknown)))
+
+    normalized = {}
+    for key in sorted(REPORT_TOKEN_USAGE_NUMBER_KEYS & set(value.keys())):
+        number = value.get(key)
+        if not isinstance(number, int) or isinstance(number, bool) or number < 0:
+            errors.append("{}.{} must be a non-negative integer".format(path, key))
+        else:
+            normalized[key] = number
+    for key in sorted(REPORT_TOKEN_USAGE_BOOL_KEYS & set(value.keys())):
+        flag = value.get(key)
+        if not isinstance(flag, bool):
+            errors.append("{}.{} must be a boolean".format(path, key))
+        else:
+            normalized[key] = flag
+    for key in sorted(REPORT_TOKEN_USAGE_STRING_KEYS & set(value.keys())):
+        text = value.get(key)
+        if not isinstance(text, str):
+            errors.append("{}.{} must be a string".format(path, key))
+        else:
+            normalized[key] = text
+    return normalized
+
+
 def normalize_task_report_payload(payload, task):
     errors = []
     unknown = sorted(set(payload.keys()) - REPORT_TOP_LEVEL_KEYS)
@@ -578,6 +637,7 @@ def normalize_task_report_payload(payload, task):
         "report.owner_decision_required",
         errors,
     )
+    token_usage = normalize_report_token_usage(payload.get("token_usage"), errors)
 
     checks = payload.get("checks")
     if not isinstance(checks, list):
@@ -655,6 +715,7 @@ def normalize_task_report_payload(payload, task):
         "blockers": list(payload.get("blockers") or []),
         "notes": list(payload.get("notes") or []),
         "owner_decision_required": payload.get("owner_decision_required"),
+        "token_usage": token_usage,
     }
 
 
@@ -1747,6 +1808,11 @@ def validate_task_reports(report_state, tasks_state):
             path + ".report.owner_decision_required",
             errors,
         )
+        normalize_report_token_usage(
+            report.get("token_usage"),
+            errors,
+            path=path + ".report.token_usage",
+        )
         checks = report.get("checks")
         if not isinstance(checks, list):
             errors.append(path + ".report.checks must be a list")
@@ -2221,6 +2287,7 @@ def build_prompt_text(state, task, plan=None):
     lines.append("- Stay within Allowed Files and Scope.")
     lines.append("- If task state must change, report the required taskctl command instead of editing state by hand.")
     lines.append("- If `python scripts/{} task report submit --task {} --file <REPORT.json> --confirm` exists, submit a structured execution report through it instead of editing report state directly.".format(aictl_script_name(), task.get("id")))
+    lines.append("- When policy requires token evidence, include `token_usage` with `prompt_tokens`, `context_tokens`, `token_count_strategy`, and `token_count_estimated` in the structured report.")
     lines.append("- At the end, report changed files, checks run, result, and any unresolved risks.")
     lines.append("")
 

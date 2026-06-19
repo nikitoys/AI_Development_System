@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `1469`
+Revision: `1475`
 Changes: `49`
 
 ## Summary
 
-- `accepted`: 38
-- `approved`: 11
+- `accepted`: 40
+- `approved`: 9
 
 ## Changes
 
@@ -2522,7 +2522,7 @@ Linked tasks:
 
 ### CHG-041 — PIPE-07 Codex Execution Adapter
 
-Status: `approved`  
+Status: `accepted`  
 Type: `docs`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -2542,6 +2542,9 @@ Add a controlled Codex execution adapter with dry-run/manual default behavior, e
 
 Approved by: `human_owner` at `2026-06-19T20:41:09Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-19T22:14:54Z`  
+Acceptance notes: Accepted after task PIPE-07 review  
 
 Affected files:
 
@@ -2583,7 +2586,7 @@ Linked tasks:
 
 ### CHG-042 — PIPE-08 Codex Report Gate
 
-Status: `approved`  
+Status: `accepted`  
 Type: `docs`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -2603,6 +2606,9 @@ Add a report gate that checks the latest Codex execution report for required fie
 
 Approved by: `human_owner` at `2026-06-19T20:41:40Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-19T22:36:04Z`  
+Acceptance notes: Validate Codex structured execution reports before review and closure gates.  
 
 Affected files:
 

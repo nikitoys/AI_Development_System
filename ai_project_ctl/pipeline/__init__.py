@@ -27,6 +27,7 @@ from .queue import (
     preview_queue,
 )
 from .runner import run_next
+from .machine_review import evaluate_machine_review
 
 __all__ = [
     "CodexAdapterMode",
@@ -49,6 +50,7 @@ __all__ = [
     "QueuePreview",
     "QueuePreviewItem",
     "preview_queue",
+    "evaluate_machine_review",
     "run_next",
     "preset_names",
     "validate_policy",

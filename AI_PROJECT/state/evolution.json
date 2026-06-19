@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 1469,
+  "revision": 1475,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-19T21:53:38Z",
+  "updated_at": "2026-06-19T22:36:04Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -2328,7 +2328,7 @@
     {
       "id": "CHG-041",
       "title": "PIPE-07 Codex Execution Adapter",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "docs",
       "rationale": "Add a controlled Codex execution adapter with dry-run/manual default behavior, explicit policy enablement, timeout, command allowlist, captured output, and report handoff instructions.",
       "problem": "Task PIPE-07 requires an explicit Evolution Change Proposal before implementation: Launch or hand off Codex Executor only after policy and Token Budget Gate PASS, then capture execution metadata.",
@@ -2376,19 +2376,19 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-19T20:41:09Z",
       "approval_notes": "Approved",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T22:14:54Z",
+      "acceptance_notes": "Accepted after task PIPE-07 review",
       "notes": [],
       "priority": 1,
       "order": 41,
       "created_at": "2026-06-19T20:40:58Z",
-      "updated_at": "2026-06-19T20:41:09Z"
+      "updated_at": "2026-06-19T22:14:54Z"
     },
     {
       "id": "CHG-042",
       "title": "PIPE-08 Codex Report Gate",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "docs",
       "rationale": "Add a report gate that checks the latest Codex execution report for required fields, task identity, token usage, changed files, generated files, checks, warnings, blockers, and credibility basics.",
       "problem": "Task PIPE-08 requires an explicit Evolution Change Proposal before implementation: Validate Codex structured execution reports before review and closure gates.",
@@ -2435,14 +2435,14 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-19T20:41:40Z",
       "approval_notes": "Approved",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-19T22:36:04Z",
+      "acceptance_notes": "Validate Codex structured execution reports before review and closure gates.",
       "notes": [],
       "priority": 1,
       "order": 42,
       "created_at": "2026-06-19T20:41:16Z",
-      "updated_at": "2026-06-19T20:41:40Z"
+      "updated_at": "2026-06-19T22:36:04Z"
     },
     {
       "id": "CHG-043",
