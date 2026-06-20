@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 1481,
+  "revision": 1484,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-20T06:29:13Z",
+  "updated_at": "2026-06-20T06:47:03Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -2568,7 +2568,7 @@
     {
       "id": "CHG-045",
       "title": "PIPE-11 Auto Review Auto Close Policy",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "docs",
       "rationale": "Implement the decision logic that maps review gate results into task done, changes_requested, rework loop, or stop states under explicit automation policy.",
       "problem": "Task PIPE-11 requires an explicit Evolution Change Proposal before implementation: Apply policy-controlled close/rework decisions only after Machine Review PASS and Codex Review APPROVE.",
@@ -2615,14 +2615,14 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-19T20:43:02Z",
       "approval_notes": "Approved",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-20T06:47:03Z",
+      "acceptance_notes": "Apply policy-controlled close/rework decisions only after Machine Review PASS and Codex Review APPROVE.",
       "notes": [],
       "priority": 1,
       "order": 45,
       "created_at": "2026-06-19T20:42:44Z",
-      "updated_at": "2026-06-19T20:43:02Z"
+      "updated_at": "2026-06-20T06:47:03Z"
     },
     {
       "id": "CHG-046",

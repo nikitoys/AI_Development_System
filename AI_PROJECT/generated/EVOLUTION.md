@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `1481`
+Revision: `1484`
 Changes: `49`
 
 ## Summary
 
-- `accepted`: 42
-- `approved`: 7
+- `accepted`: 43
+- `approved`: 6
 
 ## Changes
 
@@ -2778,7 +2778,7 @@ Linked tasks:
 
 ### CHG-045 — PIPE-11 Auto Review Auto Close Policy
 
-Status: `approved`  
+Status: `accepted`  
 Type: `docs`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -2798,6 +2798,9 @@ Implement the decision logic that maps review gate results into task done, chang
 
 Approved by: `human_owner` at `2026-06-19T20:43:02Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T06:47:03Z`  
+Acceptance notes: Apply policy-controlled close/rework decisions only after Machine Review PASS and Codex Review APPROVE.  
 
 Affected files:
 

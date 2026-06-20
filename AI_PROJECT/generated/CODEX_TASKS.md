@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `552`
-Current task: `TASK-062`
+Revision: `556`
+Current task: `TASK-063`
 
 ## Epic `EPIC-001`
 
@@ -1119,9 +1119,9 @@ Acceptance criteria:
 - Malformed/missing reviewer output blocks the pipeline.
 - Tests and project-control validations pass.
 
-### PIPE-11 (TASK-062) — PIPE-11 Auto Review Auto Close Policy ⭐
+### PIPE-11 (TASK-062) — PIPE-11 Auto Review Auto Close Policy
 
-Status: `in_review`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_01a078bae3e6`, legacy `TASK-062`, aliases `TASK-062`, local `PIPE` / `11`
@@ -1137,9 +1137,9 @@ Acceptance criteria:
 - Lifecycle mutations route through governed task workflows/commands.
 - Tests and project-control validations pass.
 
-### PIPE-12 (TASK-063) — PIPE-12 Controlled Git Commit Action
+### PIPE-12 (TASK-063) — PIPE-12 Controlled Git Commit Action ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_6f7cf68ecdf8`, legacy `TASK-063`, aliases `TASK-063`, local `PIPE` / `12`

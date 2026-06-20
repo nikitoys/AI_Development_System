@@ -16,6 +16,7 @@ from ai_project_ctl.core.store import read_json_file
 from ai_project_ctl.core.workflows import Runner, run_workflow
 
 from .close_policy import (
+    CODE_TASK_AUTO_CLOSED,
     CODE_REVIEW_CLOSE_WORKFLOW_FAILED,
     decide_review_close,
     run_review_close_workflow,
@@ -33,6 +34,8 @@ from .policy import CodexExecutionMode, PipelinePolicy
 from .queue import QueuePlannerRequest, QueuePreview, QueuePreviewItem, preview_queue
 from .report_gate import FAIL as REPORT_GATE_FAIL
 from .report_gate import evaluate_report_gate
+from .git_commit import PASS as COMMIT_PASS
+from .git_commit import run_local_commit
 from .session import (
     complete_session,
     record_step_result,
@@ -311,8 +314,11 @@ def run_next(
         if policy.commit.create_local_commit:
             return _record_stop(
                 selected_session_id,
-                stop_code="NOT_IMPLEMENTED",
-                stop_reason="Local commit readiness and commit action are not implemented yet.",
+                stop_code="COMMIT_READINESS_FAILED",
+                stop_reason=(
+                    "Local commit requires Codex execution, Machine Review PASS, "
+                    "Codex Review APPROVE and a closed task."
+                ),
                 result_status="blocked",
                 gate_name="commit_gate",
                 gate_status="blocked",
@@ -665,7 +671,7 @@ def run_next(
             )
 
         if policy.closure.auto_close_task:
-            return _apply_review_close_policy(
+            close_result = _apply_review_close_policy(
                 session=session,
                 policy=policy,
                 report_gate=report_gate,
@@ -681,21 +687,40 @@ def run_next(
                 python_executable=python_bin,
                 runner=execution_runner,
             )
-        if policy.commit.create_local_commit:
-            return _record_stop(
-                selected_session_id,
-                stop_code="NOT_IMPLEMENTED",
-                stop_reason="Local commit readiness and commit action are not implemented yet.",
-                result_status="blocked",
-                gate_name="commit_gate",
-                gate_status="blocked",
+            if (
+                not policy.commit.create_local_commit
+                or not close_result.ok
+                or close_result.data.get("stop_code") != CODE_TASK_AUTO_CLOSED
+            ):
+                return close_result
+            return _apply_local_commit_policy(
+                policy=policy,
+                report_gate=report_gate,
+                machine_review=machine_review,
+                codex_review=codex_review,
                 gate_details=codex_review_details,
-                selected_task=selected,
-                policy_name=policy.name,
+                selected_session_id=selected_session_id,
+                selected=selected,
                 queue_preview=queue_preview,
                 side_effects=side_effects,
                 root=root_path,
                 actor=actor,
+                runner=execution_runner,
+            )
+        if policy.commit.create_local_commit:
+            return _apply_local_commit_policy(
+                policy=policy,
+                report_gate=report_gate,
+                machine_review=machine_review,
+                codex_review=codex_review,
+                gate_details=codex_review_details,
+                selected_session_id=selected_session_id,
+                selected=selected,
+                queue_preview=queue_preview,
+                side_effects=side_effects,
+                root=root_path,
+                actor=actor,
+                runner=execution_runner,
             )
 
         return _record_stop(
@@ -806,6 +831,75 @@ def _apply_review_close_policy(
         root=root,
         actor=actor,
         report_ids=(codex_review.report_id,) if codex_review.report_id else (),
+        review_ids=(codex_review.review_id,) if codex_review.review_id else (),
+    )
+
+
+def _apply_local_commit_policy(
+    *,
+    policy: PipelinePolicy,
+    report_gate,
+    machine_review,
+    codex_review,
+    gate_details: Mapping[str, Any],
+    selected_session_id: str,
+    selected: QueuePreviewItem,
+    queue_preview: QueuePreview,
+    side_effects: list[CommandResult],
+    root: Path,
+    actor: str,
+    runner: Runner | None,
+) -> CommandResult:
+    commit_result = run_local_commit(
+        root=root,
+        task_id=str(selected.id or ""),
+        session_id=selected_session_id,
+        policy=policy,
+        report_gate=report_gate,
+        machine_review=machine_review,
+        codex_review=codex_review,
+        side_effects=side_effects,
+        runner=runner,
+    )
+    commit_details = {
+        **dict(gate_details),
+        "commit": commit_result.to_dict(),
+    }
+    if commit_result.status == COMMIT_PASS:
+        return _record_stop(
+            selected_session_id,
+            stop_code=commit_result.code,
+            stop_reason=commit_result.reason,
+            result_status="passed",
+            gate_name="commit_gate",
+            gate_status="pass",
+            gate_details=commit_details,
+            selected_task=selected,
+            policy_name=policy.name,
+            queue_preview=queue_preview,
+            side_effects=side_effects,
+            root=root,
+            actor=actor,
+            report_ids=(report_gate.report_id,) if report_gate.report_id else (),
+            review_ids=(codex_review.review_id,) if codex_review.review_id else (),
+            commit_ids=(commit_result.commit_hash,) if commit_result.commit_hash else (),
+        )
+
+    return _record_stop(
+        selected_session_id,
+        stop_code=commit_result.code,
+        stop_reason=commit_result.reason,
+        result_status="failed" if commit_result.status == "fail" else "blocked",
+        gate_name="commit_gate",
+        gate_status="fail" if commit_result.status == "fail" else "blocked",
+        gate_details=commit_details,
+        selected_task=selected,
+        policy_name=policy.name,
+        queue_preview=queue_preview,
+        side_effects=side_effects,
+        root=root,
+        actor=actor,
+        report_ids=(report_gate.report_id,) if report_gate.report_id else (),
         review_ids=(codex_review.review_id,) if codex_review.review_id else (),
     )
 
@@ -1086,6 +1180,8 @@ def _safe_stop_result(
         "REVIEW_CLOSE_WORKFLOW_FAILED",
         "REWORK_LIMIT_REACHED",
         "REWORK_POLICY_DISABLED",
+        "COMMIT_READINESS_FAILED",
+        "COMMIT_GIT_COMMAND_FAILED",
     }:
         result.owner_action_required = stop_reason
     return result
