@@ -41,6 +41,19 @@ from ai_project_ctl.core.workflows import (  # noqa: E402
     workflow_list,
     workflow_preview,
 )
+from ai_project_ctl.pipeline.session import (  # noqa: E402
+    check_generated as check_pipeline_generated,
+    complete_session,
+    create_session,
+    record_step_result,
+    render_status as render_pipeline_status,
+    start_step,
+    status_payload as pipeline_status_payload,
+    stop_session,
+    validate_sessions as validate_pipeline_sessions,
+)
+from ai_project_ctl.pipeline.runner import run_next as run_pipeline_next  # noqa: E402
+from ai_project_ctl.pipeline.batch import run_until_blocker as run_pipeline_until_blocker  # noqa: E402
 
 
 class FacadeError(CommandError):
@@ -286,6 +299,7 @@ def _protected_error_is_prompt_context_warning(error: str, *, strict_prompt: boo
         "ORPHAN_GENERATED_PROMPT:",
         "OUTDATED_GENERATED_FILE: AI_PROJECT/generated/CODEX_PROMPT.md",
         "CODEX_PROMPT_RENDER_FAILED: STALE_CONTEXT_PACK:",
+        "CODEX_EXECUTION_CONTEXT_MISMATCH:",
     )
     return any(fragment in error for fragment in warning_fragments)
 
@@ -996,6 +1010,57 @@ def _emit_workflow_result(result: CommandResult) -> None:
             print("  - {}".format(action))
 
 
+def _emit_command_result(result: CommandResult, args: argparse.Namespace) -> int:
+    if args.json:
+        _print_json(result.to_dict())
+        return 0 if result.ok else 1
+    print(result.message)
+    if result.data.get("session_id"):
+        print("Session: {}".format(result.data["session_id"]))
+    for error in result.errors:
+        print("ERROR: {}: {}".format(error.code, error.message), file=sys.stderr)
+    return 0 if result.ok else 1
+
+
+def _validation_result_to_command(
+    command_name: str,
+    domain: str,
+    validation,
+    *,
+    ok_message: str,
+) -> CommandResult:
+    if validation.ok:
+        return CommandResult.success(
+            command=command_name,
+            domain=domain,
+            message=ok_message,
+        )
+    return CommandResult.failure(
+        command=command_name,
+        domain=domain,
+        message="VALIDATION_FAILED",
+        errors=[
+            CommandMessage(issue.code, issue.message, issue.path)
+            for issue in validation.errors
+        ],
+    )
+
+
+def _json_mapping_arg(text: str | None) -> dict[str, Any]:
+    if not text:
+        return {}
+    try:
+        value = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise FacadeError(
+            "INVALID_JSON_ARGUMENT",
+            "Expected JSON object argument: {}".format(exc),
+        ) from exc
+    if not isinstance(value, dict):
+        raise FacadeError("INVALID_JSON_ARGUMENT", "Expected JSON object argument.")
+    return value
+
+
 def cmd_task_list(args: argparse.Namespace) -> int:
     _ensure_implemented("task.list")
     command_args = ["task", "list"]
@@ -1140,6 +1205,170 @@ def cmd_task_report_submit(args: argparse.Namespace) -> int:
         args,
         _script_argv("taskctl.py", args, command_args),
     )
+
+
+def cmd_pipeline_status(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.status")
+    payload = pipeline_status_payload(root=args.root)
+    result = CommandResult.success(
+        command="pipeline.status",
+        domain="pipeline",
+        message="Pipeline status loaded.",
+        data=payload,
+    )
+    if args.json:
+        _print_json(result.to_dict())
+        return 0
+
+    print("Pipeline sessions revision: {}".format(payload.get("revision", 0)))
+    print("Current session: {}".format(payload.get("current_session_id") or "none"))
+    print("Sessions: {}".format(len(payload.get("sessions", []))))
+    for session in payload.get("sessions", []):
+        print(
+            "- {id} [{status}] task={task} step={step} stop={stop}".format(
+                id=session.get("id"),
+                status=session.get("status"),
+                task=session.get("current_task_id") or "none",
+                step=session.get("current_step") or "none",
+                stop=session.get("stop_reason") or "none",
+            )
+        )
+    return 0
+
+
+def cmd_pipeline_validate(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.validate")
+    result = _validation_result_to_command(
+        "pipeline.validate",
+        "pipeline",
+        validate_pipeline_sessions(root=args.root),
+        ok_message="OK: pipeline sessions are valid",
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_render(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.render")
+    render_pipeline_status(root=args.root)
+    result = CommandResult.success(
+        command="pipeline.render",
+        domain="pipeline",
+        message="OK: rendered pipeline status",
+        data={"path": str(Path(args.root).resolve() / "AI_PROJECT" / "generated" / "PIPELINE_STATUS.md")},
+    )
+    result.generated_files.append(result.data["path"])
+    result.changed_files.append(result.data["path"])
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_check_generated(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.check_generated")
+    result = _validation_result_to_command(
+        "pipeline.check_generated",
+        "pipeline",
+        check_pipeline_generated(root=args.root),
+        ok_message="OK: generated pipeline status is up to date",
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_session_create(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.session.create")
+    result = create_session(
+        root=args.root,
+        actor=args.actor,
+        policy_name=args.policy,
+        task_refs=_tuple_or_empty(args.task_ref),
+        epic_ids=_tuple_or_empty(args.epic),
+        statuses=_tuple_or_empty(args.status_filter),
+        max_tasks=args.max_tasks,
+        order_by=args.order_by,
+        current_task_id=args.current_task_id or "",
+        current_task_ref=args.current_task_ref or "",
+        linked_change_ids=_tuple_or_empty(args.change),
+        report_ids=_tuple_or_empty(args.report),
+        review_ids=_tuple_or_empty(args.review),
+        commit_ids=_tuple_or_empty(args.commit),
+        status=args.status,
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_run_next(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.run_next")
+    result = run_pipeline_next(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_run_until_blocker(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.run_until_blocker")
+    result = run_pipeline_until_blocker(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+        confirmed=args.confirm,
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_step_start(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.step.start")
+    result = start_step(
+        args.session_id,
+        args.step,
+        root=args.root,
+        actor=args.actor,
+        task_id=args.task or "",
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_step_result(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.step.result")
+    result = record_step_result(
+        args.session_id,
+        args.step,
+        args.result,
+        root=args.root,
+        actor=args.actor,
+        task_id=args.task or "",
+        gate_name=args.gate_name or "",
+        gate_status=args.gate_status or "",
+        gate_details=_json_mapping_arg(args.gate_details),
+        stop_reason=args.stop_reason or "",
+        linked_change_ids=_tuple_or_empty(args.change),
+        report_ids=_tuple_or_empty(args.report),
+        review_ids=_tuple_or_empty(args.review),
+        commit_ids=_tuple_or_empty(args.commit),
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_session_stop(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.session.stop")
+    result = stop_session(
+        args.session_id,
+        args.reason,
+        root=args.root,
+        actor=args.actor,
+        status=args.status,
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_session_complete(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.session.complete")
+    result = complete_session(
+        args.session_id,
+        root=args.root,
+        actor=args.actor,
+        reason=args.reason or "completed",
+    )
+    return _emit_command_result(result, args)
 
 
 def cmd_current_set(args: argparse.Namespace) -> int:
@@ -1558,6 +1787,102 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--file", required=True)
     p.add_argument("--confirm", action="store_true")
     p.set_defaults(func=cmd_task_report_submit, facade_command="task.report.submit")
+
+    pipeline = sub.add_parser("pipeline", help="Pipeline session facade commands")
+    pipeline_sub = pipeline.add_subparsers(dest="pipeline_action", required=True)
+
+    p = pipeline_sub.add_parser("status", help="Show pipeline session state")
+    p.set_defaults(func=cmd_pipeline_status, facade_command="pipeline.status")
+
+    p = pipeline_sub.add_parser("validate", help="Validate pipeline session state")
+    p.set_defaults(func=cmd_pipeline_validate, facade_command="pipeline.validate")
+
+    p = pipeline_sub.add_parser("render", help="Render pipeline generated status")
+    p.set_defaults(func=cmd_pipeline_render, facade_command="pipeline.render")
+
+    p = pipeline_sub.add_parser("check-generated", help="Check pipeline generated status freshness")
+    p.set_defaults(func=cmd_pipeline_check_generated, facade_command="pipeline.check_generated")
+
+    p = pipeline_sub.add_parser("run-next", help="Run one guarded pipeline step")
+    p.add_argument("session_id", nargs="?")
+    p.set_defaults(func=cmd_pipeline_run_next, facade_command="pipeline.run_next")
+
+    p = pipeline_sub.add_parser(
+        "run-until-blocker",
+        help="Run guarded pipeline steps until blocker or queue completion",
+    )
+    p.add_argument("session_id", nargs="?")
+    p.add_argument("--confirm", action="store_true")
+    p.set_defaults(
+        func=cmd_pipeline_run_until_blocker,
+        facade_command="pipeline.run_until_blocker",
+    )
+
+    session = pipeline_sub.add_parser("session", help="Pipeline session mutations")
+    session_sub = session.add_subparsers(dest="pipeline_session_action", required=True)
+
+    p = session_sub.add_parser("create", help="Create a governed pipeline session")
+    p.add_argument("--policy", default="dry_run")
+    p.add_argument("--task-ref", action="append")
+    p.add_argument("--epic", action="append")
+    p.add_argument("--status-filter", action="append")
+    p.add_argument("--max-tasks", type=int)
+    p.add_argument(
+        "--order-by",
+        default="execution",
+        choices=("execution", "owner", "selected"),
+    )
+    p.add_argument("--current-task-id")
+    p.add_argument("--current-task-ref")
+    p.add_argument("--change", action="append")
+    p.add_argument("--report", action="append")
+    p.add_argument("--review", action="append")
+    p.add_argument("--commit", action="append")
+    p.add_argument(
+        "--status",
+        default="planned",
+        choices=("planned", "running", "stopped", "blocked", "failed", "completed", "archived"),
+    )
+    p.set_defaults(func=cmd_pipeline_session_create, facade_command="pipeline.session.create")
+
+    p = session_sub.add_parser("start-step", help="Record pipeline step start")
+    p.add_argument("session_id")
+    p.add_argument("--step", required=True)
+    p.add_argument("--task")
+    p.set_defaults(func=cmd_pipeline_step_start, facade_command="pipeline.step.start")
+
+    p = session_sub.add_parser("step-result", help="Record pipeline step result")
+    p.add_argument("session_id")
+    p.add_argument("--step", required=True)
+    p.add_argument(
+        "--result",
+        required=True,
+        choices=("passed", "failed", "blocked", "skipped", "stopped"),
+    )
+    p.add_argument("--task")
+    p.add_argument("--gate-name")
+    p.add_argument(
+        "--gate-status",
+        choices=("pass", "warn", "fail", "blocked", "skipped", "unknown"),
+    )
+    p.add_argument("--gate-details")
+    p.add_argument("--stop-reason")
+    p.add_argument("--change", action="append")
+    p.add_argument("--report", action="append")
+    p.add_argument("--review", action="append")
+    p.add_argument("--commit", action="append")
+    p.set_defaults(func=cmd_pipeline_step_result, facade_command="pipeline.step.result")
+
+    p = session_sub.add_parser("stop", help="Stop a pipeline session")
+    p.add_argument("session_id")
+    p.add_argument("--reason", required=True)
+    p.add_argument("--status", default="stopped", choices=("stopped", "blocked", "failed"))
+    p.set_defaults(func=cmd_pipeline_session_stop, facade_command="pipeline.session.stop")
+
+    p = session_sub.add_parser("complete", help="Mark a pipeline session completed")
+    p.add_argument("session_id")
+    p.add_argument("--reason")
+    p.set_defaults(func=cmd_pipeline_session_complete, facade_command="pipeline.session.complete")
 
     current = sub.add_parser("current", help="Current task facade commands")
     current_sub = current.add_subparsers(dest="current_action", required=True)

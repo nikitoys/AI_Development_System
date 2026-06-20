@@ -5,7 +5,7 @@
 
 Project: **AI Development System**
 Status: `active`
-Revision: `10`
+Revision: `12`
 
 ## Idea
 
@@ -46,3 +46,5 @@ Epics:
 
 - `EPIC-005` / `CTL` — Implement unified aictl and local Control Center foundation (`planned`)
 - `EPIC-006` / `WFA` — Control Plane Workflow Automation (`planned`)
+- `EPIC-007` / `PIPE` — Supervised Batch Pipeline Runner (`planned`)
+- `EPIC-008` / `BUG` — Bug Fixes (`planned`)

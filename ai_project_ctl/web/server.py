@@ -33,6 +33,7 @@ WEB_ACTION_BODY_MAX_BYTES = WEB_IMPORT_FILE_MAX_BYTES + 16_384
 
 NAV_ITEMS = (
     ("/", "Dashboard"),
+    ("/pipeline", "Pipeline"),
     ("/tasks", "Tasks"),
     ("/evolution", "Evolution"),
     ("/epics", "Epics"),
@@ -285,6 +286,13 @@ def route(
 
     pages: dict[str, Callable[[], str]] = {
         "/": lambda: render_dashboard(model.dashboard()),
+        "/pipeline": lambda: render_pipeline(
+            model.dashboard(
+                include_events=True,
+                pipeline_options=pipeline_query_options(query),
+            ),
+            query=query,
+        ),
         "/tasks": lambda: render_tasks(model.dashboard(), query=query),
         "/evolution": lambda: render_evolution(model.dashboard(), query=query),
         "/epics": lambda: render_epics(model.dashboard()),
@@ -352,6 +360,465 @@ def render_dashboard(data: Mapping[str, Any]) -> str:
         "</section>",
     ]
     return render_page("Dashboard", "".join(body), active="/")
+
+
+def render_pipeline(
+    data: Mapping[str, Any],
+    *,
+    query: Mapping[str, Sequence[str]] | None = None,
+) -> str:
+    pipeline = _mapping(data.get("pipeline"))
+    state = _mapping(pipeline.get("state"))
+    selected_policy = _mapping(pipeline.get("selected_policy"))
+    queue_preview = _mapping(pipeline.get("queue_preview"))
+    categories = _mapping(queue_preview.get("categories"))
+    current_session = _mapping(pipeline.get("current_session"))
+    next_task = _mapping(queue_preview.get("next_task"))
+    body = [
+        '<section class="summary-grid">',
+        metric("Current Session", str(state.get("current_session_id") or "none")),
+        metric("Policy", str(selected_policy.get("name") or "unknown")),
+        metric("Queue", "{} executable".format(len(categories.get("executable") or []))),
+        metric("Current Step", str(current_session.get("current_step") or "none")),
+        metric("Stop Reason", str(current_session.get("stop_reason") or "none")),
+        "</section>",
+    ]
+    unknown_policy = str(pipeline.get("unknown_policy") or "")
+    if unknown_policy:
+        body.append(
+            '<section class="panel"><p class="callout">Unknown policy {}; showing dry_run.</p></section>'.format(
+                escape(unknown_policy)
+            )
+        )
+    body.extend(
+        [
+            '<section class="panel">',
+            "<h2>Pipeline Queue Selector</h2>",
+            pipeline_selector_form(data, pipeline),
+            "</section>",
+            '<section class="panel">',
+            "<h2>Policy Preset Preview</h2>",
+            pipeline_policy_preview(selected_policy),
+            "</section>",
+            '<section class="panel">',
+            "<h2>Queue Preview</h2>",
+            '<div class="status-row">',
+            status_badge("next"),
+            "<span>{}</span>".format(
+                escape(_pipeline_task_label(next_task) if next_task else "No next task")
+            ),
+            "</div>",
+            pipeline_queue_preview_table(queue_preview, _mapping(pipeline.get("queue_error"))),
+            "</section>",
+            pipeline_current_session_panel(data, pipeline),
+            '<section class="panel">',
+            "<h2>Sessions</h2>",
+            pipeline_session_table(pipeline.get("sessions") or []),
+            "</section>",
+            '<section class="panel">',
+            "<h2>Latest Pipeline Audit</h2>",
+            pipeline_audit_table(pipeline.get("audit") or []),
+            "</section>",
+        ]
+    )
+    return render_page("Pipeline", "".join(body), active="/pipeline")
+
+
+def pipeline_selector_form(data: Mapping[str, Any], pipeline: Mapping[str, Any]) -> str:
+    request = _mapping(pipeline.get("queue_request"))
+    current_task = _mapping(data.get("current_task"))
+    policy_options = [
+        (str(policy.get("name") or ""), str(policy.get("name") or ""))
+        for policy in pipeline.get("policies") or []
+        if isinstance(policy, Mapping) and policy.get("name")
+    ]
+    epic_options = [("", "Any Epic")]
+    epic_options.extend(
+        (
+            str(epic.get("id") or ""),
+            "{} - {}".format(epic.get("key") or epic.get("id") or "", epic.get("title") or "").strip(" -"),
+        )
+        for epic in data.get("epics") or []
+        if isinstance(epic, Mapping) and epic.get("id")
+    )
+    status_options = [
+        ("", "Any Status"),
+        ("planned", "planned"),
+        ("ready", "ready"),
+        ("in_progress", "in_progress"),
+        ("blocked", "blocked"),
+        ("in_review", "in_review"),
+        ("changes_requested", "changes_requested"),
+    ]
+    max_tasks = request.get("max_tasks")
+    return (
+        '<form class="task-controls" method="get" action="/pipeline">'
+        "{}{}{}{}{}{}"
+        '<button type="submit">Preview Queue</button>'
+        '<a class="button-link secondary" href="/pipeline">Reset</a>'
+        "</form>"
+    ).format(
+        filter_select("policy", "Policy", policy_options, str(request.get("policy") or "")),
+        input_field(
+            "task_ref",
+            "Task Refs",
+            ", ".join(_string_items(request.get("task_refs"))),
+            required=False,
+        ),
+        filter_select(
+            "epic",
+            "Epic",
+            epic_options,
+            next(iter(_string_items(request.get("epic_ids"))), ""),
+        ),
+        filter_select(
+            "status",
+            "Status",
+            status_options,
+            next(iter(_string_items(request.get("statuses"))), ""),
+        ),
+        input_field(
+            "max_tasks",
+            "Max Tasks",
+            "" if max_tasks is None else str(max_tasks),
+            required=False,
+        ),
+        filter_select(
+            "order_by",
+            "Order",
+            (("execution", "execution"), ("owner", "owner"), ("selected", "selected")),
+            str(request.get("order_by") or "execution"),
+        ),
+    )
+
+
+def pipeline_policy_preview(policy: Mapping[str, Any]) -> str:
+    queue = _mapping(policy.get("queue"))
+    codex = _mapping(policy.get("codex"))
+    token_budget = _mapping(policy.get("token_budget"))
+    review = _mapping(policy.get("review"))
+    closure = _mapping(policy.get("closure"))
+    commit = _mapping(policy.get("commit"))
+    rows = [
+        ("Name", policy.get("name")),
+        ("Valid", "yes" if policy.get("valid") else "no"),
+        ("Queue", "{} max {}".format(queue.get("selection"), queue.get("max_tasks"))),
+        ("Codex", "{} / {}".format(codex.get("mode"), codex.get("adapter_mode"))),
+        ("Token Gate", "required" if token_budget.get("require_gate_pass") else "not required"),
+        ("Review", _pipeline_review_summary(review)),
+        ("Auto Close", "yes" if closure.get("auto_close_task") else "no"),
+        ("Commit", str(commit.get("mode") or "disabled")),
+    ]
+    error_rows = []
+    for issue in policy.get("errors") or []:
+        if isinstance(issue, Mapping):
+            error_rows.append(
+                "<li><strong>{}</strong>: {}</li>".format(
+                    escape(issue.get("code") or ""),
+                    escape(issue.get("message") or ""),
+                )
+            )
+    content = [
+        table(
+            ("Field", "Value"),
+            [
+                "<tr><td>{}</td><td>{}</td></tr>".format(
+                    escape(label),
+                    escape(value if value is not None else ""),
+                )
+                for label, value in rows
+            ],
+            "No policy selected.",
+        )
+    ]
+    if error_rows:
+        content.append('<ul class="hint-list">{}</ul>'.format("".join(error_rows)))
+    return "".join(content)
+
+
+def pipeline_queue_preview_table(
+    queue_preview: Mapping[str, Any],
+    queue_error: Mapping[str, Any],
+) -> str:
+    if queue_error:
+        return '<p class="empty">{}: {}</p>'.format(
+            escape(queue_error.get("code") or "QUEUE_PREVIEW_FAILED"),
+            escape(queue_error.get("message") or ""),
+        )
+    items = [
+        item
+        for item in queue_preview.get("items") or []
+        if isinstance(item, Mapping)
+    ]
+    rows = []
+    for item in items:
+        rows.append(
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                status_badge(str(item.get("category") or "unknown")),
+                escape(_pipeline_task_label(item)),
+                status_badge(str(item.get("status") or "unknown")),
+                escape(item.get("epic_id") or ""),
+                escape(item.get("title") or ""),
+                pipeline_reason_list(item.get("reasons") or []),
+            )
+        )
+    return table(
+        ("Category", "Task", "Status", "Epic", "Title", "Reasons"),
+        rows,
+        "No queue preview items.",
+    )
+
+
+def pipeline_current_session_panel(
+    data: Mapping[str, Any],
+    pipeline: Mapping[str, Any],
+) -> str:
+    session = _mapping(pipeline.get("current_session"))
+    parts = ['<section class="panel action-panel">', "<h2>Current Session</h2>"]
+    if session:
+        parts.extend(
+            [
+                '<div class="execution-grid">',
+                metric("Session", str(session.get("id") or "")),
+                metric("Status", str(session.get("status") or "")),
+                metric("Policy", str(session.get("policy") or "")),
+                metric("Task", str(session.get("current_task_ref") or session.get("current_task_id") or "none")),
+                metric("Step", str(session.get("current_step") or "none")),
+                metric("Stop", str(session.get("stop_reason") or "none")),
+                "</div>",
+                "<h3>Gates</h3>",
+                pipeline_gate_table(session.get("recent_gates") or []),
+                "<h3>Steps</h3>",
+                pipeline_step_table(session.get("recent_steps") or []),
+                "<h3>References</h3>",
+                pipeline_reference_list(session),
+            ]
+        )
+    else:
+        parts.append('<p class="empty">No current pipeline session.</p>')
+    parts.append("<h3>Pipeline Actions</h3>")
+    parts.append(pipeline_action_controls(data, pipeline))
+    parts.append("</section>")
+    return "".join(parts)
+
+
+def pipeline_action_controls(data: Mapping[str, Any], pipeline: Mapping[str, Any]) -> str:
+    request = _mapping(pipeline.get("queue_request"))
+    session = _mapping(pipeline.get("current_session"))
+    current_task = _mapping(data.get("current_task"))
+    policy_options = [
+        (str(policy.get("name") or ""), str(policy.get("name") or ""))
+        for policy in pipeline.get("policies") or []
+        if isinstance(policy, Mapping) and policy.get("name")
+    ]
+    status_options = [
+        ("", "Any Status"),
+        ("planned", "planned"),
+        ("ready", "ready"),
+        ("in_progress", "in_progress"),
+        ("blocked", "blocked"),
+        ("in_review", "in_review"),
+        ("changes_requested", "changes_requested"),
+    ]
+    max_tasks = request.get("max_tasks")
+    create_fields = [
+        filter_select("policy", "Policy", policy_options, str(request.get("policy") or "")),
+        input_field(
+            "task_ref",
+            "Task Refs",
+            ", ".join(_string_items(request.get("task_refs"))),
+            required=False,
+        ),
+        input_field(
+            "epic",
+            "Epic",
+            ", ".join(_string_items(request.get("epic_ids"))),
+            required=False,
+        ),
+        filter_select(
+            "status_filter",
+            "Status Filter",
+            status_options,
+            next(iter(_string_items(request.get("statuses"))), ""),
+        ),
+        input_field(
+            "max_tasks",
+            "Max Tasks",
+            "" if max_tasks is None else str(max_tasks),
+            required=False,
+        ),
+        filter_select(
+            "order_by",
+            "Order",
+            (("execution", "execution"), ("owner", "owner"), ("selected", "selected")),
+            str(request.get("order_by") or "execution"),
+        ),
+    ]
+    if current_task.get("id"):
+        create_fields.append(hidden_field("current_task_id", str(current_task.get("id") or "")))
+        create_fields.append(hidden_field("current_task_ref", str(current_task.get("ref") or current_task.get("id") or "")))
+    forms = [
+        action_form(
+            "pipeline.session.create",
+            create_fields,
+            button_label="Create Session",
+        ),
+        action_form("pipeline.render", [], button_label="Refresh Status"),
+    ]
+    session_id = str(session.get("id") or "")
+    if session_id:
+        forms.extend(
+            [
+                action_form(
+                    "pipeline.run_next",
+                    [hidden_field("session_id", session_id)],
+                    button_label="Run Next",
+                ),
+                action_form(
+                    "pipeline.run_until_blocker",
+                    [hidden_field("session_id", session_id)],
+                    button_label="Run Until Blocker",
+                ),
+                action_form(
+                    "pipeline.session.stop",
+                    [
+                        hidden_field("session_id", session_id),
+                        input_field("reason", "Reason", "Owner stop", required=True),
+                        filter_select(
+                            "status",
+                            "Status",
+                            (("stopped", "stopped"), ("blocked", "blocked"), ("failed", "failed")),
+                            "stopped",
+                        ),
+                    ],
+                    button_label="Stop Session",
+                ),
+            ]
+        )
+    return '<div class="pipeline-actions">{}</div>'.format("".join(forms))
+
+
+def pipeline_gate_table(gates: Sequence[Any]) -> str:
+    rows = []
+    for gate in gates:
+        if not isinstance(gate, Mapping):
+            continue
+        details = _mapping(gate.get("details"))
+        rows.append(
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                escape(gate.get("name") or ""),
+                status_badge(str(gate.get("status") or "unknown")),
+                escape(gate.get("recorded_at") or ""),
+                escape(details.get("stop_reason") or details.get("stop_code") or ""),
+            )
+        )
+    return table(("Gate", "Status", "Recorded", "Detail"), rows, "No gates recorded.")
+
+
+def pipeline_step_table(steps: Sequence[Any]) -> str:
+    rows = []
+    for step in steps:
+        if not isinstance(step, Mapping):
+            continue
+        rows.append(
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                escape(step.get("name") or ""),
+                status_badge(str(step.get("status") or "unknown")),
+                escape(step.get("task_id") or ""),
+                escape(step.get("stop_reason") or ""),
+            )
+        )
+    return table(("Step", "Status", "Task", "Stop Reason"), rows, "No steps recorded.")
+
+
+def pipeline_reference_list(session: Mapping[str, Any]) -> str:
+    refs = []
+    for label, key in (
+        ("Changes", "linked_change_ids"),
+        ("Reports", "report_ids"),
+        ("Reviews", "review_ids"),
+        ("Commits", "commit_ids"),
+    ):
+        values = _string_items(session.get(key))
+        refs.append("<li><strong>{}</strong>: {}</li>".format(escape(label), escape(", ".join(values) or "none")))
+    return '<ul class="compact-list">{}</ul>'.format("".join(refs))
+
+
+def pipeline_session_table(sessions: Sequence[Any]) -> str:
+    rows = []
+    for session in sessions:
+        if not isinstance(session, Mapping):
+            continue
+        rows.append(
+            "<tr><td><code>{}</code></td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                escape(session.get("id") or ""),
+                status_badge(str(session.get("status") or "unknown")),
+                escape(session.get("policy") or ""),
+                escape(session.get("current_task_ref") or session.get("current_task_id") or ""),
+                escape(session.get("current_step") or ""),
+                escape(session.get("stop_reason") or ""),
+            )
+        )
+    return table(
+        ("Session", "Status", "Policy", "Task", "Step", "Stop Reason"),
+        rows,
+        "No pipeline sessions recorded.",
+    )
+
+
+def pipeline_audit_table(events: Sequence[Any]) -> str:
+    rows = []
+    for event in events:
+        if not isinstance(event, Mapping):
+            continue
+        rows.append(
+            "<tr><td><code>{}</code></td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                escape(event.get("event_id") or ""),
+                escape(event.get("timestamp") or ""),
+                escape(event.get("command") or ""),
+                escape(event.get("entity_id") or ""),
+                escape(event.get("summary") or ""),
+            )
+        )
+    return table(
+        ("Event", "Time", "Command", "Entity", "Summary"),
+        rows,
+        "No pipeline audit entries.",
+    )
+
+
+def pipeline_reason_list(reasons: Sequence[Any]) -> str:
+    items = []
+    for reason in reasons:
+        if isinstance(reason, Mapping):
+            items.append(
+                "<li><strong>{}</strong> {}</li>".format(
+                    escape(reason.get("code") or ""),
+                    escape(reason.get("detail") or ""),
+                )
+            )
+    if not items:
+        return '<span class="muted">none</span>'
+    return '<ul class="compact-list">{}</ul>'.format("".join(items))
+
+
+def _pipeline_task_label(item: Mapping[str, Any]) -> str:
+    return str(
+        item.get("ref")
+        or item.get("legacy_id")
+        or item.get("id")
+        or item.get("selected_ref")
+        or "unknown"
+    )
+
+
+def _pipeline_review_summary(review: Mapping[str, Any]) -> str:
+    required = []
+    if review.get("require_machine_review"):
+        required.append("machine {}".format(review.get("required_machine_outcome")))
+    if review.get("require_codex_review"):
+        required.append("codex {}".format(review.get("required_codex_decision")))
+    return ", ".join(required) or "not required"
 
 
 def render_tasks(
@@ -1075,6 +1542,7 @@ def action_result_panel(payload: Mapping[str, Any]) -> str:
     sections.extend(_file_list_panel("Generated Files", result.get("generated_files")))
     sections.extend(_message_panel("Warnings", "warn", _messages(result.get("warnings"))))
     sections.extend(_message_panel("Errors", "fail", visible_errors))
+    sections.extend(_pipeline_result_panel(data))
     sections.extend(_next_actions_panel(result, summary))
     sections.append(_technical_details(payload))
     sections.append("</section>")
@@ -1111,6 +1579,7 @@ def _result_target(data: Mapping[str, Any]) -> str:
         ("Task", data.get("task_ref") or task.get("ref") or task.get("id")),
         ("Change", data.get("change_ref") or change.get("id")),
         ("Epic", data.get("epic_ref") or epic.get("id")),
+        ("Session", data.get("session_id")),
     ):
         text = str(value or "").strip()
         if text:
@@ -1128,6 +1597,18 @@ def _result_steps(
     summary_steps = summary.get("steps")
     if isinstance(summary_steps, list):
         return [step for step in summary_steps if isinstance(step, Mapping)]
+    side_effects = data.get("side_effects")
+    if isinstance(side_effects, list):
+        return [
+            {
+                "id": str(effect.get("command") or ""),
+                "title": str(effect.get("command") or "Pipeline side effect"),
+                "status": "ok" if effect.get("ok") else "failed",
+                "route": str(effect.get("message") or ""),
+            }
+            for effect in side_effects
+            if isinstance(effect, Mapping)
+        ]
     return []
 
 
@@ -1216,6 +1697,76 @@ def _message_panel(
         '<ul class="result-messages">{}</ul>'.format("".join(items)),
         "</section>",
     ]
+
+
+def _pipeline_result_panel(data: Mapping[str, Any]) -> list[str]:
+    if not data.get("session_id"):
+        return []
+    sections = []
+    facts = []
+    for label, key in (
+        ("Session", "session_id"),
+        ("Stop Code", "stop_code"),
+        ("Stop Reason", "stop_reason"),
+        ("Current Task", "current_task_id"),
+        ("Current Step", "current_step"),
+        ("Step Status", "current_step_status"),
+    ):
+        value = str(data.get(key) or "").strip()
+        if value:
+            facts.append("<li><strong>{}</strong>: {}</li>".format(escape(label), escape(value)))
+    if facts:
+        sections.extend(
+            [
+                '<section class="result-section">',
+                "<h3>Pipeline Result</h3>",
+                '<ul class="result-actions">{}</ul>'.format("".join(facts)),
+                "</section>",
+            ]
+        )
+
+    blockers = []
+    for blocker in data.get("blockers") or []:
+        if isinstance(blocker, Mapping):
+            blockers.append(
+                "<li><strong>{}</strong>: {}</li>".format(
+                    escape(blocker.get("code") or "BLOCKED"),
+                    escape(blocker.get("reason") or ""),
+                )
+            )
+    if blockers:
+        sections.extend(
+            [
+                '<section class="result-section result-section-warn">',
+                "<h3>Blockers</h3>",
+                '<ul class="result-messages">{}</ul>'.format("".join(blockers)),
+                "</section>",
+            ]
+        )
+
+    refs = []
+    for label, key in (
+        ("Completed Tasks", "completed_tasks"),
+        ("Changed Tasks", "changed_tasks"),
+        ("Requested Changes", "requested_changes"),
+        ("Accepted Changes", "accepted_changes"),
+        ("Reports", "report_ids"),
+        ("Reviews", "review_ids"),
+        ("Commits", "commits"),
+    ):
+        values = _string_items(data.get(key))
+        if values:
+            refs.append("<li><strong>{}</strong>: {}</li>".format(escape(label), escape(", ".join(values))))
+    if refs:
+        sections.extend(
+            [
+                '<section class="result-section">',
+                "<h3>Pipeline References</h3>",
+                '<ul class="result-actions">{}</ul>'.format("".join(refs)),
+                "</section>",
+            ]
+        )
+    return sections
 
 
 def _next_actions_panel(
@@ -3364,6 +3915,33 @@ def status_badge(value: str) -> str:
         escape(class_name),
         escape(safe),
     )
+
+
+def pipeline_query_options(query: Mapping[str, Sequence[str]]) -> dict[str, Any]:
+    max_tasks_text = _query_value(query, "max_tasks")
+    max_tasks = int(max_tasks_text) if max_tasks_text.isdigit() else None
+    order_by = _query_value(query, "order_by") or "execution"
+    if order_by not in {"execution", "owner", "selected"}:
+        order_by = "execution"
+    return {
+        "policy_name": _query_value(query, "policy") or "dry_run",
+        "task_refs": _query_items(query, "task_ref"),
+        "epic_ids": _query_items(query, "epic"),
+        "statuses": _query_items(query, "status"),
+        "max_tasks": max_tasks,
+        "order_by": order_by,
+    }
+
+
+def _query_items(query: Mapping[str, Sequence[str]], name: str) -> tuple[str, ...]:
+    items: list[str] = []
+    for value in query.get(name) or ():
+        for line in str(value).splitlines():
+            for item in line.split(","):
+                text = item.strip()
+                if text:
+                    items.append(text)
+    return tuple(items)
 
 
 def _query_enabled(query: Mapping[str, Sequence[str]], name: str) -> bool:

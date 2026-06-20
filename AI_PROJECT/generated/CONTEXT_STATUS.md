@@ -1,19 +1,19 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/generated/CONTEXT_PACK.md -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-043 UIX-06 Update UI workflow documentation Update owner-facing documentation for the improved UI cockpit, task filters, workflow buttons, Evolution tab, and bulk file import. Document the new owner workflow after UI cockpit improvements so daily operation is clear and old manual command-heavy instructions are de-emphasized. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Update owner quickstart with UI-first daily workflow. Document Tasks filtering/grouping/collapse. Document task row workflow buttons. Document action result panel. Document Evolution management tab. Document Bulk Task Import from paste and file. Clarify that legacy ctl scripts remain compatibility tools. Clarify that UI writes route through governed workflows/commands. Run docctl validation/render/check-generated if documentation registry is used. Do not change command behavior. Do not add new UI actions. Do not edit generated docs manually. Do not mark docs accepted without Human Owner approval. README.md AGENTS.md ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md ai-system/project-control/** if documentation index or appendix updates are needed AI_PROJECT/state/docs.json via docctl.py only AI_PROJECT/events/doc-events.jsonl via docctl.py only AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only Documentation describes the UI-first daily workflow. Documentation explains task filters, workflow buttons, Evolution tab, and bulk file import. Documentation preserves protected-file and generated-output rules. Legacy ctl scripts are documented as compatibility layer. Documentation checks and project-control checks pass. Verify that documentation matches the implemented UI behavior. Verify that outdated command-heavy workflow is not presented as the preferred path.","schema_version":1,"task_id":"TASK-043"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-066 PIPE-15 Pipeline SOP Documentation Document the supervised batch pipeline runner, policies, gates, UI flow, blockers, and operator responsibilities. Create owner-facing and system-facing SOP documentation for the PIPE epic after implementation details are stable. ai-system/project-control/pipeline-runner.md Human Owner and Codex can operate the supervised batch pipeline safely using documented SOPs. Create or update pipeline runner documentation. Document Queue -> Policy -> Change -> Prepare -> Token Gate -> Codex Execute -> Report -> Machine Review -> Codex Review -> Done/Rework -> Accept Change -> Commit -> Next / Stop on Blocker. Document policy presets and what each one may or may not automate. Document token budget gate behavior and strict-mode failure cases. Document Codex Executor report requirements and Codex Reviewer read-only responsibilities. Document Machine Review and Codex Review gate meanings. Document auto-close, rework loop, Change acceptance, and local commit rules. Document UI dashboard operation and CLI equivalents. Document common blockers, unsafe conditions, recovery paths, and audit trail interpretation. Run docctl validation/render/check-generated and project-control checks. Do not change pipeline command behavior. Do not mark documentation accepted without Human Owner approval. Do not edit generated documentation manually. Do not document unsupported unsafe automation as available. ai-system/project-control/pipeline-runner.md ai-system/project-control/10-owner-quickstart.md ai-system/project-control/04-command-catalog.md ai-system/project-control/README.md if index update is needed README.md if owner-facing quick links are needed AGENTS.md if Codex handoff rules need a pointer AI_PROJECT/state/docs.json via docctl.py only AI_PROJECT/events/doc-events.jsonl via docctl.py only AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only Pipeline SOP documents the approved algorithm and stop conditions. Documentation clearly distinguishes policy-selected automation from forbidden autonomy. Documentation says Codex Reviewer is read-only and cannot mutate files/lifecycle/commits. Documentation says commit is local-only and push/merge remain forbidden. Documentation explains token budget strict-mode failures. Documentation checks and project-control validations pass. Verify documentation does not overclaim unimplemented behavior. Verify generated docs are refreshed only through docctl.py.","schema_version":1,"task_id":"TASK-066"} -->
 
 # Context Status
 
 Context pack exists: `true`
 Mode: `task`
-Task ID: `TASK-043`
+Task ID: `TASK-066`
 Limit: `8`
-Docs revision: `24`
-Tasks revision: `468`
+Docs revision: `27`
+Tasks revision: `593`
 Indexed source documents: `10`
-Indexed chunks: `890`
+Indexed chunks: `891`
 Selected chunks: `8`
-Excluded registered sources: `134`
+Excluded registered sources: `135`
 
 ## Selected Source Paths
 
@@ -24,5 +24,5 @@ Excluded registered sources: `134`
 
 ## Exclusion Reasons
 
-- inactive document excluded by default: `93`
+- inactive document excluded by default: `94`
 - template document excluded by default: `41`

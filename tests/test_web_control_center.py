@@ -225,6 +225,148 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("Clear Current", dashboard_body)
         self.assertIn("Current Execution", tasks_body)
 
+    def test_pipeline_page_shows_policy_queue_session_audit_and_actions(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-064",
+                        "ref": "PIPE-13",
+                        "legacy_id": "TASK-064",
+                        "status": "ready",
+                        "title": "PIPE-13 Pipeline UI Dashboard",
+                        "summary": "Add a pipeline dashboard.",
+                        "epic_id": "EPIC-007",
+                        "epic_key": "PIPE",
+                        "order": 13,
+                        "local_seq": 13,
+                    }
+                ],
+                current_task_id="TASK-064",
+                epics=[
+                    {
+                        "id": "EPIC-007",
+                        "key": "PIPE",
+                        "status": "active",
+                        "title": "Pipeline Automation",
+                        "order": 7,
+                    }
+                ],
+                changes=[
+                    {
+                        "id": "CHG-047",
+                        "status": "approved",
+                        "title": "PIPE-13 Pipeline UI Dashboard",
+                        "linked_tasks": ["TASK-064"],
+                        "order": 47,
+                    }
+                ],
+                pipeline={
+                    "schema_version": 1,
+                    "revision": 2,
+                    "created_at": "2026-06-20T09:00:00Z",
+                    "updated_at": "2026-06-20T09:05:00Z",
+                    "current_session_id": "PSESS-001",
+                    "sessions": [
+                        {
+                            "id": "PSESS-001",
+                            "status": "blocked",
+                            "selected_queue": {
+                                "selection": "ready_queue",
+                                "task_refs": ["PIPE-13"],
+                                "epic_ids": [],
+                                "statuses": ["ready"],
+                                "max_tasks": 2,
+                                "order_by": "execution",
+                                "include_blocked_tasks": False,
+                            },
+                            "policy_snapshot": {"name": "supervised"},
+                            "current_task_id": "TASK-064",
+                            "current_task_ref": "PIPE-13",
+                            "current_step": "run_next",
+                            "current_step_status": "blocked",
+                            "attempt_counters": {"steps": 1, "tasks": 0, "rework": 0},
+                            "gate_outcomes": [
+                                {
+                                    "name": "token_budget",
+                                    "status": "blocked",
+                                    "recorded_at": "2026-06-20T09:05:00Z",
+                                    "details": {
+                                        "stop_code": "TOKEN_BUDGET_FAILURE",
+                                        "stop_reason": "Token Budget Gate failed.",
+                                    },
+                                }
+                            ],
+                            "steps": [
+                                {
+                                    "name": "run_next",
+                                    "status": "blocked",
+                                    "task_id": "TASK-064",
+                                    "stop_reason": "TOKEN_BUDGET_FAILURE: Token Budget Gate failed.",
+                                    "gate_outcomes": [],
+                                }
+                            ],
+                            "linked_change_ids": ["CHG-047"],
+                            "report_ids": ["RPT-001"],
+                            "review_ids": ["REV-001"],
+                            "commit_ids": [],
+                            "audit_event_ids": ["EVT-001"],
+                            "stop_reason": "TOKEN_BUDGET_FAILURE: Token Budget Gate failed.",
+                            "created_at": "2026-06-20T09:00:00Z",
+                            "updated_at": "2026-06-20T09:05:00Z",
+                            "started_at": "2026-06-20T09:04:00Z",
+                            "finished_at": "",
+                        }
+                    ],
+                },
+                pipeline_events=[
+                    {
+                        "event_id": "EVT-001",
+                        "timestamp": "2026-06-20T09:05:00Z",
+                        "actor": "tester",
+                        "command": "pipeline.step.result",
+                        "entity_type": "pipeline_session",
+                        "entity_id": "PSESS-001",
+                        "revision_before": 1,
+                        "revision_after": 2,
+                        "payload": {
+                            "session_id": "PSESS-001",
+                            "step": {"name": "run_next", "status": "blocked"},
+                            "gate_outcome": {"name": "token_budget", "status": "blocked"},
+                        },
+                    }
+                ],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route(
+                "/pipeline?policy=supervised&status=ready&max_tasks=2",
+                model,
+            )
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Pipeline Queue Selector", body)
+        self.assertIn("Policy Preset Preview", body)
+        self.assertIn("Queue Preview", body)
+        self.assertIn("PIPE-13", body)
+        self.assertIn("PSESS-001", body)
+        self.assertIn("TOKEN_BUDGET_FAILURE", body)
+        self.assertIn("Latest Pipeline Audit", body)
+        self.assertIn("pipeline.step.result", body)
+        self.assertIn('value="pipeline.session.create"', body)
+        self.assertIn("Create Session", body)
+        self.assertIn('value="pipeline.run_next"', body)
+        self.assertIn("Run Next", body)
+        self.assertIn('value="pipeline.run_until_blocker"', body)
+        self.assertIn("Run Until Blocker", body)
+        self.assertIn('value="pipeline.session.stop"', body)
+        self.assertIn("Stop Session", body)
+        self.assertIn('value="pipeline.render"', body)
+        self.assertIn("Refresh Status", body)
+        self.assertIn('name="confirm" value="yes" required', body)
+
     def test_current_execution_panel_shows_stale_prompt_context_and_selection_warning(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -718,7 +860,7 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertNotIn('value="task.refresh_execution_context"', review_body)
         self.assertNotIn('value="task.submit_for_review"', review_body)
 
-    def test_tasks_page_suggests_refresh_for_current_review_task_with_stale_context(self):
+    def test_tasks_page_keeps_approve_done_primary_for_review_task_with_stale_context(self):
         tasks = [
             {
                 "id": "TASK-100",
@@ -756,7 +898,8 @@ class WebControlCenterTests(unittest.TestCase):
             status, _, body = route("/tasks?status=in_review&group=none", model)
 
         self.assertEqual(status.value, 200)
-        self.assertIn("Next:</strong> Refresh Context", body)
+        self.assertIn("Next:</strong> Approve &amp; Done", body)
+        self.assertIn('value="task.close_reviewed"', body)
         self.assertIn('value="task.refresh_execution_context"', body)
         self.assertIn("Context Pack tasks revision is 0 but current is 1", body)
         self.assertNotIn("Refresh Context unavailable: task status is in_review", body)
@@ -1984,6 +2127,129 @@ class WebControlCenterTests(unittest.TestCase):
                 self.assertEqual(Path(argv[1]).name, "aictl.py")
                 self.assertEqual(argv[-len(expected_tail) :], expected_tail)
 
+    def test_pipeline_web_actions_delegate_to_aictl(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"ok": true, "data": {"session_id": "PSESS-001"}}\n',
+            stderr="",
+        )
+
+        cases = [
+            (
+                {
+                    "action": "pipeline.session.create",
+                    "confirm": "yes",
+                    "policy": "supervised",
+                    "task_ref": "PIPE-13",
+                    "status_filter": "ready",
+                    "max_tasks": "2",
+                    "order_by": "execution",
+                    "current_task_id": "TASK-064",
+                    "current_task_ref": "PIPE-13",
+                    "change": "CHG-047",
+                    "report": "RPT-001",
+                    "status": "planned",
+                },
+                [
+                    "pipeline",
+                    "session",
+                    "create",
+                    "--policy",
+                    "supervised",
+                    "--task-ref",
+                    "PIPE-13",
+                    "--status-filter",
+                    "ready",
+                    "--max-tasks",
+                    "2",
+                    "--order-by",
+                    "execution",
+                    "--current-task-id",
+                    "TASK-064",
+                    "--current-task-ref",
+                    "PIPE-13",
+                    "--change",
+                    "CHG-047",
+                    "--report",
+                    "RPT-001",
+                    "--status",
+                    "planned",
+                ],
+            ),
+            (
+                {
+                    "action": "pipeline.run_next",
+                    "confirm": "yes",
+                    "session_id": "PSESS-001",
+                },
+                ["pipeline", "run-next", "PSESS-001"],
+            ),
+            (
+                {
+                    "action": "pipeline.run_until_blocker",
+                    "confirm": "yes",
+                    "session_id": "PSESS-001",
+                },
+                ["pipeline", "run-until-blocker", "PSESS-001", "--confirm"],
+            ),
+            (
+                {
+                    "action": "pipeline.session.stop",
+                    "confirm": "yes",
+                    "session_id": "PSESS-001",
+                    "reason": "Owner stop",
+                    "status": "stopped",
+                },
+                [
+                    "pipeline",
+                    "session",
+                    "stop",
+                    "PSESS-001",
+                    "--reason",
+                    "Owner stop",
+                    "--status",
+                    "stopped",
+                ],
+            ),
+            (
+                {
+                    "action": "pipeline.render",
+                    "confirm": "yes",
+                },
+                ["pipeline", "render"],
+            ),
+        ]
+
+        for fields, expected_tail in cases:
+            with self.subTest(action=fields["action"]):
+                with patch(
+                    "ai_project_ctl.web.actions.subprocess.run",
+                    return_value=completed_process,
+                ) as run:
+                    result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                        fields
+                    )
+
+                argv = run.call_args.args[0]
+
+                self.assertTrue(result.ok)
+                self.assertEqual(Path(argv[1]).name, "aictl.py")
+                self.assertEqual(argv[-len(expected_tail) :], expected_tail)
+
+    def test_pipeline_run_action_requires_confirmation(self):
+        with patch("ai_project_ctl.web.actions.subprocess.run") as run:
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor("/tmp/project", actor="tester").execute(
+                    {
+                        "action": "pipeline.run_next",
+                        "session_id": "PSESS-001",
+                    }
+                )
+
+        self.assertEqual(raised.exception.code, "WEB_ACTION_CONFIRMATION_REQUIRED")
+        run.assert_not_called()
+
     def test_prepare_for_codex_action_result_includes_next_instruction(self):
         completed_process = subprocess.CompletedProcess(
             args=[],
@@ -2107,6 +2373,75 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("textarea readonly", body)
         self.assertIn("Read AI_PROJECT/generated/CODEX_PROMPT.md and execute it.", body)
         self.assertNotIn("scripts/aictl.py", body)
+
+    def test_pipeline_action_result_panel_shows_blockers_refs_and_side_effects(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "ok": True,
+                    "command": "pipeline.run_until_blocker",
+                    "domain": "pipeline",
+                    "message": "TOKEN_BUDGET_FAILURE: Token Budget Gate failed.",
+                    "data": {
+                        "session_id": "PSESS-001",
+                        "stop_code": "TOKEN_BUDGET_FAILURE",
+                        "stop_reason": "Token Budget Gate failed.",
+                        "current_task_id": "TASK-064",
+                        "current_step": "run_next",
+                        "current_step_status": "blocked",
+                        "blockers": [
+                            {
+                                "code": "TOKEN_BUDGET_FAILURE",
+                                "reason": "Token Budget Gate failed.",
+                            }
+                        ],
+                        "completed_tasks": [],
+                        "changed_tasks": ["TASK-064"],
+                        "requested_changes": [],
+                        "accepted_changes": ["CHG-047"],
+                        "report_ids": ["RPT-001"],
+                        "review_ids": ["REV-001"],
+                        "commits": ["abc123"],
+                        "side_effects": [
+                            {
+                                "ok": True,
+                                "command": "pipeline.run_next",
+                                "message": "Stopped on token gate.",
+                            }
+                        ],
+                    },
+                    "changed_files": ["AI_PROJECT/state/pipeline_sessions.json"],
+                    "generated_files": ["AI_PROJECT/generated/PIPELINE_STATUS.md"],
+                    "owner_action_required": "Review the blocked pipeline session.",
+                }
+            )
+            + "\n",
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "pipeline.run_until_blocker",
+                    "confirm": "yes",
+                    "session_id": "PSESS-001",
+                }
+            )
+
+        body = render_action_result(result)
+
+        self.assertIn("Pipeline Result", body)
+        self.assertIn("TOKEN_BUDGET_FAILURE", body)
+        self.assertIn("Blockers", body)
+        self.assertIn("Pipeline References", body)
+        self.assertIn("RPT-001", body)
+        self.assertIn("REV-001", body)
+        self.assertIn("abc123", body)
+        self.assertIn("pipeline.run_next", body)
+        self.assertIn("AI_PROJECT/generated/PIPELINE_STATUS.md", body)
+        self.assertIn("Review the blocked pipeline session.", body)
 
     def test_action_error_panel_keeps_failed_workflow_step_visible(self):
         error = WebActionError(
@@ -2541,6 +2876,8 @@ def write_web_state(
     changes=None,
     execution=None,
     task_reports=None,
+    pipeline=None,
+    pipeline_events=None,
 ):
     state_dir = root / "AI_PROJECT" / "state"
     state_dir.mkdir(parents=True, exist_ok=True)
@@ -2584,6 +2921,18 @@ def write_web_state(
     if task_reports is not None:
         (state_dir / "task_reports.json").write_text(
             json.dumps(task_reports),
+            encoding="utf-8",
+        )
+    if pipeline is not None:
+        (state_dir / "pipeline_sessions.json").write_text(
+            json.dumps(pipeline),
+            encoding="utf-8",
+        )
+    if pipeline_events is not None:
+        events_dir = root / "AI_PROJECT" / "events"
+        events_dir.mkdir(parents=True, exist_ok=True)
+        (events_dir / "pipeline-events.jsonl").write_text(
+            "".join(json.dumps(event) + "\n" for event in pipeline_events),
             encoding="utf-8",
         )
 

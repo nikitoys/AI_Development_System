@@ -1,0 +1,1054 @@
+import json
+import subprocess
+import tempfile
+import unittest
+from dataclasses import replace
+from pathlib import Path
+
+from ai_project_ctl.pipeline import CodexAdapterMode, CodexExecutionMode, policy_preset
+from ai_project_ctl.pipeline.runner import run_next
+from ai_project_ctl.pipeline.session import create_session
+from ai_project_ctl.pipeline.state import pipeline_state_path
+
+
+def completed(stdout="OK\n", returncode=0, stderr=""):
+    return subprocess.CompletedProcess(args=[], returncode=returncode, stdout=stdout, stderr=stderr)
+
+
+def write_project_state(root: Path, *, change_status: str | None = "approved") -> None:
+    state_dir = root / "AI_PROJECT" / "state"
+    state_dir.mkdir(parents=True)
+    (state_dir / "plan.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "revision": 1,
+                "initiatives": [{"id": "INIT-001", "status": "active"}],
+                "epics": [
+                    {
+                        "id": "EPIC-001",
+                        "initiative_id": "INIT-001",
+                        "status": "planned",
+                        "key": "APP",
+                        "order": 1,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (state_dir / "tasks.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "revision": 1,
+                "current_task_id": None,
+                "tasks": [
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "uid": "uid_task_001",
+                        "legacy_id": "TASK-001",
+                        "aliases": ["TASK-001"],
+                        "title": "Runnable task",
+                        "status": "ready",
+                        "epic_id": "EPIC-001",
+                        "priority": 1,
+                        "order": 1,
+                        "local_seq": 1,
+                        "depends_on": [],
+                        "allowed_files": [
+                            "ai_project_ctl/pipeline/report_gate.py",
+                            "tests/**",
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    changes = []
+    if change_status:
+        changes.append(
+            {
+                "id": "CHG-001",
+                "status": change_status,
+                "linked_tasks": ["TASK-001"],
+            }
+        )
+    (state_dir / "evolution.json").write_text(
+        json.dumps({"schema_version": 1, "revision": 1, "changes": changes}),
+        encoding="utf-8",
+    )
+
+
+def successful_workflow_runner(
+    calls,
+    *,
+    root: Path | None = None,
+    prompt_text: str = "Source ID: TASK-001\n\nSmall prompt.",
+    report_on_local_codex: bool = False,
+):
+    def fake_run(argv):
+        calls.append(list(argv))
+        if list(argv) == ["codex", "exec"]:
+            if root is not None and report_on_local_codex:
+                write_report_state(root, "TASK-001", "RPT-001")
+            return completed(stdout="codex adapter finished\n")
+        if Path(argv[1]).name == "taskctl.py" and "resolve" in argv:
+            return completed(
+                json.dumps(
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "status": "ready",
+                    }
+                )
+                + "\n"
+            )
+        if root is not None and "codex" in argv and "build" in argv:
+            prompt = root / "AI_PROJECT" / "generated" / "CODEX_PROMPT.md"
+            prompt.parent.mkdir(parents=True, exist_ok=True)
+            prompt.write_text(prompt_text, encoding="utf-8")
+        return completed('{"ok": true}\n')
+
+    return fake_run
+
+
+def stateful_workflow_runner(
+    calls,
+    *,
+    root: Path,
+    prompt_text: str = "Source ID: TASK-001\n\nSmall prompt.",
+):
+    task_status = {"value": "ready"}
+
+    def fake_run(argv):
+        args = list(argv)
+        calls.append(args)
+        if args == ["codex", "exec"]:
+            write_report_state(root, "TASK-001", "RPT-001")
+            return completed(stdout="codex adapter finished\n")
+        if len(args) > 1 and Path(args[1]).name == "taskctl.py" and "resolve" in args:
+            return completed(
+                json.dumps(
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "status": task_status["value"],
+                    }
+                )
+                + "\n"
+            )
+        if "codex" in args and "build" in args:
+            prompt = root / "AI_PROJECT" / "generated" / "CODEX_PROMPT.md"
+            prompt.parent.mkdir(parents=True, exist_ok=True)
+            prompt.write_text(prompt_text, encoding="utf-8")
+        if "task" in args and "transition" in args and "TASK-001" in args and "--to" in args:
+            task_status["value"] = args[args.index("--to") + 1]
+        return completed('{"ok": true}\n')
+
+    return fake_run, task_status
+
+
+def committing_workflow_runner(
+    calls,
+    *,
+    root: Path,
+    prompt_text: str = "Source ID: TASK-001\n\nSmall prompt.",
+    git_status_stdout: str = " M ai_project_ctl/pipeline/report_gate.py\n",
+):
+    task_status = {"value": "ready"}
+
+    def fake_run(argv):
+        args = list(argv)
+        if args and args[0] == "git":
+            calls.append(args)
+            if args == ["git", "status", "--short", "--untracked-files=all"]:
+                return completed(stdout=git_status_stdout)
+            if args[:3] == ["git", "add", "--"]:
+                return completed(stdout="")
+            if args[:3] == ["git", "commit", "-m"]:
+                return completed(stdout="[main abc1234] pipeline commit\n")
+            if args == ["git", "rev-parse", "--verify", "HEAD"]:
+                return completed(stdout="abc1234deadbeef\n")
+            return completed(returncode=1, stderr="unexpected git command\n")
+
+        calls.append(args)
+        if args == ["codex", "exec"]:
+            write_report_state(root, "TASK-001", "RPT-001")
+            return completed(stdout="codex adapter finished\n")
+        if len(args) > 1 and Path(args[1]).name == "taskctl.py" and "resolve" in args:
+            return completed(
+                json.dumps(
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "status": task_status["value"],
+                    }
+                )
+                + "\n"
+            )
+        if "codex" in args and "build" in args:
+            prompt = root / "AI_PROJECT" / "generated" / "CODEX_PROMPT.md"
+            prompt.parent.mkdir(parents=True, exist_ok=True)
+            prompt.write_text(prompt_text, encoding="utf-8")
+        if "task" in args and "transition" in args and "TASK-001" in args and "--to" in args:
+            task_status["value"] = args[args.index("--to") + 1]
+            _write_task_status(root, task_status["value"])
+        return completed('{"ok": true}\n')
+
+    return fake_run
+
+
+def _write_task_status(root: Path, status: str) -> None:
+    path = root / "AI_PROJECT" / "state" / "tasks.json"
+    state = json.loads(path.read_text(encoding="utf-8"))
+    for task in state["tasks"]:
+        if task.get("id") == "TASK-001":
+            task["status"] = status
+    path.write_text(json.dumps(state), encoding="utf-8")
+
+
+def valid_report(task_id: str) -> dict:
+    return {
+        "schema_version": 1,
+        "task_id": task_id,
+        "task_ref": "APP-01",
+        "reported_task_id": task_id,
+        "reported_task_ref": "APP-01",
+        "implementation_summary": "Implemented the selected task.",
+        "changed_files": ["ai_project_ctl/pipeline/report_gate.py"],
+        "generated_files": ["AI_PROJECT/generated/PIPELINE_STATUS.md"],
+        "checks": [
+            {
+                "name": "unit",
+                "command": "python -m unittest tests.test_pipeline_runner",
+                "result": "pass",
+                "duration_sec": 0.1,
+                "blocking": True,
+                "details": "",
+            }
+        ],
+        "warnings": [],
+        "blockers": [],
+        "notes": [],
+        "owner_decision_required": False,
+        "token_usage": {
+            "prompt_tokens": 100,
+            "context_tokens": 20,
+            "remaining_tokens": 1000,
+            "token_count_strategy": "local_byte_estimate",
+            "token_count_estimated": True,
+            "token_count_unavailable": False,
+        },
+    }
+
+
+def valid_review_output(verdict="APPROVE", findings=None) -> str:
+    return json.dumps(
+        {
+            "verdict": verdict,
+            "summary": "Semantic review completed.",
+            "evidence": {
+                "task_id": "TASK-001",
+                "report_id": "RPT-001",
+                "report_gate_status": "pass",
+                "machine_review_status": "pass",
+            },
+            "findings": list(findings or []),
+            "risks": [],
+        }
+    )
+
+
+def write_report_state(root: Path, task_id: str, report_id: str, report: dict | None = None) -> None:
+    report_data = report or valid_report(task_id)
+    state_dir = root / "AI_PROJECT" / "state"
+    state_dir.mkdir(parents=True, exist_ok=True)
+    (state_dir / "task_reports.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "revision": 1,
+                "created_at": "2026-06-19T00:00:00Z",
+                "updated_at": "2026-06-19T00:00:00Z",
+                "latest_by_task": {task_id: report_id},
+                "reports": [
+                    {
+                        "id": report_id,
+                        "task_id": task_id,
+                        "task_ref": "APP-01",
+                        "submitted_at": "2026-06-19T00:00:00Z",
+                        "submitted_by": "tester",
+                        "source_file": "/tmp/report.json",
+                        "report": report_data,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def load_pipeline(root: Path):
+    return json.loads(pipeline_state_path(root).read_text(encoding="utf-8"))
+
+
+class PipelineRunnerTests(unittest.TestCase):
+    def test_dry_run_records_selected_task_and_stops_without_prepare(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy_name="dry_run",
+                task_refs=("APP-01",),
+            )
+            calls = []
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=successful_workflow_runner(calls),
+            )
+            state = load_pipeline(root)
+            latest = state["sessions"][0]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "BLOCKED")
+            self.assertEqual(result.data["selected_task"]["id"], "TASK-001")
+            self.assertEqual(calls, [])
+            self.assertEqual(latest["steps"][0]["status"], "stopped")
+            self.assertEqual(latest["steps"][0]["gate_outcomes"][0]["name"], "codex_execution_policy")
+
+    def test_supervised_blocks_when_approved_change_is_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status=None)
+            session = create_session(root=root, actor="tester", policy_name="supervised")
+            calls = []
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=successful_workflow_runner(calls),
+            )
+            state = load_pipeline(root)
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "BLOCKED")
+            self.assertIn("Approved linked Evolution Change", result.data["stop_reason"])
+            self.assertEqual(calls, [])
+            self.assertEqual(state["sessions"][0]["status"], "blocked")
+            self.assertEqual(state["sessions"][0]["steps"][0]["gate_outcomes"][0]["name"], "evolution_change_gate")
+
+    def test_supervised_builds_prompt_and_stops_before_codex_execution(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            session = create_session(root=root, actor="tester", policy_name="supervised")
+            calls = []
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=successful_workflow_runner(calls),
+            )
+            step = load_pipeline(root)["sessions"][0]["steps"][0]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "BLOCKED")
+            self.assertIn("policy stops before Codex execution", result.data["stop_reason"])
+            self.assertTrue(calls)
+            self.assertTrue(any("context" in call for call in calls))
+            self.assertEqual(step["status"], "passed")
+            self.assertEqual(step["gate_outcomes"][0]["status"], "skipped")
+
+    def test_run_codex_records_token_gate_pass_before_manual_adapter_blocker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_test",
+                codex=replace(supervised.codex, mode=CodexExecutionMode.RUN_CODEX),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=successful_workflow_runner(calls, root=root),
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "BLOCKED")
+            self.assertEqual(gates[0]["name"], "token_budget_gate")
+            self.assertEqual(gates[0]["status"], "pass")
+            self.assertEqual(gates[0]["details"]["token_budget"]["code"], "TOKEN_BUDGET_PASS")
+            self.assertEqual(gates[1]["name"], "codex_execution_adapter")
+            self.assertEqual(gates[1]["status"], "blocked")
+            self.assertTrue(gates[1]["details"]["codex_adapter_called"])
+            self.assertEqual(
+                gates[1]["details"]["adapter"]["code"],
+                "CODEX_ADAPTER_MANUAL_HANDOFF_REQUIRED",
+            )
+
+    def test_run_codex_local_adapter_records_codex_review_pass_then_policy_stop(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_local_adapter_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=successful_workflow_runner(
+                    calls,
+                    root=root,
+                    report_on_local_codex=True,
+                ),
+                codex_reviewer=lambda prompt: valid_review_output(),
+            )
+            latest = load_pipeline(root)["sessions"][0]
+            gates = latest["steps"][0]["gate_outcomes"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "BLOCKED")
+            self.assertIn("policy stops before auto-close", result.data["stop_reason"])
+            self.assertEqual(gates[1]["name"], "codex_execution_adapter")
+            self.assertEqual(gates[1]["status"], "pass")
+            self.assertEqual(gates[1]["details"]["adapter"]["report_id"], "RPT-001")
+            self.assertEqual(gates[2]["name"], "codex_report_gate")
+            self.assertEqual(gates[2]["status"], "pass")
+            self.assertEqual(gates[2]["details"]["report_gate"]["report_id"], "RPT-001")
+            self.assertEqual(gates[3]["name"], "machine_review_gate")
+            self.assertEqual(gates[3]["status"], "pass")
+            self.assertEqual(gates[4]["name"], "codex_review_gate")
+            self.assertEqual(gates[4]["status"], "pass")
+            self.assertEqual(gates[4]["details"]["codex_review"]["verdict"], "APPROVE")
+            self.assertEqual(gates[5]["name"], "pipeline_policy")
+            self.assertEqual(gates[5]["status"], "skipped")
+            self.assertEqual(latest["report_ids"], ["RPT-001"])
+            self.assertEqual(len(latest["review_ids"]), 1)
+            self.assertIn(["codex", "exec"], calls)
+
+    def test_run_codex_blocks_when_codex_review_output_is_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_missing_review_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=successful_workflow_runner(
+                    [],
+                    root=root,
+                    report_on_local_codex=True,
+                ),
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "CODEX_REVIEW_GATE_FAILURE")
+            self.assertEqual(gates[4]["name"], "codex_review_gate")
+            self.assertEqual(gates[4]["status"], "fail")
+            self.assertEqual(
+                gates[4]["details"]["codex_review"]["code"],
+                "CODEX_REVIEW_OUTPUT_MISSING",
+            )
+
+    def test_run_codex_request_changes_blocks_before_policy_stop(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_request_changes_review_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=successful_workflow_runner(
+                    [],
+                    root=root,
+                    report_on_local_codex=True,
+                ),
+                codex_reviewer=lambda prompt: valid_review_output(
+                    "REQUEST_CHANGES",
+                    findings=(
+                        {
+                            "severity": "Major",
+                            "message": "Acceptance evidence is incomplete.",
+                            "file": "ai_project_ctl/pipeline/codex_review.py",
+                        },
+                    ),
+                ),
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "CODEX_REVIEW_REQUEST_CHANGES")
+            self.assertEqual(gates[4]["name"], "codex_review_gate")
+            self.assertEqual(gates[4]["status"], "blocked")
+            self.assertEqual(len(gates), 5)
+
+    def test_autoclose_policy_closes_after_machine_pass_and_codex_approve(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised_autoclose")
+            policy = replace(
+                supervised,
+                name="run_codex_autoclose_close_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+            fake_runner, task_status = stateful_workflow_runner(calls, root=root)
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=fake_runner,
+                codex_reviewer=lambda prompt: valid_review_output(),
+            )
+            latest = load_pipeline(root)["sessions"][0]
+            gates = latest["steps"][0]["gate_outcomes"]
+            commands = [" ".join(call) for call in calls]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "TASK_AUTO_CLOSED")
+            self.assertEqual(task_status["value"], "done")
+            self.assertEqual(gates[5]["name"], "review_close_gate")
+            self.assertEqual(gates[5]["status"], "pass")
+            self.assertEqual(gates[5]["details"]["close_policy"]["action"], "close_task")
+            self.assertTrue(any("task transition TASK-001 --to in_review" in command for command in commands))
+            self.assertTrue(any("task approve TASK-001 --notes Pipeline policy=run_codex_autoclose_close_test" in command for command in commands))
+            self.assertTrue(any("machine_gate=pass/MACHINE_REVIEW_PASS" in command for command in commands))
+            self.assertTrue(any("codex_review=APPROVE/CODEX_REVIEW_APPROVE" in command for command in commands))
+            self.assertTrue(any("report_id=RPT-001" in command for command in commands))
+            self.assertTrue(any("task transition TASK-001 --to done" in command for command in commands))
+
+    def test_autoclose_policy_requests_changes_when_review_requests_changes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised_autoclose")
+            policy = replace(
+                supervised,
+                name="run_codex_autoclose_rework_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+            fake_runner, task_status = stateful_workflow_runner(calls, root=root)
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=fake_runner,
+                codex_reviewer=lambda prompt: valid_review_output(
+                    "REQUEST_CHANGES",
+                    findings=(
+                        {
+                            "severity": "Major",
+                            "message": "Acceptance evidence is incomplete.",
+                            "file": "ai_project_ctl/pipeline/close_policy.py",
+                        },
+                    ),
+                ),
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+            commands = [" ".join(call) for call in calls]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "CODEX_REVIEW_REQUEST_CHANGES")
+            self.assertEqual(task_status["value"], "changes_requested")
+            self.assertEqual(gates[4]["name"], "codex_review_gate")
+            self.assertEqual(gates[4]["status"], "blocked")
+            self.assertEqual(gates[5]["name"], "review_close_gate")
+            self.assertEqual(gates[5]["status"], "blocked")
+            self.assertEqual(gates[5]["details"]["close_policy"]["action"], "request_changes")
+            self.assertTrue(any("task transition TASK-001 --to in_review" in command for command in commands))
+            self.assertTrue(any("task add-note TASK-001 --text Pipeline policy=run_codex_autoclose_rework_test" in command for command in commands))
+            self.assertTrue(any("task transition TASK-001 --to changes_requested" in command for command in commands))
+
+    def test_autoclose_policy_stops_when_codex_review_is_blocked(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised_autoclose")
+            policy = replace(
+                supervised,
+                name="run_codex_autoclose_blocked_review_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+            fake_runner, _task_status = stateful_workflow_runner(calls, root=root)
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=fake_runner,
+                codex_reviewer=lambda prompt: valid_review_output(
+                    "BLOCKED",
+                    findings=(
+                        {
+                            "severity": "Major",
+                            "message": "Semantic review could not be completed.",
+                            "file": "ai_project_ctl/pipeline/close_policy.py",
+                        },
+                    ),
+                ),
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+            commands = [" ".join(call) for call in calls]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "CODEX_REVIEW_BLOCKED")
+            self.assertEqual(gates[4]["name"], "codex_review_gate")
+            self.assertEqual(gates[4]["status"], "blocked")
+            self.assertEqual(len(gates), 5)
+            self.assertFalse(any("task approve TASK-001" in command for command in commands))
+            self.assertFalse(any("task transition TASK-001 --to changes_requested" in command for command in commands))
+
+    def test_autoclose_policy_does_not_close_after_machine_review_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised_autoclose")
+            policy = replace(
+                supervised,
+                name="run_codex_autoclose_machine_fail_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+            base_runner, _task_status = stateful_workflow_runner(calls, root=root)
+
+            def fake_runner(argv):
+                if tuple(argv)[-2:] == ("project", "protected-check"):
+                    calls.append(list(argv))
+                    return completed(returncode=1, stderr="protected drift\n")
+                return base_runner(argv)
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=fake_runner,
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+            commands = [" ".join(call) for call in calls]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "MACHINE_REVIEW_FAILURE")
+            self.assertEqual(gates[3]["name"], "machine_review_gate")
+            self.assertEqual(gates[3]["status"], "fail")
+            self.assertFalse(any("task approve TASK-001" in command for command in commands))
+            self.assertFalse(any("review_close_gate" == gate["name"] for gate in gates))
+
+    def test_autoclose_policy_stops_when_rework_limit_is_reached(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised_autoclose")
+            policy = replace(
+                supervised,
+                name="run_codex_autoclose_rework_limit_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+                rework=replace(supervised.rework, max_rework_attempts=1),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            state_path = pipeline_state_path(root)
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            state["sessions"][0]["attempt_counters"]["rework"] = 1
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+            calls = []
+            fake_runner, task_status = stateful_workflow_runner(calls, root=root)
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=fake_runner,
+                codex_reviewer=lambda prompt: valid_review_output(
+                    "REQUEST_CHANGES",
+                    findings=(
+                        {
+                            "severity": "Major",
+                            "message": "Acceptance evidence is incomplete.",
+                            "file": "ai_project_ctl/pipeline/close_policy.py",
+                        },
+                    ),
+                ),
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+            commands = [" ".join(call) for call in calls]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "REWORK_LIMIT_REACHED")
+            self.assertEqual(task_status["value"], "in_progress")
+            self.assertEqual(gates[5]["name"], "review_close_gate")
+            self.assertEqual(gates[5]["status"], "blocked")
+            self.assertEqual(gates[5]["details"]["close_policy"]["action"], "stop")
+            self.assertFalse(any("task transition TASK-001 --to changes_requested" in command for command in commands))
+
+    def test_run_codex_blocks_downstream_when_machine_review_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_machine_review_failure_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+            base_runner = successful_workflow_runner(
+                calls,
+                root=root,
+                report_on_local_codex=True,
+            )
+
+            def fake_runner(argv):
+                if tuple(argv)[-2:] == ("project", "protected-check"):
+                    return completed(returncode=1, stderr="protected drift\n")
+                return base_runner(argv)
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=fake_runner,
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "MACHINE_REVIEW_FAILURE")
+            self.assertEqual(gates[3]["name"], "machine_review_gate")
+            self.assertEqual(gates[3]["status"], "fail")
+            self.assertNotIn("codex_review_gate", [gate["name"] for gate in gates])
+
+    def test_run_codex_blocks_downstream_when_report_gate_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_report_gate_failure_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+            report = valid_report("TASK-001")
+            report["blockers"] = ["Manual blocker."]
+            base_runner = successful_workflow_runner(calls, root=root)
+
+            def fake_runner(argv):
+                if list(argv) == ["codex", "exec"]:
+                    calls.append(list(argv))
+                    write_report_state(root, "TASK-001", "RPT-001", report=report)
+                    return completed(stdout="report submitted\n")
+                return base_runner(argv)
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=fake_runner,
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "CODEX_REPORT_GATE_FAILURE")
+            self.assertEqual(gates[2]["name"], "codex_report_gate")
+            self.assertEqual(gates[2]["status"], "fail")
+            self.assertNotIn("codex_review_gate", [gate["name"] for gate in gates])
+            self.assertIn(["codex", "exec"], calls)
+
+    def test_run_codex_stops_on_token_budget_failure_before_adapter(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_low_budget_test",
+                codex=replace(supervised.codex, mode=CodexExecutionMode.RUN_CODEX),
+                token_budget=replace(
+                    supervised.token_budget,
+                    max_prompt_tokens=30,
+                    max_context_tokens=30,
+                    min_remaining_tokens=20,
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=successful_workflow_runner(calls, root=root, prompt_text="x" * 80),
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "TOKEN_BUDGET_FAILURE")
+            self.assertEqual(gates[0]["name"], "token_budget_gate")
+            self.assertEqual(gates[0]["status"], "fail")
+            self.assertEqual(
+                gates[0]["details"]["token_budget"]["code"],
+                "TOKEN_BUDGET_LOW_REMAINING",
+            )
+            self.assertEqual(len(gates), 1)
+
+    def test_autoclose_policy_stops_when_build_prompt_only_cannot_review(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy_name="supervised_autoclose",
+            )
+            calls = []
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=successful_workflow_runner(calls),
+            )
+            gate = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"][0]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "NOT_IMPLEMENTED")
+            self.assertEqual(gate["name"], "review_close_gate")
+            self.assertIn("requires Codex execution", result.data["stop_reason"])
+
+    def test_local_commit_policy_commits_after_close_and_green_readiness(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            supervised = policy_preset("supervised_local_commit")
+            policy = replace(
+                supervised,
+                name="run_codex_local_commit_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=committing_workflow_runner(calls, root=root),
+                codex_reviewer=lambda prompt: valid_review_output(),
+            )
+            latest = load_pipeline(root)["sessions"][0]
+            gates = latest["steps"][0]["gate_outcomes"]
+            git_calls = [call for call in calls if call and call[0] == "git"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "LOCAL_COMMIT_CREATED")
+            self.assertEqual(gates[5]["name"], "review_close_gate")
+            self.assertEqual(gates[5]["status"], "pass")
+            self.assertEqual(gates[6]["name"], "commit_gate")
+            self.assertEqual(gates[6]["status"], "pass")
+            self.assertEqual(latest["commit_ids"], ["abc1234deadbeef"])
+            self.assertEqual(git_calls[0], ["git", "status", "--short", "--untracked-files=all"])
+            self.assertEqual(git_calls[1], ["git", "add", "--", "ai_project_ctl/pipeline/report_gate.py"])
+            self.assertEqual(git_calls[2][:3], ["git", "commit", "-m"])
+            self.assertEqual(git_calls[3], ["git", "rev-parse", "--verify", "HEAD"])
+            self.assertFalse(any("push" in call for call in git_calls))
+            self.assertFalse(any("reset" in call for call in git_calls))
+
+    def test_local_commit_blocks_until_linked_change_is_accepted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised_local_commit")
+            policy = replace(
+                supervised,
+                name="run_codex_local_commit_change_gate_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=committing_workflow_runner(calls, root=root),
+                codex_reviewer=lambda prompt: valid_review_output(),
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+            git_calls = [call for call in calls if call and call[0] == "git"]
+            commit = gates[6]["details"]["commit"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "COMMIT_READINESS_FAILED")
+            self.assertEqual(gates[6]["name"], "commit_gate")
+            self.assertEqual(gates[6]["status"], "blocked")
+            self.assertEqual(commit["readiness"]["code"], "COMMIT_CHANGE_NOT_ACCEPTED")
+            self.assertEqual(git_calls, [])
+
+    def test_local_commit_refuses_unapproved_dirty_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            supervised = policy_preset("supervised_local_commit")
+            policy = replace(
+                supervised,
+                name="run_codex_local_commit_unrelated_files_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=committing_workflow_runner(
+                    calls,
+                    root=root,
+                    git_status_stdout=(
+                        " M ai_project_ctl/pipeline/report_gate.py\n"
+                        " M README.md\n"
+                    ),
+                ),
+                codex_reviewer=lambda prompt: valid_review_output(),
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+            git_calls = [call for call in calls if call and call[0] == "git"]
+            commit = gates[6]["details"]["commit"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "COMMIT_READINESS_FAILED")
+            self.assertEqual(commit["readiness"]["code"], "COMMIT_UNRELATED_FILES")
+            self.assertIn("README.md", commit["readiness"]["blockers"])
+            self.assertEqual(git_calls, [["git", "status", "--short", "--untracked-files=all"]])
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `470`
+Revision: `595`
 
 ## Executable Now
 
@@ -97,11 +97,43 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `WFA-20 (TASK-051)` [done] `EPIC-006` priority `1` — UIX-14 Add Commit Readiness View
   - `status_not_executable`: status is done
+- `PIPE-01 (TASK-052)` [done] `EPIC-007` priority `1` — PIPE-01 Automation Policy Model
+  - `status_not_executable`: status is done
 - `TASK-008` [done] `EPIC-003` priority `1` — P0 Strengthen docctl metadata and documentation gaps
+  - `status_not_executable`: status is done
+- `PIPE-02 (TASK-053)` [done] `EPIC-007` priority `1` — PIPE-02 Pipeline Queue Planner
   - `status_not_executable`: status is done
 - `TASK-009` [done] `EPIC-003` priority `1` — P1 Implement contextctl deterministic retrieval MVP
   - `status_not_executable`: status is done
+- `PIPE-03 (TASK-054)` [done] `EPIC-007` priority `1` — PIPE-03 Pipeline Session State
+  - `status_not_executable`: status is done
 - `TASK-010` [done] `EPIC-003` priority `1` — P2 Integrate Context Pack into codexctl prompt generation
+  - `status_not_executable`: status is done
+- `PIPE-04 (TASK-055)` [done] `EPIC-007` priority `1` — PIPE-04 Run Next Step Action
+  - `status_not_executable`: status is done
+- `PIPE-05 (TASK-056)` [done] `EPIC-007` priority `1` — PIPE-05 Batch Runner Run Until Blocker
+  - `status_not_executable`: status is done
+- `PIPE-06 (TASK-057)` [done] `EPIC-007` priority `1` — PIPE-06 Token Budget Gate
+  - `status_not_executable`: status is done
+- `PIPE-07 (TASK-058)` [done] `EPIC-007` priority `1` — PIPE-07 Codex Execution Adapter
+  - `status_not_executable`: status is done
+- `PIPE-08 (TASK-059)` [done] `EPIC-007` priority `1` — PIPE-08 Codex Report Gate
+  - `status_not_executable`: status is done
+- `PIPE-09 (TASK-060)` [done] `EPIC-007` priority `1` — PIPE-09 Machine Review Gate
+  - `status_not_executable`: status is done
+- `PIPE-10 (TASK-061)` [done] `EPIC-007` priority `1` — PIPE-10 Codex Review Gate
+  - `status_not_executable`: status is done
+- `PIPE-11 (TASK-062)` [done] `EPIC-007` priority `1` — PIPE-11 Auto Review Auto Close Policy
+  - `status_not_executable`: status is done
+- `PIPE-12 (TASK-063)` [done] `EPIC-007` priority `1` — PIPE-12 Controlled Git Commit Action
+  - `status_not_executable`: status is done
+- `PIPE-13 (TASK-064)` [done] `EPIC-007` priority `1` — PIPE-13 Pipeline UI Dashboard
+  - `status_not_executable`: status is done
+- `PIPE-14 (TASK-065)` [done] `EPIC-007` priority `1` — PIPE-14 Pipeline Audit Trail
+  - `status_not_executable`: status is done
+- `PIPE-15 (TASK-066)` [done] `EPIC-007` priority `1` — PIPE-15 Pipeline SOP Documentation
+  - `status_not_executable`: status is done
+- `PIPE-16 (TASK-067)` [done] `EPIC-007` priority `1` — BUG-01 Fix Approve & Done stale execution context handling
   - `status_not_executable`: status is done
 - `TIG-01 (TASK-012)` [done] `EPIC-004` priority `1` — TIG-01 Document task identity and execution graph design
   - `status_not_executable`: status is done

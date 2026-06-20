@@ -27,7 +27,7 @@ python scripts/aictl.py workflow list
 python scripts/aictl.py project doctor
 ```
 
-Use `/ai-system/project-control/10-owner-quickstart.md` for the practical UI-first owner workflow and `/ai-system/project-control/08-usage-guide.md` for the full Project Control Gateway usage guide.
+Use `/ai-system/project-control/10-owner-quickstart.md` for the practical UI-first owner workflow, `/ai-system/project-control/08-usage-guide.md` for the full Project Control Gateway usage guide and `/ai-system/project-control/pipeline-runner.md` for the supervised batch pipeline SOP.
 
 `AI_PROJECT` appears in three distinct contexts:
 

@@ -66,6 +66,8 @@ Each workflow posts to `/actions`, delegates through registered `aictl.py` workf
 
 `Evolution` lets you filter Change Proposals by Status, Type and search text, create a Change for a Task, and run owner-facing change workflows such as approve, move to review and accept when the proposal state allows them. Human Owner approval or acceptance notes are still required where the lifecycle requires them; Codex must not provide those notes on its own.
 
+`Pipeline` shows the supervised batch pipeline cockpit for queue preview, policy selection, current session state, gate outcomes, run-next, run-until-blocker and recent pipeline audit entries. It is supervised automation only; it does not approve Evolution Changes, accept final work, push, merge, or bypass review gates.
+
 `Actions` contains direct forms for Task creation, Bulk Task Import, health and repair checks, Task workflows, Task transitions, current Task changes, generated-output refreshes, and Codex/context builds. Bulk Task Import supports pasted JSON and `.json` or `.txt` file upload; leave Confirm unchecked for preview and check Confirm only when the preview is ready to create Tasks.
 
 ## Command-Line Equivalents
@@ -176,6 +178,40 @@ python scripts/aictl.py workflow run evolution.create_for_task --task CTL-12 --c
 `task.close_reviewed` is an owner-facing close helper. It requires explicit approval notes, rejects Tasks that are not `in_review`, delegates approval to `taskctl.py task approve` and then moves the Task to `done`.
 
 `evolution.create_for_task` drafts an Evolution Change from a bounded Task, adds derived affected files, risks and impact, links the Task, validates evolution state and moves the Change only to `ready`. It does not approve or accept the Change.
+
+## Supervised Pipeline Runner
+
+Use the Pipeline page when the Human Owner wants a supervised queue runner instead of manually pressing one task workflow at a time.
+
+The implemented pipeline flow is:
+
+```text
+Queue -> Policy -> Change -> Prepare -> Token Gate -> Codex Execute -> Report -> Machine Review -> Codex Review -> Done/Rework -> Accept Change -> Commit -> Next / Stop on Blocker
+```
+
+Policy presets decide what is allowed, but they do not remove owner gates:
+
+- `dry_run` keeps Codex execution, auto-close and commit disabled.
+- `supervised` selects from the ready queue and builds a Codex prompt package, then stops before Codex execution.
+- `supervised_autoclose` enables auto-close policy, but close still requires Codex execution evidence, Codex Report Gate PASS, Machine Review PASS and Codex Review APPROVE.
+- `supervised_local_commit` adds local-only commit policy after all review and commit-readiness gates pass. Push and merge remain forbidden.
+
+CLI equivalents:
+
+```bash
+python scripts/aictl.py pipeline status
+python scripts/aictl.py pipeline session create --policy supervised --task-ref PIPE-15
+python scripts/aictl.py pipeline run-next
+python scripts/aictl.py pipeline run-until-blocker --confirm
+python scripts/aictl.py pipeline render
+python scripts/aictl.py pipeline check-generated
+```
+
+Read the full SOP before running batches:
+
+```text
+ai-system/project-control/pipeline-runner.md
+```
 
 ## Bulk Task Import
 
@@ -356,6 +392,11 @@ evolution.approve_change
 evolution.move_to_review
 evolution.accept_change
 epic.close_if_complete
+pipeline.session.create
+pipeline.run_next
+pipeline.run_until_blocker
+pipeline.session.stop
+pipeline.render
 ```
 
 Every Web write action must:
@@ -400,6 +441,7 @@ python scripts/taskctl.py render
 python scripts/docctl.py render
 python scripts/contextctl.py render
 python scripts/evolutionctl.py render
+python scripts/aictl.py pipeline render
 ```
 
 Then check freshness:
@@ -409,6 +451,7 @@ python scripts/taskctl.py check-generated
 python scripts/docctl.py check-generated
 python scripts/contextctl.py check-generated
 python scripts/evolutionctl.py check-generated
+python scripts/aictl.py pipeline check-generated
 python scripts/check-protected-project-files.py --verbose
 ```
 

@@ -3,13 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `1003`
-Changes: `34`
+Revision: `1544`
+Changes: `50`
 
 ## Summary
 
-- `accepted`: 33
-- `approved`: 1
+- `accepted`: 50
 
 ## Changes
 
@@ -169,7 +168,7 @@ Linked tasks:
 
 ### CHG-004 — Record L4 Role-Agent Runtime Architecture
 
-Status: `approved`  
+Status: `accepted`  
 Type: `process`  
 Priority: `1`  
 Backward compatibility: `compatible`  
@@ -189,6 +188,9 @@ A source-of-truth architecture document is needed before implementation work on 
 
 Approved by: `Human Owner` at `2026-06-16T20:37:03Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T08:38:10Z`  
+Acceptance notes: Approve  
 
 Affected areas:
 
@@ -2130,3 +2132,1053 @@ Impact:
 Linked tasks:
 
 - TASK-051
+
+### CHG-035 — PIPE-01 Automation Policy Model
+
+Status: `accepted`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-01 requires an explicit Evolution Change Proposal before implementation: Define the supervised batch pipeline automation policy model and safe presets.
+
+Proposal:
+
+Implement the bounded task scope: Create a policy model for supervised batch pipeline execution.; Define policy fields for queue selection, linked Evolution Change creation/approval/acceptance, token budget thresholds, Codex execution mode, review behavior, rework loop, auto-close behavior, and local commit behavior.; Add safe presets such as dry_run, supervised, supervised_autoclose, and supervised_local_commit if appropriate.; Require explicit policy values for any action that can mutate lifecycle state, launch Codex, close tasks, accept Changes, or create commits.; Reject unsafe combinations such as auto-close without Machine Review PASS and Codex Review APPROVE, commit without commit readiness, push/merge, or execution without Token Budget Gate PASS.; Expose policy validation through a governed command or registry metadata if needed.; Add tests for valid presets, invalid combinations, defaults, and serialization.
+
+Rationale:
+
+Create the policy contract that controls what the Pipeline may do automatically: queue selection, Evolution Change handling, token budget, Codex execution, review, rework, closure, and local commit behavior.
+
+Approved by: `human_owner` at `2026-06-19T20:35:37Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-19T21:02:28Z`  
+Acceptance notes: Accept Change  
+
+Affected files:
+
+- ai_project_ctl/pipeline/policy.py
+- ai_project_ctl/pipeline/__init__.py
+- ai_project_ctl/core/registry.py if command metadata is needed
+- scripts/aictl.py if policy command routing is needed
+- tests/**
+- ai-system/project-control/** if policy documentation is needed
+
+Risks:
+
+- Boundary risk: Do not run tasks.
+- Boundary risk: Do not launch Codex.
+- Boundary risk: Do not close tasks, accept Changes, or commit.
+- Boundary risk: Do not implement queue execution loop.
+- Boundary risk: Do not bypass Human Owner policy selection.
+- Verify that policy cannot authorize push, merge, unsafe auto-close, lifecycle bypass, or execution without token gate.
+- Verify that policy values are explicit enough for audit.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-052.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Create a policy model for supervised batch pipeline execution.
+- Define policy fields for queue selection, linked Evolution Change creation/approval/acceptance, token budget thresholds, Codex execution mode, review behavior, rework loop, auto-close behavior, and local commit behavior.
+- Add safe presets such as dry_run, supervised, supervised_autoclose, and supervised_local_commit if appropriate.
+- Require explicit policy values for any action that can mutate lifecycle state, launch Codex, close tasks, accept Changes, or create commits.
+- Reject unsafe combinations such as auto-close without Machine Review PASS and Codex Review APPROVE, commit without commit readiness, push/merge, or execution without Token Budget Gate PASS.
+- Policy schema covers all approved pipeline automation decisions.
+- Policy validation rejects unsafe combinations with stable error codes.
+- Default policy is safe and does not auto-run Codex, auto-close tasks, accept Changes, or commit.
+
+Linked tasks:
+
+- TASK-052
+
+### CHG-036 — PIPE-02 Pipeline Queue Planner
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-02 requires an explicit Evolution Change Proposal before implementation: Select the next executable task from an owner-selected queue under policy constraints.
+
+Proposal:
+
+Implement the bounded task scope: Create a queue planner for selected task refs, epic filters, status filters, priority/order rules, and max task limits.; Reuse existing task executable queue semantics where possible.; Respect task dependencies, parent Epic/Initiative state, current-task conflicts, terminal statuses, and policy queue constraints.; Return deterministic queue preview with executable, waiting, skipped, and blocked reasons.; Select exactly one next executable task for run-next.; Do not mutate task state during planning.; Add tests for empty queue, executable queue, dependency-blocked tasks, invalid refs, and deterministic ordering.
+
+Rationale:
+
+Implement a deterministic queue planner that reads existing task execution state, owner queue filters, and policy constraints, then returns the next executable task without mutating lifecycle state.
+
+Approved by: `human_owner` at `2026-06-19T20:38:27Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-19T21:01:41Z`  
+Acceptance notes: Select the next executable task from an owner-selected queue under policy constraints.  
+
+Affected files:
+
+- ai_project_ctl/pipeline/queue.py
+- ai_project_ctl/pipeline/policy.py if compatibility changes are needed
+- ai_project_ctl/core/registry.py if command metadata is needed
+- scripts/aictl.py if queue preview command routing is needed
+- tests/**
+
+Risks:
+
+- Boundary risk: Do not run tasks.
+- Boundary risk: Do not create Evolution Changes.
+- Boundary risk: Do not modify task lifecycle state.
+- Boundary risk: Do not implement batch loop yet.
+- Boundary risk: Do not invent new task dependency semantics.
+- Verify that queue planning is read-only.
+- Verify that existing task executable semantics are preserved.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-053.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Create a queue planner for selected task refs, epic filters, status filters, priority/order rules, and max task limits.
+- Reuse existing task executable queue semantics where possible.
+- Respect task dependencies, parent Epic/Initiative state, current-task conflicts, terminal statuses, and policy queue constraints.
+- Return deterministic queue preview with executable, waiting, skipped, and blocked reasons.
+- Select exactly one next executable task for run-next.
+- Queue planner can preview owner-selected queues.
+- Queue planner selects the same next task deterministically for the same state and policy.
+- Tasks blocked by dependencies or parent state are not selected as executable.
+
+Linked tasks:
+
+- TASK-053
+
+### CHG-037 — PIPE-03 Pipeline Session State
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-03 requires an explicit Evolution Change Proposal before implementation: Persist supervised pipeline sessions, selected queue, policy snapshot, step status, stop reason, and audit references.
+
+Proposal:
+
+Implement the bounded task scope: Define pipeline session state schema with session id, status, selected queue, policy snapshot, current task, current step, attempt counters, gate outcomes, linked Change ids, report ids, review ids, commit ids if any, and stop reason.; Add governed state read/write paths for pipeline_sessions.json.; Append pipeline audit events for session creation, step start, step result, stop, and completion.; Generate a read-only Pipeline Status output if useful.; Support session statuses such as planned, running, stopped, blocked, failed, completed, and archived if appropriate.; Add validation for dangling task/change/report references.; Add tests for session creation, update, validation, and generated output freshness.
+
+Rationale:
+
+Add governed pipeline session state so batch runs are restartable, auditable, and stoppable without relying on transient UI memory or manual notes.
+
+Approved by: `human_owner` at `2026-06-19T20:39:14Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-19T21:20:17Z`  
+Acceptance notes: Persist supervised pipeline sessions, selected queue, policy snapshot, step status, stop reason, and audit references.  
+
+Affected files:
+
+- ai_project_ctl/pipeline/session.py
+- ai_project_ctl/pipeline/state.py
+- ai_project_ctl/core/registry.py if command metadata is needed
+- scripts/aictl.py if session command routing is needed
+- AI_PROJECT/state/pipeline_sessions.json via governed CLI/service only
+- AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only
+- tests/**
+
+Risks:
+
+- Boundary risk: Do not run Codex.
+- Boundary risk: Do not implement run-next step logic yet.
+- Boundary risk: Do not store secrets or raw prompts larger than necessary.
+- Boundary risk: Do not treat generated Pipeline Status as source of truth.
+- Verify state/events/generated separation.
+- Verify no raw secret or unnecessary prompt payload is stored in session state.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-054.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Define pipeline session state schema with session id, status, selected queue, policy snapshot, current task, current step, attempt counters, gate outcomes, linked Change ids, report ids, review ids, commit ids if any, and stop reason.
+- Add governed state read/write paths for pipeline_sessions.json.
+- Append pipeline audit events for session creation, step start, step result, stop, and completion.
+- Generate a read-only Pipeline Status output if useful.
+- Support session statuses such as planned, running, stopped, blocked, failed, completed, and archived if appropriate.
+- Pipeline session state is validated before and after mutation.
+- Session state records queue, policy snapshot, current task, gate outcomes, and stop reason.
+- Pipeline events are appended for session lifecycle mutations.
+
+Linked tasks:
+
+- TASK-054
+
+### CHG-038 — PIPE-04 Run Next Step Action
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-04 requires an explicit Evolution Change Proposal before implementation: Implement a supervised run-next pipeline action that advances exactly one safe step and stops on blockers.
+
+Proposal:
+
+Implement the bounded task scope: Add a run-next action for one pipeline session.; Resolve selected policy and queue.; Choose the next executable task through the queue planner.; Create a linked Evolution Change when required and policy allows.; Approve a linked Change only when policy explicitly allows and lifecycle gates pass.; Prepare task execution by setting current task, moving it to in_progress when valid, building Context Pack, and building Codex prompt.; Call Token Budget Gate before any Codex execution.; Call Codex Execution Adapter only when Token Budget Gate PASS.; Call report, machine review, Codex review, auto-close/rework, Change acceptance, and commit actions only when those components exist and policy allows.; Stop with a clear NOT_IMPLEMENTED, BLOCKED, POLICY_VIOLATION, UNSAFE_CONDITION, or TOKEN_BUDGET_FAILURE result when a required component is unavailable or fails.; Update pipeline session state and audit events for every decision.
+
+Rationale:
+
+Add the one-step pipeline executor. It should compose queue planning, policy checks, lifecycle preparation, gate calls, execution adapter calls, review gates, close/rework/accept/commit decisions, and session updates without running a full loop.
+
+Approved by: `human_owner` at `2026-06-19T20:40:01Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-19T21:39:41Z`  
+Acceptance notes: Implement a supervised run-next pipeline action that advances exactly one safe step and stops on blockers.  
+
+Affected files:
+
+- ai_project_ctl/pipeline/runner.py
+- ai_project_ctl/pipeline/**
+- ai_project_ctl/core/registry.py if command metadata is needed
+- ai_project_ctl/core/workflows.py if workflow routing is needed
+- ai_project_ctl/web/actions.py if UI action routing is needed
+- scripts/aictl.py
+- tests/**
+- AI_PROJECT/state/pipeline_sessions.json via governed CLI/service only
+- AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only
+
+Risks:
+
+- Boundary risk: Do not implement run-until-blocker loop.
+- Boundary risk: Do not push or merge.
+- Boundary risk: Do not bypass any existing task/evolution lifecycle validation.
+- Boundary risk: Do not close tasks unless policy and review gates allow.
+- Boundary risk: Do not silently continue after blockers.
+- Verify that run-next is a guarded orchestrator, not an unsafe autonomous loop.
+- Verify stop-on-first-blocker behavior.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-055.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add a run-next action for one pipeline session.
+- Resolve selected policy and queue.
+- Choose the next executable task through the queue planner.
+- Create a linked Evolution Change when required and policy allows.
+- Approve a linked Change only when policy explicitly allows and lifecycle gates pass.
+- Run-next advances at most one pipeline step.
+- Run-next records policy decision, selected task, gate result, and stop reason.
+- Run-next stops when a required component is not implemented instead of bypassing it.
+
+Linked tasks:
+
+- TASK-055
+
+### CHG-039 — PIPE-05 Batch Runner Run Until Blocker
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-05 requires an explicit Evolution Change Proposal before implementation: Run repeated pipeline run-next steps until first blocker, policy violation, unsafe condition, token failure, or queue completion.
+
+Proposal:
+
+Implement the bounded task scope: Add run-until-blocker action for an existing or newly created pipeline session.; Loop over run-next with max steps, max tasks, max failures, and max rework attempts from policy.; Stop on first blocker, policy violation, unsafe condition, token budget failure, report failure, review failure, commit readiness failure, or queue completion.; Persist each step result to session state and pipeline audit events.; Return a final summary with completed tasks, changed tasks, requested changes, accepted Changes, commits if any, blockers, and next owner action.; Expose CLI command and optional UI action with explicit confirmation.; Add tests for queue completion, blocker stop, policy stop, max-step stop, and session resume behavior if supported.
+
+Rationale:
+
+Add the supervised batch runner loop over run-next. It must honor policy limits, max steps, max tasks, rework limits, and stop-on-blocker semantics.
+
+Approved by: `human_owner` at `2026-06-19T20:40:27Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T07:34:26Z`  
+Acceptance notes: Accept Change  
+
+Affected files:
+
+- ai_project_ctl/pipeline/batch.py
+- ai_project_ctl/pipeline/**
+- ai_project_ctl/core/registry.py if command metadata is needed
+- ai_project_ctl/web/actions.py if UI action routing is needed
+- ai_project_ctl/web/server.py if UI controls are added
+- scripts/aictl.py
+- tests/**
+- AI_PROJECT/state/pipeline_sessions.json via governed CLI/service only
+- AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only
+
+Risks:
+
+- Boundary risk: Do not run as a background daemon.
+- Boundary risk: Do not continue past blockers.
+- Boundary risk: Do not push, merge, or open PRs.
+- Boundary risk: Do not create tasks during the batch run unless a bounded policy explicitly supports it later.
+- Boundary risk: Do not hide failed step details.
+- Verify no background/unsupervised execution is introduced.
+- Verify that failed gates are visible and stop the loop.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-056.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add run-until-blocker action for an existing or newly created pipeline session.
+- Loop over run-next with max steps, max tasks, max failures, and max rework attempts from policy.
+- Stop on first blocker, policy violation, unsafe condition, token budget failure, report failure, review failure, commit readiness failure, or queue completion.
+- Persist each step result to session state and pipeline audit events.
+- Return a final summary with completed tasks, changed tasks, requested changes, accepted Changes, commits if any, blockers, and next owner action.
+- Batch runner stops on the first blocker or policy violation.
+- Batch runner stops when token budget gate fails.
+- Batch runner stops when queue is complete and reports completion.
+
+Linked tasks:
+
+- TASK-056
+
+### CHG-040 — PIPE-06 Token Budget Gate
+
+Status: `accepted`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-06 requires an explicit Evolution Change Proposal before implementation: Gate Codex execution using the actual prompt payload token budget and policy thresholds.
+
+Proposal:
+
+Implement the bounded task scope: Read the actual generated Codex prompt payload and included Context Pack metadata.; Count tokens through an available local/provider strategy or return token_count_unavailable with a stable reason.; Compare prompt size, model context limit, reserved output tokens, and policy remaining-token threshold.; Fail in strict mode when token count is unavailable.; Fail when prompt does not fit, remaining tokens are below threshold, or context requires compact/split.; Return PASS/WARN/FAIL gate result with measured bytes, estimated/measured tokens, thresholds, and reason.; Expose gate result to pipeline session state and audit.; Add tests for pass, oversized prompt, low remaining tokens, unavailable counter in strict mode, and compact/split required.
+
+Rationale:
+
+Implement the Token Budget Gate that counts or estimates the actual Codex payload, checks remaining-token thresholds, detects unavailable token counting in strict mode, and blocks execution when context must be compacted or split.
+
+Approved by: `human_owner` at `2026-06-19T20:40:49Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-19T21:53:38Z`  
+Acceptance notes: Gate Codex execution using the actual prompt payload token budget and policy thresholds.  
+
+Affected files:
+
+- ai_project_ctl/pipeline/token_budget.py
+- ai_project_ctl/pipeline/policy.py if policy compatibility is needed
+- ai_project_ctl/pipeline/runner.py if integration is needed
+- ai_project_ctl/core/registry.py if command metadata is needed
+- scripts/aictl.py if gate command routing is needed
+- tests/**
+- ai-system/project-control/** if token gate documentation is needed
+
+Risks:
+
+- Boundary risk: Do not call external token services unless explicitly configured and policy allows.
+- Boundary risk: Do not compact or split context in this task.
+- Boundary risk: Do not launch Codex.
+- Boundary risk: Do not mutate task scope or allowed_files based on retrieved context.
+- Verify strict-mode failure behavior.
+- Verify token gate cannot be bypassed by run-next before Codex execution.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-057.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Read the actual generated Codex prompt payload and included Context Pack metadata.
+- Count tokens through an available local/provider strategy or return token_count_unavailable with a stable reason.
+- Compare prompt size, model context limit, reserved output tokens, and policy remaining-token threshold.
+- Fail in strict mode when token count is unavailable.
+- Fail when prompt does not fit, remaining tokens are below threshold, or context requires compact/split.
+- Token Budget Gate evaluates the actual Codex prompt payload.
+- Gate blocks execution when prompt does not fit or remaining tokens are below policy threshold.
+- Gate blocks in strict mode when token count is unavailable.
+
+Linked tasks:
+
+- TASK-057
+
+### CHG-041 — PIPE-07 Codex Execution Adapter
+
+Status: `accepted`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-07 requires an explicit Evolution Change Proposal before implementation: Launch or hand off Codex Executor only after policy and Token Budget Gate PASS, then capture execution metadata.
+
+Proposal:
+
+Implement the bounded task scope: Define Codex Execution Adapter interface with dry-run, manual-handoff, and configured-local-command modes if appropriate.; Require policy permission before any non-dry-run execution.; Require Token Budget Gate PASS before execution.; Pass only the generated Codex prompt path/payload and bounded task context.; Capture start/end time, return code, stdout/stderr references, timeout, and adapter mode.; Require Codex to submit a structured execution report through the existing report path before downstream gates can pass.; Stop safely on timeout, non-zero exit, missing prompt, stale prompt, or missing report.; Add tests with a fake adapter/runner; do not require real Codex in normal test runs.
+
+Rationale:
+
+Add a controlled Codex execution adapter with dry-run/manual default behavior, explicit policy enablement, timeout, command allowlist, captured output, and report handoff instructions.
+
+Approved by: `human_owner` at `2026-06-19T20:41:09Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-19T22:14:54Z`  
+Acceptance notes: Accepted after task PIPE-07 review  
+
+Affected files:
+
+- ai_project_ctl/pipeline/codex_adapter.py
+- ai_project_ctl/pipeline/runner.py if integration is needed
+- ai_project_ctl/pipeline/policy.py if policy compatibility is needed
+- ai_project_ctl/core/registry.py if command metadata is needed
+- scripts/aictl.py if adapter command routing is needed
+- tests/**
+- ai-system/project-control/** if adapter documentation is needed
+
+Risks:
+
+- Boundary risk: Do not bypass task allowed_files.
+- Boundary risk: Do not give Codex permission to push, merge, or approve owner decisions.
+- Boundary risk: Do not require external Codex services for local tests.
+- Boundary risk: Do not auto-close tasks based only on adapter success.
+- Verify no external execution happens by default.
+- Verify adapter cannot run before Token Budget Gate PASS.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-058.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Define Codex Execution Adapter interface with dry-run, manual-handoff, and configured-local-command modes if appropriate.
+- Require policy permission before any non-dry-run execution.
+- Require Token Budget Gate PASS before execution.
+- Pass only the generated Codex prompt path/payload and bounded task context.
+- Capture start/end time, return code, stdout/stderr references, timeout, and adapter mode.
+- Adapter default mode is safe and does not unexpectedly launch external tools.
+- Adapter refuses execution unless policy allows it and Token Budget Gate PASS is present.
+- Adapter captures execution metadata and exposes it to pipeline session state.
+
+Linked tasks:
+
+- TASK-058
+
+### CHG-042 — PIPE-08 Codex Report Gate
+
+Status: `accepted`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-08 requires an explicit Evolution Change Proposal before implementation: Validate Codex structured execution reports before review and closure gates.
+
+Proposal:
+
+Implement the bounded task scope: Read the latest structured task execution report for the selected task.; Validate report schema, task id/ref match, implementation summary, changed files, generated files, checks, warnings, blockers, notes, owner decision flag, and token usage fields.; Require blockers to stop the pipeline.; Require token usage evidence when policy requires it.; Reject reports with changed files outside task allowed_files unless explicitly classified as generated or governed state output.; Return PASS/WARN/FAIL with report id and failure reasons.; Add tests for missing report, invalid schema, mismatched task, blockers present, missing token usage, and out-of-scope changed files.
+
+Rationale:
+
+Add a report gate that checks the latest Codex execution report for required fields, task identity, token usage, changed files, generated files, checks, warnings, blockers, and credibility basics.
+
+Approved by: `human_owner` at `2026-06-19T20:41:40Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-19T22:36:04Z`  
+Acceptance notes: Validate Codex structured execution reports before review and closure gates.  
+
+Affected files:
+
+- ai_project_ctl/pipeline/report_gate.py
+- ai_project_ctl/pipeline/runner.py if integration is needed
+- scripts/taskctl.py if report schema compatibility is required
+- ai_project_ctl/web/read_model.py if report gate status is surfaced
+- tests/**
+- ai-system/project-control/** if report gate documentation is needed
+
+Risks:
+
+- Boundary risk: Do not decide semantic acceptance criteria; that belongs to Codex Review Gate.
+- Boundary risk: Do not close tasks.
+- Boundary risk: Do not edit report state manually.
+- Boundary risk: Do not hide blockers as warnings.
+- Verify report credibility checks are machine-checkable and do not replace semantic review.
+- Verify blockers cannot be downgraded silently.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-059.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Read the latest structured task execution report for the selected task.
+- Validate report schema, task id/ref match, implementation summary, changed files, generated files, checks, warnings, blockers, notes, owner decision flag, and token usage fields.
+- Require blockers to stop the pipeline.
+- Require token usage evidence when policy requires it.
+- Reject reports with changed files outside task allowed_files unless explicitly classified as generated or governed state output.
+- Report Gate blocks missing, invalid, mismatched, or blocker-containing reports.
+- Report Gate checks changed files against task allowed_files/governed generated files.
+- Report Gate checks token usage when policy requires it.
+
+Linked tasks:
+
+- TASK-059
+
+### CHG-043 — PIPE-09 Machine Review Gate
+
+Status: `accepted`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-09 requires an explicit Evolution Change Proposal before implementation: Run deterministic machine checks for tests, doctor, protected files, generated outputs, allowed_files, token usage, and blockers.
+
+Proposal:
+
+Implement the bounded task scope: Run or collect project-control validation checks: task validate, task graph validate, generated checks, evolution validate/check-generated, context validate/check-generated, project doctor, and protected-file check.; Run task/report-declared tests or configured test commands only when policy allows and commands are safe.; Check changed files against task allowed_files and protected-file rules.; Check report blockers and token usage against policy.; Return PASS only when all blocking checks pass.; Return structured evidence with command, result, duration if available, stdout/stderr summaries, and failure reasons.; Add tests with fake command runners and representative pass/fail cases.
+
+Rationale:
+
+Implement the machine review gate that collects deterministic evidence before Codex semantic review or auto-close decisions.
+
+Approved by: `human_owner` at `2026-06-19T20:42:05Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T06:12:52Z`  
+Acceptance notes: Run deterministic machine checks for tests, doctor, protected files, generated outputs, allowed_files, token usage, and blockers.  
+
+Affected files:
+
+- ai_project_ctl/pipeline/machine_review.py
+- ai_project_ctl/pipeline/report_gate.py if integration is needed
+- ai_project_ctl/pipeline/runner.py if integration is needed
+- ai_project_ctl/core/registry.py if command metadata is needed
+- scripts/aictl.py if gate command routing is needed
+- tests/**
+- ai-system/project-control/** if machine review documentation is needed
+
+Risks:
+
+- Boundary risk: Do not do semantic acceptance review.
+- Boundary risk: Do not close tasks.
+- Boundary risk: Do not accept Changes.
+- Boundary risk: Do not commit.
+- Boundary risk: Do not suppress doctor/protected-file failures.
+- Verify that deterministic checks are actually blocking.
+- Verify that allowed_files/protected-file checks cannot be bypassed by report wording.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-060.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Run or collect project-control validation checks: task validate, task graph validate, generated checks, evolution validate/check-generated, context validate/check-generated, project doctor, and protected-file check.
+- Run task/report-declared tests or configured test commands only when policy allows and commands are safe.
+- Check changed files against task allowed_files and protected-file rules.
+- Check report blockers and token usage against policy.
+- Return PASS only when all blocking checks pass.
+- Machine Review PASS requires all blocking checks to pass.
+- Machine Review FAIL stops the pipeline.
+- Protected-file and allowed_files violations are blocking.
+
+Linked tasks:
+
+- TASK-060
+
+### CHG-044 — PIPE-10 Codex Review Gate
+
+Status: `accepted`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-10 requires an explicit Evolution Change Proposal before implementation: Run a narrow read-only Codex Reviewer prompt for semantic review and structured verdict.
+
+Proposal:
+
+Implement the bounded task scope: Create a narrow review prompt package for Codex Reviewer.; Include task scope, out_of_scope, acceptance criteria, allowed_files, execution report summary, machine review evidence, changed files, and relevant context references.; Require reviewer role to be read-only: no file edits, no lifecycle transitions, no commits.; Support structured verdicts APPROVE, REQUEST_CHANGES, BLOCKED with findings and severity.; Fail the gate if reviewer output is missing, malformed, or contradicts required evidence.; Expose review result to pipeline session state and audit.; Add tests using fake reviewer outputs for approve, request changes, blocked, malformed, and missing verdict.
+
+Rationale:
+
+Add the semantic review gate. It should generate and optionally run a narrow Codex Reviewer prompt that checks acceptance criteria, out_of_scope, hidden risks, and report credibility without changing files or lifecycle state.
+
+Approved by: `human_owner` at `2026-06-19T20:42:35Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T06:29:13Z`  
+Acceptance notes: Run a narrow read-only Codex Reviewer prompt for semantic review and structured verdict.  
+
+Affected files:
+
+- ai_project_ctl/pipeline/codex_review.py
+- ai_project_ctl/pipeline/runner.py if integration is needed
+- AI_PROJECT/generated/PIPELINE_REVIEW_PROMPT.md via governed CLI/service only if implemented
+- AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only
+- tests/**
+- ai-system/project-control/** if review gate documentation is needed
+
+Risks:
+
+- Boundary risk: Do not let reviewer edit files.
+- Boundary risk: Do not let reviewer move task lifecycle.
+- Boundary risk: Do not let reviewer approve as Human Owner.
+- Boundary risk: Do not auto-close tasks in this task.
+- Boundary risk: Do not run reviewer before Machine Review evidence exists.
+- Verify reviewer prompt does not authorize file edits or lifecycle movement.
+- Verify semantic verdict cannot override Machine Review FAIL.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-061.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Create a narrow review prompt package for Codex Reviewer.
+- Include task scope, out_of_scope, acceptance criteria, allowed_files, execution report summary, machine review evidence, changed files, and relevant context references.
+- Require reviewer role to be read-only: no file edits, no lifecycle transitions, no commits.
+- Support structured verdicts APPROVE, REQUEST_CHANGES, BLOCKED with findings and severity.
+- Fail the gate if reviewer output is missing, malformed, or contradicts required evidence.
+- Codex Review Gate prompt is narrow and read-only.
+- Reviewer cannot mutate files, lifecycle, or commits through this gate.
+- Gate accepts only structured verdicts APPROVE, REQUEST_CHANGES, or BLOCKED.
+
+Linked tasks:
+
+- TASK-061
+
+### CHG-045 — PIPE-11 Auto Review Auto Close Policy
+
+Status: `accepted`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-11 requires an explicit Evolution Change Proposal before implementation: Apply policy-controlled close/rework decisions only after Machine Review PASS and Codex Review APPROVE.
+
+Proposal:
+
+Implement the bounded task scope: Implement decision logic for Machine Review result plus Codex Review result.; Allow auto-close only if policy allows and Machine Review PASS and Codex Review APPROVE.; Move task to changes_requested or start a bounded rework loop only when policy allows and review verdict requests changes.; Stop when review is blocked, malformed, failing, or policy disallows automatic lifecycle mutation.; Require explicit audit notes that identify policy, machine gate, Codex review verdict, and report id.; Prevent auto-close when task report has blockers or changed files outside allowed_files.; Add tests for approve+pass close, request changes, blocked review, machine fail, policy disabled, and rework-limit reached.
+
+Rationale:
+
+Implement the decision logic that maps review gate results into task done, changes_requested, rework loop, or stop states under explicit automation policy.
+
+Approved by: `human_owner` at `2026-06-19T20:43:02Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T06:47:03Z`  
+Acceptance notes: Apply policy-controlled close/rework decisions only after Machine Review PASS and Codex Review APPROVE.  
+
+Affected files:
+
+- ai_project_ctl/pipeline/close_policy.py
+- ai_project_ctl/pipeline/runner.py if integration is needed
+- ai_project_ctl/core/workflows.py if close/request-changes workflow metadata needs compatible updates
+- tests/**
+- ai-system/project-control/** if auto-close documentation is needed
+
+Risks:
+
+- Boundary risk: Do not bypass task lifecycle transitions.
+- Boundary risk: Do not accept linked Evolution Changes.
+- Boundary risk: Do not commit.
+- Boundary risk: Do not treat Codex Review as Human Owner approval outside the selected policy.
+- Boundary risk: Do not continue rework indefinitely.
+- Verify auto-close cannot happen on Machine Review FAIL or Codex Review REQUEST_CHANGES.
+- Verify lifecycle changes are routed through governed commands.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-062.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Implement decision logic for Machine Review result plus Codex Review result.
+- Allow auto-close only if policy allows and Machine Review PASS and Codex Review APPROVE.
+- Move task to changes_requested or start a bounded rework loop only when policy allows and review verdict requests changes.
+- Stop when review is blocked, malformed, failing, or policy disallows automatic lifecycle mutation.
+- Require explicit audit notes that identify policy, machine gate, Codex review verdict, and report id.
+- Auto-close requires policy permission, Machine Review PASS, and Codex Review APPROVE.
+- REQUEST_CHANGES moves to changes_requested or starts rework only if policy allows.
+- Blocked or failed gates stop the pipeline.
+
+Linked tasks:
+
+- TASK-062
+
+### CHG-046 — PIPE-12 Controlled Git Commit Action
+
+Status: `accepted`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-12 requires an explicit Evolution Change Proposal before implementation: Create local commits only when policy allows and commit readiness is green.
+
+Proposal:
+
+Implement the bounded task scope: Implement read-only commit readiness check reuse or integration with the existing Commit Readiness view.; Implement local commit action only behind explicit policy permission.; Require clean readiness: task done, required Change accepted if policy requires it, machine checks pass, protected-file checks pass, generated outputs fresh, no unrelated dirty files unless policy explicitly allows.; Stage only files approved by policy/session evidence.; Generate commit message from completed task refs, Change ids, and session id.; Run git commit locally only; explicitly forbid push, merge, reset, checkout, rebase, and destructive git commands.; Record commit hash or failure in pipeline session/audit.; Add tests with fake git runner for readiness green, readiness fail, unrelated files, commit success, and forbidden command attempts.
+
+Rationale:
+
+Add a controlled local git commit action for completed pipeline work. It must never push, merge, reset, discard, or create remote changes.
+
+Approved by: `human_owner` at `2026-06-19T20:43:32Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T07:03:47Z`  
+Acceptance notes: Create local commits only when policy allows and commit readiness is green.  
+
+Affected files:
+
+- ai_project_ctl/pipeline/git_commit.py
+- ai_project_ctl/pipeline/runner.py if integration is needed
+- ai_project_ctl/web/read_model.py if commit readiness data is reused
+- ai_project_ctl/core/registry.py if command metadata is needed
+- scripts/aictl.py if commit command routing is needed
+- tests/**
+- ai-system/project-control/** if git commit policy documentation is needed
+
+Risks:
+
+- Boundary risk: Do not push.
+- Boundary risk: Do not merge.
+- Boundary risk: Do not open PRs.
+- Boundary risk: Do not discard or reset changes.
+- Boundary risk: Do not commit when readiness is not green.
+- Boundary risk: Do not auto-accept Changes in this task.
+- Verify command allowlist forbids push/merge/destructive git actions.
+- Verify readiness failure blocks commit.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-063.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Implement read-only commit readiness check reuse or integration with the existing Commit Readiness view.
+- Implement local commit action only behind explicit policy permission.
+- Require clean readiness: task done, required Change accepted if policy requires it, machine checks pass, protected-file checks pass, generated outputs fresh, no unrelated dirty files unless policy explicitly allows.
+- Stage only files approved by policy/session evidence.
+- Generate commit message from completed task refs, Change ids, and session id.
+- Commit action is disabled unless policy explicitly allows local commit.
+- Commit action refuses when commit readiness is not green.
+- Commit action stages only approved files.
+
+Linked tasks:
+
+- TASK-063
+
+### CHG-047 — PIPE-13 Pipeline UI Dashboard
+
+Status: `accepted`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-13 requires an explicit Evolution Change Proposal before implementation: Add a Web Control Center dashboard for pipeline sessions, queue preview, policy selection, run-next, and run-until-blocker.
+
+Proposal:
+
+Implement the bounded task scope: Add Pipeline dashboard/page to the Web Control Center.; Show policy selector/preset preview, queue selector, queue preview, session status, current step, gates, stop reason, and latest audit entries.; Expose Create Session, Run Next, Run Until Blocker, Stop Session, and Refresh Status actions where implemented.; Require explicit confirmation for any write/run action.; Show action result panel with step status, blockers, changed/generated files, reports, reviews, and next actions.; Keep UI local-only and route writes through governed commands/workflows.; Add tests for dashboard rendering, confirmation requirements, and action routing.
+
+Rationale:
+
+Expose supervised pipeline operation in the local Web Control Center without weakening confirmation, policy, or lifecycle gates.
+
+Approved by: `human_owner` at `2026-06-19T20:43:50Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T08:53:21Z`  
+Acceptance notes: Approve  
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/pipeline/** if UI integration requires compatible changes
+- ai_project_ctl/core/registry.py if action metadata is needed
+- scripts/aictl.py if routing is needed
+- tests/test_web_control_center.py
+- tests/**
+- ai-system/project-control/** if UI documentation is needed
+
+Risks:
+
+- Boundary risk: Do not add remote hosting.
+- Boundary risk: Do not bypass pipeline policy.
+- Boundary risk: Do not auto-start sessions on page load.
+- Boundary risk: Do not run arbitrary shell commands from UI.
+- Boundary risk: Do not hide blockers or failed gates.
+- Verify UI cannot start or continue pipeline silently.
+- Verify all mutations route through governed command paths.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-064.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add Pipeline dashboard/page to the Web Control Center.
+- Show policy selector/preset preview, queue selector, queue preview, session status, current step, gates, stop reason, and latest audit entries.
+- Expose Create Session, Run Next, Run Until Blocker, Stop Session, and Refresh Status actions where implemented.
+- Require explicit confirmation for any write/run action.
+- Show action result panel with step status, blockers, changed/generated files, reports, reviews, and next actions.
+- Pipeline dashboard shows sessions, selected policy, queue preview, current step, and stop reason.
+- Run actions require explicit confirmation.
+- UI writes route through governed commands/workflows.
+
+Linked tasks:
+
+- TASK-064
+
+### CHG-048 — PIPE-14 Pipeline Audit Trail
+
+Status: `accepted`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-14 requires an explicit Evolution Change Proposal before implementation: Record a complete audit trail for pipeline sessions, policy decisions, gates, Codex runs, reviews, stops, and commits.
+
+Proposal:
+
+Implement the bounded task scope: Define pipeline event types for session create, policy selected, queue planned, task selected, Change created/approved/accepted, context built, token gate result, Codex run result, report gate result, machine review, Codex review, close/rework decision, commit readiness, commit result, stop, and completion.; Append events through governed pipeline services only.; Generate a readable Pipeline Audit or Pipeline Status timeline if useful.; Include stable ids for session, task, Change, report, review, gate, and commit references.; Avoid storing secrets or excessive raw prompt contents in audit events.; Add tests for event append, validation, generated output freshness, and redaction/sizing behavior.
+
+Rationale:
+
+Strengthen pipeline observability by adding structured audit events and generated timeline output for all supervised batch decisions.
+
+Approved by: `human_owner` at `2026-06-19T20:44:16Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T08:53:06Z`  
+Acceptance notes: Approve  
+
+Affected files:
+
+- ai_project_ctl/pipeline/audit.py
+- ai_project_ctl/pipeline/session.py
+- ai_project_ctl/pipeline/** if integration is needed
+- AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_AUDIT.md via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only
+- tests/**
+- ai-system/project-control/** if audit documentation is needed
+
+Risks:
+
+- Boundary risk: Do not make audit logs editable from UI.
+- Boundary risk: Do not store raw secrets.
+- Boundary risk: Do not store full huge prompt payloads when hashes/paths are sufficient.
+- Boundary risk: Do not replace existing task/evolution/codex/context event logs.
+- Verify event/state/generated separation.
+- Verify audit is sufficient to reconstruct why pipeline stopped.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-065.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Define pipeline event types for session create, policy selected, queue planned, task selected, Change created/approved/accepted, context built, token gate result, Codex run result, report gate result, machine review, Codex review, close/rework decision, commit readiness, commit result, stop, and completion.
+- Append events through governed pipeline services only.
+- Generate a readable Pipeline Audit or Pipeline Status timeline if useful.
+- Include stable ids for session, task, Change, report, review, gate, and commit references.
+- Avoid storing secrets or excessive raw prompt contents in audit events.
+- Pipeline audit captures every major gate and decision.
+- Audit events include stable references and stop reasons.
+- Audit avoids raw secrets and oversized prompt payloads.
+
+Linked tasks:
+
+- TASK-065
+
+### CHG-049 — PIPE-15 Pipeline SOP Documentation
+
+Status: `accepted`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-15 requires an explicit Evolution Change Proposal before implementation: Document the supervised batch pipeline runner, policies, gates, UI flow, blockers, and operator responsibilities.
+
+Proposal:
+
+Implement the bounded task scope: Create or update pipeline runner documentation.; Document Queue -> Policy -> Change -> Prepare -> Token Gate -> Codex Execute -> Report -> Machine Review -> Codex Review -> Done/Rework -> Accept Change -> Commit -> Next / Stop on Blocker.; Document policy presets and what each one may or may not automate.; Document token budget gate behavior and strict-mode failure cases.; Document Codex Executor report requirements and Codex Reviewer read-only responsibilities.; Document Machine Review and Codex Review gate meanings.; Document auto-close, rework loop, Change acceptance, and local commit rules.; Document UI dashboard operation and CLI equivalents.; Document common blockers, unsafe conditions, recovery paths, and audit trail interpretation.; Run docctl validation/render/check-generated and project-control checks.
+
+Rationale:
+
+Create owner-facing and system-facing SOP documentation for the PIPE epic after implementation details are stable.
+
+Approved by: `human_owner` at `2026-06-19T20:44:39Z`  
+Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T09:12:02Z`  
+Acceptance notes: Approve  
+
+Affected files:
+
+- ai-system/project-control/pipeline-runner.md
+- ai-system/project-control/10-owner-quickstart.md
+- ai-system/project-control/04-command-catalog.md
+- ai-system/project-control/README.md if index update is needed
+- README.md if owner-facing quick links are needed
+- AGENTS.md if Codex handoff rules need a pointer
+- AI_PROJECT/state/docs.json via docctl.py only
+- AI_PROJECT/events/doc-events.jsonl via docctl.py only
+- AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only
+- AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only
+
+Risks:
+
+- Boundary risk: Do not change pipeline command behavior.
+- Boundary risk: Do not mark documentation accepted without Human Owner approval.
+- Boundary risk: Do not edit generated documentation manually.
+- Boundary risk: Do not document unsupported unsafe automation as available.
+- Verify documentation does not overclaim unimplemented behavior.
+- Verify generated docs are refreshed only through docctl.py.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-066.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Create or update pipeline runner documentation.
+- Document Queue -> Policy -> Change -> Prepare -> Token Gate -> Codex Execute -> Report -> Machine Review -> Codex Review -> Done/Rework -> Accept Change -> Commit -> Next / Stop on Blocker.
+- Document policy presets and what each one may or may not automate.
+- Document token budget gate behavior and strict-mode failure cases.
+- Document Codex Executor report requirements and Codex Reviewer read-only responsibilities.
+- Pipeline SOP documents the approved algorithm and stop conditions.
+- Documentation clearly distinguishes policy-selected automation from forbidden autonomy.
+- Documentation says Codex Reviewer is read-only and cannot mutate files/lifecycle/commits.
+
+Linked tasks:
+
+- TASK-066
+
+### CHG-050 — BUG-01 Fix Approve & Done stale execution context handling
+
+Status: `accepted`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-16 requires an explicit Evolution Change Proposal before implementation: Fix the Web Control Center / workflow issue where Approve & Done can be blocked by stale Context Pack or Codex prompt state and where closed tasks can leave a stale Codex execution package behind.
+
+Proposal:
+
+Implement the bounded task scope: Adjust task.close_reviewed so stale Context Pack / Codex prompt freshness does not block Human Owner approval and done transition.; Keep owner confirmation and non-empty approval notes mandatory for Approve & Done.; Keep task lifecycle, task graph, generated task output, evolution, protected-file, and project doctor checks where they are relevant to closure.; Preserve visibility of stale context/prompt state as a warning or result detail instead of hiding it.; After successful Approve & Done, clear or invalidate current_execution when it targets the task that was just closed.; Use an existing governed command such as codexctl.py clear if suitable, or add a small registered/facade workflow step if needed.; Update Web Control Center hints so an in_review task can still expose Approve & Done even when execution context is stale.; Add or update tests covering stale context in_review close, post-close execution cleanup, required approval notes, invalid status rejection, and no direct protected-file writes.
+
+Rationale:
+
+Implement options B + C from the review: B) Approve & Done must not require Refresh Context when the task is already in review and owner approval notes are provided; stale execution context may be reported as a warning, not a lifecycle blocker. C) after a reviewed task is successfully approved and transitioned to done, clear or invalidate current Codex execution state when it still points to the closed task.
+
+Approved by: `human_owner` at `2026-06-20T07:35:54Z`  
+Approval notes: Approve Change  
+
+Accepted by: `human_owner` at `2026-06-20T08:52:58Z`  
+Acceptance notes: Approve  
+
+Affected files:
+
+- ai_project_ctl/core/workflows.py
+- ai_project_ctl/core/registry.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/actions.py
+- scripts/aictl.py
+- scripts/codexctl.py
+- tests/test_workflows.py
+- tests/test_web_control_center.py
+- tests/test_aictl.py
+- tests/test_registry.py
+- ai-system/project-control/08-usage-guide.md if owner-facing workflow documentation needs a small clarification
+- ai-system/project-control/10-owner-quickstart.md if owner-facing workflow documentation needs a small clarification
+
+Risks:
+
+- Boundary risk: Do not weaken Human Owner approval gates.
+- Boundary risk: Do not allow Codex to self-approve tasks.
+- Boundary risk: Do not silently accept linked Evolution Changes.
+- Boundary risk: Do not hide stale context/prompt warnings from the UI or action result.
+- Boundary risk: Do not auto-refresh Context Pack or Codex Prompt as part of approval unless explicitly justified by the implementation.
+- Boundary risk: Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Verify that the fix implements options B + C, not option A.
+- Verify that no approval gate was weakened and owner notes remain required.
+- Verify that stale execution context is not hidden, only made non-blocking for closure.
+- Verify that current_execution cleanup is conditional on the closed task identity.
+- Verify that generated files were not edited manually.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-067.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Adjust task.close_reviewed so stale Context Pack / Codex prompt freshness does not block Human Owner approval and done transition.
+- Keep owner confirmation and non-empty approval notes mandatory for Approve & Done.
+- Keep task lifecycle, task graph, generated task output, evolution, protected-file, and project doctor checks where they are relevant to closure.
+- Preserve visibility of stale context/prompt state as a warning or result detail instead of hiding it.
+- After successful Approve & Done, clear or invalidate current_execution when it targets the task that was just closed.
+- A task in in_review with stale Context Pack or stale Codex prompt can be closed through Approve & Done when explicit owner notes and confirmation are provided.
+- Approve & Done still rejects tasks outside in_review.
+- Approve & Done still requires non-empty owner approval notes.
+
+Linked tasks:
+
+- TASK-067

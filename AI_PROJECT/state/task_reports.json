@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 4,
+  "revision": 5,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-19T14:21:56Z",
+  "updated_at": "2026-06-19T22:08:50Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -460,11 +460,115 @@
         ],
         "owner_decision_required": true
       }
+    },
+    {
+      "id": "RPT-005",
+      "task_id": "TASK-058",
+      "task_ref": "PIPE-07",
+      "submitted_at": "2026-06-19T22:08:50Z",
+      "submitted_by": "human_owner",
+      "source_file": "/tmp/task-058-codex-report.json",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-058",
+        "task_ref": "PIPE-07",
+        "reported_task_id": "TASK-058",
+        "reported_task_ref": "PIPE-07",
+        "implementation_summary": "Implemented a controlled Codex execution adapter with safe manual-handoff default, explicit local-command allowlisting, timeout metadata, token-gate enforcement, prompt freshness checks, captured output references, and structured report enforcement. Wired the adapter into the pipeline RUN_CODEX branch and added focused tests for policy, adapter, and runner behavior.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/__init__.py",
+          "ai_project_ctl/pipeline/codex_adapter.py",
+          "ai_project_ctl/pipeline/policy.py",
+          "ai_project_ctl/pipeline/runner.py",
+          "tests/test_pipeline_codex_adapter.py",
+          "tests/test_pipeline_policy.py",
+          "tests/test_pipeline_runner.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "py_compile",
+            "command": "python -m py_compile ai_project_ctl/pipeline/policy.py ai_project_ctl/pipeline/codex_adapter.py ai_project_ctl/pipeline/runner.py ai_project_ctl/pipeline/__init__.py tests/test_pipeline_codex_adapter.py tests/test_pipeline_policy.py tests/test_pipeline_runner.py",
+            "result": "pass",
+            "duration_sec": 0.252,
+            "blocking": true,
+            "details": "Syntax/import compilation succeeded."
+          },
+          {
+            "name": "focused pipeline unittest",
+            "command": "python -m unittest tests.test_pipeline_codex_adapter tests.test_pipeline_policy tests.test_pipeline_runner",
+            "result": "pass",
+            "duration_sec": 0.896,
+            "blocking": true,
+            "details": "23 tests passed."
+          },
+          {
+            "name": "surrounding pipeline unittest",
+            "command": "python -m unittest tests.test_pipeline_codex_adapter tests.test_pipeline_policy tests.test_pipeline_queue tests.test_pipeline_runner tests.test_pipeline_session tests.test_pipeline_token_budget tests.test_aictl tests.test_registry",
+            "result": "pass",
+            "duration_sec": 1.577,
+            "blocking": true,
+            "details": "83 tests passed."
+          },
+          {
+            "name": "full unittest discovery",
+            "command": "python -m unittest discover tests",
+            "result": "pass",
+            "duration_sec": 14.058,
+            "blocking": true,
+            "details": "192 tests passed."
+          },
+          {
+            "name": "project-control core validation",
+            "command": "planctl validate; taskctl validate; taskctl check-generated; evolutionctl validate; evolutionctl check-generated; aictl pipeline validate",
+            "result": "pass",
+            "duration_sec": 2.7,
+            "blocking": true,
+            "details": "Plan, task, evolution, generated task/evolution, and pipeline validation passed."
+          },
+          {
+            "name": "project-control generated and protected checks",
+            "command": "aictl pipeline check-generated; docctl validate; docctl check-generated; contextctl validate; contextctl check-generated; check-protected-project-files.py --verbose",
+            "result": "pass",
+            "duration_sec": 4.7,
+            "blocking": true,
+            "details": "Generated pipeline/docs/context files were fresh; protected-file check passed. docctl validate emitted pre-existing warnings but exited OK."
+          },
+          {
+            "name": "project doctor",
+            "command": "python scripts/aictl.py project doctor",
+            "result": "pass",
+            "duration_sec": 2.857,
+            "blocking": true,
+            "details": "Project Doctor: PASS, 15 PASS, 0 WARN, 0 FAIL."
+          },
+          {
+            "name": "pytest availability",
+            "command": "python -m pytest tests/test_pipeline_codex_adapter.py tests/test_pipeline_policy.py tests/test_pipeline_runner.py",
+            "result": "skipped",
+            "duration_sec": 0.0,
+            "blocking": false,
+            "details": "pytest is not installed in this environment; equivalent unittest checks were run instead."
+          }
+        ],
+        "warnings": [
+          "pytest is not installed; used unittest instead.",
+          "docctl validate reported existing documentation lifecycle warnings while still passing validation."
+        ],
+        "blockers": [],
+        "notes": [
+          "No real Codex binary or external service was invoked in tests.",
+          "Adapter local-command mode requires exact command allowlisting and a new structured task report before reporting pass.",
+          "Task moved only toward review; Human Owner acceptance remains pending."
+        ],
+        "owner_decision_required": true
+      }
     }
   ],
   "latest_by_task": {
     "TASK-046": "RPT-002",
     "TASK-047": "RPT-003",
-    "TASK-049": "RPT-004"
+    "TASK-049": "RPT-004",
+    "TASK-058": "RPT-005"
   }
 }
