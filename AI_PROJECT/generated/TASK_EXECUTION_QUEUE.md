@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `669`
+Revision: `817`
 
 ## Executable Now
 
@@ -12,6 +12,31 @@ Revision: `669`
 - `PIPE-20 (TASK-071)` [planned] `EPIC-007` priority `1` — PIPE-20 Document Dynamic Pipeline Policy Presets
 - `PIPE-21 (TASK-072)` [planned] `EPIC-007` priority `1` — PIPE-21 Fix Pipeline Queue Epic Filter Behavior
 - `PIPE-22 (TASK-073)` [planned] `EPIC-007` priority `1` — PIPE-22 Add Pipeline Session Resume After Blocker
+- `PIPEF-21 (TASK-100)` [planned] `EPIC-009` priority `1` — PIPE-021 Extract report schema gate into verify
+- `PIPEF-22 (TASK-101)` [planned] `EPIC-009` priority `1` — PIPE-022 Add actual git diff gate
+- `PIPEF-23 (TASK-102)` [planned] `EPIC-009` priority `1` — PIPE-023 Compare report files with actual git diff
+- `PIPEF-24 (TASK-103)` [planned] `EPIC-009` priority `1` — PIPE-024 Enforce allowed files against actual diff
+- `PIPEF-25 (TASK-104)` [planned] `EPIC-009` priority `1` — PIPE-025 Enforce protected files against actual diff
+- `PIPEF-26 (TASK-105)` [planned] `EPIC-009` priority `1` — PIPE-026 Add project test policy
+- `PIPEF-27 (TASK-106)` [planned] `EPIC-009` priority `1` — PIPE-027 Record verify evidence
+- `PIPEF-28 (TASK-107)` [planned] `EPIC-009` priority `1` — PIPE-028 Add review prompt build command
+- `PIPEF-29 (TASK-108)` [planned] `EPIC-009` priority `1` — PIPE-029 Accept manual review file
+- `PIPEF-30 (TASK-109)` [planned] `EPIC-009` priority `1` — PIPE-030 Add reviewer command adapter
+- `PIPEF-31 (TASK-110)` [planned] `EPIC-009` priority `1` — PIPE-031 Handle review request changes outcome
+- `PIPEF-32 (TASK-111)` [planned] `EPIC-009` priority `1` — PIPE-032 Add close phase preflight
+- `PIPEF-33 (TASK-112)` [planned] `EPIC-009` priority `1` — PIPE-033 Extract task close action
+- `PIPEF-34 (TASK-113)` [planned] `EPIC-009` priority `1` — PIPE-034 Accept linked Evolution Change on close
+- `PIPEF-35 (TASK-114)` [planned] `EPIC-009` priority `1` — PIPE-035 Add optional local commit close step
+- `PIPEF-36 (TASK-115)` [planned] `EPIC-009` priority `1` — PIPE-036 Clear execution state after close
+- `PIPEF-37 (TASK-116)` [planned] `EPIC-009` priority `1` — PIPE-037 Rewrite run-next as phase dispatcher
+- `PIPEF-38 (TASK-117)` [planned] `EPIC-009` priority `1` — PIPE-038 Rewrite run-until-blocker with phase outcomes
+- `PIPEF-39 (TASK-118)` [planned] `EPIC-009` priority `1` — PIPE-039 Add CI exit-code mode for pipeline
+- `PIPEF-40 (TASK-119)` [planned] `EPIC-009` priority `1` — PIPE-040 Add tests for phase model and mutations
+- `PIPEF-41 (TASK-120)` [planned] `EPIC-009` priority `1` — PIPE-041 Add tests for queue prepare execute report phases
+- `PIPEF-42 (TASK-121)` [planned] `EPIC-009` priority `1` — PIPE-042 Add tests for git diff gate
+- `PIPEF-43 (TASK-122)` [planned] `EPIC-009` priority `1` — PIPE-043 Add fake Codex happy path integration test
+- `PIPEF-44 (TASK-123)` [planned] `EPIC-009` priority `1` — PIPE-044 Add fake reviewer close integration test
+- `PIPEF-45 (TASK-124)` [planned] `EPIC-009` priority `1` — PIPE-045 Update phase pipeline usage guide
 
 ## Waiting For Dependencies
 
@@ -117,8 +142,8 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPE-05 (TASK-056)` [done] `EPIC-007` priority `1` — PIPE-05 Batch Runner Run Until Blocker
   - `status_not_executable`: status is done
-- `TASK-079` [in_review] `EPIC-003` priority `1` — Compact codexctl execute prompt renderer
-  - `status_not_executable`: status is in_review
+- `TASK-079` [done] `EPIC-003` priority `1` — Compact codexctl execute prompt renderer
+  - `status_not_executable`: status is done
 - `PIPE-06 (TASK-057)` [done] `EPIC-007` priority `1` — PIPE-06 Token Budget Gate
   - `status_not_executable`: status is done
 - `PIPE-07 (TASK-058)` [done] `EPIC-007` priority `1` — PIPE-07 Codex Execution Adapter
@@ -153,8 +178,8 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPE-26 (TASK-077)` [done] `EPIC-007` priority `1` — PIPE-26 Fix Codex Adapter Prompt Transport
   - `status_not_executable`: status is done
-- `PIPE-27 (TASK-078)` [in_progress] `EPIC-007` priority `1` — PIPE-27 Add Persistent Pipeline Session Detail Page
-  - `status_not_executable`: status is in_progress
+- `PIPE-27 (TASK-078)` [done] `EPIC-007` priority `1` — PIPE-27 Add Persistent Pipeline Session Detail Page
+  - `status_not_executable`: status is done
 - `TIG-01 (TASK-012)` [done] `EPIC-004` priority `1` — TIG-01 Document task identity and execution graph design
   - `status_not_executable`: status is done
 - `TIG-02 (TASK-013)` [done] `EPIC-004` priority `1` — TIG-02 Add epic keys to plan model
@@ -167,3 +192,43 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `TIG-06 (TASK-017)` [done] `EPIC-004` priority `1` — TIG-06 Add migration and generated output update
   - `status_not_executable`: status is done
+- `PIPEF-01 (TASK-080)` [done] `EPIC-009` priority `1` — PIPE-001 Add Pipeline PhaseResult model
+  - `status_not_executable`: status is done
+- `PIPEF-02 (TASK-081)` [done] `EPIC-009` priority `1` — PIPE-002 Extend pipeline sessions with phase fields
+  - `status_not_executable`: status is done
+- `PIPEF-03 (TASK-082)` [done] `EPIC-009` priority `1` — PIPE-003 Add phase start and result mutations
+  - `status_not_executable`: status is done
+- `PIPEF-04 (TASK-083)` [done] `EPIC-009` priority `1` — PIPE-004 Render phase status in pipeline status output
+  - `status_not_executable`: status is done
+- `PIPEF-05 (TASK-084)` [done] `EPIC-009` priority `1` — PIPE-005 Register phase pipeline commands
+  - `status_not_executable`: status is done
+- `PIPEF-06 (TASK-085)` [done] `EPIC-009` priority `1` — PIPE-006 Add pipeline queue preview CLI
+  - `status_not_executable`: status is done
+- `PIPEF-07 (TASK-086)` [done] `EPIC-009` priority `1` — PIPE-007 Normalize queue preview output
+  - `status_not_executable`: status is done
+- `PIPEF-08 (TASK-087)` [done] `EPIC-009` priority `1` — PIPE-008 Return no-task queue outcome
+  - `status_not_executable`: status is done
+- `PIPEF-09 (TASK-088)` [done] `EPIC-009` priority `1` — PIPE-009 Narrow Change gate to selected task
+  - `status_not_executable`: status is done
+- `PIPEF-10 (TASK-089)` [done] `EPIC-009` priority `1` — PIPE-010 Extract prepare phase service
+  - `status_not_executable`: status is done
+- `PIPEF-11 (TASK-090)` [done] `EPIC-009` priority `1` — PIPE-011 Record prepare artifacts
+  - `status_not_executable`: status is done
+- `PIPEF-12 (TASK-091)` [done] `EPIC-009` priority `1` — PIPE-012 Add prepare idempotency check
+  - `status_not_executable`: status is done
+- `PIPEF-13 (TASK-092)` [done] `EPIC-009` priority `1` — PIPE-013 Extract execute phase service
+  - `status_not_executable`: status is done
+- `PIPEF-14 (TASK-093)` [done] `EPIC-009` priority `1` — PIPE-014 Decouple report requirement from execute
+  - `status_not_executable`: status is done
+- `PIPEF-15 (TASK-094)` [done] `EPIC-009` priority `1` — PIPE-015 Add manual handoff execute mode
+  - `status_not_executable`: status is done
+- `PIPEF-16 (TASK-095)` [done] `EPIC-009` priority `1` — PIPE-016 Record execute adapter result
+  - `status_not_executable`: status is done
+- `PIPEF-17 (TASK-096)` [done] `EPIC-009` priority `1` — PIPE-017 Add pipeline report template command
+  - `status_not_executable`: status is done
+- `PIPEF-18 (TASK-097)` [done] `EPIC-009` priority `1` — PIPE-018 Add collect-report phase service
+  - `status_not_executable`: status is done
+- `PIPEF-19 (TASK-098)` [done] `EPIC-009` priority `1` — PIPE-019 Validate collected report task identity
+  - `status_not_executable`: status is done
+- `PIPEF-20 (TASK-099)` [in_progress] `EPIC-009` priority `1` — PIPE-020 Validate report freshness after execute
+  - `status_not_executable`: status is in_progress

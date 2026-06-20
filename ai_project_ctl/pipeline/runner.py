@@ -168,45 +168,6 @@ def run_next(
             actor=actor,
         )
 
-    queue_change_check = _ensure_approved_changes_for_queue(
-        queue_preview,
-        policy,
-        refs.get("evolution"),
-        session_id=selected_session_id,
-        root=root_path,
-        actor=actor,
-        python_executable=python_bin,
-        runner=execution_runner,
-    )
-    if not queue_change_check.ok:
-        queue_change_check.data.setdefault("side_effects", [])
-        return _record_stop(
-            selected_session_id,
-            stop_code=str(queue_change_check.data.get("stop_code") or "BLOCKED"),
-            stop_reason=queue_change_check.message,
-            result_status="blocked",
-            gate_name="evolution_change_gate",
-            gate_status="blocked",
-            gate_details={
-                **_gate_details(policy.name, queue_preview, queue_preview.next_task),
-                "change_gate": queue_change_check.data,
-            },
-            selected_task=queue_preview.next_task,
-            policy_name=policy.name,
-            queue_preview=queue_preview,
-            side_effects=[*side_effects, queue_change_check],
-            root=root_path,
-            actor=actor,
-            linked_change_ids=_string_tuple(queue_change_check.data.get("change_ids")),
-        )
-    if queue_change_check.data.get("state_changed"):
-        refs = load_reference_state(root_path)
-    queue_change_gate = (
-        dict(queue_change_check.data)
-        if queue_change_check.data.get("required")
-        else {}
-    )
-
     selected = queue_preview.next_task
 
     if selected is None:
@@ -221,7 +182,6 @@ def run_next(
                 policy.name,
                 queue_preview,
                 selected,
-                change_gate=queue_change_gate,
             ),
             selected_task=None,
             policy_name=policy.name,
@@ -254,7 +214,6 @@ def run_next(
                 policy.name,
                 queue_preview,
                 selected,
-                change_gate=queue_change_gate,
             ),
             selected_task=selected,
             policy_name=policy.name,
@@ -263,6 +222,45 @@ def run_next(
             root=root_path,
             actor=actor,
         )
+
+    selected_change_check = _ensure_approved_change_for_selected_task(
+        selected,
+        policy,
+        refs.get("evolution"),
+        session_id=selected_session_id,
+        root=root_path,
+        actor=actor,
+        python_executable=python_bin,
+        runner=execution_runner,
+    )
+    if not selected_change_check.ok:
+        selected_change_check.data.setdefault("side_effects", [])
+        return _record_stop(
+            selected_session_id,
+            stop_code=str(selected_change_check.data.get("stop_code") or "BLOCKED"),
+            stop_reason=selected_change_check.message,
+            result_status="blocked",
+            gate_name="evolution_change_gate",
+            gate_status="blocked",
+            gate_details={
+                **_gate_details(policy.name, queue_preview, selected),
+                "change_gate": selected_change_check.data,
+            },
+            selected_task=selected,
+            policy_name=policy.name,
+            queue_preview=queue_preview,
+            side_effects=[*side_effects, selected_change_check],
+            root=root_path,
+            actor=actor,
+            linked_change_ids=_string_tuple(selected_change_check.data.get("change_ids")),
+        )
+    if selected_change_check.data.get("state_changed"):
+        refs = load_reference_state(root_path)
+    queue_change_gate = (
+        dict(selected_change_check.data)
+        if selected_change_check.data.get("required")
+        else {}
+    )
 
     if policy.codex.mode == CodexExecutionMode.DISABLED:
         return _record_stop(
@@ -1074,23 +1072,135 @@ def _ensure_approved_changes_for_queue(
     python_executable: str,
     runner: Runner | None,
 ) -> CommandResult:
+    return _ensure_approved_changes_for_tasks(
+        _queue_task_ids(queue_preview),
+        _queue_task_ref_map(queue_preview),
+        policy,
+        evolution_state,
+        session_id=session_id,
+        root=root,
+        actor=actor,
+        python_executable=python_executable,
+        runner=runner,
+        scope="selected_queue",
+        preflight_requires_session_action=True,
+        disabled_message="Queue-wide Change preflight is not enabled by policy.",
+        approval_message="Owner-approved session Change approval completed for selected queue.",
+        pass_message="Approved Change gate passed for selected queue.",
+    )
+
+
+def _ensure_approved_change_for_selected_task(
+    selected_task: QueuePreviewItem,
+    policy: PipelinePolicy,
+    evolution_state: Any,
+    *,
+    session_id: str,
+    root: Path,
+    actor: str,
+    python_executable: str,
+    runner: Runner | None,
+) -> CommandResult:
+    task_id = str(selected_task.id or "")
+    task_ref = str(selected_task.ref or selected_task.selected_ref or task_id)
+    if not task_id:
+        result = CommandResult.failure(
+            command="pipeline.change_gate",
+            domain="pipeline",
+            message="Selected task has no stable task id.",
+            errors=[
+                CommandMessage(
+                    "PIPELINE_SELECTED_TASK_ID_MISSING",
+                    "Queue planner selected a task without a stable task id.",
+                )
+            ],
+        )
+        result.data = {
+            "required": True,
+            "scope": "selected_task",
+            "stop_code": "UNSAFE_CONDITION",
+            "selected_task_id": "",
+            "selected_task_ref": task_ref,
+            "inspected_task_ids": [],
+            "linked_changes_inspected": [],
+        }
+        return result
+    return _ensure_approved_changes_for_tasks(
+        (task_id,),
+        {task_id: task_ref},
+        policy,
+        evolution_state,
+        session_id=session_id,
+        root=root,
+        actor=actor,
+        python_executable=python_executable,
+        runner=runner,
+        scope="selected_task",
+        preflight_requires_session_action=False,
+        disabled_message="Selected-task Change gate is not enabled by policy.",
+        approval_message="Owner-approved session Change approval completed for selected task.",
+        pass_message="Approved Change gate passed for selected task.",
+    )
+
+
+def _ensure_approved_changes_for_tasks(
+    task_ids: Sequence[str],
+    task_refs: Mapping[str, str],
+    policy: PipelinePolicy,
+    evolution_state: Any,
+    *,
+    session_id: str,
+    root: Path,
+    actor: str,
+    python_executable: str,
+    runner: Runner | None,
+    scope: str,
+    preflight_requires_session_action: bool,
+    disabled_message: str,
+    approval_message: str,
+    pass_message: str,
+) -> CommandResult:
+    inspected_task_ids: list[str] = []
+    for task_id in task_ids:
+        normalized = str(task_id or "")
+        if normalized and normalized not in inspected_task_ids:
+            inspected_task_ids.append(normalized)
+
+    linked_changes_inspected: list[dict[str, Any]] = []
+
+    def context_data() -> dict[str, Any]:
+        data: dict[str, Any] = {
+            "scope": scope,
+            "inspected_task_ids": list(inspected_task_ids),
+            "linked_changes_inspected": [dict(item) for item in linked_changes_inspected],
+        }
+        if scope == "selected_task" and inspected_task_ids:
+            selected_task_id = inspected_task_ids[0]
+            data["selected_task_id"] = selected_task_id
+            data["selected_task_ref"] = task_refs.get(selected_task_id, selected_task_id)
+        return data
+
     owner_approval_enabled = (
         policy.evolution.owner_approve_required_changes_for_session
     )
     approval_note = policy.evolution.owner_approval_note.strip()
-    if not policy.evolution.create_missing_change and not owner_approval_enabled:
+    if (
+        preflight_requires_session_action
+        and not policy.evolution.create_missing_change
+        and not owner_approval_enabled
+    ):
         return CommandResult.success(
             command="pipeline.change_gate",
             domain="pipeline",
-            message="Queue-wide Change preflight is not enabled by policy.",
-            data={"required": False},
+            message=disabled_message,
+            data={"required": False, **context_data()},
         )
     if not policy.evolution.require_approved_change_for_execution:
         return CommandResult.success(
             command="pipeline.change_gate",
             domain="pipeline",
             message="Approved Change gate is not required by policy.",
-            data={"required": False},
+            data={"required": False, **context_data()},
         )
 
     created_change_ids: list[str] = []
@@ -1100,10 +1210,20 @@ def _ensure_approved_changes_for_queue(
     unapprovable_changes: list[dict[str, str]] = []
     workflows: list[dict[str, Any]] = []
     effects: list[CommandResult] = []
-    task_refs = _queue_task_ref_map(queue_preview)
 
-    for task_id in _queue_task_ids(queue_preview):
+    for task_id in inspected_task_ids:
         linked = _linked_changes_for_task(task_id, evolution_state)
+        linked_for_task = [
+            str(change.get("id"))
+            for change in linked
+            if str(change.get("id") or "")
+        ]
+        inspected_entry: dict[str, Any] = {
+            "task_id": task_id,
+            "task_ref": task_refs.get(task_id, task_id),
+            "change_ids": linked_for_task,
+        }
+        linked_changes_inspected.append(inspected_entry)
         approved = [
             change
             for change in linked
@@ -1169,6 +1289,7 @@ def _ensure_approved_changes_for_queue(
             result.data = {
                 "required": True,
                 "stop_code": "BLOCKED",
+                **context_data(),
                 "task_id": task_id,
                 "workflows": workflows,
             }
@@ -1178,6 +1299,7 @@ def _ensure_approved_changes_for_queue(
         if change_id:
             created_change_ids.append(change_id)
             linked_change_ids.append(change_id)
+            inspected_entry.setdefault("created_change_ids", []).append(change_id)
             approval_candidates.append(
                 {
                     "change_id": change_id,
@@ -1204,6 +1326,7 @@ def _ensure_approved_changes_for_queue(
             result.data = {
                 "required": True,
                 "stop_code": "BLOCKED",
+                **context_data(),
                 "created_change_ids": created_change_ids,
                 "linked_change_ids": linked_change_ids,
                 "change_ids": linked_change_ids,
@@ -1227,6 +1350,7 @@ def _ensure_approved_changes_for_queue(
             result.data = {
                 "required": True,
                 "stop_code": "BLOCKED",
+                **context_data(),
                 "created_change_ids": created_change_ids,
                 "linked_change_ids": linked_change_ids,
                 "change_ids": linked_change_ids,
@@ -1254,6 +1378,7 @@ def _ensure_approved_changes_for_queue(
                     {
                         "required": True,
                         "stop_code": "BLOCKED",
+                        **context_data(),
                         "created_change_ids": created_change_ids,
                         "linked_change_ids": linked_change_ids,
                         "change_ids": linked_change_ids,
@@ -1269,9 +1394,10 @@ def _ensure_approved_changes_for_queue(
             result = CommandResult.success(
                 command="pipeline.change_gate",
                 domain="pipeline",
-                message="Owner-approved session Change approval completed for selected queue.",
+                message=approval_message,
                 data={
                     "required": True,
+                    **context_data(),
                     "created_change_ids": created_change_ids,
                     "linked_change_ids": linked_change_ids,
                     "change_ids": linked_change_ids,
@@ -1308,6 +1434,7 @@ def _ensure_approved_changes_for_queue(
         result.data = {
             "required": True,
             "stop_code": "BLOCKED",
+            **context_data(),
             "created_change_ids": created_change_ids,
             "linked_change_ids": linked_change_ids,
             "change_ids": linked_change_ids,
@@ -1320,9 +1447,10 @@ def _ensure_approved_changes_for_queue(
     return CommandResult.success(
         command="pipeline.change_gate",
         domain="pipeline",
-        message="Approved Change gate passed for selected queue.",
+        message=pass_message,
         data={
             "required": True,
+            **context_data(),
             "change_ids": linked_change_ids,
         },
     )

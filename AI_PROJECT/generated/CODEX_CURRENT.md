@@ -3,85 +3,75 @@
 
 # Current Codex Task
 
-Revision: `669`
+Revision: `817`
 
-Task: `TASK-079` — **Compact codexctl execute prompt renderer**
-Epic: `EPIC-003`
-Status: `in_review`
-Verification: `standard`
-UID: `tsk_4b2c0921708a`
-Legacy ID: `TASK-079`
-Aliases: `TASK-079`
+Task: `PIPEF-20 (TASK-099)` — **PIPE-020 Validate report freshness after execute**
+Epic: `EPIC-009`
+Status: `in_progress`
+Verification: `strict`
+Ref: `PIPEF-20`
+UID: `tsk_9d547d384917`
+Legacy ID: `TASK-099`
+Aliases: `TASK-099`
+Epic Key / Local Seq: `PIPEF` / `20`
 
 ## Prompt Control Fields
 
 Active Role: `Codex Executor`
 Active Stage: `Task Execution`
-Active Document: `scripts/codexctl.py`
-Expected Result: `Compact CODEX_PROMPT.md renderer implemented for execute-profile MVP`
+Active Document: `AI_PROJECT/generated/CODEX_CURRENT.md`
+Expected Result: `Task completed according to acceptance criteria`
 
 ## Summary
 
-Render CODEX_PROMPT.md as a compact execute-profile contract instead of embedding full Context Pack content.
+Ensure collect-report can distinguish a report created for the current execution from an older report.
 
 ## Description
 
-Implement approved CHG-062 by updating scripts/codexctl.py prompt rendering and focused tests so context-aware Codex prompt packages remain compact and bounded.
+Prevent old task reports from accidentally satisfying a new execute phase.
 
 ## Scope
 
-- Modify scripts/codexctl.py prompt rendering.
-- Render Profile: execute as the MVP default; do not implement --profile.
-- Use existing task fields only for identity, role, objective, scope, out-of-scope, allowed files, acceptance criteria, and verification mode.
-- Render Objective from task.summary with fallback to task.title.
-- Render full task.scope and full task.acceptance_criteria without category splitting.
-- Omit Execution Steps because task.execution_steps is not part of the current task schema.
-- Render Verification mode plus compact default check instruction.
-- Render Context as manifest-only when Context Pack is attached, keeping path, hash, docs revision, tasks revision, and selected source refs.
-- Do not embed the full AI_PROJECT/generated/CONTEXT_PACK.md body into CODEX_PROMPT.md.
-- Keep compact Execution Rules, Missing Info policy, and Final Report format.
-- Add or update tests proving compact context rendering.
+- Record execute start and finish evidence usable by collect-report.
+- Compare the collected report timestamp or report id against execute evidence.
+- Block stale reports by default with REPORT_STALE.
+- Support an explicit allow-existing-report option for supervised recovery.
 
 ## Out of Scope
 
-- Do not implement --profile.
-- Do not add profile-specific role switching.
-- Do not change task schema.
-- Do not add execution_steps or verification_checks.
-- Do not implement task splitting.
-- Do not modify contextctl.py.
-- Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Do not change behavior unrelated to this task.
+- Do not refactor unrelated code.
+- Do not edit protected project-control files manually.
 
 ## Allowed Files
 
-- scripts/codexctl.py
-- tests/test_legacy_ctl_wrappers.py
+- ai_project_ctl/pipeline/report_phase.py
+- ai_project_ctl/pipeline/execute_phase.py
+- scripts/aictl.py
 
 ## Acceptance Criteria
 
-- codexctl.py build --task <TASK> still works without Context Pack.
-- codexctl.py build --task <TASK> --with-context produces a compact Context section.
-- Generated CODEX_PROMPT.md does not embed the full CONTEXT_PACK.md body.
-- Generated CODEX_PROMPT.md includes Context Pack path, hash, docs revision, tasks revision, and selected source refs when context is attached.
-- Execution Steps section is omitted for current tasks because task.execution_steps does not exist.
-- Verification renders mode plus compact default check instruction.
-- Existing wrapper tests still pass.
-- Add or update tests to prove compact context rendering.
-- Generated CODEX_PROMPT.md omits the legacy full retrieved-context body section.
+- A report submitted after the current execute phase passes freshness checks.
+- An older report blocks collect-report unless allow-existing-report is explicitly used.
+- The result explains whether freshness was based on timestamp, report id, or recovery override.
+- The override is visible in phase artifacts for review.
 
 ## Review Instructions
 
-- Run python -m py_compile scripts/codexctl.py.
-- Run relevant tests for legacy ctl wrappers.
-- Run a local codex prompt build with context if fixtures allow it.
+- Check that freshness logic is deterministic and does not rely on local timezone formatting.
+- Verify the recovery override cannot silently hide task identity mismatch.
+
+## Notes
+
+- Draft ref: PIPE-020.
 
 ## Useful CLI
 
 ```bash
-python scripts/taskctl.py task transition TASK-079 --to in_progress
-python scripts/taskctl.py task transition TASK-079 --to in_review
-python scripts/taskctl.py task approve TASK-079 --notes "..."
-python scripts/taskctl.py task transition TASK-079 --to done
-python scripts/aictl.py task report submit --task TASK-079 --file /path/to/report.json --confirm
+python scripts/taskctl.py task transition TASK-099 --to in_progress
+python scripts/taskctl.py task transition TASK-099 --to in_review
+python scripts/taskctl.py task approve TASK-099 --notes "..."
+python scripts/taskctl.py task transition TASK-099 --to done
+python scripts/aictl.py task report submit --task TASK-099 --file /path/to/report.json --confirm
 python scripts/taskctl.py prompt build --write
 ```

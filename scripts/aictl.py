@@ -64,6 +64,11 @@ from ai_project_ctl.pipeline.policy_store import (  # noqa: E402
 )
 from ai_project_ctl.pipeline.runner import run_next as run_pipeline_next  # noqa: E402
 from ai_project_ctl.pipeline.batch import run_until_blocker as run_pipeline_until_blocker  # noqa: E402
+from ai_project_ctl.pipeline.execute_phase import execute_phase  # noqa: E402
+from ai_project_ctl.pipeline.prepare_phase import prepare_phase  # noqa: E402
+from ai_project_ctl.pipeline.queue_phase import preview_queue_phase  # noqa: E402
+from ai_project_ctl.pipeline.report_phase import collect_report_phase  # noqa: E402
+from ai_project_ctl.pipeline.report_template import build_report_template  # noqa: E402
 
 
 class FacadeError(CommandError):
@@ -1322,6 +1327,12 @@ def cmd_pipeline_check_generated(args: argparse.Namespace) -> int:
     return _emit_command_result(result, args)
 
 
+def cmd_pipeline_report_template(args: argparse.Namespace) -> int:
+    template = build_report_template(args.task or "", root=args.root)
+    print(json.dumps(template, ensure_ascii=False, indent=2, sort_keys=True))
+    return 0
+
+
 def cmd_pipeline_policy_list(args: argparse.Namespace) -> int:
     _ensure_implemented("pipeline.policy.list")
     payload = pipeline_policy_status_payload(root=args.root)
@@ -1478,6 +1489,116 @@ def cmd_pipeline_run_until_blocker(args: argparse.Namespace) -> int:
         confirmed=args.confirm,
     )
     return _emit_command_result(result, args)
+
+
+def cmd_pipeline_queue_preview(args: argparse.Namespace) -> int:
+    result = preview_queue_phase(
+        args.session_id or "",
+        root=args.root,
+        task_refs=_tuple_or_empty(args.task_ref),
+        epic_ids=_tuple_or_empty(args.epic),
+        statuses=_tuple_or_empty(args.status_filter),
+        max_tasks=args.max_tasks,
+        order_by=args.order_by,
+    )
+    if args.json:
+        _print_json(result.to_dict())
+        return 0 if result.ok else 1
+
+    print(result.message)
+    data = result.data if isinstance(result.data, Mapping) else {}
+    if data.get("session_id"):
+        print("Session: {}".format(data["session_id"]))
+    preview = data.get("queue_preview") if isinstance(data.get("queue_preview"), Mapping) else {}
+    if preview:
+        _emit_queue_preview_text(preview)
+    for error in result.errors:
+        print("ERROR: {}: {}".format(error.code, error.message), file=sys.stderr)
+    return 0 if result.ok else 1
+
+
+def cmd_pipeline_prepare(args: argparse.Namespace) -> int:
+    result = prepare_phase(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+        task_refs=_tuple_or_empty(args.task_ref),
+        epic_ids=_tuple_or_empty(args.epic),
+        statuses=_tuple_or_empty(args.status_filter),
+        max_tasks=args.max_tasks,
+        order_by=args.order_by,
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_execute(args: argparse.Namespace) -> int:
+    result = execute_phase(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_collect_report(args: argparse.Namespace) -> int:
+    result = collect_report_phase(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+    )
+    return _emit_command_result(result, args)
+
+
+def _emit_queue_preview_text(preview: Mapping[str, Any]) -> None:
+    next_task = preview.get("next_task")
+    print("Next task: {}".format(_queue_item_label(next_task) if isinstance(next_task, Mapping) else "none"))
+    categories = preview.get("categories")
+    if not isinstance(categories, Mapping):
+        return
+    for category in ("executable", "waiting", "blocked", "skipped"):
+        items = categories.get(category) or []
+        if not isinstance(items, Sequence) or isinstance(items, (str, bytes)):
+            continue
+        print("{}: {}".format(category, len(items)))
+        for item in items:
+            if not isinstance(item, Mapping):
+                continue
+            print("  - {}".format(_queue_item_label(item)))
+            reasons = item.get("reasons") or []
+            if not isinstance(reasons, Sequence) or isinstance(reasons, (str, bytes)):
+                continue
+            for reason in reasons:
+                if not isinstance(reason, Mapping):
+                    continue
+                code = reason.get("code") or "reason"
+                detail = reason.get("detail") or ""
+                print("    {}{}".format(code, ": {}".format(detail) if detail else ""))
+
+
+def _queue_item_label(item: Mapping[str, Any] | None) -> str:
+    if not isinstance(item, Mapping):
+        return "none"
+    label = item.get("ref") or item.get("selected_ref") or item.get("id") or "unknown"
+    title = item.get("title") or ""
+    status = item.get("status") or ""
+    suffix = " [{}]".format(status) if status else ""
+    return "{}{}{}".format(label, " - {}".format(title) if title else "", suffix)
+
+
+def cmd_pipeline_phase_not_implemented(args: argparse.Namespace) -> int:
+    try:
+        _ensure_implemented(args.facade_command)
+    except FacadeError:
+        raise
+    raise FacadeError(
+        "COMMAND_NOT_IMPLEMENTED",
+        "Pipeline phase service is not implemented yet: {}".format(args.facade_command),
+        details={
+            "command": args.facade_command,
+            "phase": args.phase_name,
+            "session_id": args.session_id or "",
+        },
+    )
 
 
 def cmd_pipeline_step_start(args: argparse.Namespace) -> int:
@@ -1813,6 +1934,19 @@ def _add_project_doctor_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--strict-prompt", action="store_true")
 
 
+def _add_pipeline_queue_preview_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("session_id", nargs="?")
+    parser.add_argument("--task-ref", action="append")
+    parser.add_argument("--epic", action="append")
+    parser.add_argument("--status-filter", action="append")
+    parser.add_argument("--max-tasks", type=int)
+    parser.add_argument(
+        "--order-by",
+        default="execution",
+        choices=("execution", "owner", "selected"),
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Unified facade for AI Development System project-control commands"
@@ -1968,6 +2102,19 @@ def build_parser() -> argparse.ArgumentParser:
     p = pipeline_sub.add_parser("check-generated", help="Check pipeline generated status freshness")
     p.set_defaults(func=cmd_pipeline_check_generated, facade_command="pipeline.check_generated")
 
+    report = pipeline_sub.add_parser("report", help="Pipeline report helper commands")
+    report_sub = report.add_subparsers(dest="pipeline_report_action", required=True)
+
+    p = report_sub.add_parser(
+        "template",
+        help="Print a read-only structured execution report template",
+    )
+    p.add_argument("--task", help="Task ID, ref, UID, legacy ID, or alias. Defaults to current task.")
+    p.set_defaults(
+        func=cmd_pipeline_report_template,
+        facade_command="pipeline.report.template",
+    )
+
     policy = pipeline_sub.add_parser("policy", help="Pipeline policy preset store commands")
     policy_sub = policy.add_subparsers(dest="pipeline_policy_action", required=True)
 
@@ -2002,6 +2149,76 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(
         func=cmd_pipeline_policy_check_generated,
         facade_command="pipeline.policy.check_generated",
+    )
+
+    phase = pipeline_sub.add_parser("phase", help="Planned phase-based pipeline commands")
+    phase_sub = phase.add_subparsers(dest="pipeline_phase_action", required=True)
+
+    p = phase_sub.add_parser("queue-preview", help="Preview the selected pipeline queue phase")
+    _add_pipeline_queue_preview_args(p)
+    p.set_defaults(
+        func=cmd_pipeline_queue_preview,
+        facade_command="pipeline.phase.queue_preview",
+        phase_name="queue_preview",
+    )
+
+    p = phase_sub.add_parser("prepare", help="Prepare context and prompt artifacts phase")
+    _add_pipeline_queue_preview_args(p)
+    p.set_defaults(
+        func=cmd_pipeline_prepare,
+        facade_command="pipeline.phase.prepare",
+        phase_name="prepare",
+    )
+
+    p = phase_sub.add_parser("execute", help="Execute prepared Codex work phase")
+    p.add_argument("session_id", nargs="?")
+    p.set_defaults(
+        func=cmd_pipeline_execute,
+        facade_command="pipeline.phase.execute",
+        phase_name="execute",
+    )
+
+    p = phase_sub.add_parser("collect-report", help="Collect the execution report phase")
+    p.add_argument("session_id", nargs="?")
+    p.set_defaults(
+        func=cmd_pipeline_collect_report,
+        facade_command="pipeline.phase.collect_report",
+        phase_name="collect_report",
+    )
+
+    p = phase_sub.add_parser("verify", help="Run machine verification gate phase")
+    p.add_argument("session_id", nargs="?")
+    p.set_defaults(
+        func=cmd_pipeline_phase_not_implemented,
+        facade_command="pipeline.phase.verify",
+        phase_name="verify",
+    )
+
+    p = phase_sub.add_parser("review", help="Run Codex review gate phase")
+    p.add_argument("session_id", nargs="?")
+    p.set_defaults(
+        func=cmd_pipeline_phase_not_implemented,
+        facade_command="pipeline.phase.review",
+        phase_name="review",
+    )
+
+    p = phase_sub.add_parser("close", help="Close reviewed task work phase")
+    p.add_argument("session_id", nargs="?")
+    p.set_defaults(
+        func=cmd_pipeline_phase_not_implemented,
+        facade_command="pipeline.phase.close",
+        phase_name="close",
+    )
+
+    queue = pipeline_sub.add_parser("queue", help="Read-only pipeline queue commands")
+    queue_sub = queue.add_subparsers(dest="pipeline_queue_action", required=True)
+
+    p = queue_sub.add_parser("preview", help="Preview the selected pipeline queue")
+    _add_pipeline_queue_preview_args(p)
+    p.set_defaults(
+        func=cmd_pipeline_queue_preview,
+        facade_command="pipeline.phase.queue_preview",
+        phase_name="queue_preview",
     )
 
     p = pipeline_sub.add_parser("run-next", help="Run one guarded pipeline step")

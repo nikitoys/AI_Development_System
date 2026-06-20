@@ -311,6 +311,76 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
     state_pipeline = "AI_PROJECT/state/pipeline_sessions.json"
     state_pipeline_policy = "AI_PROJECT/state/pipeline_policy_presets.json"
 
+    pipeline_phase_reads = (
+        state_pipeline,
+        state_pipeline_policy,
+        state_tasks,
+        state_plan,
+        state_evolution,
+        state_task_reports,
+        state_execution,
+    )
+    pipeline_phase_generated = (
+        "AI_PROJECT/generated/PIPELINE_STATUS.md",
+        "AI_PROJECT/generated/CODEX_CURRENT.md",
+        "AI_PROJECT/generated/CODEX_TASKS.md",
+        "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+        "AI_PROJECT/generated/CONTEXT_PACK.md",
+        "AI_PROJECT/generated/CONTEXT_STATUS.md",
+        "AI_PROJECT/generated/CODEX_PROMPT.md",
+        "AI_PROJECT/generated/CODEX_STATUS.md",
+        "AI_PROJECT/generated/EVOLUTION.md",
+    )
+
+    def _pipeline_phase_descriptor(
+        *,
+        suffix: str,
+        cli_name: str,
+        phase: str,
+        description: str,
+        kind: CommandKind = CommandKind.WRITE,
+        writes_state: tuple[str, ...] = (state_pipeline,),
+        event_logs: tuple[str, ...] = ("AI_PROJECT/events/pipeline-events.jsonl",),
+        generated_files: tuple[str, ...] = pipeline_phase_generated,
+        fields: tuple[str, ...] = ("phase_result", "session_id", "next_action"),
+        validators: tuple[str, ...] = (
+            "pipeline_session_state",
+            "pipeline_session_references",
+            "pipeline_phase_result",
+        ),
+        notes: tuple[str, ...] = (),
+    ) -> CommandDescriptor:
+        return CommandDescriptor(
+            name=f"pipeline.phase.{suffix}",
+            domain="pipeline",
+            description=description,
+            kind=kind,
+            arguments=(
+                _arg("session_id", "Pipeline session ID. Uses current session when omitted."),
+            ),
+            reads_state=pipeline_phase_reads,
+            writes_state=writes_state,
+            event_logs=event_logs,
+            generated_files=generated_files,
+            output=_output(
+                "Pipeline {} phase result.".format(phase.replace("_", " ")),
+                fields=fields,
+            ),
+            validators=validators,
+            lock_scope="pipeline",
+            owner_approval=(
+                "Registered as a planned phase command only; execution behavior "
+                "requires a future bounded implementation task."
+            ),
+            availability=CommandAvailability.PLANNED,
+            legacy_command=("python scripts/aictl.py pipeline phase {} <SESSION>".format(cli_name),),
+            notes=(
+                "CLI skeleton returns COMMAND_NOT_IMPLEMENTED until the phase service exists.",
+                "Planned phase name: {}.".format(phase),
+                *notes,
+            ),
+        )
+
     return (
         CommandDescriptor(
             name="command.list",
@@ -1150,6 +1220,97 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
                 "Creates or updates only pipeline_sessions.json through the pipeline session service.",
                 "Does not implement run-next behavior and does not launch Codex.",
             ),
+        ),
+        _pipeline_phase_descriptor(
+            suffix="queue_preview",
+            cli_name="queue-preview",
+            phase="queue_preview",
+            description="Preview the selected supervised pipeline queue as a planned phase.",
+            kind=CommandKind.READ,
+            writes_state=(),
+            event_logs=(),
+            generated_files=(),
+            fields=("phase_result", "session_id", "queue_preview"),
+            validators=("pipeline_session_state", "pipeline_session_references"),
+            notes=("Queue preview is planned as a read-only phase.",),
+        ),
+        _pipeline_phase_descriptor(
+            suffix="prepare",
+            cli_name="prepare",
+            phase="prepare",
+            description="Prepare task context and prompt artifacts as a planned pipeline phase.",
+            event_logs=(
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/codex-events.jsonl",
+            ),
+            notes=("Prepare is planned to build context and Codex prompt artifacts.",),
+        ),
+        _pipeline_phase_descriptor(
+            suffix="execute",
+            cli_name="execute",
+            phase="execute",
+            description="Execute the prepared Codex work adapter as a planned pipeline phase.",
+            event_logs=(
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/codex-events.jsonl",
+            ),
+            notes=("Execute remains gated by future adapter and policy implementation.",),
+        ),
+        _pipeline_phase_descriptor(
+            suffix="collect_report",
+            cli_name="collect-report",
+            phase="collect_report",
+            description="Collect and store the Codex execution report as a planned pipeline phase.",
+            writes_state=(state_pipeline, state_task_reports),
+            event_logs=(
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+            ),
+            generated_files=("AI_PROJECT/generated/PIPELINE_STATUS.md",),
+            fields=("phase_result", "session_id", "report_id"),
+            notes=("Collect-report is planned to use task report control instead of direct file writes.",),
+        ),
+        _pipeline_phase_descriptor(
+            suffix="verify",
+            cli_name="verify",
+            phase="verify",
+            description="Run the machine verification gate as a planned pipeline phase.",
+            event_logs=(
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+            ),
+            generated_files=("AI_PROJECT/generated/PIPELINE_STATUS.md",),
+            fields=("phase_result", "session_id", "verification"),
+            notes=("Verify is planned to record gate outcomes without owner acceptance.",),
+        ),
+        _pipeline_phase_descriptor(
+            suffix="review",
+            cli_name="review",
+            phase="review",
+            description="Run the Codex review gate as a planned pipeline phase.",
+            event_logs=(
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+            ),
+            generated_files=("AI_PROJECT/generated/PIPELINE_STATUS.md",),
+            fields=("phase_result", "session_id", "review"),
+            notes=("Review is planned as a gate and must not self-approve Human Owner acceptance.",),
+        ),
+        _pipeline_phase_descriptor(
+            suffix="close",
+            cli_name="close",
+            phase="close",
+            description="Close reviewed task work as a planned pipeline phase.",
+            writes_state=(state_pipeline, state_tasks, state_execution),
+            event_logs=(
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/codex-events.jsonl",
+            ),
+            fields=("phase_result", "session_id", "closure"),
+            notes=("Close is planned to respect review and Human Owner gates before task closure.",),
         ),
         CommandDescriptor(
             name="pipeline.run_next",

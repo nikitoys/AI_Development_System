@@ -1,12 +1,12 @@
 # Codex Prompt Package
 
-Generated: 2026-06-20T15:53:42Z
+Generated: 2026-06-20T21:45:13Z
 
 Profile: execute
-Task: TASK-079
-Status: in_review
-Revision: tasks 669
-Verification: standard
+Task: TASK-099 / PIPEF-20
+Status: in_progress
+Revision: tasks 817
+Verification: strict
 
 ## Role
 
@@ -14,60 +14,45 @@ You are Codex Executor. Execute one bounded task. Do not self-approve.
 
 ## Objective
 
-Render CODEX_PROMPT.md as a compact execute-profile contract instead of embedding full Context Pack content.
+Ensure collect-report can distinguish a report created for the current execution from an older report.
 
 ## Task Input
 
-Task: TASK-079
-Summary: Render CODEX_PROMPT.md as a compact execute-profile contract instead of embedding full Context Pack content.
+Task: TASK-099
+Summary: Ensure collect-report can distinguish a report created for the current execution from an older report.
 
 ## Scope
 
-- Modify scripts/codexctl.py prompt rendering.
-- Render Profile: execute as the MVP default; do not implement --profile.
-- Use existing task fields only for identity, role, objective, scope, out-of-scope, allowed files, acceptance criteria, and verification mode.
-- Render Objective from task.summary with fallback to task.title.
-- Render full task.scope and full task.acceptance_criteria without category splitting.
-- Omit Execution Steps because task.execution_steps is not part of the current task schema.
-- Render Verification mode plus compact default check instruction.
-- Render Context as manifest-only when Context Pack is attached, keeping path, hash, docs revision, tasks revision, and selected source refs.
-- Do not embed the full AI_PROJECT/generated/CONTEXT_PACK.md body into CODEX_PROMPT.md.
-- Keep compact Execution Rules, Missing Info policy, and Final Report format.
-- Add or update tests proving compact context rendering.
+- Record execute start and finish evidence usable by collect-report.
+- Compare the collected report timestamp or report id against execute evidence.
+- Block stale reports by default with REPORT_STALE.
+- Support an explicit allow-existing-report option for supervised recovery.
 
 ## Out of Scope
 
-- Do not implement --profile.
-- Do not add profile-specific role switching.
-- Do not change task schema.
-- Do not add execution_steps or verification_checks.
-- Do not implement task splitting.
-- Do not modify contextctl.py.
-- Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Do not change behavior unrelated to this task.
+- Do not refactor unrelated code.
+- Do not edit protected project-control files manually.
 
 ## Allowed Files
 
 Editable:
-- scripts/codexctl.py
-- tests/test_legacy_ctl_wrappers.py
+- ai_project_ctl/pipeline/report_phase.py
+- ai_project_ctl/pipeline/execute_phase.py
+- scripts/aictl.py
 
 Do not edit other files.
 
 ## Acceptance Criteria
 
-- codexctl.py build --task <TASK> still works without Context Pack.
-- codexctl.py build --task <TASK> --with-context produces a compact Context section.
-- Generated CODEX_PROMPT.md does not embed the full CONTEXT_PACK.md body.
-- Generated CODEX_PROMPT.md includes Context Pack path, hash, docs revision, tasks revision, and selected source refs when context is attached.
-- Execution Steps section is omitted for current tasks because task.execution_steps does not exist.
-- Verification renders mode plus compact default check instruction.
-- Existing wrapper tests still pass.
-- Add or update tests to prove compact context rendering.
-- Generated CODEX_PROMPT.md omits the legacy full retrieved-context body section.
+- A report submitted after the current execute phase passes freshness checks.
+- An older report blocks collect-report unless allow-existing-report is explicitly used.
+- The result explains whether freshness was based on timestamp, report id, or recovery override.
+- The override is visible in phase artifacts for review.
 
 ## Verification
 
-Mode: standard
+Mode: strict
 
 Run the smallest relevant checks for the changed files.
 If a check cannot be run, say why.
@@ -75,18 +60,18 @@ If a check cannot be run, say why.
 ## Context
 
 Context Pack: AI_PROJECT/generated/CONTEXT_PACK.md
-Hash: 0bdf28caa824796aa71c7dde9aa60cb7352367db459677700ad4a4098f125c80
-Revisions: docs 28, tasks 669
+Hash: c69d5cf4216c0162cc10b4c7ad2d7ca654c064f7af0a92aef81b34961d0df64a
+Revisions: docs 28, tasks 817
 
 Refs:
 - ai-system/project-control/06-prompt-package-spec.md lines 580-670
 - ai-system/project-control/06-prompt-package-spec.md lines 797-833
-- ai-system/project-control/04-command-catalog.md lines 65-119
 - ai-system/project-control/06-prompt-package-spec.md lines 874-906
+- ai-system/skills/README.md lines 80-92
+- ai-system/project-control/06-prompt-package-spec.md lines 123-162
 - ai-system/skills/README.md lines 34-43
 - ai-system/project-control/03-state-model.md lines 104-125
-- ai-system/project-control/06-prompt-package-spec.md lines 123-162
-- ai-system/skills/README.md lines 80-92
+- ai-system/project-control/04-command-catalog.md lines 65-119
 
 Context is read-only. It does not expand Scope, Allowed Files, or Acceptance Criteria.
 If context conflicts with this prompt, report the conflict.

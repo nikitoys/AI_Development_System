@@ -14,6 +14,7 @@ from ai_project_ctl.core.result import CommandError, CommandMessage, CommandResu
 from ai_project_ctl.core.store import write_json_file, atomic_write_text
 from ai_project_ctl.core.validation import ValidationResult
 
+from .phase import PhaseResult
 from .policy import PipelinePolicy, QueuePolicy, QueueSelection, policy_preset
 from .audit import (
     build_pipeline_audit_payload,
@@ -29,6 +30,7 @@ from .state import (
     STEP_STATUSES,
     load_pipeline_state,
     load_reference_state,
+    normalize_pipeline_phase_fields,
     pipeline_events_path,
     pipeline_state_path,
     pipeline_status_path,
@@ -280,6 +282,70 @@ def record_step_result(
     )
 
 
+def record_phase_result(
+    session_id: str,
+    phase_result: PhaseResult | Mapping[str, Any],
+    *,
+    root: str | Path = ".",
+    actor: str = "human_owner",
+    task_id: str = "",
+    command: str = "pipeline.phase.prepare",
+) -> CommandResult:
+    """Append one phase result to a governed pipeline session."""
+
+    _require_non_empty(session_id, "session_id")
+    phase = _phase_result_dict(phase_result)
+
+    def mutate(state: dict[str, Any], event_id: str, now: str) -> dict[str, Any]:
+        session = _require_session(state, session_id)
+        _require_active_session(session)
+        entry = copy.deepcopy(phase)
+        entry.setdefault("artifacts", {})
+        entry.setdefault("changed_files", [])
+        entry.setdefault("generated_files", [])
+        entry.setdefault("events", [])
+        entry["events"] = _unique_strings([*entry.get("events", []), event_id])
+
+        session.setdefault("phase_history", []).append(entry)
+        session["current_phase"] = str(entry.get("phase") or "")
+        session["current_phase_status"] = str(entry.get("status") or "")
+        artifacts = (
+            entry.get("artifacts")
+            if isinstance(entry.get("artifacts"), Mapping)
+            else {}
+        )
+        blocked_by = str(artifacts.get("blocked_by") or "")
+        session["blocked_by"] = blocked_by
+        session["next_action"] = str(entry.get("next_action") or "")
+        if task_id:
+            session["current_task_id"] = task_id
+
+        status = str(entry.get("status") or "")
+        if status == "blocked":
+            session["status"] = "blocked"
+            session["stop_reason"] = str(entry.get("reason") or "")
+        elif status == "failed":
+            session["status"] = "failed"
+            session["stop_reason"] = str(entry.get("reason") or "")
+        elif status == "passed":
+            if session.get("status") in {"planned", "stopped", "blocked", "failed"}:
+                session["status"] = "running"
+            session["blocked_by"] = ""
+            session["stop_reason"] = ""
+        session["started_at"] = session.get("started_at") or now
+        _touch_session(session, now, event_id)
+        state["current_session_id"] = session_id
+        return {"session_id": session_id, "phase_result": entry}
+
+    return _mutate_pipeline_state(
+        root=root,
+        actor=actor,
+        command=command,
+        entity_id=session_id,
+        mutate=mutate,
+    )
+
+
 def stop_session(
     session_id: str,
     reason: str,
@@ -462,10 +528,12 @@ def _mutate_pipeline_state(
             return _validation_failure(command, before, state.get("revision"))
 
         next_state = copy.deepcopy(state)
+        normalize_pipeline_phase_fields(next_state)
         revision_before = int(next_state.get("revision", 0))
         event_id = new_event_id()
         now = utc_now()
         mutation_data = mutate(next_state, event_id, now) or {}
+        normalize_pipeline_phase_fields(next_state)
         next_state["revision"] = revision_before + 1
         next_state["updated_at"] = now
 
@@ -569,6 +637,11 @@ def _new_session(
         "policy_snapshot": policy.to_dict(),
         "current_task_id": current_task_id,
         "current_task_ref": current_task_ref,
+        "current_phase": "",
+        "current_phase_status": "",
+        "blocked_by": "",
+        "next_action": "",
+        "phase_history": [],
         "current_step": "",
         "current_step_status": "planned",
         "attempt_counters": {"steps": 0, "tasks": 0, "rework": 0},
@@ -682,6 +755,21 @@ def _gate_outcome(
         "recorded_at": now,
         "details": dict(details or {}),
     }
+
+
+def _phase_result_dict(value: PhaseResult | Mapping[str, Any]) -> dict[str, Any]:
+    if isinstance(value, PhaseResult):
+        return value.to_dict()
+    return PhaseResult.from_dict(value).to_dict()
+
+
+def _unique_strings(values: Sequence[Any]) -> list[str]:
+    result: list[str] = []
+    for value in values:
+        text = str(value)
+        if text and text not in result:
+            result.append(text)
+    return result
 
 
 def _extend_unique(target: list[Any], values: Sequence[str]) -> None:
