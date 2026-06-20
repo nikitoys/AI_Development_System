@@ -15,6 +15,11 @@ from ai_project_ctl.core.result import CommandMessage, CommandResult
 from ai_project_ctl.core.store import read_json_file
 from ai_project_ctl.core.workflows import Runner, run_workflow
 
+from .close_policy import (
+    CODE_REVIEW_CLOSE_WORKFLOW_FAILED,
+    decide_review_close,
+    run_review_close_workflow,
+)
 from .codex_adapter import CodexAdapterResult, run_codex_adapter
 from .codex_review import BLOCKED as CODEX_REVIEW_BLOCKED_STATUS
 from .codex_review import FAIL as CODEX_REVIEW_FAIL
@@ -574,6 +579,45 @@ def run_next(
                 review_ids=(codex_review.review_id,) if codex_review.review_id else (),
             )
         if codex_review.status == CODEX_REVIEW_BLOCKED_STATUS:
+            if policy.closure.auto_close_task and codex_review.verdict == VERDICT_REQUEST_CHANGES:
+                codex_review_recorded = record_step_result(
+                    selected_session_id,
+                    RUN_NEXT_STEP,
+                    "passed",
+                    root=root_path,
+                    actor=actor,
+                    task_id=task_id,
+                    gate_name="codex_review_gate",
+                    gate_status="blocked",
+                    gate_details=codex_review_details,
+                    report_ids=(codex_review.report_id,) if codex_review.report_id else (),
+                    review_ids=(codex_review.review_id,) if codex_review.review_id else (),
+                )
+                side_effects.append(codex_review_recorded)
+                if not codex_review_recorded.ok:
+                    return _aggregate_failure(
+                        "pipeline.run_next",
+                        "Failed to record Codex Review Gate result.",
+                        selected_session_id,
+                        side_effects,
+                    )
+                return _apply_review_close_policy(
+                    session=session,
+                    policy=policy,
+                    report_gate=report_gate,
+                    machine_review=machine_review,
+                    codex_review=codex_review,
+                    gate_details=codex_review_details,
+                    selected_session_id=selected_session_id,
+                    selected=selected,
+                    queue_preview=queue_preview,
+                    side_effects=side_effects,
+                    root=root_path,
+                    actor=actor,
+                    python_executable=python_bin,
+                    runner=execution_runner,
+                )
+
             if codex_review.verdict == VERDICT_REQUEST_CHANGES:
                 stop_code = "CODEX_REVIEW_REQUEST_CHANGES"
             elif codex_review.verdict == VERDICT_BLOCKED:
@@ -621,20 +665,21 @@ def run_next(
             )
 
         if policy.closure.auto_close_task:
-            return _record_stop(
-                selected_session_id,
-                stop_code="NOT_IMPLEMENTED",
-                stop_reason="Task auto-close action is not implemented in this task.",
-                result_status="blocked",
-                gate_name="review_close_gate",
-                gate_status="blocked",
+            return _apply_review_close_policy(
+                session=session,
+                policy=policy,
+                report_gate=report_gate,
+                machine_review=machine_review,
+                codex_review=codex_review,
                 gate_details=codex_review_details,
-                selected_task=selected,
-                policy_name=policy.name,
+                selected_session_id=selected_session_id,
+                selected=selected,
                 queue_preview=queue_preview,
                 side_effects=side_effects,
                 root=root_path,
                 actor=actor,
+                python_executable=python_bin,
+                runner=execution_runner,
             )
         if policy.commit.create_local_commit:
             return _record_stop(
@@ -683,6 +728,85 @@ def run_next(
         side_effects=side_effects,
         root=root_path,
         actor=actor,
+    )
+
+
+def _apply_review_close_policy(
+    *,
+    session: Mapping[str, Any],
+    policy: PipelinePolicy,
+    report_gate,
+    machine_review,
+    codex_review,
+    gate_details: Mapping[str, Any],
+    selected_session_id: str,
+    selected: QueuePreviewItem,
+    queue_preview: QueuePreview,
+    side_effects: list[CommandResult],
+    root: Path,
+    actor: str,
+    python_executable: str,
+    runner: Runner | None,
+) -> CommandResult:
+    decision = decide_review_close(
+        policy=policy,
+        report_gate=report_gate,
+        machine_review=machine_review,
+        codex_review=codex_review,
+        session=session,
+    )
+    close_details: dict[str, Any] = {
+        **dict(gate_details),
+        "close_policy": decision.to_dict(),
+    }
+
+    workflow = run_review_close_workflow(
+        decision,
+        root=root,
+        actor=actor,
+        task_id=str(selected.id or ""),
+        python_executable=python_executable,
+        runner=runner,
+    )
+    if decision.should_run_workflow or not workflow.ok:
+        side_effects.append(workflow)
+        close_details["close_policy_workflow"] = workflow.to_dict()
+
+    if not workflow.ok:
+        return _record_stop(
+            selected_session_id,
+            stop_code=CODE_REVIEW_CLOSE_WORKFLOW_FAILED,
+            stop_reason=workflow.message,
+            result_status="blocked",
+            gate_name="review_close_gate",
+            gate_status="fail",
+            gate_details=close_details,
+            selected_task=selected,
+            policy_name=policy.name,
+            queue_preview=queue_preview,
+            side_effects=side_effects,
+            root=root,
+            actor=actor,
+            report_ids=(codex_review.report_id,) if codex_review.report_id else (),
+            review_ids=(codex_review.review_id,) if codex_review.review_id else (),
+        )
+
+    return _record_stop(
+        selected_session_id,
+        stop_code=decision.stop_code,
+        stop_reason=decision.reason,
+        result_status=decision.result_status,
+        gate_name="review_close_gate",
+        gate_status=decision.gate_status,
+        gate_details=close_details,
+        selected_task=selected,
+        policy_name=policy.name,
+        queue_preview=queue_preview,
+        side_effects=side_effects,
+        root=root,
+        actor=actor,
+        report_ids=(codex_review.report_id,) if codex_review.report_id else (),
+        review_ids=(codex_review.review_id,) if codex_review.review_id else (),
     )
 
 
@@ -958,6 +1082,10 @@ def _safe_stop_result(
         "CODEX_REVIEW_GATE_FAILURE",
         "CODEX_REVIEW_REQUEST_CHANGES",
         "CODEX_REVIEW_BLOCKED",
+        "REVIEW_CLOSE_POLICY_BLOCKED",
+        "REVIEW_CLOSE_WORKFLOW_FAILED",
+        "REWORK_LIMIT_REACHED",
+        "REWORK_POLICY_DISABLED",
     }:
         result.owner_action_required = stop_reason
     return result

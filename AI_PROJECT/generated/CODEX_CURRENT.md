@@ -3,11 +3,11 @@
 
 # Current Codex Task
 
-Revision: `549`
+Revision: `552`
 
 Task: `PIPE-11 (TASK-062)` — **PIPE-11 Auto Review Auto Close Policy**
 Epic: `EPIC-007`
-Status: `in_progress`
+Status: `in_review`
 Verification: `strict`
 Ref: `PIPE-11`
 UID: `tsk_01a078bae3e6`

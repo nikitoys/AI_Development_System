@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 549,
+  "revision": 552,
   "current_task_id": "TASK-062",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-20T06:29:23Z",
+  "updated_at": "2026-06-20T06:44:05Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -4657,7 +4657,7 @@
       "id": "TASK-062",
       "epic_id": "EPIC-007",
       "title": "PIPE-11 Auto Review Auto Close Policy",
-      "status": "in_progress",
+      "status": "in_review",
       "summary": "Apply policy-controlled close/rework decisions only after Machine Review PASS and Codex Review APPROVE.",
       "description": "Implement the decision logic that maps review gate results into task done, changes_requested, rework loop, or stop states under explicit automation policy.",
       "priority": 1,
@@ -4717,7 +4717,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-19T20:33:31Z",
-      "updated_at": "2026-06-20T06:29:23Z",
+      "updated_at": "2026-06-20T06:44:05Z",
       "uid": "tsk_01a078bae3e6",
       "ref": "PIPE-11",
       "legacy_id": "TASK-062",

@@ -1,9 +1,9 @@
 # Codex Prompt Package
 
-Generated: 2026-06-20T06:29:25Z
+Generated: 2026-06-20T06:44:47Z
 Source Type: task
 Source ID: TASK-062
-Source Status: in_progress
+Source Status: in_review
 
 [SYSTEM]
 
@@ -25,7 +25,7 @@ Project-control state is managed through Python CLI gateways; generated Markdown
 
 Source:
 Source Task: TASK-062
-Task Status: in_progress
+Task Status: in_review
 Title: PIPE-11 Auto Review Auto Close Policy
 
 Apply policy-controlled close/rework decisions only after Machine Review PASS and Codex Review APPROVE.
@@ -65,11 +65,11 @@ Implementation Instructions:
 
 Retrieved Context:
 - Context Pack path: `AI_PROJECT/generated/CONTEXT_PACK.md`
-- Context Pack SHA-256: `51080a71c3d46ebee609410887af44fda6df89c9353aaef2752a4aa6859bdfd4`
+- Context Pack SHA-256: `e51ce1cf7614b3c4e41b15cc098a609cd3b817ce7133c2644eb26bbd996e4e3f`
 - Context mode: `task`
 - Context task ID: `TASK-062`
 - Docs revision: `24`
-- Tasks revision: `549`
+- Tasks revision: `552`
 
 Retrieved Context Rules:
 - Retrieved context is read-only.
@@ -105,7 +105,7 @@ Task ID: `TASK-062`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `24`
-Tasks revision: `549`
+Tasks revision: `552`
 
 ## Query
 
@@ -116,7 +116,7 @@ TASK-062 PIPE-11 Auto Review Auto Close Policy Apply policy-controlled close/rew
 ## Task Boundary Snapshot
 
 Task: `TASK-062` - PIPE-11 Auto Review Auto Close Policy
-Status: `in_progress`
+Status: `in_review`
 
 Scope:
 - Implement decision logic for Machine Review result plus Codex Review result.

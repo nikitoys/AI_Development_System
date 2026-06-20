@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `549`
+Revision: `552`
 Current task: `TASK-062`
 
 ## Epic `EPIC-001`
@@ -1121,7 +1121,7 @@ Acceptance criteria:
 
 ### PIPE-11 (TASK-062) — PIPE-11 Auto Review Auto Close Policy ⭐
 
-Status: `in_progress`
+Status: `in_review`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_01a078bae3e6`, legacy `TASK-062`, aliases `TASK-062`, local `PIPE` / `11`

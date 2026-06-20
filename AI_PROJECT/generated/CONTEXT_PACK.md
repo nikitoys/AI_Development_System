@@ -12,7 +12,7 @@ Task ID: `TASK-062`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `24`
-Tasks revision: `549`
+Tasks revision: `552`
 
 ## Query
 
@@ -23,7 +23,7 @@ TASK-062 PIPE-11 Auto Review Auto Close Policy Apply policy-controlled close/rew
 ## Task Boundary Snapshot
 
 Task: `TASK-062` - PIPE-11 Auto Review Auto Close Policy
-Status: `in_progress`
+Status: `in_review`
 
 Scope:
 - Implement decision logic for Machine Review result plus Codex Review result.
