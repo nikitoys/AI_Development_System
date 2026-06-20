@@ -451,9 +451,14 @@ def pipeline_selector_form(data: Mapping[str, Any], pipeline: Mapping[str, Any])
         ("changes_requested", "changes_requested"),
     ]
     max_tasks = request.get("max_tasks")
+    auto_create_missing_changes = bool(request.get("auto_create_missing_changes"))
+    owner_approve_required_changes = bool(
+        request.get("owner_approve_required_changes")
+    )
+    approval_note = str(request.get("approval_note") or "")
     return (
         '<form class="task-controls" method="get" action="/pipeline">'
-        "{}{}{}{}{}{}"
+        "{}{}{}{}{}{}{}{}{}"
         '<button type="submit">Preview Queue</button>'
         '<a class="button-link secondary" href="/pipeline">Reset</a>'
         "</form>"
@@ -489,6 +494,22 @@ def pipeline_selector_form(data: Mapping[str, Any], pipeline: Mapping[str, Any])
             (("execution", "execution"), ("owner", "owner"), ("selected", "selected")),
             str(request.get("order_by") or "execution"),
         ),
+        checkbox_field(
+            "auto_create_missing_changes",
+            "Auto-create missing Changes",
+            checked=auto_create_missing_changes,
+        ),
+        checkbox_field(
+            "owner_approve_required_changes",
+            "Owner-approve required Changes for this session",
+            checked=owner_approve_required_changes,
+        ),
+        input_field(
+            "approval_note",
+            "Approval Note",
+            approval_note,
+            required=False,
+        ),
     )
 
 
@@ -497,6 +518,7 @@ def pipeline_policy_preview(policy: Mapping[str, Any]) -> str:
     codex = _mapping(policy.get("codex"))
     token_budget = _mapping(policy.get("token_budget"))
     review = _mapping(policy.get("review"))
+    evolution = _mapping(policy.get("evolution"))
     closure = _mapping(policy.get("closure"))
     commit = _mapping(policy.get("commit"))
     rows = [
@@ -505,6 +527,22 @@ def pipeline_policy_preview(policy: Mapping[str, Any]) -> str:
         ("Queue", "{} max {}".format(queue.get("selection"), queue.get("max_tasks"))),
         ("Codex", "{} / {}".format(codex.get("mode"), codex.get("adapter_mode"))),
         ("Token Gate", "required" if token_budget.get("require_gate_pass") else "not required"),
+        (
+            "Auto Create Missing Changes",
+            "yes" if evolution.get("create_missing_change") else "no",
+        ),
+        (
+            "Owner Session Change Approval",
+            "yes"
+            if evolution.get("owner_approve_required_changes_for_session")
+            else "no",
+        ),
+        (
+            "Approval Note Required",
+            "yes"
+            if evolution.get("owner_approve_required_changes_for_session")
+            else "no",
+        ),
         ("Review", _pipeline_review_summary(review)),
         ("Auto Close", "yes" if closure.get("auto_close_task") else "no"),
         ("Commit", str(commit.get("mode") or "disabled")),
@@ -621,6 +659,11 @@ def pipeline_action_controls(data: Mapping[str, Any], pipeline: Mapping[str, Any
         ("changes_requested", "changes_requested"),
     ]
     max_tasks = request.get("max_tasks")
+    auto_create_missing_changes = bool(request.get("auto_create_missing_changes"))
+    owner_approve_required_changes = bool(
+        request.get("owner_approve_required_changes")
+    )
+    approval_note = str(request.get("approval_note") or "")
     create_fields = [
         filter_select("policy", "Policy", policy_options, str(request.get("policy") or "")),
         input_field(
@@ -652,6 +695,22 @@ def pipeline_action_controls(data: Mapping[str, Any], pipeline: Mapping[str, Any
             "Order",
             (("execution", "execution"), ("owner", "owner"), ("selected", "selected")),
             str(request.get("order_by") or "execution"),
+        ),
+        checkbox_field(
+            "auto_create_missing_changes",
+            "Auto-create missing Changes",
+            checked=auto_create_missing_changes,
+        ),
+        checkbox_field(
+            "owner_approve_required_changes",
+            "Owner-approve required Changes for this session",
+            checked=owner_approve_required_changes,
+        ),
+        input_field(
+            "approval_note",
+            "Approval Note",
+            approval_note,
+            required=False,
         ),
     ]
     if current_task.get("id"):
@@ -3930,6 +3989,15 @@ def pipeline_query_options(query: Mapping[str, Sequence[str]]) -> dict[str, Any]
         "statuses": _query_items(query, "status"),
         "max_tasks": max_tasks,
         "order_by": order_by,
+        "auto_create_missing_changes": _query_enabled(
+            query,
+            "auto_create_missing_changes",
+        ),
+        "owner_approve_required_changes": _query_enabled(
+            query,
+            "owner_approve_required_changes",
+        ),
+        "approval_note": _query_value(query, "approval_note") or "",
     }
 
 
@@ -4086,9 +4154,11 @@ def textarea_field(
     )
 
 
-def checkbox_field(name: str, label: str) -> str:
-    return '<label class="checkline"><input type="checkbox" name="{}" value="yes">{}</label>'.format(
+def checkbox_field(name: str, label: str, *, checked: bool = False) -> str:
+    checked_attr = " checked" if checked else ""
+    return '<label class="checkline"><input type="checkbox" name="{}" value="yes"{}>{}</label>'.format(
         escape(name),
+        checked_attr,
         escape(label),
     )
 

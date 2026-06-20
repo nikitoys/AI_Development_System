@@ -9,7 +9,7 @@ import sys
 import threading
 import time
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -603,6 +603,9 @@ class ReadOnlyProjectModel:
         statuses: Sequence[str] = (),
         max_tasks: int | None = None,
         order_by: str = "execution",
+        auto_create_missing_changes: bool = False,
+        owner_approve_required_changes: bool = False,
+        approval_note: str = "",
         audit_last: int = 6,
     ) -> dict[str, Any]:
         """Return read-only supervised pipeline dashboard data."""
@@ -616,6 +619,25 @@ class ReadOnlyProjectModel:
             policy_name if policy_name in policy_names else PIPELINE_DEFAULT_POLICY
         )
         policy = policy_preset(selected_policy_name)
+        if (
+            auto_create_missing_changes
+            or owner_approve_required_changes
+            or approval_note
+        ):
+            evolution = policy.evolution
+            policy = replace(
+                policy,
+                evolution=replace(
+                    evolution,
+                    create_missing_change=evolution.create_missing_change
+                    or auto_create_missing_changes,
+                    owner_approve_required_changes_for_session=(
+                        evolution.owner_approve_required_changes_for_session
+                        or owner_approve_required_changes
+                    ),
+                    owner_approval_note=approval_note or evolution.owner_approval_note,
+                ),
+            )
         tasks_state = self._state_json("tasks.json")
         plan_state = self._state_json("plan.json")
         state = load_pipeline_state(self.root)
@@ -668,6 +690,7 @@ class ReadOnlyProjectModel:
             "selected_policy": _pipeline_policy_summary(
                 selected_policy_name,
                 selected_policy_name,
+                policy=policy,
             ),
             "unknown_policy": policy_name
             if policy_name and policy_name != selected_policy_name
@@ -679,6 +702,9 @@ class ReadOnlyProjectModel:
                 "statuses": list(statuses),
                 "max_tasks": max_tasks,
                 "order_by": order_by,
+                "auto_create_missing_changes": auto_create_missing_changes,
+                "owner_approve_required_changes": owner_approve_required_changes,
+                "approval_note": approval_note,
             },
             "queue_preview": queue_preview,
             "queue_error": queue_error,
@@ -809,8 +835,13 @@ def _read_text(path: Path) -> str:
         return ""
 
 
-def _pipeline_policy_summary(name: str, selected_name: str) -> dict[str, Any]:
-    policy = policy_preset(name)
+def _pipeline_policy_summary(
+    name: str,
+    selected_name: str,
+    *,
+    policy=None,
+) -> dict[str, Any]:
+    policy = policy or policy_preset(name)
     validation = policy.validate()
     data = policy.to_dict()
     return {
@@ -822,6 +853,7 @@ def _pipeline_policy_summary(name: str, selected_name: str) -> dict[str, Any]:
         "policy": data,
         "queue": data.get("queue", {}),
         "codex": data.get("codex", {}),
+        "evolution": data.get("evolution", {}),
         "token_budget": data.get("token_budget", {}),
         "review": data.get("review", {}),
         "closure": data.get("closure", {}),

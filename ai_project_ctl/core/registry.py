@@ -1008,6 +1008,20 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
             kind=CommandKind.WRITE,
             arguments=(
                 _arg("policy", "Pipeline policy preset.", default="dry_run"),
+                _arg(
+                    "auto_create_missing_changes",
+                    "Enable pipeline policy support for creating missing linked Evolution Changes before execution.",
+                    value_type="boolean",
+                ),
+                _arg(
+                    "owner_approve_required_changes",
+                    "Enable Human Owner approval of required linked Evolution Changes for this session.",
+                    value_type="boolean",
+                ),
+                _arg(
+                    "approval_note",
+                    "Required approval note when owner_approve_required_changes is enabled.",
+                ),
                 _arg("task_ref", "Owner-selected task ref.", repeatable=True),
                 _arg("epic", "Owner-selected Epic ID or key.", repeatable=True),
                 _arg("status_filter", "Owner-selected task status filter.", repeatable=True),

@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `595`
-Current task: `none`
+Revision: `611`
+Current task: `TASK-075`
 
 ## Epic `EPIC-001`
 
@@ -1227,3 +1227,166 @@ Acceptance criteria:
 - Closing one task does not clear an execution package that points to a different active task.
 - All writes continue to route through governed CLI/workflow paths.
 - Relevant tests pass and project-control validation/check-generated commands pass.
+
+### PIPE-17 (TASK-068) — PIPE-17 Add Custom Pipeline Policy Preset Store
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_02b15df91747`, legacy `TASK-068`, aliases `TASK-068`, local `PIPE` / `17`
+
+Add governed storage for user-defined pipeline policy presets while keeping built-in safe presets immutable.
+
+Acceptance criteria:
+
+- Custom policy presets can be saved, loaded, validated, listed, and deleted through governed service paths.
+- Built-in policy presets remain available and immutable.
+- Invalid or unsafe custom presets are rejected before persistence.
+- Preset changes create audit events.
+- No direct protected-file writes are introduced.
+- Tests and project-control validations pass.
+
+### PIPE-18 (TASK-069) — PIPE-18 Add Pipeline Policy CRUD Commands
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_6e53dad1427b`, legacy `TASK-069`, aliases `TASK-069`, local `PIPE` / `18`
+
+Expose custom pipeline policy preset operations through aictl and command registry.
+
+Acceptance criteria:
+
+- Owner can list built-in and custom presets through aictl.
+- Owner can show one preset through aictl.
+- Owner can validate a policy JSON before saving.
+- Owner can save or update a custom preset only with explicit confirmation.
+- Owner can delete a custom preset only with explicit confirmation.
+- Built-in presets cannot be overwritten or deleted.
+- Command registry describes policy commands accurately.
+- Tests and project-control validations pass.
+
+### PIPE-19 (TASK-070) — PIPE-19 Add Dynamic Policy Editor To Web Pipeline Dashboard
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_cd9e8b6d586b`, legacy `TASK-070`, aliases `TASK-070`, local `PIPE` / `19`
+
+Allow editing, saving, deleting, and previewing pipeline policy presets from the Web Control Center.
+
+Acceptance criteria:
+
+- Changing the policy select immediately updates Policy Preset Preview without pressing Preview Queue.
+- Owner can save a custom preset from the UI with explicit confirmation.
+- Owner can delete a custom preset from the UI with explicit confirmation.
+- Built-in presets are visibly locked and cannot be deleted or overwritten.
+- Invalid custom policy values show clear validation errors before persistence.
+- All Web writes route through governed aictl/registry commands.
+- No direct protected-file writes are introduced.
+- Tests and project-control validations pass.
+
+### PIPE-20 (TASK-071) — PIPE-20 Document Dynamic Pipeline Policy Presets
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_4556429523ff`, legacy `TASK-071`, aliases `TASK-071`, local `PIPE` / `20`
+
+Update owner-facing SOP and quickstart documentation for custom policy presets and dynamic preview behavior.
+
+Acceptance criteria:
+
+- Docs explain how to use custom policy presets in UI.
+- Docs explain CLI policy CRUD commands.
+- Docs state built-in presets are immutable.
+- Docs state dynamic preview is read-only and does not run pipeline actions.
+- Docs preserve safety boundaries: no push, no merge, no bypass of gates.
+- Documentation checks and project-control validations pass.
+
+### PIPE-21 (TASK-072) — PIPE-21 Fix Pipeline Queue Epic Filter Behavior
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_77eb0582f227`, legacy `TASK-072`, aliases `TASK-072`, local `PIPE` / `21`
+
+Make Pipeline Queue Preview respect selected Epic filtering by default and avoid showing unrelated tasks from other epics.
+
+Acceptance criteria:
+
+- When Pipeline Queue Selector has Epic = EPIC-007, the default Queue Preview does not render tasks from EPIC-001, EPIC-002, EPIC-003, EPIC-004, EPIC-005, EPIC-006, or other non-selected Epics.
+- Tasks from other Epics may still be visible only through an explicit diagnostic/debug/show-skipped option.
+- Selecting Epic = EPIC-007 with Status = planned shows PIPE-17, PIPE-18, PIPE-19, and PIPE-20 or their current imported refs as matching candidates.
+- max_tasks does not get consumed by done tasks or tasks skipped only because of status_not_executable or epic_filter_mismatch.
+- Queue Preview selects the first valid matching executable candidate as next task when one exists.
+- Queue Preview still shows clear waiting/blocking reasons for tasks inside the selected Epic.
+- Selected Task Refs mode remains supported and deterministic.
+- No Pipeline safety gate is weakened.
+- Tests and project-control validations pass.
+
+### PIPE-22 (TASK-073) — PIPE-22 Add Pipeline Session Resume After Blocker
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_074ee82806ea`, legacy `TASK-073`, aliases `TASK-073`, local `PIPE` / `22`
+
+Allow a blocked supervised pipeline session to be resumed after the owner resolves the blocker, without creating a new session.
+
+Acceptance criteria:
+
+- A blocked pipeline session can be resumed after the Human Owner resolves the blocker.
+- The original PSESS-style scenario works: session blocks on approved Change gate, owner approves linked Change, same session resumes, and run-next proceeds without requiring a new session.
+- Resume requires explicit confirmation.
+- Resume preserves previous steps, gates, stop reason, and audit trail.
+- Resume appends a new audit event.
+- Resume does not approve or accept Evolution Changes.
+- Resume does not bypass lifecycle, review, token, report, machine-review, Codex-review, or commit gates.
+- Run-next either supports resumed sessions safely or produces an actionable message telling the owner to run the resume command first.
+- Web Control Center shows a resume/continue action for blocked or stopped sessions when safe.
+- Tests and project-control validations pass.
+
+### PIPE-23 (TASK-074) — PIPE-23 Add Auto-Create Missing Changes Policy Checkbox
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_4389d41c9bf7`, legacy `TASK-074`, aliases `TASK-074`, local `PIPE` / `23`
+
+Add a pipeline policy checkbox that creates missing linked Evolution Changes for the selected pipeline queue before execution.
+
+Acceptance criteria:
+
+- Pipeline UI has an Auto-create missing Changes checkbox.
+- Policy preview clearly shows whether missing Changes will be created automatically.
+- When enabled, selected tasks without linked Changes receive newly created linked Evolution Changes.
+- Created Change ids are recorded in the pipeline session and audit trail.
+- Auto-create works for a selected queue such as PIPE-17, PIPE-18, PIPE-19, PIPE-20, PIPE-21.
+- Auto-create alone does not approve Changes.
+- If approval is still required, session remains resumable and shows clear owner action required.
+- Existing supervised policies remain backward-compatible.
+- Tests pass.
+
+### PIPE-24 (TASK-075) — PIPE-24 Add Owner-Approved Session Changes Policy Checkbox ⭐
+
+Status: `in_review`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_c55990cd59ea`, legacy `TASK-075`, aliases `TASK-075`, local `PIPE` / `24`
+
+Add a pipeline policy checkbox that lets the Human Owner approve all required Changes for the selected session queue as part of the pipeline run.
+
+Acceptance criteria:
+
+- Pipeline UI has an Owner-approve required Changes for this session checkbox.
+- Checkbox requires explicit confirmation and approval note.
+- Policy preview clearly distinguishes owner-approved session approval from unsafe automatic approval.
+- Policy validation still rejects unsafe autonomous evolution.approve_linked_change = true.
+- When enabled, pipeline approves only required Changes linked to tasks in the selected session queue.
+- When combined with Auto-create missing Changes, pipeline can create and owner-approve required Changes for PIPE-17..PIPE-21 in one confirmed session flow.
+- Approved Change ids, task refs, actor, approval note, and session id are recorded in audit.
+- Pipeline can continue the same session after approval.
+- No Change is accepted automatically.
+- No unrelated Change is approved.
+- Tests pass.

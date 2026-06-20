@@ -153,6 +153,10 @@ class AictlTests(unittest.TestCase):
                     "create",
                     "--policy",
                     "dry_run",
+                    "--auto-create-missing-changes",
+                    "--owner-approve-required-changes",
+                    "--approval-note",
+                    "Owner approved session Changes.",
                     "--task-ref",
                     "WFA-01",
                     "--current-task-id",
@@ -165,6 +169,24 @@ class AictlTests(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertTrue(payload["ok"])
             self.assertEqual(payload["data"]["session_id"], "PSESS-001")
+            session_path = root / "AI_PROJECT" / "state" / "pipeline_sessions.json"
+            session_state = json.loads(session_path.read_text(encoding="utf-8"))
+            self.assertTrue(
+                session_state["sessions"][0]["policy_snapshot"]["evolution"][
+                    "create_missing_change"
+                ]
+            )
+            self.assertTrue(
+                session_state["sessions"][0]["policy_snapshot"]["evolution"][
+                    "owner_approve_required_changes_for_session"
+                ]
+            )
+            self.assertEqual(
+                session_state["sessions"][0]["policy_snapshot"]["evolution"][
+                    "owner_approval_note"
+                ],
+                "Owner approved session Changes.",
+            )
             self.assertTrue((root / "AI_PROJECT" / "state" / "pipeline_sessions.json").exists())
             self.assertTrue((root / "AI_PROJECT" / "events" / "pipeline-events.jsonl").exists())
             self.assertTrue((root / "AI_PROJECT" / "generated" / "PIPELINE_STATUS.md").exists())

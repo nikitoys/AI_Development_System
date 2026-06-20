@@ -75,6 +75,8 @@ class EvolutionChangePolicy:
     approve_linked_change: bool = False
     accept_linked_change: bool = False
     require_approved_change_for_execution: bool = True
+    owner_approve_required_changes_for_session: bool = False
+    owner_approval_note: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -82,17 +84,23 @@ class EvolutionChangePolicy:
             "approve_linked_change": self.approve_linked_change,
             "accept_linked_change": self.accept_linked_change,
             "require_approved_change_for_execution": self.require_approved_change_for_execution,
+            "owner_approve_required_changes_for_session": self.owner_approve_required_changes_for_session,
+            "owner_approval_note": self.owner_approval_note,
         }
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "EvolutionChangePolicy":
         return cls(
-            create_missing_change=bool(data["create_missing_change"]),
-            approve_linked_change=bool(data["approve_linked_change"]),
-            accept_linked_change=bool(data["accept_linked_change"]),
+            create_missing_change=bool(data.get("create_missing_change", False)),
+            approve_linked_change=bool(data.get("approve_linked_change", False)),
+            accept_linked_change=bool(data.get("accept_linked_change", False)),
             require_approved_change_for_execution=bool(
-                data["require_approved_change_for_execution"]
+                data.get("require_approved_change_for_execution", True)
             ),
+            owner_approve_required_changes_for_session=bool(
+                data.get("owner_approve_required_changes_for_session", False)
+            ),
+            owner_approval_note=str(data.get("owner_approval_note") or ""),
         )
 
 
@@ -357,6 +365,15 @@ def validate_policy(policy: PipelinePolicy) -> ValidationResult:
             path="evolution.accept_linked_change",
         )
     if (
+        policy.evolution.owner_approve_required_changes_for_session
+        and not policy.evolution.owner_approval_note.strip()
+    ):
+        result.add_error(
+            "POLICY_OWNER_CHANGE_APPROVAL_NOTE_REQUIRED",
+            "Owner-approved session Change approval requires a non-empty approval note.",
+            path="evolution.owner_approval_note",
+        )
+    if (
         policy.codex.mode != CodexExecutionMode.DISABLED
         and not policy.evolution.require_approved_change_for_execution
     ):
@@ -410,7 +427,7 @@ def validate_policy(policy: PipelinePolicy) -> ValidationResult:
 
 
 def preset_names() -> tuple[str, ...]:
-    return tuple(sorted(_PRESETS))
+    return tuple(_LISTED_PRESETS)
 
 
 def policy_preset(name: str) -> PipelinePolicy:
@@ -458,6 +475,15 @@ def _supervised_autoclose() -> PipelinePolicy:
         _supervised(),
         name="supervised_autoclose",
         closure=TaskClosurePolicy(auto_close_task=True),
+    )
+
+
+def _supervised_auto_create_changes() -> PipelinePolicy:
+    base = _supervised()
+    return replace(
+        base,
+        name="supervised_auto_create_changes",
+        evolution=replace(base.evolution, create_missing_change=True),
     )
 
 
@@ -682,6 +708,14 @@ def _string_tuple(value: Any) -> tuple[str, ...]:
 _PRESETS = {
     "dry_run": _dry_run,
     "supervised": _supervised,
+    "supervised_auto_create_changes": _supervised_auto_create_changes,
     "supervised_autoclose": _supervised_autoclose,
     "supervised_local_commit": _supervised_local_commit,
 }
+
+_LISTED_PRESETS = (
+    "dry_run",
+    "supervised",
+    "supervised_autoclose",
+    "supervised_local_commit",
+)

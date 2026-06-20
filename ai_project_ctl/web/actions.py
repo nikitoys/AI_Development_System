@@ -370,6 +370,11 @@ def _build_pipeline_session_create(fields: Mapping[str, str]) -> list[str]:
         "--policy",
         _field(fields, "policy") or "dry_run",
     ]
+    if _field(fields, "auto_create_missing_changes").lower() in CONFIRM_VALUES:
+        args.append("--auto-create-missing-changes")
+    if _field(fields, "owner_approve_required_changes").lower() in CONFIRM_VALUES:
+        args.append("--owner-approve-required-changes")
+        args.extend(["--approval-note", _require_field(fields, "approval_note")])
     for value in _split_values(fields, "task_ref"):
         args.extend(["--task-ref", value])
     for value in _split_values(fields, "epic"):

@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 4,
+  "revision": 14,
   "created_at": "2026-06-19T21:27:58Z",
-  "updated_at": "2026-06-19T21:35:14Z",
-  "current_session_id": null,
+  "updated_at": "2026-06-20T10:20:25Z",
+  "current_session_id": "PSESS-004",
   "sessions": [
     {
       "id": "PSESS-001",
@@ -141,6 +141,1813 @@
       "updated_at": "2026-06-19T21:35:14Z",
       "started_at": "2026-06-19T21:35:13Z",
       "finished_at": "2026-06-19T21:35:14Z"
+    },
+    {
+      "id": "PSESS-002",
+      "status": "blocked",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPE-17",
+          "PIPE-18",
+          "PIPE-19",
+          "PIPE-20",
+          "PIPE-21"
+        ],
+        "epic_ids": [
+          "EPIC-007"
+        ],
+        "statuses": [],
+        "max_tasks": 5,
+        "order_by": "execution",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised_local_commit",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": false,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "build_prompt_only",
+          "require_human_selected_policy": true,
+          "adapter_mode": "manual_handoff",
+          "local_command": [],
+          "command_allowlist": [],
+          "timeout_sec": 300,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-068",
+      "current_task_ref": "",
+      "current_step": "run_next",
+      "current_step_status": "blocked",
+      "attempt_counters": {
+        "steps": 1,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [
+        {
+          "name": "evolution_change_gate",
+          "status": "blocked",
+          "recorded_at": "2026-06-20T09:45:28Z",
+          "details": {
+            "policy": "supervised_local_commit",
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-068",
+              "ref": "PIPE-17",
+              "uid": "tsk_02b15df91747",
+              "legacy_id": "TASK-068",
+              "title": "PIPE-17 Add Custom Pipeline Policy Preset Store",
+              "status": "planned",
+              "epic_id": "EPIC-007",
+              "priority": 1,
+              "order": 17,
+              "local_seq": 17,
+              "selected_ref": "PIPE-17",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 5,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "stop_code": "BLOCKED",
+              "linked_change_ids": [],
+              "side_effects": []
+            },
+            "stop_code": "BLOCKED",
+            "stop_reason": "Approved linked Evolution Change is required before execution."
+          }
+        }
+      ],
+      "steps": [
+        {
+          "name": "run_next",
+          "status": "blocked",
+          "started_at": "2026-06-20T09:45:28Z",
+          "finished_at": "2026-06-20T09:45:28Z",
+          "task_id": "TASK-068",
+          "gate_outcomes": [
+            {
+              "name": "evolution_change_gate",
+              "status": "blocked",
+              "recorded_at": "2026-06-20T09:45:28Z",
+              "details": {
+                "policy": "supervised_local_commit",
+                "selected_task": {
+                  "category": "executable",
+                  "executable": true,
+                  "id": "TASK-068",
+                  "ref": "PIPE-17",
+                  "uid": "tsk_02b15df91747",
+                  "legacy_id": "TASK-068",
+                  "title": "PIPE-17 Add Custom Pipeline Policy Preset Store",
+                  "status": "planned",
+                  "epic_id": "EPIC-007",
+                  "priority": 1,
+                  "order": 17,
+                  "local_seq": 17,
+                  "selected_ref": "PIPE-17",
+                  "reasons": []
+                },
+                "queue_counts": {
+                  "executable": 5,
+                  "waiting": 0,
+                  "blocked": 0,
+                  "skipped": 0
+                },
+                "change_gate": {
+                  "required": true,
+                  "stop_code": "BLOCKED",
+                  "linked_change_ids": [],
+                  "side_effects": []
+                },
+                "stop_code": "BLOCKED",
+                "stop_reason": "Approved linked Evolution Change is required before execution."
+              }
+            }
+          ],
+          "result": {},
+          "stop_reason": "BLOCKED: Approved linked Evolution Change is required before execution.",
+          "audit_event_ids": [
+            "EVT-837EA466E7EA",
+            "EVT-16BCF51BE101"
+          ]
+        }
+      ],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-9954893ED45E",
+        "EVT-837EA466E7EA",
+        "EVT-16BCF51BE101"
+      ],
+      "stop_reason": "BLOCKED: Approved linked Evolution Change is required before execution.",
+      "created_at": "2026-06-20T09:43:30Z",
+      "updated_at": "2026-06-20T09:45:28Z",
+      "started_at": "2026-06-20T09:45:28Z",
+      "finished_at": ""
+    },
+    {
+      "id": "PSESS-003",
+      "status": "completed",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPE-17",
+          "PIPE-18",
+          "PIPE-19",
+          "PIPE-20",
+          "PIPE-21"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 5,
+        "order_by": "selected",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": true,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "build_prompt_only",
+          "require_human_selected_policy": true,
+          "adapter_mode": "manual_handoff",
+          "local_command": [],
+          "command_allowlist": [],
+          "timeout_sec": 300,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": false
+        },
+        "commit": {
+          "create_local_commit": false,
+          "mode": "disabled",
+          "require_commit_readiness": false,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "",
+      "current_task_ref": "",
+      "current_step": "run_next",
+      "current_step_status": "blocked",
+      "attempt_counters": {
+        "steps": 1,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [
+        {
+          "name": "queue_planner",
+          "status": "blocked",
+          "recorded_at": "2026-06-20T10:16:13Z",
+          "details": {
+            "policy": "supervised",
+            "selected_task": null,
+            "queue_counts": {
+              "executable": 0,
+              "waiting": 0,
+              "blocked": 5,
+              "skipped": 0
+            },
+            "stop_code": "BLOCKED",
+            "stop_reason": "No executable task is available in the selected queue."
+          }
+        }
+      ],
+      "steps": [
+        {
+          "name": "run_next",
+          "status": "blocked",
+          "started_at": "2026-06-20T10:16:12Z",
+          "finished_at": "2026-06-20T10:16:13Z",
+          "task_id": "",
+          "gate_outcomes": [
+            {
+              "name": "queue_planner",
+              "status": "blocked",
+              "recorded_at": "2026-06-20T10:16:13Z",
+              "details": {
+                "policy": "supervised",
+                "selected_task": null,
+                "queue_counts": {
+                  "executable": 0,
+                  "waiting": 0,
+                  "blocked": 5,
+                  "skipped": 0
+                },
+                "stop_code": "BLOCKED",
+                "stop_reason": "No executable task is available in the selected queue."
+              }
+            }
+          ],
+          "result": {},
+          "stop_reason": "BLOCKED: No executable task is available in the selected queue.",
+          "audit_event_ids": [
+            "EVT-A149ABC57F58",
+            "EVT-D6CFF63C3F0C"
+          ]
+        }
+      ],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-78CD67C5AE97",
+        "EVT-A149ABC57F58",
+        "EVT-D6CFF63C3F0C",
+        "EVT-0681FC1C3509"
+      ],
+      "stop_reason": "queue_complete",
+      "created_at": "2026-06-20T10:16:08Z",
+      "updated_at": "2026-06-20T10:16:13Z",
+      "started_at": "2026-06-20T10:16:12Z",
+      "finished_at": "2026-06-20T10:16:13Z"
+    },
+    {
+      "id": "PSESS-004",
+      "status": "blocked",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPE-17",
+          "PIPE-18",
+          "PIPE-19",
+          "PIPE-20",
+          "PIPE-21"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 5,
+        "order_by": "selected",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": true,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "build_prompt_only",
+          "require_human_selected_policy": true,
+          "adapter_mode": "manual_handoff",
+          "local_command": [],
+          "command_allowlist": [],
+          "timeout_sec": 300,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": false
+        },
+        "commit": {
+          "create_local_commit": false,
+          "mode": "disabled",
+          "require_commit_readiness": false,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "",
+      "current_task_ref": "",
+      "current_step": "run_next",
+      "current_step_status": "blocked",
+      "attempt_counters": {
+        "steps": 1,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [
+        {
+          "name": "evolution_change_gate",
+          "status": "blocked",
+          "recorded_at": "2026-06-20T10:20:25Z",
+          "details": {
+            "policy": "supervised",
+            "selected_task": null,
+            "queue_counts": {
+              "executable": 0,
+              "waiting": 0,
+              "blocked": 5,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "stop_code": "BLOCKED",
+              "created_change_ids": [
+                "CHG-054",
+                "CHG-055",
+                "CHG-056",
+                "CHG-057"
+              ],
+              "linked_change_ids": [
+                "CHG-051",
+                "CHG-054",
+                "CHG-055",
+                "CHG-056",
+                "CHG-057"
+              ],
+              "change_ids": [
+                "CHG-051",
+                "CHG-054",
+                "CHG-055",
+                "CHG-056",
+                "CHG-057"
+              ],
+              "tasks_requiring_approval": [
+                "TASK-069",
+                "TASK-070",
+                "TASK-071",
+                "TASK-072"
+              ],
+              "workflows": [
+                {
+                  "ok": true,
+                  "message": "Workflow completed. Evolution Change Proposal is ready for Human Owner approval.",
+                  "steps": [
+                    {
+                      "id": "resolve",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "change_create",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_1",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_2",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_3",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_4",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_5",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_6",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_7",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_8",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_9",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_10",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_1",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_2",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_3",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_4",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_5",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_6",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_7",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_8",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_9",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_1",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_2",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_3",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_4",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_5",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_6",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_7",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_8",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_9",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_10",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "link_task",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "validate_before_ready",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "ready",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "validate",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "check_generated",
+                      "status": "ok"
+                    }
+                  ],
+                  "errors": []
+                },
+                {
+                  "ok": true,
+                  "message": "Workflow completed. Evolution Change Proposal is ready for Human Owner approval.",
+                  "steps": [
+                    {
+                      "id": "resolve",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "change_create",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_1",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_2",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_3",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_4",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_5",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_6",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_7",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_8",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_9",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_1",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_2",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_3",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_4",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_5",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_6",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_7",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_8",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_9",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_10",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_1",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_2",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_3",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_4",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_5",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_6",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_7",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_8",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_9",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_10",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "link_task",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "validate_before_ready",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "ready",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "validate",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "check_generated",
+                      "status": "ok"
+                    }
+                  ],
+                  "errors": []
+                },
+                {
+                  "ok": true,
+                  "message": "Workflow completed. Evolution Change Proposal is ready for Human Owner approval.",
+                  "steps": [
+                    {
+                      "id": "resolve",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "change_create",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_1",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_2",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_3",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_4",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_5",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_6",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_7",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_1",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_2",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_3",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_4",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_5",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_6",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_7",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_8",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_1",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_2",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_3",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_4",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_5",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_6",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_7",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_8",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_9",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_10",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "link_task",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "validate_before_ready",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "ready",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "validate",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "check_generated",
+                      "status": "ok"
+                    }
+                  ],
+                  "errors": []
+                },
+                {
+                  "ok": true,
+                  "message": "Workflow completed. Evolution Change Proposal is ready for Human Owner approval.",
+                  "steps": [
+                    {
+                      "id": "resolve",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "change_create",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_1",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_2",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_3",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_4",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_5",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_6",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_7",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_8",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_9",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_10",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_11",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_12",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_13",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_affected_file_14",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_1",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_2",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_3",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_4",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_5",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_6",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_7",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_8",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_9",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_10",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_11",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_12",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_risk_13",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_1",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_2",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_3",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_4",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_5",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_6",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_7",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_8",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_9",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "add_impact_10",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "link_task",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "validate_before_ready",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "ready",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "validate",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "check_generated",
+                      "status": "ok"
+                    }
+                  ],
+                  "errors": []
+                }
+              ],
+              "side_effects": []
+            },
+            "stop_code": "BLOCKED",
+            "stop_reason": "Evolution Changes were created and now require Human Owner approval."
+          }
+        }
+      ],
+      "steps": [
+        {
+          "name": "run_next",
+          "status": "blocked",
+          "started_at": "2026-06-20T10:18:35Z",
+          "finished_at": "2026-06-20T10:20:25Z",
+          "task_id": "",
+          "gate_outcomes": [
+            {
+              "name": "evolution_change_gate",
+              "status": "blocked",
+              "recorded_at": "2026-06-20T10:20:25Z",
+              "details": {
+                "policy": "supervised",
+                "selected_task": null,
+                "queue_counts": {
+                  "executable": 0,
+                  "waiting": 0,
+                  "blocked": 5,
+                  "skipped": 0
+                },
+                "change_gate": {
+                  "required": true,
+                  "stop_code": "BLOCKED",
+                  "created_change_ids": [
+                    "CHG-054",
+                    "CHG-055",
+                    "CHG-056",
+                    "CHG-057"
+                  ],
+                  "linked_change_ids": [
+                    "CHG-051",
+                    "CHG-054",
+                    "CHG-055",
+                    "CHG-056",
+                    "CHG-057"
+                  ],
+                  "change_ids": [
+                    "CHG-051",
+                    "CHG-054",
+                    "CHG-055",
+                    "CHG-056",
+                    "CHG-057"
+                  ],
+                  "tasks_requiring_approval": [
+                    "TASK-069",
+                    "TASK-070",
+                    "TASK-071",
+                    "TASK-072"
+                  ],
+                  "workflows": [
+                    {
+                      "ok": true,
+                      "message": "Workflow completed. Evolution Change Proposal is ready for Human Owner approval.",
+                      "steps": [
+                        {
+                          "id": "resolve",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "change_create",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_1",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_2",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_3",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_4",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_5",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_6",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_7",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_8",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_9",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_10",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_1",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_2",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_3",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_4",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_5",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_6",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_7",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_8",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_9",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_1",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_2",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_3",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_4",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_5",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_6",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_7",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_8",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_9",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_10",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "link_task",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "validate_before_ready",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "ready",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "validate",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "check_generated",
+                          "status": "ok"
+                        }
+                      ],
+                      "errors": []
+                    },
+                    {
+                      "ok": true,
+                      "message": "Workflow completed. Evolution Change Proposal is ready for Human Owner approval.",
+                      "steps": [
+                        {
+                          "id": "resolve",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "change_create",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_1",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_2",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_3",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_4",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_5",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_6",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_7",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_8",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_9",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_1",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_2",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_3",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_4",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_5",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_6",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_7",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_8",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_9",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_10",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_1",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_2",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_3",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_4",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_5",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_6",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_7",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_8",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_9",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_10",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "link_task",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "validate_before_ready",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "ready",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "validate",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "check_generated",
+                          "status": "ok"
+                        }
+                      ],
+                      "errors": []
+                    },
+                    {
+                      "ok": true,
+                      "message": "Workflow completed. Evolution Change Proposal is ready for Human Owner approval.",
+                      "steps": [
+                        {
+                          "id": "resolve",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "change_create",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_1",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_2",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_3",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_4",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_5",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_6",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_7",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_1",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_2",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_3",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_4",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_5",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_6",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_7",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_8",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_1",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_2",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_3",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_4",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_5",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_6",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_7",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_8",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_9",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_10",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "link_task",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "validate_before_ready",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "ready",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "validate",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "check_generated",
+                          "status": "ok"
+                        }
+                      ],
+                      "errors": []
+                    },
+                    {
+                      "ok": true,
+                      "message": "Workflow completed. Evolution Change Proposal is ready for Human Owner approval.",
+                      "steps": [
+                        {
+                          "id": "resolve",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "change_create",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_1",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_2",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_3",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_4",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_5",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_6",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_7",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_8",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_9",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_10",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_11",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_12",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_13",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_affected_file_14",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_1",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_2",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_3",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_4",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_5",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_6",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_7",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_8",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_9",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_10",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_11",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_12",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_risk_13",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_1",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_2",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_3",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_4",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_5",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_6",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_7",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_8",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_9",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "add_impact_10",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "link_task",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "validate_before_ready",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "ready",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "validate",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "check_generated",
+                          "status": "ok"
+                        }
+                      ],
+                      "errors": []
+                    }
+                  ],
+                  "side_effects": []
+                },
+                "stop_code": "BLOCKED",
+                "stop_reason": "Evolution Changes were created and now require Human Owner approval."
+              }
+            }
+          ],
+          "result": {},
+          "stop_reason": "BLOCKED: Evolution Changes were created and now require Human Owner approval.",
+          "audit_event_ids": [
+            "EVT-4676E56C107B",
+            "EVT-B33EACB37185"
+          ]
+        }
+      ],
+      "linked_change_ids": [
+        "CHG-051",
+        "CHG-054",
+        "CHG-055",
+        "CHG-056",
+        "CHG-057"
+      ],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-13AA19ADFC71",
+        "EVT-4676E56C107B",
+        "EVT-B33EACB37185"
+      ],
+      "stop_reason": "BLOCKED: Evolution Changes were created and now require Human Owner approval.",
+      "created_at": "2026-06-20T10:18:30Z",
+      "updated_at": "2026-06-20T10:20:25Z",
+      "started_at": "2026-06-20T10:18:35Z",
+      "finished_at": ""
     }
   ]
 }

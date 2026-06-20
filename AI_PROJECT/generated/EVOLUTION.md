@@ -3,12 +3,14 @@
 
 # AI Development System Evolution
 
-Revision: `1544`
-Changes: `50`
+Revision: `1864`
+Changes: `58`
 
 ## Summary
 
 - `accepted`: 50
+- `approved`: 3
+- `ready`: 5
 
 ## Changes
 
@@ -3182,3 +3184,569 @@ Impact:
 Linked tasks:
 
 - TASK-067
+
+### CHG-051 — PIPE-17 Add Custom Pipeline Policy Preset Store
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-17 requires an explicit Evolution Change Proposal before implementation: Add governed storage for user-defined pipeline policy presets while keeping built-in safe presets immutable.
+
+Proposal:
+
+Implement the bounded task scope: Create a governed custom pipeline policy preset storage model.; Store custom presets separately from built-in presets.; Keep built-in presets dry_run, supervised, supervised_autoclose, and supervised_local_commit immutable.; Validate saved presets through the existing PipelinePolicy validation rules.; Reject unsafe presets with stable error codes.; Add audit events for preset create/update/delete operations.; Add generated policy status output if useful for UI and validation.
+
+Rationale:
+
+Introduce a persistent custom policy preset store so the Human Owner can save, validate, list, and delete pipeline policy presets without editing Python source or protected state manually.
+
+Approved by: `human_owner` at `2026-06-20T09:47:19Z`  
+Approval notes: Approve  
+
+Affected files:
+
+- ai_project_ctl/pipeline/policy.py
+- ai_project_ctl/pipeline/policy_store.py
+- ai_project_ctl/pipeline/__init__.py
+- ai_project_ctl/core/registry.py
+- scripts/aictl.py
+- AI_PROJECT/state/pipeline_policy_presets.json via governed CLI/service only
+- AI_PROJECT/events/pipeline-policy-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_POLICIES.md via governed CLI/service only
+- tests/**
+
+Risks:
+
+- Boundary risk: Do not allow custom presets to authorize push, merge, reset, rebase, clean, or destructive git operations.
+- Boundary risk: Do not allow custom presets to bypass Token Budget Gate, Machine Review, Codex Review, Human Owner approval, or Evolution Change gates.
+- Boundary risk: Do not modify built-in preset definitions except for compatibility wiring.
+- Boundary risk: Do not edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/** manually.
+- Verify that custom presets cannot weaken forbidden safety boundaries.
+- Verify that built-in presets cannot be overwritten or deleted.
+- Verify that all persistence goes through governed service paths.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-068.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Create a governed custom pipeline policy preset storage model.
+- Store custom presets separately from built-in presets.
+- Keep built-in presets dry_run, supervised, supervised_autoclose, and supervised_local_commit immutable.
+- Validate saved presets through the existing PipelinePolicy validation rules.
+- Reject unsafe presets with stable error codes.
+- Custom policy presets can be saved, loaded, validated, listed, and deleted through governed service paths.
+- Built-in policy presets remain available and immutable.
+- Invalid or unsafe custom presets are rejected before persistence.
+
+Linked tasks:
+
+- TASK-068
+
+### CHG-052 — PIPE-23 Add Auto-Create Missing Changes Policy Checkbox
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-23 requires an explicit Evolution Change Proposal before implementation: Add a pipeline policy checkbox that creates missing linked Evolution Changes for the selected pipeline queue before execution.
+
+Proposal:
+
+Implement the bounded task scope: Expose evolution.create_missing_change as an owner-facing policy checkbox in Pipeline policy editor / policy preview.; Add or update a policy preset option such as supervised_auto_create_changes.; When enabled, pipeline should create missing linked Evolution Changes for selected session tasks.; Prefer preflight behavior for the selected queue, not only the first next task, so PIPE-17..PIPE-21 can be prepared in one pipeline session.; Created Changes must be linked to their corresponding tasks.; Created Changes must include enough title/summary/scope metadata for owner review.; Created Changes must be recorded in pipeline session data and audit output.; If only auto-create is enabled and owner approval is not enabled, pipeline must stop in a resumable owner-action-required state after creating Changes.; If both auto-create and owner-approved session Changes are enabled, pipeline may create missing Changes and then pass them to the session approval gate in the same run.; Update Pipeline Policy Preview to show Auto Create Missing Changes = yes/no.; Update Web Control Center Pipeline form to include the checkbox.; Update CLI session create / policy configuration support if needed.; Add tests for creating missing Changes for one task and for multiple selected queue tasks.
+
+Rationale:
+
+Add owner-facing policy support for automatically creating missing Evolution Changes for tasks selected by the pipeline session. This must be controlled by an explicit policy/UI checkbox and must not approve the created Changes unless the separate owner-approved session Changes policy is enabled.
+
+Approved by: `human_owner` at `2026-06-20T09:59:32Z`  
+Approval notes: Approve  
+
+Affected files:
+
+- ai_project_ctl/pipeline/policy.py
+- ai_project_ctl/pipeline/runner.py
+- ai_project_ctl/pipeline/session.py
+- ai_project_ctl/pipeline/state.py
+- ai_project_ctl/pipeline/batch.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/core/registry.py
+- scripts/aictl.py
+- scripts/evolutionctl.py if existing workflow integration is needed
+- tests/test_pipeline_runner.py
+- tests/test_pipeline_batch.py
+- tests/test_web_control_center.py
+- tests/test_aictl.py
+- tests/test_registry.py
+- AI_PROJECT/state/evolution.json via governed CLI/service only
+- AI_PROJECT/events/evolution-events.jsonl via governed CLI/service only
+- AI_PROJECT/state/pipeline_sessions.json via governed CLI/service only
+- AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/EVOLUTION_STATUS.md via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_AUDIT.md via governed CLI/service only
+
+Risks:
+
+- Boundary risk: Do not approve Evolution Changes in this task unless PIPE-24 policy is also implemented and explicitly enabled.
+- Boundary risk: Do not accept Evolution Changes.
+- Boundary risk: Do not bypass Human Owner approval semantics.
+- Boundary risk: Do not bypass Codex execution, token, report, review, close, or commit gates.
+- Boundary risk: Do not push, merge, reset, rebase, clean, restore, or discard git changes.
+- Boundary risk: Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Create a pipeline session for PIPE-17..PIPE-21 with Auto-create missing Changes enabled.
+- Verify missing Changes are created and linked to the correct tasks.
+- Verify pipeline does not approve them unless PIPE-24 session approval is enabled.
+- Verify audit and generated views show created Change ids.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-074.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Expose evolution.create_missing_change as an owner-facing policy checkbox in Pipeline policy editor / policy preview.
+- Add or update a policy preset option such as supervised_auto_create_changes.
+- When enabled, pipeline should create missing linked Evolution Changes for selected session tasks.
+- Prefer preflight behavior for the selected queue, not only the first next task, so PIPE-17..PIPE-21 can be prepared in one pipeline session.
+- Created Changes must be linked to their corresponding tasks.
+- Pipeline UI has an Auto-create missing Changes checkbox.
+- Policy preview clearly shows whether missing Changes will be created automatically.
+- When enabled, selected tasks without linked Changes receive newly created linked Evolution Changes.
+
+Linked tasks:
+
+- TASK-074
+
+### CHG-053 — PIPE-24 Add Owner-Approved Session Changes Policy Checkbox
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-24 requires an explicit Evolution Change Proposal before implementation: Add a pipeline policy checkbox that lets the Human Owner approve all required Changes for the selected session queue as part of the pipeline run.
+
+Proposal:
+
+Implement the bounded task scope: Add a new safe policy field distinct from evolution.approve_linked_change, for example evolution.owner_approve_required_changes_for_session.; Do not reuse approve_linked_change if it represents autonomous policy self-approval.; Require explicit Human Owner confirmation when this checkbox is enabled.; Require an approval note/reason when this checkbox is enabled.; Store owner approval intent in the pipeline session snapshot.; Approve only Changes linked to tasks selected by the current pipeline session queue.; If Auto-create missing Changes is also enabled, allow pipeline to create missing Changes and approve those newly created Changes in the same owner-confirmed session.; If a selected task has an existing ready/proposed linked Change, allow the session approval policy to approve it.; Do not approve Changes outside the selected session queue.; Do not accept Changes automatically.; Do not approve Changes if the owner approval checkbox was not explicitly enabled.; Add Web Control Center checkbox: Owner-approve required Changes for this session.; Add approval note field to Pipeline session create form when checkbox is enabled.; Add Policy Preview rows for Owner Session Change Approval and Approval Note Required.; Add CLI support for equivalent flags, for example --owner-approve-required-changes and --approval-note.; Update pipeline audit to record approved Change ids, linked task refs, actor, approval note, and session id.; After required Changes are approved, pipeline should continue the same session if resume/waiting behavior is available.; Add tests for approving multiple Changes in one owner-confirmed pipeline run.
+
+Rationale:
+
+Add a safe owner-approved policy mode for approving required Evolution Changes across the selected pipeline session. This is not autonomous pipeline self-approval: the Human Owner must explicitly select the policy checkbox, confirm the session, and provide an approval note. The pipeline may then approve only the Changes required by that selected session queue.
+
+Approved by: `human_owner` at `2026-06-20T09:59:40Z`  
+Approval notes: Approve  
+
+Affected files:
+
+- ai_project_ctl/pipeline/policy.py
+- ai_project_ctl/pipeline/runner.py
+- ai_project_ctl/pipeline/session.py
+- ai_project_ctl/pipeline/state.py
+- ai_project_ctl/pipeline/batch.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/core/registry.py
+- ai_project_ctl/core/workflows.py
+- scripts/aictl.py
+- scripts/evolutionctl.py if existing approve command integration is needed
+- tests/test_pipeline_runner.py
+- tests/test_pipeline_batch.py
+- tests/test_web_control_center.py
+- tests/test_aictl.py
+- tests/test_registry.py
+- AI_PROJECT/state/evolution.json via governed CLI/service only
+- AI_PROJECT/events/evolution-events.jsonl via governed CLI/service only
+- AI_PROJECT/state/pipeline_sessions.json via governed CLI/service only
+- AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/EVOLUTION_STATUS.md via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_AUDIT.md via governed CLI/service only
+
+Risks:
+
+- Boundary risk: Do not allow fully autonomous approval without Human Owner confirmation.
+- Boundary risk: Do not make evolution.approve_linked_change valid if it means unsafe auto-approval.
+- Boundary risk: Do not accept Evolution Changes automatically.
+- Boundary risk: Do not approve unrelated Changes outside the selected session queue.
+- Boundary risk: Do not bypass Codex execution, token, report, machine review, Codex review, task close, or commit gates.
+- Boundary risk: Do not push, merge, reset, rebase, clean, restore, or discard git changes.
+- Boundary risk: Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Create a session for PIPE-17..PIPE-21 with both Auto-create missing Changes and Owner-approve required Changes enabled.
+- Provide an approval note and confirm.
+- Verify missing Changes are created where needed.
+- Verify required Changes for the selected queue are approved.
+- Verify no unrelated Changes are approved.
+- Verify the same session continues after approval.
+- Verify audit trail contains owner approval evidence.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-075.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add a new safe policy field distinct from evolution.approve_linked_change, for example evolution.owner_approve_required_changes_for_session.
+- Do not reuse approve_linked_change if it represents autonomous policy self-approval.
+- Require explicit Human Owner confirmation when this checkbox is enabled.
+- Require an approval note/reason when this checkbox is enabled.
+- Store owner approval intent in the pipeline session snapshot.
+- Pipeline UI has an Owner-approve required Changes for this session checkbox.
+- Checkbox requires explicit confirmation and approval note.
+- Policy preview clearly distinguishes owner-approved session approval from unsafe automatic approval.
+
+Linked tasks:
+
+- TASK-075
+
+### CHG-054 — PIPE-18 Add Pipeline Policy CRUD Commands
+
+Status: `ready`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-18 requires an explicit Evolution Change Proposal before implementation: Expose custom pipeline policy preset operations through aictl and command registry.
+
+Proposal:
+
+Implement the bounded task scope: Add aictl commands for pipeline policy list/show/validate/save/delete.; Support JSON input for custom policy preset save/update.; Support human-readable and --json output.; Add command registry metadata for policy commands.; Require explicit confirmation for save/update/delete.; Block delete/update for built-in presets.; Add tests for valid save, invalid save, delete, built-in protection, and JSON output.
+
+Rationale:
+
+Add owner-facing CLI commands and registry metadata for policy preset list, show, validate, save, and delete operations.
+
+Affected files:
+
+- scripts/aictl.py
+- ai_project_ctl/core/registry.py
+- ai_project_ctl/pipeline/policy.py
+- ai_project_ctl/pipeline/policy_store.py
+- ai_project_ctl/pipeline/session.py if preset resolution needs compatibility updates
+- ai_project_ctl/pipeline/runner.py if preset resolution needs compatibility updates
+- tests/**
+- AI_PROJECT/state/pipeline_policy_presets.json via governed CLI/service only
+- AI_PROJECT/events/pipeline-policy-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_POLICIES.md via governed CLI/service only
+
+Risks:
+
+- Boundary risk: Do not add Web UI editing in this task.
+- Boundary risk: Do not add new automation permissions beyond the policy model.
+- Boundary risk: Do not bypass policy validation.
+- Boundary risk: Do not change run-next or run-until-blocker behavior except to read custom presets if already supported by PIPE-17.
+- Verify CLI UX and --json output.
+- Verify confirmation gates for writes.
+- Verify policy validation is not bypassed.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-069.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add aictl commands for pipeline policy list/show/validate/save/delete.
+- Support JSON input for custom policy preset save/update.
+- Support human-readable and --json output.
+- Add command registry metadata for policy commands.
+- Require explicit confirmation for save/update/delete.
+- Owner can list built-in and custom presets through aictl.
+- Owner can show one preset through aictl.
+- Owner can validate a policy JSON before saving.
+
+Linked tasks:
+
+- TASK-069
+
+### CHG-055 — PIPE-19 Add Dynamic Policy Editor To Web Pipeline Dashboard
+
+Status: `ready`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-19 requires an explicit Evolution Change Proposal before implementation: Allow editing, saving, deleting, and previewing pipeline policy presets from the Web Control Center.
+
+Proposal:
+
+Implement the bounded task scope: Add a policy editor panel to the Pipeline page.; Load built-in and custom presets into the policy selector.; Immediately update Policy Preset Preview when the selected policy changes without requiring the Preview Queue button.; Support editing common policy fields: queue selection, max tasks, Codex mode, adapter mode, token gate, review requirements, auto-close, local commit mode.; Show validation errors live or on preview before save.; Add Save as Custom Preset action routed through governed policy save command.; Add Delete Custom Preset action routed through governed policy delete command.; Protect built-in presets from delete/update in the UI.; Keep queue preview button for queue-specific filters, but decouple policy preview from the button.; Add tests for immediate selected-policy preview, custom save, custom delete, invalid policy display, and built-in protection.
+
+Rationale:
+
+Improve the Pipeline page so the Human Owner can select a policy, immediately see its preview, edit policy fields, save custom presets, and delete custom presets without manual JSON editing.
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/core/registry.py if Web action metadata needs updates
+- scripts/aictl.py if Web routing needs compatibility updates
+- tests/test_web_control_center.py
+- tests/test_aictl.py
+- tests/test_registry.py
+- tests/test_pipeline_policy_store.py
+
+Risks:
+
+- Boundary risk: Do not add remote UI access.
+- Boundary risk: Do not write policy files directly from route handlers.
+- Boundary risk: Do not allow arbitrary Python, shell commands, or executable content in policy fields.
+- Boundary risk: Do not allow UI to weaken pipeline safety validation.
+- Boundary risk: Do not remove existing CLI policy commands.
+- Verify the exact UX issue from the screenshot: selecting another policy updates the preview immediately.
+- Verify that Save/Delete buttons are confirmation-gated.
+- Verify that Web route handlers do not write JSON directly.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-070.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add a policy editor panel to the Pipeline page.
+- Load built-in and custom presets into the policy selector.
+- Immediately update Policy Preset Preview when the selected policy changes without requiring the Preview Queue button.
+- Support editing common policy fields: queue selection, max tasks, Codex mode, adapter mode, token gate, review requirements, auto-close, local commit mode.
+- Show validation errors live or on preview before save.
+- Changing the policy select immediately updates Policy Preset Preview without pressing Preview Queue.
+- Owner can save a custom preset from the UI with explicit confirmation.
+- Owner can delete a custom preset from the UI with explicit confirmation.
+
+Linked tasks:
+
+- TASK-070
+
+### CHG-056 — PIPE-20 Document Dynamic Pipeline Policy Presets
+
+Status: `ready`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-20 requires an explicit Evolution Change Proposal before implementation: Update owner-facing SOP and quickstart documentation for custom policy presets and dynamic preview behavior.
+
+Proposal:
+
+Implement the bounded task scope: Update pipeline runner SOP with custom preset storage and safety rules.; Update owner quickstart with Web policy editor flow.; Document CLI commands for policy list/show/validate/save/delete.; Document that built-in presets are immutable.; Document that dynamic preview is read-only and does not create a session or run the pipeline.; Run documentation-control validation, render, and check-generated.
+
+Rationale:
+
+Document how to use built-in and custom pipeline policy presets from CLI and Web Control Center, including save/delete rules, validation, safety boundaries, and immediate preview behavior.
+
+Affected files:
+
+- ai-system/project-control/pipeline-runner.md
+- ai-system/project-control/10-owner-quickstart.md
+- ai-system/project-control/08-usage-guide.md if needed
+- AI_PROJECT/state/docs.json via docctl.py only
+- AI_PROJECT/events/doc-events.jsonl via docctl.py only
+- AI_PROJECT/generated/DOCS_INDEX.md via docctl.py only
+- AI_PROJECT/generated/DOCS_GAPS.md via docctl.py only
+
+Risks:
+
+- Boundary risk: Do not change command behavior.
+- Boundary risk: Do not add new policy permissions.
+- Boundary risk: Do not edit generated documentation manually.
+- Boundary risk: Do not mark docs accepted without Human Owner approval.
+- Verify docs match implemented UI and CLI.
+- Verify docs do not imply unsafe autonomy or final owner approval bypass.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-071.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Update pipeline runner SOP with custom preset storage and safety rules.
+- Update owner quickstart with Web policy editor flow.
+- Document CLI commands for policy list/show/validate/save/delete.
+- Document that built-in presets are immutable.
+- Document that dynamic preview is read-only and does not create a session or run the pipeline.
+- Docs explain how to use custom policy presets in UI.
+- Docs explain CLI policy CRUD commands.
+- Docs state built-in presets are immutable.
+
+Linked tasks:
+
+- TASK-071
+
+### CHG-057 — PIPE-21 Fix Pipeline Queue Epic Filter Behavior
+
+Status: `ready`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-21 requires an explicit Evolution Change Proposal before implementation: Make Pipeline Queue Preview respect selected Epic filtering by default and avoid showing unrelated tasks from other epics.
+
+Proposal:
+
+Implement the bounded task scope: Inspect ai_project_ctl/pipeline/queue.py filtering behavior.; Inspect ai_project_ctl/web/read_model.py pipeline_dashboard behavior.; Inspect ai_project_ctl/web/server.py Pipeline page rendering.; Change owner-facing Pipeline Queue Preview so selected Epic filters exclude tasks from other Epics by default.; Preserve diagnostic information for skipped/non-matching tasks through an explicit option such as Show skipped, Show non-matching, debug flag, or structured JSON output.; Ensure max_tasks is applied only after Epic/status matching and executable candidate filtering, so old done/skipped tasks do not consume the selected task limit.; Ensure selected Task Refs still work even when Epic filter is empty.; Ensure queue preview still explains why selected in-Epic tasks are waiting, blocked, skipped, or executable.; Update UI labels/help text if needed so the difference between filtered preview and diagnostic skipped rows is clear.; Add or update tests for Epic filtering, status filtering, max_tasks behavior, selected Task Refs, and diagnostic skipped visibility.
+
+Rationale:
+
+Fix the Pipeline Queue Preview behavior where selecting an Epic still renders tasks from other Epics as skipped rows with epic_filter_mismatch. The owner-facing queue preview should focus on the selected Epic by default, while still allowing diagnostic visibility when explicitly requested.
+
+Affected files:
+
+- ai_project_ctl/pipeline/queue.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py if Pipeline form/action fields need compatible updates
+- ai_project_ctl/core/registry.py if command metadata needs compatible updates
+- scripts/aictl.py if CLI preview/options need compatible updates
+- tests/test_pipeline_queue.py
+- tests/test_web_control_center.py
+- tests/test_aictl.py if CLI behavior is touched
+- AI_PROJECT/state/tasks.json via taskctl.py only
+- AI_PROJECT/events/task-events.jsonl via taskctl.py only
+- AI_PROJECT/generated/CODEX_TASKS.md via taskctl.py only
+- AI_PROJECT/generated/CODEX_CURRENT.md via taskctl.py only
+- AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md via taskctl.py only
+
+Risks:
+
+- Boundary risk: Do not change task lifecycle rules.
+- Boundary risk: Do not change Pipeline policy safety gates.
+- Boundary risk: Do not change Codex execution behavior.
+- Boundary risk: Do not auto-run pipeline sessions.
+- Boundary risk: Do not hide blockers for tasks inside the selected Epic.
+- Boundary risk: Do not remove auditability or JSON/debug visibility for skipped tasks.
+- Boundary risk: Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Reproduce the original issue: choose Pipeline page, select Epic EPIC-007, leave Status as Any Status, and verify unrelated CTL/WFA/TIG/TASK rows no longer dominate the default Queue Preview.
+- Verify that an explicit diagnostic option can still expose skipped/non-matching tasks if implemented.
+- Verify that max_tasks is applied after filtering and no longer blocks PIPE-17 because older done PIPE tasks consumed the limit.
+- Verify Web UI and CLI queue preview remain consistent.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-072.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Inspect ai_project_ctl/pipeline/queue.py filtering behavior.
+- Inspect ai_project_ctl/web/read_model.py pipeline_dashboard behavior.
+- Inspect ai_project_ctl/web/server.py Pipeline page rendering.
+- Change owner-facing Pipeline Queue Preview so selected Epic filters exclude tasks from other Epics by default.
+- Preserve diagnostic information for skipped/non-matching tasks through an explicit option such as Show skipped, Show non-matching, debug flag, or structured JSON output.
+- When Pipeline Queue Selector has Epic = EPIC-007, the default Queue Preview does not render tasks from EPIC-001, EPIC-002, EPIC-003, EPIC-004, EPIC-005, EPIC-006, or other non-selected Epics.
+- Tasks from other Epics may still be visible only through an explicit diagnostic/debug/show-skipped option.
+- Selecting Epic = EPIC-007 with Status = planned shows PIPE-17, PIPE-18, PIPE-19, and PIPE-20 or their current imported refs as matching candidates.
+
+Linked tasks:
+
+- TASK-072
+
+### CHG-058 — PIPE-24 Add Owner-Approved Session Changes Policy Checkbox
+
+Status: `ready`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-24 requires an explicit Evolution Change Proposal before implementation: Add a pipeline policy checkbox that lets the Human Owner approve all required Changes for the selected session queue as part of the pipeline run.
+
+Proposal:
+
+Implement the bounded task scope: Add a new safe policy field distinct from evolution.approve_linked_change, for example evolution.owner_approve_required_changes_for_session.; Do not reuse approve_linked_change if it represents autonomous policy self-approval.; Require explicit Human Owner confirmation when this checkbox is enabled.; Require an approval note/reason when this checkbox is enabled.; Store owner approval intent in the pipeline session snapshot.; Approve only Changes linked to tasks selected by the current pipeline session queue.; If Auto-create missing Changes is also enabled, allow pipeline to create missing Changes and approve those newly created Changes in the same owner-confirmed session.; If a selected task has an existing ready/proposed linked Change, allow the session approval policy to approve it.; Do not approve Changes outside the selected session queue.; Do not accept Changes automatically.; Do not approve Changes if the owner approval checkbox was not explicitly enabled.; Add Web Control Center checkbox: Owner-approve required Changes for this session.; Add approval note field to Pipeline session create form when checkbox is enabled.; Add Policy Preview rows for Owner Session Change Approval and Approval Note Required.; Add CLI support for equivalent flags, for example --owner-approve-required-changes and --approval-note.; Update pipeline audit to record approved Change ids, linked task refs, actor, approval note, and session id.; After required Changes are approved, pipeline should continue the same session if resume/waiting behavior is available.; Add tests for approving multiple Changes in one owner-confirmed pipeline run.
+
+Rationale:
+
+Add a safe owner-approved policy mode for approving required Evolution Changes across the selected pipeline session. This is not autonomous pipeline self-approval: the Human Owner must explicitly select the policy checkbox, confirm the session, and provide an approval note. The pipeline may then approve only the Changes required by that selected session queue.
+
+Affected files:
+
+- ai_project_ctl/pipeline/policy.py
+- ai_project_ctl/pipeline/runner.py
+- ai_project_ctl/pipeline/session.py
+- ai_project_ctl/pipeline/state.py
+- ai_project_ctl/pipeline/batch.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/core/registry.py
+- ai_project_ctl/core/workflows.py
+- scripts/aictl.py
+- scripts/evolutionctl.py if existing approve command integration is needed
+- tests/test_pipeline_runner.py
+- tests/test_pipeline_batch.py
+- tests/test_web_control_center.py
+- tests/test_aictl.py
+- tests/test_registry.py
+- AI_PROJECT/state/evolution.json via governed CLI/service only
+- AI_PROJECT/events/evolution-events.jsonl via governed CLI/service only
+- AI_PROJECT/state/pipeline_sessions.json via governed CLI/service only
+- AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/EVOLUTION_STATUS.md via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_AUDIT.md via governed CLI/service only
+
+Risks:
+
+- Boundary risk: Do not allow fully autonomous approval without Human Owner confirmation.
+- Boundary risk: Do not make evolution.approve_linked_change valid if it means unsafe auto-approval.
+- Boundary risk: Do not accept Evolution Changes automatically.
+- Boundary risk: Do not approve unrelated Changes outside the selected session queue.
+- Boundary risk: Do not bypass Codex execution, token, report, machine review, Codex review, task close, or commit gates.
+- Boundary risk: Do not push, merge, reset, rebase, clean, restore, or discard git changes.
+- Boundary risk: Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Create a session for PIPE-17..PIPE-21 with both Auto-create missing Changes and Owner-approve required Changes enabled.
+- Provide an approval note and confirm.
+- Verify missing Changes are created where needed.
+- Verify required Changes for the selected queue are approved.
+- Verify no unrelated Changes are approved.
+- Verify the same session continues after approval.
+- Verify audit trail contains owner approval evidence.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-075.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add a new safe policy field distinct from evolution.approve_linked_change, for example evolution.owner_approve_required_changes_for_session.
+- Do not reuse approve_linked_change if it represents autonomous policy self-approval.
+- Require explicit Human Owner confirmation when this checkbox is enabled.
+- Require an approval note/reason when this checkbox is enabled.
+- Store owner approval intent in the pipeline session snapshot.
+- Pipeline UI has an Owner-approve required Changes for this session checkbox.
+- Checkbox requires explicit confirmation and approval note.
+- Policy preview clearly distinguishes owner-approved session approval from unsafe automatic approval.
+
+Linked tasks:
+
+- TASK-075

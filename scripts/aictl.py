@@ -1289,6 +1289,9 @@ def cmd_pipeline_session_create(args: argparse.Namespace) -> int:
         report_ids=_tuple_or_empty(args.report),
         review_ids=_tuple_or_empty(args.review),
         commit_ids=_tuple_or_empty(args.commit),
+        auto_create_missing_changes=args.auto_create_missing_changes,
+        owner_approve_required_changes=args.owner_approve_required_changes,
+        approval_note=args.approval_note or "",
         status=args.status,
     )
     return _emit_command_result(result, args)
@@ -1823,6 +1826,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = session_sub.add_parser("create", help="Create a governed pipeline session")
     p.add_argument("--policy", default="dry_run")
+    p.add_argument("--auto-create-missing-changes", action="store_true")
+    p.add_argument("--owner-approve-required-changes", action="store_true")
+    p.add_argument("--approval-note", default="")
     p.add_argument("--task-ref", action="append")
     p.add_argument("--epic", action="append")
     p.add_argument("--status-filter", action="append")
