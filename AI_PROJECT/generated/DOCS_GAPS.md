@@ -3,8 +3,8 @@
 
 # Documentation Gaps
 
-Revision: `24`
-Open gaps: `160`
+Revision: `27`
+Open gaps: `161`
 Tracked categories: `Missing File`, `Status Mismatch`, `Active Not Reviewed`, `Active Review Stale`, `Unresolved Placeholder`, `Broken Local Link`, `Stale Content Hash`, `Not Active`
 
 ## Missing File
@@ -194,4 +194,5 @@ _No gaps._
 - `plugins/ai-project-control/skills/project-control-gateway/SKILL.md` (guide, draft): document is not active
 - `ai-system/project-control/08-usage-guide.md` (guide, review): document is not active
 - `ai-system/project-control/10-owner-quickstart.md` (guide, review): document is not active
+- `ai-system/project-control/pipeline-runner.md` (guide, review): document is not active
 

@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `587`
+Revision: `595`
 
 ## Executable Now
 
@@ -11,8 +11,7 @@ Revision: `587`
 
 ## Waiting For Dependencies
 
-- `PIPE-15 (TASK-066)` [planned] `EPIC-007` priority `1` — PIPE-15 Pipeline SOP Documentation
-  - `dependency_not_done`: depends on PIPE-14 (TASK-065) with status in_progress
+_No tasks waiting only on dependencies._
 
 ## Not Executable Due To Status Or Parent State
 
@@ -130,8 +129,10 @@ Revision: `587`
   - `status_not_executable`: status is done
 - `PIPE-13 (TASK-064)` [done] `EPIC-007` priority `1` — PIPE-13 Pipeline UI Dashboard
   - `status_not_executable`: status is done
-- `PIPE-14 (TASK-065)` [in_progress] `EPIC-007` priority `1` — PIPE-14 Pipeline Audit Trail
-  - `status_not_executable`: status is in_progress
+- `PIPE-14 (TASK-065)` [done] `EPIC-007` priority `1` — PIPE-14 Pipeline Audit Trail
+  - `status_not_executable`: status is done
+- `PIPE-15 (TASK-066)` [done] `EPIC-007` priority `1` — PIPE-15 Pipeline SOP Documentation
+  - `status_not_executable`: status is done
 - `PIPE-16 (TASK-067)` [done] `EPIC-007` priority `1` — BUG-01 Fix Approve & Done stale execution context handling
   - `status_not_executable`: status is done
 - `TIG-01 (TASK-012)` [done] `EPIC-004` priority `1` — TIG-01 Document task identity and execution graph design

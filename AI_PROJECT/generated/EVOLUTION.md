@@ -3,13 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `1532`
+Revision: `1544`
 Changes: `50`
 
 ## Summary
 
-- `accepted`: 46
-- `approved`: 4
+- `accepted`: 50
 
 ## Changes
 
@@ -2913,7 +2912,7 @@ Linked tasks:
 
 ### CHG-047 — PIPE-13 Pipeline UI Dashboard
 
-Status: `approved`  
+Status: `accepted`  
 Type: `docs`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -2933,6 +2932,9 @@ Expose supervised pipeline operation in the local Web Control Center without wea
 
 Approved by: `human_owner` at `2026-06-19T20:43:50Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T08:53:21Z`  
+Acceptance notes: Approve  
 
 Affected files:
 
@@ -2977,7 +2979,7 @@ Linked tasks:
 
 ### CHG-048 — PIPE-14 Pipeline Audit Trail
 
-Status: `approved`  
+Status: `accepted`  
 Type: `docs`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -2997,6 +2999,9 @@ Strengthen pipeline observability by adding structured audit events and generate
 
 Approved by: `human_owner` at `2026-06-19T20:44:16Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T08:53:06Z`  
+Acceptance notes: Approve  
 
 Affected files:
 
@@ -3039,7 +3044,7 @@ Linked tasks:
 
 ### CHG-049 — PIPE-15 Pipeline SOP Documentation
 
-Status: `approved`  
+Status: `accepted`  
 Type: `docs`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -3059,6 +3064,9 @@ Create owner-facing and system-facing SOP documentation for the PIPE epic after 
 
 Approved by: `human_owner` at `2026-06-19T20:44:39Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T09:12:02Z`  
+Acceptance notes: Approve  
 
 Affected files:
 
@@ -3103,7 +3111,7 @@ Linked tasks:
 
 ### CHG-050 — BUG-01 Fix Approve & Done stale execution context handling
 
-Status: `approved`  
+Status: `accepted`  
 Type: `docs`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -3123,6 +3131,9 @@ Implement options B + C from the review: B) Approve & Done must not require Refr
 
 Approved by: `human_owner` at `2026-06-20T07:35:54Z`  
 Approval notes: Approve Change  
+
+Accepted by: `human_owner` at `2026-06-20T08:52:58Z`  
+Acceptance notes: Approve  
 
 Affected files:
 

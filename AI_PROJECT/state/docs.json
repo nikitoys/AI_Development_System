@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 24,
+  "revision": 27,
   "created_at": "2026-06-15T21:36:58Z",
-  "updated_at": "2026-06-19T15:34:40Z",
+  "updated_at": "2026-06-20T09:04:00Z",
   "docs": [
     {
       "id": "DOC-001",
@@ -75,7 +75,7 @@
       "created_at": "2026-06-15T21:36:58Z",
       "updated_at": "2026-06-15T21:36:58Z",
       "last_reviewed_content_hash": "",
-      "content_hash": "d6bfbf03256d4d5a7f005184d36c94434a45640595c0d654fc463065a1428adf",
+      "content_hash": "f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6",
       "declared_status": "draft",
       "declared_status_raw": "Draft",
       "declared_status_source": "status_section"
@@ -2610,7 +2610,7 @@
       "owner": "AI System Maintainer",
       "last_reviewed_at": "",
       "last_reviewed_by": "",
-      "content_hash": "c94f7ff1cddb7b6b4ea07dfa2b62667822140c3301cae5b7a100096f76315e38",
+      "content_hash": "15db7b72dcf1a843e723601bd504f1c23b35996c48cfc2e9f4f561300b683508",
       "last_reviewed_content_hash": "",
       "declared_status": "draft",
       "declared_status_raw": "Draft",
@@ -2688,7 +2688,7 @@
       "owner": "AI System Maintainer / Technical Writer AI",
       "last_reviewed_at": "",
       "last_reviewed_by": "",
-      "content_hash": "7622f907549b93ea554a797842b8a2e54843cc816d32e3ed135eb15cc53e2dee",
+      "content_hash": "da11435aa12d897f5c46603f6999c3ada31140c68b203102379710db713cb36e",
       "last_reviewed_content_hash": "",
       "declared_status": "review",
       "declared_status_raw": "Review",
@@ -2755,6 +2755,27 @@
       "notes": [],
       "created_at": "2026-06-18T18:12:34Z",
       "updated_at": "2026-06-18T18:12:34Z"
+    },
+    {
+      "id": "DOC-145",
+      "path": "ai-system/project-control/pipeline-runner.md",
+      "title": "Supervised Pipeline Runner SOP",
+      "type": "guide",
+      "status": "review",
+      "required": false,
+      "owner": "AI System Maintainer",
+      "last_reviewed_at": "",
+      "last_reviewed_by": "",
+      "content_hash": "5ba818d54a3a863567f8388e389163febeebfe30e5ed90975dcb9a1c6ffc90cc",
+      "last_reviewed_content_hash": "",
+      "declared_status": "review",
+      "declared_status_raw": "Review",
+      "declared_status_source": "status_field",
+      "notes": [
+        "PIPE-15 pipeline SOP documentation"
+      ],
+      "created_at": "2026-06-20T09:03:50Z",
+      "updated_at": "2026-06-20T09:03:50Z"
     }
   ]
 }

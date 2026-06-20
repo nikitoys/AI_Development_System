@@ -44,9 +44,10 @@ context     deterministic Context Pack generated output
 docs        documentation registry and generated doc indexes
 evolution   Evolution Change Proposals
 web         local loopback Web Control Center
+pipeline    supervised batch pipeline sessions, gates and generated pipeline status
 ```
 
-`aictl.py` is a facade and command registry. Domain ownership still belongs to the owning scripts such as `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py`, `contextctl.py` and `codexctl.py`.
+`aictl.py` is a facade and command registry. Domain ownership still belongs to the owning scripts and packages such as `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py`, `contextctl.py`, `codexctl.py` and `ai_project_ctl/pipeline/**`.
 
 Still-future or partial domains include:
 
@@ -2218,6 +2219,7 @@ context
 codex
 project
 web
+pipeline
 ```
 
 The legacy domain CLIs remain the compatibility layer and source of domain-specific validation:
@@ -2288,6 +2290,34 @@ python scripts/contextctl.py ...
 ```
 
 Context commands build deterministic, derived Context Packs from registered documentation and optional Task context. They do not create source state, do not use vector search or external APIs, and do not change the Task execution contract.
+
+## Pipeline Commands
+
+```text
+pipeline status
+pipeline validate
+pipeline render
+pipeline check-generated
+pipeline session create
+pipeline session start-step
+pipeline session step-result
+pipeline session stop
+pipeline session complete
+pipeline run-next
+pipeline run-until-blocker
+```
+
+Current implementation entry point:
+
+```bash
+python scripts/aictl.py pipeline ...
+```
+
+Pipeline commands manage supervised pipeline sessions, selected queues, policy snapshots, gate outcomes, stop reasons, generated pipeline status and generated pipeline audit output. They must route through `aictl.py` and the `ai_project_ctl/pipeline/**` services. They must not manually edit `AI_PROJECT/state/pipeline_sessions.json`, `AI_PROJECT/events/pipeline-events.jsonl`, `AI_PROJECT/generated/PIPELINE_STATUS.md` or `AI_PROJECT/generated/PIPELINE_AUDIT.md`.
+
+`pipeline run-next` advances at most one guarded step. `pipeline run-until-blocker` composes `run-next`, requires `--confirm`, stops on the first blocker or queue completion and does not introduce background execution.
+
+Pipeline policies must not authorize push, merge, automatic Evolution Change approval, automatic Evolution Change acceptance, or Human Owner final acceptance. Local commits, when policy-enabled, are local-only and require passing report, machine review, Codex review and commit-readiness gates.
 
 ## Future Execution Commands
 

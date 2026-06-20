@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `587`
-Current task: `TASK-065`
+Revision: `595`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -1173,9 +1173,9 @@ Acceptance criteria:
 - UI remains local-only by default.
 - Tests and project-control validations pass.
 
-### PIPE-14 (TASK-065) — PIPE-14 Pipeline Audit Trail ⭐
+### PIPE-14 (TASK-065) — PIPE-14 Pipeline Audit Trail
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_b7153a9d28be`, legacy `TASK-065`, aliases `TASK-065`, local `PIPE` / `14`
@@ -1192,7 +1192,7 @@ Acceptance criteria:
 
 ### PIPE-15 (TASK-066) — PIPE-15 Pipeline SOP Documentation
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_712743bf741e`, legacy `TASK-066`, aliases `TASK-066`, local `PIPE` / `15`

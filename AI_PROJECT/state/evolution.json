@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 1532,
+  "revision": 1544,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-20T08:38:10Z",
+  "updated_at": "2026-06-20T09:12:02Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -2689,7 +2689,7 @@
     {
       "id": "CHG-047",
       "title": "PIPE-13 Pipeline UI Dashboard",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "docs",
       "rationale": "Expose supervised pipeline operation in the local Web Control Center without weakening confirmation, policy, or lifecycle gates.",
       "problem": "Task PIPE-13 requires an explicit Evolution Change Proposal before implementation: Add a Web Control Center dashboard for pipeline sessions, queue preview, policy selection, run-next, and run-until-blocker.",
@@ -2740,19 +2740,19 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-19T20:43:50Z",
       "approval_notes": "Approved",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-20T08:53:21Z",
+      "acceptance_notes": "Approve",
       "notes": [],
       "priority": 1,
       "order": 47,
       "created_at": "2026-06-19T20:43:37Z",
-      "updated_at": "2026-06-19T20:43:50Z"
+      "updated_at": "2026-06-20T08:53:21Z"
     },
     {
       "id": "CHG-048",
       "title": "PIPE-14 Pipeline Audit Trail",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "docs",
       "rationale": "Strengthen pipeline observability by adding structured audit events and generated timeline output for all supervised batch decisions.",
       "problem": "Task PIPE-14 requires an explicit Evolution Change Proposal before implementation: Record a complete audit trail for pipeline sessions, policy decisions, gates, Codex runs, reviews, stops, and commits.",
@@ -2801,19 +2801,19 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-19T20:44:16Z",
       "approval_notes": "Approved",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-20T08:53:06Z",
+      "acceptance_notes": "Approve",
       "notes": [],
       "priority": 1,
       "order": 48,
       "created_at": "2026-06-19T20:43:55Z",
-      "updated_at": "2026-06-19T20:44:16Z"
+      "updated_at": "2026-06-20T08:53:06Z"
     },
     {
       "id": "CHG-049",
       "title": "PIPE-15 Pipeline SOP Documentation",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "docs",
       "rationale": "Create owner-facing and system-facing SOP documentation for the PIPE epic after implementation details are stable.",
       "problem": "Task PIPE-15 requires an explicit Evolution Change Proposal before implementation: Document the supervised batch pipeline runner, policies, gates, UI flow, blockers, and operator responsibilities.",
@@ -2864,19 +2864,19 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-19T20:44:39Z",
       "approval_notes": "Approved",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-20T09:12:02Z",
+      "acceptance_notes": "Approve",
       "notes": [],
       "priority": 1,
       "order": 49,
       "created_at": "2026-06-19T20:44:22Z",
-      "updated_at": "2026-06-19T20:44:39Z"
+      "updated_at": "2026-06-20T09:12:02Z"
     },
     {
       "id": "CHG-050",
       "title": "BUG-01 Fix Approve & Done stale execution context handling",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "docs",
       "rationale": "Implement options B + C from the review: B) Approve & Done must not require Refresh Context when the task is already in review and owner approval notes are provided; stale execution context may be reported as a warning, not a lifecycle blocker. C) after a reviewed task is successfully approved and transitioned to done, clear or invalidate current Codex execution state when it still points to the closed task.",
       "problem": "Task PIPE-16 requires an explicit Evolution Change Proposal before implementation: Fix the Web Control Center / workflow issue where Approve & Done can be blocked by stale Context Pack or Codex prompt state and where closed tasks can leave a stale Codex execution package behind.",
@@ -2934,14 +2934,14 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-20T07:35:54Z",
       "approval_notes": "Approve Change",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-20T08:52:58Z",
+      "acceptance_notes": "Approve",
       "notes": [],
       "priority": 1,
       "order": 50,
       "created_at": "2026-06-20T07:35:37Z",
-      "updated_at": "2026-06-20T07:35:54Z"
+      "updated_at": "2026-06-20T08:52:58Z"
     }
   ]
 }
