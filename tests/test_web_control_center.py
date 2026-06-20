@@ -718,7 +718,7 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertNotIn('value="task.refresh_execution_context"', review_body)
         self.assertNotIn('value="task.submit_for_review"', review_body)
 
-    def test_tasks_page_suggests_refresh_for_current_review_task_with_stale_context(self):
+    def test_tasks_page_keeps_approve_done_primary_for_review_task_with_stale_context(self):
         tasks = [
             {
                 "id": "TASK-100",
@@ -756,7 +756,8 @@ class WebControlCenterTests(unittest.TestCase):
             status, _, body = route("/tasks?status=in_review&group=none", model)
 
         self.assertEqual(status.value, 200)
-        self.assertIn("Next:</strong> Refresh Context", body)
+        self.assertIn("Next:</strong> Approve &amp; Done", body)
+        self.assertIn('value="task.close_reviewed"', body)
         self.assertIn('value="task.refresh_execution_context"', body)
         self.assertIn("Context Pack tasks revision is 0 but current is 1", body)
         self.assertNotIn("Refresh Context unavailable: task status is in_review", body)

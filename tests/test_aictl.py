@@ -82,6 +82,7 @@ class AictlTests(unittest.TestCase):
         self.assertIn("current.set", names)
         self.assertIn("project.render", names)
         self.assertIn("pipeline.run_next", names)
+        self.assertIn("pipeline.run_until_blocker", names)
         self.assertIn("pipeline.session.create", names)
         self.assertIn("pipeline.status", names)
         self.assertIn("task.import", names)
@@ -207,6 +208,44 @@ class AictlTests(unittest.TestCase):
             self.assertEqual(payload["data"]["session_id"], "PSESS-001")
             self.assertEqual(payload["data"]["stop_code"], "BLOCKED")
             self.assertTrue((root / "AI_PROJECT" / "generated" / "PIPELINE_STATUS.md").exists())
+
+    def test_pipeline_run_until_blocker_requires_confirmation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root)
+            create_code, create_stdout, _run = self.run_main(
+                [
+                    "--root",
+                    str(root),
+                    "--actor",
+                    "tester",
+                    "--json",
+                    "pipeline",
+                    "session",
+                    "create",
+                    "--policy",
+                    "dry_run",
+                ]
+            )
+            self.assertEqual(create_code, 0, create_stdout)
+
+            code, stdout, _run = self.run_main(
+                [
+                    "--root",
+                    str(root),
+                    "--actor",
+                    "tester",
+                    "--json",
+                    "pipeline",
+                    "run-until-blocker",
+                    "PSESS-001",
+                ]
+            )
+            payload = json.loads(stdout)
+
+            self.assertEqual(code, 1)
+            self.assertFalse(payload["ok"])
+            self.assertEqual(payload["errors"][0]["code"], "PIPELINE_BATCH_CONFIRMATION_REQUIRED")
 
     def test_evolution_create_for_task_workflow_delegates_without_approval(self):
         with tempfile.TemporaryDirectory() as tmp:

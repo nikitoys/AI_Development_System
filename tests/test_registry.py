@@ -166,6 +166,10 @@ class RegistryTests(unittest.TestCase):
         self.assertEqual(close_task["lock_scope"], "workflow")
         self.assertIn("approval notes", close_task["owner_approval"])
         self.assertIn("AI_PROJECT/state/tasks.json", close_task["writes_state"])
+        self.assertIn("AI_PROJECT/state/current_execution.json", close_task["writes_state"])
+        self.assertIn("AI_PROJECT/events/codex-events.jsonl", close_task["event_logs"])
+        self.assertIn("AI_PROJECT/generated/CODEX_STATUS.md", close_task["generated_files"])
+        self.assertIn("only when it targets the closed Task", " ".join(close_task["notes"]))
 
         self.assertEqual(request_changes["domain"], "task")
         self.assertEqual(request_changes["lock_scope"], "workflow")
@@ -228,6 +232,7 @@ class RegistryTests(unittest.TestCase):
     def test_pipeline_session_commands_are_registered_as_governed_writes(self):
         create = command_describe("pipeline.session.create")
         run_next = command_describe("pipeline.run_next")
+        run_until = command_describe("pipeline.run_until_blocker")
         validate = command_describe("pipeline.validate")
         check_generated = command_describe("pipeline.check_generated")
 
@@ -249,6 +254,13 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("AI_PROJECT/events/pipeline-events.jsonl", run_next["event_logs"])
         self.assertIn("AI_PROJECT/generated/PIPELINE_STATUS.md", run_next["generated_files"])
         self.assertIn("run-until-blocker", " ".join(run_next["notes"]))
+
+        self.assertEqual(run_until["kind"], "write")
+        self.assertTrue(run_until["read_write"]["mutates_state"])
+        self.assertTrue(run_until["read_write"]["writes_events"])
+        self.assertTrue(run_until["read_write"]["renders_generated"])
+        self.assertIn("AI_PROJECT/state/pipeline_sessions.json", run_until["writes_state"])
+        self.assertIn("explicit confirmation", run_until["owner_approval"])
 
         self.assertEqual(validate["kind"], "validation")
         self.assertTrue(validate["read_write"]["validates"])

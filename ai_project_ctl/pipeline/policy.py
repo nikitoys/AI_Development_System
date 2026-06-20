@@ -217,6 +217,26 @@ class ReworkPolicy:
 
 
 @dataclass(frozen=True)
+class BatchPolicy:
+    max_steps: int = 5
+    max_failures: int = 1
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "max_steps": self.max_steps,
+            "max_failures": self.max_failures,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any] | None) -> "BatchPolicy":
+        value = data or {}
+        return cls(
+            max_steps=int(value.get("max_steps", cls.max_steps)),
+            max_failures=int(value.get("max_failures", cls.max_failures)),
+        )
+
+
+@dataclass(frozen=True)
 class TaskClosurePolicy:
     auto_close_task: bool = False
 
@@ -265,6 +285,7 @@ class PipelinePolicy:
     codex: CodexExecutionPolicy = CodexExecutionPolicy()
     review: ReviewPolicy = ReviewPolicy()
     rework: ReworkPolicy = ReworkPolicy()
+    batch: BatchPolicy = BatchPolicy()
     closure: TaskClosurePolicy = TaskClosurePolicy()
     commit: CommitPolicy = CommitPolicy()
 
@@ -284,6 +305,7 @@ class PipelinePolicy:
             "codex": self.codex.to_dict(),
             "review": self.review.to_dict(),
             "rework": self.rework.to_dict(),
+            "batch": self.batch.to_dict(),
             "closure": self.closure.to_dict(),
             "commit": self.commit.to_dict(),
         }
@@ -298,6 +320,7 @@ class PipelinePolicy:
             codex=CodexExecutionPolicy.from_dict(_mapping(data, "codex")),
             review=ReviewPolicy.from_dict(_mapping(data, "review")),
             rework=ReworkPolicy.from_dict(_mapping(data, "rework")),
+            batch=BatchPolicy.from_dict(data.get("batch") if isinstance(data, Mapping) else None),
             closure=TaskClosurePolicy.from_dict(_mapping(data, "closure")),
             commit=CommitPolicy.from_dict(_mapping(data, "commit")),
         )
@@ -380,6 +403,7 @@ def validate_policy(policy: PipelinePolicy) -> ValidationResult:
                 path="rework.require_owner_decision_for_rework",
             )
 
+    _validate_batch_policy(policy, result)
     _validate_commit_policy(policy, result)
 
     return result
@@ -545,6 +569,33 @@ def _validate_commit_policy(policy: PipelinePolicy, result: ValidationResult) ->
             "POLICY_COMMIT_REQUIRES_APPROVED_REVIEWS",
             "Local commit policy must require Machine Review PASS and Codex Review APPROVE.",
             path="review",
+        )
+
+
+def _validate_batch_policy(policy: PipelinePolicy, result: ValidationResult) -> None:
+    if policy.batch.max_steps < 1:
+        result.add_error(
+            "POLICY_BATCH_INVALID_MAX_STEPS",
+            "Batch runner max_steps must be at least one.",
+            path="batch.max_steps",
+        )
+    if policy.batch.max_steps > 50:
+        result.add_error(
+            "POLICY_BATCH_MAX_STEPS_TOO_LARGE",
+            "Batch runner max_steps must not exceed 50.",
+            path="batch.max_steps",
+        )
+    if policy.batch.max_failures < 1:
+        result.add_error(
+            "POLICY_BATCH_INVALID_MAX_FAILURES",
+            "Batch runner max_failures must be at least one.",
+            path="batch.max_failures",
+        )
+    if policy.batch.max_failures > 10:
+        result.add_error(
+            "POLICY_BATCH_MAX_FAILURES_TOO_LARGE",
+            "Batch runner max_failures must not exceed 10.",
+            path="batch.max_failures",
         )
 
 

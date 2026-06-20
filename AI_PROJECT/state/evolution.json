@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 1484,
+  "revision": 1529,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-20T06:47:03Z",
+  "updated_at": "2026-06-20T07:35:54Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -2204,7 +2204,7 @@
     {
       "id": "CHG-039",
       "title": "PIPE-05 Batch Runner Run Until Blocker",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "tooling",
       "rationale": "Add the supervised batch runner loop over run-next. It must honor policy limits, max steps, max tasks, rework limits, and stop-on-blocker semantics.",
       "problem": "Task PIPE-05 requires an explicit Evolution Change Proposal before implementation: Run repeated pipeline run-next steps until first blocker, policy violation, unsafe condition, token failure, or queue completion.",
@@ -2256,14 +2256,14 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-19T20:40:27Z",
       "approval_notes": "Approved",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-20T07:34:26Z",
+      "acceptance_notes": "Accept Change",
       "notes": [],
       "priority": 1,
       "order": 39,
       "created_at": "2026-06-19T20:40:11Z",
-      "updated_at": "2026-06-19T20:40:27Z"
+      "updated_at": "2026-06-20T07:34:26Z"
     },
     {
       "id": "CHG-040",
@@ -2627,7 +2627,7 @@
     {
       "id": "CHG-046",
       "title": "PIPE-12 Controlled Git Commit Action",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "docs",
       "rationale": "Add a controlled local git commit action for completed pipeline work. It must never push, merge, reset, discard, or create remote changes.",
       "problem": "Task PIPE-12 requires an explicit Evolution Change Proposal before implementation: Create local commits only when policy allows and commit readiness is green.",
@@ -2677,14 +2677,14 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-19T20:43:32Z",
       "approval_notes": "Approved",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-20T07:03:47Z",
+      "acceptance_notes": "Create local commits only when policy allows and commit readiness is green.",
       "notes": [],
       "priority": 1,
       "order": 46,
       "created_at": "2026-06-19T20:43:08Z",
-      "updated_at": "2026-06-19T20:43:32Z"
+      "updated_at": "2026-06-20T07:03:47Z"
     },
     {
       "id": "CHG-047",
@@ -2872,6 +2872,76 @@
       "order": 49,
       "created_at": "2026-06-19T20:44:22Z",
       "updated_at": "2026-06-19T20:44:39Z"
+    },
+    {
+      "id": "CHG-050",
+      "title": "BUG-01 Fix Approve & Done stale execution context handling",
+      "status": "approved",
+      "change_type": "docs",
+      "rationale": "Implement options B + C from the review: B) Approve & Done must not require Refresh Context when the task is already in review and owner approval notes are provided; stale execution context may be reported as a warning, not a lifecycle blocker. C) after a reviewed task is successfully approved and transitioned to done, clear or invalidate current Codex execution state when it still points to the closed task.",
+      "problem": "Task PIPE-16 requires an explicit Evolution Change Proposal before implementation: Fix the Web Control Center / workflow issue where Approve & Done can be blocked by stale Context Pack or Codex prompt state and where closed tasks can leave a stale Codex execution package behind.",
+      "proposal": "Implement the bounded task scope: Adjust task.close_reviewed so stale Context Pack / Codex prompt freshness does not block Human Owner approval and done transition.; Keep owner confirmation and non-empty approval notes mandatory for Approve & Done.; Keep task lifecycle, task graph, generated task output, evolution, protected-file, and project doctor checks where they are relevant to closure.; Preserve visibility of stale context/prompt state as a warning or result detail instead of hiding it.; After successful Approve & Done, clear or invalidate current_execution when it targets the task that was just closed.; Use an existing governed command such as codexctl.py clear if suitable, or add a small registered/facade workflow step if needed.; Update Web Control Center hints so an in_review task can still expose Approve & Done even when execution context is stale.; Add or update tests covering stale context in_review close, post-close execution cleanup, required approval notes, invalid status rejection, and no direct protected-file writes.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai_project_ctl/core/workflows.py",
+        "ai_project_ctl/core/registry.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/actions.py",
+        "scripts/aictl.py",
+        "scripts/codexctl.py",
+        "tests/test_workflows.py",
+        "tests/test_web_control_center.py",
+        "tests/test_aictl.py",
+        "tests/test_registry.py",
+        "ai-system/project-control/08-usage-guide.md if owner-facing workflow documentation needs a small clarification",
+        "ai-system/project-control/10-owner-quickstart.md if owner-facing workflow documentation needs a small clarification"
+      ],
+      "risks": [
+        "Boundary risk: Do not weaken Human Owner approval gates.",
+        "Boundary risk: Do not allow Codex to self-approve tasks.",
+        "Boundary risk: Do not silently accept linked Evolution Changes.",
+        "Boundary risk: Do not hide stale context/prompt warnings from the UI or action result.",
+        "Boundary risk: Do not auto-refresh Context Pack or Codex Prompt as part of approval unless explicitly justified by the implementation.",
+        "Boundary risk: Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.",
+        "Verify that the fix implements options B + C, not option A.",
+        "Verify that no approval gate was weakened and owner notes remain required.",
+        "Verify that stale execution context is not hidden, only made non-blocking for closure.",
+        "Verify that current_execution cleanup is conditional on the closed task identity.",
+        "Verify that generated files were not edited manually.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-067.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Adjust task.close_reviewed so stale Context Pack / Codex prompt freshness does not block Human Owner approval and done transition.",
+        "Keep owner confirmation and non-empty approval notes mandatory for Approve & Done.",
+        "Keep task lifecycle, task graph, generated task output, evolution, protected-file, and project doctor checks where they are relevant to closure.",
+        "Preserve visibility of stale context/prompt state as a warning or result detail instead of hiding it.",
+        "After successful Approve & Done, clear or invalidate current_execution when it targets the task that was just closed.",
+        "A task in in_review with stale Context Pack or stale Codex prompt can be closed through Approve & Done when explicit owner notes and confirmation are provided.",
+        "Approve & Done still rejects tasks outside in_review.",
+        "Approve & Done still requires non-empty owner approval notes."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-067"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-20T07:35:54Z",
+      "approval_notes": "Approve Change",
+      "accepted_by": "",
+      "accepted_at": "",
+      "acceptance_notes": "",
+      "notes": [],
+      "priority": 1,
+      "order": 50,
+      "created_at": "2026-06-20T07:35:37Z",
+      "updated_at": "2026-06-20T07:35:54Z"
     }
   ]
 }

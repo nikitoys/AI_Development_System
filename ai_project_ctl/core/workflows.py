@@ -6,7 +6,7 @@ import json
 import re
 import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
@@ -150,9 +150,10 @@ class WorkflowStep:
     argv: tuple[str, ...]
     blocking: bool = True
     skip_reason: str = ""
+    prompt_context_errors_are_warnings: bool = False
 
     def preview_dict(self) -> dict[str, Any]:
-        return {
+        data = {
             "id": self.step_id,
             "title": self.title,
             "command_name": self.command_name,
@@ -161,6 +162,9 @@ class WorkflowStep:
             "blocking": self.blocking,
             "skip_reason": self.skip_reason,
         }
+        if self.prompt_context_errors_are_warnings:
+            data["prompt_context_errors_are_warnings"] = True
+        return data
 
 
 @dataclass(frozen=True)
@@ -565,7 +569,7 @@ def run_task_create_workflow(
     for step in followup_steps:
         step_result = executor._execute_step(step)
         step_results.append(step_result)
-        if not step_result.ok and step.blocking:
+        if not step_result.ok and step_result.step.blocking:
             return _task_create_result(
                 descriptor,
                 request,
@@ -769,7 +773,7 @@ class WorkflowExecutor:
         for step in steps:
             step_result = self._execute_step(step)
             step_results.append(step_result)
-            if not step_result.ok and step.blocking:
+            if not step_result.ok and step_result.step.blocking:
                 return self._result(
                     descriptor,
                     task_ref=task_ref,
@@ -911,7 +915,7 @@ class WorkflowExecutor:
         for step in steps:
             step_result = self._execute_step(step)
             step_results.append(step_result)
-            if not step_result.ok and step.blocking:
+            if not step_result.ok and step_result.step.blocking:
                 result = self._result(
                     descriptor,
                     task_ref=task_ref,
@@ -988,7 +992,7 @@ class WorkflowExecutor:
         for step in steps:
             step_result = self._execute_step(step)
             step_results.append(step_result)
-            if not step_result.ok and step.blocking:
+            if not step_result.ok and step_result.step.blocking:
                 return self._result(
                     descriptor,
                     task_ref="",
@@ -1051,7 +1055,7 @@ class WorkflowExecutor:
         for step in steps:
             step_result = self._execute_step(step)
             step_results.append(step_result)
-            if not step_result.ok and step.blocking:
+            if not step_result.ok and step_result.step.blocking:
                 return self._result(
                     descriptor,
                     task_ref="",
@@ -1112,7 +1116,7 @@ class WorkflowExecutor:
         for step in steps:
             step_result = self._execute_step(step)
             step_results.append(step_result)
-            if not step_result.ok and step.blocking:
+            if not step_result.ok and step_result.step.blocking:
                 return self._result(
                     descriptor,
                     task_ref="",
@@ -1171,7 +1175,7 @@ class WorkflowExecutor:
         for step in steps:
             step_result = self._execute_step(step)
             step_results.append(step_result)
-            if not step_result.ok and step.blocking:
+            if not step_result.ok and step_result.step.blocking:
                 return self._result(
                     descriptor,
                     task_ref="",
@@ -1195,6 +1199,10 @@ class WorkflowExecutor:
             return WorkflowStepResult(step=step, status="skipped")
         _validate_step_route(step)
         completed = self.runner(step.argv)
+        if step.prompt_context_errors_are_warnings:
+            warning_result = _protected_prompt_context_warning_result(step, completed)
+            if warning_result is not None:
+                return warning_result
         return WorkflowStepResult(
             step=step,
             status="ok" if completed.returncode == 0 else "failed",
@@ -1222,7 +1230,13 @@ class WorkflowExecutor:
         message: str,
         extra_data: Mapping[str, Any] | None = None,
     ) -> CommandResult:
-        failed = next((item for item in step_results if not item.ok), None)
+        failed = next(
+            (item for item in step_results if not item.ok and item.step.blocking),
+            None,
+        )
+        warning_steps = [
+            item for item in step_results if not item.ok and not item.step.blocking
+        ]
         result = CommandResult(
             ok=failed is None,
             command=descriptor.name,
@@ -1235,6 +1249,22 @@ class WorkflowExecutor:
                 "steps": [item.to_dict() for item in step_results],
             },
         )
+        for warning_step in warning_steps:
+            result.warnings.append(
+                CommandMessage(
+                    code="WORKFLOW_NON_BLOCKING_STEP_FAILED",
+                    message="Non-blocking workflow step reported a warning: {}".format(
+                        warning_step.step.title
+                    ),
+                    details={
+                        "step": warning_step.step.step_id,
+                        "command_name": warning_step.step.command_name,
+                        "returncode": warning_step.returncode,
+                        "stdout": warning_step.stdout,
+                        "stderr": warning_step.stderr,
+                    },
+                )
+            )
         if extra_data:
             result.data.update(dict(extra_data))
         if failed is not None:
@@ -1398,13 +1428,14 @@ def _workflow_descriptors() -> tuple[WorkflowDescriptor, ...]:
                 _template("task_graph", "Validate task graph", "taskctl.task.graph.validate", VALIDATED_CTL, "python scripts/taskctl.py task graph validate"),
                 _template("task_generated", "Check generated task output", "taskctl.check-generated", VALIDATED_CTL, "python scripts/taskctl.py check-generated"),
                 _template("context_validate", "Validate context control", "contextctl.validate", VALIDATED_CTL, "python scripts/contextctl.py validate"),
-                _template("context_generated", "Check generated context output", "contextctl.check-generated", VALIDATED_CTL, "python scripts/contextctl.py check-generated"),
+                _template("context_generated", "Check generated context output", "contextctl.check-generated", VALIDATED_CTL, "python scripts/contextctl.py check-generated", blocking=False),
                 _template("evolution_validate", "Validate evolution state", "evolutionctl.validate", VALIDATED_CTL, "python scripts/evolutionctl.py validate"),
                 _template("evolution_generated", "Check generated evolution output", "evolutionctl.check-generated", VALIDATED_CTL, "python scripts/evolutionctl.py check-generated"),
                 _template("protected", "Check protected project files", "protected.check", VALIDATED_CTL, "python scripts/check-protected-project-files.py --json"),
-                _template("doctor", "Run project doctor", "project.doctor", REGISTERED, "python scripts/aictl.py project doctor"),
+                _template("doctor", "Run project doctor", "project.doctor", REGISTERED, "python scripts/aictl.py project doctor", blocking=False),
                 _template("task_approve", "Approve task with owner notes", "taskctl.task.approve", VALIDATED_CTL, "python scripts/taskctl.py task approve <TASK> --notes <NOTES>"),
                 _template("task_done", "Move task to done", "task.transition", REGISTERED, "python scripts/aictl.py task transition <TASK> --to done"),
+                _template("codex_clear", "Clear closed-task Codex execution state", "codexctl.clear", VALIDATED_CTL, "python scripts/codexctl.py clear"),
                 _template("task_validate_after", "Validate task state after close", "taskctl.validate", VALIDATED_CTL, "python scripts/taskctl.py validate"),
                 _template("task_generated_after", "Check generated task output after close", "taskctl.check-generated", VALIDATED_CTL, "python scripts/taskctl.py check-generated"),
             ),
@@ -1576,6 +1607,8 @@ def _template(
     command_name: str,
     route: str,
     command_template: str,
+    *,
+    blocking: bool = True,
 ) -> WorkflowStepTemplate:
     return WorkflowStepTemplate(
         step_id=step_id,
@@ -1583,6 +1616,7 @@ def _template(
         command_name=command_name,
         route=route,
         command_template=tuple(command_template.split()),
+        blocking=blocking,
     )
 
 
@@ -1700,13 +1734,42 @@ def _build_steps(
                 _ctl_step("task_graph", "Validate task graph", "taskctl.task.graph.validate", "taskctl.py", root, actor, python_executable, "task", "graph", "validate"),
                 _ctl_step("task_generated", "Check generated task output", "taskctl.check-generated", "taskctl.py", root, actor, python_executable, "check-generated"),
                 _ctl_step("context_validate", "Validate context control", "contextctl.validate", "contextctl.py", root, actor, python_executable, "validate"),
-                _ctl_step("context_generated", "Check generated context output", "contextctl.check-generated", "contextctl.py", root, actor, python_executable, "check-generated"),
+                _ctl_step(
+                    "context_generated",
+                    "Check generated context output",
+                    "contextctl.check-generated",
+                    "contextctl.py",
+                    root,
+                    actor,
+                    python_executable,
+                    "check-generated",
+                    blocking=False,
+                ),
                 _ctl_step("evolution_validate", "Validate evolution state", "evolutionctl.validate", "evolutionctl.py", root, actor, python_executable, "validate"),
                 _ctl_step("evolution_generated", "Check generated evolution output", "evolutionctl.check-generated", "evolutionctl.py", root, actor, python_executable, "check-generated"),
-                _protected_step(root, python_executable),
-                _aictl_step("doctor", "Run project doctor", "project.doctor", root, actor, python_executable, "project", "doctor"),
+                _protected_step(
+                    root,
+                    python_executable,
+                    prompt_context_errors_are_warnings=True,
+                ),
+                _aictl_step("doctor", "Run project doctor", "project.doctor", root, actor, python_executable, "project", "doctor", blocking=False),
                 _ctl_step("task_approve", "Approve task with owner notes", "taskctl.task.approve", "taskctl.py", root, actor, python_executable, "task", "approve", task_id, "--notes", notes),
                 _aictl_step("task_done", "Move task to done", "task.transition", root, actor, python_executable, "task", "transition", task_id, "--to", "done"),
+                _ctl_step(
+                    "codex_clear",
+                    "Clear closed-task Codex execution state",
+                    "codexctl.clear",
+                    "codexctl.py",
+                    root,
+                    actor,
+                    python_executable,
+                    "clear",
+                    skip_reason=(
+                        ""
+                        if _current_execution_targets_task(root, task)
+                        else "Current Codex execution does not target this task."
+                    ),
+                ),
                 _ctl_step("task_validate_after", "Validate task state after close", "taskctl.validate", "taskctl.py", root, actor, python_executable, "validate"),
                 _ctl_step("task_generated_after", "Check generated task output after close", "taskctl.check-generated", "taskctl.py", root, actor, python_executable, "check-generated"),
             ]
@@ -2914,6 +2977,32 @@ def _task_matches_ref(task: Mapping[str, Any], task_ref: str) -> bool:
     return isinstance(aliases, list) and task_ref in [str(alias) for alias in aliases]
 
 
+def _current_execution_targets_task(root: Path, task: Mapping[str, Any]) -> bool:
+    path = root / "AI_PROJECT" / "state" / "current_execution.json"
+    if not path.exists():
+        return False
+    try:
+        execution = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(execution, Mapping):
+        return False
+    source_type = str(execution.get("source_type") or "")
+    if source_type and source_type != "task":
+        return False
+    return str(execution.get("source_id") or "") in _task_refs(task)
+
+
+def _task_refs(task: Mapping[str, Any]) -> set[str]:
+    refs = {
+        str(task.get(field) or "").strip()
+        for field in ("id", "uid", "ref", "legacy_id")
+    }
+    refs.update(_string_list(task.get("aliases")))
+    refs.discard("")
+    return refs
+
+
 def _workflow_target_error(
     workflow_name: str,
     *,
@@ -3532,6 +3621,7 @@ def _aictl_step(
     python_executable: str,
     *args: str,
     skip_reason: str = "",
+    blocking: bool = True,
 ) -> WorkflowStep:
     return WorkflowStep(
         step_id=step_id,
@@ -3549,6 +3639,7 @@ def _aictl_step(
             *args,
         ),
         skip_reason=skip_reason,
+        blocking=blocking,
     )
 
 
@@ -3562,6 +3653,7 @@ def _ctl_step(
     python_executable: str,
     *args: str,
     skip_reason: str = "",
+    blocking: bool = True,
 ) -> WorkflowStep:
     return WorkflowStep(
         step_id=step_id,
@@ -3578,10 +3670,16 @@ def _ctl_step(
             *args,
         ),
         skip_reason=skip_reason,
+        blocking=blocking,
     )
 
 
-def _protected_step(root: Path, python_executable: str) -> WorkflowStep:
+def _protected_step(
+    root: Path,
+    python_executable: str,
+    *,
+    prompt_context_errors_are_warnings: bool = False,
+) -> WorkflowStep:
     return WorkflowStep(
         step_id="protected",
         title="Check protected project files",
@@ -3594,7 +3692,53 @@ def _protected_step(root: Path, python_executable: str) -> WorkflowStep:
             str(root),
             "--json",
         ),
+        prompt_context_errors_are_warnings=prompt_context_errors_are_warnings,
     )
+
+
+def _protected_prompt_context_warning_result(
+    step: WorkflowStep,
+    completed: subprocess.CompletedProcess[str],
+) -> WorkflowStepResult | None:
+    if completed.returncode == 0:
+        return None
+    try:
+        parsed = json.loads(completed.stdout)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(parsed, Mapping):
+        return None
+    errors = [str(error) for error in parsed.get("errors") or []]
+    prompt_context_warnings = [
+        error for error in errors if _protected_error_is_prompt_context_warning(error)
+    ]
+    blocking_errors = [
+        error for error in errors if error not in prompt_context_warnings
+    ]
+    if not prompt_context_warnings or blocking_errors:
+        return None
+    warning_step = replace(step, blocking=False)
+    stderr = completed.stderr or (
+        "Protected-file check reported only stale prompt/context warnings."
+    )
+    return WorkflowStepResult(
+        step=warning_step,
+        status="failed",
+        returncode=completed.returncode,
+        stdout=completed.stdout,
+        stderr=stderr,
+    )
+
+
+def _protected_error_is_prompt_context_warning(error: str) -> bool:
+    warning_fragments = (
+        "MISSING_GENERATED_PROMPT:",
+        "ORPHAN_GENERATED_PROMPT:",
+        "OUTDATED_GENERATED_FILE: AI_PROJECT/generated/CODEX_PROMPT.md",
+        "CODEX_PROMPT_RENDER_FAILED: STALE_CONTEXT_PACK:",
+        "CODEX_EXECUTION_CONTEXT_MISMATCH:",
+    )
+    return any(fragment in error for fragment in warning_fragments)
 
 
 def _validate_step_route(step: WorkflowStep) -> None:

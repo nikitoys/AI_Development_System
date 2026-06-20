@@ -2,6 +2,7 @@ import unittest
 from dataclasses import replace
 
 from ai_project_ctl.pipeline import (
+    BatchPolicy,
     CodexAdapterMode,
     CodexExecutionMode,
     CodexReviewDecision,
@@ -36,6 +37,7 @@ class PipelinePolicyTests(unittest.TestCase):
         self.assertFalse(policy.commit.create_local_commit)
         self.assertFalse(policy.commit.allow_push)
         self.assertFalse(policy.commit.allow_merge)
+        self.assertEqual(policy.batch.max_failures, 1)
 
     def test_safe_presets_validate(self):
         self.assertEqual(
@@ -220,6 +222,7 @@ class PipelinePolicyTests(unittest.TestCase):
         policy = replace(
             PipelinePolicy.default(),
             queue=QueuePolicy(max_tasks=0, include_blocked_tasks=True),
+            batch=BatchPolicy(max_steps=0, max_failures=0),
             token_budget=TokenBudgetPolicy(
                 require_gate_pass=True,
                 max_prompt_tokens=100,
@@ -235,6 +238,8 @@ class PipelinePolicyTests(unittest.TestCase):
                 "POLICY_QUEUE_INCLUDES_BLOCKED_TASKS",
                 "POLICY_INVALID_TOKEN_THRESHOLD",
                 "POLICY_CONTEXT_EXCEEDS_PROMPT_BUDGET",
+                "POLICY_BATCH_INVALID_MAX_STEPS",
+                "POLICY_BATCH_INVALID_MAX_FAILURES",
             ],
         )
 
@@ -247,6 +252,7 @@ class PipelinePolicyTests(unittest.TestCase):
         self.assertEqual(
             sorted(policy.to_dict()),
             [
+                "batch",
                 "closure",
                 "codex",
                 "commit",

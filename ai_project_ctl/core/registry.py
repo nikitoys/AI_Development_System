@@ -622,12 +622,17 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
                 _arg("confirm", "Required explicit confirmation.", value_type="boolean", required=True),
             ),
             reads_state=(state_tasks, state_plan, state_docs, state_evolution, state_execution),
-            writes_state=(state_tasks,),
-            event_logs=("AI_PROJECT/events/task-events.jsonl",),
+            writes_state=(state_tasks, state_execution),
+            event_logs=(
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/codex-events.jsonl",
+            ),
             generated_files=(
                 "AI_PROJECT/generated/CODEX_TASKS.md",
                 "AI_PROJECT/generated/CODEX_CURRENT.md",
                 "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
             ),
             output=_output("Step-by-step workflow result.", fields=("steps",)),
             validators=(
@@ -646,6 +651,8 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
             notes=(
                 "Preflight rejects tasks that are not in_review.",
                 "Delegates approval to taskctl.py task approve and done transition to the registered task.transition path.",
+                "Clears the current Codex execution package only when it targets the closed Task.",
+                "Stale context or prompt state is reported as a warning, not an owner-approval blocker.",
             ),
         ),
         CommandDescriptor(
@@ -1078,6 +1085,63 @@ def _default_descriptors() -> tuple[CommandDescriptor, ...]:
                 "Does not implement run-until-blocker behavior.",
                 "Does not push or merge.",
                 "Codex execution is gated and not called when Token Budget Gate is unavailable.",
+            ),
+        ),
+        CommandDescriptor(
+            name="pipeline.run_until_blocker",
+            domain="pipeline",
+            description="Run guarded pipeline steps until the first blocker or selected queue completion.",
+            kind=CommandKind.WRITE,
+            arguments=(
+                _arg("session_id", "Pipeline session ID. Uses current session when omitted."),
+                _arg("confirm", "Explicit confirmation required.", value_type="boolean"),
+            ),
+            reads_state=(
+                state_pipeline,
+                state_tasks,
+                state_plan,
+                state_evolution,
+                state_task_reports,
+            ),
+            writes_state=(state_pipeline,),
+            event_logs=(
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/evolution-events.jsonl",
+            ),
+            generated_files=(
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/EVOLUTION.md",
+            ),
+            output=_output(
+                "Run-until-blocker result.",
+                fields=("session_id", "stop_code", "steps_run", "completed_tasks"),
+            ),
+            validators=(
+                "pipeline_session_state",
+                "pipeline_session_references",
+                "task_lifecycle",
+                "context_pack",
+                "codex_prompt_status",
+            ),
+            lock_scope="pipeline",
+            owner_approval=(
+                "Batch runner requires explicit confirmation and stops on blockers, "
+                "policy failures, unsafe gates, limits, or queue completion."
+            ),
+            legacy_command=("python scripts/aictl.py pipeline run-until-blocker <SESSION> --confirm",),
+            notes=(
+                "Composes pipeline.run_next; it does not introduce background execution.",
+                "Stops at first blocker and never pushes or merges.",
             ),
         ),
         CommandDescriptor(

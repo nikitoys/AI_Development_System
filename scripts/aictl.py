@@ -53,6 +53,7 @@ from ai_project_ctl.pipeline.session import (  # noqa: E402
     validate_sessions as validate_pipeline_sessions,
 )
 from ai_project_ctl.pipeline.runner import run_next as run_pipeline_next  # noqa: E402
+from ai_project_ctl.pipeline.batch import run_until_blocker as run_pipeline_until_blocker  # noqa: E402
 
 
 class FacadeError(CommandError):
@@ -298,6 +299,7 @@ def _protected_error_is_prompt_context_warning(error: str, *, strict_prompt: boo
         "ORPHAN_GENERATED_PROMPT:",
         "OUTDATED_GENERATED_FILE: AI_PROJECT/generated/CODEX_PROMPT.md",
         "CODEX_PROMPT_RENDER_FAILED: STALE_CONTEXT_PACK:",
+        "CODEX_EXECUTION_CONTEXT_MISMATCH:",
     )
     return any(fragment in error for fragment in warning_fragments)
 
@@ -1302,6 +1304,17 @@ def cmd_pipeline_run_next(args: argparse.Namespace) -> int:
     return _emit_command_result(result, args)
 
 
+def cmd_pipeline_run_until_blocker(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.run_until_blocker")
+    result = run_pipeline_until_blocker(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+        confirmed=args.confirm,
+    )
+    return _emit_command_result(result, args)
+
+
 def cmd_pipeline_step_start(args: argparse.Namespace) -> int:
     _ensure_implemented("pipeline.step.start")
     result = start_step(
@@ -1793,6 +1806,17 @@ def build_parser() -> argparse.ArgumentParser:
     p = pipeline_sub.add_parser("run-next", help="Run one guarded pipeline step")
     p.add_argument("session_id", nargs="?")
     p.set_defaults(func=cmd_pipeline_run_next, facade_command="pipeline.run_next")
+
+    p = pipeline_sub.add_parser(
+        "run-until-blocker",
+        help="Run guarded pipeline steps until blocker or queue completion",
+    )
+    p.add_argument("session_id", nargs="?")
+    p.add_argument("--confirm", action="store_true")
+    p.set_defaults(
+        func=cmd_pipeline_run_until_blocker,
+        facade_command="pipeline.run_until_blocker",
+    )
 
     session = pipeline_sub.add_parser("session", help="Pipeline session mutations")
     session_sub = session.add_subparsers(dest="pipeline_session_action", required=True)

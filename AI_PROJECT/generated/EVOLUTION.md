@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `1484`
-Changes: `49`
+Revision: `1529`
+Changes: `50`
 
 ## Summary
 
-- `accepted`: 43
-- `approved`: 6
+- `accepted`: 45
+- `approved`: 5
 
 ## Changes
 
@@ -2393,7 +2393,7 @@ Linked tasks:
 
 ### CHG-039 — PIPE-05 Batch Runner Run Until Blocker
 
-Status: `approved`  
+Status: `accepted`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -2413,6 +2413,9 @@ Add the supervised batch runner loop over run-next. It must honor policy limits,
 
 Approved by: `human_owner` at `2026-06-19T20:40:27Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T07:34:26Z`  
+Acceptance notes: Accept Change  
 
 Affected files:
 
@@ -2841,7 +2844,7 @@ Linked tasks:
 
 ### CHG-046 — PIPE-12 Controlled Git Commit Action
 
-Status: `approved`  
+Status: `accepted`  
 Type: `docs`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -2861,6 +2864,9 @@ Add a controlled local git commit action for completed pipeline work. It must ne
 
 Approved by: `human_owner` at `2026-06-19T20:43:32Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T07:03:47Z`  
+Acceptance notes: Create local commits only when policy allows and commit readiness is green.  
 
 Affected files:
 
@@ -3091,3 +3097,74 @@ Impact:
 Linked tasks:
 
 - TASK-066
+
+### CHG-050 — BUG-01 Fix Approve & Done stale execution context handling
+
+Status: `approved`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-16 requires an explicit Evolution Change Proposal before implementation: Fix the Web Control Center / workflow issue where Approve & Done can be blocked by stale Context Pack or Codex prompt state and where closed tasks can leave a stale Codex execution package behind.
+
+Proposal:
+
+Implement the bounded task scope: Adjust task.close_reviewed so stale Context Pack / Codex prompt freshness does not block Human Owner approval and done transition.; Keep owner confirmation and non-empty approval notes mandatory for Approve & Done.; Keep task lifecycle, task graph, generated task output, evolution, protected-file, and project doctor checks where they are relevant to closure.; Preserve visibility of stale context/prompt state as a warning or result detail instead of hiding it.; After successful Approve & Done, clear or invalidate current_execution when it targets the task that was just closed.; Use an existing governed command such as codexctl.py clear if suitable, or add a small registered/facade workflow step if needed.; Update Web Control Center hints so an in_review task can still expose Approve & Done even when execution context is stale.; Add or update tests covering stale context in_review close, post-close execution cleanup, required approval notes, invalid status rejection, and no direct protected-file writes.
+
+Rationale:
+
+Implement options B + C from the review: B) Approve & Done must not require Refresh Context when the task is already in review and owner approval notes are provided; stale execution context may be reported as a warning, not a lifecycle blocker. C) after a reviewed task is successfully approved and transitioned to done, clear or invalidate current Codex execution state when it still points to the closed task.
+
+Approved by: `human_owner` at `2026-06-20T07:35:54Z`  
+Approval notes: Approve Change  
+
+Affected files:
+
+- ai_project_ctl/core/workflows.py
+- ai_project_ctl/core/registry.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/actions.py
+- scripts/aictl.py
+- scripts/codexctl.py
+- tests/test_workflows.py
+- tests/test_web_control_center.py
+- tests/test_aictl.py
+- tests/test_registry.py
+- ai-system/project-control/08-usage-guide.md if owner-facing workflow documentation needs a small clarification
+- ai-system/project-control/10-owner-quickstart.md if owner-facing workflow documentation needs a small clarification
+
+Risks:
+
+- Boundary risk: Do not weaken Human Owner approval gates.
+- Boundary risk: Do not allow Codex to self-approve tasks.
+- Boundary risk: Do not silently accept linked Evolution Changes.
+- Boundary risk: Do not hide stale context/prompt warnings from the UI or action result.
+- Boundary risk: Do not auto-refresh Context Pack or Codex Prompt as part of approval unless explicitly justified by the implementation.
+- Boundary risk: Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Verify that the fix implements options B + C, not option A.
+- Verify that no approval gate was weakened and owner notes remain required.
+- Verify that stale execution context is not hidden, only made non-blocking for closure.
+- Verify that current_execution cleanup is conditional on the closed task identity.
+- Verify that generated files were not edited manually.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-067.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Adjust task.close_reviewed so stale Context Pack / Codex prompt freshness does not block Human Owner approval and done transition.
+- Keep owner confirmation and non-empty approval notes mandatory for Approve & Done.
+- Keep task lifecycle, task graph, generated task output, evolution, protected-file, and project doctor checks where they are relevant to closure.
+- Preserve visibility of stale context/prompt state as a warning or result detail instead of hiding it.
+- After successful Approve & Done, clear or invalidate current_execution when it targets the task that was just closed.
+- A task in in_review with stale Context Pack or stale Codex prompt can be closed through Approve & Done when explicit owner notes and confirmation are provided.
+- Approve & Done still rejects tasks outside in_review.
+- Approve & Done still requires non-empty owner approval notes.
+
+Linked tasks:
+
+- TASK-067

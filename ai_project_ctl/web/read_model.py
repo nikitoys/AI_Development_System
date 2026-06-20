@@ -1045,10 +1045,10 @@ def _task_next_actions(
             return ["Refresh Context"]
         if available.get("Submit for Review"):
             return ["Submit for Review"]
-    if status == "in_review" and context_reason and available.get("Refresh Context"):
-        return ["Refresh Context"]
     if available.get("Approve & Done"):
         return ["Approve & Done"]
+    if status == "in_review" and context_reason and available.get("Refresh Context"):
+        return ["Refresh Context"]
     if available.get("Accept Change"):
         return ["Accept Change"]
     return []

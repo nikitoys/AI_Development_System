@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `556`
-Current task: `TASK-063`
+Revision: `580`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -1013,7 +1013,7 @@ Acceptance criteria:
 
 ### PIPE-05 (TASK-056) — PIPE-05 Batch Runner Run Until Blocker
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_06eb9ba3c9a9`, legacy `TASK-056`, aliases `TASK-056`, local `PIPE` / `5`
@@ -1137,9 +1137,9 @@ Acceptance criteria:
 - Lifecycle mutations route through governed task workflows/commands.
 - Tests and project-control validations pass.
 
-### PIPE-12 (TASK-063) — PIPE-12 Controlled Git Commit Action ⭐
+### PIPE-12 (TASK-063) — PIPE-12 Controlled Git Commit Action
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_6f7cf68ecdf8`, legacy `TASK-063`, aliases `TASK-063`, local `PIPE` / `12`
@@ -1207,3 +1207,23 @@ Acceptance criteria:
 - Documentation says commit is local-only and push/merge remain forbidden.
 - Documentation explains token budget strict-mode failures.
 - Documentation checks and project-control validations pass.
+
+### PIPE-16 (TASK-067) — BUG-01 Fix Approve & Done stale execution context handling
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_b590f17b8bdd`, legacy `TASK-067`, aliases `TASK-067`, local `PIPE` / `16`
+
+Fix the Web Control Center / workflow issue where Approve & Done can be blocked by stale Context Pack or Codex prompt state and where closed tasks can leave a stale Codex execution package behind.
+
+Acceptance criteria:
+
+- A task in in_review with stale Context Pack or stale Codex prompt can be closed through Approve & Done when explicit owner notes and confirmation are provided.
+- Approve & Done still rejects tasks outside in_review.
+- Approve & Done still requires non-empty owner approval notes.
+- Stale Context Pack / Codex prompt state remains visible as a warning, blocked reason, or action-result detail, but does not force Refresh Context before owner acceptance.
+- After successful Approve & Done, current_execution is cleared or marked non-ready when it points to the closed task.
+- Closing one task does not clear an execution package that points to a different active task.
+- All writes continue to route through governed CLI/workflow paths.
+- Relevant tests pass and project-control validation/check-generated commands pass.

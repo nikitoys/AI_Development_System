@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 556,
-  "current_task_id": "TASK-063",
+  "revision": 580,
+  "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-20T06:47:11Z",
+  "updated_at": "2026-06-20T08:12:47Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -4201,7 +4201,7 @@
       "id": "TASK-056",
       "epic_id": "EPIC-007",
       "title": "PIPE-05 Batch Runner Run Until Blocker",
-      "status": "planned",
+      "status": "done",
       "summary": "Run repeated pipeline run-next steps until first blocker, policy violation, unsafe condition, token failure, or queue completion.",
       "description": "Add the supervised batch runner loop over run-next. It must honor policy limits, max steps, max tasks, rework limits, and stop-on-blocker semantics.",
       "priority": 1,
@@ -4263,11 +4263,11 @@
           "reason": "Batch runner composes all one-step gates before looping."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T07:34:05Z",
+      "approval_notes": "Run repeated pipeline run-next steps until first blocker, policy violation, unsafe condition, token failure, or queue completion.",
       "created_at": "2026-06-19T20:33:25Z",
-      "updated_at": "2026-06-19T20:34:08Z",
+      "updated_at": "2026-06-20T07:34:06Z",
       "uid": "tsk_06eb9ba3c9a9",
       "ref": "PIPE-05",
       "legacy_id": "TASK-056",
@@ -4731,7 +4731,7 @@
       "id": "TASK-063",
       "epic_id": "EPIC-007",
       "title": "PIPE-12 Controlled Git Commit Action",
-      "status": "in_progress",
+      "status": "done",
       "summary": "Create local commits only when policy allows and commit readiness is green.",
       "description": "Add a controlled local git commit action for completed pipeline work. It must never push, merge, reset, discard, or create remote changes.",
       "priority": 1,
@@ -4791,11 +4791,11 @@
           "reason": "Commit action depends on safe close/review policy."
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T07:03:32Z",
+      "approval_notes": "Create local commits only when policy allows and commit readiness is green.",
       "created_at": "2026-06-19T20:33:31Z",
-      "updated_at": "2026-06-20T06:47:11Z",
+      "updated_at": "2026-06-20T07:03:33Z",
       "uid": "tsk_6f7cf68ecdf8",
       "ref": "PIPE-12",
       "legacy_id": "TASK-063",
@@ -5043,6 +5043,91 @@
       ],
       "epic_key": "PIPE",
       "local_seq": 15
+    },
+    {
+      "id": "TASK-067",
+      "epic_id": "EPIC-007",
+      "title": "BUG-01 Fix Approve & Done stale execution context handling",
+      "status": "done",
+      "summary": "Fix the Web Control Center / workflow issue where Approve & Done can be blocked by stale Context Pack or Codex prompt state and where closed tasks can leave a stale Codex execution package behind.",
+      "description": "Implement options B + C from the review: B) Approve & Done must not require Refresh Context when the task is already in review and owner approval notes are provided; stale execution context may be reported as a warning, not a lifecycle blocker. C) after a reviewed task is successfully approved and transitioned to done, clear or invalidate current Codex execution state when it still points to the closed task.",
+      "priority": 1,
+      "order": 16,
+      "active_role": "Codex Executor",
+      "active_stage": "Bug Fix Implementation",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Approve & Done closes reviewed tasks without requiring Refresh Context, and stale Codex execution state is cleared after task closure.",
+      "verification_mode": "standard",
+      "scope": [
+        "Adjust task.close_reviewed so stale Context Pack / Codex prompt freshness does not block Human Owner approval and done transition.",
+        "Keep owner confirmation and non-empty approval notes mandatory for Approve & Done.",
+        "Keep task lifecycle, task graph, generated task output, evolution, protected-file, and project doctor checks where they are relevant to closure.",
+        "Preserve visibility of stale context/prompt state as a warning or result detail instead of hiding it.",
+        "After successful Approve & Done, clear or invalidate current_execution when it targets the task that was just closed.",
+        "Use an existing governed command such as codexctl.py clear if suitable, or add a small registered/facade workflow step if needed.",
+        "Update Web Control Center hints so an in_review task can still expose Approve & Done even when execution context is stale.",
+        "Add or update tests covering stale context in_review close, post-close execution cleanup, required approval notes, invalid status rejection, and no direct protected-file writes."
+      ],
+      "out_of_scope": [
+        "Do not weaken Human Owner approval gates.",
+        "Do not allow Codex to self-approve tasks.",
+        "Do not silently accept linked Evolution Changes.",
+        "Do not hide stale context/prompt warnings from the UI or action result.",
+        "Do not auto-refresh Context Pack or Codex Prompt as part of approval unless explicitly justified by the implementation.",
+        "Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/core/workflows.py",
+        "ai_project_ctl/core/registry.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/actions.py",
+        "scripts/aictl.py",
+        "scripts/codexctl.py",
+        "tests/test_workflows.py",
+        "tests/test_web_control_center.py",
+        "tests/test_aictl.py",
+        "tests/test_registry.py",
+        "ai-system/project-control/08-usage-guide.md if owner-facing workflow documentation needs a small clarification",
+        "ai-system/project-control/10-owner-quickstart.md if owner-facing workflow documentation needs a small clarification"
+      ],
+      "acceptance_criteria": [
+        "A task in in_review with stale Context Pack or stale Codex prompt can be closed through Approve & Done when explicit owner notes and confirmation are provided.",
+        "Approve & Done still rejects tasks outside in_review.",
+        "Approve & Done still requires non-empty owner approval notes.",
+        "Stale Context Pack / Codex prompt state remains visible as a warning, blocked reason, or action-result detail, but does not force Refresh Context before owner acceptance.",
+        "After successful Approve & Done, current_execution is cleared or marked non-ready when it points to the closed task.",
+        "Closing one task does not clear an execution package that points to a different active task.",
+        "All writes continue to route through governed CLI/workflow paths.",
+        "Relevant tests pass and project-control validation/check-generated commands pass."
+      ],
+      "review_instructions": [
+        "Verify that the fix implements options B + C, not option A.",
+        "Verify that no approval gate was weakened and owner notes remain required.",
+        "Verify that stale execution context is not hidden, only made non-blocking for closure.",
+        "Verify that current_execution cleanup is conditional on the closed task identity.",
+        "Verify that generated files were not edited manually."
+      ],
+      "notes": [
+        "Logical label: BUG-01",
+        "Root cause: task.close_reviewed validates context freshness but does not rebuild context/prompt, so stale execution context can force Refresh Context before Approve & Done.",
+        "Requires approved Evolution Change before execution because task.close_reviewed and Web workflow behavior change.",
+        "null message",
+        "Changes requested. TASK-067 made contextctl.check-generated non-blocking, but Approve & Done is still blocked by protected.check when protected-check reports only prompt/context drift: OUTDATED_GENERATED_FILE CODEX_PROMPT.md and CODEX_PROMPT_RENDER_FAILED STALE_CONTEXT_PACK. The close workflow must treat prompt/context freshness failures inside protected.check as warning-visible and non-blocking, while keeping real protected-file violations blocking. Current behavior still forces Refresh Context before owner acceptance, so option B is not fully implemented."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T08:12:46Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T07:33:09Z",
+      "updated_at": "2026-06-20T08:12:47Z",
+      "uid": "tsk_b590f17b8bdd",
+      "ref": "PIPE-16",
+      "legacy_id": "TASK-067",
+      "aliases": [
+        "TASK-067"
+      ],
+      "epic_key": "PIPE",
+      "local_seq": 16
     }
   ]
 }

@@ -2,6 +2,7 @@
 
 from .policy import (
     CodexAdapterMode,
+    BatchPolicy,
     CodexExecutionMode,
     CodexExecutionPolicy,
     CodexReviewDecision,
@@ -27,9 +28,11 @@ from .queue import (
     preview_queue,
 )
 from .runner import run_next
+from .batch import run_until_blocker
 from .machine_review import evaluate_machine_review
 
 __all__ = [
+    "BatchPolicy",
     "CodexAdapterMode",
     "CodexExecutionMode",
     "CodexExecutionPolicy",
@@ -52,6 +55,7 @@ __all__ = [
     "preview_queue",
     "evaluate_machine_review",
     "run_next",
+    "run_until_blocker",
     "preset_names",
     "validate_policy",
 ]

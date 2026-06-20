@@ -3,20 +3,16 @@
 
 # Task Execution Queue
 
-Revision: `556`
+Revision: `580`
 
 ## Executable Now
 
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
+- `PIPE-13 (TASK-064)` [planned] `EPIC-007` priority `1` — PIPE-13 Pipeline UI Dashboard
+- `PIPE-14 (TASK-065)` [planned] `EPIC-007` priority `1` — PIPE-14 Pipeline Audit Trail
 
 ## Waiting For Dependencies
 
-- `PIPE-05 (TASK-056)` [planned] `EPIC-007` priority `1` — PIPE-05 Batch Runner Run Until Blocker
-  - `dependency_not_done`: depends on PIPE-12 (TASK-063) with status in_progress
-- `PIPE-13 (TASK-064)` [planned] `EPIC-007` priority `1` — PIPE-13 Pipeline UI Dashboard
-  - `dependency_not_done`: depends on PIPE-05 (TASK-056) with status planned
-- `PIPE-14 (TASK-065)` [planned] `EPIC-007` priority `1` — PIPE-14 Pipeline Audit Trail
-  - `dependency_not_done`: depends on PIPE-05 (TASK-056) with status planned
 - `PIPE-15 (TASK-066)` [planned] `EPIC-007` priority `1` — PIPE-15 Pipeline SOP Documentation
   - `dependency_not_done`: depends on PIPE-13 (TASK-064) with status planned
   - `dependency_not_done`: depends on PIPE-14 (TASK-065) with status planned
@@ -119,6 +115,8 @@ Revision: `556`
   - `status_not_executable`: status is done
 - `PIPE-04 (TASK-055)` [done] `EPIC-007` priority `1` — PIPE-04 Run Next Step Action
   - `status_not_executable`: status is done
+- `PIPE-05 (TASK-056)` [done] `EPIC-007` priority `1` — PIPE-05 Batch Runner Run Until Blocker
+  - `status_not_executable`: status is done
 - `PIPE-06 (TASK-057)` [done] `EPIC-007` priority `1` — PIPE-06 Token Budget Gate
   - `status_not_executable`: status is done
 - `PIPE-07 (TASK-058)` [done] `EPIC-007` priority `1` — PIPE-07 Codex Execution Adapter
@@ -131,8 +129,10 @@ Revision: `556`
   - `status_not_executable`: status is done
 - `PIPE-11 (TASK-062)` [done] `EPIC-007` priority `1` — PIPE-11 Auto Review Auto Close Policy
   - `status_not_executable`: status is done
-- `PIPE-12 (TASK-063)` [in_progress] `EPIC-007` priority `1` — PIPE-12 Controlled Git Commit Action
-  - `status_not_executable`: status is in_progress
+- `PIPE-12 (TASK-063)` [done] `EPIC-007` priority `1` — PIPE-12 Controlled Git Commit Action
+  - `status_not_executable`: status is done
+- `PIPE-16 (TASK-067)` [done] `EPIC-007` priority `1` — BUG-01 Fix Approve & Done stale execution context handling
+  - `status_not_executable`: status is done
 - `TIG-01 (TASK-012)` [done] `EPIC-004` priority `1` — TIG-01 Document task identity and execution graph design
   - `status_not_executable`: status is done
 - `TIG-02 (TASK-013)` [done] `EPIC-004` priority `1` — TIG-02 Add epic keys to plan model

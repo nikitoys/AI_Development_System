@@ -320,6 +320,194 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(any("task transition TASK-032 --to done" in command for command in commands))
         self.assertTrue(any("task list --status ready" in action for action in result.next_actions))
 
+    def test_close_reviewed_task_treats_stale_context_as_warning(self):
+        calls = []
+
+        def fake_run(argv):
+            calls.append(list(argv))
+            script = Path(argv[1]).name
+            if script == "taskctl.py" and "resolve" in argv:
+                return completed(
+                    '{"id": "TASK-032", "ref": "WFA-01", "status": "in_review"}\n'
+                )
+            if script == "contextctl.py" and argv[-1] == "check-generated":
+                return completed("GENERATED_CHECK_FAILED: stale Context Pack\n", 1)
+            return completed('{"ok": true}\n')
+
+        result = run_workflow(
+            "task.close_reviewed",
+            task_ref="WFA-01",
+            notes="Reviewed and accepted.",
+            confirmed=True,
+            runner=fake_run,
+        )
+
+        commands = [" ".join(call) for call in calls]
+        steps = {step["id"]: step for step in result.data["steps"]}
+
+        self.assertTrue(result.ok)
+        self.assertEqual(result.warnings[0].code, "WORKFLOW_NON_BLOCKING_STEP_FAILED")
+        self.assertEqual(steps["context_generated"]["status"], "failed")
+        self.assertFalse(steps["context_generated"]["blocking"])
+        self.assertTrue(any("task approve TASK-032 --notes Reviewed and accepted." in command for command in commands))
+        self.assertTrue(any("task transition TASK-032 --to done" in command for command in commands))
+
+    def test_close_reviewed_task_treats_protected_prompt_context_errors_as_warning(self):
+        calls = []
+        protected_payload = {
+            "ok": False,
+            "errors": [
+                "OUTDATED_GENERATED_FILE: AI_PROJECT/generated/CODEX_PROMPT.md",
+                "CODEX_PROMPT_RENDER_FAILED: STALE_CONTEXT_PACK: AI_PROJECT/generated/CONTEXT_PACK.md",
+            ],
+            "warnings": [],
+            "checked": ["AI_PROJECT/generated/CODEX_PROMPT.md"],
+        }
+
+        def fake_run(argv):
+            calls.append(list(argv))
+            script = Path(argv[1]).name
+            if script == "taskctl.py" and "resolve" in argv:
+                return completed(
+                    '{"id": "TASK-032", "ref": "WFA-01", "status": "in_review"}\n'
+                )
+            if script == "check-protected-project-files.py":
+                return completed(json.dumps(protected_payload) + "\n", 1)
+            return completed('{"ok": true}\n')
+
+        result = run_workflow(
+            "task.close_reviewed",
+            task_ref="WFA-01",
+            notes="Reviewed and accepted.",
+            confirmed=True,
+            runner=fake_run,
+        )
+
+        commands = [" ".join(call) for call in calls]
+        steps = {step["id"]: step for step in result.data["steps"]}
+
+        self.assertTrue(result.ok)
+        self.assertEqual(steps["protected"]["status"], "failed")
+        self.assertFalse(steps["protected"]["blocking"])
+        self.assertIn("stale prompt/context warnings", steps["protected"]["stderr"])
+        self.assertTrue(
+            any(warning.details["step"] == "protected" for warning in result.warnings)
+        )
+        self.assertTrue(any("task approve TASK-032 --notes Reviewed and accepted." in command for command in commands))
+        self.assertTrue(any("task transition TASK-032 --to done" in command for command in commands))
+
+    def test_close_reviewed_task_keeps_real_protected_errors_blocking(self):
+        calls = []
+        protected_payload = {
+            "ok": False,
+            "errors": ["OUTDATED_GENERATED_FILE: AI_PROJECT/generated/CODEX_TASKS.md"],
+            "warnings": [],
+            "checked": ["AI_PROJECT/generated/CODEX_TASKS.md"],
+        }
+
+        def fake_run(argv):
+            calls.append(list(argv))
+            script = Path(argv[1]).name
+            if script == "taskctl.py" and "resolve" in argv:
+                return completed(
+                    '{"id": "TASK-032", "ref": "WFA-01", "status": "in_review"}\n'
+                )
+            if script == "check-protected-project-files.py":
+                return completed(json.dumps(protected_payload) + "\n", 1)
+            return completed('{"ok": true}\n')
+
+        result = run_workflow(
+            "task.close_reviewed",
+            task_ref="WFA-01",
+            notes="Reviewed and accepted.",
+            confirmed=True,
+            runner=fake_run,
+        )
+
+        commands = [" ".join(call) for call in calls]
+        steps = {step["id"]: step for step in result.data["steps"]}
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.errors[0].details["step"], "protected")
+        self.assertEqual(steps["protected"]["status"], "failed")
+        self.assertTrue(steps["protected"]["blocking"])
+        self.assertFalse(any("task approve TASK-032" in command for command in commands))
+
+    def test_close_reviewed_task_clears_codex_execution_for_closed_task(self):
+        calls = []
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            state_dir = root / "AI_PROJECT" / "state"
+            state_dir.mkdir(parents=True)
+            (state_dir / "current_execution.json").write_text(
+                json.dumps({"source_type": "task", "source_id": "TASK-032"}),
+                encoding="utf-8",
+            )
+
+            def fake_run(argv):
+                calls.append(list(argv))
+                if Path(argv[1]).name == "taskctl.py" and "resolve" in argv:
+                    return completed(
+                        '{"id": "TASK-032", "ref": "WFA-01", "status": "in_review"}\n'
+                    )
+                return completed('{"ok": true}\n')
+
+            result = run_workflow(
+                "task.close_reviewed",
+                task_ref="WFA-01",
+                notes="Reviewed and accepted.",
+                confirmed=True,
+                root=root,
+                runner=fake_run,
+            )
+
+        self.assertTrue(result.ok)
+        self.assertTrue(
+            any(Path(call[1]).name == "codexctl.py" and call[-1] == "clear" for call in calls)
+        )
+
+    def test_close_reviewed_task_keeps_other_task_codex_execution(self):
+        calls = []
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            state_dir = root / "AI_PROJECT" / "state"
+            state_dir.mkdir(parents=True)
+            (state_dir / "current_execution.json").write_text(
+                json.dumps({"source_type": "task", "source_id": "TASK-999"}),
+                encoding="utf-8",
+            )
+
+            def fake_run(argv):
+                calls.append(list(argv))
+                if Path(argv[1]).name == "taskctl.py" and "resolve" in argv:
+                    return completed(
+                        '{"id": "TASK-032", "ref": "WFA-01", "status": "in_review"}\n'
+                    )
+                return completed('{"ok": true}\n')
+
+            result = run_workflow(
+                "task.close_reviewed",
+                task_ref="WFA-01",
+                notes="Reviewed and accepted.",
+                confirmed=True,
+                root=root,
+                runner=fake_run,
+            )
+
+        steps = {step["id"]: step for step in result.data["steps"]}
+
+        self.assertTrue(result.ok)
+        self.assertFalse(
+            any(Path(call[1]).name == "codexctl.py" and call[-1] == "clear" for call in calls)
+        )
+        self.assertEqual(steps["codex_clear"]["status"], "skipped")
+        self.assertEqual(
+            steps["codex_clear"]["skip_reason"],
+            "Current Codex execution does not target this task.",
+        )
+
     def test_request_changes_task_requires_notes_before_transition(self):
         calls = []
 
