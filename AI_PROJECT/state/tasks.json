@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 580,
-  "current_task_id": null,
+  "revision": 582,
+  "current_task_id": "TASK-064",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-20T08:12:47Z",
+  "updated_at": "2026-06-20T08:15:00Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -4809,7 +4809,7 @@
       "id": "TASK-064",
       "epic_id": "EPIC-007",
       "title": "PIPE-13 Pipeline UI Dashboard",
-      "status": "planned",
+      "status": "in_progress",
       "summary": "Add a Web Control Center dashboard for pipeline sessions, queue preview, policy selection, run-next, and run-until-blocker.",
       "description": "Expose supervised pipeline operation in the local Web Control Center without weakening confirmation, policy, or lifecycle gates.",
       "priority": 1,
@@ -4873,7 +4873,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-19T20:33:32Z",
-      "updated_at": "2026-06-19T20:34:09Z",
+      "updated_at": "2026-06-20T08:15:00Z",
       "uid": "tsk_d4153f05f2bc",
       "ref": "PIPE-13",
       "legacy_id": "TASK-064",

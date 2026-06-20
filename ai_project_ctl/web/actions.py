@@ -28,6 +28,17 @@ TASK_TRANSITION_ALLOWED_TARGETS = {
     "changes_requested",
     "deferred",
 }
+PIPELINE_SESSION_STATUSES = {
+    "planned",
+    "running",
+    "stopped",
+    "blocked",
+    "failed",
+    "completed",
+    "archived",
+}
+PIPELINE_STOP_STATUSES = {"stopped", "blocked", "failed"}
+PIPELINE_ORDER_OPTIONS = {"execution", "owner", "selected"}
 
 
 class WebActionError(CommandError):
@@ -351,6 +362,102 @@ def _build_codex_prompt_build(fields: Mapping[str, str]) -> list[str]:
     return args
 
 
+def _build_pipeline_session_create(fields: Mapping[str, str]) -> list[str]:
+    args = [
+        "pipeline",
+        "session",
+        "create",
+        "--policy",
+        _field(fields, "policy") or "dry_run",
+    ]
+    for value in _split_values(fields, "task_ref"):
+        args.extend(["--task-ref", value])
+    for value in _split_values(fields, "epic"):
+        args.extend(["--epic", value])
+    for value in _split_values(fields, "status_filter"):
+        args.extend(["--status-filter", value])
+    max_tasks = _field(fields, "max_tasks")
+    if max_tasks:
+        if not max_tasks.isdigit() or int(max_tasks) < 1:
+            raise WebActionError(
+                "WEB_INVALID_ACTION_ARGUMENT",
+                "Pipeline max tasks must be a positive integer.",
+                details={"max_tasks": max_tasks},
+            )
+        args.extend(["--max-tasks", max_tasks])
+    order_by = _field(fields, "order_by")
+    if order_by:
+        if order_by not in PIPELINE_ORDER_OPTIONS:
+            raise WebActionError(
+                "WEB_INVALID_ACTION_ARGUMENT",
+                "Pipeline order_by is not allowed: {}".format(order_by),
+                details={"order_by": order_by, "allowed": sorted(PIPELINE_ORDER_OPTIONS)},
+            )
+        args.extend(["--order-by", order_by])
+    for field_name, flag in (
+        ("current_task_id", "--current-task-id"),
+        ("current_task_ref", "--current-task-ref"),
+    ):
+        value = _field(fields, field_name)
+        if value:
+            args.extend([flag, value])
+    for value in _split_values(fields, "change"):
+        args.extend(["--change", value])
+    for value in _split_values(fields, "report"):
+        args.extend(["--report", value])
+    status = _field(fields, "status")
+    if status:
+        if status not in PIPELINE_SESSION_STATUSES:
+            raise WebActionError(
+                "WEB_INVALID_ACTION_ARGUMENT",
+                "Pipeline session status is not allowed: {}".format(status),
+                details={"status": status, "allowed": sorted(PIPELINE_SESSION_STATUSES)},
+            )
+        args.extend(["--status", status])
+    return args
+
+
+def _build_pipeline_run_next(fields: Mapping[str, str]) -> list[str]:
+    args = ["pipeline", "run-next"]
+    session_id = _field(fields, "session_id")
+    if session_id:
+        args.append(session_id)
+    return args
+
+
+def _build_pipeline_run_until_blocker(fields: Mapping[str, str]) -> list[str]:
+    args = ["pipeline", "run-until-blocker"]
+    session_id = _field(fields, "session_id")
+    if session_id:
+        args.append(session_id)
+    args.append("--confirm")
+    return args
+
+
+def _build_pipeline_session_stop(fields: Mapping[str, str]) -> list[str]:
+    status = _field(fields, "status") or "stopped"
+    if status not in PIPELINE_STOP_STATUSES:
+        raise WebActionError(
+            "WEB_INVALID_ACTION_ARGUMENT",
+            "Pipeline stop status is not allowed: {}".format(status),
+            details={"status": status, "allowed": sorted(PIPELINE_STOP_STATUSES)},
+        )
+    return [
+        "pipeline",
+        "session",
+        "stop",
+        _require_field(fields, "session_id"),
+        "--reason",
+        _require_field(fields, "reason"),
+        "--status",
+        status,
+    ]
+
+
+def _build_pipeline_render(fields: Mapping[str, str]) -> list[str]:
+    return ["pipeline", "render"]
+
+
 def _build_workflow(
     workflow_name: str,
     *,
@@ -402,6 +509,16 @@ def _multiline_values(fields: Mapping[str, str], name: str) -> list[str]:
         for line in _field(fields, name).splitlines()
         if line.strip()
     ]
+
+
+def _split_values(fields: Mapping[str, str], name: str) -> list[str]:
+    values: list[str] = []
+    for line in _field(fields, name).splitlines():
+        for value in line.split(","):
+            text = value.strip()
+            if text:
+                values.append(text)
+    return values
 
 
 def _parse_json(text: str) -> Any | None:
@@ -533,6 +650,36 @@ ACTIONS: dict[str, WebAction] = {
         command_name="codex.prompt.build",
         label="Build Codex prompt",
         builder=_build_codex_prompt_build,
+    ),
+    "pipeline.session.create": WebAction(
+        action_id="pipeline.session.create",
+        command_name="pipeline.session.create",
+        label="Create pipeline session",
+        builder=_build_pipeline_session_create,
+    ),
+    "pipeline.run_next": WebAction(
+        action_id="pipeline.run_next",
+        command_name="pipeline.run_next",
+        label="Run next pipeline step",
+        builder=_build_pipeline_run_next,
+    ),
+    "pipeline.run_until_blocker": WebAction(
+        action_id="pipeline.run_until_blocker",
+        command_name="pipeline.run_until_blocker",
+        label="Run until blocker",
+        builder=_build_pipeline_run_until_blocker,
+    ),
+    "pipeline.session.stop": WebAction(
+        action_id="pipeline.session.stop",
+        command_name="pipeline.session.stop",
+        label="Stop pipeline session",
+        builder=_build_pipeline_session_stop,
+    ),
+    "pipeline.render": WebAction(
+        action_id="pipeline.render",
+        command_name="pipeline.render",
+        label="Refresh pipeline status",
+        builder=_build_pipeline_render,
     ),
     "task.prepare_for_codex": WebAction(
         action_id="task.prepare_for_codex",

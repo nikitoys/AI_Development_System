@@ -3,18 +3,17 @@
 
 # Task Execution Queue
 
-Revision: `580`
+Revision: `582`
 
 ## Executable Now
 
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
-- `PIPE-13 (TASK-064)` [planned] `EPIC-007` priority `1` — PIPE-13 Pipeline UI Dashboard
 - `PIPE-14 (TASK-065)` [planned] `EPIC-007` priority `1` — PIPE-14 Pipeline Audit Trail
 
 ## Waiting For Dependencies
 
 - `PIPE-15 (TASK-066)` [planned] `EPIC-007` priority `1` — PIPE-15 Pipeline SOP Documentation
-  - `dependency_not_done`: depends on PIPE-13 (TASK-064) with status planned
+  - `dependency_not_done`: depends on PIPE-13 (TASK-064) with status in_progress
   - `dependency_not_done`: depends on PIPE-14 (TASK-065) with status planned
 
 ## Not Executable Due To Status Or Parent State
@@ -131,6 +130,8 @@ Revision: `580`
   - `status_not_executable`: status is done
 - `PIPE-12 (TASK-063)` [done] `EPIC-007` priority `1` — PIPE-12 Controlled Git Commit Action
   - `status_not_executable`: status is done
+- `PIPE-13 (TASK-064)` [in_progress] `EPIC-007` priority `1` — PIPE-13 Pipeline UI Dashboard
+  - `status_not_executable`: status is in_progress
 - `PIPE-16 (TASK-067)` [done] `EPIC-007` priority `1` — BUG-01 Fix Approve & Done stale execution context handling
   - `status_not_executable`: status is done
 - `TIG-01 (TASK-012)` [done] `EPIC-004` priority `1` — TIG-01 Document task identity and execution graph design

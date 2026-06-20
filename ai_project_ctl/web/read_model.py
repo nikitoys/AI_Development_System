@@ -26,6 +26,9 @@ from ai_project_ctl.core.workflows import (
     EPIC_CLOSABLE_STATUSES,
     workflow_list,
 )
+from ai_project_ctl.pipeline.policy import policy_preset, preset_names
+from ai_project_ctl.pipeline.queue import QueuePlannerRequest, preview_queue
+from ai_project_ctl.pipeline.state import load_pipeline_state
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[2]
@@ -42,11 +45,14 @@ GENERATED_VIEW_FILES = (
     "CODEX_PROMPT.md",
     "CONTEXT_STATUS.md",
     "CONTEXT_PACK.md",
+    "PIPELINE_STATUS.md",
     "EVOLUTION.md",
     "CODEX_PLAN.md",
     "DOCS_INDEX.md",
     "DOCS_GAPS.md",
 )
+PIPELINE_DEFAULT_POLICY = "dry_run"
+PIPELINE_ORDER_OPTIONS = {"execution", "owner", "selected"}
 
 COMMIT_COMPLETED_TASK_STATUSES = {"done"}
 COMMIT_ACCEPTED_CHANGE_STATUSES = {"accepted"}
@@ -215,6 +221,7 @@ class ReadOnlyProjectModel:
         *,
         refresh_doctor: bool = False,
         include_events: bool = False,
+        pipeline_options: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         tasks = self.tasks()
         latest_reports = self.latest_task_reports_by_task()
@@ -272,6 +279,7 @@ class ReadOnlyProjectModel:
             "health": health,
             "execution": execution,
             "execution_context": execution_context,
+            "pipeline": self.pipeline_dashboard(**dict(pipeline_options or {})),
             "generated": generated,
             "events": events,
             "events_loaded": include_events,
@@ -586,6 +594,126 @@ class ReadOnlyProjectModel:
             ),
         }
 
+    def pipeline_dashboard(
+        self,
+        *,
+        policy_name: str = PIPELINE_DEFAULT_POLICY,
+        task_refs: Sequence[str] = (),
+        epic_ids: Sequence[str] = (),
+        statuses: Sequence[str] = (),
+        max_tasks: int | None = None,
+        order_by: str = "execution",
+        audit_last: int = 6,
+    ) -> dict[str, Any]:
+        """Return read-only supervised pipeline dashboard data."""
+
+        task_refs = tuple(str(ref).strip() for ref in task_refs if str(ref).strip())
+        epic_ids = tuple(str(epic).strip() for epic in epic_ids if str(epic).strip())
+        statuses = tuple(str(status).strip() for status in statuses if str(status).strip())
+        order_by = order_by if order_by in PIPELINE_ORDER_OPTIONS else "execution"
+        policy_names = set(preset_names())
+        selected_policy_name = (
+            policy_name if policy_name in policy_names else PIPELINE_DEFAULT_POLICY
+        )
+        policy = policy_preset(selected_policy_name)
+        tasks_state = self._state_json("tasks.json")
+        plan_state = self._state_json("plan.json")
+        state = load_pipeline_state(self.root)
+        sessions = [
+            _pipeline_session_summary(session)
+            for session in state.get("sessions", [])
+            if isinstance(session, Mapping)
+        ]
+        current_session_id = str(state.get("current_session_id") or "")
+        current_session = next(
+            (
+                session
+                for session in sessions
+                if str(session.get("id") or "") == current_session_id
+            ),
+            {},
+        )
+        request = QueuePlannerRequest(
+            task_refs=task_refs,
+            epic_ids=epic_ids,
+            statuses=statuses,
+            max_tasks=max_tasks,
+            order_by=order_by,
+        )
+        queue_error: dict[str, str] = {}
+        queue_preview: dict[str, Any] = {}
+        try:
+            queue_preview = preview_queue(
+                tasks_state,
+                plan_state,
+                policy=policy,
+                request=request,
+            ).to_dict()
+        except (KeyError, TypeError, ValueError) as exc:
+            queue_error = {
+                "code": "PIPELINE_QUEUE_PREVIEW_FAILED",
+                "message": str(exc),
+            }
+
+        return {
+            "state": {
+                "revision": state.get("revision", 0),
+                "current_session_id": current_session_id,
+                "session_count": len(sessions),
+            },
+            "policies": [
+                _pipeline_policy_summary(name, selected_policy_name)
+                for name in preset_names()
+            ],
+            "selected_policy": _pipeline_policy_summary(
+                selected_policy_name,
+                selected_policy_name,
+            ),
+            "unknown_policy": policy_name
+            if policy_name and policy_name != selected_policy_name
+            else "",
+            "queue_request": {
+                "policy": selected_policy_name,
+                "task_refs": list(task_refs),
+                "epic_ids": list(epic_ids),
+                "statuses": list(statuses),
+                "max_tasks": max_tasks,
+                "order_by": order_by,
+            },
+            "queue_preview": queue_preview,
+            "queue_error": queue_error,
+            "current_session": current_session,
+            "sessions": sessions,
+            "audit": self.pipeline_audit_events(last=audit_last),
+        }
+
+    def pipeline_audit_events(self, *, last: int = 6) -> list[dict[str, Any]]:
+        """Read latest pipeline audit entries without mutating event state."""
+
+        path = self.paths.event_file("pipeline-events.jsonl")
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except FileNotFoundError:
+            return []
+        events = []
+        for line in lines[-max(1, last) :]:
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                events.append(
+                    {
+                        "event_id": "",
+                        "timestamp": "",
+                        "command": "invalid",
+                        "entity_id": "",
+                        "summary": line[:240],
+                    }
+                )
+                continue
+            if isinstance(payload, Mapping):
+                events.append(_pipeline_event_summary(payload))
+        return events
+
     def git_status(self) -> dict[str, Any]:
         """Read git porcelain status without running any write-capable git command."""
 
@@ -679,6 +807,119 @@ def _read_text(path: Path) -> str:
         return path.read_text(encoding="utf-8")
     except (FileNotFoundError, UnicodeDecodeError):
         return ""
+
+
+def _pipeline_policy_summary(name: str, selected_name: str) -> dict[str, Any]:
+    policy = policy_preset(name)
+    validation = policy.validate()
+    data = policy.to_dict()
+    return {
+        "name": name,
+        "selected": name == selected_name,
+        "valid": validation.ok,
+        "errors": [_validation_issue(issue) for issue in validation.errors],
+        "warnings": [_validation_issue(issue) for issue in validation.warnings],
+        "policy": data,
+        "queue": data.get("queue", {}),
+        "codex": data.get("codex", {}),
+        "token_budget": data.get("token_budget", {}),
+        "review": data.get("review", {}),
+        "closure": data.get("closure", {}),
+        "commit": data.get("commit", {}),
+    }
+
+
+def _validation_issue(issue: Any) -> dict[str, str]:
+    return {
+        "code": str(getattr(issue, "code", "")),
+        "message": str(getattr(issue, "message", "")),
+        "path": str(getattr(issue, "path", "")),
+    }
+
+
+def _pipeline_session_summary(session: Mapping[str, Any]) -> dict[str, Any]:
+    policy = _mapping(session.get("policy_snapshot"))
+    selected_queue = _mapping(session.get("selected_queue"))
+    steps = [
+        _pipeline_step_summary(step)
+        for step in session.get("steps") or []
+        if isinstance(step, Mapping)
+    ]
+    gates = [
+        dict(gate)
+        for gate in session.get("gate_outcomes") or []
+        if isinstance(gate, Mapping)
+    ]
+    return {
+        "id": session.get("id"),
+        "status": session.get("status"),
+        "policy": str(policy.get("name") or "unknown"),
+        "policy_snapshot": dict(policy),
+        "selected_queue": dict(selected_queue),
+        "current_task_id": session.get("current_task_id"),
+        "current_task_ref": session.get("current_task_ref"),
+        "current_step": session.get("current_step"),
+        "current_step_status": session.get("current_step_status"),
+        "stop_reason": session.get("stop_reason"),
+        "created_at": session.get("created_at"),
+        "updated_at": session.get("updated_at"),
+        "started_at": session.get("started_at"),
+        "finished_at": session.get("finished_at"),
+        "attempt_counters": dict(_mapping(session.get("attempt_counters"))),
+        "gate_outcomes": gates,
+        "recent_gates": gates[-5:],
+        "steps": steps,
+        "recent_steps": steps[-5:],
+        "linked_change_ids": _string_list(session.get("linked_change_ids")),
+        "report_ids": _string_list(session.get("report_ids")),
+        "review_ids": _string_list(session.get("review_ids")),
+        "commit_ids": _string_list(session.get("commit_ids")),
+        "audit_event_ids": _string_list(session.get("audit_event_ids")),
+    }
+
+
+def _pipeline_step_summary(step: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "name": step.get("name"),
+        "status": step.get("status"),
+        "task_id": step.get("task_id"),
+        "started_at": step.get("started_at"),
+        "finished_at": step.get("finished_at"),
+        "stop_reason": step.get("stop_reason"),
+        "gate_outcomes": [
+            dict(gate)
+            for gate in step.get("gate_outcomes") or []
+            if isinstance(gate, Mapping)
+        ],
+    }
+
+
+def _pipeline_event_summary(event: Mapping[str, Any]) -> dict[str, Any]:
+    payload = _mapping(event.get("payload"))
+    step = _mapping(payload.get("step"))
+    gate = _mapping(payload.get("gate_outcome"))
+    bits = []
+    for value in (
+        payload.get("status"),
+        step.get("name"),
+        step.get("status"),
+        gate.get("name"),
+        gate.get("status"),
+        payload.get("stop_reason"),
+    ):
+        text = str(value or "").strip()
+        if text and text not in bits:
+            bits.append(text)
+    return {
+        "event_id": str(event.get("event_id") or ""),
+        "timestamp": str(event.get("timestamp") or ""),
+        "actor": str(event.get("actor") or ""),
+        "command": str(event.get("command") or ""),
+        "entity_id": str(event.get("entity_id") or ""),
+        "revision_before": event.get("revision_before"),
+        "revision_after": event.get("revision_after"),
+        "summary": " / ".join(bits),
+    }
 
 
 def task_hints(
