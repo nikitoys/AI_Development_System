@@ -26,7 +26,7 @@ from ai_project_ctl.core.workflows import (
     EPIC_CLOSABLE_STATUSES,
     workflow_list,
 )
-from ai_project_ctl.pipeline.policy import policy_preset, preset_names
+from ai_project_ctl.pipeline.policy import policy_behavior_label, policy_preset, preset_names
 from ai_project_ctl.pipeline.queue import QueuePlannerRequest, preview_queue
 from ai_project_ctl.pipeline.state import load_pipeline_state
 
@@ -606,6 +606,7 @@ class ReadOnlyProjectModel:
         auto_create_missing_changes: bool = False,
         owner_approve_required_changes: bool = False,
         approval_note: str = "",
+        auto_close_note: str = "",
         audit_last: int = 6,
     ) -> dict[str, Any]:
         """Return read-only supervised pipeline dashboard data."""
@@ -623,6 +624,7 @@ class ReadOnlyProjectModel:
             auto_create_missing_changes
             or owner_approve_required_changes
             or approval_note
+            or auto_close_note
         ):
             evolution = policy.evolution
             policy = replace(
@@ -638,6 +640,14 @@ class ReadOnlyProjectModel:
                     owner_approval_note=approval_note or evolution.owner_approval_note,
                 ),
             )
+            if auto_close_note:
+                policy = replace(
+                    policy,
+                    closure=replace(
+                        policy.closure,
+                        owner_approval_note=auto_close_note,
+                    ),
+                )
         tasks_state = self._state_json("tasks.json")
         plan_state = self._state_json("plan.json")
         state = load_pipeline_state(self.root)
@@ -705,6 +715,7 @@ class ReadOnlyProjectModel:
                 "auto_create_missing_changes": auto_create_missing_changes,
                 "owner_approve_required_changes": owner_approve_required_changes,
                 "approval_note": approval_note,
+                "auto_close_note": auto_close_note,
             },
             "queue_preview": queue_preview,
             "queue_error": queue_error,
@@ -848,6 +859,7 @@ def _pipeline_policy_summary(
         "name": name,
         "selected": name == selected_name,
         "valid": validation.ok,
+        "behavior_label": policy_behavior_label(policy),
         "errors": [_validation_issue(issue) for issue in validation.errors],
         "warnings": [_validation_issue(issue) for issue in validation.warnings],
         "policy": data,

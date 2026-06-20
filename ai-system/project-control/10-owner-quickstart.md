@@ -193,14 +193,18 @@ Policy presets decide what is allowed, but they do not remove owner gates:
 
 - `dry_run` keeps Codex execution, auto-close and commit disabled.
 - `supervised` selects from the ready queue and builds a Codex prompt package, then stops before Codex execution.
-- `supervised_autoclose` enables auto-close policy, but close still requires Codex execution evidence, Codex Report Gate PASS, Machine Review PASS and Codex Review APPROVE.
-- `supervised_local_commit` adds local-only commit policy after all review and commit-readiness gates pass. Push and merge remain forbidden.
+- `supervised_executable` runs the allowlisted local Codex adapter after Token Budget Gate PASS and requires a structured Codex execution report.
+- `supervised_autoclose` is a prompt-only legacy preset; it blocks before close because Codex execution evidence is missing.
+- `supervised_executable_autoclose` runs the allowlisted local Codex adapter, then may close only after Codex Report Gate PASS, Machine Review PASS, Codex Review APPROVE and an explicit owner auto-close note on the session.
+- `supervised_local_commit` is a prompt-only legacy preset; local commit is blocked before commit because close evidence is missing.
+- `supervised_executable_local_commit` adds local-only commit policy after executable run, approved review gates, auto-close and commit-readiness gates pass. Push and merge remain forbidden.
 
 CLI equivalents:
 
 ```bash
 python scripts/aictl.py pipeline status
 python scripts/aictl.py pipeline session create --policy supervised --task-ref PIPE-15
+python scripts/aictl.py pipeline session create --policy supervised_executable_autoclose --task-ref PIPE-25 --auto-close-note "APPROVED by Human Owner for this selected session"
 python scripts/aictl.py pipeline run-next
 python scripts/aictl.py pipeline run-until-blocker --confirm
 python scripts/aictl.py pipeline render

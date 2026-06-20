@@ -375,6 +375,9 @@ def _build_pipeline_session_create(fields: Mapping[str, str]) -> list[str]:
     if _field(fields, "owner_approve_required_changes").lower() in CONFIRM_VALUES:
         args.append("--owner-approve-required-changes")
         args.extend(["--approval-note", _require_field(fields, "approval_note")])
+    auto_close_note = _field(fields, "auto_close_note")
+    if auto_close_note:
+        args.extend(["--auto-close-note", auto_close_note])
     for value in _split_values(fields, "task_ref"):
         args.extend(["--task-ref", value])
     for value in _split_values(fields, "epic"):

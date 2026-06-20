@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `615`
+Revision: `622`
 
 ## Executable Now
 
@@ -140,12 +140,14 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPE-16 (TASK-067)` [done] `EPIC-007` priority `1` — BUG-01 Fix Approve & Done stale execution context handling
   - `status_not_executable`: status is done
-- `PIPE-17 (TASK-068)` [in_progress] `EPIC-007` priority `1` — PIPE-17 Add Custom Pipeline Policy Preset Store
-  - `status_not_executable`: status is in_progress
+- `PIPE-17 (TASK-068)` [done] `EPIC-007` priority `1` — PIPE-17 Add Custom Pipeline Policy Preset Store
+  - `status_not_executable`: status is done
 - `PIPE-23 (TASK-074)` [done] `EPIC-007` priority `1` — PIPE-23 Add Auto-Create Missing Changes Policy Checkbox
   - `status_not_executable`: status is done
 - `PIPE-24 (TASK-075)` [done] `EPIC-007` priority `1` — PIPE-24 Add Owner-Approved Session Changes Policy Checkbox
   - `status_not_executable`: status is done
+- `PIPE-25 (TASK-076)` [in_review] `EPIC-007` priority `1` — PIPE-25 Add Full Self-Running Pipeline Mode
+  - `status_not_executable`: status is in_review
 - `TIG-01 (TASK-012)` [done] `EPIC-004` priority `1` — TIG-01 Document task identity and execution graph design
   - `status_not_executable`: status is done
 - `TIG-02 (TASK-013)` [done] `EPIC-004` priority `1` — TIG-02 Add epic keys to plan model

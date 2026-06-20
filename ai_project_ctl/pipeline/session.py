@@ -66,6 +66,7 @@ def create_session(
     auto_create_missing_changes: bool = False,
     owner_approve_required_changes: bool = False,
     approval_note: str = "",
+    auto_close_note: str = "",
     status: str = "planned",
 ) -> CommandResult:
     """Create one governed pipeline session."""
@@ -84,6 +85,14 @@ def create_session(
                     or owner_approve_required_changes
                 ),
                 owner_approval_note=approval_note or evolution.owner_approval_note,
+            ),
+        )
+    if auto_close_note:
+        selected_policy = replace(
+            selected_policy,
+            closure=replace(
+                selected_policy.closure,
+                owner_approval_note=auto_close_note,
             ),
         )
     queue = _queue_snapshot(

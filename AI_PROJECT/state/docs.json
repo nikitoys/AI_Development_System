@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 27,
+  "revision": 28,
   "created_at": "2026-06-15T21:36:58Z",
-  "updated_at": "2026-06-20T09:04:00Z",
+  "updated_at": "2026-06-20T11:48:54Z",
   "docs": [
     {
       "id": "DOC-001",
@@ -2688,7 +2688,7 @@
       "owner": "AI System Maintainer / Technical Writer AI",
       "last_reviewed_at": "",
       "last_reviewed_by": "",
-      "content_hash": "da11435aa12d897f5c46603f6999c3ada31140c68b203102379710db713cb36e",
+      "content_hash": "37d8fdf91dc7a980b7529058de2a5d0fb20fe66d3b90dfb4c7bec5aa62067a0e",
       "last_reviewed_content_hash": "",
       "declared_status": "review",
       "declared_status_raw": "Review",
@@ -2766,7 +2766,7 @@
       "owner": "AI System Maintainer",
       "last_reviewed_at": "",
       "last_reviewed_by": "",
-      "content_hash": "5ba818d54a3a863567f8388e389163febeebfe30e5ed90975dcb9a1c6ffc90cc",
+      "content_hash": "a08382d06ca0556ef6447766937f7a27604b51046734d5264f473b5465c3562c",
       "last_reviewed_content_hash": "",
       "declared_status": "review",
       "declared_status_raw": "Review",

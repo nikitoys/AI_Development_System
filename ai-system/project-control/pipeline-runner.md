@@ -109,13 +109,18 @@ Policy is a declarative safety contract. A policy can allow specific automation,
 | --- | --- | --- | --- | --- | --- |
 | `dry_run` | Manual, max 1 | Disabled | Not required by preset | Disabled | Disabled |
 | `supervised` | Ready queue, max 1 | Build prompt only | Machine Review PASS and Codex Review APPROVE are configured for later gates | Disabled | Disabled |
+| `supervised_executable` | Ready queue, max 1 | Run local allowlisted Codex command | Requires Codex Report Gate PASS, Machine Review PASS and Codex Review APPROVE | Disabled | Disabled |
 | `supervised_autoclose` | Same as `supervised` | Build prompt only by default | Requires Machine Review PASS and Codex Review APPROVE for auto-close policy validity | Auto-close enabled, but real close requires Codex execution and review evidence | Disabled |
-| `supervised_local_commit` | Same as `supervised_autoclose` | Build prompt only by default | Requires approved review gates | Auto-close enabled | Local-only commit enabled after commit readiness |
+| `supervised_executable_autoclose` | Ready queue, max 1 | Run local allowlisted Codex command | Requires Codex Report Gate PASS, Machine Review PASS and Codex Review APPROVE | Auto-close enabled; requires explicit owner auto-close note on the session | Disabled |
+| `supervised_local_commit` | Same as `supervised_autoclose` | Build prompt only by default | Requires approved review gates | Auto-close enabled, but blocked before close because Codex execution evidence is missing | Local-only commit policy is blocked before commit |
+| `supervised_executable_local_commit` | Same as `supervised_executable_autoclose` | Run local allowlisted Codex command | Requires approved review gates | Auto-close enabled; requires explicit owner auto-close note on the session | Local-only commit enabled after commit readiness |
 
 Important details:
 
 - `RUN_CODEX` policy mode is stricter than prompt-only mode. It requires Token Budget Gate PASS, a human-selected policy, an approved linked Evolution Change when the policy requires it, and a structured execution report.
 - `supervised_autoclose` and `supervised_local_commit` do not magically execute Codex. With their default prompt-only Codex mode, they stop before auto-close or commit because the execution and review evidence does not exist.
+- Executable presets use the local-command adapter with an exact allowlist for `codex exec`. The adapter validates prompt freshness and task identity before invoking the command, then requires a newly submitted structured execution report before downstream gates can pass.
+- Auto-close requires an explicit owner approval note on the session. Use `--auto-close-note "..."` when creating an executable auto-close session.
 - Commit policy is always local-only when enabled. Push and merge are forbidden by policy validation.
 
 ## Session Lifecycle
@@ -169,6 +174,12 @@ or for an Epic queue:
 
 ```bash
 python scripts/aictl.py pipeline session create --policy supervised --epic EPIC-007 --status-filter ready --max-tasks 3
+```
+
+Create an executable auto-close session only when the Human Owner explicitly approved auto-close for the selected queue:
+
+```bash
+python scripts/aictl.py pipeline session create --policy supervised_executable_autoclose --task-ref PIPE-25 --auto-close-note "APPROVED by Human Owner for this selected session"
 ```
 
 Do not create or edit `pipeline_sessions.json` manually.
@@ -723,4 +734,3 @@ Human Owner approval and acceptance
 local-only commit policy
 audit trail
 ```
-

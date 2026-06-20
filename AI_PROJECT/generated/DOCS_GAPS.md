@@ -3,7 +3,7 @@
 
 # Documentation Gaps
 
-Revision: `27`
+Revision: `28`
 Open gaps: `161`
 Tracked categories: `Missing File`, `Status Mismatch`, `Active Not Reviewed`, `Active Review Stale`, `Unresolved Placeholder`, `Broken Local Link`, `Stale Content Hash`, `Not Active`
 

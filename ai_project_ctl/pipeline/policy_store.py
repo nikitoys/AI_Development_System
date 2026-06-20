@@ -18,6 +18,7 @@ from ai_project_ctl.core.validation import ValidationResult
 from .policy import (
     PipelinePolicy,
     is_builtin_preset_name,
+    policy_behavior_label,
     policy_preset,
     preset_names,
 )
@@ -443,8 +444,8 @@ def render_policy_store_status(state: Mapping[str, Any]) -> str:
         "",
         "## Built-In Presets",
         "",
-        "| Name | Immutable | Codex Mode | Token Gate | Reviews | Auto Close | Local Commit |",
-        "| --- | --- | --- | --- | --- | --- | --- |",
+        "| Name | Immutable | Behavior | Codex Mode | Token Gate | Reviews | Auto Close | Local Commit |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for name in preset_names():
         lines.append(_summary_row(_policy_summary(name=name, policy=policy_preset(name), kind="built_in")))
@@ -454,9 +455,9 @@ def render_policy_store_status(state: Mapping[str, Any]) -> str:
         lines.append("_No custom pipeline policy presets recorded._")
     else:
         lines.append(
-            "| Name | Updated | Codex Mode | Token Gate | Reviews | Auto Close | Local Commit |"
+            "| Name | Updated | Behavior | Codex Mode | Token Gate | Reviews | Auto Close | Local Commit |"
         )
-        lines.append("| --- | --- | --- | --- | --- | --- | --- |")
+        lines.append("| --- | --- | --- | --- | --- | --- | --- | --- |")
         for summary in custom:
             lines.append(_summary_row(summary, include_updated=True))
     lines.append("")
@@ -614,6 +615,7 @@ def _policy_summary(
         "queue_max_tasks": policy.queue.max_tasks,
         "codex_mode": policy.codex.mode.value,
         "codex_adapter_mode": policy.codex.adapter_mode.value,
+        "behavior_label": policy_behavior_label(policy),
         "requires_token_gate": policy.token_budget.require_gate_pass,
         "requires_approved_change": policy.evolution.require_approved_change_for_execution,
         "requires_machine_review": policy.review.require_machine_review,
@@ -636,6 +638,7 @@ def _summary_row(summary: Mapping[str, Any], *, include_updated: bool = False) -
     cells = [
         "`{}`".format(summary.get("name") or ""),
         "`{}`".format(summary.get("updated_at") or "") if include_updated else "`yes`",
+        "`{}`".format(summary.get("behavior_label") or ""),
         "`{}`".format(summary.get("codex_mode") or ""),
         "`{}`".format("yes" if summary.get("requires_token_gate") else "no"),
         "`{}`".format(review),

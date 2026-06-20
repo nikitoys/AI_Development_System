@@ -28,6 +28,7 @@ ACTION_STOP = "stop"
 
 CODE_TASK_AUTO_CLOSED = "TASK_AUTO_CLOSED"
 CODE_REQUEST_CHANGES = "CODEX_REVIEW_REQUEST_CHANGES"
+CODE_OWNER_NOTE_REQUIRED = "AUTO_CLOSE_OWNER_NOTE_REQUIRED"
 CODE_REWORK_LIMIT_REACHED = "REWORK_LIMIT_REACHED"
 CODE_REWORK_POLICY_DISABLED = "REWORK_POLICY_DISABLED"
 CODE_REVIEW_CLOSE_BLOCKED = "REVIEW_CLOSE_POLICY_BLOCKED"
@@ -83,6 +84,14 @@ def decide_review_close(
             notes=notes,
             result_status="passed",
             gate_status="skipped",
+        )
+
+    if not policy.closure.owner_approval_note.strip():
+        return _stop(
+            CODE_OWNER_NOTE_REQUIRED,
+            "Task auto-close requires an explicit Human Owner approval note.",
+            details=details,
+            notes=notes,
         )
 
     if report_gate.status != REPORT_GATE_PASS:
@@ -280,6 +289,7 @@ def _decision_details(
         "session_id": str(session.get("id") or ""),
         "rework_attempts_used": _rework_count(session),
         "max_rework_attempts": int(policy.rework.max_rework_attempts),
+        "owner_auto_close_note": policy.closure.owner_approval_note.strip(),
     }
 
 
@@ -290,10 +300,12 @@ def _audit_notes(
     codex_review: CodexReviewResult,
 ) -> str:
     return (
+        "Owner auto-close note={owner_note}; "
         "Pipeline policy={policy}; machine_gate={machine_status}/{machine_code}; "
         "codex_review={verdict}/{review_code}; report_id={report_id}; "
         "review_id={review_id}"
     ).format(
+        owner_note=policy.closure.owner_approval_note.strip() or "missing",
         policy=policy.name,
         machine_status=machine_review.status,
         machine_code=machine_review.code,

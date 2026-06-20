@@ -1338,16 +1338,24 @@ def cmd_pipeline_policy_list(args: argparse.Namespace) -> int:
     print("Pipeline policy presets revision: {}".format(payload.get("revision", 0)))
     print("Built-in presets:")
     for item in payload.get("builtins", []):
-        print("- {name} [immutable]".format(name=item.get("name")))
+        print(
+            "- {name} [immutable] - {behavior}".format(
+                name=item.get("name"),
+                behavior=item.get("behavior_label") or item.get("codex_mode") or "",
+            )
+        )
     print("Custom presets:")
     custom = payload.get("custom", [])
     if not custom:
         print("- none")
     for item in custom:
-        print("- {name} [updated={updated}]".format(
-            name=item.get("name"),
-            updated=item.get("updated_at") or "unknown",
-        ))
+        print(
+            "- {name} [updated={updated}] - {behavior}".format(
+                name=item.get("name"),
+                updated=item.get("updated_at") or "unknown",
+                behavior=item.get("behavior_label") or item.get("codex_mode") or "",
+            )
+        )
     return 0
 
 
@@ -1445,6 +1453,7 @@ def cmd_pipeline_session_create(args: argparse.Namespace) -> int:
         auto_create_missing_changes=args.auto_create_missing_changes,
         owner_approve_required_changes=args.owner_approve_required_changes,
         approval_note=args.approval_note or "",
+        auto_close_note=args.auto_close_note or "",
         status=args.status,
     )
     return _emit_command_result(result, args)
@@ -2018,6 +2027,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--auto-create-missing-changes", action="store_true")
     p.add_argument("--owner-approve-required-changes", action="store_true")
     p.add_argument("--approval-note", default="")
+    p.add_argument("--auto-close-note", default="")
     p.add_argument("--task-ref", action="append")
     p.add_argument("--epic", action="append")
     p.add_argument("--status-filter", action="append")

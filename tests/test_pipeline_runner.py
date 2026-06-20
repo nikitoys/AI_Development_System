@@ -788,7 +788,12 @@ class PipelineRunnerTests(unittest.TestCase):
                 name="run_codex_test",
                 codex=replace(supervised.codex, mode=CodexExecutionMode.RUN_CODEX),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
 
             result = run_next(
@@ -828,7 +833,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
 
             result = run_next(
@@ -881,7 +891,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
 
             result = run_next(
                 session.data["session_id"],
@@ -920,7 +935,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
 
             result = run_next(
                 session.data["session_id"],
@@ -966,7 +986,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
             fake_runner, task_status = stateful_workflow_runner(calls, root=root)
 
@@ -988,7 +1013,8 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(gates[5]["status"], "pass")
             self.assertEqual(gates[5]["details"]["close_policy"]["action"], "close_task")
             self.assertTrue(any("task transition TASK-001 --to in_review" in command for command in commands))
-            self.assertTrue(any("task approve TASK-001 --notes Pipeline policy=run_codex_autoclose_close_test" in command for command in commands))
+            self.assertTrue(any("task approve TASK-001 --notes Owner auto-close note=Owner approved auto-close for this test session." in command for command in commands))
+            self.assertTrue(any("Pipeline policy=run_codex_autoclose_close_test" in command for command in commands))
             self.assertTrue(any("machine_gate=pass/MACHINE_REVIEW_PASS" in command for command in commands))
             self.assertTrue(any("codex_review=APPROVE/CODEX_REVIEW_APPROVE" in command for command in commands))
             self.assertTrue(any("report_id=RPT-001" in command for command in commands))
@@ -1010,7 +1036,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
             fake_runner, task_status = stateful_workflow_runner(calls, root=root)
 
@@ -1042,7 +1073,8 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(gates[5]["status"], "blocked")
             self.assertEqual(gates[5]["details"]["close_policy"]["action"], "request_changes")
             self.assertTrue(any("task transition TASK-001 --to in_review" in command for command in commands))
-            self.assertTrue(any("task add-note TASK-001 --text Pipeline policy=run_codex_autoclose_rework_test" in command for command in commands))
+            self.assertTrue(any("task add-note TASK-001 --text Owner auto-close note=Owner approved auto-close for this test session." in command for command in commands))
+            self.assertTrue(any("Pipeline policy=run_codex_autoclose_rework_test" in command for command in commands))
             self.assertTrue(any("task transition TASK-001 --to changes_requested" in command for command in commands))
 
     def test_autoclose_policy_stops_when_codex_review_is_blocked(self):
@@ -1061,7 +1093,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
             fake_runner, _task_status = stateful_workflow_runner(calls, root=root)
 
@@ -1108,7 +1145,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
             base_runner, _task_status = stateful_workflow_runner(calls, root=root)
 
@@ -1151,7 +1193,12 @@ class PipelineRunnerTests(unittest.TestCase):
                 ),
                 rework=replace(supervised.rework, max_rework_attempts=1),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             state_path = pipeline_state_path(root)
             state = json.loads(state_path.read_text(encoding="utf-8"))
             state["sessions"][0]["attempt_counters"]["rework"] = 1
@@ -1202,7 +1249,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
             base_runner = successful_workflow_runner(
                 calls,
@@ -1245,7 +1297,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
             report = valid_report("TASK-001")
             report["blockers"] = ["Manual blocker."]
@@ -1289,7 +1346,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     min_remaining_tokens=20,
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
 
             result = run_next(
@@ -1350,7 +1412,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
 
             result = run_next(
@@ -1394,7 +1461,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
 
             result = run_next(
@@ -1431,7 +1503,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
 
             result = run_next(

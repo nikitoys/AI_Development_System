@@ -1,6 +1,6 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/state/docs.json + AI_PROJECT/state/tasks.json -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-068 PIPE-17 Add Custom Pipeline Policy Preset Store Add governed storage for user-defined pipeline policy presets while keeping built-in safe presets immutable. Introduce a persistent custom policy preset store so the Human Owner can save, validate, list, and delete pipeline policy presets without editing Python source or protected state manually. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Create a governed custom pipeline policy preset storage model. Store custom presets separately from built-in presets. Keep built-in presets dry_run, supervised, supervised_autoclose, and supervised_local_commit immutable. Validate saved presets through the existing PipelinePolicy validation rules. Reject unsafe presets with stable error codes. Add audit events for preset create/update/delete operations. Add generated policy status output if useful for UI and validation. Do not allow custom presets to authorize push, merge, reset, rebase, clean, or destructive git operations. Do not allow custom presets to bypass Token Budget Gate, Machine Review, Codex Review, Human Owner approval, or Evolution Change gates. Do not modify built-in preset definitions except for compatibility wiring. Do not edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/** manually. ai_project_ctl/pipeline/policy.py ai_project_ctl/pipeline/policy_store.py ai_project_ctl/pipeline/__init__.py ai_project_ctl/core/registry.py scripts/aictl.py AI_PROJECT/state/pipeline_policy_presets.json via governed CLI/service only AI_PROJECT/events/pipeline-policy-events.jsonl via governed CLI/service only AI_PROJECT/generated/PIPELINE_POLICIES.md via governed CLI/service only tests/** Custom policy presets can be saved, loaded, validated, listed, and deleted through governed service paths. Built-in policy presets remain available and immutable. Invalid or unsafe custom presets are rejected before persistence. Preset changes create audit events. No direct protected-file writes are introduced. Tests and project-control validations pass. Verify that custom presets cannot weaken forbidden safety boundaries. Verify that built-in presets cannot be overwritten or deleted. Verify that all persistence goes through governed service paths.","schema_version":1,"task_id":"TASK-068"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-076 PIPE-25 Add Full Self-Running Pipeline Mode Turn pipeline from prompt-only orchestration into a real supervised self-running task executor. Implement a real executable pipeline mode that can run selected tasks end-to-end: create/approve required Changes according to explicit owner-approved session policy, prepare Codex context, run local Codex adapter, ingest execution report, run review gates, close tasks, optionally create local commits, and continue to the next task until queue_complete or blocker. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add a real executable pipeline policy mode distinct from prompt-only supervised mode. Add or finalize local Codex RUN_CODEX adapter support. Allow the pipeline to execute a configured local Codex command against AI_PROJECT/generated/CODEX_PROMPT.md. Require command allowlist, timeout, prompt freshness, and task identity validation. Capture Codex stdout, stderr, exit code, started_at, finished_at, timeout status, and adapter result. Define and implement structured Codex execution report intake. Report must include task id/ref, summary, changed files, tests run, test results, risks, blockers, and next actions. Persist accepted reports through governed task report state mutation. Link report id to pipeline session and selected task. Make Report Gate validate required report fields and block on missing, malformed, stale, wrong-task, or failed-test reports. Run Machine Review Gate after Report Gate. Run Codex Review Gate after Machine Review Gate. If all required gates pass and owner-approved auto-close is enabled for the session, close the selected task through governed lifecycle commands. Auto-close only tasks selected by the current pipeline session queue. Require explicit Human Owner approval intent and note for auto-close behavior. Do not close tasks if Codex Review requests changes, is blocked, or required evidence is missing. Support continuing to the next selected task after the current task reaches done. End run-until-blocker with queue_complete only after all selected tasks are done or no executable selected tasks remain. Expose policy options in Web Control Center with clear labels: prompt-only vs executable vs auto-close vs local-commit. Prevent misleading policy combinations such as BUILD_PROMPT_ONLY plus auto-close/local-commit. Update CLI policy list/describe and session create options if needed. Add deterministic end-to-end tests using a fake local Codex command. Do not call remote APIs directly. Do not allow unsafe shell execution. Do not approve Evolution Changes without explicit Human Owner session approval. Do not accept Evolution Changes automatically unless a separate owner-approved accept policy exists. Do not bypass Token Budget Gate. Do not bypass Report Gate. Do not bypass Machine Review. Do not bypass Codex Review. Do not close tasks outside the selected session queue. Do not push or merge. Do not reset, rebase, clean, restore, discard, or otherwise destroy local work. Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**. ai_project_ctl/pipeline/policy.py ai_project_ctl/pipeline/runner.py ai_project_ctl/pipeline/batch.py ai_project_ctl/pipeline/codex_adapter.py ai_project_ctl/pipeline/report_gate.py ai_project_ctl/pipeline/machine_review.py ai_project_ctl/pipeline/codex_review.py ai_project_ctl/pipeline/close_policy.py ai_project_ctl/pipeline/git_commit.py ai_project_ctl/pipeline/session.py ai_project_ctl/pipeline/state.py ai_project_ctl/core/registry.py ai_project_ctl/core/workflows.py ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py ai_project_ctl/web/actions.py scripts/aictl.py scripts/taskctl.py if governed report or lifecycle integration is needed scripts/evolutionctl.py if governed Change integration is needed tests/test_pipeline_runner.py tests/test_pipeline_batch.py tests/test_pipeline_codex_adapter.py tests/test_pipeline_report_gate.py tests/test_pipeline_e2e.py tests/test_web_control_center.py tests/test_aictl.py tests/test_registry.py ai-system/project-control/10-owner-quickstart.md ai-system/project-control/pipeline-runner.md AI_PROJECT/state/tasks.json via governed CLI/service only AI_PROJECT/events/task-events.jsonl via governed CLI/service only AI_PROJECT/state/evolution.json via governed CLI/service only AI_PROJECT/events/evolution-events.jsonl via governed CLI/service only AI_PROJECT/state/task_reports.json via governed CLI/service only AI_PROJECT/state/pipeline_sessions.json via governed CLI/service only AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only AI_PROJECT/generated/CODEX_TASKS.md via governed CLI/service only AI_PROJECT/generated/EVOLUTION_STATUS.md via governed CLI/service only AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only AI_PROJECT/generated/PIPELINE_AUDIT.md via governed CLI/service only A new executable pipeline mode can run a selected task beyond prompt generation. Pipeline can invoke a safe local Codex adapter command using RUN_CODEX mode. Adapter refuses unsafe or non-allowlisted commands. Adapter refuses missing, stale, or wrong-task CODEX_PROMPT.md. Pipeline ingests a structured Codex execution report. Report Gate passes only for a valid report linked to the selected task. Machine Review Gate runs after Report Gate. Codex Review Gate runs after Machine Review Gate. With explicit owner-approved auto-close enabled, a task can reach done through governed lifecycle commands. Pipeline proceeds to the next selected task after the previous selected task reaches done. run-until-blocker can process at least two selected tasks using a fake local Codex command and finish with queue_complete. Prompt-only supervised mode remains available and clearly labeled. Misleading BUILD_PROMPT_ONLY plus auto-close/local-commit combinations are disabled or clearly rejected. No task outside the selected queue is closed. No push or merge is performed. Audit contains execution, report, review, close, and completion evidence. Tests pass. Use a fake local Codex command in tests; do not require real Codex or network access. Verify old supervised prompt-only behavior still works. Verify new executable mode runs through adapter, report gate, machine review, Codex review, and task close. Verify negative paths: unsafe command, stale prompt, failed report tests, review request changes, missing owner auto-close note. Verify run-until-blocker can complete a two-task selected queue to done and queue_complete. Verify UI policy preview clearly distinguishes prompt-only and executable modes.","schema_version":1,"task_id":"TASK-076"} -->
 
 # Context Pack
 
@@ -8,50 +8,107 @@ This generated Context Pack is derived output only. It is not source of truth.
 It does not expand task scope, allowed files, out-of-scope items, or acceptance criteria.
 
 Mode: `task`
-Task ID: `TASK-068`
+Task ID: `TASK-076`
 Explicit query: `false`
 Limit: `8`
-Docs revision: `27`
-Tasks revision: `615`
+Docs revision: `28`
+Tasks revision: `622`
 
 ## Query
 
 ```text
-TASK-068 PIPE-17 Add Custom Pipeline Policy Preset Store Add governed storage for user-defined pipeline policy presets while keeping built-in safe presets immutable. Introduce a persistent custom policy preset store so the Human Owner can save, validate, list, and delete pipeline policy presets without editing Python source or protected state manually. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Create a governed custom pipeline policy preset storage model. Store custom presets separately from built-in presets. Keep built-in presets dry_run, supervised, supervised_autoclose, and supervised_local_commit immutable. Validate saved presets through the existing PipelinePolicy validation rules. Reject unsafe presets with stable error codes. Add audit events for preset create/update/delete operations. Add generated policy status output if useful for UI and validation. Do not allow custom presets to authorize push, merge, reset, rebase, clean, or destructive git operations. Do not allow custom presets to bypass Token Budget Gate, Machine Review, Codex Review, Human Owner approval, or Evolution Change gates. Do not modify built-in preset definitions except for compatibility wiring. Do not edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/** manually. ai_project_ctl/pipeline/policy.py ai_project_ctl/pipeline/policy_store.py ai_project_ctl/pipeline/__init__.py ai_project_ctl/core/registry.py scripts/aictl.py AI_PROJECT/state/pipeline_policy_presets.json via governed CLI/service only AI_PROJECT/events/pipeline-policy-events.jsonl via governed CLI/service only AI_PROJECT/generated/PIPELINE_POLICIES.md via governed CLI/service only tests/** Custom policy presets can be saved, loaded, validated, listed, and deleted through governed service paths. Built-in policy presets remain available and immutable. Invalid or unsafe custom presets are rejected before persistence. Preset changes create audit events. No direct protected-file writes are introduced. Tests and project-control validations pass. Verify that custom presets cannot weaken forbidden safety boundaries. Verify that built-in presets cannot be overwritten or deleted. Verify that all persistence goes through governed service paths.
+TASK-076 PIPE-25 Add Full Self-Running Pipeline Mode Turn pipeline from prompt-only orchestration into a real supervised self-running task executor. Implement a real executable pipeline mode that can run selected tasks end-to-end: create/approve required Changes according to explicit owner-approved session policy, prepare Codex context, run local Codex adapter, ingest execution report, run review gates, close tasks, optionally create local commits, and continue to the next task until queue_complete or blocker. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add a real executable pipeline policy mode distinct from prompt-only supervised mode. Add or finalize local Codex RUN_CODEX adapter support. Allow the pipeline to execute a configured local Codex command against AI_PROJECT/generated/CODEX_PROMPT.md. Require command allowlist, timeout, prompt freshness, and task identity validation. Capture Codex stdout, stderr, exit code, started_at, finished_at, timeout status, and adapter result. Define and implement structured Codex execution report intake. Report must include task id/ref, summary, changed files, tests run, test results, risks, blockers, and next actions. Persist accepted reports through governed task report state mutation. Link report id to pipeline session and selected task. Make Report Gate validate required report fields and block on missing, malformed, stale, wrong-task, or failed-test reports. Run Machine Review Gate after Report Gate. Run Codex Review Gate after Machine Review Gate. If all required gates pass and owner-approved auto-close is enabled for the session, close the selected task through governed lifecycle commands. Auto-close only tasks selected by the current pipeline session queue. Require explicit Human Owner approval intent and note for auto-close behavior. Do not close tasks if Codex Review requests changes, is blocked, or required evidence is missing. Support continuing to the next selected task after the current task reaches done. End run-until-blocker with queue_complete only after all selected tasks are done or no executable selected tasks remain. Expose policy options in Web Control Center with clear labels: prompt-only vs executable vs auto-close vs local-commit. Prevent misleading policy combinations such as BUILD_PROMPT_ONLY plus auto-close/local-commit. Update CLI policy list/describe and session create options if needed. Add deterministic end-to-end tests using a fake local Codex command. Do not call remote APIs directly. Do not allow unsafe shell execution. Do not approve Evolution Changes without explicit Human Owner session approval. Do not accept Evolution Changes automatically unless a separate owner-approved accept policy exists. Do not bypass Token Budget Gate. Do not bypass Report Gate. Do not bypass Machine Review. Do not bypass Codex Review. Do not close tasks outside the selected session queue. Do not push or merge. Do not reset, rebase, clean, restore, discard, or otherwise destroy local work. Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**. ai_project_ctl/pipeline/policy.py ai_project_ctl/pipeline/runner.py ai_project_ctl/pipeline/batch.py ai_project_ctl/pipeline/codex_adapter.py ai_project_ctl/pipeline/report_gate.py ai_project_ctl/pipeline/machine_review.py ai_project_ctl/pipeline/codex_review.py ai_project_ctl/pipeline/close_policy.py ai_project_ctl/pipeline/git_commit.py ai_project_ctl/pipeline/session.py ai_project_ctl/pipeline/state.py ai_project_ctl/core/registry.py ai_project_ctl/core/workflows.py ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py ai_project_ctl/web/actions.py scripts/aictl.py scripts/taskctl.py if governed report or lifecycle integration is needed scripts/evolutionctl.py if governed Change integration is needed tests/test_pipeline_runner.py tests/test_pipeline_batch.py tests/test_pipeline_codex_adapter.py tests/test_pipeline_report_gate.py tests/test_pipeline_e2e.py tests/test_web_control_center.py tests/test_aictl.py tests/test_registry.py ai-system/project-control/10-owner-quickstart.md ai-system/project-control/pipeline-runner.md AI_PROJECT/state/tasks.json via governed CLI/service only AI_PROJECT/events/task-events.jsonl via governed CLI/service only AI_PROJECT/state/evolution.json via governed CLI/service only AI_PROJECT/events/evolution-events.jsonl via governed CLI/service only AI_PROJECT/state/task_reports.json via governed CLI/service only AI_PROJECT/state/pipeline_sessions.json via governed CLI/service only AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only AI_PROJECT/generated/CODEX_TASKS.md via governed CLI/service only AI_PROJECT/generated/EVOLUTION_STATUS.md via governed CLI/service only AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only AI_PROJECT/generated/PIPELINE_AUDIT.md via governed CLI/service only A new executable pipeline mode can run a selected task beyond prompt generation. Pipeline can invoke a safe local Codex adapter command using RUN_CODEX mode. Adapter refuses unsafe or non-allowlisted commands. Adapter refuses missing, stale, or wrong-task CODEX_PROMPT.md. Pipeline ingests a structured Codex execution report. Report Gate passes only for a valid report linked to the selected task. Machine Review Gate runs after Report Gate. Codex Review Gate runs after Machine Review Gate. With explicit owner-approved auto-close enabled, a task can reach done through governed lifecycle commands. Pipeline proceeds to the next selected task after the previous selected task reaches done. run-until-blocker can process at least two selected tasks using a fake local Codex command and finish with queue_complete. Prompt-only supervised mode remains available and clearly labeled. Misleading BUILD_PROMPT_ONLY plus auto-close/local-commit combinations are disabled or clearly rejected. No task outside the selected queue is closed. No push or merge is performed. Audit contains execution, report, review, close, and completion evidence. Tests pass. Use a fake local Codex command in tests; do not require real Codex or network access. Verify old supervised prompt-only behavior still works. Verify new executable mode runs through adapter, report gate, machine review, Codex review, and task close. Verify negative paths: unsafe command, stale prompt, failed report tests, review request changes, missing owner auto-close note. Verify run-until-blocker can complete a two-task selected queue to done and queue_complete. Verify UI policy preview clearly distinguishes prompt-only and executable modes.
 ```
 
 ## Task Boundary Snapshot
 
-Task: `TASK-068` - PIPE-17 Add Custom Pipeline Policy Preset Store
-Status: `in_progress`
+Task: `TASK-076` - PIPE-25 Add Full Self-Running Pipeline Mode
+Status: `in_review`
 
 Scope:
-- Create a governed custom pipeline policy preset storage model.
-- Store custom presets separately from built-in presets.
-- Keep built-in presets dry_run, supervised, supervised_autoclose, and supervised_local_commit immutable.
-- Validate saved presets through the existing PipelinePolicy validation rules.
-- Reject unsafe presets with stable error codes.
-- Add audit events for preset create/update/delete operations.
-- Add generated policy status output if useful for UI and validation.
+- Add a real executable pipeline policy mode distinct from prompt-only supervised mode.
+- Add or finalize local Codex RUN_CODEX adapter support.
+- Allow the pipeline to execute a configured local Codex command against AI_PROJECT/generated/CODEX_PROMPT.md.
+- Require command allowlist, timeout, prompt freshness, and task identity validation.
+- Capture Codex stdout, stderr, exit code, started_at, finished_at, timeout status, and adapter result.
+- Define and implement structured Codex execution report intake.
+- Report must include task id/ref, summary, changed files, tests run, test results, risks, blockers, and next actions.
+- Persist accepted reports through governed task report state mutation.
+- Link report id to pipeline session and selected task.
+- Make Report Gate validate required report fields and block on missing, malformed, stale, wrong-task, or failed-test reports.
+- Run Machine Review Gate after Report Gate.
+- Run Codex Review Gate after Machine Review Gate.
+- If all required gates pass and owner-approved auto-close is enabled for the session, close the selected task through governed lifecycle commands.
+- Auto-close only tasks selected by the current pipeline session queue.
+- Require explicit Human Owner approval intent and note for auto-close behavior.
+- Do not close tasks if Codex Review requests changes, is blocked, or required evidence is missing.
+- Support continuing to the next selected task after the current task reaches done.
+- End run-until-blocker with queue_complete only after all selected tasks are done or no executable selected tasks remain.
+- Expose policy options in Web Control Center with clear labels: prompt-only vs executable vs auto-close vs local-commit.
+- Prevent misleading policy combinations such as BUILD_PROMPT_ONLY plus auto-close/local-commit.
+- Update CLI policy list/describe and session create options if needed.
+- Add deterministic end-to-end tests using a fake local Codex command.
 
 Allowed Files:
 - ai_project_ctl/pipeline/policy.py
-- ai_project_ctl/pipeline/policy_store.py
-- ai_project_ctl/pipeline/__init__.py
+- ai_project_ctl/pipeline/runner.py
+- ai_project_ctl/pipeline/batch.py
+- ai_project_ctl/pipeline/codex_adapter.py
+- ai_project_ctl/pipeline/report_gate.py
+- ai_project_ctl/pipeline/machine_review.py
+- ai_project_ctl/pipeline/codex_review.py
+- ai_project_ctl/pipeline/close_policy.py
+- ai_project_ctl/pipeline/git_commit.py
+- ai_project_ctl/pipeline/session.py
+- ai_project_ctl/pipeline/state.py
 - ai_project_ctl/core/registry.py
+- ai_project_ctl/core/workflows.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py
 - scripts/aictl.py
-- AI_PROJECT/state/pipeline_policy_presets.json via governed CLI/service only
-- AI_PROJECT/events/pipeline-policy-events.jsonl via governed CLI/service only
-- AI_PROJECT/generated/PIPELINE_POLICIES.md via governed CLI/service only
-- tests/**
+- scripts/taskctl.py if governed report or lifecycle integration is needed
+- scripts/evolutionctl.py if governed Change integration is needed
+- tests/test_pipeline_runner.py
+- tests/test_pipeline_batch.py
+- tests/test_pipeline_codex_adapter.py
+- tests/test_pipeline_report_gate.py
+- tests/test_pipeline_e2e.py
+- tests/test_web_control_center.py
+- tests/test_aictl.py
+- tests/test_registry.py
+- ai-system/project-control/10-owner-quickstart.md
+- ai-system/project-control/pipeline-runner.md
+- AI_PROJECT/state/tasks.json via governed CLI/service only
+- AI_PROJECT/events/task-events.jsonl via governed CLI/service only
+- AI_PROJECT/state/evolution.json via governed CLI/service only
+- AI_PROJECT/events/evolution-events.jsonl via governed CLI/service only
+- AI_PROJECT/state/task_reports.json via governed CLI/service only
+- AI_PROJECT/state/pipeline_sessions.json via governed CLI/service only
+- AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/CODEX_TASKS.md via governed CLI/service only
+- AI_PROJECT/generated/EVOLUTION_STATUS.md via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_AUDIT.md via governed CLI/service only
 
 Acceptance Criteria:
-- Custom policy presets can be saved, loaded, validated, listed, and deleted through governed service paths.
-- Built-in policy presets remain available and immutable.
-- Invalid or unsafe custom presets are rejected before persistence.
-- Preset changes create audit events.
-- No direct protected-file writes are introduced.
-- Tests and project-control validations pass.
+- A new executable pipeline mode can run a selected task beyond prompt generation.
+- Pipeline can invoke a safe local Codex adapter command using RUN_CODEX mode.
+- Adapter refuses unsafe or non-allowlisted commands.
+- Adapter refuses missing, stale, or wrong-task CODEX_PROMPT.md.
+- Pipeline ingests a structured Codex execution report.
+- Report Gate passes only for a valid report linked to the selected task.
+- Machine Review Gate runs after Report Gate.
+- Codex Review Gate runs after Machine Review Gate.
+- With explicit owner-approved auto-close enabled, a task can reach done through governed lifecycle commands.
+- Pipeline proceeds to the next selected task after the previous selected task reaches done.
+- run-until-blocker can process at least two selected tasks using a fake local Codex command and finish with queue_complete.
+- Prompt-only supervised mode remains available and clearly labeled.
+- Misleading BUILD_PROMPT_ONLY plus auto-close/local-commit combinations are disabled or clearly rejected.
+- No task outside the selected queue is closed.
+- No push or merge is performed.
+- Audit contains execution, report, review, close, and completion evidence.
+- Tests pass.
 
 ## Index Summary
 
@@ -66,14 +123,14 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 | Score | Source | Heading | Lines | Content hash | Chunk hash | Reasons |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 199 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | heading token match: existing, useful; metadata token match: existing, md, useful; content token match: a, acceptance, add, ai_project, allow, and, approval, authorize |
-| 191 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: create, to; metadata token match: create, md, to; content token match: a, acceptance, and, approval, authorize, be, before, boundaries |
-| 147 | `ai-system/project-control/04-command-catalog.md` | 18. Additional Command Domains > Pipeline Commands | 2294-2321 | `f824429b0a39` | `efe882b18c98` | heading token match: pipeline; metadata token match: md, pipeline, project-control; content token match: acceptance, ai_project, ai_project_ctl, aictl, and, approval, are, audit |
-| 142 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 65-119 | `f824429b0a39` | `5b78d4503548` | metadata token match: md, project-control; content token match: a, acceptance, ai_project, aictl, all, and, are, audit |
-| 136 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: model, state; metadata token match: md, model, project-control, state; content token match: a, acceptance, ai_project, and, are, be, criteria, events |
-| 118 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 874-906 | `3444e8d40e40` | `6cf68be89257` | heading token match: and, py, to; metadata token match: and, md, project-control, py, to; content token match: a, and, audit, be, before, bypass, can, codex |
-| 112 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 797-833 | `3444e8d40e40` | `24706f89c068` | heading token match: budget, rules; metadata token match: budget, md, project-control, rules; content token match: a, acceptance, add, and, audit, before, change, codex |
-| 106 | `ai-system/project-control/05-lifecycle-rules.md` | 1. Global Lifecycle Rules > 1.1 State Must Change Only Through CLI | 67-90 | `69165d09d150` | `b097c4666cbb` | heading token match: change, cli, only, rules, state, through; metadata token match: change, cli, md, only, project-control, rules, state, through; content token match: ai_project, aictl, be, change, cli, events, generated, manually |
+| 306 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: create, to; metadata token match: ai-system, create, md, to; content token match: a, accept, acceptance, accepted, actions, and, approval, as |
+| 300 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | metadata token match: ai-system, md; content token match: a, acceptance, accepted, actions, add, after, ai_project, allow |
+| 287 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 65-119 | `f824429b0a39` | `5b78d4503548` | heading token match: command, control; metadata token match: ai-system, command, control, md, project-control; content token match: a, acceptance, ai-system, ai_project, aictl, all, and, are |
+| 244 | `ai-system/project-control/04-command-catalog.md` | 18. Additional Command Domains > Pipeline Commands | 2294-2321 | `f824429b0a39` | `efe882b18c98` | heading token match: command, commands, pipeline; metadata token match: ai-system, command, commands, control, md, pipeline, project-control; content token match: acceptance, ai_project, ai_project_ctl, aictl, and, approval, are, at |
+| 206 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: context, control, state; metadata token match: ai-system, context, control, md, project-control, state; content token match: a, acceptance, ai_project, and, are, by, context, control |
+| 200 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Scope | 21-64 | `f824429b0a39` | `9c998142f16f` | heading token match: command, control; metadata token match: ai-system, command, control, md, project-control; content token match: a, actions, add, ai_project_ctl, aictl, and, as, batch |
+| 196 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 580-670 | `3444e8d40e40` | `4b3949b96350` | heading token match: prompt; metadata token match: ai-system, control, md, project-control, prompt; content token match: acceptance, ai_project, and, at, by, change, changed, cli |
+| 186 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 874-906 | `3444e8d40e40` | `6cf68be89257` | heading token match: and, py, taskctl, to; metadata token match: ai-system, and, control, md, project-control, prompt, py, taskctl; content token match: a, and, audit, by, bypass, can, clear, codex |
 
 ## Selected Context
 
@@ -81,35 +138,12 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 Title: Skills Layer Roadmap
 Status: `active`  Type: `guide`
-Heading: Skills Layer Roadmap > Existing Useful Skills
-Lines: `34-43`
-Score: `199`
-Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
-Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
-Reasons: heading token match: existing, useful; metadata token match: existing, md, useful; content token match: a, acceptance, add, ai_project, allow, and, approval, authorize
-
-```text
-## Existing Useful Skills
-
-| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
-| --- | --- | --- | --- | --- | --- |
-| Project Control Gateway Skill | Route plan, task, documentation and evolution work through the controlled CLI gateway instead of manual state edits. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Inspect state through CLI, choose allowed commands, run validation and render commands, report unsupported operations. | Manually edit `AI_PROJECT/state/**`, `AI_PROJECT/events/**` or `AI_PROJECT/generated/**`; invent lifecycle states or commands; execute Initiative or Epic directly. |
-| Clarification Gate Skill | Teach Codex and subagents when to inspect first, proceed with safe assumptions, or stop for Human Owner blocker questions. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Classify blockers, group owner questions, identify safe defaults, preserve task and approval boundaries. | Use questions to avoid normal inspection; ask for approval after every small step; self-approve accepted, approved, active or done states. |
-| Documentation Navigation Skill | Route Codex and subagents to the minimal correct documentation and project-control read set before planning, editing, reviewing or executing AI_Development_System work.
-
-[...truncated by contextctl...]
-```
-
-### 2. `ai-system/skills/README.md`
-
-Title: Skills Layer Roadmap
-Status: `active`  Type: `guide`
 Heading: Skills Layer Roadmap > Recommended Skills To Create
 Lines: `80-92`
-Score: `191`
+Score: `306`
 Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
 Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
-Reasons: heading token match: create, to; metadata token match: create, md, to; content token match: a, acceptance, and, approval, authorize, be, before, boundaries
+Reasons: heading token match: create, to; metadata token match: ai-system, create, md, to; content token match: a, accept, acceptance, accepted, actions, and, approval, as
 
 ```text
 ## Recommended Skills To Create
@@ -123,57 +157,39 @@ Reasons: heading token match: create, to; metadata token match: create, md, to; 
 [...truncated by contextctl...]
 ```
 
+### 2. `ai-system/skills/README.md`
+
+Title: Skills Layer Roadmap
+Status: `active`  Type: `guide`
+Heading: Skills Layer Roadmap > Existing Useful Skills
+Lines: `34-43`
+Score: `300`
+Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
+Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
+Reasons: metadata token match: ai-system, md; content token match: a, acceptance, accepted, actions, add, after, ai_project, allow
+
+```text
+## Existing Useful Skills
+
+| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
+| --- | --- | --- | --- | --- | --- |
+| Project Control Gateway Skill | Route plan, task, documentation and evolution work through the controlled CLI gateway instead of manual state edits. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Inspect state through CLI, choose allowed commands, run validation and render commands, report unsupported operations. | Manually edit `AI_PROJECT/state/**`, `AI_PROJECT/events/**` or `AI_PROJECT/generated/**`; invent lifecycle states or commands; execute Initiative or Epic directly. |
+| Clarification Gate Skill | Teach Codex and subagents when to inspect first, proceed with safe assumptions, or stop for Human Owner blocker questions. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Classify blockers, group owner questions, identify safe defaults, preserve task and approval boundaries. | Use questions to avoid normal inspection; ask for approval after every small step; self-approve accepted, approved, active or done states. |
+| Documentation Navigation Skill | Route Codex and subagents to the minimal correct documentation and project-control read set before planning, editing, reviewing or executing AI_Development_System work.
+
+[...truncated by contextctl...]
+```
+
 ### 3. `ai-system/project-control/04-command-catalog.md`
-
-Title: Project Control Command Catalog
-Status: `active`  Type: `reference`
-Heading: 18. Additional Command Domains > Pipeline Commands
-Lines: `2294-2321`
-Score: `147`
-Content hash: `f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6`
-Chunk hash: `efe882b18c987d13ed38a60c38d0a9ba2dccd1c95061f72f79901f6f007ad46a`
-Reasons: heading token match: pipeline; metadata token match: md, pipeline, project-control; content token match: acceptance, ai_project, ai_project_ctl, aictl, and, approval, are, audit
-
-```text
-## Pipeline Commands
-
-```text
-pipeline status
-pipeline validate
-pipeline render
-pipeline check-generated
-pipeline session create
-pipeline session start-step
-pipeline session step-result
-pipeline session stop
-pipeline session complete
-pipeline run-next
-pipeline run-until-blocker
-```
-
-Current implementation entry point:
-
-```bash
-python scripts/aictl.py pipeline ...
-```
-
-Pipeline commands manage supervised pipeline sessions, selected queues, policy snapshots, gate outcomes, stop reasons, generated pipeline status and generated pipeline audit output. They must route through `aictl.py` and the `ai_project_ctl/pipeline/**` services. They must not manually edit `AI_PROJECT/state/pipeline_sessions.json`, `AI_PROJECT/events/pipeline-events.jsonl`, `AI_PROJECT/generated/PIPELINE_STATUS.md` or `AI_PROJECT/generated/PIPELINE_AUDIT.md`.
-
-`pipeline run-next` advances at most one guarded step. `pipeline run-until-blocker` composes `run-next`, requires `--confirm`, stops on the first blocker or queue completion and does not introduce background execution.
-
-Pipeline policies must not authorize push, merge, automatic Evolution Change approval, automatic Evolution Change acceptance, or Human Owner final acceptance. Local commits, when policy-enabled, are local-only and require passing report, machine review, Codex review and commit-readiness gates.
-```
-
-### 4. `ai-system/project-control/04-command-catalog.md`
 
 Title: Project Control Command Catalog
 Status: `active`  Type: `reference`
 Heading: Project Control Command Catalog > Self-Hosted Command Boundary
 Lines: `65-119`
-Score: `142`
+Score: `287`
 Content hash: `f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6`
 Chunk hash: `5b78d45035483b51a58d0a7bed1cf1402fe3b2e6bc9a7ffcda911c0d12fcb6bc`
-Reasons: metadata token match: md, project-control; content token match: a, acceptance, ai_project, aictl, all, and, are, audit
+Reasons: heading token match: command, control; metadata token match: ai-system, command, control, md, project-control; content token match: a, acceptance, ai-system, ai_project, aictl, all, and, are
 
 ```text
 ## Self-Hosted Command Boundary
@@ -214,16 +230,57 @@ python scripts/docctl.py audit --last 20
 [...truncated by contextctl...]
 ```
 
+### 4. `ai-system/project-control/04-command-catalog.md`
+
+Title: Project Control Command Catalog
+Status: `active`  Type: `reference`
+Heading: 18. Additional Command Domains > Pipeline Commands
+Lines: `2294-2321`
+Score: `244`
+Content hash: `f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6`
+Chunk hash: `efe882b18c987d13ed38a60c38d0a9ba2dccd1c95061f72f79901f6f007ad46a`
+Reasons: heading token match: command, commands, pipeline; metadata token match: ai-system, command, commands, control, md, pipeline, project-control; content token match: acceptance, ai_project, ai_project_ctl, aictl, and, approval, are, at
+
+```text
+## Pipeline Commands
+
+```text
+pipeline status
+pipeline validate
+pipeline render
+pipeline check-generated
+pipeline session create
+pipeline session start-step
+pipeline session step-result
+pipeline session stop
+pipeline session complete
+pipeline run-next
+pipeline run-until-blocker
+```
+
+Current implementation entry point:
+
+```bash
+python scripts/aictl.py pipeline ...
+```
+
+Pipeline commands manage supervised pipeline sessions, selected queues, policy snapshots, gate outcomes, stop reasons, generated pipeline status and generated pipeline audit output. They must route through `aictl.py` and the `ai_project_ctl/pipeline/**` services. They must not manually edit `AI_PROJECT/state/pipeline_sessions.json`, `AI_PROJECT/events/pipeline-events.jsonl`, `AI_PROJECT/generated/PIPELINE_STATUS.md` or `AI_PROJECT/generated/PIPELINE_AUDIT.md`.
+
+`pipeline run-next` advances at most one guarded step. `pipeline run-until-blocker` composes `run-next`, requires `--confirm`, stops on the first blocker or queue completion and does not introduce background execution.
+
+Pipeline policies must not authorize push, merge, automatic Evolution Change approval, automatic Evolution Change acceptance, or Human Owner final acceptance. Local commits, when policy-enabled, are local-only and require passing report, machine review, Codex review and commit-readiness gates.
+```
+
 ### 5. `ai-system/project-control/03-state-model.md`
 
 Title: Project Control State Model
 Status: `active`  Type: `reference`
 Heading: Project Control State Model > Context Control State
 Lines: `104-125`
-Score: `136`
+Score: `206`
 Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
 Chunk hash: `0cd80bdf0d55e5284fa6355477f50005896398136bf33b7e1a181718f309f8b4`
-Reasons: heading token match: model, state; metadata token match: md, model, project-control, state; content token match: a, acceptance, ai_project, and, are, be, criteria, events
+Reasons: heading token match: context, control, state; metadata token match: ai-system, context, control, md, project-control, state; content token match: a, acceptance, ai_project, and, are, by, context, control
 
 ```text
 ## Context Control State
@@ -249,16 +306,155 @@ By default, context control indexes registered active source documents only. It 
 ---
 ```
 
-### 6. `ai-system/project-control/06-prompt-package-spec.md`
+### 6. `ai-system/project-control/04-command-catalog.md`
+
+Title: Project Control Command Catalog
+Status: `active`  Type: `reference`
+Heading: Project Control Command Catalog > Scope
+Lines: `21-64`
+Score: `200`
+Content hash: `f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6`
+Chunk hash: `9c998142f16f19b020151b13a6a80db5dfffa618771f91cbdd39a8467a7ee582`
+Reasons: heading token match: command, control; metadata token match: ai-system, command, control, md, project-control; content token match: a, actions, add, ai_project_ctl, aictl, and, as, batch
+
+```text
+## Scope
+
+This document records the command boundary for Project Control Gateway.
+
+The first implemented command surface was plan control:
+
+```bash
+python scripts/planctl.py <command>
+```
+
+The current owner-facing facade is:
+
+```bash
+python scripts/aictl.py <domain> <command>
+```
+
+Current implemented control domains include:
+
+```text
+plan        Project, Idea, Goal, Strategy, Initiative, Epic
+task        Task, Current Task, generated task views
+codex       current Codex prompt/status package
+context     deterministic Context Pack generated output
+docs        documentation registry and generated doc indexes
+evolution   Evolution Change Proposals
+web         local loopback Web Control Center
+pipeline    supervised batch pipeline sessions, gates and generated pipeline status
+```
+
+`aictl.py` is a facade and command registry. Domain ownership still belongs to the owning scripts and packages such as `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py`, `contextctl.py`, `codexctl.py` and `ai_project_ctl/pipeline/**`.
+
+Still-future or partial domains include:
+
+```text
+Execution Session
+Review
+QA Result
+Decision
+Release
+Unified projectctl.py
+```
+
+These must not be invented through free-form AI actions. Add them only through approved system evolution and bounded Tasks.
+```
+
+### 7. `ai-system/project-control/06-prompt-package-spec.md`
+
+Title: Project Control Prompt Package Specification
+Status: `active`  Type: `reference`
+Heading: 12. Prompt Package Template
+Lines: `580-670`
+Score: `196`
+Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
+Chunk hash: `4b3949b963506d03a8ca61d2f28eb70f0cc2ca715a4c20495bab284ca4d8fcb0`
+Reasons: heading token match: prompt; metadata token match: ai-system, control, md, project-control, prompt; content token match: acceptance, ai_project, and, at, by, change, changed, cli
+
+```text
+# 12. Prompt Package Template
+
+Canonical structure:
+
+````text id="7p2uqx"
+[SYSTEM]
+
+Active Role: <active_role>
+Active Stage: <active_stage>
+Active Document: <active_document>
+Expected Result: <expected_result>
+
+Repository: current repository
+Task ID: <task_id>
+Task Title: <task_title>
+Task Status: <task_status>
+Verification Mode: <verification_mode>
+
+Initiative: <initiative_id> — <initiative_title>
+Epic: <epic_id> — <epic_title>
+
+Context:
+<summary>
+
+Details:
+<description>
+
+Scope:
+- <scope item>
+
+Out of Scope:
+- <out of scope item>
+
+Allowed Files:
+- <allowed file>
+
+Retrieved Context:
+- Context Pack path: <path>
+- Context Pack SHA-256: <hash>
+- Context mode: <mode>
+- Context task ID: <task_id>
+- Docs revision: <revision>
+- Tasks revision: <revision>
+
+Retrieved Context Rules:
+- Retrieved context is read-only.
+- Retrieved context does not expand Allowed Files.
+- Retrieved context does not expand Scope or override Out of Scope.
+- Retrieved context does not replace Acceptance Criteria.
+- Conflicts must be reported.
+
+Retrieved Context Source Metadata:
+- <source path, line range, source content hash, chunk hash>
+
+Retrieved Context Pack Content:
+<bounded generated context pack>
+
+Acceptance Criteria:
+- <acceptance criterion>
+
+Review Instructions:
+- <review instruction>
+
+Execution Rules:
+- Do not edit AI_PROJECT/state/*.json manually.
+- Do not edit AI_PROJECT/events/*.jsonl manually.
+
+[...truncated by contextctl...]
+```
+
+### 8. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 17. Relationship To taskctl.py And codexctl.py
 Lines: `874-906`
-Score: `118`
+Score: `186`
 Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
 Chunk hash: `6cf68be892579b77502246852781af90dc2942f367d5af5b0a3c4a4ee727323f`
-Reasons: heading token match: and, py, to; metadata token match: and, md, project-control, py, to; content token match: a, and, audit, be, before, bypass, can, codex
+Reasons: heading token match: and, py, taskctl, to; metadata token match: ai-system, and, control, md, project-control, prompt, py, taskctl; content token match: a, and, audit, by, bypass, can, clear, codex
 
 ```text
 # 17. Relationship To taskctl.py And codexctl.py
@@ -293,93 +489,6 @@ Before building the package, task state must be valid.
 `codexctl.py` may validate and include an existing Context Pack, but it must not build the index or refresh Context Pack content itself.
 
 ---
-```
-
-### 7. `ai-system/project-control/06-prompt-package-spec.md`
-
-Title: Project Control Prompt Package Specification
-Status: `active`  Type: `reference`
-Heading: 14. Context Budget Rules > Context Pack Boundary
-Lines: `797-833`
-Score: `112`
-Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
-Chunk hash: `24706f89c068bb280d5630a712f0d9b260c02079a14823cc0a350875c71ba831`
-Reasons: heading token match: budget, rules; metadata token match: budget, md, project-control, rules; content token match: a, acceptance, add, and, audit, before, change, codex
-
-```text
-## Context Pack Boundary
-
-When Codex needs additional documentation context, use `contextctl.py` to generate a bounded Context Pack:
-
-```bash
-python scripts/contextctl.py pack build --task <TASK_ID> --write
-```
-
-Context Pack output is derived retrieval context. It may help Codex decide which source sections to inspect, but it must not change the Prompt Package contract.
-
-Context Pack must not:
-
-```text
-- expand Task scope;
-- add allowed files;
-- add acceptance criteria;
-- override out-of-scope items;
-- replace source documents or Task state;
-- include full tasks.json, full docs.json or full audit logs by default.
-```
-
-The default retrieval policy excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless explicitly allowed by a `contextctl.py` include flag.
-
-Before `codexctl.py` includes a Context Pack in `CODEX_PROMPT.md`, it must validate that the pack:
-
-```text
-- exists;
-- has the generated-file header;
-- has valid Context Pack metadata;
-- matches the requested Task when the pack is task-scoped;
-- was generated from the current docs/task revisions recorded in project-control state.
-```
-
-If validation fails, `codexctl.py` must fail clearly and must not include stale or invalid retrieved context in the prompt package.
-
----
-```
-
-### 8. `ai-system/project-control/05-lifecycle-rules.md`
-
-Title: Project Control Lifecycle Rules
-Status: `active`  Type: `lifecycle`
-Heading: 1. Global Lifecycle Rules > 1.1 State Must Change Only Through CLI
-Lines: `67-90`
-Score: `106`
-Content hash: `69165d09d150a2b5382e4f64fd813eb6a7c63454a92fa521af931da4d4004d57`
-Chunk hash: `b097c4666cbbc6061f445920c53f5229bd91e4421241ad9ad4e0e3d4836d83e8`
-Reasons: heading token match: change, cli, only, rules, state, through; metadata token match: change, cli, md, only, project-control, rules, state, through; content token match: ai_project, aictl, be, change, cli, events, generated, manually
-
-```text
-## 1.1 State Must Change Only Through CLI
-
-Protected state must not be changed manually.
-
-Protected files:
-
-```text
-AI_PROJECT/state/**
-AI_PROJECT/events/**
-AI_PROJECT/generated/**
-```
-
-Allowed mutation path:
-
-```bash
-python scripts/planctl.py ...
-python scripts/taskctl.py ...
-python scripts/evolutionctl.py ...
-python scripts/contextctl.py ...
-python scripts/codexctl.py ...
-```
-
-`aictl.py` may be used as the owner-facing facade when the operation is exposed through the command registry.
 ```
 
 ## Excluded Source Summary

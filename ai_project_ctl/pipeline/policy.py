@@ -247,13 +247,20 @@ class BatchPolicy:
 @dataclass(frozen=True)
 class TaskClosurePolicy:
     auto_close_task: bool = False
+    owner_approval_note: str = ""
 
     def to_dict(self) -> dict[str, Any]:
-        return {"auto_close_task": self.auto_close_task}
+        return {
+            "auto_close_task": self.auto_close_task,
+            "owner_approval_note": self.owner_approval_note,
+        }
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "TaskClosurePolicy":
-        return cls(auto_close_task=bool(data["auto_close_task"]))
+        return cls(
+            auto_close_task=bool(data["auto_close_task"]),
+            owner_approval_note=str(data.get("owner_approval_note") or ""),
+        )
 
 
 @dataclass(frozen=True)
@@ -511,6 +518,41 @@ def _supervised_local_commit() -> PipelinePolicy:
     )
 
 
+def _with_local_codex(policy: PipelinePolicy) -> PipelinePolicy:
+    return replace(
+        policy,
+        codex=replace(
+            policy.codex,
+            mode=CodexExecutionMode.RUN_CODEX,
+            adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+            local_command=("codex", "exec"),
+            command_allowlist=("codex exec",),
+            require_report=True,
+        ),
+    )
+
+
+def _supervised_executable() -> PipelinePolicy:
+    return replace(
+        _with_local_codex(_supervised()),
+        name="supervised_executable",
+    )
+
+
+def _supervised_executable_autoclose() -> PipelinePolicy:
+    return replace(
+        _with_local_codex(_supervised_autoclose()),
+        name="supervised_executable_autoclose",
+    )
+
+
+def _supervised_executable_local_commit() -> PipelinePolicy:
+    return replace(
+        _with_local_codex(_supervised_local_commit()),
+        name="supervised_executable_local_commit",
+    )
+
+
 def _passing_review_policy() -> ReviewPolicy:
     return ReviewPolicy(
         require_machine_review=True,
@@ -715,17 +757,56 @@ def _string_tuple(value: Any) -> tuple[str, ...]:
     return tuple(str(item) for item in value if str(item).strip())
 
 
+def policy_behavior_label(policy: PipelinePolicy) -> str:
+    """Human-facing policy summary for CLI and Web Control Center choices."""
+
+    labels: list[str] = []
+    if policy.codex.mode == CodexExecutionMode.DISABLED:
+        labels.append("dry-run")
+    elif policy.codex.mode == CodexExecutionMode.BUILD_PROMPT_ONLY:
+        labels.append("prompt-only")
+    elif policy.codex.mode == CodexExecutionMode.RUN_CODEX:
+        if policy.codex.adapter_mode == CodexAdapterMode.LOCAL_COMMAND:
+            labels.append("executable")
+        elif policy.codex.adapter_mode == CodexAdapterMode.MANUAL_HANDOFF:
+            labels.append("manual-handoff")
+        else:
+            labels.append("run-codex")
+    else:
+        labels.append(policy.codex.mode.value)
+
+    if policy.closure.auto_close_task:
+        if policy.codex.mode == CodexExecutionMode.BUILD_PROMPT_ONLY:
+            labels.append("auto-close blocked")
+        elif not policy.closure.owner_approval_note.strip():
+            labels.append("auto-close needs note")
+        else:
+            labels.append("auto-close")
+    if policy.commit.create_local_commit:
+        if policy.codex.mode == CodexExecutionMode.BUILD_PROMPT_ONLY:
+            labels.append("local-commit blocked")
+        else:
+            labels.append("local-commit")
+    return " / ".join(labels)
+
+
 _PRESETS = {
     "dry_run": _dry_run,
     "supervised": _supervised,
     "supervised_auto_create_changes": _supervised_auto_create_changes,
     "supervised_autoclose": _supervised_autoclose,
     "supervised_local_commit": _supervised_local_commit,
+    "supervised_executable": _supervised_executable,
+    "supervised_executable_autoclose": _supervised_executable_autoclose,
+    "supervised_executable_local_commit": _supervised_executable_local_commit,
 }
 
 _LISTED_PRESETS = (
     "dry_run",
     "supervised",
+    "supervised_executable",
     "supervised_autoclose",
+    "supervised_executable_autoclose",
     "supervised_local_commit",
+    "supervised_executable_local_commit",
 )

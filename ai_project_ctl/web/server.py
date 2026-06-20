@@ -428,7 +428,7 @@ def pipeline_selector_form(data: Mapping[str, Any], pipeline: Mapping[str, Any])
     request = _mapping(pipeline.get("queue_request"))
     current_task = _mapping(data.get("current_task"))
     policy_options = [
-        (str(policy.get("name") or ""), str(policy.get("name") or ""))
+        (str(policy.get("name") or ""), _pipeline_policy_option_label(policy))
         for policy in pipeline.get("policies") or []
         if isinstance(policy, Mapping) and policy.get("name")
     ]
@@ -456,6 +456,7 @@ def pipeline_selector_form(data: Mapping[str, Any], pipeline: Mapping[str, Any])
         request.get("owner_approve_required_changes")
     )
     approval_note = str(request.get("approval_note") or "")
+    auto_close_note = str(request.get("auto_close_note") or "")
     return (
         '<form class="task-controls" method="get" action="/pipeline">'
         "{}{}{}{}{}{}{}{}{}"
@@ -510,6 +511,12 @@ def pipeline_selector_form(data: Mapping[str, Any], pipeline: Mapping[str, Any])
             approval_note,
             required=False,
         ),
+        input_field(
+            "auto_close_note",
+            "Auto-close Note",
+            auto_close_note,
+            required=False,
+        ),
     )
 
 
@@ -524,6 +531,7 @@ def pipeline_policy_preview(policy: Mapping[str, Any]) -> str:
     rows = [
         ("Name", policy.get("name")),
         ("Valid", "yes" if policy.get("valid") else "no"),
+        ("Behavior", policy.get("behavior_label") or ""),
         ("Queue", "{} max {}".format(queue.get("selection"), queue.get("max_tasks"))),
         ("Codex", "{} / {}".format(codex.get("mode"), codex.get("adapter_mode"))),
         ("Token Gate", "required" if token_budget.get("require_gate_pass") else "not required"),
@@ -572,6 +580,14 @@ def pipeline_policy_preview(policy: Mapping[str, Any]) -> str:
     if error_rows:
         content.append('<ul class="hint-list">{}</ul>'.format("".join(error_rows)))
     return "".join(content)
+
+
+def _pipeline_policy_option_label(policy: Mapping[str, Any]) -> str:
+    name = str(policy.get("name") or "")
+    behavior = str(policy.get("behavior_label") or "")
+    if not behavior:
+        return name
+    return "{} ({})".format(name, behavior)
 
 
 def pipeline_queue_preview_table(
@@ -645,7 +661,7 @@ def pipeline_action_controls(data: Mapping[str, Any], pipeline: Mapping[str, Any
     session = _mapping(pipeline.get("current_session"))
     current_task = _mapping(data.get("current_task"))
     policy_options = [
-        (str(policy.get("name") or ""), str(policy.get("name") or ""))
+        (str(policy.get("name") or ""), _pipeline_policy_option_label(policy))
         for policy in pipeline.get("policies") or []
         if isinstance(policy, Mapping) and policy.get("name")
     ]
@@ -664,6 +680,7 @@ def pipeline_action_controls(data: Mapping[str, Any], pipeline: Mapping[str, Any
         request.get("owner_approve_required_changes")
     )
     approval_note = str(request.get("approval_note") or "")
+    auto_close_note = str(request.get("auto_close_note") or "")
     create_fields = [
         filter_select("policy", "Policy", policy_options, str(request.get("policy") or "")),
         input_field(
@@ -710,6 +727,12 @@ def pipeline_action_controls(data: Mapping[str, Any], pipeline: Mapping[str, Any
             "approval_note",
             "Approval Note",
             approval_note,
+            required=False,
+        ),
+        input_field(
+            "auto_close_note",
+            "Auto-close Note",
+            auto_close_note,
             required=False,
         ),
     ]
@@ -3998,6 +4021,7 @@ def pipeline_query_options(query: Mapping[str, Sequence[str]]) -> dict[str, Any]
             "owner_approve_required_changes",
         ),
         "approval_note": _query_value(query, "approval_note") or "",
+        "auto_close_note": _query_value(query, "auto_close_note") or "",
     }
 
 

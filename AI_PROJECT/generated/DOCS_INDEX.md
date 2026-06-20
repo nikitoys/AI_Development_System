@@ -3,7 +3,7 @@
 
 # Documentation Index
 
-Revision: `27`
+Revision: `28`
 Documents: `145`
 
 | Path | Title | Type | Status | Declared | Required | Content hash | Last reviewed | Reviewed hash |
@@ -151,5 +151,5 @@ Documents: `145`
 | `ai-system/workflow.md` | Workflow | `reference` | `draft` | `draft` | `false` | `6b18b7d5f515` | - | `-` |
 | `plugins/ai-project-control/skills/project-control-gateway/SKILL.md` | Skill | `guide` | `draft` | - | `false` | `880e4a5b6b09` | - | `-` |
 | `ai-system/project-control/08-usage-guide.md` | Project Control Usage Guide | `guide` | `review` | `review` | `false` | `e5e442e6c124` | - | `-` |
-| `ai-system/project-control/10-owner-quickstart.md` | Project Control Owner Quickstart | `guide` | `review` | `review` | `false` | `da11435aa12d` | - | `-` |
-| `ai-system/project-control/pipeline-runner.md` | Supervised Pipeline Runner SOP | `guide` | `review` | `review` | `false` | `5ba818d54a3a` | - | `-` |
+| `ai-system/project-control/10-owner-quickstart.md` | Project Control Owner Quickstart | `guide` | `review` | `review` | `false` | `37d8fdf91dc7` | - | `-` |
+| `ai-system/project-control/pipeline-runner.md` | Supervised Pipeline Runner SOP | `guide` | `review` | `review` | `false` | `a08382d06ca0` | - | `-` |

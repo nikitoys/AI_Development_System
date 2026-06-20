@@ -45,9 +45,20 @@ class PipelinePolicyStoreTests(unittest.TestCase):
             self.assertEqual([item["name"] for item in payload["builtins"]], [
                 "dry_run",
                 "supervised",
+                "supervised_executable",
                 "supervised_autoclose",
+                "supervised_executable_autoclose",
                 "supervised_local_commit",
+                "supervised_executable_local_commit",
             ])
+            self.assertEqual(
+                payload["builtins"][1]["behavior_label"],
+                "prompt-only",
+            )
+            self.assertEqual(
+                payload["builtins"][2]["behavior_label"],
+                "executable",
+            )
             self.assertEqual([item["name"] for item in payload["custom"]], ["owner_supervised"])
             events = read_policy_events(root)
             self.assertEqual(events[0]["command"], "pipeline.policy.save")

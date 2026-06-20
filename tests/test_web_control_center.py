@@ -349,6 +349,9 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(status.value, 200)
         self.assertIn("Pipeline Queue Selector", body)
         self.assertIn("Policy Preset Preview", body)
+        self.assertIn("supervised (prompt-only)", body)
+        self.assertIn("supervised_executable (executable)", body)
+        self.assertIn("<td>Behavior</td><td>prompt-only</td>", body)
         self.assertIn("Auto Create Missing Changes", body)
         self.assertIn("Owner Session Change Approval", body)
         self.assertIn("Approval Note Required", body)
@@ -359,6 +362,7 @@ class WebControlCenterTests(unittest.TestCase):
             body,
         )
         self.assertIn('name="approval_note" value="Owner approved"', body)
+        self.assertIn('name="auto_close_note" value=""', body)
         self.assertIn("Queue Preview", body)
         self.assertIn("PIPE-13", body)
         self.assertIn("PSESS-001", body)
@@ -2154,6 +2158,7 @@ class WebControlCenterTests(unittest.TestCase):
                     "auto_create_missing_changes": "yes",
                     "owner_approve_required_changes": "yes",
                     "approval_note": "Owner approved session Changes.",
+                    "auto_close_note": "Owner approved auto-close.",
                     "task_ref": "PIPE-13",
                     "status_filter": "ready",
                     "max_tasks": "2",
@@ -2174,6 +2179,8 @@ class WebControlCenterTests(unittest.TestCase):
                     "--owner-approve-required-changes",
                     "--approval-note",
                     "Owner approved session Changes.",
+                    "--auto-close-note",
+                    "Owner approved auto-close.",
                     "--task-ref",
                     "PIPE-13",
                     "--status-filter",

@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `615`
-Current task: `TASK-068`
+Revision: `622`
+Current task: `TASK-076`
 
 ## Epic `EPIC-001`
 
@@ -1228,9 +1228,9 @@ Acceptance criteria:
 - All writes continue to route through governed CLI/workflow paths.
 - Relevant tests pass and project-control validation/check-generated commands pass.
 
-### PIPE-17 (TASK-068) — PIPE-17 Add Custom Pipeline Policy Preset Store ⭐
+### PIPE-17 (TASK-068) — PIPE-17 Add Custom Pipeline Policy Preset Store
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_02b15df91747`, legacy `TASK-068`, aliases `TASK-068`, local `PIPE` / `17`
@@ -1389,4 +1389,33 @@ Acceptance criteria:
 - Pipeline can continue the same session after approval.
 - No Change is accepted automatically.
 - No unrelated Change is approved.
+- Tests pass.
+
+### PIPE-25 (TASK-076) — PIPE-25 Add Full Self-Running Pipeline Mode ⭐
+
+Status: `in_review`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_652b0a2ad41e`, legacy `TASK-076`, aliases `TASK-076`, local `PIPE` / `25`
+
+Turn pipeline from prompt-only orchestration into a real supervised self-running task executor.
+
+Acceptance criteria:
+
+- A new executable pipeline mode can run a selected task beyond prompt generation.
+- Pipeline can invoke a safe local Codex adapter command using RUN_CODEX mode.
+- Adapter refuses unsafe or non-allowlisted commands.
+- Adapter refuses missing, stale, or wrong-task CODEX_PROMPT.md.
+- Pipeline ingests a structured Codex execution report.
+- Report Gate passes only for a valid report linked to the selected task.
+- Machine Review Gate runs after Report Gate.
+- Codex Review Gate runs after Machine Review Gate.
+- With explicit owner-approved auto-close enabled, a task can reach done through governed lifecycle commands.
+- Pipeline proceeds to the next selected task after the previous selected task reaches done.
+- run-until-blocker can process at least two selected tasks using a fake local Codex command and finish with queue_complete.
+- Prompt-only supervised mode remains available and clearly labeled.
+- Misleading BUILD_PROMPT_ONLY plus auto-close/local-commit combinations are disabled or clearly rejected.
+- No task outside the selected queue is closed.
+- No push or merge is performed.
+- Audit contains execution, report, review, close, and completion evidence.
 - Tests pass.

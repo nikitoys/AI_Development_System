@@ -3,17 +3,17 @@
 
 # Current Codex Task
 
-Revision: `615`
+Revision: `622`
 
-Task: `PIPE-17 (TASK-068)` — **PIPE-17 Add Custom Pipeline Policy Preset Store**
+Task: `PIPE-25 (TASK-076)` — **PIPE-25 Add Full Self-Running Pipeline Mode**
 Epic: `EPIC-007`
-Status: `in_progress`
-Verification: `standard`
-Ref: `PIPE-17`
-UID: `tsk_02b15df91747`
-Legacy ID: `TASK-068`
-Aliases: `TASK-068`
-Epic Key / Local Seq: `PIPE` / `17`
+Status: `in_review`
+Verification: `strict`
+Ref: `PIPE-25`
+UID: `tsk_652b0a2ad41e`
+Legacy ID: `TASK-076`
+Aliases: `TASK-076`
+Epic Key / Local Seq: `PIPE` / `25`
 
 ## Prompt Control Fields
 
@@ -24,67 +24,136 @@ Expected Result: `Task completed according to acceptance criteria`
 
 ## Summary
 
-Add governed storage for user-defined pipeline policy presets while keeping built-in safe presets immutable.
+Turn pipeline from prompt-only orchestration into a real supervised self-running task executor.
 
 ## Description
 
-Introduce a persistent custom policy preset store so the Human Owner can save, validate, list, and delete pipeline policy presets without editing Python source or protected state manually.
+Implement a real executable pipeline mode that can run selected tasks end-to-end: create/approve required Changes according to explicit owner-approved session policy, prepare Codex context, run local Codex adapter, ingest execution report, run review gates, close tasks, optionally create local commits, and continue to the next task until queue_complete or blocker.
 
 ## Scope
 
-- Create a governed custom pipeline policy preset storage model.
-- Store custom presets separately from built-in presets.
-- Keep built-in presets dry_run, supervised, supervised_autoclose, and supervised_local_commit immutable.
-- Validate saved presets through the existing PipelinePolicy validation rules.
-- Reject unsafe presets with stable error codes.
-- Add audit events for preset create/update/delete operations.
-- Add generated policy status output if useful for UI and validation.
+- Add a real executable pipeline policy mode distinct from prompt-only supervised mode.
+- Add or finalize local Codex RUN_CODEX adapter support.
+- Allow the pipeline to execute a configured local Codex command against AI_PROJECT/generated/CODEX_PROMPT.md.
+- Require command allowlist, timeout, prompt freshness, and task identity validation.
+- Capture Codex stdout, stderr, exit code, started_at, finished_at, timeout status, and adapter result.
+- Define and implement structured Codex execution report intake.
+- Report must include task id/ref, summary, changed files, tests run, test results, risks, blockers, and next actions.
+- Persist accepted reports through governed task report state mutation.
+- Link report id to pipeline session and selected task.
+- Make Report Gate validate required report fields and block on missing, malformed, stale, wrong-task, or failed-test reports.
+- Run Machine Review Gate after Report Gate.
+- Run Codex Review Gate after Machine Review Gate.
+- If all required gates pass and owner-approved auto-close is enabled for the session, close the selected task through governed lifecycle commands.
+- Auto-close only tasks selected by the current pipeline session queue.
+- Require explicit Human Owner approval intent and note for auto-close behavior.
+- Do not close tasks if Codex Review requests changes, is blocked, or required evidence is missing.
+- Support continuing to the next selected task after the current task reaches done.
+- End run-until-blocker with queue_complete only after all selected tasks are done or no executable selected tasks remain.
+- Expose policy options in Web Control Center with clear labels: prompt-only vs executable vs auto-close vs local-commit.
+- Prevent misleading policy combinations such as BUILD_PROMPT_ONLY plus auto-close/local-commit.
+- Update CLI policy list/describe and session create options if needed.
+- Add deterministic end-to-end tests using a fake local Codex command.
 
 ## Out of Scope
 
-- Do not allow custom presets to authorize push, merge, reset, rebase, clean, or destructive git operations.
-- Do not allow custom presets to bypass Token Budget Gate, Machine Review, Codex Review, Human Owner approval, or Evolution Change gates.
-- Do not modify built-in preset definitions except for compatibility wiring.
-- Do not edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/** manually.
+- Do not call remote APIs directly.
+- Do not allow unsafe shell execution.
+- Do not approve Evolution Changes without explicit Human Owner session approval.
+- Do not accept Evolution Changes automatically unless a separate owner-approved accept policy exists.
+- Do not bypass Token Budget Gate.
+- Do not bypass Report Gate.
+- Do not bypass Machine Review.
+- Do not bypass Codex Review.
+- Do not close tasks outside the selected session queue.
+- Do not push or merge.
+- Do not reset, rebase, clean, restore, discard, or otherwise destroy local work.
+- Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
 
 ## Allowed Files
 
 - ai_project_ctl/pipeline/policy.py
-- ai_project_ctl/pipeline/policy_store.py
-- ai_project_ctl/pipeline/__init__.py
+- ai_project_ctl/pipeline/runner.py
+- ai_project_ctl/pipeline/batch.py
+- ai_project_ctl/pipeline/codex_adapter.py
+- ai_project_ctl/pipeline/report_gate.py
+- ai_project_ctl/pipeline/machine_review.py
+- ai_project_ctl/pipeline/codex_review.py
+- ai_project_ctl/pipeline/close_policy.py
+- ai_project_ctl/pipeline/git_commit.py
+- ai_project_ctl/pipeline/session.py
+- ai_project_ctl/pipeline/state.py
 - ai_project_ctl/core/registry.py
+- ai_project_ctl/core/workflows.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/actions.py
 - scripts/aictl.py
-- AI_PROJECT/state/pipeline_policy_presets.json via governed CLI/service only
-- AI_PROJECT/events/pipeline-policy-events.jsonl via governed CLI/service only
-- AI_PROJECT/generated/PIPELINE_POLICIES.md via governed CLI/service only
-- tests/**
+- scripts/taskctl.py if governed report or lifecycle integration is needed
+- scripts/evolutionctl.py if governed Change integration is needed
+- tests/test_pipeline_runner.py
+- tests/test_pipeline_batch.py
+- tests/test_pipeline_codex_adapter.py
+- tests/test_pipeline_report_gate.py
+- tests/test_pipeline_e2e.py
+- tests/test_web_control_center.py
+- tests/test_aictl.py
+- tests/test_registry.py
+- ai-system/project-control/10-owner-quickstart.md
+- ai-system/project-control/pipeline-runner.md
+- AI_PROJECT/state/tasks.json via governed CLI/service only
+- AI_PROJECT/events/task-events.jsonl via governed CLI/service only
+- AI_PROJECT/state/evolution.json via governed CLI/service only
+- AI_PROJECT/events/evolution-events.jsonl via governed CLI/service only
+- AI_PROJECT/state/task_reports.json via governed CLI/service only
+- AI_PROJECT/state/pipeline_sessions.json via governed CLI/service only
+- AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/CODEX_TASKS.md via governed CLI/service only
+- AI_PROJECT/generated/EVOLUTION_STATUS.md via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_AUDIT.md via governed CLI/service only
 
 ## Acceptance Criteria
 
-- Custom policy presets can be saved, loaded, validated, listed, and deleted through governed service paths.
-- Built-in policy presets remain available and immutable.
-- Invalid or unsafe custom presets are rejected before persistence.
-- Preset changes create audit events.
-- No direct protected-file writes are introduced.
-- Tests and project-control validations pass.
+- A new executable pipeline mode can run a selected task beyond prompt generation.
+- Pipeline can invoke a safe local Codex adapter command using RUN_CODEX mode.
+- Adapter refuses unsafe or non-allowlisted commands.
+- Adapter refuses missing, stale, or wrong-task CODEX_PROMPT.md.
+- Pipeline ingests a structured Codex execution report.
+- Report Gate passes only for a valid report linked to the selected task.
+- Machine Review Gate runs after Report Gate.
+- Codex Review Gate runs after Machine Review Gate.
+- With explicit owner-approved auto-close enabled, a task can reach done through governed lifecycle commands.
+- Pipeline proceeds to the next selected task after the previous selected task reaches done.
+- run-until-blocker can process at least two selected tasks using a fake local Codex command and finish with queue_complete.
+- Prompt-only supervised mode remains available and clearly labeled.
+- Misleading BUILD_PROMPT_ONLY plus auto-close/local-commit combinations are disabled or clearly rejected.
+- No task outside the selected queue is closed.
+- No push or merge is performed.
+- Audit contains execution, report, review, close, and completion evidence.
+- Tests pass.
 
 ## Review Instructions
 
-- Verify that custom presets cannot weaken forbidden safety boundaries.
-- Verify that built-in presets cannot be overwritten or deleted.
-- Verify that all persistence goes through governed service paths.
+- Use a fake local Codex command in tests; do not require real Codex or network access.
+- Verify old supervised prompt-only behavior still works.
+- Verify new executable mode runs through adapter, report gate, machine review, Codex review, and task close.
+- Verify negative paths: unsafe command, stale prompt, failed report tests, review request changes, missing owner auto-close note.
+- Verify run-until-blocker can complete a two-task selected queue to done and queue_complete.
+- Verify UI policy preview clearly distinguishes prompt-only and executable modes.
 
 ## Notes
 
-- Requires approved Evolution Change before execution because this changes pipeline policy behavior.
+- This is the main task that makes Pipeline meaningful as a real runner rather than only a Codex prompt generator.
+- The implementation should remain supervised and gated, but it should be able to close tasks itself when the Human Owner explicitly enabled that behavior for the session.
 
 ## Useful CLI
 
 ```bash
-python scripts/taskctl.py task transition TASK-068 --to in_progress
-python scripts/taskctl.py task transition TASK-068 --to in_review
-python scripts/taskctl.py task approve TASK-068 --notes "..."
-python scripts/taskctl.py task transition TASK-068 --to done
-python scripts/aictl.py task report submit --task TASK-068 --file /path/to/report.json --confirm
+python scripts/taskctl.py task transition TASK-076 --to in_progress
+python scripts/taskctl.py task transition TASK-076 --to in_review
+python scripts/taskctl.py task approve TASK-076 --notes "..."
+python scripts/taskctl.py task transition TASK-076 --to done
+python scripts/aictl.py task report submit --task TASK-076 --file /path/to/report.json --confirm
 python scripts/taskctl.py prompt build --write
 ```
