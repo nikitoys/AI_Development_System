@@ -3,86 +3,84 @@
 
 # Current Codex Task
 
-Revision: `539`
+Revision: `549`
 
-Task: `PIPE-09 (TASK-060)` — **PIPE-09 Machine Review Gate**
+Task: `PIPE-11 (TASK-062)` — **PIPE-11 Auto Review Auto Close Policy**
 Epic: `EPIC-007`
 Status: `in_progress`
 Verification: `strict`
-Ref: `PIPE-09`
-UID: `tsk_2b44723c1bdb`
-Legacy ID: `TASK-060`
-Aliases: `TASK-060`
-Epic Key / Local Seq: `PIPE` / `9`
+Ref: `PIPE-11`
+UID: `tsk_01a078bae3e6`
+Legacy ID: `TASK-062`
+Aliases: `TASK-062`
+Epic Key / Local Seq: `PIPE` / `11`
 
 ## Prompt Control Fields
 
-Active Role: `QA Engineer AI / Project Control Maintainer`
-Active Stage: `Machine Review Gate Implementation`
-Active Document: `ai_project_ctl/pipeline/machine_review.py`
-Expected Result: `Pipeline has a deterministic Machine Review PASS/WARN/FAIL gate before semantic review and auto-close.`
+Active Role: `AI System Maintainer / QA Lead AI`
+Active Stage: `Auto Review and Close Policy`
+Active Document: `ai_project_ctl/pipeline/close_policy.py`
+Expected Result: `Pipeline can safely close or request changes for tasks only when policy and review gates allow it.`
 
 ## Summary
 
-Run deterministic machine checks for tests, doctor, protected files, generated outputs, allowed_files, token usage, and blockers.
+Apply policy-controlled close/rework decisions only after Machine Review PASS and Codex Review APPROVE.
 
 ## Description
 
-Implement the machine review gate that collects deterministic evidence before Codex semantic review or auto-close decisions.
+Implement the decision logic that maps review gate results into task done, changes_requested, rework loop, or stop states under explicit automation policy.
 
 ## Scope
 
-- Run or collect project-control validation checks: task validate, task graph validate, generated checks, evolution validate/check-generated, context validate/check-generated, project doctor, and protected-file check.
-- Run task/report-declared tests or configured test commands only when policy allows and commands are safe.
-- Check changed files against task allowed_files and protected-file rules.
-- Check report blockers and token usage against policy.
-- Return PASS only when all blocking checks pass.
-- Return structured evidence with command, result, duration if available, stdout/stderr summaries, and failure reasons.
-- Add tests with fake command runners and representative pass/fail cases.
+- Implement decision logic for Machine Review result plus Codex Review result.
+- Allow auto-close only if policy allows and Machine Review PASS and Codex Review APPROVE.
+- Move task to changes_requested or start a bounded rework loop only when policy allows and review verdict requests changes.
+- Stop when review is blocked, malformed, failing, or policy disallows automatic lifecycle mutation.
+- Require explicit audit notes that identify policy, machine gate, Codex review verdict, and report id.
+- Prevent auto-close when task report has blockers or changed files outside allowed_files.
+- Add tests for approve+pass close, request changes, blocked review, machine fail, policy disabled, and rework-limit reached.
 
 ## Out of Scope
 
-- Do not do semantic acceptance review.
-- Do not close tasks.
-- Do not accept Changes.
+- Do not bypass task lifecycle transitions.
+- Do not accept linked Evolution Changes.
 - Do not commit.
-- Do not suppress doctor/protected-file failures.
+- Do not treat Codex Review as Human Owner approval outside the selected policy.
+- Do not continue rework indefinitely.
 
 ## Allowed Files
 
-- ai_project_ctl/pipeline/machine_review.py
-- ai_project_ctl/pipeline/report_gate.py if integration is needed
+- ai_project_ctl/pipeline/close_policy.py
 - ai_project_ctl/pipeline/runner.py if integration is needed
-- ai_project_ctl/core/registry.py if command metadata is needed
-- scripts/aictl.py if gate command routing is needed
+- ai_project_ctl/core/workflows.py if close/request-changes workflow metadata needs compatible updates
 - tests/**
-- ai-system/project-control/** if machine review documentation is needed
+- ai-system/project-control/** if auto-close documentation is needed
 
 ## Acceptance Criteria
 
-- Machine Review PASS requires all blocking checks to pass.
-- Machine Review FAIL stops the pipeline.
-- Protected-file and allowed_files violations are blocking.
-- Token usage and report blockers are checked according to policy.
-- Gate output is structured and auditable.
+- Auto-close requires policy permission, Machine Review PASS, and Codex Review APPROVE.
+- REQUEST_CHANGES moves to changes_requested or starts rework only if policy allows.
+- Blocked or failed gates stop the pipeline.
+- Rework loop has a policy-controlled maximum.
+- Lifecycle mutations route through governed task workflows/commands.
 - Tests and project-control validations pass.
 
 ## Review Instructions
 
-- Verify that deterministic checks are actually blocking.
-- Verify that allowed_files/protected-file checks cannot be bypassed by report wording.
+- Verify auto-close cannot happen on Machine Review FAIL or Codex Review REQUEST_CHANGES.
+- Verify lifecycle changes are routed through governed commands.
 
 ## Notes
 
-- Requires approved Evolution Change before execution because this adds a pipeline review gate.
+- Requires approved Evolution Change before execution because this adds automated lifecycle decisions.
 
 ## Useful CLI
 
 ```bash
-python scripts/taskctl.py task transition TASK-060 --to in_progress
-python scripts/taskctl.py task transition TASK-060 --to in_review
-python scripts/taskctl.py task approve TASK-060 --notes "..."
-python scripts/taskctl.py task transition TASK-060 --to done
-python scripts/aictl.py task report submit --task TASK-060 --file /path/to/report.json --confirm
+python scripts/taskctl.py task transition TASK-062 --to in_progress
+python scripts/taskctl.py task transition TASK-062 --to in_review
+python scripts/taskctl.py task approve TASK-062 --notes "..."
+python scripts/taskctl.py task transition TASK-062 --to done
+python scripts/aictl.py task report submit --task TASK-062 --file /path/to/report.json --confirm
 python scripts/taskctl.py prompt build --write
 ```

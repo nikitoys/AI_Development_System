@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 1475,
+  "revision": 1481,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-19T22:36:04Z",
+  "updated_at": "2026-06-20T06:29:13Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -2447,7 +2447,7 @@
     {
       "id": "CHG-043",
       "title": "PIPE-09 Machine Review Gate",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "docs",
       "rationale": "Implement the machine review gate that collects deterministic evidence before Codex semantic review or auto-close decisions.",
       "problem": "Task PIPE-09 requires an explicit Evolution Change Proposal before implementation: Run deterministic machine checks for tests, doctor, protected files, generated outputs, allowed_files, token usage, and blockers.",
@@ -2496,19 +2496,19 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-19T20:42:05Z",
       "approval_notes": "Approved",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-20T06:12:52Z",
+      "acceptance_notes": "Run deterministic machine checks for tests, doctor, protected files, generated outputs, allowed_files, token usage, and blockers.",
       "notes": [],
       "priority": 1,
       "order": 43,
       "created_at": "2026-06-19T20:41:46Z",
-      "updated_at": "2026-06-19T20:42:05Z"
+      "updated_at": "2026-06-20T06:12:52Z"
     },
     {
       "id": "CHG-044",
       "title": "PIPE-10 Codex Review Gate",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "docs",
       "rationale": "Add the semantic review gate. It should generate and optionally run a narrow Codex Reviewer prompt that checks acceptance criteria, out_of_scope, hidden risks, and report credibility without changing files or lifecycle state.",
       "problem": "Task PIPE-10 requires an explicit Evolution Change Proposal before implementation: Run a narrow read-only Codex Reviewer prompt for semantic review and structured verdict.",
@@ -2556,14 +2556,14 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-19T20:42:35Z",
       "approval_notes": "Approved",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-20T06:29:13Z",
+      "acceptance_notes": "Run a narrow read-only Codex Reviewer prompt for semantic review and structured verdict.",
       "notes": [],
       "priority": 1,
       "order": 44,
       "created_at": "2026-06-19T20:42:10Z",
-      "updated_at": "2026-06-19T20:42:35Z"
+      "updated_at": "2026-06-20T06:29:13Z"
     },
     {
       "id": "CHG-045",

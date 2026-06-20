@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `1475`
+Revision: `1481`
 Changes: `49`
 
 ## Summary
 
-- `accepted`: 40
-- `approved`: 9
+- `accepted`: 42
+- `approved`: 7
 
 ## Changes
 
@@ -2649,7 +2649,7 @@ Linked tasks:
 
 ### CHG-043 — PIPE-09 Machine Review Gate
 
-Status: `approved`  
+Status: `accepted`  
 Type: `docs`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -2669,6 +2669,9 @@ Implement the machine review gate that collects deterministic evidence before Co
 
 Approved by: `human_owner` at `2026-06-19T20:42:05Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T06:12:52Z`  
+Acceptance notes: Run deterministic machine checks for tests, doctor, protected files, generated outputs, allowed_files, token usage, and blockers.  
 
 Affected files:
 
@@ -2711,7 +2714,7 @@ Linked tasks:
 
 ### CHG-044 — PIPE-10 Codex Review Gate
 
-Status: `approved`  
+Status: `accepted`  
 Type: `docs`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -2731,6 +2734,9 @@ Add the semantic review gate. It should generate and optionally run a narrow Cod
 
 Approved by: `human_owner` at `2026-06-19T20:42:35Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T06:29:13Z`  
+Acceptance notes: Run a narrow read-only Codex Reviewer prompt for semantic review and structured verdict.  
 
 Affected files:
 

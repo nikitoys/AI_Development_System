@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `539`
+Revision: `549`
 
 ## Executable Now
 
@@ -13,12 +13,8 @@ Revision: `539`
 
 - `PIPE-05 (TASK-056)` [planned] `EPIC-007` priority `1` — PIPE-05 Batch Runner Run Until Blocker
   - `dependency_not_done`: depends on PIPE-12 (TASK-063) with status planned
-- `PIPE-10 (TASK-061)` [planned] `EPIC-007` priority `1` — PIPE-10 Codex Review Gate
-  - `dependency_not_done`: depends on PIPE-09 (TASK-060) with status in_progress
-- `PIPE-11 (TASK-062)` [planned] `EPIC-007` priority `1` — PIPE-11 Auto Review Auto Close Policy
-  - `dependency_not_done`: depends on PIPE-10 (TASK-061) with status planned
 - `PIPE-12 (TASK-063)` [planned] `EPIC-007` priority `1` — PIPE-12 Controlled Git Commit Action
-  - `dependency_not_done`: depends on PIPE-11 (TASK-062) with status planned
+  - `dependency_not_done`: depends on PIPE-11 (TASK-062) with status in_progress
 - `PIPE-13 (TASK-064)` [planned] `EPIC-007` priority `1` — PIPE-13 Pipeline UI Dashboard
   - `dependency_not_done`: depends on PIPE-05 (TASK-056) with status planned
 - `PIPE-14 (TASK-065)` [planned] `EPIC-007` priority `1` — PIPE-14 Pipeline Audit Trail
@@ -131,7 +127,11 @@ Revision: `539`
   - `status_not_executable`: status is done
 - `PIPE-08 (TASK-059)` [done] `EPIC-007` priority `1` — PIPE-08 Codex Report Gate
   - `status_not_executable`: status is done
-- `PIPE-09 (TASK-060)` [in_progress] `EPIC-007` priority `1` — PIPE-09 Machine Review Gate
+- `PIPE-09 (TASK-060)` [done] `EPIC-007` priority `1` — PIPE-09 Machine Review Gate
+  - `status_not_executable`: status is done
+- `PIPE-10 (TASK-061)` [done] `EPIC-007` priority `1` — PIPE-10 Codex Review Gate
+  - `status_not_executable`: status is done
+- `PIPE-11 (TASK-062)` [in_progress] `EPIC-007` priority `1` — PIPE-11 Auto Review Auto Close Policy
   - `status_not_executable`: status is in_progress
 - `TIG-01 (TASK-012)` [done] `EPIC-004` priority `1` — TIG-01 Document task identity and execution graph design
   - `status_not_executable`: status is done

@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `539`
-Current task: `TASK-060`
+Revision: `549`
+Current task: `TASK-062`
 
 ## Epic `EPIC-001`
 
@@ -1083,9 +1083,9 @@ Acceptance criteria:
 - Report Gate result is stored or exposed for pipeline session audit.
 - Tests and project-control validations pass.
 
-### PIPE-09 (TASK-060) — PIPE-09 Machine Review Gate ⭐
+### PIPE-09 (TASK-060) — PIPE-09 Machine Review Gate
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_2b44723c1bdb`, legacy `TASK-060`, aliases `TASK-060`, local `PIPE` / `9`
@@ -1103,7 +1103,7 @@ Acceptance criteria:
 
 ### PIPE-10 (TASK-061) — PIPE-10 Codex Review Gate
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_12dcf6285371`, legacy `TASK-061`, aliases `TASK-061`, local `PIPE` / `10`
@@ -1119,9 +1119,9 @@ Acceptance criteria:
 - Malformed/missing reviewer output blocks the pipeline.
 - Tests and project-control validations pass.
 
-### PIPE-11 (TASK-062) — PIPE-11 Auto Review Auto Close Policy
+### PIPE-11 (TASK-062) — PIPE-11 Auto Review Auto Close Policy ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_01a078bae3e6`, legacy `TASK-062`, aliases `TASK-062`, local `PIPE` / `11`

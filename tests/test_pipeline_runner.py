@@ -150,6 +150,23 @@ def valid_report(task_id: str) -> dict:
     }
 
 
+def valid_review_output(verdict="APPROVE", findings=None) -> str:
+    return json.dumps(
+        {
+            "verdict": verdict,
+            "summary": "Semantic review completed.",
+            "evidence": {
+                "task_id": "TASK-001",
+                "report_id": "RPT-001",
+                "report_gate_status": "pass",
+                "machine_review_status": "pass",
+            },
+            "findings": list(findings or []),
+            "risks": [],
+        }
+    )
+
+
 def write_report_state(root: Path, task_id: str, report_id: str, report: dict | None = None) -> None:
     report_data = report or valid_report(task_id)
     state_dir = root / "AI_PROJECT" / "state"
@@ -291,7 +308,7 @@ class PipelineRunnerTests(unittest.TestCase):
                 "CODEX_ADAPTER_MANUAL_HANDOFF_REQUIRED",
             )
 
-    def test_run_codex_local_adapter_records_report_gate_pass_then_stops_at_review_gate(self):
+    def test_run_codex_local_adapter_records_codex_review_pass_then_policy_stop(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write_project_state(root, change_status="approved")
@@ -319,12 +336,14 @@ class PipelineRunnerTests(unittest.TestCase):
                     root=root,
                     report_on_local_codex=True,
                 ),
+                codex_reviewer=lambda prompt: valid_review_output(),
             )
             latest = load_pipeline(root)["sessions"][0]
             gates = latest["steps"][0]["gate_outcomes"]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "NOT_IMPLEMENTED")
+            self.assertEqual(result.data["stop_code"], "BLOCKED")
+            self.assertIn("policy stops before auto-close", result.data["stop_reason"])
             self.assertEqual(gates[1]["name"], "codex_execution_adapter")
             self.assertEqual(gates[1]["status"], "pass")
             self.assertEqual(gates[1]["details"]["adapter"]["report_id"], "RPT-001")
@@ -334,8 +353,98 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(gates[3]["name"], "machine_review_gate")
             self.assertEqual(gates[3]["status"], "pass")
             self.assertEqual(gates[4]["name"], "codex_review_gate")
+            self.assertEqual(gates[4]["status"], "pass")
+            self.assertEqual(gates[4]["details"]["codex_review"]["verdict"], "APPROVE")
+            self.assertEqual(gates[5]["name"], "pipeline_policy")
+            self.assertEqual(gates[5]["status"], "skipped")
             self.assertEqual(latest["report_ids"], ["RPT-001"])
+            self.assertEqual(len(latest["review_ids"]), 1)
             self.assertIn(["codex", "exec"], calls)
+
+    def test_run_codex_blocks_when_codex_review_output_is_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_missing_review_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=successful_workflow_runner(
+                    [],
+                    root=root,
+                    report_on_local_codex=True,
+                ),
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "CODEX_REVIEW_GATE_FAILURE")
+            self.assertEqual(gates[4]["name"], "codex_review_gate")
+            self.assertEqual(gates[4]["status"], "fail")
+            self.assertEqual(
+                gates[4]["details"]["codex_review"]["code"],
+                "CODEX_REVIEW_OUTPUT_MISSING",
+            )
+
+    def test_run_codex_request_changes_blocks_before_policy_stop(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_request_changes_review_test",
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=successful_workflow_runner(
+                    [],
+                    root=root,
+                    report_on_local_codex=True,
+                ),
+                codex_reviewer=lambda prompt: valid_review_output(
+                    "REQUEST_CHANGES",
+                    findings=(
+                        {
+                            "severity": "Major",
+                            "message": "Acceptance evidence is incomplete.",
+                            "file": "ai_project_ctl/pipeline/codex_review.py",
+                        },
+                    ),
+                ),
+            )
+            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "CODEX_REVIEW_REQUEST_CHANGES")
+            self.assertEqual(gates[4]["name"], "codex_review_gate")
+            self.assertEqual(gates[4]["status"], "blocked")
+            self.assertEqual(len(gates), 5)
 
     def test_run_codex_blocks_downstream_when_machine_review_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -461,7 +570,7 @@ class PipelineRunnerTests(unittest.TestCase):
             )
             self.assertEqual(len(gates), 1)
 
-    def test_autoclose_policy_stops_when_review_gates_are_unimplemented(self):
+    def test_autoclose_policy_stops_when_build_prompt_only_cannot_review(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write_project_state(root, change_status="approved")
@@ -483,7 +592,7 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertTrue(result.ok)
             self.assertEqual(result.data["stop_code"], "NOT_IMPLEMENTED")
             self.assertEqual(gate["name"], "review_close_gate")
-            self.assertIn("not implemented", result.data["stop_reason"])
+            self.assertIn("requires Codex execution", result.data["stop_reason"])
 
 
 if __name__ == "__main__":
