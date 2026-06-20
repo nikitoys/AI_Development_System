@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `611`
-Current task: `TASK-075`
+Revision: `615`
+Current task: `TASK-068`
 
 ## Epic `EPIC-001`
 
@@ -1228,9 +1228,9 @@ Acceptance criteria:
 - All writes continue to route through governed CLI/workflow paths.
 - Relevant tests pass and project-control validation/check-generated commands pass.
 
-### PIPE-17 (TASK-068) — PIPE-17 Add Custom Pipeline Policy Preset Store
+### PIPE-17 (TASK-068) — PIPE-17 Add Custom Pipeline Policy Preset Store ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_02b15df91747`, legacy `TASK-068`, aliases `TASK-068`, local `PIPE` / `17`
@@ -1368,9 +1368,9 @@ Acceptance criteria:
 - Existing supervised policies remain backward-compatible.
 - Tests pass.
 
-### PIPE-24 (TASK-075) — PIPE-24 Add Owner-Approved Session Changes Policy Checkbox ⭐
+### PIPE-24 (TASK-075) — PIPE-24 Add Owner-Approved Session Changes Policy Checkbox
 
-Status: `in_review`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_c55990cd59ea`, legacy `TASK-075`, aliases `TASK-075`, local `PIPE` / `24`

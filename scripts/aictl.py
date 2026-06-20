@@ -52,6 +52,16 @@ from ai_project_ctl.pipeline.session import (  # noqa: E402
     stop_session,
     validate_sessions as validate_pipeline_sessions,
 )
+from ai_project_ctl.pipeline.policy import policy_preset  # noqa: E402
+from ai_project_ctl.pipeline.policy_store import (  # noqa: E402
+    check_generated as check_pipeline_policy_generated,
+    delete_policy_preset,
+    load_policy_preset,
+    render_policy_store,
+    save_policy_preset,
+    status_payload as pipeline_policy_status_payload,
+    validate_policy_store,
+)
 from ai_project_ctl.pipeline.runner import run_next as run_pipeline_next  # noqa: E402
 from ai_project_ctl.pipeline.batch import run_until_blocker as run_pipeline_until_blocker  # noqa: E402
 
@@ -1061,6 +1071,46 @@ def _json_mapping_arg(text: str | None) -> dict[str, Any]:
     return value
 
 
+def _policy_payload_arg(args: argparse.Namespace) -> dict[str, Any]:
+    sources = [
+        bool(args.from_preset),
+        bool(args.file),
+        bool(args.policy_json),
+    ]
+    if sum(1 for source in sources if source) > 1:
+        raise FacadeError(
+            "POLICY_PRESET_INPUT_CONFLICT",
+            "Use only one of --from-preset, --file, or --policy-json.",
+        )
+    if args.from_preset:
+        payload = policy_preset(args.from_preset).to_dict()
+        payload["name"] = args.name
+        return payload
+    if args.file:
+        try:
+            raw = Path(args.file).read_text(encoding="utf-8")
+        except OSError as exc:
+            raise FacadeError(
+                "POLICY_PRESET_FILE_READ_FAILED",
+                "Could not read policy preset file: {}".format(args.file),
+                details={"file": args.file, "error": str(exc)},
+            ) from exc
+    elif args.policy_json:
+        raw = args.policy_json
+    else:
+        raw = sys.stdin.read()
+    try:
+        value = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise FacadeError(
+            "POLICY_PRESET_INVALID_JSON",
+            "Policy preset payload must be a JSON object: {}".format(exc),
+        ) from exc
+    if not isinstance(value, dict):
+        raise FacadeError("POLICY_PRESET_INVALID_JSON", "Policy preset payload must be a JSON object.")
+    return value
+
+
 def cmd_task_list(args: argparse.Namespace) -> int:
     _ensure_implemented("task.list")
     command_args = ["task", "list"]
@@ -1272,11 +1322,114 @@ def cmd_pipeline_check_generated(args: argparse.Namespace) -> int:
     return _emit_command_result(result, args)
 
 
+def cmd_pipeline_policy_list(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.policy.list")
+    payload = pipeline_policy_status_payload(root=args.root)
+    result = CommandResult.success(
+        command="pipeline.policy.list",
+        domain="pipeline",
+        message="Pipeline policy presets loaded.",
+        data=payload,
+    )
+    if args.json:
+        _print_json(result.to_dict())
+        return 0
+
+    print("Pipeline policy presets revision: {}".format(payload.get("revision", 0)))
+    print("Built-in presets:")
+    for item in payload.get("builtins", []):
+        print("- {name} [immutable]".format(name=item.get("name")))
+    print("Custom presets:")
+    custom = payload.get("custom", [])
+    if not custom:
+        print("- none")
+    for item in custom:
+        print("- {name} [updated={updated}]".format(
+            name=item.get("name"),
+            updated=item.get("updated_at") or "unknown",
+        ))
+    return 0
+
+
+def cmd_pipeline_policy_show(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.policy.show")
+    policy = load_policy_preset(args.name, root=args.root)
+    result = CommandResult.success(
+        command="pipeline.policy.show",
+        domain="pipeline",
+        message="Pipeline policy preset loaded.",
+        data={"name": policy.name, "policy": policy.to_dict()},
+    )
+    if args.json:
+        _print_json(result.to_dict())
+        return 0
+
+    print("Policy: {}".format(policy.name))
+    print(json.dumps(policy.to_dict(), ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_pipeline_policy_save(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.policy.save")
+    result = save_policy_preset(
+        args.name,
+        _policy_payload_arg(args),
+        root=args.root,
+        actor=args.actor,
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_policy_delete(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.policy.delete")
+    result = delete_policy_preset(args.name, root=args.root, actor=args.actor)
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_policy_validate(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.policy.validate")
+    result = _validation_result_to_command(
+        "pipeline.policy.validate",
+        "pipeline",
+        validate_policy_store(root=args.root),
+        ok_message="OK: pipeline policy presets are valid",
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_policy_render(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.policy.render")
+    render_policy_store(root=args.root)
+    path = str(Path(args.root).resolve() / "AI_PROJECT" / "generated" / "PIPELINE_POLICIES.md")
+    result = CommandResult.success(
+        command="pipeline.policy.render",
+        domain="pipeline",
+        message="OK: rendered pipeline policy presets",
+        data={"path": path},
+    )
+    result.generated_files.append(path)
+    result.changed_files.append(path)
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_policy_check_generated(args: argparse.Namespace) -> int:
+    _ensure_implemented("pipeline.policy.check_generated")
+    result = _validation_result_to_command(
+        "pipeline.policy.check_generated",
+        "pipeline",
+        check_pipeline_policy_generated(root=args.root),
+        ok_message="OK: generated pipeline policy preset status is up to date",
+    )
+    return _emit_command_result(result, args)
+
+
 def cmd_pipeline_session_create(args: argparse.Namespace) -> int:
     _ensure_implemented("pipeline.session.create")
+    selected_policy = load_policy_preset(args.policy, root=args.root)
     result = create_session(
         root=args.root,
         actor=args.actor,
+        policy=selected_policy,
         policy_name=args.policy,
         task_refs=_tuple_or_empty(args.task_ref),
         epic_ids=_tuple_or_empty(args.epic),
@@ -1805,6 +1958,42 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = pipeline_sub.add_parser("check-generated", help="Check pipeline generated status freshness")
     p.set_defaults(func=cmd_pipeline_check_generated, facade_command="pipeline.check_generated")
+
+    policy = pipeline_sub.add_parser("policy", help="Pipeline policy preset store commands")
+    policy_sub = policy.add_subparsers(dest="pipeline_policy_action", required=True)
+
+    p = policy_sub.add_parser("list", help="List built-in and custom pipeline policy presets")
+    p.set_defaults(func=cmd_pipeline_policy_list, facade_command="pipeline.policy.list")
+
+    p = policy_sub.add_parser("show", help="Show one built-in or custom pipeline policy preset")
+    p.add_argument("name")
+    p.set_defaults(func=cmd_pipeline_policy_show, facade_command="pipeline.policy.show")
+
+    p = policy_sub.add_parser("save", help="Save a governed custom pipeline policy preset")
+    p.add_argument("--name", required=True)
+    p.add_argument("--from-preset")
+    p.add_argument("--file")
+    p.add_argument("--policy-json")
+    p.set_defaults(func=cmd_pipeline_policy_save, facade_command="pipeline.policy.save")
+
+    p = policy_sub.add_parser("delete", help="Delete a governed custom pipeline policy preset")
+    p.add_argument("name")
+    p.set_defaults(func=cmd_pipeline_policy_delete, facade_command="pipeline.policy.delete")
+
+    p = policy_sub.add_parser("validate", help="Validate custom pipeline policy preset state")
+    p.set_defaults(func=cmd_pipeline_policy_validate, facade_command="pipeline.policy.validate")
+
+    p = policy_sub.add_parser("render", help="Render pipeline policy generated status")
+    p.set_defaults(func=cmd_pipeline_policy_render, facade_command="pipeline.policy.render")
+
+    p = policy_sub.add_parser(
+        "check-generated",
+        help="Check pipeline policy generated status freshness",
+    )
+    p.set_defaults(
+        func=cmd_pipeline_policy_check_generated,
+        facade_command="pipeline.policy.check_generated",
+    )
 
     p = pipeline_sub.add_parser("run-next", help="Run one guarded pipeline step")
     p.add_argument("session_id", nargs="?")

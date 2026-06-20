@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 14,
+  "revision": 21,
   "created_at": "2026-06-19T21:27:58Z",
-  "updated_at": "2026-06-20T10:20:25Z",
-  "current_session_id": "PSESS-004",
+  "updated_at": "2026-06-20T10:51:46Z",
+  "current_session_id": null,
   "sessions": [
     {
       "id": "PSESS-001",
@@ -1948,6 +1948,435 @@
       "updated_at": "2026-06-20T10:20:25Z",
       "started_at": "2026-06-20T10:18:35Z",
       "finished_at": ""
+    },
+    {
+      "id": "PSESS-005",
+      "status": "blocked",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPE-17"
+        ],
+        "epic_ids": [
+          "EPIC-007"
+        ],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "execution",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised_local_commit",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": true,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": true,
+          "owner_approval_note": "Approve"
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "build_prompt_only",
+          "require_human_selected_policy": true,
+          "adapter_mode": "manual_handoff",
+          "local_command": [],
+          "command_allowlist": [],
+          "timeout_sec": 300,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-068",
+      "current_task_ref": "",
+      "current_step": "run_next",
+      "current_step_status": "blocked",
+      "attempt_counters": {
+        "steps": 1,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [
+        {
+          "name": "review_close_gate",
+          "status": "blocked",
+          "recorded_at": "2026-06-20T10:49:14Z",
+          "details": {
+            "policy": "supervised_local_commit",
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-068",
+              "ref": "PIPE-17",
+              "uid": "tsk_02b15df91747",
+              "legacy_id": "TASK-068",
+              "title": "PIPE-17 Add Custom Pipeline Policy Preset Store",
+              "status": "planned",
+              "epic_id": "EPIC-007",
+              "priority": 1,
+              "order": 17,
+              "local_seq": 17,
+              "selected_ref": "PIPE-17",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "change_ids": [
+                "CHG-051"
+              ]
+            },
+            "workflow": {
+              "ok": true,
+              "message": "Workflow completed.",
+              "steps": [
+                {
+                  "id": "resolve",
+                  "status": "ok"
+                },
+                {
+                  "id": "current_set",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_validate",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_graph",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_in_progress",
+                  "status": "ok"
+                },
+                {
+                  "id": "context_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "codex_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "doctor",
+                  "status": "ok"
+                }
+              ],
+              "errors": []
+            },
+            "stop_code": "NOT_IMPLEMENTED",
+            "stop_reason": "Auto-close requires Codex execution, Codex Report, Machine Review, Codex Review and a close action."
+          }
+        }
+      ],
+      "steps": [
+        {
+          "name": "run_next",
+          "status": "blocked",
+          "started_at": "2026-06-20T10:49:07Z",
+          "finished_at": "2026-06-20T10:49:14Z",
+          "task_id": "TASK-068",
+          "gate_outcomes": [
+            {
+              "name": "review_close_gate",
+              "status": "blocked",
+              "recorded_at": "2026-06-20T10:49:14Z",
+              "details": {
+                "policy": "supervised_local_commit",
+                "selected_task": {
+                  "category": "executable",
+                  "executable": true,
+                  "id": "TASK-068",
+                  "ref": "PIPE-17",
+                  "uid": "tsk_02b15df91747",
+                  "legacy_id": "TASK-068",
+                  "title": "PIPE-17 Add Custom Pipeline Policy Preset Store",
+                  "status": "planned",
+                  "epic_id": "EPIC-007",
+                  "priority": 1,
+                  "order": 17,
+                  "local_seq": 17,
+                  "selected_ref": "PIPE-17",
+                  "reasons": []
+                },
+                "queue_counts": {
+                  "executable": 1,
+                  "waiting": 0,
+                  "blocked": 0,
+                  "skipped": 0
+                },
+                "change_gate": {
+                  "required": true,
+                  "change_ids": [
+                    "CHG-051"
+                  ]
+                },
+                "workflow": {
+                  "ok": true,
+                  "message": "Workflow completed.",
+                  "steps": [
+                    {
+                      "id": "resolve",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "current_set",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "task_validate",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "task_graph",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "task_in_progress",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "context_build",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "codex_build",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "doctor",
+                      "status": "ok"
+                    }
+                  ],
+                  "errors": []
+                },
+                "stop_code": "NOT_IMPLEMENTED",
+                "stop_reason": "Auto-close requires Codex execution, Codex Report, Machine Review, Codex Review and a close action."
+              }
+            }
+          ],
+          "result": {},
+          "stop_reason": "NOT_IMPLEMENTED: Auto-close requires Codex execution, Codex Report, Machine Review, Codex Review and a close action.",
+          "audit_event_ids": [
+            "EVT-61F5CF0F6018",
+            "EVT-C04AACC8549F"
+          ]
+        }
+      ],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-C8891BA593BF",
+        "EVT-61F5CF0F6018",
+        "EVT-C04AACC8549F"
+      ],
+      "stop_reason": "NOT_IMPLEMENTED: Auto-close requires Codex execution, Codex Report, Machine Review, Codex Review and a close action.",
+      "created_at": "2026-06-20T10:48:33Z",
+      "updated_at": "2026-06-20T10:49:14Z",
+      "started_at": "2026-06-20T10:49:07Z",
+      "finished_at": ""
+    },
+    {
+      "id": "PSESS-006",
+      "status": "completed",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPE-17"
+        ],
+        "epic_ids": [
+          "EPIC-007"
+        ],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "execution",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": true,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": true,
+          "owner_approval_note": "Approve"
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "build_prompt_only",
+          "require_human_selected_policy": true,
+          "adapter_mode": "manual_handoff",
+          "local_command": [],
+          "command_allowlist": [],
+          "timeout_sec": 300,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": false
+        },
+        "commit": {
+          "create_local_commit": false,
+          "mode": "disabled",
+          "require_commit_readiness": false,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-068",
+      "current_task_ref": "PIPE-17",
+      "current_step": "run_next",
+      "current_step_status": "blocked",
+      "attempt_counters": {
+        "steps": 1,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [
+        {
+          "name": "queue_planner",
+          "status": "blocked",
+          "recorded_at": "2026-06-20T10:51:46Z",
+          "details": {
+            "policy": "supervised",
+            "selected_task": null,
+            "queue_counts": {
+              "executable": 0,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 1
+            },
+            "change_gate": {
+              "required": true,
+              "change_ids": []
+            },
+            "stop_code": "BLOCKED",
+            "stop_reason": "No executable task is available in the selected queue."
+          }
+        }
+      ],
+      "steps": [
+        {
+          "name": "run_next",
+          "status": "blocked",
+          "started_at": "2026-06-20T10:51:46Z",
+          "finished_at": "2026-06-20T10:51:46Z",
+          "task_id": "",
+          "gate_outcomes": [
+            {
+              "name": "queue_planner",
+              "status": "blocked",
+              "recorded_at": "2026-06-20T10:51:46Z",
+              "details": {
+                "policy": "supervised",
+                "selected_task": null,
+                "queue_counts": {
+                  "executable": 0,
+                  "waiting": 0,
+                  "blocked": 0,
+                  "skipped": 1
+                },
+                "change_gate": {
+                  "required": true,
+                  "change_ids": []
+                },
+                "stop_code": "BLOCKED",
+                "stop_reason": "No executable task is available in the selected queue."
+              }
+            }
+          ],
+          "result": {},
+          "stop_reason": "BLOCKED: No executable task is available in the selected queue.",
+          "audit_event_ids": [
+            "EVT-B78464C26251",
+            "EVT-99720CB785F7"
+          ]
+        }
+      ],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-7AF2B07DA0D4",
+        "EVT-B78464C26251",
+        "EVT-99720CB785F7",
+        "EVT-64F9E76CAB2A"
+      ],
+      "stop_reason": "queue_complete",
+      "created_at": "2026-06-20T10:51:37Z",
+      "updated_at": "2026-06-20T10:51:46Z",
+      "started_at": "2026-06-20T10:51:46Z",
+      "finished_at": "2026-06-20T10:51:46Z"
     }
   ]
 }

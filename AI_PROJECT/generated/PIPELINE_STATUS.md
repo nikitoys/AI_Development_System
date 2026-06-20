@@ -3,19 +3,9 @@
 
 # Pipeline Status
 
-Revision: `14`
-Current session: `PSESS-004`
-Sessions: `4`
-
-## Current Session
-
-- ID: `PSESS-004`
-- Status: `blocked`
-- Policy: `supervised`
-- Current task: `none`
-- Current step: `run_next`
-- Step status: `blocked`
-- Stop reason: `BLOCKED: Evolution Changes were created and now require Human Owner approval.`
+Revision: `21`
+Current session: `none`
+Sessions: `6`
 
 ## Sessions
 
@@ -25,3 +15,5 @@ Sessions: `4`
 | `PSESS-002` | `blocked` | `supervised_local_commit` | `TASK-068` | `run_next` | BLOCKED: Approved linked Evolution Change is required before execution. |
 | `PSESS-003` | `completed` | `supervised` | `` | `run_next` | queue_complete |
 | `PSESS-004` | `blocked` | `supervised` | `` | `run_next` | BLOCKED: Evolution Changes were created and now require Human Owner approval. |
+| `PSESS-005` | `blocked` | `supervised_local_commit` | `TASK-068` | `run_next` | NOT_IMPLEMENTED: Auto-close requires Codex execution, Codex Report, Machine Review, Codex Review and a close action. |
+| `PSESS-006` | `completed` | `supervised` | `TASK-068` | `run_next` | queue_complete |

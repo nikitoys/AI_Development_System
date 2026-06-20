@@ -83,6 +83,8 @@ class AictlTests(unittest.TestCase):
         self.assertIn("project.render", names)
         self.assertIn("pipeline.run_next", names)
         self.assertIn("pipeline.run_until_blocker", names)
+        self.assertIn("pipeline.policy.save", names)
+        self.assertIn("pipeline.policy.list", names)
         self.assertIn("pipeline.session.create", names)
         self.assertIn("pipeline.status", names)
         self.assertIn("task.import", names)
@@ -190,6 +192,57 @@ class AictlTests(unittest.TestCase):
             self.assertTrue((root / "AI_PROJECT" / "state" / "pipeline_sessions.json").exists())
             self.assertTrue((root / "AI_PROJECT" / "events" / "pipeline-events.jsonl").exists())
             self.assertTrue((root / "AI_PROJECT" / "generated" / "PIPELINE_STATUS.md").exists())
+
+    def test_pipeline_session_create_can_use_custom_policy_preset(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root)
+
+            save_code, save_stdout, _run = self.run_main(
+                [
+                    "--root",
+                    str(root),
+                    "--actor",
+                    "tester",
+                    "--json",
+                    "pipeline",
+                    "policy",
+                    "save",
+                    "--name",
+                    "owner_supervised",
+                    "--from-preset",
+                    "supervised",
+                ]
+            )
+            self.assertEqual(save_code, 0, save_stdout)
+
+            code, stdout, _run = self.run_main(
+                [
+                    "--root",
+                    str(root),
+                    "--actor",
+                    "tester",
+                    "--json",
+                    "pipeline",
+                    "session",
+                    "create",
+                    "--policy",
+                    "owner_supervised",
+                ]
+            )
+            payload = json.loads(stdout)
+
+            self.assertEqual(code, 0)
+            self.assertTrue(payload["ok"])
+            session_path = root / "AI_PROJECT" / "state" / "pipeline_sessions.json"
+            session_state = json.loads(session_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                session_state["sessions"][0]["policy_snapshot"]["name"],
+                "owner_supervised",
+            )
+            self.assertTrue((root / "AI_PROJECT" / "state" / "pipeline_policy_presets.json").exists())
+            self.assertTrue((root / "AI_PROJECT" / "events" / "pipeline-policy-events.jsonl").exists())
+            self.assertTrue((root / "AI_PROJECT" / "generated" / "PIPELINE_POLICIES.md").exists())
 
     def test_pipeline_run_next_json_uses_governed_runner(self):
         with tempfile.TemporaryDirectory() as tmp:

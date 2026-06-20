@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `14`
-State revision: `14`
-Current session: `PSESS-004`
+Events: `21`
+State revision: `21`
+Current session: `none`
 
 ## Timeline
 
@@ -25,13 +25,22 @@ Current session: `PSESS-004`
 | `2026-06-20T10:18:30Z` | `session.create` | `pipeline.session.create` | `PSESS-004` | `` | `` | PSESS-004 |
 | `2026-06-20T10:18:35Z` | `step.started` | `pipeline.step.start` | `PSESS-004` | `` | `` | PSESS-004 |
 | `2026-06-20T10:20:25Z` | `change.approved` | `pipeline.step.result` | `PSESS-004` | `` | `evolution_change_gate` | evolution_change_gate blocked \| changes=CHG-051,CHG-054,CHG-055,CHG-056,CHG-057 \| Evolution Changes were created and now require Human Owner approval. |
+| `2026-06-20T10:48:33Z` | `session.create` | `pipeline.session.create` | `PSESS-005` | `` | `` | PSESS-005 |
+| `2026-06-20T10:49:07Z` | `step.started` | `pipeline.step.start` | `PSESS-005` | `` | `` | PSESS-005 |
+| `2026-06-20T10:49:14Z` | `close_rework.decision` | `pipeline.step.result` | `PSESS-005` | `TASK-068` | `review_close_gate` | review_close_gate blocked \| changes=CHG-051 \| Auto-close requires Codex execution, Codex Report, Machine Review, Codex Review and a close action. |
+| `2026-06-20T10:51:37Z` | `session.create` | `pipeline.session.create` | `PSESS-006` | `TASK-068` | `` | PSESS-006 |
+| `2026-06-20T10:51:46Z` | `step.started` | `pipeline.step.start` | `PSESS-006` | `` | `` | PSESS-006 |
+| `2026-06-20T10:51:46Z` | `queue.planned` | `pipeline.step.result` | `PSESS-006` | `` | `queue_planner` | queue_planner blocked \| No executable task is available in the selected queue. |
+| `2026-06-20T10:51:46Z` | `completion` | `pipeline.session.complete` | `PSESS-006` | `` | `` | completed |
 
 ## Event Type Coverage
 
 - `change.approved`
+- `close_rework.decision`
 - `completion`
 - `policy.selected`
 - `queue.planned`
 - `session.create`
 - `step.started`
 - `stop`
+- `task.selected`

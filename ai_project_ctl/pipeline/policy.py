@@ -430,6 +430,16 @@ def preset_names() -> tuple[str, ...]:
     return tuple(_LISTED_PRESETS)
 
 
+def builtin_preset_names(*, include_unlisted: bool = False) -> tuple[str, ...]:
+    if include_unlisted:
+        return tuple(_PRESETS)
+    return preset_names()
+
+
+def is_builtin_preset_name(name: str) -> bool:
+    return name in _PRESETS
+
+
 def policy_preset(name: str) -> PipelinePolicy:
     try:
         return _PRESETS[name]()
