@@ -109,13 +109,19 @@ Policy is a declarative safety contract. A policy can allow specific automation,
 | --- | --- | --- | --- | --- | --- |
 | `dry_run` | Manual, max 1 | Disabled | Not required by preset | Disabled | Disabled |
 | `supervised` | Ready queue, max 1 | Build prompt only | Machine Review PASS and Codex Review APPROVE are configured for later gates | Disabled | Disabled |
+| `supervised_executable` | Ready queue, max 1 | Run local allowlisted Codex command | Requires Codex Report Gate PASS, Machine Review PASS and Codex Review APPROVE | Disabled | Disabled |
 | `supervised_autoclose` | Same as `supervised` | Build prompt only by default | Requires Machine Review PASS and Codex Review APPROVE for auto-close policy validity | Auto-close enabled, but real close requires Codex execution and review evidence | Disabled |
-| `supervised_local_commit` | Same as `supervised_autoclose` | Build prompt only by default | Requires approved review gates | Auto-close enabled | Local-only commit enabled after commit readiness |
+| `supervised_executable_autoclose` | Ready queue, max 1 | Run local allowlisted Codex command | Requires Codex Report Gate PASS, Machine Review PASS and Codex Review APPROVE | Auto-close enabled; requires explicit owner auto-close note on the session | Disabled |
+| `supervised_local_commit` | Same as `supervised_autoclose` | Build prompt only by default | Requires approved review gates | Auto-close enabled, but blocked before close because Codex execution evidence is missing | Local-only commit policy is blocked before commit |
+| `supervised_executable_local_commit` | Same as `supervised_executable_autoclose` | Run local allowlisted Codex command | Requires approved review gates | Auto-close enabled; requires explicit owner auto-close note on the session | Local-only commit enabled after commit readiness |
 
 Important details:
 
 - `RUN_CODEX` policy mode is stricter than prompt-only mode. It requires Token Budget Gate PASS, a human-selected policy, an approved linked Evolution Change when the policy requires it, and a structured execution report.
 - `supervised_autoclose` and `supervised_local_commit` do not magically execute Codex. With their default prompt-only Codex mode, they stop before auto-close or commit because the execution and review evidence does not exist.
+- Executable presets use the local-command adapter with an exact allowlist for `codex exec`. The adapter validates prompt freshness and task identity before invoking the command, passes `AI_PROJECT/generated/CODEX_PROMPT.md` to `codex exec` through stdin by default, then requires a newly submitted structured execution report before downstream gates can pass.
+- Owner-configured Codex sandbox flags belong in `local_command` and must exactly match `command_allowlist`, for example `codex exec -s workspace-write`. The adapter does not hardcode `danger-full-access` or bypass modes.
+- Auto-close requires an explicit owner approval note on the session. Use `--auto-close-note "..."` when creating an executable auto-close session.
 - Commit policy is always local-only when enabled. Push and merge are forbidden by policy validation.
 
 ## Session Lifecycle
@@ -169,6 +175,12 @@ or for an Epic queue:
 
 ```bash
 python scripts/aictl.py pipeline session create --policy supervised --epic EPIC-007 --status-filter ready --max-tasks 3
+```
+
+Create an executable auto-close session only when the Human Owner explicitly approved auto-close for the selected queue:
+
+```bash
+python scripts/aictl.py pipeline session create --policy supervised_executable_autoclose --task-ref PIPE-25 --auto-close-note "APPROVED by Human Owner for this selected session"
 ```
 
 Do not create or edit `pipeline_sessions.json` manually.
@@ -325,8 +337,13 @@ Behavior:
 - `dry_run` blocks with `CODEX_ADAPTER_DRY_RUN`.
 - `manual_handoff` blocks with `CODEX_ADAPTER_MANUAL_HANDOFF_REQUIRED`.
 - `local_command` runs only an exact command listed in the policy allowlist.
+- `local_command` passes `AI_PROJECT/generated/CODEX_PROMPT.md` to the command through stdin by default. The command `codex exec` is never launched with empty input after Token Budget Gate passes.
 
 The adapter validates that the prompt still exists, still hashes to the token-gated payload, and still references the selected Task. If the prompt changes after the token gate, execution stops with `CODEX_ADAPTER_PROMPT_STALE`.
+
+The adapter records stdout/stderr byte counts and SHA-256 refs. For failed local commands it also records short bounded stdout/stderr snippets for diagnostics. It must not store the full prompt text in pipeline state, events or generated output.
+
+If local Codex startup fails because the host sandbox is unavailable, such as `bwrap`, `bubblewrap`, loopback setup, `RTM_NEWADDR`, `Operation not permitted`, user namespace or `unshare` errors, the adapter reports `CODEX_ADAPTER_SANDBOX_UNAVAILABLE` instead of the generic nonzero-exit reason.
 
 When report evidence is required, the adapter expects a newer structured execution report for the task after the local command finishes.
 
@@ -335,6 +352,15 @@ Submit a report with:
 ```bash
 python scripts/aictl.py task report submit --task TASK-066 --file REPORT.json --confirm
 ```
+
+Before using a local Codex command in an executable pipeline, verify it manually from the repository root:
+
+```bash
+codex exec -s workspace-write < AI_PROJECT/generated/CODEX_PROMPT.md
+codex exec -s danger-full-access < AI_PROJECT/generated/CODEX_PROMPT.md
+```
+
+Use the weakest sandbox that works in the local environment. If `danger-full-access` or a bypass mode is needed because the environment is externally sandboxed, it must be explicitly owner configured in both `local_command` and `command_allowlist`; the adapter does not infer or add it.
 
 ## Codex Execution Report Requirements
 
@@ -723,4 +749,3 @@ Human Owner approval and acceptance
 local-only commit policy
 audit trail
 ```
-

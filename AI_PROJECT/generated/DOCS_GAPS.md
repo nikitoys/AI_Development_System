@@ -3,8 +3,8 @@
 
 # Documentation Gaps
 
-Revision: `27`
-Open gaps: `161`
+Revision: `28`
+Open gaps: `163`
 Tracked categories: `Missing File`, `Status Mismatch`, `Active Not Reviewed`, `Active Review Stale`, `Unresolved Placeholder`, `Broken Local Link`, `Stale Content Hash`, `Not Active`
 
 ## Missing File
@@ -57,7 +57,8 @@ _No gaps._
 
 ## Stale Content Hash
 
-_No gaps._
+- `ai-system/project-control/10-owner-quickstart.md` (guide, review): recorded content hash does not match file content
+- `ai-system/project-control/pipeline-runner.md` (guide, review): recorded content hash does not match file content
 
 ## Not Active
 

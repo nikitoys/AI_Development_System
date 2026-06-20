@@ -7,6 +7,7 @@ existing workflow commands.
 
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -53,6 +54,8 @@ from .token_budget import evaluate_token_budget
 RUN_NEXT_STEP = "run_next"
 ACTIVE_RUN_NEXT_STATUSES = {"planned", "running"}
 TERMINAL_CHANGE_STATUSES = {"approved", "in_progress", "in_review", "accepted"}
+SESSION_APPROVAL_CHANGE_STATUSES = {"ready", "proposed"}
+SCRIPTS_DIR = Path(__file__).resolve().parents[2] / "scripts"
 
 
 def run_next(
@@ -164,6 +167,46 @@ def run_next(
             root=root_path,
             actor=actor,
         )
+
+    queue_change_check = _ensure_approved_changes_for_queue(
+        queue_preview,
+        policy,
+        refs.get("evolution"),
+        session_id=selected_session_id,
+        root=root_path,
+        actor=actor,
+        python_executable=python_bin,
+        runner=execution_runner,
+    )
+    if not queue_change_check.ok:
+        queue_change_check.data.setdefault("side_effects", [])
+        return _record_stop(
+            selected_session_id,
+            stop_code=str(queue_change_check.data.get("stop_code") or "BLOCKED"),
+            stop_reason=queue_change_check.message,
+            result_status="blocked",
+            gate_name="evolution_change_gate",
+            gate_status="blocked",
+            gate_details={
+                **_gate_details(policy.name, queue_preview, queue_preview.next_task),
+                "change_gate": queue_change_check.data,
+            },
+            selected_task=queue_preview.next_task,
+            policy_name=policy.name,
+            queue_preview=queue_preview,
+            side_effects=[*side_effects, queue_change_check],
+            root=root_path,
+            actor=actor,
+            linked_change_ids=_string_tuple(queue_change_check.data.get("change_ids")),
+        )
+    if queue_change_check.data.get("state_changed"):
+        refs = load_reference_state(root_path)
+    queue_change_gate = (
+        dict(queue_change_check.data)
+        if queue_change_check.data.get("required")
+        else {}
+    )
+
     selected = queue_preview.next_task
 
     if selected is None:
@@ -174,7 +217,12 @@ def run_next(
             result_status="blocked",
             gate_name="queue_planner",
             gate_status="blocked",
-            gate_details=_gate_details(policy.name, queue_preview, selected),
+            gate_details=_gate_details(
+                policy.name,
+                queue_preview,
+                selected,
+                change_gate=queue_change_gate,
+            ),
             selected_task=None,
             policy_name=policy.name,
             queue_preview=queue_preview,
@@ -202,7 +250,12 @@ def run_next(
             result_status="failed",
             gate_name="queue_planner",
             gate_status="fail",
-            gate_details=_gate_details(policy.name, queue_preview, selected),
+            gate_details=_gate_details(
+                policy.name,
+                queue_preview,
+                selected,
+                change_gate=queue_change_gate,
+            ),
             selected_task=selected,
             policy_name=policy.name,
             queue_preview=queue_preview,
@@ -219,7 +272,12 @@ def run_next(
             result_status="stopped",
             gate_name="codex_execution_policy",
             gate_status="skipped",
-            gate_details=_gate_details(policy.name, queue_preview, selected),
+            gate_details=_gate_details(
+                policy.name,
+                queue_preview,
+                selected,
+                change_gate=queue_change_gate,
+            ),
             selected_task=selected,
             policy_name=policy.name,
             queue_preview=queue_preview,
@@ -247,7 +305,12 @@ def run_next(
             gate_name="evolution_change_gate",
             gate_status="blocked",
             gate_details={
-                **_gate_details(policy.name, queue_preview, selected),
+                **_gate_details(
+                    policy.name,
+                    queue_preview,
+                    selected,
+                    change_gate=queue_change_gate,
+                ),
                 "change_gate": change_check.data,
             },
             selected_task=selected,
@@ -256,6 +319,7 @@ def run_next(
             side_effects=[*side_effects, change_check],
             root=root_path,
             actor=actor,
+            linked_change_ids=_string_tuple(change_check.data.get("change_ids")),
         )
 
     prepare = run_workflow(
@@ -277,7 +341,12 @@ def run_next(
             gate_name="task_prepare_for_codex",
             gate_status="blocked",
             gate_details={
-                **_gate_details(policy.name, queue_preview, selected),
+                **_gate_details(
+                    policy.name,
+                    queue_preview,
+                    selected,
+                    change_gate=queue_change_gate,
+                ),
                 "workflow": _workflow_summary(prepare),
             },
             selected_task=selected,
@@ -301,7 +370,12 @@ def run_next(
                 gate_name="review_close_gate",
                 gate_status="blocked",
                 gate_details={
-                    **_gate_details(policy.name, queue_preview, selected),
+                    **_gate_details(
+                        policy.name,
+                        queue_preview,
+                        selected,
+                        change_gate=queue_change_gate,
+                    ),
                     "workflow": _workflow_summary(prepare),
                 },
                 selected_task=selected,
@@ -323,7 +397,12 @@ def run_next(
                 gate_name="commit_gate",
                 gate_status="blocked",
                 gate_details={
-                    **_gate_details(policy.name, queue_preview, selected),
+                    **_gate_details(
+                        policy.name,
+                        queue_preview,
+                        selected,
+                        change_gate=queue_change_gate,
+                    ),
                     "workflow": _workflow_summary(prepare),
                 },
                 selected_task=selected,
@@ -341,7 +420,12 @@ def run_next(
             gate_name="codex_execution_policy",
             gate_status="skipped",
             gate_details={
-                **_gate_details(policy.name, queue_preview, selected),
+                **_gate_details(
+                    policy.name,
+                    queue_preview,
+                    selected,
+                    change_gate=queue_change_gate,
+                ),
                 "workflow": _workflow_summary(prepare),
             },
             selected_task=selected,
@@ -359,7 +443,12 @@ def run_next(
             strict=True,
         )
         token_gate_details = {
-            **_gate_details(policy.name, queue_preview, selected),
+            **_gate_details(
+                policy.name,
+                queue_preview,
+                selected,
+                change_gate=queue_change_gate,
+            ),
             "workflow": _workflow_summary(prepare),
             "token_budget": token_gate.to_dict(),
             "codex_adapter_called": False,
@@ -410,7 +499,12 @@ def run_next(
             runner=execution_runner,
         )
         adapter_details = {
-            **_gate_details(policy.name, queue_preview, selected),
+            **_gate_details(
+                policy.name,
+                queue_preview,
+                selected,
+                change_gate=queue_change_gate,
+            ),
             "workflow": _workflow_summary(prepare),
             "token_budget": token_gate.to_dict(),
             "codex_adapter_called": True,
@@ -746,7 +840,12 @@ def run_next(
         result_status="failed",
         gate_name="codex_execution_policy",
         gate_status="fail",
-        gate_details=_gate_details(policy.name, queue_preview, selected),
+        gate_details=_gate_details(
+            policy.name,
+            queue_preview,
+            selected,
+            change_gate=queue_change_gate,
+        ),
         selected_task=selected,
         policy_name=policy.name,
         queue_preview=queue_preview,
@@ -964,6 +1063,439 @@ def _preview_session_queue(
     return preview_queue(tasks_state, plan, policy=policy, request=request)
 
 
+def _ensure_approved_changes_for_queue(
+    queue_preview: QueuePreview,
+    policy: PipelinePolicy,
+    evolution_state: Any,
+    *,
+    session_id: str,
+    root: Path,
+    actor: str,
+    python_executable: str,
+    runner: Runner | None,
+) -> CommandResult:
+    owner_approval_enabled = (
+        policy.evolution.owner_approve_required_changes_for_session
+    )
+    approval_note = policy.evolution.owner_approval_note.strip()
+    if not policy.evolution.create_missing_change and not owner_approval_enabled:
+        return CommandResult.success(
+            command="pipeline.change_gate",
+            domain="pipeline",
+            message="Queue-wide Change preflight is not enabled by policy.",
+            data={"required": False},
+        )
+    if not policy.evolution.require_approved_change_for_execution:
+        return CommandResult.success(
+            command="pipeline.change_gate",
+            domain="pipeline",
+            message="Approved Change gate is not required by policy.",
+            data={"required": False},
+        )
+
+    created_change_ids: list[str] = []
+    linked_change_ids: list[str] = []
+    tasks_requiring_approval: list[str] = []
+    approval_candidates: list[dict[str, str]] = []
+    unapprovable_changes: list[dict[str, str]] = []
+    workflows: list[dict[str, Any]] = []
+    effects: list[CommandResult] = []
+    task_refs = _queue_task_ref_map(queue_preview)
+
+    for task_id in _queue_task_ids(queue_preview):
+        linked = _linked_changes_for_task(task_id, evolution_state)
+        approved = [
+            change
+            for change in linked
+            if str(change.get("status") or "") in TERMINAL_CHANGE_STATUSES
+        ]
+        if approved:
+            _extend_unique(linked_change_ids, [str(change.get("id")) for change in approved])
+            continue
+        if linked:
+            _extend_unique(linked_change_ids, [str(change.get("id")) for change in linked])
+            tasks_requiring_approval.append(task_id)
+            for change in linked:
+                change_id = str(change.get("id") or "")
+                status = str(change.get("status") or "")
+                if status in SESSION_APPROVAL_CHANGE_STATUSES:
+                    approval_candidates.append(
+                        {
+                            "change_id": change_id,
+                            "task_id": task_id,
+                            "task_ref": task_refs.get(task_id, task_id),
+                            "status": status,
+                        }
+                    )
+                else:
+                    unapprovable_changes.append(
+                        {
+                            "change_id": change_id,
+                            "task_id": task_id,
+                            "task_ref": task_refs.get(task_id, task_id),
+                            "status": status,
+                        }
+                    )
+            continue
+
+        if not policy.evolution.create_missing_change:
+            tasks_requiring_approval.append(task_id)
+            continue
+
+        created = run_workflow(
+            "evolution.create_for_task",
+            task_ref=task_id,
+            root=root,
+            actor=actor,
+            confirmed=True,
+            python_executable=python_executable,
+            runner=runner,
+        )
+        effects.append(created)
+        workflows.append(_workflow_summary(created))
+        if not created.ok:
+            result = CommandResult.failure(
+                command="pipeline.change_gate",
+                domain="pipeline",
+                message="Evolution Change creation workflow failed.",
+                errors=list(created.errors)
+                or [
+                    CommandMessage(
+                        "PIPELINE_CHANGE_CREATE_FAILED",
+                        "Could not create required Evolution Change for task {}.".format(task_id),
+                    )
+                ],
+            )
+            result.data = {
+                "required": True,
+                "stop_code": "BLOCKED",
+                "task_id": task_id,
+                "workflows": workflows,
+            }
+            _merge_effects(result, effects)
+            return result
+        change_id = str(created.data.get("change_id") or "")
+        if change_id:
+            created_change_ids.append(change_id)
+            linked_change_ids.append(change_id)
+            approval_candidates.append(
+                {
+                    "change_id": change_id,
+                    "task_id": task_id,
+                    "task_ref": task_refs.get(task_id, task_id),
+                    "status": "ready",
+                }
+            )
+        tasks_requiring_approval.append(task_id)
+
+    if created_change_ids or tasks_requiring_approval:
+        if owner_approval_enabled and not approval_note:
+            result = CommandResult.failure(
+                command="pipeline.change_gate",
+                domain="pipeline",
+                message="Owner-approved session Change approval requires an approval note.",
+                errors=[
+                    CommandMessage(
+                        "PIPELINE_OWNER_APPROVAL_NOTE_REQUIRED",
+                        "Provide --approval-note when owner-approved Change approval is enabled.",
+                    )
+                ],
+            )
+            result.data = {
+                "required": True,
+                "stop_code": "BLOCKED",
+                "created_change_ids": created_change_ids,
+                "linked_change_ids": linked_change_ids,
+                "change_ids": linked_change_ids,
+                "tasks_requiring_approval": tasks_requiring_approval,
+                "workflows": workflows,
+            }
+            _merge_effects(result, effects)
+            return result
+        if owner_approval_enabled and unapprovable_changes:
+            result = CommandResult.failure(
+                command="pipeline.change_gate",
+                domain="pipeline",
+                message="Some linked Evolution Changes are not ready for owner session approval.",
+                errors=[
+                    CommandMessage(
+                        "PIPELINE_CHANGE_NOT_SESSION_APPROVABLE",
+                        "Only ready or proposed linked Changes can be approved by the session approval policy.",
+                    )
+                ],
+            )
+            result.data = {
+                "required": True,
+                "stop_code": "BLOCKED",
+                "created_change_ids": created_change_ids,
+                "linked_change_ids": linked_change_ids,
+                "change_ids": linked_change_ids,
+                "tasks_requiring_approval": tasks_requiring_approval,
+                "unapprovable_changes": unapprovable_changes,
+                "workflows": workflows,
+            }
+            _merge_effects(result, effects)
+            return result
+        if owner_approval_enabled and approval_candidates:
+            approvals = _approve_session_changes(
+                approval_candidates,
+                approval_note=approval_note,
+                session_id=session_id,
+                root=root,
+                actor=actor,
+                python_executable=python_executable,
+                runner=runner,
+            )
+            effects.extend(approvals["effects"])
+            workflows.extend(approvals["workflows"])
+            if approvals["failed_result"] is not None:
+                failed = approvals["failed_result"]
+                failed.data.update(
+                    {
+                        "required": True,
+                        "stop_code": "BLOCKED",
+                        "created_change_ids": created_change_ids,
+                        "linked_change_ids": linked_change_ids,
+                        "change_ids": linked_change_ids,
+                        "tasks_requiring_approval": tasks_requiring_approval,
+                        "approved_change_ids": approvals["approved_change_ids"],
+                        "approved_task_refs": approvals["approved_task_refs"],
+                        "workflows": workflows,
+                    }
+                )
+                _merge_effects(failed, effects)
+                return failed
+            approved_change_ids = approvals["approved_change_ids"]
+            result = CommandResult.success(
+                command="pipeline.change_gate",
+                domain="pipeline",
+                message="Owner-approved session Change approval completed for selected queue.",
+                data={
+                    "required": True,
+                    "created_change_ids": created_change_ids,
+                    "linked_change_ids": linked_change_ids,
+                    "change_ids": linked_change_ids,
+                    "tasks_requiring_approval": tasks_requiring_approval,
+                    "approved_change_ids": approved_change_ids,
+                    "approved_task_refs": approvals["approved_task_refs"],
+                    "owner_approval": {
+                        "actor": actor,
+                        "approval_note": approval_note,
+                        "session_id": session_id,
+                    },
+                    "workflows": workflows,
+                    "state_changed": bool(created_change_ids or approved_change_ids),
+                },
+            )
+            _merge_effects(result, effects)
+            return result
+        message = (
+            "Evolution Changes were created and now require Human Owner approval."
+            if created_change_ids
+            else "Approved linked Evolution Changes are required before execution."
+        )
+        result = CommandResult.failure(
+            command="pipeline.change_gate",
+            domain="pipeline",
+            message=message,
+            errors=[
+                CommandMessage(
+                    "PIPELINE_CHANGE_APPROVAL_REQUIRED",
+                    "Approve linked Changes before Codex execution.",
+                )
+            ],
+        )
+        result.data = {
+            "required": True,
+            "stop_code": "BLOCKED",
+            "created_change_ids": created_change_ids,
+            "linked_change_ids": linked_change_ids,
+            "change_ids": linked_change_ids,
+            "tasks_requiring_approval": tasks_requiring_approval,
+            "workflows": workflows,
+        }
+        _merge_effects(result, effects)
+        return result
+
+    return CommandResult.success(
+        command="pipeline.change_gate",
+        domain="pipeline",
+        message="Approved Change gate passed for selected queue.",
+        data={
+            "required": True,
+            "change_ids": linked_change_ids,
+        },
+    )
+
+
+def _approve_session_changes(
+    approval_candidates: Sequence[Mapping[str, str]],
+    *,
+    approval_note: str,
+    session_id: str,
+    root: Path,
+    actor: str,
+    python_executable: str,
+    runner: Runner | None,
+) -> dict[str, Any]:
+    effects: list[CommandResult] = []
+    workflows: list[dict[str, Any]] = []
+    approved_change_ids: list[str] = []
+    approved_task_refs: list[str] = []
+    failed_result: CommandResult | None = None
+
+    seen_changes: set[str] = set()
+    for candidate in approval_candidates:
+        change_id = str(candidate.get("change_id") or "")
+        if not change_id or change_id in seen_changes:
+            continue
+        seen_changes.add(change_id)
+        status = str(candidate.get("status") or "")
+        task_ref = str(candidate.get("task_ref") or candidate.get("task_id") or "")
+
+        if status == "proposed":
+            for target_status in ("draft", "ready"):
+                transition = _run_change_transition(
+                    change_id,
+                    target_status,
+                    root=root,
+                    actor=actor,
+                    python_executable=python_executable,
+                    runner=runner,
+                )
+                effects.append(transition)
+                workflows.append(_workflow_summary(transition))
+                if not transition.ok:
+                    failed_result = CommandResult.failure(
+                        command="pipeline.change_gate",
+                        domain="pipeline",
+                        message="Evolution Change preparation for approval failed.",
+                        errors=list(transition.errors)
+                        or [
+                            CommandMessage(
+                                "PIPELINE_CHANGE_PREPARE_FAILED",
+                                "Could not move Change {} to {}.".format(
+                                    change_id,
+                                    target_status,
+                                ),
+                            )
+                        ],
+                    )
+                    return {
+                        "effects": effects,
+                        "workflows": workflows,
+                        "approved_change_ids": approved_change_ids,
+                        "approved_task_refs": approved_task_refs,
+                        "failed_result": failed_result,
+                    }
+
+        approve = run_workflow(
+            "evolution.approve_change",
+            change_ref=change_id,
+            notes="{} (pipeline session {})".format(approval_note, session_id),
+            root=root,
+            actor=actor,
+            confirmed=True,
+            python_executable=python_executable,
+            runner=runner,
+        )
+        effects.append(approve)
+        workflows.append(_workflow_summary(approve))
+        if not approve.ok:
+            failed_result = CommandResult.failure(
+                command="pipeline.change_gate",
+                domain="pipeline",
+                message="Owner-approved session Change approval workflow failed.",
+                errors=list(approve.errors)
+                or [
+                    CommandMessage(
+                        "PIPELINE_CHANGE_APPROVAL_FAILED",
+                        "Could not approve Change {}.".format(change_id),
+                    )
+                ],
+            )
+            return {
+                "effects": effects,
+                "workflows": workflows,
+                "approved_change_ids": approved_change_ids,
+                "approved_task_refs": approved_task_refs,
+                "failed_result": failed_result,
+            }
+        approved_change_ids.append(change_id)
+        if task_ref:
+            approved_task_refs.append(task_ref)
+
+    return {
+        "effects": effects,
+        "workflows": workflows,
+        "approved_change_ids": approved_change_ids,
+        "approved_task_refs": approved_task_refs,
+        "failed_result": failed_result,
+    }
+
+
+def _run_change_transition(
+    change_id: str,
+    target_status: str,
+    *,
+    root: Path,
+    actor: str,
+    python_executable: str,
+    runner: Runner | None,
+) -> CommandResult:
+    argv = (
+        python_executable,
+        str(SCRIPTS_DIR / "evolutionctl.py"),
+        "--root",
+        str(root),
+        "--actor",
+        actor,
+        "change",
+        "transition",
+        change_id,
+        "--to",
+        target_status,
+    )
+    executor = runner or _run_subprocess
+    completed = executor(argv)
+    if completed.returncode == 0:
+        return CommandResult.success(
+            command="evolutionctl.change.transition",
+            domain="evolution",
+            message=completed.stdout.strip() or "OK",
+            data={
+                "change_id": change_id,
+                "status": target_status,
+            },
+        )
+    return CommandResult.failure(
+        command="evolutionctl.change.transition",
+        domain="evolution",
+        message="Evolution Change transition failed.",
+        errors=[
+            CommandMessage(
+                "PIPELINE_CHANGE_TRANSITION_FAILED",
+                "Could not move Change {} to {}.".format(change_id, target_status),
+                details={
+                    "returncode": completed.returncode,
+                    "stdout": completed.stdout,
+                    "stderr": completed.stderr,
+                },
+            )
+        ],
+    )
+
+
+def _run_subprocess(argv: Sequence[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        list(argv),
+        cwd=str(SCRIPTS_DIR.parent),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+
 def _ensure_approved_change(
     task_id: str,
     policy: PipelinePolicy,
@@ -1067,6 +1599,40 @@ def _ensure_approved_change(
         "linked_change_ids": [str(change.get("id")) for change in linked],
     }
     return result
+
+
+def _queue_task_ids(queue_preview: QueuePreview) -> tuple[str, ...]:
+    task_ids: list[str] = []
+    for item in (
+        *queue_preview.executable,
+        *queue_preview.waiting,
+        *queue_preview.blocked,
+    ):
+        task_id = str(item.id or "")
+        if task_id and task_id not in task_ids:
+            task_ids.append(task_id)
+    if not task_ids and queue_preview.next_task and queue_preview.next_task.id:
+        task_ids.append(str(queue_preview.next_task.id))
+    return tuple(task_ids)
+
+
+def _queue_task_ref_map(queue_preview: QueuePreview) -> dict[str, str]:
+    task_refs: dict[str, str] = {}
+    for item in (
+        *queue_preview.executable,
+        *queue_preview.waiting,
+        *queue_preview.blocked,
+    ):
+        task_id = str(item.id or "")
+        if task_id:
+            task_refs[task_id] = str(item.ref or item.selected_ref or task_id)
+    if queue_preview.next_task and queue_preview.next_task.id:
+        task_id = str(queue_preview.next_task.id)
+        task_refs.setdefault(
+            task_id,
+            str(queue_preview.next_task.ref or queue_preview.next_task.selected_ref or task_id),
+        )
+    return task_refs
 
 
 def _linked_changes_for_task(task_id: str, evolution_state: Any) -> list[Mapping[str, Any]]:
@@ -1229,12 +1795,17 @@ def _gate_details(
     policy_name: str,
     queue_preview: QueuePreview,
     selected_task: QueuePreviewItem | None,
+    *,
+    change_gate: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    return {
+    data = {
         "policy": policy_name,
         "selected_task": selected_task.to_dict() if selected_task else None,
         "queue_counts": _queue_counts(queue_preview),
     }
+    if change_gate:
+        data["change_gate"] = dict(change_gate)
+    return data
 
 
 def _queue_counts(queue_preview: QueuePreview | None) -> dict[str, int]:
@@ -1250,6 +1821,7 @@ def _queue_counts(queue_preview: QueuePreview | None) -> dict[str, int]:
 
 def _workflow_summary(result: CommandResult) -> dict[str, Any]:
     steps = result.data.get("steps") if isinstance(result.data, Mapping) else []
+    steps = steps or []
     return {
         "ok": result.ok,
         "message": result.message,

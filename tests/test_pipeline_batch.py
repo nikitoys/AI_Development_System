@@ -249,6 +249,7 @@ class PipelineBatchTests(unittest.TestCase):
                 actor="tester",
                 policy=policy,
                 max_tasks=2,
+                auto_close_note="Owner approved auto-close for this batch test.",
             )
             calls = []
             fake_runner, task_status = batch_workflow_runner(calls, root=root)
@@ -311,7 +312,13 @@ class PipelineBatchTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy, max_tasks=2)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                max_tasks=2,
+                auto_close_note="Owner approved auto-close for this batch test.",
+            )
             calls = []
             fake_runner, task_status = batch_workflow_runner(calls, root=root)
 

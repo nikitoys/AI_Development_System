@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `4`
-State revision: `4`
-Current session: `none`
+Events: `27`
+State revision: `27`
+Current session: `PSESS-008`
 
 ## Timeline
 
@@ -15,10 +15,40 @@ Current session: `none`
 | `2026-06-19T21:35:13Z` | `step.started` | `pipeline.step.start` | `PSESS-001` | `` | `` | PSESS-001 |
 | `2026-06-19T21:35:14Z` | `queue.planned` | `pipeline.step.result` | `PSESS-001` | `` | `queue_planner` | queue_planner blocked \| No executable task is available in the selected queue. |
 | `2026-06-19T21:35:14Z` | `completion` | `pipeline.session.complete` | `PSESS-001` | `` | `` | completed |
+| `2026-06-20T09:43:30Z` | `session.create` | `pipeline.session.create` | `PSESS-002` | `` | `` | PSESS-002 |
+| `2026-06-20T09:45:28Z` | `step.started` | `pipeline.step.start` | `PSESS-002` | `` | `` | PSESS-002 |
+| `2026-06-20T09:45:28Z` | `change.approved` | `pipeline.step.result` | `PSESS-002` | `TASK-068` | `evolution_change_gate` | evolution_change_gate blocked \| Approved linked Evolution Change is required before execution. |
+| `2026-06-20T10:16:08Z` | `session.create` | `pipeline.session.create` | `PSESS-003` | `` | `` | PSESS-003 |
+| `2026-06-20T10:16:12Z` | `step.started` | `pipeline.step.start` | `PSESS-003` | `` | `` | PSESS-003 |
+| `2026-06-20T10:16:13Z` | `queue.planned` | `pipeline.step.result` | `PSESS-003` | `` | `queue_planner` | queue_planner blocked \| No executable task is available in the selected queue. |
+| `2026-06-20T10:16:13Z` | `completion` | `pipeline.session.complete` | `PSESS-003` | `` | `` | completed |
+| `2026-06-20T10:18:30Z` | `session.create` | `pipeline.session.create` | `PSESS-004` | `` | `` | PSESS-004 |
+| `2026-06-20T10:18:35Z` | `step.started` | `pipeline.step.start` | `PSESS-004` | `` | `` | PSESS-004 |
+| `2026-06-20T10:20:25Z` | `change.approved` | `pipeline.step.result` | `PSESS-004` | `` | `evolution_change_gate` | evolution_change_gate blocked \| changes=CHG-051,CHG-054,CHG-055,CHG-056,CHG-057 \| Evolution Changes were created and now require Human Owner approval. |
+| `2026-06-20T10:48:33Z` | `session.create` | `pipeline.session.create` | `PSESS-005` | `` | `` | PSESS-005 |
+| `2026-06-20T10:49:07Z` | `step.started` | `pipeline.step.start` | `PSESS-005` | `` | `` | PSESS-005 |
+| `2026-06-20T10:49:14Z` | `close_rework.decision` | `pipeline.step.result` | `PSESS-005` | `TASK-068` | `review_close_gate` | review_close_gate blocked \| changes=CHG-051 \| Auto-close requires Codex execution, Codex Report, Machine Review, Codex Review and a close action. |
+| `2026-06-20T10:51:37Z` | `session.create` | `pipeline.session.create` | `PSESS-006` | `TASK-068` | `` | PSESS-006 |
+| `2026-06-20T10:51:46Z` | `step.started` | `pipeline.step.start` | `PSESS-006` | `` | `` | PSESS-006 |
+| `2026-06-20T10:51:46Z` | `queue.planned` | `pipeline.step.result` | `PSESS-006` | `` | `queue_planner` | queue_planner blocked \| No executable task is available in the selected queue. |
+| `2026-06-20T10:51:46Z` | `completion` | `pipeline.session.complete` | `PSESS-006` | `` | `` | completed |
+| `2026-06-20T11:55:35Z` | `session.create` | `pipeline.session.create` | `PSESS-007` | `TASK-076` | `` | PSESS-007 |
+| `2026-06-20T11:59:11Z` | `stop` | `pipeline.session.stop` | `PSESS-007` | `` | `` | stopped \| Owner stop |
+| `2026-06-20T12:00:15Z` | `session.create` | `pipeline.session.create` | `PSESS-008` | `` | `` | PSESS-008 |
+| `2026-06-20T12:01:22Z` | `step.started` | `pipeline.step.start` | `PSESS-008` | `` | `` | PSESS-008 |
+| `2026-06-20T12:01:29Z` | `token_gate.result` | `pipeline.step.result` | `PSESS-008` | `TASK-069` | `token_budget_gate` | token_budget_gate pass \| changes=CHG-054 |
+| `2026-06-20T12:01:31Z` | `codex_run.result` | `pipeline.step.result` | `PSESS-008` | `TASK-069` | `codex_execution_adapter` | codex_execution_adapter fail \| changes=CHG-054 \| Codex Execution Adapter stopped: local_command_nonzero_exit |
 
 ## Event Type Coverage
 
+- `change.approved`
+- `close_rework.decision`
+- `codex_run.result`
 - `completion`
+- `policy.selected`
 - `queue.planned`
 - `session.create`
 - `step.started`
+- `stop`
+- `task.selected`
+- `token_gate.result`

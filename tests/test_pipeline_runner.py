@@ -82,6 +82,79 @@ def write_project_state(root: Path, *, change_status: str | None = "approved") -
     )
 
 
+def write_multi_task_project_state(
+    root: Path,
+    *,
+    task_count: int = 5,
+    task_status: str = "ready",
+) -> None:
+    state_dir = root / "AI_PROJECT" / "state"
+    state_dir.mkdir(parents=True)
+    (state_dir / "plan.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "revision": 1,
+                "initiatives": [{"id": "INIT-001", "status": "active"}],
+                "epics": [
+                    {
+                        "id": "EPIC-001",
+                        "initiative_id": "INIT-001",
+                        "status": "planned",
+                        "key": "APP",
+                        "order": 1,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    tasks = []
+    for index in range(1, task_count + 1):
+        task_id = "TASK-{0:03d}".format(index)
+        tasks.append(
+            {
+                "id": task_id,
+                "ref": "APP-{0:02d}".format(index),
+                "uid": "uid_task_{0:03d}".format(index),
+                "legacy_id": task_id,
+                "aliases": [task_id],
+                "title": "Runnable task {}".format(index),
+                "summary": "Prepare task {}".format(index),
+                "description": "Task {} needs a linked Change.".format(index),
+                "scope": ["Implement task {}".format(index)],
+                "out_of_scope": ["Do not approve Evolution Changes."],
+                "acceptance_criteria": ["Created Change is linked."],
+                "review_instructions": ["Check owner approval remains separate."],
+                "status": task_status,
+                "epic_id": "EPIC-001",
+                "priority": 1,
+                "order": index,
+                "local_seq": index,
+                "depends_on": [],
+                "allowed_files": [
+                    "ai_project_ctl/pipeline/runner.py",
+                    "tests/test_pipeline_runner.py",
+                ],
+            }
+        )
+    (state_dir / "tasks.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "revision": 1,
+                "current_task_id": None,
+                "tasks": tasks,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (state_dir / "evolution.json").write_text(
+        json.dumps({"schema_version": 1, "revision": 1, "changes": []}),
+        encoding="utf-8",
+    )
+
+
 def successful_workflow_runner(
     calls,
     *,
@@ -113,6 +186,106 @@ def successful_workflow_runner(
         return completed('{"ok": true}\n')
 
     return fake_run
+
+
+def auto_create_change_runner(calls, *, root: Path, allow_approval: bool = False):
+    def fake_run(argv):
+        args = list(argv)
+        calls.append(args)
+        script = Path(args[1]).name if len(args) > 1 else ""
+        if script == "taskctl.py" and "resolve" in args:
+            task_ref = args[args.index("resolve") + 1]
+            task = _task_by_ref(root, task_ref)
+            return completed(
+                json.dumps(
+                    {
+                        "id": task["id"],
+                        "ref": task.get("ref") or task["id"],
+                        "status": task["status"],
+                    }
+                )
+                + "\n"
+            )
+        if script == "taskctl.py":
+            return completed("OK\n")
+        if script == "evolutionctl.py":
+            change_command = (
+                args[args.index("change") + 1]
+                if "change" in args and args.index("change") + 1 < len(args)
+                else ""
+            )
+            if change_command in {"approve", "accept"}:
+                if change_command == "accept" or not allow_approval:
+                    raise AssertionError("pipeline must not approve or accept changes")
+                change_id = args[args.index("approve") + 1]
+                _update_change(root, change_id, status="approved")
+                return completed("OK: change.approve revision 1 -> 2\n")
+            if args[-1] == "validate":
+                return completed("OK: evolution is valid\n")
+            if args[-1] == "check-generated":
+                return completed("OK: generated evolution file is up to date\n")
+            if "create" in args:
+                change_id = _append_change(root)
+                return completed(
+                    "OK: change.create revision 1 -> 2\nCreated: {}\n".format(change_id)
+                )
+            if "link-task" in args:
+                change_id = args[args.index("link-task") + 1]
+                task_id = args[args.index("--task") + 1]
+                _update_change(root, change_id, linked_task=task_id)
+                return completed("OK\n")
+            if "transition" in args and "--to" in args:
+                change_id = args[args.index("transition") + 1]
+                _update_change(root, change_id, status=args[args.index("--to") + 1])
+                return completed("OK\n")
+            if any(command in args for command in ("add-affected-file", "add-risk", "add-impact")):
+                return completed("OK\n")
+        if script == "aictl.py":
+            return completed('{"ok": true}\n')
+        raise AssertionError("unexpected command: {}".format(args))
+
+    return fake_run
+
+
+def _task_by_ref(root: Path, task_ref: str) -> dict:
+    state = json.loads((root / "AI_PROJECT" / "state" / "tasks.json").read_text(encoding="utf-8"))
+    for task in state["tasks"]:
+        refs = {task.get("id"), task.get("ref"), task.get("uid"), task.get("legacy_id")}
+        refs.update(task.get("aliases") or [])
+        if task_ref in refs:
+            return task
+    raise AssertionError("missing task ref: {}".format(task_ref))
+
+
+def _append_change(root: Path) -> str:
+    path = root / "AI_PROJECT" / "state" / "evolution.json"
+    state = json.loads(path.read_text(encoding="utf-8"))
+    change_id = "CHG-{0:03d}".format(len(state.get("changes", [])) + 1)
+    state.setdefault("changes", []).append(
+        {
+            "id": change_id,
+            "status": "draft",
+            "title": "Generated Change {}".format(change_id),
+            "linked_tasks": [],
+        }
+    )
+    state["revision"] = int(state.get("revision", 0)) + 1
+    path.write_text(json.dumps(state), encoding="utf-8")
+    return change_id
+
+
+def _update_change(root: Path, change_id: str, *, linked_task: str = "", status: str = "") -> None:
+    path = root / "AI_PROJECT" / "state" / "evolution.json"
+    state = json.loads(path.read_text(encoding="utf-8"))
+    for change in state.get("changes", []):
+        if change.get("id") != change_id:
+            continue
+        if linked_task and linked_task not in change.setdefault("linked_tasks", []):
+            change["linked_tasks"].append(linked_task)
+        if status:
+            change["status"] = status
+    state["revision"] = int(state.get("revision", 0)) + 1
+    path.write_text(json.dumps(state), encoding="utf-8")
 
 
 def stateful_workflow_runner(
@@ -346,6 +519,242 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(state["sessions"][0]["status"], "blocked")
             self.assertEqual(state["sessions"][0]["steps"][0]["gate_outcomes"][0]["name"], "evolution_change_gate")
 
+    def test_auto_create_missing_change_creates_linked_change_and_blocks_for_approval(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status=None)
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="auto_create_missing_change",
+                evolution=replace(supervised.evolution, create_missing_change=True),
+            )
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                task_refs=("APP-01",),
+            )
+            calls = []
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=auto_create_change_runner(calls, root=root),
+            )
+            state = load_pipeline(root)
+            latest = state["sessions"][0]
+            changes = json.loads(
+                (root / "AI_PROJECT" / "state" / "evolution.json").read_text(
+                    encoding="utf-8"
+                )
+            )["changes"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "BLOCKED")
+            self.assertIn("Human Owner approval", result.data["stop_reason"])
+            self.assertEqual(changes[0]["id"], "CHG-001")
+            self.assertEqual(changes[0]["status"], "ready")
+            self.assertEqual(changes[0]["linked_tasks"], ["TASK-001"])
+            self.assertEqual(latest["linked_change_ids"], ["CHG-001"])
+            change_gate = latest["steps"][0]["gate_outcomes"][0]["details"]["change_gate"]
+            self.assertEqual(change_gate["created_change_ids"], ["CHG-001"])
+            self.assertEqual(change_gate["tasks_requiring_approval"], ["TASK-001"])
+            command_texts = [" ".join(call) for call in calls]
+            self.assertFalse(any(" change approve " in text for text in command_texts))
+            self.assertFalse(any(" change accept " in text for text in command_texts))
+
+    def test_auto_create_missing_changes_preflights_multiple_selected_tasks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_multi_task_project_state(root, task_count=5)
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="auto_create_missing_changes",
+                evolution=replace(supervised.evolution, create_missing_change=True),
+            )
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                task_refs=("APP-01", "APP-02", "APP-03", "APP-04", "APP-05"),
+                max_tasks=5,
+            )
+            calls = []
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=auto_create_change_runner(calls, root=root),
+            )
+            state = load_pipeline(root)
+            latest = state["sessions"][0]
+            changes = json.loads(
+                (root / "AI_PROJECT" / "state" / "evolution.json").read_text(
+                    encoding="utf-8"
+                )
+            )["changes"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "BLOCKED")
+            self.assertEqual(
+                [change["id"] for change in changes],
+                ["CHG-001", "CHG-002", "CHG-003", "CHG-004", "CHG-005"],
+            )
+            self.assertEqual(
+                [change["linked_tasks"] for change in changes],
+                [["TASK-001"], ["TASK-002"], ["TASK-003"], ["TASK-004"], ["TASK-005"]],
+            )
+            self.assertEqual(
+                latest["linked_change_ids"],
+                ["CHG-001", "CHG-002", "CHG-003", "CHG-004", "CHG-005"],
+            )
+            change_gate = latest["steps"][0]["gate_outcomes"][0]["details"]["change_gate"]
+            self.assertEqual(
+                change_gate["created_change_ids"],
+                ["CHG-001", "CHG-002", "CHG-003", "CHG-004", "CHG-005"],
+            )
+            self.assertEqual(
+                change_gate["tasks_requiring_approval"],
+                ["TASK-001", "TASK-002", "TASK-003", "TASK-004", "TASK-005"],
+            )
+            self.assertFalse(any("codexctl.py" in " ".join(call) for call in calls))
+
+    def test_auto_create_missing_changes_preflights_blocked_selected_tasks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_multi_task_project_state(root, task_count=2, task_status="planned")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="auto_create_blocked_selected_changes",
+                evolution=replace(supervised.evolution, create_missing_change=True),
+            )
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                task_refs=("APP-01", "APP-02"),
+                max_tasks=2,
+            )
+            calls = []
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=auto_create_change_runner(calls, root=root),
+            )
+            state = load_pipeline(root)
+            latest = state["sessions"][0]
+            changes = json.loads(
+                (root / "AI_PROJECT" / "state" / "evolution.json").read_text(
+                    encoding="utf-8"
+                )
+            )["changes"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "BLOCKED")
+            self.assertEqual([change["id"] for change in changes], ["CHG-001", "CHG-002"])
+            self.assertEqual(latest["linked_change_ids"], ["CHG-001", "CHG-002"])
+            change_gate = latest["steps"][0]["gate_outcomes"][0]["details"]["change_gate"]
+            self.assertEqual(change_gate["created_change_ids"], ["CHG-001", "CHG-002"])
+
+    def test_owner_approval_policy_approves_selected_queue_changes_and_continues(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_multi_task_project_state(root, task_count=5)
+            evolution_path = root / "AI_PROJECT" / "state" / "evolution.json"
+            evolution = json.loads(evolution_path.read_text(encoding="utf-8"))
+            evolution["changes"] = [
+                {
+                    "id": "CHG-001",
+                    "status": "proposed",
+                    "title": "Existing proposed",
+                    "linked_tasks": ["TASK-003"],
+                },
+                {
+                    "id": "CHG-002",
+                    "status": "ready",
+                    "title": "Existing ready",
+                    "linked_tasks": ["TASK-004"],
+                },
+                {
+                    "id": "CHG-999",
+                    "status": "ready",
+                    "title": "Unrelated ready",
+                    "linked_tasks": ["TASK-999"],
+                },
+            ]
+            evolution_path.write_text(json.dumps(evolution), encoding="utf-8")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="owner_approved_session_changes",
+                evolution=replace(
+                    supervised.evolution,
+                    create_missing_change=True,
+                    owner_approve_required_changes_for_session=True,
+                    owner_approval_note="Owner approved this selected queue.",
+                ),
+            )
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                task_refs=("APP-01", "APP-02", "APP-03", "APP-04", "APP-05"),
+                max_tasks=5,
+            )
+            calls = []
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=auto_create_change_runner(calls, root=root, allow_approval=True),
+            )
+            state = load_pipeline(root)
+            latest = state["sessions"][0]
+            changes = {
+                change["id"]: change
+                for change in json.loads(evolution_path.read_text(encoding="utf-8"))[
+                    "changes"
+                ]
+            }
+            gate_details = latest["steps"][0]["gate_outcomes"][0]["details"]
+            change_gate = gate_details["change_gate"]
+            command_texts = [" ".join(call) for call in calls]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "BLOCKED")
+            self.assertIn("policy stops before Codex execution", result.data["stop_reason"])
+            self.assertEqual(changes["CHG-001"]["status"], "approved")
+            self.assertEqual(changes["CHG-002"]["status"], "approved")
+            self.assertEqual(changes["CHG-999"]["status"], "ready")
+            self.assertEqual(changes["CHG-004"]["status"], "approved")
+            self.assertEqual(changes["CHG-005"]["status"], "approved")
+            self.assertEqual(changes["CHG-006"]["status"], "approved")
+            self.assertEqual(
+                change_gate["approved_change_ids"],
+                ["CHG-004", "CHG-005", "CHG-001", "CHG-002", "CHG-006"],
+            )
+            self.assertEqual(
+                change_gate["approved_task_refs"],
+                ["APP-01", "APP-02", "APP-03", "APP-04", "APP-05"],
+            )
+            self.assertEqual(
+                change_gate["owner_approval"]["approval_note"],
+                "Owner approved this selected queue.",
+            )
+            self.assertEqual(change_gate["owner_approval"]["session_id"], "PSESS-001")
+            self.assertTrue(any(" change approve CHG-001 " in text for text in command_texts))
+            self.assertTrue(any(" change approve CHG-002 " in text for text in command_texts))
+            self.assertFalse(any(" change approve CHG-999 " in text for text in command_texts))
+            self.assertTrue(any(" current set TASK-001" in text for text in command_texts))
+
     def test_supervised_builds_prompt_and_stops_before_codex_execution(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -379,7 +788,12 @@ class PipelineRunnerTests(unittest.TestCase):
                 name="run_codex_test",
                 codex=replace(supervised.codex, mode=CodexExecutionMode.RUN_CODEX),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
 
             result = run_next(
@@ -419,7 +833,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
 
             result = run_next(
@@ -472,7 +891,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
 
             result = run_next(
                 session.data["session_id"],
@@ -511,7 +935,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
 
             result = run_next(
                 session.data["session_id"],
@@ -557,7 +986,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
             fake_runner, task_status = stateful_workflow_runner(calls, root=root)
 
@@ -579,7 +1013,8 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(gates[5]["status"], "pass")
             self.assertEqual(gates[5]["details"]["close_policy"]["action"], "close_task")
             self.assertTrue(any("task transition TASK-001 --to in_review" in command for command in commands))
-            self.assertTrue(any("task approve TASK-001 --notes Pipeline policy=run_codex_autoclose_close_test" in command for command in commands))
+            self.assertTrue(any("task approve TASK-001 --notes Owner auto-close note=Owner approved auto-close for this test session." in command for command in commands))
+            self.assertTrue(any("Pipeline policy=run_codex_autoclose_close_test" in command for command in commands))
             self.assertTrue(any("machine_gate=pass/MACHINE_REVIEW_PASS" in command for command in commands))
             self.assertTrue(any("codex_review=APPROVE/CODEX_REVIEW_APPROVE" in command for command in commands))
             self.assertTrue(any("report_id=RPT-001" in command for command in commands))
@@ -601,7 +1036,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
             fake_runner, task_status = stateful_workflow_runner(calls, root=root)
 
@@ -633,7 +1073,8 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(gates[5]["status"], "blocked")
             self.assertEqual(gates[5]["details"]["close_policy"]["action"], "request_changes")
             self.assertTrue(any("task transition TASK-001 --to in_review" in command for command in commands))
-            self.assertTrue(any("task add-note TASK-001 --text Pipeline policy=run_codex_autoclose_rework_test" in command for command in commands))
+            self.assertTrue(any("task add-note TASK-001 --text Owner auto-close note=Owner approved auto-close for this test session." in command for command in commands))
+            self.assertTrue(any("Pipeline policy=run_codex_autoclose_rework_test" in command for command in commands))
             self.assertTrue(any("task transition TASK-001 --to changes_requested" in command for command in commands))
 
     def test_autoclose_policy_stops_when_codex_review_is_blocked(self):
@@ -652,7 +1093,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
             fake_runner, _task_status = stateful_workflow_runner(calls, root=root)
 
@@ -699,7 +1145,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
             base_runner, _task_status = stateful_workflow_runner(calls, root=root)
 
@@ -742,7 +1193,12 @@ class PipelineRunnerTests(unittest.TestCase):
                 ),
                 rework=replace(supervised.rework, max_rework_attempts=1),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             state_path = pipeline_state_path(root)
             state = json.loads(state_path.read_text(encoding="utf-8"))
             state["sessions"][0]["attempt_counters"]["rework"] = 1
@@ -793,7 +1249,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
             base_runner = successful_workflow_runner(
                 calls,
@@ -836,7 +1297,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
             report = valid_report("TASK-001")
             report["blockers"] = ["Manual blocker."]
@@ -880,7 +1346,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     min_remaining_tokens=20,
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
 
             result = run_next(
@@ -941,7 +1412,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
 
             result = run_next(
@@ -985,7 +1461,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
 
             result = run_next(
@@ -1022,7 +1503,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     command_allowlist=("codex exec",),
                 ),
             )
-            session = create_session(root=root, actor="tester", policy=policy)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
             calls = []
 
             result = run_next(

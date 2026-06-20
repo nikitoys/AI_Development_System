@@ -32,6 +32,10 @@ class CodexAdapterMode(str, Enum):
     LOCAL_COMMAND = "local_command"
 
 
+class PromptTransport(str, Enum):
+    STDIN = "stdin"
+
+
 class MachineReviewOutcome(str, Enum):
     NONE = "none"
     PASS = "pass"
@@ -75,6 +79,8 @@ class EvolutionChangePolicy:
     approve_linked_change: bool = False
     accept_linked_change: bool = False
     require_approved_change_for_execution: bool = True
+    owner_approve_required_changes_for_session: bool = False
+    owner_approval_note: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -82,17 +88,23 @@ class EvolutionChangePolicy:
             "approve_linked_change": self.approve_linked_change,
             "accept_linked_change": self.accept_linked_change,
             "require_approved_change_for_execution": self.require_approved_change_for_execution,
+            "owner_approve_required_changes_for_session": self.owner_approve_required_changes_for_session,
+            "owner_approval_note": self.owner_approval_note,
         }
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "EvolutionChangePolicy":
         return cls(
-            create_missing_change=bool(data["create_missing_change"]),
-            approve_linked_change=bool(data["approve_linked_change"]),
-            accept_linked_change=bool(data["accept_linked_change"]),
+            create_missing_change=bool(data.get("create_missing_change", False)),
+            approve_linked_change=bool(data.get("approve_linked_change", False)),
+            accept_linked_change=bool(data.get("accept_linked_change", False)),
             require_approved_change_for_execution=bool(
-                data["require_approved_change_for_execution"]
+                data.get("require_approved_change_for_execution", True)
             ),
+            owner_approve_required_changes_for_session=bool(
+                data.get("owner_approve_required_changes_for_session", False)
+            ),
+            owner_approval_note=str(data.get("owner_approval_note") or ""),
         )
 
 
@@ -129,6 +141,7 @@ class CodexExecutionPolicy:
     mode: CodexExecutionMode = CodexExecutionMode.DISABLED
     require_human_selected_policy: bool = True
     adapter_mode: CodexAdapterMode = CodexAdapterMode.MANUAL_HANDOFF
+    prompt_transport: PromptTransport = PromptTransport.STDIN
     local_command: tuple[str, ...] = ()
     command_allowlist: tuple[str, ...] = ()
     timeout_sec: int = 300
@@ -139,6 +152,7 @@ class CodexExecutionPolicy:
             "mode": self.mode.value,
             "require_human_selected_policy": self.require_human_selected_policy,
             "adapter_mode": self.adapter_mode.value,
+            "prompt_transport": self.prompt_transport.value,
             "local_command": list(self.local_command),
             "command_allowlist": list(self.command_allowlist),
             "timeout_sec": self.timeout_sec,
@@ -155,6 +169,12 @@ class CodexExecutionPolicy:
                 data,
                 "adapter_mode",
                 default=CodexAdapterMode.MANUAL_HANDOFF,
+            ),
+            prompt_transport=_enum_value(
+                PromptTransport,
+                data,
+                "prompt_transport",
+                default=PromptTransport.STDIN,
             ),
             local_command=_string_tuple(data.get("local_command", ())),
             command_allowlist=_string_tuple(data.get("command_allowlist", ())),
@@ -239,13 +259,20 @@ class BatchPolicy:
 @dataclass(frozen=True)
 class TaskClosurePolicy:
     auto_close_task: bool = False
+    owner_approval_note: str = ""
 
     def to_dict(self) -> dict[str, Any]:
-        return {"auto_close_task": self.auto_close_task}
+        return {
+            "auto_close_task": self.auto_close_task,
+            "owner_approval_note": self.owner_approval_note,
+        }
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "TaskClosurePolicy":
-        return cls(auto_close_task=bool(data["auto_close_task"]))
+        return cls(
+            auto_close_task=bool(data["auto_close_task"]),
+            owner_approval_note=str(data.get("owner_approval_note") or ""),
+        )
 
 
 @dataclass(frozen=True)
@@ -357,6 +384,15 @@ def validate_policy(policy: PipelinePolicy) -> ValidationResult:
             path="evolution.accept_linked_change",
         )
     if (
+        policy.evolution.owner_approve_required_changes_for_session
+        and not policy.evolution.owner_approval_note.strip()
+    ):
+        result.add_error(
+            "POLICY_OWNER_CHANGE_APPROVAL_NOTE_REQUIRED",
+            "Owner-approved session Change approval requires a non-empty approval note.",
+            path="evolution.owner_approval_note",
+        )
+    if (
         policy.codex.mode != CodexExecutionMode.DISABLED
         and not policy.evolution.require_approved_change_for_execution
     ):
@@ -410,7 +446,17 @@ def validate_policy(policy: PipelinePolicy) -> ValidationResult:
 
 
 def preset_names() -> tuple[str, ...]:
-    return tuple(sorted(_PRESETS))
+    return tuple(_LISTED_PRESETS)
+
+
+def builtin_preset_names(*, include_unlisted: bool = False) -> tuple[str, ...]:
+    if include_unlisted:
+        return tuple(_PRESETS)
+    return preset_names()
+
+
+def is_builtin_preset_name(name: str) -> bool:
+    return name in _PRESETS
 
 
 def policy_preset(name: str) -> PipelinePolicy:
@@ -461,6 +507,15 @@ def _supervised_autoclose() -> PipelinePolicy:
     )
 
 
+def _supervised_auto_create_changes() -> PipelinePolicy:
+    base = _supervised()
+    return replace(
+        base,
+        name="supervised_auto_create_changes",
+        evolution=replace(base.evolution, create_missing_change=True),
+    )
+
+
 def _supervised_local_commit() -> PipelinePolicy:
     return replace(
         _supervised_autoclose(),
@@ -472,6 +527,41 @@ def _supervised_local_commit() -> PipelinePolicy:
             allow_push=False,
             allow_merge=False,
         ),
+    )
+
+
+def _with_local_codex(policy: PipelinePolicy) -> PipelinePolicy:
+    return replace(
+        policy,
+        codex=replace(
+            policy.codex,
+            mode=CodexExecutionMode.RUN_CODEX,
+            adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+            local_command=("codex", "exec"),
+            command_allowlist=("codex exec",),
+            require_report=True,
+        ),
+    )
+
+
+def _supervised_executable() -> PipelinePolicy:
+    return replace(
+        _with_local_codex(_supervised()),
+        name="supervised_executable",
+    )
+
+
+def _supervised_executable_autoclose() -> PipelinePolicy:
+    return replace(
+        _with_local_codex(_supervised_autoclose()),
+        name="supervised_executable_autoclose",
+    )
+
+
+def _supervised_executable_local_commit() -> PipelinePolicy:
+    return replace(
+        _with_local_codex(_supervised_local_commit()),
+        name="supervised_executable_local_commit",
     )
 
 
@@ -626,6 +716,13 @@ def _validate_codex_adapter_policy(policy: PipelinePolicy, result: ValidationRes
     if policy.codex.adapter_mode != CodexAdapterMode.LOCAL_COMMAND:
         return
 
+    if policy.codex.prompt_transport != PromptTransport.STDIN:
+        result.add_error(
+            "POLICY_CODEX_UNSUPPORTED_PROMPT_TRANSPORT",
+            "Local-command Codex execution currently supports stdin prompt transport only.",
+            path="codex.prompt_transport",
+        )
+
     if not policy.codex.local_command:
         result.add_error(
             "POLICY_CODEX_LOCAL_COMMAND_REQUIRED",
@@ -679,9 +776,56 @@ def _string_tuple(value: Any) -> tuple[str, ...]:
     return tuple(str(item) for item in value if str(item).strip())
 
 
+def policy_behavior_label(policy: PipelinePolicy) -> str:
+    """Human-facing policy summary for CLI and Web Control Center choices."""
+
+    labels: list[str] = []
+    if policy.codex.mode == CodexExecutionMode.DISABLED:
+        labels.append("dry-run")
+    elif policy.codex.mode == CodexExecutionMode.BUILD_PROMPT_ONLY:
+        labels.append("prompt-only")
+    elif policy.codex.mode == CodexExecutionMode.RUN_CODEX:
+        if policy.codex.adapter_mode == CodexAdapterMode.LOCAL_COMMAND:
+            labels.append("executable")
+        elif policy.codex.adapter_mode == CodexAdapterMode.MANUAL_HANDOFF:
+            labels.append("manual-handoff")
+        else:
+            labels.append("run-codex")
+    else:
+        labels.append(policy.codex.mode.value)
+
+    if policy.closure.auto_close_task:
+        if policy.codex.mode == CodexExecutionMode.BUILD_PROMPT_ONLY:
+            labels.append("auto-close blocked")
+        elif not policy.closure.owner_approval_note.strip():
+            labels.append("auto-close needs note")
+        else:
+            labels.append("auto-close")
+    if policy.commit.create_local_commit:
+        if policy.codex.mode == CodexExecutionMode.BUILD_PROMPT_ONLY:
+            labels.append("local-commit blocked")
+        else:
+            labels.append("local-commit")
+    return " / ".join(labels)
+
+
 _PRESETS = {
     "dry_run": _dry_run,
     "supervised": _supervised,
+    "supervised_auto_create_changes": _supervised_auto_create_changes,
     "supervised_autoclose": _supervised_autoclose,
     "supervised_local_commit": _supervised_local_commit,
+    "supervised_executable": _supervised_executable,
+    "supervised_executable_autoclose": _supervised_executable_autoclose,
+    "supervised_executable_local_commit": _supervised_executable_local_commit,
 }
+
+_LISTED_PRESETS = (
+    "dry_run",
+    "supervised",
+    "supervised_executable",
+    "supervised_autoclose",
+    "supervised_executable_autoclose",
+    "supervised_local_commit",
+    "supervised_executable_local_commit",
+)

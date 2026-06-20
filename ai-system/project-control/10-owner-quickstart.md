@@ -193,14 +193,29 @@ Policy presets decide what is allowed, but they do not remove owner gates:
 
 - `dry_run` keeps Codex execution, auto-close and commit disabled.
 - `supervised` selects from the ready queue and builds a Codex prompt package, then stops before Codex execution.
-- `supervised_autoclose` enables auto-close policy, but close still requires Codex execution evidence, Codex Report Gate PASS, Machine Review PASS and Codex Review APPROVE.
-- `supervised_local_commit` adds local-only commit policy after all review and commit-readiness gates pass. Push and merge remain forbidden.
+- `supervised_executable` runs the allowlisted local Codex adapter after Token Budget Gate PASS and requires a structured Codex execution report.
+- `supervised_autoclose` is a prompt-only legacy preset; it blocks before close because Codex execution evidence is missing.
+- `supervised_executable_autoclose` runs the allowlisted local Codex adapter, then may close only after Codex Report Gate PASS, Machine Review PASS, Codex Review APPROVE and an explicit owner auto-close note on the session.
+- `supervised_local_commit` is a prompt-only legacy preset; local commit is blocked before commit because close evidence is missing.
+- `supervised_executable_local_commit` adds local-only commit policy after executable run, approved review gates, auto-close and commit-readiness gates pass. Push and merge remain forbidden.
+
+Executable pipeline policies pass `AI_PROJECT/generated/CODEX_PROMPT.md` to the local Codex command through stdin by default. The configured command must exactly match the policy allowlist. Owner-configured sandbox flags are allowed only when both `local_command` and `command_allowlist` include the exact command.
+
+Manual local Codex preflight examples:
+
+```bash
+codex exec -s workspace-write < AI_PROJECT/generated/CODEX_PROMPT.md
+codex exec -s danger-full-access < AI_PROJECT/generated/CODEX_PROMPT.md
+```
+
+Prefer `workspace-write` when it works. Configure `danger-full-access` or bypass modes only when the local environment is already externally sandboxed and the owner intentionally allowlists that command.
 
 CLI equivalents:
 
 ```bash
 python scripts/aictl.py pipeline status
 python scripts/aictl.py pipeline session create --policy supervised --task-ref PIPE-15
+python scripts/aictl.py pipeline session create --policy supervised_executable_autoclose --task-ref PIPE-25 --auto-close-note "APPROVED by Human Owner for this selected session"
 python scripts/aictl.py pipeline run-next
 python scripts/aictl.py pipeline run-until-blocker --confirm
 python scripts/aictl.py pipeline render

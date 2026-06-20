@@ -43,6 +43,13 @@ class RegistryTests(unittest.TestCase):
         self.assertIn("pipeline.validate", names)
         self.assertIn("pipeline.render", names)
         self.assertIn("pipeline.check_generated", names)
+        self.assertIn("pipeline.policy.list", names)
+        self.assertIn("pipeline.policy.show", names)
+        self.assertIn("pipeline.policy.save", names)
+        self.assertIn("pipeline.policy.delete", names)
+        self.assertIn("pipeline.policy.validate", names)
+        self.assertIn("pipeline.policy.render", names)
+        self.assertIn("pipeline.policy.check_generated", names)
         self.assertIn("pipeline.session.create", names)
         self.assertIn("pipeline.run_next", names)
         self.assertIn("pipeline.step.start", names)
@@ -266,6 +273,32 @@ class RegistryTests(unittest.TestCase):
         self.assertTrue(validate["read_write"]["validates"])
         self.assertFalse(validate["read_write"]["mutates_state"])
 
+        self.assertEqual(check_generated["kind"], "validation")
+        self.assertTrue(check_generated["read_write"]["validates"])
+
+    def test_pipeline_policy_store_commands_are_registered_as_governed_writes(self):
+        save = command_describe("pipeline.policy.save")
+        delete = command_describe("pipeline.policy.delete")
+        list_command = command_describe("pipeline.policy.list")
+        check_generated = command_describe("pipeline.policy.check_generated")
+
+        self.assertEqual(save["domain"], "pipeline")
+        self.assertEqual(save["kind"], "write")
+        self.assertTrue(save["read_write"]["mutates_state"])
+        self.assertTrue(save["read_write"]["writes_events"])
+        self.assertTrue(save["read_write"]["renders_generated"])
+        self.assertIn("AI_PROJECT/state/pipeline_policy_presets.json", save["writes_state"])
+        self.assertIn("AI_PROJECT/events/pipeline-policy-events.jsonl", save["event_logs"])
+        self.assertIn("AI_PROJECT/generated/PIPELINE_POLICIES.md", save["generated_files"])
+        self.assertIn("cannot overwrite built-in", save["owner_approval"])
+
+        self.assertEqual(delete["kind"], "write")
+        self.assertTrue(delete["read_write"]["mutates_state"])
+        self.assertIn("AI_PROJECT/state/pipeline_policy_presets.json", delete["writes_state"])
+        self.assertIn("Built-in presets are immutable", delete["owner_approval"])
+
+        self.assertEqual(list_command["kind"], "read")
+        self.assertFalse(list_command["read_write"]["mutates_state"])
         self.assertEqual(check_generated["kind"], "validation")
         self.assertTrue(check_generated["read_write"]["validates"])
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -62,11 +63,38 @@ def create_session(
     report_ids: Sequence[str] = (),
     review_ids: Sequence[str] = (),
     commit_ids: Sequence[str] = (),
+    auto_create_missing_changes: bool = False,
+    owner_approve_required_changes: bool = False,
+    approval_note: str = "",
+    auto_close_note: str = "",
     status: str = "planned",
 ) -> CommandResult:
     """Create one governed pipeline session."""
 
     selected_policy = policy or policy_preset(policy_name)
+    if auto_create_missing_changes or owner_approve_required_changes or approval_note:
+        evolution = selected_policy.evolution
+        selected_policy = replace(
+            selected_policy,
+            evolution=replace(
+                evolution,
+                create_missing_change=evolution.create_missing_change
+                or auto_create_missing_changes,
+                owner_approve_required_changes_for_session=(
+                    evolution.owner_approve_required_changes_for_session
+                    or owner_approve_required_changes
+                ),
+                owner_approval_note=approval_note or evolution.owner_approval_note,
+            ),
+        )
+    if auto_close_note:
+        selected_policy = replace(
+            selected_policy,
+            closure=replace(
+                selected_policy.closure,
+                owner_approval_note=auto_close_note,
+            ),
+        )
     queue = _queue_snapshot(
         selected_policy.queue,
         selected_queue=selected_queue,

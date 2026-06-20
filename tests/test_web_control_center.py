@@ -342,13 +342,27 @@ class WebControlCenterTests(unittest.TestCase):
             model = ReadOnlyProjectModel(root, actor="tester")
 
             status, _, body = route(
-                "/pipeline?policy=supervised&status=ready&max_tasks=2",
+                "/pipeline?policy=supervised&status=ready&max_tasks=2&auto_create_missing_changes=yes&owner_approve_required_changes=yes&approval_note=Owner%20approved",
                 model,
             )
 
         self.assertEqual(status.value, 200)
         self.assertIn("Pipeline Queue Selector", body)
         self.assertIn("Policy Preset Preview", body)
+        self.assertIn("supervised (prompt-only)", body)
+        self.assertIn("supervised_executable (executable)", body)
+        self.assertIn("<td>Behavior</td><td>prompt-only</td>", body)
+        self.assertIn("Auto Create Missing Changes", body)
+        self.assertIn("Owner Session Change Approval", body)
+        self.assertIn("Approval Note Required", body)
+        self.assertIn("<td>yes</td>", body)
+        self.assertIn('name="auto_create_missing_changes" value="yes" checked', body)
+        self.assertIn(
+            'name="owner_approve_required_changes" value="yes" checked',
+            body,
+        )
+        self.assertIn('name="approval_note" value="Owner approved"', body)
+        self.assertIn('name="auto_close_note" value=""', body)
         self.assertIn("Queue Preview", body)
         self.assertIn("PIPE-13", body)
         self.assertIn("PSESS-001", body)
@@ -2141,6 +2155,10 @@ class WebControlCenterTests(unittest.TestCase):
                     "action": "pipeline.session.create",
                     "confirm": "yes",
                     "policy": "supervised",
+                    "auto_create_missing_changes": "yes",
+                    "owner_approve_required_changes": "yes",
+                    "approval_note": "Owner approved session Changes.",
+                    "auto_close_note": "Owner approved auto-close.",
                     "task_ref": "PIPE-13",
                     "status_filter": "ready",
                     "max_tasks": "2",
@@ -2157,6 +2175,12 @@ class WebControlCenterTests(unittest.TestCase):
                     "create",
                     "--policy",
                     "supervised",
+                    "--auto-create-missing-changes",
+                    "--owner-approve-required-changes",
+                    "--approval-note",
+                    "Owner approved session Changes.",
+                    "--auto-close-note",
+                    "Owner approved auto-close.",
                     "--task-ref",
                     "PIPE-13",
                     "--status-filter",
