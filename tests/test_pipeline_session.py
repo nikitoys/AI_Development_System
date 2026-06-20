@@ -13,6 +13,13 @@ from ai_project_ctl.pipeline.session import (
     stop_session,
     validate_sessions,
 )
+from ai_project_ctl.pipeline.audit import (
+    MAX_AUDIT_STRING_LENGTH,
+    build_pipeline_audit_payload,
+    pipeline_audit_path,
+    read_pipeline_audit_events,
+    validate_pipeline_audit_events,
+)
 from ai_project_ctl.pipeline.state import (
     default_pipeline_state,
     pipeline_events_path,
@@ -83,6 +90,7 @@ class PipelineSessionTests(unittest.TestCase):
             self.assertEqual(result.data["session_id"], "PSESS-001")
             self.assertTrue(pipeline_state_path(root).exists())
             self.assertTrue(pipeline_status_path(root).exists())
+            self.assertTrue(pipeline_audit_path(root).exists())
 
             state = json.loads(pipeline_state_path(root).read_text(encoding="utf-8"))
             session = state["sessions"][0]
@@ -95,6 +103,14 @@ class PipelineSessionTests(unittest.TestCase):
             self.assertEqual(session["linked_change_ids"], ["CHG-001"])
             self.assertEqual(session["report_ids"], ["REPORT-001"])
             self.assertEqual(events[0]["command"], "pipeline.session.create")
+            self.assertEqual(events[0]["payload"]["event_type"], "session.create")
+            self.assertIn("policy.selected", events[0]["payload"]["event_types"])
+            self.assertIn("queue.planned", events[0]["payload"]["event_types"])
+            self.assertIn("task.selected", events[0]["payload"]["event_types"])
+            self.assertEqual(events[0]["payload"]["refs"]["session_id"], "PSESS-001")
+            self.assertEqual(events[0]["payload"]["refs"]["task_id"], "TASK-001")
+            self.assertEqual(events[0]["payload"]["refs"]["change_ids"], ["CHG-001"])
+            self.assertEqual(events[0]["payload"]["refs"]["report_ids"], ["REPORT-001"])
             self.assertIn(events[0]["event_id"], session["audit_event_ids"])
             self.assertTrue(check_generated(root=root).ok)
 
@@ -135,6 +151,10 @@ class PipelineSessionTests(unittest.TestCase):
             self.assertEqual(completed["status"], "completed")
             self.assertEqual(completed["steps"][0]["status"], "passed")
             self.assertEqual(completed["gate_outcomes"][0]["name"], "prompt_ready")
+            self.assertEqual(events := load_events(root), read_pipeline_audit_events(root))
+            self.assertEqual(events[4]["payload"]["refs"]["gate"], "prompt_ready")
+            self.assertIn("step.result", events[4]["payload"]["event_types"])
+            self.assertEqual(events[5]["payload"]["event_type"], "completion")
             self.assertEqual(
                 commands,
                 [
@@ -209,6 +229,66 @@ class PipelineSessionTests(unittest.TestCase):
             self.assertFalse(result.ok)
             self.assertEqual(result.errors[0].code, "PIPELINE_STATUS_OUTDATED")
             self.assertTrue(validate_sessions(root=root).ok)
+
+            render_status(root=root)
+            self.assertTrue(check_generated(root=root).ok)
+            pipeline_audit_path(root).write_text("manual drift\n", encoding="utf-8")
+
+            audit_result = check_generated(root=root)
+            self.assertFalse(audit_result.ok)
+            self.assertEqual(audit_result.errors[0].code, "PIPELINE_AUDIT_OUTDATED")
+
+    def test_audit_payload_sanitizes_forbidden_fields_and_oversized_strings(self):
+        oversized = "x" * (MAX_AUDIT_STRING_LENGTH + 1)
+        payload = build_pipeline_audit_payload(
+            "pipeline.step.result",
+            {
+                "session_id": "PSESS-001",
+                "step": {
+                    "task_id": "TASK-001",
+                    "gate_outcomes": [
+                        {
+                            "name": "codex_execution_adapter",
+                            "status": "pass",
+                            "details": {
+                                "prompt_text": "do not store",
+                                "summary": oversized,
+                            },
+                        }
+                    ],
+                },
+                "report_ids": ["REPORT-001"],
+            },
+        )
+
+        raw = json.dumps(payload, sort_keys=True)
+        self.assertNotIn("do not store", raw)
+        self.assertNotIn("prompt_text", raw)
+        self.assertNotIn(oversized, raw)
+        self.assertEqual(payload["event_type"], "codex_run.result")
+        self.assertEqual(payload["refs"]["task_id"], "TASK-001")
+        self.assertEqual(payload["refs"]["report_ids"], ["REPORT-001"])
+
+    def test_audit_validation_rejects_raw_secret_payloads(self):
+        result = validate_pipeline_audit_events(
+            [
+                {
+                    "event_id": "EVT-001",
+                    "timestamp": "2026-06-20T00:00:00Z",
+                    "actor": "tester",
+                    "command": "pipeline.step.result",
+                    "entity_type": "pipeline_session",
+                    "entity_id": "PSESS-001",
+                    "payload": {
+                        "event_type": "codex_run.result",
+                        "secret": "raw secret",
+                    },
+                }
+            ]
+        )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.errors[0].code, "PIPELINE_FORBIDDEN_AUDIT_PAYLOAD_FIELD")
 
 
 def create_session_policy_snapshot():

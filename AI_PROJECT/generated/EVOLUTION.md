@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `1529`
+Revision: `1532`
 Changes: `50`
 
 ## Summary
 
-- `accepted`: 45
-- `approved`: 5
+- `accepted`: 46
+- `approved`: 4
 
 ## Changes
 
@@ -169,7 +169,7 @@ Linked tasks:
 
 ### CHG-004 — Record L4 Role-Agent Runtime Architecture
 
-Status: `approved`  
+Status: `accepted`  
 Type: `process`  
 Priority: `1`  
 Backward compatibility: `compatible`  
@@ -189,6 +189,9 @@ A source-of-truth architecture document is needed before implementation work on 
 
 Approved by: `Human Owner` at `2026-06-16T20:37:03Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-20T08:38:10Z`  
+Acceptance notes: Approve  
 
 Affected areas:
 

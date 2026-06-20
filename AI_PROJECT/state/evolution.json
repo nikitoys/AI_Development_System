@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 1529,
+  "revision": 1532,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-20T07:35:54Z",
+  "updated_at": "2026-06-20T08:38:10Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -145,7 +145,7 @@
     {
       "id": "CHG-004",
       "title": "Record L4 Role-Agent Runtime Architecture",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "process",
       "rationale": "A source-of-truth architecture document is needed before implementation work on agentctl.py or assisted role-agent execution can be safely decomposed into bounded tasks.",
       "problem": "AI_Development_System still presents L4 role-agent runtime as future or deferred even though the Human Owner has approved L4 as a bounded implementation target.",
@@ -186,14 +186,14 @@
       "owner_approved_by": "Human Owner",
       "owner_approved_at": "2026-06-16T20:37:03Z",
       "approval_notes": "Approved",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-20T08:38:10Z",
+      "acceptance_notes": "Approve",
       "notes": [],
       "priority": 1,
       "order": 4,
       "created_at": "2026-06-16T20:35:08Z",
-      "updated_at": "2026-06-16T20:41:26Z"
+      "updated_at": "2026-06-20T08:38:10Z"
     },
     {
       "id": "CHG-005",

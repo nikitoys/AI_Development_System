@@ -14,6 +14,13 @@ from ai_project_ctl.core.store import write_json_file, atomic_write_text
 from ai_project_ctl.core.validation import ValidationResult
 
 from .policy import PipelinePolicy, QueuePolicy, QueueSelection, policy_preset
+from .audit import (
+    build_pipeline_audit_payload,
+    pipeline_audit_path,
+    read_pipeline_audit_events,
+    render_pipeline_audit,
+    validate_pipeline_audit_events,
+)
 from .state import (
     ACTIVE_SESSION_STATUSES,
     GATE_STATUSES,
@@ -88,7 +95,14 @@ def create_session(
         )
         state.setdefault("sessions", []).append(session)
         state["current_session_id"] = session_id
-        return {"session_id": session_id, "session": session_summary(session)}
+        return {
+            "session_id": session_id,
+            "session": session_summary(session),
+            "linked_change_ids": list(linked_change_ids),
+            "report_ids": list(report_ids),
+            "review_ids": list(review_ids),
+            "commit_ids": list(commit_ids),
+        }
 
     return _mutate_pipeline_state(
         root=root,
@@ -223,6 +237,10 @@ def record_step_result(
             "session_id": session_id,
             "step": dict(step),
             "gate_outcome": gate or {},
+            "linked_change_ids": list(linked_change_ids),
+            "report_ids": list(report_ids),
+            "review_ids": list(review_ids),
+            "commit_ids": list(commit_ids),
         }
 
     return _mutate_pipeline_state(
@@ -308,12 +326,14 @@ def complete_session(
 def validate_sessions(*, root: str | Path = ".") -> ValidationResult:
     state = load_pipeline_state(root)
     refs = load_reference_state(root)
-    return validate_pipeline_state(
+    result = validate_pipeline_state(
         state,
         tasks_state=refs["tasks"],
         evolution_state=refs["evolution"],
         task_reports_state=refs["task_reports"],
     )
+    result.extend(validate_pipeline_audit_events(read_pipeline_audit_events(root), state=state))
+    return result
 
 
 def render_status(*, root: str | Path = ".") -> str:
@@ -321,8 +341,10 @@ def render_status(*, root: str | Path = ".") -> str:
     result = validate_sessions(root=root)
     result.require_ok()
     text = render_pipeline_status(state)
+    audit_text = render_pipeline_audit(read_pipeline_audit_events(root), state=state)
     ProjectPaths.from_root(root).ensure_project_dirs()
     atomic_write_text(pipeline_status_path(root), text)
+    atomic_write_text(pipeline_audit_path(root), audit_text)
     return text
 
 
@@ -347,6 +369,22 @@ def check_generated(*, root: str | Path = ".") -> ValidationResult:
             "outdated generated file: {}".format(path),
             path=str(path),
         )
+    audit_path = pipeline_audit_path(root)
+    if not audit_path.exists():
+        result.add_error(
+            "PIPELINE_AUDIT_MISSING",
+            "missing generated file: {}".format(audit_path),
+            path=str(audit_path),
+        )
+        return result
+    expected_audit = render_pipeline_audit(read_pipeline_audit_events(root), state=state)
+    actual_audit = audit_path.read_text(encoding="utf-8")
+    if actual_audit != expected_audit:
+        result.add_error(
+            "PIPELINE_AUDIT_OUTDATED",
+            "outdated generated file: {}".format(audit_path),
+            path=str(audit_path),
+        )
     return result
 
 
@@ -362,6 +400,7 @@ def status_payload(*, root: str | Path = ".") -> dict[str, Any]:
         "state_path": str(pipeline_state_path(root)),
         "events_path": str(pipeline_events_path(root)),
         "generated_status_path": str(pipeline_status_path(root)),
+        "generated_audit_path": str(pipeline_audit_path(root)),
         "revision": state.get("revision", 0),
         "current_session_id": current_session_id,
         "current_session": session_summary(current) if current else None,
@@ -414,7 +453,9 @@ def _mutate_pipeline_state(
         state_path = pipeline_state_path(root_path)
         events_path = pipeline_events_path(root_path)
         status_path = pipeline_status_path(root_path)
+        audit_path = pipeline_audit_path(root_path)
         write_json_file(state_path, next_state)
+        audit_payload = build_pipeline_audit_payload(command, mutation_data)
         event = AuditEvent(
             actor=actor,
             command=command,
@@ -422,12 +463,16 @@ def _mutate_pipeline_state(
             entity_id=str(mutation_data.get("session_id") or entity_id),
             revision_before=revision_before,
             revision_after=next_state["revision"],
-            payload=dict(mutation_data),
+            payload=audit_payload,
             event_id=event_id,
             timestamp=now,
         )
         AuditLog(events_path).append(event)
         atomic_write_text(status_path, render_pipeline_status(next_state))
+        atomic_write_text(
+            audit_path,
+            render_pipeline_audit(read_pipeline_audit_events(root_path), state=next_state),
+        )
 
         result = CommandResult.success(
             command=command,
@@ -441,8 +486,10 @@ def _mutate_pipeline_state(
             revision_before=revision_before,
             revision_after=next_state["revision"],
         )
-        result.changed_files.extend([str(state_path), str(events_path), str(status_path)])
-        result.generated_files.append(str(status_path))
+        result.changed_files.extend(
+            [str(state_path), str(events_path), str(status_path), str(audit_path)]
+        )
+        result.generated_files.extend([str(status_path), str(audit_path)])
         result.events.append(event_id)
         result.warnings.extend(before.warning_messages())
         result.warnings.extend(after.warning_messages())

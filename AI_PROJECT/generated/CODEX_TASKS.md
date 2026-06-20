@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `582`
-Current task: `TASK-064`
+Revision: `587`
+Current task: `TASK-065`
 
 ## Epic `EPIC-001`
 
@@ -1155,9 +1155,9 @@ Acceptance criteria:
 - Commit result is recorded in session/audit.
 - Tests and project-control validations pass.
 
-### PIPE-13 (TASK-064) — PIPE-13 Pipeline UI Dashboard ⭐
+### PIPE-13 (TASK-064) — PIPE-13 Pipeline UI Dashboard
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_d4153f05f2bc`, legacy `TASK-064`, aliases `TASK-064`, local `PIPE` / `13`
@@ -1173,9 +1173,9 @@ Acceptance criteria:
 - UI remains local-only by default.
 - Tests and project-control validations pass.
 
-### PIPE-14 (TASK-065) — PIPE-14 Pipeline Audit Trail
+### PIPE-14 (TASK-065) — PIPE-14 Pipeline Audit Trail ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_b7153a9d28be`, legacy `TASK-065`, aliases `TASK-065`, local `PIPE` / `14`

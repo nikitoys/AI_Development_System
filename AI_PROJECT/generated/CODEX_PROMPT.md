@@ -1,63 +1,60 @@
 # Codex Prompt Package
 
-Generated: 2026-06-20T08:15:03Z
+Generated: 2026-06-20T08:38:20Z
 Source Type: task
-Source ID: TASK-064
+Source ID: TASK-065
 Source Status: in_progress
 
 [SYSTEM]
 
 Active Role:
-Frontend Developer AI / Backend Developer AI
+AI System Maintainer / QA Engineer AI
 
 Active Stage:
-Pipeline Dashboard UI
+Pipeline Audit Trail
 
 Active Document:
-ai_project_ctl/web/server.py / ai_project_ctl/web/read_model.py
+AI_PROJECT/events/pipeline-events.jsonl
 
 Expected Result:
-Human Owner can inspect and operate supervised pipeline sessions from the local UI with explicit confirmation.
+Every pipeline decision and stop condition is auditable and visible in generated read-only output.
 
 Repository Context:
 This repository is an AI Development System governance control plane.
 Project-control state is managed through Python CLI gateways; generated Markdown is derived output.
 
 Source:
-Source Task: TASK-064
+Source Task: TASK-065
 Task Status: in_progress
-Title: PIPE-13 Pipeline UI Dashboard
+Title: PIPE-14 Pipeline Audit Trail
 
-Add a Web Control Center dashboard for pipeline sessions, queue preview, policy selection, run-next, and run-until-blocker.
+Record a complete audit trail for pipeline sessions, policy decisions, gates, Codex runs, reviews, stops, and commits.
 
-Expose supervised pipeline operation in the local Web Control Center without weakening confirmation, policy, or lifecycle gates.
+Strengthen pipeline observability by adding structured audit events and generated timeline output for all supervised batch decisions.
 
 Scope:
-- Add Pipeline dashboard/page to the Web Control Center.
-- Show policy selector/preset preview, queue selector, queue preview, session status, current step, gates, stop reason, and latest audit entries.
-- Expose Create Session, Run Next, Run Until Blocker, Stop Session, and Refresh Status actions where implemented.
-- Require explicit confirmation for any write/run action.
-- Show action result panel with step status, blockers, changed/generated files, reports, reviews, and next actions.
-- Keep UI local-only and route writes through governed commands/workflows.
-- Add tests for dashboard rendering, confirmation requirements, and action routing.
+- Define pipeline event types for session create, policy selected, queue planned, task selected, Change created/approved/accepted, context built, token gate result, Codex run result, report gate result, machine review, Codex review, close/rework decision, commit readiness, commit result, stop, and completion.
+- Append events through governed pipeline services only.
+- Generate a readable Pipeline Audit or Pipeline Status timeline if useful.
+- Include stable ids for session, task, Change, report, review, gate, and commit references.
+- Avoid storing secrets or excessive raw prompt contents in audit events.
+- Add tests for event append, validation, generated output freshness, and redaction/sizing behavior.
 
 Out of Scope:
-- Do not add remote hosting.
-- Do not bypass pipeline policy.
-- Do not auto-start sessions on page load.
-- Do not run arbitrary shell commands from UI.
-- Do not hide blockers or failed gates.
+- Do not make audit logs editable from UI.
+- Do not store raw secrets.
+- Do not store full huge prompt payloads when hashes/paths are sufficient.
+- Do not replace existing task/evolution/codex/context event logs.
 
 Allowed Files:
-- ai_project_ctl/web/read_model.py
-- ai_project_ctl/web/server.py
-- ai_project_ctl/web/actions.py
-- ai_project_ctl/pipeline/** if UI integration requires compatible changes
-- ai_project_ctl/core/registry.py if action metadata is needed
-- scripts/aictl.py if routing is needed
-- tests/test_web_control_center.py
+- ai_project_ctl/pipeline/audit.py
+- ai_project_ctl/pipeline/session.py
+- ai_project_ctl/pipeline/** if integration is needed
+- AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_AUDIT.md via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only
 - tests/**
-- ai-system/project-control/** if UI documentation is needed
+- ai-system/project-control/** if audit documentation is needed
 
 Implementation Instructions:
 - Inspect current files before editing.
@@ -69,11 +66,11 @@ Implementation Instructions:
 
 Retrieved Context:
 - Context Pack path: `AI_PROJECT/generated/CONTEXT_PACK.md`
-- Context Pack SHA-256: `3478cd815c10ab7052b7c4152825f8f2e206ca739068bdd583f01f39a7821441`
+- Context Pack SHA-256: `18dc1309063ac7924e8b3bc10c66150073fb19eae37d44e7b5606e48e97cc2a9`
 - Context mode: `task`
-- Context task ID: `TASK-064`
+- Context task ID: `TASK-065`
 - Docs revision: `24`
-- Tasks revision: `582`
+- Tasks revision: `587`
 
 Retrieved Context Rules:
 - Retrieved context is read-only.
@@ -83,13 +80,13 @@ Retrieved Context Rules:
 - If retrieved context conflicts with the source Task, source documents, or Human Owner instructions, report the conflict.
 
 Retrieved Context Source Metadata:
-- `ai-system/skills/README.md` lines 80-92; heading: Skills Layer Roadmap > Recommended Skills To Create; content: `dbf637225bec`; chunk: `eef80c572381`
 - `ai-system/skills/README.md` lines 34-43; heading: Skills Layer Roadmap > Existing Useful Skills; content: `dbf637225bec`; chunk: `758bde12e28c`
-- `ai-system/project-control/04-command-catalog.md` lines 64-118; heading: Project Control Command Catalog > Self-Hosted Command Boundary; content: `d6bfbf03256d`; chunk: `749381be335a`
-- `ai-system/project-control/04-command-catalog.md` lines 21-63; heading: Project Control Command Catalog > Scope; content: `d6bfbf03256d`; chunk: `d914c61786e4`
+- `ai-system/skills/README.md` lines 80-92; heading: Skills Layer Roadmap > Recommended Skills To Create; content: `dbf637225bec`; chunk: `eef80c572381`
 - `ai-system/project-control/03-state-model.md` lines 104-125; heading: Project Control State Model > Context Control State; content: `9e818e514763`; chunk: `0cd80bdf0d55`
+- `ai-system/project-control/04-command-catalog.md` lines 64-118; heading: Project Control Command Catalog > Self-Hosted Command Boundary; content: `d6bfbf03256d`; chunk: `749381be335a`
 - `ai-system/project-control/06-prompt-package-spec.md` lines 874-906; heading: 17. Relationship To taskctl.py And codexctl.py; content: `3444e8d40e40`; chunk: `6cf68be89257`
-- `ai-system/project-control/03-state-model.md` lines 71-103; heading: Project Control State Model > Documentation Control State; content: `9e818e514763`; chunk: `c68c7fcfa12b`
+- `ai-system/project-control/06-prompt-package-spec.md` lines 797-833; heading: 14. Context Budget Rules > Context Pack Boundary; content: `3444e8d40e40`; chunk: `24706f89c068`
+- `ai-system/project-control/06-prompt-package-spec.md` lines 580-670; heading: 12. Prompt Package Template; content: `3444e8d40e40`; chunk: `4b3949b96350`
 - `ai-system/project-control/06-prompt-package-spec.md` lines 123-162; heading: 3. Current Implementation; content: `3444e8d40e40`; chunk: `4fe051d2de08`
 
 Retrieved Context Pack Content:
@@ -97,7 +94,7 @@ Retrieved Context Pack Content:
 ````text
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/state/docs.json + AI_PROJECT/state/tasks.json -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-064 PIPE-13 Pipeline UI Dashboard Add a Web Control Center dashboard for pipeline sessions, queue preview, policy selection, run-next, and run-until-blocker. Expose supervised pipeline operation in the local Web Control Center without weakening confirmation, policy, or lifecycle gates. ai_project_ctl/web/server.py / ai_project_ctl/web/read_model.py Human Owner can inspect and operate supervised pipeline sessions from the local UI with explicit confirmation. Add Pipeline dashboard/page to the Web Control Center. Show policy selector/preset preview, queue selector, queue preview, session status, current step, gates, stop reason, and latest audit entries. Expose Create Session, Run Next, Run Until Blocker, Stop Session, and Refresh Status actions where implemented. Require explicit confirmation for any write/run action. Show action result panel with step status, blockers, changed/generated files, reports, reviews, and next actions. Keep UI local-only and route writes through governed commands/workflows. Add tests for dashboard rendering, confirmation requirements, and action routing. Do not add remote hosting. Do not bypass pipeline policy. Do not auto-start sessions on page load. Do not run arbitrary shell commands from UI. Do not hide blockers or failed gates. ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py ai_project_ctl/web/actions.py ai_project_ctl/pipeline/** if UI integration requires compatible changes ai_project_ctl/core/registry.py if action metadata is needed scripts/aictl.py if routing is needed tests/test_web_control_center.py tests/** ai-system/project-control/** if UI documentation is needed Pipeline dashboard shows sessions, selected policy, queue preview, current step, and stop reason. Run actions require explicit confirmation. UI writes route through governed commands/workflows. Failed gates and blockers are visible. UI remains local-only by default. Tests and project-control validations pass. Verify UI cannot start or continue pipeline silently. Verify all mutations route through governed command paths.","schema_version":1,"task_id":"TASK-064"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-065 PIPE-14 Pipeline Audit Trail Record a complete audit trail for pipeline sessions, policy decisions, gates, Codex runs, reviews, stops, and commits. Strengthen pipeline observability by adding structured audit events and generated timeline output for all supervised batch decisions. AI_PROJECT/events/pipeline-events.jsonl Every pipeline decision and stop condition is auditable and visible in generated read-only output. Define pipeline event types for session create, policy selected, queue planned, task selected, Change created/approved/accepted, context built, token gate result, Codex run result, report gate result, machine review, Codex review, close/rework decision, commit readiness, commit result, stop, and completion. Append events through governed pipeline services only. Generate a readable Pipeline Audit or Pipeline Status timeline if useful. Include stable ids for session, task, Change, report, review, gate, and commit references. Avoid storing secrets or excessive raw prompt contents in audit events. Add tests for event append, validation, generated output freshness, and redaction/sizing behavior. Do not make audit logs editable from UI. Do not store raw secrets. Do not store full huge prompt payloads when hashes/paths are sufficient. Do not replace existing task/evolution/codex/context event logs. ai_project_ctl/pipeline/audit.py ai_project_ctl/pipeline/session.py ai_project_ctl/pipeline/** if integration is needed AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only AI_PROJECT/generated/PIPELINE_AUDIT.md via governed CLI/service only AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only tests/** ai-system/project-control/** if audit documentation is needed Pipeline audit captures every major gate and decision. Audit events include stable references and stop reasons. Audit avoids raw secrets and oversized prompt payloads. Generated audit/status output is derived and can be refreshed/check-generated if implemented. Tests and project-control validations pass. Verify event/state/generated separation. Verify audit is sufficient to reconstruct why pipeline stopped.","schema_version":1,"task_id":"TASK-065"} -->
 
 # Context Pack
 
@@ -105,49 +102,46 @@ This generated Context Pack is derived output only. It is not source of truth.
 It does not expand task scope, allowed files, out-of-scope items, or acceptance criteria.
 
 Mode: `task`
-Task ID: `TASK-064`
+Task ID: `TASK-065`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `24`
-Tasks revision: `582`
+Tasks revision: `587`
 
 ## Query
 
 ```text
-TASK-064 PIPE-13 Pipeline UI Dashboard Add a Web Control Center dashboard for pipeline sessions, queue preview, policy selection, run-next, and run-until-blocker. Expose supervised pipeline operation in the local Web Control Center without weakening confirmation, policy, or lifecycle gates. ai_project_ctl/web/server.py / ai_project_ctl/web/read_model.py Human Owner can inspect and operate supervised pipeline sessions from the local UI with explicit confirmation. Add Pipeline dashboard/page to the Web Control Center. Show policy selector/preset preview, queue selector, queue preview, session status, current step, gates, stop reason, and latest audit entries. Expose Create Session, Run Next, Run Until Blocker, Stop Session, and Refresh Status actions where implemented. Require explicit confirmation for any write/run action. Show action result panel with step status, blockers, changed/generated files, reports, reviews, and next actions. Keep UI local-only and route writes through governed commands/workflows. Add tests for dashboard rendering, confirmation requirements, and action routing. Do not add remote hosting. Do not bypass pipeline policy. Do not auto-start sessions on page load. Do not run arbitrary shell commands from UI. Do not hide blockers or failed gates. ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py ai_project_ctl/web/actions.py ai_project_ctl/pipeline/** if UI integration requires compatible changes ai_project_ctl/core/registry.py if action metadata is needed scripts/aictl.py if routing is needed tests/test_web_control_center.py tests/** ai-system/project-control/** if UI documentation is needed Pipeline dashboard shows sessions, selected policy, queue preview, current step, and stop reason. Run actions require explicit confirmation. UI writes route through governed commands/workflows. Failed gates and blockers are visible. UI remains local-only by default. Tests and project-control validations pass. Verify UI cannot start or continue pipeline silently. Verify all mutations route through governed command paths.
+TASK-065 PIPE-14 Pipeline Audit Trail Record a complete audit trail for pipeline sessions, policy decisions, gates, Codex runs, reviews, stops, and commits. Strengthen pipeline observability by adding structured audit events and generated timeline output for all supervised batch decisions. AI_PROJECT/events/pipeline-events.jsonl Every pipeline decision and stop condition is auditable and visible in generated read-only output. Define pipeline event types for session create, policy selected, queue planned, task selected, Change created/approved/accepted, context built, token gate result, Codex run result, report gate result, machine review, Codex review, close/rework decision, commit readiness, commit result, stop, and completion. Append events through governed pipeline services only. Generate a readable Pipeline Audit or Pipeline Status timeline if useful. Include stable ids for session, task, Change, report, review, gate, and commit references. Avoid storing secrets or excessive raw prompt contents in audit events. Add tests for event append, validation, generated output freshness, and redaction/sizing behavior. Do not make audit logs editable from UI. Do not store raw secrets. Do not store full huge prompt payloads when hashes/paths are sufficient. Do not replace existing task/evolution/codex/context event logs. ai_project_ctl/pipeline/audit.py ai_project_ctl/pipeline/session.py ai_project_ctl/pipeline/** if integration is needed AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only AI_PROJECT/generated/PIPELINE_AUDIT.md via governed CLI/service only AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only tests/** ai-system/project-control/** if audit documentation is needed Pipeline audit captures every major gate and decision. Audit events include stable references and stop reasons. Audit avoids raw secrets and oversized prompt payloads. Generated audit/status output is derived and can be refreshed/check-generated if implemented. Tests and project-control validations pass. Verify event/state/generated separation. Verify audit is sufficient to reconstruct why pipeline stopped.
 ```
 
 ## Task Boundary Snapshot
 
-Task: `TASK-064` - PIPE-13 Pipeline UI Dashboard
+Task: `TASK-065` - PIPE-14 Pipeline Audit Trail
 Status: `in_progress`
 
 Scope:
-- Add Pipeline dashboard/page to the Web Control Center.
-- Show policy selector/preset preview, queue selector, queue preview, session status, current step, gates, stop reason, and latest audit entries.
-- Expose Create Session, Run Next, Run Until Blocker, Stop Session, and Refresh Status actions where implemented.
-- Require explicit confirmation for any write/run action.
-- Show action result panel with step status, blockers, changed/generated files, reports, reviews, and next actions.
-- Keep UI local-only and route writes through governed commands/workflows.
-- Add tests for dashboard rendering, confirmation requirements, and action routing.
+- Define pipeline event types for session create, policy selected, queue planned, task selected, Change created/approved/accepted, context built, token gate result, Codex run result, report gate result, machine review, Codex review, close/rework decision, commit readiness, commit result, stop, and completion.
+- Append events through governed pipeline services only.
+- Generate a readable Pipeline Audit or Pipeline Status timeline if useful.
+- Include stable ids for session, task, Change, report, review, gate, and commit references.
+- Avoid storing secrets or excessive raw prompt contents in audit events.
+- Add tests for event append, validation, generated output freshness, and redaction/sizing behavior.
 
 Allowed Files:
-- ai_project_ctl/web/read_model.py
-- ai_project_ctl/web/server.py
-- ai_project_ctl/web/actions.py
-- ai_project_ctl/pipeline/** if UI integration requires compatible changes
-- ai_project_ctl/core/registry.py if action metadata is needed
-- scripts/aictl.py if routing is needed
-- tests/test_web_control_center.py
+- ai_project_ctl/pipeline/audit.py
+- ai_project_ctl/pipeline/session.py
+- ai_project_ctl/pipeline/** if integration is needed
+- AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_AUDIT.md via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only
 - tests/**
-- ai-system/project-control/** if UI documentation is needed
+- ai-system/project-control/** if audit documentation is needed
 
 Acceptance Criteria:
-- Pipeline dashboard shows sessions, selected policy, queue preview, current step, and stop reason.
-- Run actions require explicit confirmation.
-- UI writes route through governed commands/workflows.
-- Failed gates and blockers are visible.
-- UI remains local-only by default.
+- Pipeline audit captures every major gate and decision.
+- Audit events include stable references and stop reasons.
+- Audit avoids raw secrets and oversized prompt payloads.
+- Generated audit/status output is derived and can be refreshed/check-generated if implemented.
 - Tests and project-control validations pass.
 
 ## Index Summary
@@ -163,14 +157,14 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 | Score | Source | Heading | Lines | Content hash | Chunk hash | Reasons |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 153 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: create, to; metadata token match: ai-system, create, to; content token match: a, actions, and, bypass, can, changes, commands, control |
-| 127 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | metadata token match: ai-system; content token match: a, actions, add, and, blocker, blockers, by, bypass |
-| 125 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 64-118 | `d6bfbf03256d` | `749381be335a` | heading token match: command, control; metadata token match: ai-system, command, control, project-control; content token match: a, ai-system, aictl, all, and, are, audit, by |
-| 113 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Scope | 21-63 | `d6bfbf03256d` | `d914c61786e4` | heading token match: command, control; metadata token match: ai-system, command, control, project-control; content token match: a, actions, add, aictl, and, center, command, control |
-| 97 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: control; metadata token match: ai-system, control, project-control; content token match: a, and, are, by, control, current, default, files |
-| 97 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 874-906 | `3444e8d40e40` | `6cf68be89257` | heading token match: and, py, to; metadata token match: ai-system, and, control, project-control, py, to; content token match: a, and, audit, by, bypass, can, current, for |
-| 96 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Documentation Control State | 71-103 | `9e818e514763` | `c68c7fcfa12b` | heading token match: control, documentation; metadata token match: ai-system, control, documentation, project-control; content token match: a, and, are, by, control, current, documentation, files |
-| 94 | `ai-system/project-control/06-prompt-package-spec.md` | 3. Current Implementation | 123-162 | `3444e8d40e40` | `4fe051d2de08` | heading token match: current; metadata token match: ai-system, control, current, project-control; content token match: a, and, are, current, default, explicit, for, generated |
+| 156 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | heading token match: existing, useful; metadata token match: ai-system, existing, md, useful; content token match: a, accepted, add, ai_project, and, approved, avoid, behavior |
+| 152 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: create, to; metadata token match: ai-system, create, md, to; content token match: a, accepted, and, approved, be, can, cli, commit |
+| 131 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: context, state; metadata token match: ai-system, context, md, project-control, state; content token match: a, adding, ai_project, and, are, be, by, context |
+| 131 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 64-118 | `d6bfbf03256d` | `749381be335a` | metadata token match: ai-system, md, project-control; content token match: a, ai-system, ai_project, all, and, approved, are, audit |
+| 130 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 874-906 | `3444e8d40e40` | `6cf68be89257` | heading token match: and, py, to; metadata token match: ai-system, and, md, project-control, prompt, py, to; content token match: a, and, audit, be, built, by, can, codex |
+| 122 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 797-833 | `3444e8d40e40` | `24706f89c068` | heading token match: context; metadata token match: ai-system, context, md, project-control, prompt; content token match: a, add, and, audit, by, change, codex, context |
+| 113 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 580-670 | `3444e8d40e40` | `4b3949b96350` | heading token match: prompt; metadata token match: ai-system, md, project-control, prompt; content token match: ai_project, and, be, by, change, cli, context, do |
+| 100 | `ai-system/project-control/06-prompt-package-spec.md` | 3. Current Implementation | 123-162 | `3444e8d40e40` | `4fe051d2de08` | metadata token match: ai-system, md, project-control, prompt; content token match: a, ai_project, and, are, behavior, cli, codex, context |
 
 ## Selected Context
 
@@ -178,35 +172,12 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 Title: Skills Layer Roadmap
 Status: `active`  Type: `guide`
-Heading: Skills Layer Roadmap > Recommended Skills To Create
-Lines: `80-92`
-Score: `153`
-Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
-Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
-Reasons: heading token match: create, to; metadata token match: ai-system, create, to; content token match: a, actions, and, bypass, can, changes, commands, control
-
-```text
-## Recommended Skills To Create
-
-| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
-| --- | --- | --- | --- | --- | --- |
-| Documentation Control Skill | Guide documentation registration, status changes, generated indexes and documentation validation. | `docctl.py` | P0 | Register documents, set draft/review status, render/check generated docs, explain documentation lifecycle. | Mark documents active without Human Owner approval; manually edit `docs.json`, doc events or generated doc indexes. |
-| Protected Files Skill | Keep agents inside the protected-files boundary and detect unsafe project-control edits. | `check-protected-project-files.py`, `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Explain protected paths, run protected-files checks, route repairs through CLIs. | Edit protected state/events/generated files manually; use ad hoc scripts to mutate protected files; hide drift. |
-| Review Gate Skill | Guide review intake before a Task can be accepted or closed. | `taskctl.py`; future review control CLI if approved | P1 | Check scope, allowed files, acceptance criteria, validation output and review status; recommend APPROVED, REWORK, REJECTED or DEFERRED. | Self-approve work; mark a Task done without the required approval path; ignore Critical or Major findings. |
-
-[...truncated by contextctl...]
-```
-
-### 2. `ai-system/skills/README.md`
-
-Title: Skills Layer Roadmap
-Status: `active`  Type: `guide`
 Heading: Skills Layer Roadmap > Existing Useful Skills
 Lines: `34-43`
-Score: `127`
+Score: `156`
 Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
 Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
-Reasons: metadata token match: ai-system; content token match: a, actions, add, and, blocker, blockers, by, bypass
+Reasons: heading token match: existing, useful; metadata token match: ai-system, existing, md, useful; content token match: a, accepted, add, ai_project, and, approved, avoid, behavior
 
 ```text
 ## Existing Useful Skills
@@ -220,16 +191,74 @@ Reasons: metadata token match: ai-system; content token match: a, actions, add, 
 [...truncated by contextctl...]
 ```
 
-### 3. `ai-system/project-control/04-command-catalog.md`
+### 2. `ai-system/skills/README.md`
+
+Title: Skills Layer Roadmap
+Status: `active`  Type: `guide`
+Heading: Skills Layer Roadmap > Recommended Skills To Create
+Lines: `80-92`
+Score: `152`
+Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
+Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
+Reasons: heading token match: create, to; metadata token match: ai-system, create, md, to; content token match: a, accepted, and, approved, be, can, cli, commit
+
+```text
+## Recommended Skills To Create
+
+| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
+| --- | --- | --- | --- | --- | --- |
+| Documentation Control Skill | Guide documentation registration, status changes, generated indexes and documentation validation. | `docctl.py` | P0 | Register documents, set draft/review status, render/check generated docs, explain documentation lifecycle. | Mark documents active without Human Owner approval; manually edit `docs.json`, doc events or generated doc indexes. |
+| Protected Files Skill | Keep agents inside the protected-files boundary and detect unsafe project-control edits. | `check-protected-project-files.py`, `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Explain protected paths, run protected-files checks, route repairs through CLIs. | Edit protected state/events/generated files manually; use ad hoc scripts to mutate protected files; hide drift. |
+| Review Gate Skill | Guide review intake before a Task can be accepted or closed. | `taskctl.py`; future review control CLI if approved | P1 | Check scope, allowed files, acceptance criteria, validation output and review status; recommend APPROVED, REWORK, REJECTED or DEFERRED. | Self-approve work; mark a Task done without the required approval path; ignore Critical or Major findings. |
+
+[...truncated by contextctl...]
+```
+
+### 3. `ai-system/project-control/03-state-model.md`
+
+Title: Project Control State Model
+Status: `active`  Type: `reference`
+Heading: Project Control State Model > Context Control State
+Lines: `104-125`
+Score: `131`
+Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
+Chunk hash: `0cd80bdf0d55e5284fa6355477f50005896398136bf33b7e1a181718f309f8b4`
+Reasons: heading token match: context, state; metadata token match: ai-system, context, md, project-control, state; content token match: a, adding, ai_project, and, are, be, by, context
+
+```text
+## Context Control State
+
+Context control uses the state/events/generated model without adding a new source-of-truth state file:
+
+```text
+AI_PROJECT/state/docs.json
+AI_PROJECT/state/tasks.json
+AI_PROJECT/events/context-events.jsonl
+AI_PROJECT/generated/CONTEXT_PACK.md
+AI_PROJECT/generated/CONTEXT_STATUS.md
+```
+
+`scripts/contextctl.py` builds a deterministic derived index in memory from registered documents in `docs.json` and optional Task context from `tasks.json`.
+
+The derived index and Context Pack are not source of truth. They must not expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task or source documents, the Task and source documents remain authoritative.
+
+By default, context control indexes registered active source documents only. It excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless the operator explicitly enables the relevant include flag.
+
+`CONTEXT_PACK.md` includes selected source paths, headings, line ranges, source content hashes, chunk hashes, deterministic keyword scores and selection reasons. `CONTEXT_STATUS.md` summarizes the current generated pack, selected paths and exclusion reasons. Both files are generated output and must be regenerated through `contextctl.py`.
+
+---
+```
+
+### 4. `ai-system/project-control/04-command-catalog.md`
 
 Title: Project Control Command Catalog
 Status: `active`  Type: `reference`
 Heading: Project Control Command Catalog > Self-Hosted Command Boundary
 Lines: `64-118`
-Score: `125`
+Score: `131`
 Content hash: `d6bfbf03256d4d5a7f005184d36c94434a45640595c0d654fc463065a1428adf`
 Chunk hash: `749381be335ac66aa70d957f55a95f190d998afd70c4347643a6c88c059f6587`
-Reasons: heading token match: command, control; metadata token match: ai-system, command, control, project-control; content token match: a, ai-system, aictl, all, and, are, audit, by
+Reasons: metadata token match: ai-system, md, project-control; content token match: a, ai-system, ai_project, all, and, approved, are, audit
 
 ```text
 ## Self-Hosted Command Boundary
@@ -270,107 +299,16 @@ python scripts/docctl.py audit --last 20
 [...truncated by contextctl...]
 ```
 
-### 4. `ai-system/project-control/04-command-catalog.md`
-
-Title: Project Control Command Catalog
-Status: `active`  Type: `reference`
-Heading: Project Control Command Catalog > Scope
-Lines: `21-63`
-Score: `113`
-Content hash: `d6bfbf03256d4d5a7f005184d36c94434a45640595c0d654fc463065a1428adf`
-Chunk hash: `d914c61786e4b852b59e3a000d5c0b85638a7e8731366116abd8c8b8e9591815`
-Reasons: heading token match: command, control; metadata token match: ai-system, command, control, project-control; content token match: a, actions, add, aictl, and, center, command, control
-
-```text
-## Scope
-
-This document records the command boundary for Project Control Gateway.
-
-The first implemented command surface was plan control:
-
-```bash
-python scripts/planctl.py <command>
-```
-
-The current owner-facing facade is:
-
-```bash
-python scripts/aictl.py <domain> <command>
-```
-
-Current implemented control domains include:
-
-```text
-plan        Project, Idea, Goal, Strategy, Initiative, Epic
-task        Task, Current Task, generated task views
-codex       current Codex prompt/status package
-context     deterministic Context Pack generated output
-docs        documentation registry and generated doc indexes
-evolution   Evolution Change Proposals
-web         local loopback Web Control Center
-```
-
-`aictl.py` is a facade and command registry. Domain ownership still belongs to the owning scripts such as `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py`, `contextctl.py` and `codexctl.py`.
-
-Still-future or partial domains include:
-
-```text
-Execution Session
-Review
-QA Result
-Decision
-Release
-Unified projectctl.py
-```
-
-These must not be invented through free-form AI actions. Add them only through approved system evolution and bounded Tasks.
-```
-
-### 5. `ai-system/project-control/03-state-model.md`
-
-Title: Project Control State Model
-Status: `active`  Type: `reference`
-Heading: Project Control State Model > Context Control State
-Lines: `104-125`
-Score: `97`
-Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
-Chunk hash: `0cd80bdf0d55e5284fa6355477f50005896398136bf33b7e1a181718f309f8b4`
-Reasons: heading token match: control; metadata token match: ai-system, control, project-control; content token match: a, and, are, by, control, current, default, files
-
-```text
-## Context Control State
-
-Context control uses the state/events/generated model without adding a new source-of-truth state file:
-
-```text
-AI_PROJECT/state/docs.json
-AI_PROJECT/state/tasks.json
-AI_PROJECT/events/context-events.jsonl
-AI_PROJECT/generated/CONTEXT_PACK.md
-AI_PROJECT/generated/CONTEXT_STATUS.md
-```
-
-`scripts/contextctl.py` builds a deterministic derived index in memory from registered documents in `docs.json` and optional Task context from `tasks.json`.
-
-The derived index and Context Pack are not source of truth. They must not expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task or source documents, the Task and source documents remain authoritative.
-
-By default, context control indexes registered active source documents only. It excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless the operator explicitly enables the relevant include flag.
-
-`CONTEXT_PACK.md` includes selected source paths, headings, line ranges, source content hashes, chunk hashes, deterministic keyword scores and selection reasons. `CONTEXT_STATUS.md` summarizes the current generated pack, selected paths and exclusion reasons. Both files are generated output and must be regenerated through `contextctl.py`.
-
----
-```
-
-### 6. `ai-system/project-control/06-prompt-package-spec.md`
+### 5. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 17. Relationship To taskctl.py And codexctl.py
 Lines: `874-906`
-Score: `97`
+Score: `130`
 Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
 Chunk hash: `6cf68be892579b77502246852781af90dc2942f367d5af5b0a3c4a4ee727323f`
-Reasons: heading token match: and, py, to; metadata token match: ai-system, and, control, project-control, py, to; content token match: a, and, audit, by, bypass, can, current, for
+Reasons: heading token match: and, py, to; metadata token match: ai-system, and, md, project-control, prompt, py, to; content token match: a, and, audit, be, built, by, can, codex
 
 ```text
 # 17. Relationship To taskctl.py And codexctl.py
@@ -407,50 +345,136 @@ Before building the package, task state must be valid.
 ---
 ```
 
-### 7. `ai-system/project-control/03-state-model.md`
+### 6. `ai-system/project-control/06-prompt-package-spec.md`
 
-Title: Project Control State Model
+Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
-Heading: Project Control State Model > Documentation Control State
-Lines: `71-103`
-Score: `96`
-Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
-Chunk hash: `c68c7fcfa12b1f98261105372d826707cb0cef9b3340f394ea7dc928123e4bc0`
-Reasons: heading token match: control, documentation; metadata token match: ai-system, control, documentation, project-control; content token match: a, and, are, by, control, current, documentation, files
+Heading: 14. Context Budget Rules > Context Pack Boundary
+Lines: `797-833`
+Score: `122`
+Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
+Chunk hash: `24706f89c068bb280d5630a712f0d9b260c02079a14823cc0a350875c71ba831`
+Reasons: heading token match: context; metadata token match: ai-system, context, md, project-control, prompt; content token match: a, add, and, audit, by, change, codex, context
 
 ```text
-## Documentation Control State
+## Context Pack Boundary
 
-Documentation control uses the same state/events/generated model:
+When Codex needs additional documentation context, use `contextctl.py` to generate a bounded Context Pack:
 
-```text
-AI_PROJECT/state/docs.json
-AI_PROJECT/events/doc-events.jsonl
-AI_PROJECT/generated/DOCS_INDEX.md
-AI_PROJECT/generated/DOCS_GAPS.md
+```bash
+python scripts/contextctl.py pack build --task <TASK_ID> --write
 ```
 
-`docs.json` is the authoritative registry for managed documentation. Each registered document stores lifecycle metadata plus derived retrieval metadata:
+Context Pack output is derived retrieval context. It may help Codex decide which source sections to inspect, but it must not change the Prompt Package contract.
+
+Context Pack must not:
 
 ```text
-path
-title
-type
-status
-required
-owner
-content_hash
-last_reviewed_at
-last_reviewed_by
-last_reviewed_content_hash
-declared_status
-declared_status_raw
-declared_status_source
+- expand Task scope;
+- add allowed files;
+- add acceptance criteria;
+- override out-of-scope items;
+- replace source documents or Task state;
+- include full tasks.json, full docs.json or full audit logs by default.
 ```
 
-`content_hash` is the current SHA-256 hash recorded by `docctl.py`. `last_reviewed_content_hash` is the SHA-256 hash reviewed by `docctl.py doc mark-reviewed`. Declared status fields are derived from document frontmatter, `Status:` metadata lines or a `## Status` section when present.
+The default retrieval policy excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless explicitly allowed by a `contextctl.py` include flag.
 
-`DOCS_GAPS.md` is generated from `docs.json` and current source files. It groups actionable gaps such as missing files, status mismatch, stale reviews, unresolved placeholders, broken local links and stale content hash metadata.
+Before `codexctl.py` includes a Context Pack in `CODEX_PROMPT.md`, it must validate that the pack:
+
+```text
+- exists;
+- has the generated-file header;
+- has valid Context Pack metadata;
+- matches the requested Task when the pack is task-scoped;
+- was generated from the current docs/task revisions recorded in project-control state.
+```
+
+If validation fails, `codexctl.py` must fail clearly and must not include stale or invalid retrieved context in the prompt package.
+
+---
+```
+
+### 7. `ai-system/project-control/06-prompt-package-spec.md`
+
+Title: Project Control Prompt Package Specification
+Status: `active`  Type: `reference`
+Heading: 12. Prompt Package Template
+Lines: `580-670`
+Score: `113`
+Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
+Chunk hash: `4b3949b963506d03a8ca61d2f28eb70f0cc2ca715a4c20495bab284ca4d8fcb0`
+Reasons: heading token match: prompt; metadata token match: ai-system, md, project-control, prompt; content token match: ai_project, and, be, by, change, cli, context, do
+
+```text
+# 12. Prompt Package Template
+
+Canonical structure:
+
+````text id="7p2uqx"
+[SYSTEM]
+
+Active Role: <active_role>
+Active Stage: <active_stage>
+Active Document: <active_document>
+Expected Result: <expected_result>
+
+Repository: current repository
+Task ID: <task_id>
+Task Title: <task_title>
+Task Status: <task_status>
+Verification Mode: <verification_mode>
+
+Initiative: <initiative_id> — <initiative_title>
+Epic: <epic_id> — <epic_title>
+
+Context:
+<summary>
+
+Details:
+<description>
+
+Scope:
+- <scope item>
+
+Out of Scope:
+- <out of scope item>
+
+Allowed Files:
+- <allowed file>
+
+Retrieved Context:
+- Context Pack path: <path>
+- Context Pack SHA-256: <hash>
+- Context mode: <mode>
+- Context task ID: <task_id>
+- Docs revision: <revision>
+- Tasks revision: <revision>
+
+Retrieved Context Rules:
+- Retrieved context is read-only.
+- Retrieved context does not expand Allowed Files.
+- Retrieved context does not expand Scope or override Out of Scope.
+- Retrieved context does not replace Acceptance Criteria.
+- Conflicts must be reported.
+
+Retrieved Context Source Metadata:
+- <source path, line range, source content hash, chunk hash>
+
+Retrieved Context Pack Content:
+<bounded generated context pack>
+
+Acceptance Criteria:
+- <acceptance criterion>
+
+Review Instructions:
+- <review instruction>
+
+Execution Rules:
+- Do not edit AI_PROJECT/state/*.json manually.
+- Do not edit AI_PROJECT/events/*.jsonl manually.
+
+[...truncated by contextctl...]
 ```
 
 ### 8. `ai-system/project-control/06-prompt-package-spec.md`
@@ -459,10 +483,10 @@ Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 3. Current Implementation
 Lines: `123-162`
-Score: `94`
+Score: `100`
 Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
 Chunk hash: `4fe051d2de08383b0737cc69ca48f864bb8341acd7154ddc8b2d3a70fb1ad30a`
-Reasons: heading token match: current; metadata token match: ai-system, control, current, project-control; content token match: a, and, are, current, default, explicit, for, generated
+Reasons: metadata token match: ai-system, md, project-control, prompt; content token match: a, ai_project, and, are, behavior, cli, codex, context
 
 ```text
 # 3. Current Implementation
@@ -553,11 +577,10 @@ python scripts/codexctl.py clear
 ````
 
 Acceptance Criteria:
-- Pipeline dashboard shows sessions, selected policy, queue preview, current step, and stop reason.
-- Run actions require explicit confirmation.
-- UI writes route through governed commands/workflows.
-- Failed gates and blockers are visible.
-- UI remains local-only by default.
+- Pipeline audit captures every major gate and decision.
+- Audit events include stable references and stop reasons.
+- Audit avoids raw secrets and oversized prompt payloads.
+- Generated audit/status output is derived and can be refreshed/check-generated if implemented.
 - Tests and project-control validations pass.
 
 Verification:
@@ -572,5 +595,5 @@ Result Format:
 - Blockers or risks
 
 Review / Result Format Notes:
-- Verify UI cannot start or continue pipeline silently.
-- Verify all mutations route through governed command paths.
+- Verify event/state/generated separation.
+- Verify audit is sufficient to reconstruct why pipeline stopped.
