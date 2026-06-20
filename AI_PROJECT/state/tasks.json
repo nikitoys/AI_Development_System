@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 664,
-  "current_task_id": "TASK-078",
+  "revision": 669,
+  "current_task_id": "TASK-079",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-20T13:07:36Z",
+  "updated_at": "2026-06-20T15:53:14Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -6208,6 +6208,75 @@
       ],
       "epic_key": "PIPE",
       "local_seq": 27
+    },
+    {
+      "id": "TASK-079",
+      "epic_id": "EPIC-003",
+      "title": "Compact codexctl execute prompt renderer",
+      "status": "in_review",
+      "summary": "Render CODEX_PROMPT.md as a compact execute-profile contract instead of embedding full Context Pack content.",
+      "description": "Implement approved CHG-062 by updating scripts/codexctl.py prompt rendering and focused tests so context-aware Codex prompt packages remain compact and bounded.",
+      "priority": 1,
+      "order": 5,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "scripts/codexctl.py",
+      "expected_result": "Compact CODEX_PROMPT.md renderer implemented for execute-profile MVP",
+      "verification_mode": "standard",
+      "scope": [
+        "Modify scripts/codexctl.py prompt rendering.",
+        "Render Profile: execute as the MVP default; do not implement --profile.",
+        "Use existing task fields only for identity, role, objective, scope, out-of-scope, allowed files, acceptance criteria, and verification mode.",
+        "Render Objective from task.summary with fallback to task.title.",
+        "Render full task.scope and full task.acceptance_criteria without category splitting.",
+        "Omit Execution Steps because task.execution_steps is not part of the current task schema.",
+        "Render Verification mode plus compact default check instruction.",
+        "Render Context as manifest-only when Context Pack is attached, keeping path, hash, docs revision, tasks revision, and selected source refs.",
+        "Do not embed the full AI_PROJECT/generated/CONTEXT_PACK.md body into CODEX_PROMPT.md.",
+        "Keep compact Execution Rules, Missing Info policy, and Final Report format.",
+        "Add or update tests proving compact context rendering."
+      ],
+      "out_of_scope": [
+        "Do not implement --profile.",
+        "Do not add profile-specific role switching.",
+        "Do not change task schema.",
+        "Do not add execution_steps or verification_checks.",
+        "Do not implement task splitting.",
+        "Do not modify contextctl.py.",
+        "Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**."
+      ],
+      "allowed_files": [
+        "scripts/codexctl.py",
+        "tests/test_legacy_ctl_wrappers.py"
+      ],
+      "acceptance_criteria": [
+        "codexctl.py build --task <TASK> still works without Context Pack.",
+        "codexctl.py build --task <TASK> --with-context produces a compact Context section.",
+        "Generated CODEX_PROMPT.md does not embed the full CONTEXT_PACK.md body.",
+        "Generated CODEX_PROMPT.md includes Context Pack path, hash, docs revision, tasks revision, and selected source refs when context is attached.",
+        "Execution Steps section is omitted for current tasks because task.execution_steps does not exist.",
+        "Verification renders mode plus compact default check instruction.",
+        "Existing wrapper tests still pass.",
+        "Add or update tests to prove compact context rendering.",
+        "Generated CODEX_PROMPT.md omits the legacy full retrieved-context body section."
+      ],
+      "review_instructions": [
+        "Run python -m py_compile scripts/codexctl.py.",
+        "Run relevant tests for legacy ctl wrappers.",
+        "Run a local codex prompt build with context if fixtures allow it."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-20T15:44:36Z",
+      "updated_at": "2026-06-20T15:53:14Z",
+      "uid": "tsk_4b2c0921708a",
+      "legacy_id": "TASK-079",
+      "aliases": [
+        "TASK-079"
+      ]
     }
   ]
 }

@@ -3,13 +3,14 @@
 
 # AI Development System Evolution
 
-Revision: `2044`
-Changes: `61`
+Revision: `2059`
+Changes: `62`
 
 ## Summary
 
 - `accepted`: 51
 - `approved`: 6
+- `in_review`: 1
 - `ready`: 4
 
 ## Changes
@@ -4028,3 +4029,46 @@ Impact:
 Linked tasks:
 
 - TASK-078
+
+### CHG-062 — Compact codexctl execute prompt renderer
+
+Status: `in_review`  
+Type: `prompt`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+codexctl.py currently renders runtime CODEX_PROMPT.md as a documentation-heavy prompt that can embed full Context Pack content and prompt-authoring explanations instead of a compact execution contract.
+
+Proposal:
+
+Update codexctl.py prompt rendering so CODEX_PROMPT.md uses the execute-profile MVP shape: Profile: execute, task identity, role, objective, task input, full scope, out-of-scope, allowed files, full acceptance criteria, compact verification text, manifest-only Context section, compact execution rules, missing-info policy, and final report format. Omit Execution Steps and full Context Pack body. Add or update tests proving compact context rendering.
+
+Rationale:
+
+The attached Codex execution request asks for compact runtime prompt generation so Codex receives a bounded execution contract instead of a long documentation dump.
+
+Approved by: `human_owner` at `2026-06-20T15:44:09Z`  
+Approval notes: Approved  
+
+Affected files:
+
+- scripts/codexctl.py
+- tests/test_legacy_ctl_wrappers.py
+
+Risks:
+
+- Boundary risk: Prompt rendering must not embed the full AI_PROJECT/generated/CONTEXT_PACK.md body into CODEX_PROMPT.md.
+- Boundary risk: Do not implement --profile, profile-specific role switching, task schema changes, execution_steps, verification_checks, or task splitting in this change.
+- Boundary risk: Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**; generated prompt/status output must be produced only through the owning CLI.
+
+Impact:
+
+- Creates a compact execute-profile runtime prompt shape for codexctl.py while keeping profile support postponed.
+- CODEX_PROMPT.md with context should keep only Context Pack path, hash, docs/tasks revisions, and selected source refs; it should not render Retrieved Context Pack Content.
+
+Linked tasks:
+
+- TASK-079

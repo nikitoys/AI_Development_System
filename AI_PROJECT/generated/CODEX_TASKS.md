@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `664`
-Current task: `TASK-078`
+Revision: `669`
+Current task: `TASK-079`
 
 ## Epic `EPIC-001`
 
@@ -241,6 +241,27 @@ Acceptance criteria:
 - Vector backend is documented as derived cache, not source of truth.
 - Validation passes in environments without vector dependencies.
 - Required smoke checks pass or blockers are reported.
+
+### TASK-079 — Compact codexctl execute prompt renderer ⭐
+
+Status: `in_review`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_4b2c0921708a`, legacy `TASK-079`, aliases `TASK-079`
+
+Render CODEX_PROMPT.md as a compact execute-profile contract instead of embedding full Context Pack content.
+
+Acceptance criteria:
+
+- codexctl.py build --task <TASK> still works without Context Pack.
+- codexctl.py build --task <TASK> --with-context produces a compact Context section.
+- Generated CODEX_PROMPT.md does not embed the full CONTEXT_PACK.md body.
+- Generated CODEX_PROMPT.md includes Context Pack path, hash, docs revision, tasks revision, and selected source refs when context is attached.
+- Execution Steps section is omitted for current tasks because task.execution_steps does not exist.
+- Verification renders mode plus compact default check instruction.
+- Existing wrapper tests still pass.
+- Add or update tests to prove compact context rendering.
+- Generated CODEX_PROMPT.md omits the legacy full retrieved-context body section.
 
 ## Epic `EPIC-004`
 
@@ -1451,7 +1472,7 @@ Acceptance criteria:
 - Adapter stores only bounded stdout/stderr snippets and hashes, never full prompt text.
 - Tests cover stdin prompt transport, sandbox failure detection, allowlist enforcement, and non-zero stderr diagnostics.
 
-### PIPE-27 (TASK-078) — PIPE-27 Add Persistent Pipeline Session Detail Page ⭐
+### PIPE-27 (TASK-078) — PIPE-27 Add Persistent Pipeline Session Detail Page
 
 Status: `in_progress`
 Priority: `1`

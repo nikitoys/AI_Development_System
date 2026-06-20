@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `664`
+Revision: `669`
 
 ## Executable Now
 
@@ -117,6 +117,8 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPE-05 (TASK-056)` [done] `EPIC-007` priority `1` — PIPE-05 Batch Runner Run Until Blocker
   - `status_not_executable`: status is done
+- `TASK-079` [in_review] `EPIC-003` priority `1` — Compact codexctl execute prompt renderer
+  - `status_not_executable`: status is in_review
 - `PIPE-06 (TASK-057)` [done] `EPIC-007` priority `1` — PIPE-06 Token Budget Gate
   - `status_not_executable`: status is done
 - `PIPE-07 (TASK-058)` [done] `EPIC-007` priority `1` — PIPE-07 Codex Execution Adapter
