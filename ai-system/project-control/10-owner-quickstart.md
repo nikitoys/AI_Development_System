@@ -199,6 +199,17 @@ Policy presets decide what is allowed, but they do not remove owner gates:
 - `supervised_local_commit` is a prompt-only legacy preset; local commit is blocked before commit because close evidence is missing.
 - `supervised_executable_local_commit` adds local-only commit policy after executable run, approved review gates, auto-close and commit-readiness gates pass. Push and merge remain forbidden.
 
+Executable pipeline policies pass `AI_PROJECT/generated/CODEX_PROMPT.md` to the local Codex command through stdin by default. The configured command must exactly match the policy allowlist. Owner-configured sandbox flags are allowed only when both `local_command` and `command_allowlist` include the exact command.
+
+Manual local Codex preflight examples:
+
+```bash
+codex exec -s workspace-write < AI_PROJECT/generated/CODEX_PROMPT.md
+codex exec -s danger-full-access < AI_PROJECT/generated/CODEX_PROMPT.md
+```
+
+Prefer `workspace-write` when it works. Configure `danger-full-access` or bypass modes only when the local environment is already externally sandboxed and the owner intentionally allowlists that command.
+
 CLI equivalents:
 
 ```bash

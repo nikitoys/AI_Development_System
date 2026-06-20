@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `622`
-Current task: `TASK-076`
+Revision: `652`
+Current task: `TASK-077`
 
 ## Epic `EPIC-001`
 
@@ -1248,7 +1248,7 @@ Acceptance criteria:
 
 ### PIPE-18 (TASK-069) — PIPE-18 Add Pipeline Policy CRUD Commands
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_6e53dad1427b`, legacy `TASK-069`, aliases `TASK-069`, local `PIPE` / `18`
@@ -1391,9 +1391,9 @@ Acceptance criteria:
 - No unrelated Change is approved.
 - Tests pass.
 
-### PIPE-25 (TASK-076) — PIPE-25 Add Full Self-Running Pipeline Mode ⭐
+### PIPE-25 (TASK-076) — PIPE-25 Add Full Self-Running Pipeline Mode
 
-Status: `in_review`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_652b0a2ad41e`, legacy `TASK-076`, aliases `TASK-076`, local `PIPE` / `25`
@@ -1419,3 +1419,34 @@ Acceptance criteria:
 - No push or merge is performed.
 - Audit contains execution, report, review, close, and completion evidence.
 - Tests pass.
+
+### PIPE-26 (TASK-077) — PIPE-26 Fix Codex Adapter Prompt Transport ⭐
+
+Status: `in_review`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_c919ccdc6d07`, legacy `TASK-077`, aliases `TASK-077`, local `PIPE` / `26`
+
+Fix local Codex adapter so it passes CODEX_PROMPT.md to codex exec instead of running codex exec with no input.
+
+Acceptance criteria:
+
+- Local Codex adapter passes CODEX_PROMPT.md content to codex exec through stdin by default.
+- The command ['codex', 'exec'] no longer runs with empty input.
+- Command allowlist still validates the command before execution.
+- Prompt hash and task identity validation still happen before execution.
+- Adapter result includes bounded stdout/stderr snippets for debugging non-zero exits.
+- Adapter still records stdout_ref/stderr_ref hashes.
+- Non-zero command exit produces actionable diagnostics including returncode and stderr snippet.
+- Fake command test verifies prompt content is received on stdin.
+- Existing executable pipeline tests pass.
+- Project-control validations pass.
+- When codex exec fails because bubblewrap/user namespaces are unavailable, adapter reports a clear sandbox compatibility blocker.
+- Owner can configure the local Codex command/allowlist to use a Codex CLI sandbox mode supported by the local environment.
+- Adapter still refuses any command not present in command_allowlist.
+- Adapter passes CODEX_PROMPT.md content to codex exec through stdin by default.
+- Owner can configure local_command and command_allowlist to use codex exec -s danger-full-access when workspace-write sandbox is unavailable.
+- Adapter refuses any Codex command that is not present in command_allowlist.
+- When Codex fails with bwrap/loopback/user-namespace sandbox errors, adapter reports CODEX_ADAPTER_SANDBOX_UNAVAILABLE instead of generic local_command_nonzero_exit.
+- Adapter stores only bounded stdout/stderr snippets and hashes, never full prompt text.
+- Tests cover stdin prompt transport, sandbox failure detection, allowlist enforcement, and non-zero stderr diagnostics.

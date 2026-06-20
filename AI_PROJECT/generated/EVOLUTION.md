@@ -3,14 +3,14 @@
 
 # AI Development System Evolution
 
-Revision: `1938`
-Changes: `59`
+Revision: `1988`
+Changes: `60`
 
 ## Summary
 
-- `accepted`: 50
-- `approved`: 4
-- `ready`: 5
+- `accepted`: 51
+- `approved`: 5
+- `ready`: 4
 
 ## Changes
 
@@ -3418,7 +3418,7 @@ Linked tasks:
 
 ### CHG-054 — PIPE-18 Add Pipeline Policy CRUD Commands
 
-Status: `ready`  
+Status: `approved`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -3435,6 +3435,9 @@ Implement the bounded task scope: Add aictl commands for pipeline policy list/sh
 Rationale:
 
 Add owner-facing CLI commands and registry metadata for policy preset list, show, validate, save, and delete operations.
+
+Approved by: `human_owner` at `2026-06-20T12:01:22Z`  
+Approval notes: Approve (pipeline session PSESS-008)  
 
 Affected files:
 
@@ -3753,7 +3756,7 @@ Linked tasks:
 
 ### CHG-059 — PIPE-25 Add Full Self-Running Pipeline Mode
 
-Status: `approved`  
+Status: `accepted`  
 Type: `docs`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -3773,6 +3776,9 @@ Implement a real executable pipeline mode that can run selected tasks end-to-end
 
 Approved by: `human_owner` at `2026-06-20T11:29:56Z`  
 Approval notes: Approve  
+
+Accepted by: `human_owner` at `2026-06-20T11:58:32Z`  
+Acceptance notes: Accept  
 
 Affected files:
 
@@ -3856,3 +3862,81 @@ Impact:
 Linked tasks:
 
 - TASK-076
+
+### CHG-060 — PIPE-26 Fix Codex Adapter Prompt Transport
+
+Status: `approved`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-26 requires an explicit Evolution Change Proposal before implementation: Fix local Codex adapter so it passes CODEX_PROMPT.md to codex exec instead of running codex exec with no input.
+
+Proposal:
+
+Implement the bounded task scope: Inspect ai_project_ctl/pipeline/codex_adapter.py local command execution.; Add prompt transport support for local Codex execution.; Default prompt transport should pass AI_PROJECT/generated/CODEX_PROMPT.md content to local_command stdin.; Keep command allowlist validation intact.; Keep prompt existence, prompt hash, and task identity validation intact.; Add policy/session support for prompt_transport if needed, with stdin as the default.; Optionally support future-safe modes such as file_arg or no_prompt, but only if they are explicitly tested.; Update local command execution so codex exec receives the generated prompt.; Capture a short safe stdout/stderr snippet in adapter gate details in addition to sha256 refs.; Limit captured snippets to a safe bounded size to avoid storing large logs or secrets.; Preserve existing stdout_ref/stderr_ref hash behavior.; Update report instruction if needed so Codex knows it must submit a structured execution report.; Add tests where a fake local command asserts that prompt text is received on stdin.; Add tests for non-zero exit including readable stderr snippet.; Add tests proving allowlist, timeout, stale prompt, and wrong-task prompt checks still work.; Update pipeline docs with the expected real Codex command behavior.; Allow local_command to include explicit Codex sandbox/approval flags, for example a safer owner-configured command such as codex exec --sandbox <mode> when supported by the installed Codex CLI.; Add a preflight diagnostic that detects Codex sandbox startup failures such as bubblewrap/user-namespace errors and reports them as CODEX_ADAPTER_SANDBOX_UNAVAILABLE instead of generic local_command_nonzero_exit.; Document how to verify the local Codex CLI command manually before using it in executable pipeline.; Do not hardcode danger-full-access; require owner-configured policy/command allowlist for any weaker sandbox mode.; Support owner-configured Codex sandbox mode through local_command, including commands such as codex exec -s workspace-write, codex exec -s danger-full-access, or explicitly allowed bypass mode when the environment is externally sandboxed.; Do not hardcode danger-full-access or bypass mode in the adapter; allow only owner-configured commands that are present in command_allowlist.; Default prompt transport must pass CODEX_PROMPT.md to codex exec through stdin.; Detect Codex sandbox startup failures, including bwrap, loopback, RTM_NEWADDR, Operation not permitted, user namespace, or bubblewrap errors, and report them as CODEX_ADAPTER_SANDBOX_UNAVAILABLE.; Add diagnostics that include bounded stderr/stdout snippets for failed local Codex commands without storing full prompt text.; Document manual preflight commands for local Codex execution: codex exec -s workspace-write < AI_PROJECT/generated/CODEX_PROMPT.md and codex exec -s danger-full-access < AI_PROJECT/generated/CODEX_PROMPT.md.
+
+Rationale:
+
+The executable pipeline currently runs local_command ['codex', 'exec'] without passing AI_PROJECT/generated/CODEX_PROMPT.md through stdin or as an argument. This causes real codex exec to exit non-zero. Add an explicit prompt transport mechanism, defaulting to stdin, and improve adapter diagnostics.
+
+Approved by: `human_owner` at `2026-06-20T12:32:02Z`  
+Approval notes: Approve  
+
+Affected files:
+
+- ai_project_ctl/pipeline/codex_adapter.py
+- ai_project_ctl/pipeline/policy.py
+- ai_project_ctl/pipeline/runner.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- scripts/aictl.py
+- tests/test_pipeline_codex_adapter.py
+- tests/test_pipeline_runner.py
+- tests/test_pipeline_e2e.py
+- tests/test_web_control_center.py
+- ai-system/project-control/pipeline-runner.md
+- ai-system/project-control/10-owner-quickstart.md
+- AI_PROJECT/state/tasks.json via governed CLI/service only
+- AI_PROJECT/events/task-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/CODEX_TASKS.md via governed CLI/service only
+
+Risks:
+
+- Boundary risk: Do not remove command allowlist enforcement.
+- Boundary risk: Do not use shell=True.
+- Boundary risk: Do not bypass Token Budget Gate.
+- Boundary risk: Do not bypass Change approval gate.
+- Boundary risk: Do not bypass Report Gate, Machine Review, or Codex Review.
+- Boundary risk: Do not auto-close tasks in this task.
+- Boundary risk: Do not create local commits in this task.
+- Boundary risk: Do not push, merge, reset, rebase, clean, restore, or discard git changes.
+- Boundary risk: Do not store full prompt text in pipeline state, events, generated files, or gate details.
+- Boundary risk: Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Reproduce the original failure: PSESS-008 failed because codex exec was launched without prompt input and returned local_command_nonzero_exit.
+- Verify the fixed adapter sends CODEX_PROMPT.md to stdin.
+- Verify stderr snippets are visible in gate details when command exits non-zero.
+- Verify no full prompt text is stored in pipeline state or events.
+- Verify executable pipeline can proceed past Codex adapter when fake command receives stdin and submits a report.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-077.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Inspect ai_project_ctl/pipeline/codex_adapter.py local command execution.
+- Add prompt transport support for local Codex execution.
+- Default prompt transport should pass AI_PROJECT/generated/CODEX_PROMPT.md content to local_command stdin.
+- Keep command allowlist validation intact.
+- Keep prompt existence, prompt hash, and task identity validation intact.
+- Local Codex adapter passes CODEX_PROMPT.md content to codex exec through stdin by default.
+- The command ['codex', 'exec'] no longer runs with empty input.
+- Command allowlist still validates the command before execution.
+
+Linked tasks:
+
+- TASK-077

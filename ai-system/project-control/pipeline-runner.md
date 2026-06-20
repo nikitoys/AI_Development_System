@@ -119,7 +119,8 @@ Important details:
 
 - `RUN_CODEX` policy mode is stricter than prompt-only mode. It requires Token Budget Gate PASS, a human-selected policy, an approved linked Evolution Change when the policy requires it, and a structured execution report.
 - `supervised_autoclose` and `supervised_local_commit` do not magically execute Codex. With their default prompt-only Codex mode, they stop before auto-close or commit because the execution and review evidence does not exist.
-- Executable presets use the local-command adapter with an exact allowlist for `codex exec`. The adapter validates prompt freshness and task identity before invoking the command, then requires a newly submitted structured execution report before downstream gates can pass.
+- Executable presets use the local-command adapter with an exact allowlist for `codex exec`. The adapter validates prompt freshness and task identity before invoking the command, passes `AI_PROJECT/generated/CODEX_PROMPT.md` to `codex exec` through stdin by default, then requires a newly submitted structured execution report before downstream gates can pass.
+- Owner-configured Codex sandbox flags belong in `local_command` and must exactly match `command_allowlist`, for example `codex exec -s workspace-write`. The adapter does not hardcode `danger-full-access` or bypass modes.
 - Auto-close requires an explicit owner approval note on the session. Use `--auto-close-note "..."` when creating an executable auto-close session.
 - Commit policy is always local-only when enabled. Push and merge are forbidden by policy validation.
 
@@ -336,8 +337,13 @@ Behavior:
 - `dry_run` blocks with `CODEX_ADAPTER_DRY_RUN`.
 - `manual_handoff` blocks with `CODEX_ADAPTER_MANUAL_HANDOFF_REQUIRED`.
 - `local_command` runs only an exact command listed in the policy allowlist.
+- `local_command` passes `AI_PROJECT/generated/CODEX_PROMPT.md` to the command through stdin by default. The command `codex exec` is never launched with empty input after Token Budget Gate passes.
 
 The adapter validates that the prompt still exists, still hashes to the token-gated payload, and still references the selected Task. If the prompt changes after the token gate, execution stops with `CODEX_ADAPTER_PROMPT_STALE`.
+
+The adapter records stdout/stderr byte counts and SHA-256 refs. For failed local commands it also records short bounded stdout/stderr snippets for diagnostics. It must not store the full prompt text in pipeline state, events or generated output.
+
+If local Codex startup fails because the host sandbox is unavailable, such as `bwrap`, `bubblewrap`, loopback setup, `RTM_NEWADDR`, `Operation not permitted`, user namespace or `unshare` errors, the adapter reports `CODEX_ADAPTER_SANDBOX_UNAVAILABLE` instead of the generic nonzero-exit reason.
 
 When report evidence is required, the adapter expects a newer structured execution report for the task after the local command finishes.
 
@@ -346,6 +352,15 @@ Submit a report with:
 ```bash
 python scripts/aictl.py task report submit --task TASK-066 --file REPORT.json --confirm
 ```
+
+Before using a local Codex command in an executable pipeline, verify it manually from the repository root:
+
+```bash
+codex exec -s workspace-write < AI_PROJECT/generated/CODEX_PROMPT.md
+codex exec -s danger-full-access < AI_PROJECT/generated/CODEX_PROMPT.md
+```
+
+Use the weakest sandbox that works in the local environment. If `danger-full-access` or a bypass mode is needed because the environment is externally sandboxed, it must be explicitly owner configured in both `local_command` and `command_allowlist`; the adapter does not infer or add it.
 
 ## Codex Execution Report Requirements
 

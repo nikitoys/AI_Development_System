@@ -11,6 +11,7 @@ from ai_project_ctl.pipeline import (
     EvolutionChangePolicy,
     MachineReviewOutcome,
     PipelinePolicy,
+    PromptTransport,
     QueuePolicy,
     ReworkPolicy,
     ReviewPolicy,
@@ -32,6 +33,7 @@ class PipelinePolicyTests(unittest.TestCase):
         self.assertTrue(policy.validate().ok)
         self.assertEqual(policy.codex.mode, CodexExecutionMode.DISABLED)
         self.assertEqual(policy.codex.adapter_mode, CodexAdapterMode.MANUAL_HANDOFF)
+        self.assertEqual(policy.codex.prompt_transport, PromptTransport.STDIN)
         self.assertFalse(policy.closure.auto_close_task)
         self.assertEqual(policy.closure.owner_approval_note, "")
         self.assertFalse(policy.evolution.accept_linked_change)
@@ -153,6 +155,7 @@ class PipelinePolicyTests(unittest.TestCase):
                 self.assertTrue(policy.validate().ok)
                 self.assertEqual(policy.codex.mode, CodexExecutionMode.RUN_CODEX)
                 self.assertEqual(policy.codex.adapter_mode, CodexAdapterMode.LOCAL_COMMAND)
+                self.assertEqual(policy.codex.prompt_transport, PromptTransport.STDIN)
                 self.assertEqual(policy.codex.local_command, ("codex", "exec"))
                 self.assertEqual(policy.codex.command_allowlist, ("codex exec",))
                 self.assertTrue(policy.codex.require_report)
@@ -304,6 +307,7 @@ class PipelinePolicyTests(unittest.TestCase):
                 "command_allowlist",
                 "local_command",
                 "mode",
+                "prompt_transport",
                 "require_human_selected_policy",
                 "require_report",
                 "timeout_sec",

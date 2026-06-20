@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 21,
+  "revision": 27,
   "created_at": "2026-06-19T21:27:58Z",
-  "updated_at": "2026-06-20T10:51:46Z",
-  "current_session_id": null,
+  "updated_at": "2026-06-20T12:01:31Z",
+  "current_session_id": "PSESS-008",
   "sessions": [
     {
       "id": "PSESS-001",
@@ -2377,6 +2377,946 @@
       "updated_at": "2026-06-20T10:51:46Z",
       "started_at": "2026-06-20T10:51:46Z",
       "finished_at": "2026-06-20T10:51:46Z"
+    },
+    {
+      "id": "PSESS-007",
+      "status": "stopped",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPE-18"
+        ],
+        "epic_ids": [
+          "EPIC-007"
+        ],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "execution",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": true,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": true,
+          "owner_approval_note": "Approve"
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "local_command": [
+            "codex",
+            "exec"
+          ],
+          "command_allowlist": [
+            "codex exec"
+          ],
+          "timeout_sec": 300,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": "Approve"
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-076",
+      "current_task_ref": "PIPE-25",
+      "current_step": "",
+      "current_step_status": "stopped",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-195672D11772",
+        "EVT-56251E3B7C40"
+      ],
+      "stop_reason": "Owner stop",
+      "created_at": "2026-06-20T11:55:35Z",
+      "updated_at": "2026-06-20T11:59:11Z",
+      "started_at": "",
+      "finished_at": "2026-06-20T11:59:11Z"
+    },
+    {
+      "id": "PSESS-008",
+      "status": "failed",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPE-18"
+        ],
+        "epic_ids": [
+          "EPIC-007"
+        ],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "execution",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": true,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": true,
+          "owner_approval_note": "Approve"
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "local_command": [
+            "codex",
+            "exec"
+          ],
+          "command_allowlist": [
+            "codex exec"
+          ],
+          "timeout_sec": 300,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": "Approve"
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-069",
+      "current_task_ref": "",
+      "current_step": "run_next",
+      "current_step_status": "failed",
+      "attempt_counters": {
+        "steps": 1,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [
+        {
+          "name": "token_budget_gate",
+          "status": "pass",
+          "recorded_at": "2026-06-20T12:01:29Z",
+          "details": {
+            "policy": "supervised_executable_local_commit",
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-069",
+              "ref": "PIPE-18",
+              "uid": "tsk_6e53dad1427b",
+              "legacy_id": "TASK-069",
+              "title": "PIPE-18 Add Pipeline Policy CRUD Commands",
+              "status": "planned",
+              "epic_id": "EPIC-007",
+              "priority": 1,
+              "order": 18,
+              "local_seq": 18,
+              "selected_ref": "PIPE-18",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "created_change_ids": [],
+              "linked_change_ids": [
+                "CHG-054"
+              ],
+              "change_ids": [
+                "CHG-054"
+              ],
+              "tasks_requiring_approval": [
+                "TASK-069"
+              ],
+              "approved_change_ids": [
+                "CHG-054"
+              ],
+              "approved_task_refs": [
+                "PIPE-18"
+              ],
+              "owner_approval": {
+                "actor": "human_owner",
+                "approval_note": "Approve",
+                "session_id": "PSESS-008"
+              },
+              "workflows": [
+                {
+                  "ok": true,
+                  "message": "Workflow completed. Evolution Change was approved through evolutionctl.py.",
+                  "steps": [
+                    {
+                      "id": "change_approve_preflight",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "evolution_validate",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "change_approve",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "evolution_validate_after",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "evolution_generated_after",
+                      "status": "ok"
+                    }
+                  ],
+                  "errors": []
+                }
+              ],
+              "state_changed": true
+            },
+            "workflow": {
+              "ok": true,
+              "message": "Workflow completed.",
+              "steps": [
+                {
+                  "id": "resolve",
+                  "status": "ok"
+                },
+                {
+                  "id": "current_set",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_validate",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_graph",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_in_progress",
+                  "status": "ok"
+                },
+                {
+                  "id": "context_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "codex_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "doctor",
+                  "status": "ok"
+                }
+              ],
+              "errors": []
+            },
+            "token_budget": {
+              "status": "pass",
+              "code": "TOKEN_BUDGET_PASS",
+              "reason": "within_token_budget",
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "56c7a2e932e1892b96bcefa89ce1d45272e20f4b0aed6cd64256a5aacd38e0cd",
+              "prompt_bytes": 31312,
+              "prompt_tokens": 7828,
+              "context_bytes": 5970,
+              "context_tokens": 1493,
+              "token_count_strategy": "local_byte_estimate",
+              "token_count_estimated": true,
+              "token_count_unavailable": false,
+              "token_count_unavailable_reason": "",
+              "model_context_limit": 32000,
+              "max_context_tokens": 24000,
+              "reserved_output_tokens": 0,
+              "min_remaining_tokens": 6000,
+              "remaining_tokens": 24172,
+              "context_requires_compact_or_split": false,
+              "context_requirement_reasons": [],
+              "context_pack": {
+                "metadata": {
+                  "schema_version": 1,
+                  "mode": "task",
+                  "task_id": "TASK-069",
+                  "limit": 8,
+                  "explicit_query": false
+                },
+                "path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "sha256": "8ed42886d00b70d40cd22a601228c4c126edda77b52c94d847e4d22f90dc3735",
+                "mode": "task",
+                "task_id": "TASK-069",
+                "docs_revision": "28",
+                "tasks_revision": "626",
+                "resolved_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CONTEXT_PACK.md",
+                "file_sha256": "8ed42886d00b70d40cd22a601228c4c126edda77b52c94d847e4d22f90dc3735",
+                "file_bytes": 26046
+              }
+            },
+            "codex_adapter_called": false
+          }
+        },
+        {
+          "name": "codex_execution_adapter",
+          "status": "fail",
+          "recorded_at": "2026-06-20T12:01:31Z",
+          "details": {
+            "policy": "supervised_executable_local_commit",
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-069",
+              "ref": "PIPE-18",
+              "uid": "tsk_6e53dad1427b",
+              "legacy_id": "TASK-069",
+              "title": "PIPE-18 Add Pipeline Policy CRUD Commands",
+              "status": "planned",
+              "epic_id": "EPIC-007",
+              "priority": 1,
+              "order": 18,
+              "local_seq": 18,
+              "selected_ref": "PIPE-18",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "created_change_ids": [],
+              "linked_change_ids": [
+                "CHG-054"
+              ],
+              "change_ids": [
+                "CHG-054"
+              ],
+              "tasks_requiring_approval": [
+                "TASK-069"
+              ],
+              "approved_change_ids": [
+                "CHG-054"
+              ],
+              "approved_task_refs": [
+                "PIPE-18"
+              ],
+              "owner_approval": {
+                "actor": "human_owner",
+                "approval_note": "Approve",
+                "session_id": "PSESS-008"
+              },
+              "workflows": [
+                {
+                  "ok": true,
+                  "message": "Workflow completed. Evolution Change was approved through evolutionctl.py.",
+                  "steps": [
+                    {
+                      "id": "change_approve_preflight",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "evolution_validate",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "change_approve",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "evolution_validate_after",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "evolution_generated_after",
+                      "status": "ok"
+                    }
+                  ],
+                  "errors": []
+                }
+              ],
+              "state_changed": true
+            },
+            "workflow": {
+              "ok": true,
+              "message": "Workflow completed.",
+              "steps": [
+                {
+                  "id": "resolve",
+                  "status": "ok"
+                },
+                {
+                  "id": "current_set",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_validate",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_graph",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_in_progress",
+                  "status": "ok"
+                },
+                {
+                  "id": "context_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "codex_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "doctor",
+                  "status": "ok"
+                }
+              ],
+              "errors": []
+            },
+            "token_budget": {
+              "status": "pass",
+              "code": "TOKEN_BUDGET_PASS",
+              "reason": "within_token_budget",
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "56c7a2e932e1892b96bcefa89ce1d45272e20f4b0aed6cd64256a5aacd38e0cd",
+              "prompt_bytes": 31312,
+              "prompt_tokens": 7828,
+              "context_bytes": 5970,
+              "context_tokens": 1493,
+              "token_count_strategy": "local_byte_estimate",
+              "token_count_estimated": true,
+              "token_count_unavailable": false,
+              "token_count_unavailable_reason": "",
+              "model_context_limit": 32000,
+              "max_context_tokens": 24000,
+              "reserved_output_tokens": 0,
+              "min_remaining_tokens": 6000,
+              "remaining_tokens": 24172,
+              "context_requires_compact_or_split": false,
+              "context_requirement_reasons": [],
+              "context_pack": {
+                "metadata": {
+                  "schema_version": 1,
+                  "mode": "task",
+                  "task_id": "TASK-069",
+                  "limit": 8,
+                  "explicit_query": false
+                },
+                "path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "sha256": "8ed42886d00b70d40cd22a601228c4c126edda77b52c94d847e4d22f90dc3735",
+                "mode": "task",
+                "task_id": "TASK-069",
+                "docs_revision": "28",
+                "tasks_revision": "626",
+                "resolved_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CONTEXT_PACK.md",
+                "file_sha256": "8ed42886d00b70d40cd22a601228c4c126edda77b52c94d847e4d22f90dc3735",
+                "file_bytes": 26046
+              }
+            },
+            "codex_adapter_called": true,
+            "adapter": {
+              "status": "failed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_FAILED",
+              "reason": "local_command_nonzero_exit",
+              "mode": "local_command",
+              "started_at": "2026-06-20T12:01:29Z",
+              "finished_at": "2026-06-20T12:01:31Z",
+              "duration_sec": 2.171258,
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "56c7a2e932e1892b96bcefa89ce1d45272e20f4b0aed6cd64256a5aacd38e0cd",
+              "command": [
+                "codex",
+                "exec"
+              ],
+              "command_ref": "codex exec",
+              "timeout_sec": 300,
+              "timed_out": false,
+              "returncode": 1,
+              "stdout_ref": "",
+              "stderr_ref": "captured:stderr:sha256:fa7b048a2c5dd6ad6ec3c94ff5a46843984d7e34f67ff50f57e71c4cadf4e607",
+              "stdout_bytes": 0,
+              "stderr_bytes": 85,
+              "report_required": true,
+              "report_id": "",
+              "report_instruction": "Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-069 --file <REPORT.json> --confirm"
+            },
+            "stop_code": "UNSAFE_CONDITION",
+            "stop_reason": "Codex Execution Adapter stopped: local_command_nonzero_exit"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "name": "run_next",
+          "status": "failed",
+          "started_at": "2026-06-20T12:01:22Z",
+          "finished_at": "2026-06-20T12:01:31Z",
+          "task_id": "TASK-069",
+          "gate_outcomes": [
+            {
+              "name": "token_budget_gate",
+              "status": "pass",
+              "recorded_at": "2026-06-20T12:01:29Z",
+              "details": {
+                "policy": "supervised_executable_local_commit",
+                "selected_task": {
+                  "category": "executable",
+                  "executable": true,
+                  "id": "TASK-069",
+                  "ref": "PIPE-18",
+                  "uid": "tsk_6e53dad1427b",
+                  "legacy_id": "TASK-069",
+                  "title": "PIPE-18 Add Pipeline Policy CRUD Commands",
+                  "status": "planned",
+                  "epic_id": "EPIC-007",
+                  "priority": 1,
+                  "order": 18,
+                  "local_seq": 18,
+                  "selected_ref": "PIPE-18",
+                  "reasons": []
+                },
+                "queue_counts": {
+                  "executable": 1,
+                  "waiting": 0,
+                  "blocked": 0,
+                  "skipped": 0
+                },
+                "change_gate": {
+                  "required": true,
+                  "created_change_ids": [],
+                  "linked_change_ids": [
+                    "CHG-054"
+                  ],
+                  "change_ids": [
+                    "CHG-054"
+                  ],
+                  "tasks_requiring_approval": [
+                    "TASK-069"
+                  ],
+                  "approved_change_ids": [
+                    "CHG-054"
+                  ],
+                  "approved_task_refs": [
+                    "PIPE-18"
+                  ],
+                  "owner_approval": {
+                    "actor": "human_owner",
+                    "approval_note": "Approve",
+                    "session_id": "PSESS-008"
+                  },
+                  "workflows": [
+                    {
+                      "ok": true,
+                      "message": "Workflow completed. Evolution Change was approved through evolutionctl.py.",
+                      "steps": [
+                        {
+                          "id": "change_approve_preflight",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "evolution_validate",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "change_approve",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "evolution_validate_after",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "evolution_generated_after",
+                          "status": "ok"
+                        }
+                      ],
+                      "errors": []
+                    }
+                  ],
+                  "state_changed": true
+                },
+                "workflow": {
+                  "ok": true,
+                  "message": "Workflow completed.",
+                  "steps": [
+                    {
+                      "id": "resolve",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "current_set",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "task_validate",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "task_graph",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "task_in_progress",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "context_build",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "codex_build",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "doctor",
+                      "status": "ok"
+                    }
+                  ],
+                  "errors": []
+                },
+                "token_budget": {
+                  "status": "pass",
+                  "code": "TOKEN_BUDGET_PASS",
+                  "reason": "within_token_budget",
+                  "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+                  "prompt_sha256": "56c7a2e932e1892b96bcefa89ce1d45272e20f4b0aed6cd64256a5aacd38e0cd",
+                  "prompt_bytes": 31312,
+                  "prompt_tokens": 7828,
+                  "context_bytes": 5970,
+                  "context_tokens": 1493,
+                  "token_count_strategy": "local_byte_estimate",
+                  "token_count_estimated": true,
+                  "token_count_unavailable": false,
+                  "token_count_unavailable_reason": "",
+                  "model_context_limit": 32000,
+                  "max_context_tokens": 24000,
+                  "reserved_output_tokens": 0,
+                  "min_remaining_tokens": 6000,
+                  "remaining_tokens": 24172,
+                  "context_requires_compact_or_split": false,
+                  "context_requirement_reasons": [],
+                  "context_pack": {
+                    "metadata": {
+                      "schema_version": 1,
+                      "mode": "task",
+                      "task_id": "TASK-069",
+                      "limit": 8,
+                      "explicit_query": false
+                    },
+                    "path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+                    "sha256": "8ed42886d00b70d40cd22a601228c4c126edda77b52c94d847e4d22f90dc3735",
+                    "mode": "task",
+                    "task_id": "TASK-069",
+                    "docs_revision": "28",
+                    "tasks_revision": "626",
+                    "resolved_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CONTEXT_PACK.md",
+                    "file_sha256": "8ed42886d00b70d40cd22a601228c4c126edda77b52c94d847e4d22f90dc3735",
+                    "file_bytes": 26046
+                  }
+                },
+                "codex_adapter_called": false
+              }
+            },
+            {
+              "name": "codex_execution_adapter",
+              "status": "fail",
+              "recorded_at": "2026-06-20T12:01:31Z",
+              "details": {
+                "policy": "supervised_executable_local_commit",
+                "selected_task": {
+                  "category": "executable",
+                  "executable": true,
+                  "id": "TASK-069",
+                  "ref": "PIPE-18",
+                  "uid": "tsk_6e53dad1427b",
+                  "legacy_id": "TASK-069",
+                  "title": "PIPE-18 Add Pipeline Policy CRUD Commands",
+                  "status": "planned",
+                  "epic_id": "EPIC-007",
+                  "priority": 1,
+                  "order": 18,
+                  "local_seq": 18,
+                  "selected_ref": "PIPE-18",
+                  "reasons": []
+                },
+                "queue_counts": {
+                  "executable": 1,
+                  "waiting": 0,
+                  "blocked": 0,
+                  "skipped": 0
+                },
+                "change_gate": {
+                  "required": true,
+                  "created_change_ids": [],
+                  "linked_change_ids": [
+                    "CHG-054"
+                  ],
+                  "change_ids": [
+                    "CHG-054"
+                  ],
+                  "tasks_requiring_approval": [
+                    "TASK-069"
+                  ],
+                  "approved_change_ids": [
+                    "CHG-054"
+                  ],
+                  "approved_task_refs": [
+                    "PIPE-18"
+                  ],
+                  "owner_approval": {
+                    "actor": "human_owner",
+                    "approval_note": "Approve",
+                    "session_id": "PSESS-008"
+                  },
+                  "workflows": [
+                    {
+                      "ok": true,
+                      "message": "Workflow completed. Evolution Change was approved through evolutionctl.py.",
+                      "steps": [
+                        {
+                          "id": "change_approve_preflight",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "evolution_validate",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "change_approve",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "evolution_validate_after",
+                          "status": "ok"
+                        },
+                        {
+                          "id": "evolution_generated_after",
+                          "status": "ok"
+                        }
+                      ],
+                      "errors": []
+                    }
+                  ],
+                  "state_changed": true
+                },
+                "workflow": {
+                  "ok": true,
+                  "message": "Workflow completed.",
+                  "steps": [
+                    {
+                      "id": "resolve",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "current_set",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "task_validate",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "task_graph",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "task_in_progress",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "context_build",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "codex_build",
+                      "status": "ok"
+                    },
+                    {
+                      "id": "doctor",
+                      "status": "ok"
+                    }
+                  ],
+                  "errors": []
+                },
+                "token_budget": {
+                  "status": "pass",
+                  "code": "TOKEN_BUDGET_PASS",
+                  "reason": "within_token_budget",
+                  "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+                  "prompt_sha256": "56c7a2e932e1892b96bcefa89ce1d45272e20f4b0aed6cd64256a5aacd38e0cd",
+                  "prompt_bytes": 31312,
+                  "prompt_tokens": 7828,
+                  "context_bytes": 5970,
+                  "context_tokens": 1493,
+                  "token_count_strategy": "local_byte_estimate",
+                  "token_count_estimated": true,
+                  "token_count_unavailable": false,
+                  "token_count_unavailable_reason": "",
+                  "model_context_limit": 32000,
+                  "max_context_tokens": 24000,
+                  "reserved_output_tokens": 0,
+                  "min_remaining_tokens": 6000,
+                  "remaining_tokens": 24172,
+                  "context_requires_compact_or_split": false,
+                  "context_requirement_reasons": [],
+                  "context_pack": {
+                    "metadata": {
+                      "schema_version": 1,
+                      "mode": "task",
+                      "task_id": "TASK-069",
+                      "limit": 8,
+                      "explicit_query": false
+                    },
+                    "path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+                    "sha256": "8ed42886d00b70d40cd22a601228c4c126edda77b52c94d847e4d22f90dc3735",
+                    "mode": "task",
+                    "task_id": "TASK-069",
+                    "docs_revision": "28",
+                    "tasks_revision": "626",
+                    "resolved_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CONTEXT_PACK.md",
+                    "file_sha256": "8ed42886d00b70d40cd22a601228c4c126edda77b52c94d847e4d22f90dc3735",
+                    "file_bytes": 26046
+                  }
+                },
+                "codex_adapter_called": true,
+                "adapter": {
+                  "status": "failed",
+                  "code": "CODEX_ADAPTER_LOCAL_COMMAND_FAILED",
+                  "reason": "local_command_nonzero_exit",
+                  "mode": "local_command",
+                  "started_at": "2026-06-20T12:01:29Z",
+                  "finished_at": "2026-06-20T12:01:31Z",
+                  "duration_sec": 2.171258,
+                  "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+                  "prompt_sha256": "56c7a2e932e1892b96bcefa89ce1d45272e20f4b0aed6cd64256a5aacd38e0cd",
+                  "command": [
+                    "codex",
+                    "exec"
+                  ],
+                  "command_ref": "codex exec",
+                  "timeout_sec": 300,
+                  "timed_out": false,
+                  "returncode": 1,
+                  "stdout_ref": "",
+                  "stderr_ref": "captured:stderr:sha256:fa7b048a2c5dd6ad6ec3c94ff5a46843984d7e34f67ff50f57e71c4cadf4e607",
+                  "stdout_bytes": 0,
+                  "stderr_bytes": 85,
+                  "report_required": true,
+                  "report_id": "",
+                  "report_instruction": "Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-069 --file <REPORT.json> --confirm"
+                },
+                "stop_code": "UNSAFE_CONDITION",
+                "stop_reason": "Codex Execution Adapter stopped: local_command_nonzero_exit"
+              }
+            }
+          ],
+          "result": {},
+          "stop_reason": "UNSAFE_CONDITION: Codex Execution Adapter stopped: local_command_nonzero_exit",
+          "audit_event_ids": [
+            "EVT-C5850D449A12",
+            "EVT-F84AE6B2A1DE",
+            "EVT-1FD2C3CDF5CA"
+          ]
+        }
+      ],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-30769EEC2A33",
+        "EVT-C5850D449A12",
+        "EVT-F84AE6B2A1DE",
+        "EVT-1FD2C3CDF5CA"
+      ],
+      "stop_reason": "UNSAFE_CONDITION: Codex Execution Adapter stopped: local_command_nonzero_exit",
+      "created_at": "2026-06-20T12:00:15Z",
+      "updated_at": "2026-06-20T12:01:31Z",
+      "started_at": "2026-06-20T12:01:22Z",
+      "finished_at": ""
     }
   ]
 }

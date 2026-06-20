@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `21`
-State revision: `21`
-Current session: `none`
+Events: `27`
+State revision: `27`
+Current session: `PSESS-008`
 
 ## Timeline
 
@@ -32,11 +32,18 @@ Current session: `none`
 | `2026-06-20T10:51:46Z` | `step.started` | `pipeline.step.start` | `PSESS-006` | `` | `` | PSESS-006 |
 | `2026-06-20T10:51:46Z` | `queue.planned` | `pipeline.step.result` | `PSESS-006` | `` | `queue_planner` | queue_planner blocked \| No executable task is available in the selected queue. |
 | `2026-06-20T10:51:46Z` | `completion` | `pipeline.session.complete` | `PSESS-006` | `` | `` | completed |
+| `2026-06-20T11:55:35Z` | `session.create` | `pipeline.session.create` | `PSESS-007` | `TASK-076` | `` | PSESS-007 |
+| `2026-06-20T11:59:11Z` | `stop` | `pipeline.session.stop` | `PSESS-007` | `` | `` | stopped \| Owner stop |
+| `2026-06-20T12:00:15Z` | `session.create` | `pipeline.session.create` | `PSESS-008` | `` | `` | PSESS-008 |
+| `2026-06-20T12:01:22Z` | `step.started` | `pipeline.step.start` | `PSESS-008` | `` | `` | PSESS-008 |
+| `2026-06-20T12:01:29Z` | `token_gate.result` | `pipeline.step.result` | `PSESS-008` | `TASK-069` | `token_budget_gate` | token_budget_gate pass \| changes=CHG-054 |
+| `2026-06-20T12:01:31Z` | `codex_run.result` | `pipeline.step.result` | `PSESS-008` | `TASK-069` | `codex_execution_adapter` | codex_execution_adapter fail \| changes=CHG-054 \| Codex Execution Adapter stopped: local_command_nonzero_exit |
 
 ## Event Type Coverage
 
 - `change.approved`
 - `close_rework.decision`
+- `codex_run.result`
 - `completion`
 - `policy.selected`
 - `queue.planned`
@@ -44,3 +51,4 @@ Current session: `none`
 - `step.started`
 - `stop`
 - `task.selected`
+- `token_gate.result`

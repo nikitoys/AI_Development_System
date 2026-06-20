@@ -32,6 +32,10 @@ class CodexAdapterMode(str, Enum):
     LOCAL_COMMAND = "local_command"
 
 
+class PromptTransport(str, Enum):
+    STDIN = "stdin"
+
+
 class MachineReviewOutcome(str, Enum):
     NONE = "none"
     PASS = "pass"
@@ -137,6 +141,7 @@ class CodexExecutionPolicy:
     mode: CodexExecutionMode = CodexExecutionMode.DISABLED
     require_human_selected_policy: bool = True
     adapter_mode: CodexAdapterMode = CodexAdapterMode.MANUAL_HANDOFF
+    prompt_transport: PromptTransport = PromptTransport.STDIN
     local_command: tuple[str, ...] = ()
     command_allowlist: tuple[str, ...] = ()
     timeout_sec: int = 300
@@ -147,6 +152,7 @@ class CodexExecutionPolicy:
             "mode": self.mode.value,
             "require_human_selected_policy": self.require_human_selected_policy,
             "adapter_mode": self.adapter_mode.value,
+            "prompt_transport": self.prompt_transport.value,
             "local_command": list(self.local_command),
             "command_allowlist": list(self.command_allowlist),
             "timeout_sec": self.timeout_sec,
@@ -163,6 +169,12 @@ class CodexExecutionPolicy:
                 data,
                 "adapter_mode",
                 default=CodexAdapterMode.MANUAL_HANDOFF,
+            ),
+            prompt_transport=_enum_value(
+                PromptTransport,
+                data,
+                "prompt_transport",
+                default=PromptTransport.STDIN,
             ),
             local_command=_string_tuple(data.get("local_command", ())),
             command_allowlist=_string_tuple(data.get("command_allowlist", ())),
@@ -703,6 +715,13 @@ def _validate_codex_adapter_policy(policy: PipelinePolicy, result: ValidationRes
 
     if policy.codex.adapter_mode != CodexAdapterMode.LOCAL_COMMAND:
         return
+
+    if policy.codex.prompt_transport != PromptTransport.STDIN:
+        result.add_error(
+            "POLICY_CODEX_UNSUPPORTED_PROMPT_TRANSPORT",
+            "Local-command Codex execution currently supports stdin prompt transport only.",
+            path="codex.prompt_transport",
+        )
 
     if not policy.codex.local_command:
         result.add_error(

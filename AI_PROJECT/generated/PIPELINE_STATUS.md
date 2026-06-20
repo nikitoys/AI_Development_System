@@ -3,9 +3,19 @@
 
 # Pipeline Status
 
-Revision: `21`
-Current session: `none`
-Sessions: `6`
+Revision: `27`
+Current session: `PSESS-008`
+Sessions: `8`
+
+## Current Session
+
+- ID: `PSESS-008`
+- Status: `failed`
+- Policy: `supervised_executable_local_commit`
+- Current task: `TASK-069`
+- Current step: `run_next`
+- Step status: `failed`
+- Stop reason: `UNSAFE_CONDITION: Codex Execution Adapter stopped: local_command_nonzero_exit`
 
 ## Sessions
 
@@ -17,3 +27,5 @@ Sessions: `6`
 | `PSESS-004` | `blocked` | `supervised` | `` | `run_next` | BLOCKED: Evolution Changes were created and now require Human Owner approval. |
 | `PSESS-005` | `blocked` | `supervised_local_commit` | `TASK-068` | `run_next` | NOT_IMPLEMENTED: Auto-close requires Codex execution, Codex Report, Machine Review, Codex Review and a close action. |
 | `PSESS-006` | `completed` | `supervised` | `TASK-068` | `run_next` | queue_complete |
+| `PSESS-007` | `stopped` | `supervised_executable_local_commit` | `TASK-076` | `` | Owner stop |
+| `PSESS-008` | `failed` | `supervised_executable_local_commit` | `TASK-069` | `run_next` | UNSAFE_CONDITION: Codex Execution Adapter stopped: local_command_nonzero_exit |
