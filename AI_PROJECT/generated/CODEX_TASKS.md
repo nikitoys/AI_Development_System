@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `652`
-Current task: `TASK-077`
+Revision: `669`
+Current task: `TASK-079`
 
 ## Epic `EPIC-001`
 
@@ -241,6 +241,27 @@ Acceptance criteria:
 - Vector backend is documented as derived cache, not source of truth.
 - Validation passes in environments without vector dependencies.
 - Required smoke checks pass or blockers are reported.
+
+### TASK-079 — Compact codexctl execute prompt renderer ⭐
+
+Status: `in_review`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_4b2c0921708a`, legacy `TASK-079`, aliases `TASK-079`
+
+Render CODEX_PROMPT.md as a compact execute-profile contract instead of embedding full Context Pack content.
+
+Acceptance criteria:
+
+- codexctl.py build --task <TASK> still works without Context Pack.
+- codexctl.py build --task <TASK> --with-context produces a compact Context section.
+- Generated CODEX_PROMPT.md does not embed the full CONTEXT_PACK.md body.
+- Generated CODEX_PROMPT.md includes Context Pack path, hash, docs revision, tasks revision, and selected source refs when context is attached.
+- Execution Steps section is omitted for current tasks because task.execution_steps does not exist.
+- Verification renders mode plus compact default check instruction.
+- Existing wrapper tests still pass.
+- Add or update tests to prove compact context rendering.
+- Generated CODEX_PROMPT.md omits the legacy full retrieved-context body section.
 
 ## Epic `EPIC-004`
 
@@ -1248,7 +1269,7 @@ Acceptance criteria:
 
 ### PIPE-18 (TASK-069) — PIPE-18 Add Pipeline Policy CRUD Commands
 
-Status: `in_progress`
+Status: `blocked`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_6e53dad1427b`, legacy `TASK-069`, aliases `TASK-069`, local `PIPE` / `18`
@@ -1420,9 +1441,9 @@ Acceptance criteria:
 - Audit contains execution, report, review, close, and completion evidence.
 - Tests pass.
 
-### PIPE-26 (TASK-077) — PIPE-26 Fix Codex Adapter Prompt Transport ⭐
+### PIPE-26 (TASK-077) — PIPE-26 Fix Codex Adapter Prompt Transport
 
-Status: `in_review`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_c919ccdc6d07`, legacy `TASK-077`, aliases `TASK-077`, local `PIPE` / `26`
@@ -1450,3 +1471,31 @@ Acceptance criteria:
 - When Codex fails with bwrap/loopback/user-namespace sandbox errors, adapter reports CODEX_ADAPTER_SANDBOX_UNAVAILABLE instead of generic local_command_nonzero_exit.
 - Adapter stores only bounded stdout/stderr snippets and hashes, never full prompt text.
 - Tests cover stdin prompt transport, sandbox failure detection, allowlist enforcement, and non-zero stderr diagnostics.
+
+### PIPE-27 (TASK-078) — PIPE-27 Add Persistent Pipeline Session Detail Page
+
+Status: `in_progress`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_bc97855d54fb`, legacy `TASK-078`, aliases `TASK-078`, local `PIPE` / `27`
+
+Add a persistent per-session Pipeline page with real-time steps, expandable logs, session actions, artifacts, audit events, and historical availability.
+
+Acceptance criteria:
+
+- Each pipeline session has a stable URL such as /pipeline/sessions/PSESS-012.
+- The main Pipeline page links each session id to its detail page.
+- The session detail page remains available after the session completes, blocks, fails, stops, or is archived.
+- Running sessions auto-refresh without manual page reload.
+- Auto-refresh stops after a terminal session state.
+- The page has a Steps section with all pipeline steps in execution order.
+- Each step can be expanded to inspect status, gates, details, and bounded logs.
+- The page has an Actions section with session-level buttons.
+- Action buttons require confirmation for mutating operations.
+- The page separates safe actions, owner approval actions, and restricted/dangerous actions.
+- The page shows session summary, live current step, artifacts, queue snapshot, audit events, files changed, blockers, and raw debug sections.
+- Codex adapter stdout/stderr are shown only as bounded snippets or safe references.
+- Full CODEX_PROMPT.md content is never rendered on the session page.
+- Unbounded stdout/stderr logs are never stored or rendered.
+- Historical completed sessions can be opened and inspected.
+- Tests and project-control validations pass.

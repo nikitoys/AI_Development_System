@@ -5,13 +5,14 @@ from __future__ import annotations
 import html
 import ipaddress
 import json
+from datetime import datetime, timezone
 from email.parser import BytesParser
 from email.policy import default as email_policy
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from ai_project_ctl.core.result import CommandError
 from ai_project_ctl.core.workflows import BULK_IMPORT_MAX_BYTES
@@ -50,6 +51,23 @@ TASK_FOCUS_STATUSES = {"ready", "in_progress", "in_review", "changes_requested"}
 TASK_GROUP_OPTIONS = {"none", "epic", "status"}
 CHANGE_ACTION_STATUSES = {"ready", "approved", "in_progress", "in_review"}
 TASK_REPAIR_STATUSES = {"ready", "in_progress", "in_review", "changes_requested"}
+PIPELINE_RUNNABLE_STATUSES = {"planned", "running", "stopped", "blocked", "failed"}
+PIPELINE_STOPPABLE_STATUSES = {"planned", "running"}
+PIPELINE_RESUMABLE_STATUSES = {"stopped", "blocked", "failed"}
+PIPELINE_FLOW_GATES = (
+    ("queue_planner", "Queue"),
+    ("evolution_change_gate", "Change"),
+    ("task_prepare_for_codex", "Prepare"),
+    ("token_budget_gate", "Token Gate"),
+    ("codex_execution_adapter", "Codex Execute"),
+    ("codex_report_gate", "Report"),
+    ("machine_review_gate", "Machine Review"),
+    ("codex_review_gate", "Codex Review"),
+    ("review_close_gate", "Done / Rework"),
+    ("commit_gate", "Commit"),
+)
+PIPELINE_RAW_DEBUG_LIMIT = 12_000
+PIPELINE_LOG_SNIPPET_LIMIT = 2_000
 TASK_ROW_WORKFLOWS = (
     {
         "action": "task.prepare_for_codex",
@@ -283,6 +301,16 @@ def route(
             indent=2,
             sort_keys=True,
         )
+    if path.startswith("/pipeline/sessions/"):
+        session_id = unquote(path.removeprefix("/pipeline/sessions/")).strip("/")
+        detail = model.pipeline_session_detail(session_id)
+        if not detail.get("found"):
+            return HTTPStatus.NOT_FOUND, "text/html; charset=utf-8", render_pipeline_session_detail(
+                detail
+            )
+        return HTTPStatus.OK, "text/html; charset=utf-8", render_pipeline_session_detail(
+            detail
+        )
 
     pages: dict[str, Callable[[], str]] = {
         "/": lambda: render_dashboard(model.dashboard()),
@@ -422,6 +450,843 @@ def render_pipeline(
         ]
     )
     return render_page("Pipeline", "".join(body), active="/pipeline")
+
+
+def render_pipeline_session_detail(data: Mapping[str, Any]) -> str:
+    session = _mapping(data.get("session"))
+    session_id = str(data.get("session_id") or session.get("id") or "")
+    if not session:
+        body = (
+            '<section class="panel">'
+            "<h2>Pipeline Session Not Found</h2>"
+            '<p class="empty">No persistent pipeline session exists for <code>{}</code>.</p>'
+            '<p><a class="button-link secondary" href="/pipeline">Back to Pipeline</a></p>'
+            "</section>"
+        ).format(escape(session_id or "unknown"))
+        return render_page("Pipeline Session", body, active="/pipeline")
+
+    status = str(session.get("status") or "unknown")
+    current_task = pipeline_session_task_label(data)
+    auto_refresh = "active / 2 seconds" if status == "running" else "stopped"
+    body = [
+        '<section class="summary-grid">',
+        metric("Session", str(session.get("id") or "")),
+        metric("Status", status),
+        metric("Policy", str(session.get("policy") or "unknown")),
+        metric("Current Task", current_task or "none"),
+        metric("Current Step", str(session.get("current_step") or "none")),
+        metric("Stop Reason", str(session.get("stop_reason") or "none")),
+        metric("Started", str(session.get("started_at") or "not started")),
+        metric("Updated", str(session.get("updated_at") or "")),
+        metric("Finished", str(session.get("finished_at") or "not finished")),
+        metric("Elapsed", pipeline_elapsed_label(session)),
+        metric("Auto-refresh", auto_refresh),
+        "</section>",
+        pipeline_session_auto_refresh(session),
+        '<section class="panel">',
+        "<h2>Status Overview</h2>",
+        pipeline_status_overview(session),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Current Live Step</h2>",
+        pipeline_live_step_panel(session),
+        "</section>",
+        '<section class="panel action-panel pipeline-session-actions">',
+        "<h2>Actions</h2>",
+        pipeline_session_action_controls(data),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Steps</h2>",
+        pipeline_step_details(session),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Artifacts</h2>",
+        pipeline_artifacts_panel(data),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Queue Snapshot</h2>",
+        pipeline_queue_snapshot_panel(session),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Audit Events</h2>",
+        pipeline_audit_table(data.get("audit") or []),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Files Changed During Session</h2>",
+        pipeline_files_changed_panel(data),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Problems / Blockers</h2>",
+        pipeline_blockers_panel(data),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Raw Debug</h2>",
+        pipeline_raw_debug_panel(session),
+        "</section>",
+    ]
+    return render_page(
+        "Pipeline Session {}".format(session.get("id") or ""),
+        "".join(body),
+        active="/pipeline",
+    )
+
+
+def pipeline_session_auto_refresh(session: Mapping[str, Any]) -> str:
+    status = str(session.get("status") or "unknown")
+    if status == "running":
+        return (
+            '<section class="panel auto-refresh" data-auto-refresh="2" '
+            'data-session-status="running">'
+            '<div class="status-row">{}<strong>Auto-refresh active</strong>'
+            "<span>Polling this session every 2 seconds.</span></div>"
+            "<script>setTimeout(function(){{window.location.reload();}}, 2000);</script>"
+            "</section>"
+        ).format(status_badge(status))
+    return (
+        '<section class="panel auto-refresh stopped" data-session-status="{}">'
+        '<div class="status-row">{}<strong>Auto-refresh stopped</strong>'
+        "<span>Session state is terminal or waiting for owner action.</span></div>"
+        "</section>"
+    ).format(escape(status), status_badge(status))
+
+
+def pipeline_status_overview(session: Mapping[str, Any]) -> str:
+    step = pipeline_latest_step(session)
+    flow = pipeline_gate_flow(step)
+    completed = sum(1 for item in flow if str(item.get("status")) != "planned")
+    percent = int((completed / len(flow)) * 100) if flow else 0
+    rows = []
+    for item in flow:
+        rows.append(
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                escape(item.get("label") or ""),
+                status_badge(str(item.get("status") or "planned")),
+                escape(item.get("recorded_at") or ""),
+                escape(item.get("detail") or ""),
+            )
+        )
+    return (
+        '<div class="pipeline-progress" aria-label="Pipeline progress">'
+        '<span style="width: {}%"></span></div>'
+        '<p class="muted">{} of {} flow checkpoints have recorded outcomes.</p>'
+        "{}"
+    ).format(
+        escape(percent),
+        escape(completed),
+        escape(len(flow)),
+        table(("Checkpoint", "Status", "Recorded", "Detail"), rows, "No flow checkpoints."),
+    )
+
+
+def pipeline_live_step_panel(session: Mapping[str, Any]) -> str:
+    status = str(session.get("status") or "unknown")
+    step = pipeline_latest_step(session)
+    if status != "running":
+        return '<p class="empty">No live step is running. Session status is {}.</p>'.format(
+            escape(status)
+        )
+    if not step:
+        return '<p class="empty">Session is running, but no step record exists yet.</p>'
+    return (
+        '<div class="execution-grid">'
+        "{}{}{}{}"
+        "</div>"
+        "<h3>Current Gate Flow</h3>"
+        "{}"
+    ).format(
+        execution_status_item("Step", str(step.get("status") or "running"), str(step.get("name") or ""), ""),
+        execution_status_item("Task", str(step.get("task_id") or "none"), str(session.get("current_task_ref") or ""), ""),
+        execution_status_item("Started", "time", str(step.get("started_at") or ""), ""),
+        execution_status_item("Elapsed", "duration", pipeline_elapsed_label(step), ""),
+        pipeline_step_gate_flow_table(step),
+    )
+
+
+def pipeline_session_action_controls(data: Mapping[str, Any]) -> str:
+    session = _mapping(data.get("session"))
+    status = str(session.get("status") or "unknown")
+    session_id = str(session.get("id") or "")
+    safe_forms = [
+        action_form("pipeline.render", [], button_label="Refresh Session"),
+    ]
+    if status in PIPELINE_RUNNABLE_STATUSES:
+        safe_forms.append(
+            action_form(
+                "pipeline.run_next",
+                [hidden_field("session_id", session_id)],
+                button_label="Run Next",
+            )
+        )
+        safe_forms.append(
+            action_form(
+                "pipeline.run_until_blocker",
+                [hidden_field("session_id", session_id)],
+                button_label="Run Until Blocker",
+            )
+        )
+    if status in PIPELINE_RESUMABLE_STATUSES:
+        safe_forms.append(
+            action_form(
+                "pipeline.run_next",
+                [hidden_field("session_id", session_id)],
+                button_label="Resume Session",
+            )
+        )
+
+    restricted = [
+        '<p class="muted">Restricted actions are separated and require confirmation. '
+        "Push, merge, reset, restore, clean, rebase and discard actions are not exposed.</p>"
+    ]
+    if status in PIPELINE_STOPPABLE_STATUSES:
+        restricted.append(
+            action_form(
+                "pipeline.session.stop",
+                [
+                    hidden_field("session_id", session_id),
+                    input_field("reason", "Reason", "Owner stop", required=True),
+                    filter_select(
+                        "status",
+                        "Status",
+                        (
+                            ("stopped", "stopped"),
+                            ("blocked", "blocked"),
+                            ("failed", "failed"),
+                        ),
+                        "stopped",
+                    ),
+                ],
+                button_label="Stop Session",
+            )
+        )
+    else:
+        restricted.append(
+            '<p class="empty">Stop Session is unavailable for status {}.</p>'.format(
+                escape(status)
+            )
+        )
+
+    return (
+        '<div class="pipeline-action-groups">'
+        '<div class="pipeline-action-group"><h3>Session Actions</h3>{}</div>'
+        '<div class="pipeline-action-group"><h3>Owner Approval Actions</h3>{}</div>'
+        '<div class="pipeline-action-group restricted-actions"><h3>Restricted Actions</h3>{}</div>'
+        "</div>"
+    ).format(
+        "".join(safe_forms),
+        pipeline_owner_approval_actions(data),
+        "".join(restricted),
+    )
+
+
+def pipeline_owner_approval_actions(data: Mapping[str, Any]) -> str:
+    session = _mapping(data.get("session"))
+    task = _mapping(data.get("task"))
+    task_ref = str(
+        task.get("ref")
+        or task.get("legacy_id")
+        or task.get("id")
+        or session.get("current_task_ref")
+        or session.get("current_task_id")
+        or ""
+    )
+    parts: list[str] = []
+    ready_changes = [
+        change
+        for change in data.get("linked_changes") or []
+        if isinstance(change, Mapping) and str(change.get("status") or "") == "ready"
+    ]
+    if ready_changes:
+        for change in ready_changes:
+            parts.append(
+                action_form(
+                    "evolution.approve_change",
+                    [
+                        hidden_field("change", str(change.get("id") or "")),
+                        textarea_field(
+                            "notes",
+                            "Approval Notes",
+                            rows=2,
+                            placeholder="Record the Human Owner approval basis.",
+                            required=True,
+                        ),
+                    ],
+                    button_label="Approve Required Changes",
+                )
+            )
+    else:
+        parts.append('<p class="empty">No linked ready Change requires approval.</p>')
+
+    task_status = str(task.get("status") or "")
+    auto_close_enabled = bool(
+        _mapping(_mapping(session.get("policy_snapshot")).get("closure")).get("auto_close_task")
+    )
+    if auto_close_enabled and task_ref and task_status == "in_review":
+        parts.append(
+            action_form(
+                "task.close_reviewed",
+                [
+                    hidden_field("task", task_ref),
+                    textarea_field(
+                        "notes",
+                        "Auto-close Approval Notes",
+                        rows=2,
+                        placeholder="Record explicit Human Owner auto-close approval.",
+                        required=True,
+                    ),
+                ],
+                button_label="Approve Auto-close",
+            )
+        )
+    elif auto_close_enabled:
+        parts.append(
+            '<p class="empty">Approve Auto-close is unavailable until the selected task is in_review.</p>'
+        )
+    else:
+        parts.append('<p class="empty">Approve Auto-close is not applicable to this policy.</p>')
+
+    if task_ref and task_status == "in_review":
+        parts.append(
+            action_form(
+                "task.close_reviewed",
+                [
+                    hidden_field("task", task_ref),
+                    textarea_field(
+                        "notes",
+                        "Approval Notes",
+                        rows=2,
+                        placeholder="Record Human Owner approval before closing the reviewed task.",
+                        required=True,
+                    ),
+                ],
+                button_label="Close Reviewed Task",
+            )
+        )
+    else:
+        parts.append('<p class="empty">Close Reviewed Task is unavailable for this task state.</p>')
+    return "".join(parts)
+
+
+def pipeline_step_details(session: Mapping[str, Any]) -> str:
+    steps = [
+        step
+        for step in session.get("steps") or []
+        if isinstance(step, Mapping)
+    ]
+    if not steps:
+        steps = [
+            {
+                "name": "run_next",
+                "status": "planned",
+                "started_at": "",
+                "finished_at": "",
+                "task_id": session.get("current_task_id") or "",
+                "stop_reason": "",
+                "gate_outcomes": [],
+            }
+        ]
+    html_steps = []
+    latest = steps[-1] if steps else {}
+    for index, step in enumerate(steps, start=1):
+        open_attr = " open" if step is latest else ""
+        html_steps.append(
+            '<details class="pipeline-step"{}>'
+            "<summary><strong>{}</strong>{}<span>{}</span></summary>"
+            "{}"
+            "</details>".format(
+                open_attr,
+                escape("{}.".format(index)),
+                status_badge(str(step.get("status") or "planned")),
+                escape(str(step.get("name") or "run_next")),
+                pipeline_expanded_step(step, session),
+            )
+        )
+    return "".join(html_steps)
+
+
+def pipeline_expanded_step(step: Mapping[str, Any], session: Mapping[str, Any]) -> str:
+    return (
+        '<div class="pipeline-step-body">'
+        '<div class="review-grid">'
+        "{}{}{}{}{}{}"
+        "</div>"
+        "<h3>Gate Flow</h3>"
+        "{}"
+        "<h3>Gate Outcomes</h3>"
+        "{}"
+        "<h3>Linked Artifacts</h3>"
+        "{}"
+        "<h3>Logs</h3>"
+        "{}"
+        "</div>"
+    ).format(
+        review_field("Status", status_badge(str(step.get("status") or "planned"))),
+        review_field("Task", escape(str(step.get("task_id") or session.get("current_task_id") or "none"))),
+        review_field("Started", escape(str(step.get("started_at") or ""))),
+        review_field("Finished", escape(str(step.get("finished_at") or ""))),
+        review_field("Elapsed", escape(pipeline_elapsed_label(step))),
+        review_field("Stop Reason", escape(str(step.get("stop_reason") or ""))),
+        pipeline_step_gate_flow_table(step),
+        pipeline_gate_table(step.get("gate_outcomes") or []),
+        pipeline_artifact_list(pipeline_collect_artifacts(step)),
+        pipeline_step_log_snippets(step),
+    )
+
+
+def pipeline_step_gate_flow_table(step: Mapping[str, Any]) -> str:
+    rows = []
+    for item in pipeline_gate_flow(step):
+        rows.append(
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                escape(item.get("label") or ""),
+                status_badge(str(item.get("status") or "planned")),
+                escape(item.get("recorded_at") or ""),
+                escape(item.get("detail") or ""),
+            )
+        )
+    return table(("Checkpoint", "Status", "Recorded", "Detail"), rows, "No gate flow.")
+
+
+def pipeline_gate_flow(step: Mapping[str, Any]) -> list[dict[str, str]]:
+    gates_by_name = {
+        str(gate.get("name") or ""): gate
+        for gate in step.get("gate_outcomes") or []
+        if isinstance(gate, Mapping)
+    }
+    flow = []
+    for gate_name, label in PIPELINE_FLOW_GATES:
+        gate = _mapping(gates_by_name.get(gate_name))
+        details = _mapping(gate.get("details"))
+        flow.append(
+            {
+                "name": gate_name,
+                "label": label,
+                "status": str(gate.get("status") or "planned"),
+                "recorded_at": str(gate.get("recorded_at") or ""),
+                "detail": str(
+                    details.get("stop_reason")
+                    or details.get("stop_code")
+                    or details.get("reason")
+                    or ""
+                ),
+            }
+        )
+    return flow
+
+
+def pipeline_artifacts_panel(data: Mapping[str, Any]) -> str:
+    session = _mapping(data.get("session"))
+    artifacts = pipeline_collect_artifacts(session)
+    artifacts["task_ids"].extend(
+        item
+        for item in (
+            str(session.get("current_task_id") or ""),
+            str(session.get("current_task_ref") or ""),
+        )
+        if item
+    )
+    for key, source_key in (
+        ("change_ids", "linked_change_ids"),
+        ("report_ids", "report_ids"),
+        ("review_ids", "review_ids"),
+        ("commit_ids", "commit_ids"),
+    ):
+        artifacts[key].extend(_string_items(session.get(source_key)))
+    artifacts["generated_files"].extend(
+        [
+            "AI_PROJECT/generated/PIPELINE_STATUS.md",
+            "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+        ]
+    )
+    artifacts["codex_prompt_paths"].append("AI_PROJECT/generated/CODEX_PROMPT.md")
+    artifacts["context_pack_paths"].append("AI_PROJECT/generated/CONTEXT_PACK.md")
+
+    rows = []
+    labels = (
+        ("Task IDs / Refs", "task_ids"),
+        ("Change IDs", "change_ids"),
+        ("Report IDs", "report_ids"),
+        ("Review IDs", "review_ids"),
+        ("Commit IDs", "commit_ids"),
+        ("Context Pack Path", "context_pack_paths"),
+        ("Codex Prompt Path", "codex_prompt_paths"),
+        ("Generated Files", "generated_files"),
+    )
+    for label, key in labels:
+        rows.append(
+            "<tr><td>{}</td><td>{}</td></tr>".format(
+                escape(label),
+                change_list_cell(unique_strings(artifacts.get(key) or []), limit=8),
+            )
+        )
+    return table(("Artifact", "Values"), rows, "No artifacts recorded.")
+
+
+def pipeline_queue_snapshot_panel(session: Mapping[str, Any]) -> str:
+    queue = _mapping(session.get("selected_queue"))
+    latest_gate = pipeline_latest_gate(session)
+    gate_details = _mapping(latest_gate.get("details"))
+    queue_counts = _mapping(gate_details.get("queue_counts"))
+    selected_task = _mapping(gate_details.get("selected_task"))
+    rows = [
+        ("Selection", queue.get("selection")),
+        ("Task Refs", ", ".join(_string_items(queue.get("task_refs")))),
+        ("Epic IDs", ", ".join(_string_items(queue.get("epic_ids")))),
+        ("Statuses", ", ".join(_string_items(queue.get("statuses")))),
+        ("Max Tasks", queue.get("max_tasks")),
+        ("Order", queue.get("order_by")),
+        ("Selected Task", _pipeline_task_label(selected_task) if selected_task else ""),
+    ]
+    for key in ("executable", "waiting", "blocked", "skipped"):
+        if key in queue_counts:
+            rows.append(("{} count".format(key), queue_counts.get(key)))
+    reasons = pipeline_collect_reasons(gate_details)
+    if reasons:
+        rows.append(("Skip / Block Reasons", "; ".join(reasons)))
+    return table(
+        ("Field", "Value"),
+        [
+            "<tr><td>{}</td><td>{}</td></tr>".format(
+                escape(label),
+                escape(value if value is not None else ""),
+            )
+            for label, value in rows
+        ],
+        "No queue snapshot recorded.",
+    )
+
+
+def pipeline_files_changed_panel(data: Mapping[str, Any]) -> str:
+    session = _mapping(data.get("session"))
+    files = unique_strings(
+        pipeline_collect_named_lists(session, {"changed_files", "generated_files"})
+    )
+    for report in data.get("reports") or []:
+        if not isinstance(report, Mapping):
+            continue
+        files.extend(_string_items(report.get("changed_files")))
+        files.extend(_string_items(report.get("generated_files")))
+    files = unique_strings(files)
+    if not files:
+        return '<p class="empty">No changed file data is available for this session.</p>'
+    return change_list_cell(files, limit=20)
+
+
+def pipeline_blockers_panel(data: Mapping[str, Any]) -> str:
+    session = _mapping(data.get("session"))
+    blockers = []
+    stop_reason = str(session.get("stop_reason") or "").strip()
+    if stop_reason:
+        blockers.append(stop_reason)
+    blockers.extend(
+        pipeline_collect_named_strings(session, {"stop_reason", "stop_code", "reason"})
+    )
+    for report in data.get("reports") or []:
+        if isinstance(report, Mapping):
+            blockers.extend(_string_items(report.get("blockers")))
+            blockers.extend(_string_items(report.get("warnings")))
+    blockers = unique_strings(
+        [item for item in blockers if item and item != "within_token_budget"]
+    )
+    if not blockers:
+        return '<p class="empty">No blockers or risks recorded.</p>'
+    return change_list_cell(blockers, limit=20)
+
+
+def pipeline_raw_debug_panel(session: Mapping[str, Any]) -> str:
+    raw = _mapping(session.get("raw"))
+    latest_gate = pipeline_latest_gate(session)
+    return (
+        '<details class="result-technical">'
+        "<summary>Session JSON</summary>"
+        "<pre>{}</pre>"
+        "</details>"
+        '<details class="result-technical">'
+        "<summary>Latest Gate Details</summary>"
+        "<pre>{}</pre>"
+        "</details>"
+    ).format(
+        escape(bounded_debug_json(raw or session)),
+        escape(bounded_debug_json(_mapping(latest_gate.get("details")))),
+    )
+
+
+def pipeline_latest_step(session: Mapping[str, Any]) -> Mapping[str, Any]:
+    steps = [
+        step
+        for step in session.get("steps") or []
+        if isinstance(step, Mapping)
+    ]
+    return steps[-1] if steps else {}
+
+
+def pipeline_latest_gate(session_or_step: Mapping[str, Any]) -> Mapping[str, Any]:
+    gates = [
+        gate
+        for gate in session_or_step.get("gate_outcomes") or []
+        if isinstance(gate, Mapping)
+    ]
+    if gates:
+        return gates[-1]
+    latest_step = pipeline_latest_step(session_or_step)
+    if latest_step and latest_step is not session_or_step:
+        return pipeline_latest_gate(latest_step)
+    return {}
+
+
+def pipeline_session_task_label(data: Mapping[str, Any]) -> str:
+    task = _mapping(data.get("task"))
+    session = _mapping(data.get("session"))
+    return str(
+        task.get("ref")
+        or task.get("legacy_id")
+        or task.get("id")
+        or session.get("current_task_ref")
+        or session.get("current_task_id")
+        or ""
+    )
+
+
+def pipeline_elapsed_label(value: Mapping[str, Any]) -> str:
+    started = str(value.get("started_at") or value.get("created_at") or "")
+    finished = str(value.get("finished_at") or "")
+    status = str(value.get("status") or "")
+    if not finished:
+        finished = (
+            datetime.now(timezone.utc)
+            .replace(microsecond=0)
+            .isoformat()
+            .replace("+00:00", "Z")
+            if status == "running"
+            else str(value.get("updated_at") or "")
+        )
+    start_dt = parse_timestamp(started)
+    finish_dt = parse_timestamp(finished)
+    if not start_dt or not finish_dt:
+        return "unknown"
+    seconds = max(0, int((finish_dt - start_dt).total_seconds()))
+    minutes, rem = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    if hours:
+        return "{}h {}m {}s".format(hours, minutes, rem)
+    if minutes:
+        return "{}m {}s".format(minutes, rem)
+    return "{}s".format(rem)
+
+
+def parse_timestamp(value: str) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def review_field(label: str, value: str) -> str:
+    return '<div class="review-field"><span>{}</span><div>{}</div></div>'.format(
+        escape(label),
+        value,
+    )
+
+
+def pipeline_step_log_snippets(step: Mapping[str, Any]) -> str:
+    snippets = pipeline_collect_log_snippets(step)
+    if not snippets:
+        return '<p class="empty">No bounded stdout/stderr snippets recorded.</p>'
+    parts = []
+    for snippet in snippets:
+        label = "{} {}".format(snippet.get("source") or "log", snippet.get("stream") or "").strip()
+        ref = str(snippet.get("ref") or "")
+        text = bounded_text(str(snippet.get("text") or ""), PIPELINE_LOG_SNIPPET_LIMIT)
+        parts.append(
+            '<details class="result-technical" open>'
+            "<summary>{}</summary>"
+            "{}"
+            "<pre>{}</pre>"
+            "</details>".format(
+                escape(label),
+                '<p class="muted"><code>{}</code></p>'.format(escape(ref)) if ref else "",
+                escape(text),
+            )
+        )
+    return "".join(parts)
+
+
+def pipeline_collect_log_snippets(value: Any, *, source: str = "") -> list[dict[str, str]]:
+    snippets: list[dict[str, str]] = []
+    if isinstance(value, Mapping):
+        name = str(value.get("name") or source)
+        for stream in ("stdout", "stderr"):
+            text = str(value.get("{}_snippet".format(stream)) or "")
+            ref = str(value.get("{}_ref".format(stream)) or "")
+            if text or ref:
+                snippets.append(
+                    {
+                        "source": name,
+                        "stream": stream,
+                        "text": text,
+                        "ref": ref,
+                    }
+                )
+        for nested in value.values():
+            snippets.extend(pipeline_collect_log_snippets(nested, source=name))
+    elif isinstance(value, list):
+        for nested in value:
+            snippets.extend(pipeline_collect_log_snippets(nested, source=source))
+    return snippets
+
+
+def pipeline_collect_artifacts(value: Any) -> dict[str, list[str]]:
+    artifacts: dict[str, list[str]] = {
+        "task_ids": [],
+        "change_ids": [],
+        "report_ids": [],
+        "review_ids": [],
+        "commit_ids": [],
+        "context_pack_paths": [],
+        "codex_prompt_paths": [],
+        "generated_files": [],
+    }
+    pipeline_collect_artifacts_into(value, artifacts)
+    return {key: unique_strings(items) for key, items in artifacts.items()}
+
+
+def pipeline_collect_artifacts_into(value: Any, artifacts: dict[str, list[str]]) -> None:
+    if isinstance(value, Mapping):
+        for key, nested in value.items():
+            key_text = str(key)
+            if key_text in {"task_id", "current_task_id"}:
+                artifacts["task_ids"].extend(_scalar_or_string_items(nested))
+            elif key_text in {"task_ref", "current_task_ref", "selected_ref", "ref"}:
+                artifacts["task_ids"].extend(_scalar_or_string_items(nested))
+            elif key_text in {"change_id", "change_ids", "linked_change_ids", "created_change_ids", "approved_change_ids"}:
+                artifacts["change_ids"].extend(_scalar_or_string_items(nested))
+            elif key_text in {"report_id", "report_ids"}:
+                artifacts["report_ids"].extend(_scalar_or_string_items(nested))
+            elif key_text in {"review_id", "review_ids"}:
+                artifacts["review_ids"].extend(_scalar_or_string_items(nested))
+            elif key_text in {"commit_id", "commit_ids", "commit_hash"}:
+                artifacts["commit_ids"].extend(_scalar_or_string_items(nested))
+            elif key_text in {"generated_files"}:
+                artifacts["generated_files"].extend(_scalar_or_string_items(nested))
+            elif key_text == "prompt_path":
+                artifacts["codex_prompt_paths"].extend(_scalar_or_string_items(nested))
+            elif key_text in {"context_pack"}:
+                context_pack = _mapping(nested)
+                artifacts["context_pack_paths"].extend(_scalar_or_string_items(context_pack.get("path")))
+                artifacts["context_pack_paths"].extend(_scalar_or_string_items(context_pack.get("resolved_path")))
+            pipeline_collect_artifacts_into(nested, artifacts)
+    elif isinstance(value, list):
+        for nested in value:
+            pipeline_collect_artifacts_into(nested, artifacts)
+
+
+def pipeline_artifact_list(artifacts: Mapping[str, list[str]]) -> str:
+    rows = []
+    for label, key in (
+        ("Tasks", "task_ids"),
+        ("Changes", "change_ids"),
+        ("Reports", "report_ids"),
+        ("Reviews", "review_ids"),
+        ("Commits", "commit_ids"),
+        ("Context Packs", "context_pack_paths"),
+        ("Codex Prompts", "codex_prompt_paths"),
+        ("Generated Files", "generated_files"),
+    ):
+        values = unique_strings(artifacts.get(key) or [])
+        rows.append(
+            "<tr><td>{}</td><td>{}</td></tr>".format(
+                escape(label),
+                change_list_cell(values, limit=6),
+            )
+        )
+    return table(("Type", "Values"), rows, "No linked artifacts recorded.")
+
+
+def pipeline_collect_named_lists(value: Any, names: set[str]) -> list[str]:
+    items: list[str] = []
+    if isinstance(value, Mapping):
+        for key, nested in value.items():
+            if str(key) in names:
+                items.extend(_scalar_or_string_items(nested))
+            items.extend(pipeline_collect_named_lists(nested, names))
+    elif isinstance(value, list):
+        for nested in value:
+            items.extend(pipeline_collect_named_lists(nested, names))
+    return items
+
+
+def pipeline_collect_named_strings(value: Any, names: set[str]) -> list[str]:
+    items: list[str] = []
+    if isinstance(value, Mapping):
+        for key, nested in value.items():
+            if str(key) in names and not isinstance(nested, (Mapping, list)):
+                text = str(nested or "").strip()
+                if text:
+                    items.append(text)
+            items.extend(pipeline_collect_named_strings(nested, names))
+    elif isinstance(value, list):
+        for nested in value:
+            items.extend(pipeline_collect_named_strings(nested, names))
+    return items
+
+
+def pipeline_collect_reasons(value: Any) -> list[str]:
+    reasons: list[str] = []
+    if isinstance(value, Mapping):
+        reason_items = value.get("reasons")
+        if isinstance(reason_items, list):
+            for item in reason_items:
+                if isinstance(item, Mapping):
+                    code = str(item.get("code") or "").strip()
+                    detail = str(item.get("detail") or "").strip()
+                    reasons.append("{} {}".format(code, detail).strip())
+                else:
+                    reasons.append(str(item))
+        for nested in value.values():
+            reasons.extend(pipeline_collect_reasons(nested))
+    elif isinstance(value, list):
+        for nested in value:
+            reasons.extend(pipeline_collect_reasons(nested))
+    return unique_strings([reason for reason in reasons if reason])
+
+
+def _scalar_or_string_items(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return _string_items(value)
+    if value is None or isinstance(value, Mapping):
+        return []
+    text = str(value).strip()
+    return [text] if text else []
+
+
+def unique_strings(values: Sequence[Any]) -> list[str]:
+    seen: set[str] = set()
+    selected: list[str] = []
+    for value in values:
+        text = str(value or "").strip()
+        if text and text not in seen:
+            selected.append(text)
+            seen.add(text)
+    return selected
+
+
+def bounded_debug_json(value: Any) -> str:
+    return bounded_text(
+        json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True),
+        PIPELINE_RAW_DEBUG_LIMIT,
+    )
+
+
+def bounded_text(value: str, limit: int) -> str:
+    text = str(value or "")
+    if len(text) <= limit:
+        return text
+    return "{}\n[truncated: {} bytes total]".format(text[:limit], len(text.encode("utf-8")))
 
 
 def pipeline_selector_form(data: Mapping[str, Any], pipeline: Mapping[str, Any]) -> str:
@@ -831,9 +1696,10 @@ def pipeline_session_table(sessions: Sequence[Any]) -> str:
     for session in sessions:
         if not isinstance(session, Mapping):
             continue
+        session_id = str(session.get("id") or "")
         rows.append(
             "<tr><td><code>{}</code></td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
-                escape(session.get("id") or ""),
+                '<a href="/pipeline/sessions/{0}">{0}</a>'.format(escape(session_id)),
                 status_badge(str(session.get("status") or "unknown")),
                 escape(session.get("policy") or ""),
                 escape(session.get("current_task_ref") or session.get("current_task_id") or ""),
@@ -2538,6 +3404,62 @@ def render_page(title: str, body: str, *, active: str) -> str:
     .action-panel form:first-of-type {{
       border-top: 0;
       padding-top: 0;
+    }}
+    .pipeline-progress {{
+      height: 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #eef2f7;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }}
+    .pipeline-progress span {{
+      display: block;
+      height: 100%;
+      background: var(--accent);
+    }}
+    .pipeline-action-groups {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }}
+    .pipeline-action-group {{
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fbfcfe;
+      padding: 12px;
+      min-width: 0;
+    }}
+    .pipeline-action-group h3 {{
+      margin: 0 0 8px;
+      font-size: 14px;
+    }}
+    .restricted-actions {{
+      border-color: #f0c7c7;
+      background: #fff8f8;
+    }}
+    .pipeline-step {{
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }}
+    .pipeline-step summary {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      cursor: pointer;
+      padding: 10px 12px;
+      background: #f1f4f8;
+    }}
+    .pipeline-step > div {{
+      padding: 12px;
+    }}
+    .pipeline-step h3 {{
+      margin: 14px 0 8px;
+      font-size: 14px;
     }}
     .task-controls {{
       display: grid;

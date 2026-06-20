@@ -53,6 +53,7 @@ GENERATED_VIEW_FILES = (
 )
 PIPELINE_DEFAULT_POLICY = "dry_run"
 PIPELINE_ORDER_OPTIONS = {"execution", "owner", "selected"}
+PIPELINE_DETAIL_AUDIT_LAST = 25
 
 COMMIT_COMPLETED_TASK_STATUSES = {"done"}
 COMMIT_ACCEPTED_CHANGE_STATUSES = {"accepted"}
@@ -724,6 +725,68 @@ class ReadOnlyProjectModel:
             "audit": self.pipeline_audit_events(last=audit_last),
         }
 
+    def pipeline_session_detail(
+        self,
+        session_id: str,
+        *,
+        audit_last: int = PIPELINE_DETAIL_AUDIT_LAST,
+    ) -> dict[str, Any]:
+        """Return read-only data for one persistent pipeline session page."""
+
+        requested_id = str(session_id or "").strip()
+        state = load_pipeline_state(self.root)
+        raw_sessions = [
+            session for session in state.get("sessions", []) if isinstance(session, Mapping)
+        ]
+        raw_session = next(
+            (session for session in raw_sessions if str(session.get("id") or "") == requested_id),
+            {},
+        )
+        session = _pipeline_session_summary(raw_session) if raw_session else {}
+        if raw_session:
+            session["raw"] = copy.deepcopy(raw_session)
+
+        tasks = self.tasks()
+        changes = self.changes()
+        report_records = self.task_reports()
+        linked_change_ids = set(_string_list(raw_session.get("linked_change_ids")))
+        report_ids = set(_string_list(raw_session.get("report_ids")))
+        task = _pipeline_session_task(raw_session, tasks)
+        reports = [
+            _task_report_summary(report)
+            for report in report_records
+            if str(report.get("id") or "") in report_ids
+        ]
+
+        return {
+            "session_id": requested_id,
+            "found": bool(raw_session),
+            "state": {
+                "revision": state.get("revision", 0),
+                "current_session_id": state.get("current_session_id") or "",
+                "session_count": len(raw_sessions),
+            },
+            "session": session,
+            "task": task,
+            "linked_changes": [
+                _change_summary(change)
+                for change in changes
+                if str(change.get("id") or "") in linked_change_ids
+            ],
+            "reports": reports,
+            "audit": self.pipeline_session_audit_events(
+                requested_id,
+                audit_event_ids=_string_list(raw_session.get("audit_event_ids")),
+                last=audit_last,
+            )
+            if raw_session
+            else [],
+            "sessions": [
+                _pipeline_session_summary(session)
+                for session in raw_sessions
+            ],
+        }
+
     def pipeline_audit_events(self, *, last: int = 6) -> list[dict[str, Any]]:
         """Read latest pipeline audit entries without mutating event state."""
 
@@ -750,6 +813,35 @@ class ReadOnlyProjectModel:
             if isinstance(payload, Mapping):
                 events.append(_pipeline_event_summary(payload))
         return events
+
+    def pipeline_session_audit_events(
+        self,
+        session_id: str,
+        *,
+        audit_event_ids: Sequence[str] = (),
+        last: int = PIPELINE_DETAIL_AUDIT_LAST,
+    ) -> list[dict[str, Any]]:
+        """Read latest audit entries related to one pipeline session."""
+
+        path = self.paths.event_file("pipeline-events.jsonl")
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except FileNotFoundError:
+            return []
+
+        event_ids = {str(event_id) for event_id in audit_event_ids if str(event_id).strip()}
+        events = []
+        for line in lines:
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(payload, Mapping):
+                continue
+            if _pipeline_event_matches_session(payload, session_id, event_ids):
+                events.append(_pipeline_event_summary(payload))
+        return events[-max(1, last) :]
+
 
     def git_status(self) -> dict[str, Any]:
         """Read git porcelain status without running any write-capable git command."""
@@ -964,6 +1056,54 @@ def _pipeline_event_summary(event: Mapping[str, Any]) -> dict[str, Any]:
         "revision_after": event.get("revision_after"),
         "summary": " / ".join(bits),
     }
+
+
+def _pipeline_session_task(
+    session: Mapping[str, Any],
+    tasks: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    task_ids = {str(session.get("current_task_id") or "").strip()}
+    task_refs = {str(session.get("current_task_ref") or "").strip()}
+    selected_queue = _mapping(session.get("selected_queue"))
+    task_refs.update(_string_list(selected_queue.get("task_refs")))
+    for step in session.get("steps") or []:
+        if not isinstance(step, Mapping):
+            continue
+        task_ids.add(str(step.get("task_id") or "").strip())
+    task_ids.discard("")
+    task_refs.discard("")
+    for task in tasks:
+        task_values = {
+            str(task.get("id") or ""),
+            str(task.get("ref") or ""),
+            str(task.get("legacy_id") or ""),
+            str(task.get("uid") or ""),
+        }
+        task_values.update(_string_list(task.get("aliases")))
+        if task_ids.intersection(task_values) or task_refs.intersection(task_values):
+            return dict(task)
+    return {}
+
+
+def _pipeline_event_matches_session(
+    event: Mapping[str, Any],
+    session_id: str,
+    audit_event_ids: set[str],
+) -> bool:
+    if not session_id:
+        return False
+    if str(event.get("event_id") or "") in audit_event_ids:
+        return True
+    if str(event.get("entity_id") or "") == session_id:
+        return True
+    payload = _mapping(event.get("payload"))
+    if str(payload.get("session_id") or "") == session_id:
+        return True
+    session = _mapping(payload.get("session"))
+    if str(session.get("id") or session.get("session_id") or "") == session_id:
+        return True
+    refs = _mapping(payload.get("refs"))
+    return str(refs.get("session_id") or "") == session_id
 
 
 def task_hints(

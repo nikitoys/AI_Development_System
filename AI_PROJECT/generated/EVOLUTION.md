@@ -3,13 +3,14 @@
 
 # AI Development System Evolution
 
-Revision: `1988`
-Changes: `60`
+Revision: `2059`
+Changes: `62`
 
 ## Summary
 
 - `accepted`: 51
-- `approved`: 5
+- `approved`: 6
+- `in_review`: 1
 - `ready`: 4
 
 ## Changes
@@ -3940,3 +3941,134 @@ Impact:
 Linked tasks:
 
 - TASK-077
+
+### CHG-061 — PIPE-27 Add Persistent Pipeline Session Detail Page
+
+Status: `approved`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPE-27 requires an explicit Evolution Change Proposal before implementation: Add a persistent per-session Pipeline page with real-time steps, expandable logs, session actions, artifacts, audit events, and historical availability.
+
+Proposal:
+
+Implement the bounded task scope: Add a persistent route for individual pipeline sessions, for example /pipeline/sessions/<SESSION_ID>.; Add links from the main Pipeline sessions table to each session detail page.; Keep session detail pages available after session completion, blocking, failure, stop, or archive.; Add a top session header with session id, status, policy, current task, current step, stop reason, started/updated/finished timestamps, elapsed time, and auto-refresh status.; Add a Status Overview section with a compact progress indicator for the full pipeline flow.; Add a Current Live Step section for running sessions.; Auto-refresh the session page every 1-2 seconds while the session is running.; Stop auto-refresh automatically when the session reaches a terminal state.; Add a Steps section that lists all pipeline steps in order.; Each step must be expandable/collapsible.; Expanded step view must show status, task id/ref, started_at, finished_at, elapsed time, stop reason, gate outcomes, linked artifacts, and logs.; Step logs must include bounded stdout/stderr snippets when available.; Show pending steps as visible placeholders, not hidden missing data.; Add an Actions section with buttons for safe session actions.; Actions section must include Refresh Session, Run Next, Run Until Blocker, Stop Session, and Resume Session when applicable.; Actions section must show owner approval actions when applicable, including approve required changes, approve auto-close, and close reviewed task.; Dangerous or restricted actions must be separated visually and require explicit confirmation.; Do not expose push, merge, reset, restore, clean, rebase, discard, or destructive git actions.; Add an Artifacts section showing linked task ids, change ids, report ids, review ids, commit ids, Context Pack path, Codex Prompt path, and generated files.; Add a Queue Snapshot section showing selected task, queue counts, skipped tasks, and skip reasons such as status_not_executable.; Add an Audit Events section with latest pipeline events related to the session.; Add a Files Changed During Session section when changed file data is available.; Add a Problems / Blockers section that clearly displays current blocker, previous blockers, and known risks.; Add Raw Debug collapsible sections for session JSON and latest gate details.; Do not render full CODEX_PROMPT.md content on the page.; Do not store or render unbounded logs.; Use bounded snippets, hashes, or safe log references for Codex adapter stdout/stderr.; Use simple polling for MVP; do not require WebSockets or SSE.; Add tests for session detail route rendering.; Add tests for links from main Pipeline page to session detail pages.; Add tests for running-session auto-refresh markup.; Add tests for completed historical session rendering.; Add tests for expandable steps and bounded log display.; Add tests for action buttons and confirmation requirements.; Document the session detail page in the owner quickstart and pipeline runner docs.
+
+Rationale:
+
+Create a dedicated Web Control Center page for each pipeline session, for example /pipeline/sessions/PSESS-012. The page must let the Human Owner watch a running session in real time, inspect all steps and logs, execute safe session actions, and reopen the page later as a permanent execution record.
+
+Approved by: `human_owner` at `2026-06-20T13:06:22Z`  
+Approval notes: Approve  
+
+Affected files:
+
+- ai_project_ctl/web/server.py
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/pipeline/state.py
+- ai_project_ctl/pipeline/session.py
+- ai_project_ctl/pipeline/audit.py
+- ai_project_ctl/pipeline/codex_adapter.py
+- ai_project_ctl/core/registry.py
+- scripts/aictl.py
+- tests/test_web_control_center.py
+- tests/test_pipeline_runner.py
+- tests/test_aictl.py
+- ai-system/project-control/pipeline-runner.md
+- ai-system/project-control/10-owner-quickstart.md
+- AI_PROJECT/state/pipeline_sessions.json via governed CLI/service only
+- AI_PROJECT/events/pipeline-events.jsonl via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_STATUS.md via governed CLI/service only
+- AI_PROJECT/generated/PIPELINE_AUDIT.md via governed CLI/service only
+
+Risks:
+
+- Boundary risk: Do not add background autonomous execution.
+- Boundary risk: Do not bypass pipeline gates.
+- Boundary risk: Do not change task lifecycle rules.
+- Boundary risk: Do not change queue planner semantics except for display/read-model formatting needed by this page.
+- Boundary risk: Do not approve or accept Evolution Changes automatically.
+- Boundary risk: Do not auto-close tasks without existing pipeline close gates and owner note.
+- Boundary risk: Do not push or merge.
+- Boundary risk: Do not expose full prompt text.
+- Boundary risk: Do not store full stdout/stderr logs in protected state.
+- Boundary risk: Do not add external frontend dependencies.
+- Boundary risk: Do not require WebSockets or SSE in the MVP.
+- Boundary risk: Do not directly edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Start a running pipeline session and open /pipeline/sessions/<SESSION_ID>.
+- Verify the page updates while the session is running.
+- Verify the Steps section displays all known steps and pending placeholders.
+- Expand each step and verify logs/gates/details are readable.
+- Verify Actions buttons appear only when applicable to the session state.
+- Verify mutating Actions require confirmation.
+- Verify old completed and blocked PSESS records remain viewable.
+- Verify no full CODEX_PROMPT.md content appears in page HTML, state, events, or generated output.
+- Verify the main Pipeline dashboard links to the session detail page.
+- Run web/control-center tests and project-control validation commands.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-078.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add a persistent route for individual pipeline sessions, for example /pipeline/sessions/<SESSION_ID>.
+- Add links from the main Pipeline sessions table to each session detail page.
+- Keep session detail pages available after session completion, blocking, failure, stop, or archive.
+- Add a top session header with session id, status, policy, current task, current step, stop reason, started/updated/finished timestamps, elapsed time, and auto-refresh status.
+- Add a Status Overview section with a compact progress indicator for the full pipeline flow.
+- Each pipeline session has a stable URL such as /pipeline/sessions/PSESS-012.
+- The main Pipeline page links each session id to its detail page.
+- The session detail page remains available after the session completes, blocks, fails, stops, or is archived.
+
+Linked tasks:
+
+- TASK-078
+
+### CHG-062 — Compact codexctl execute prompt renderer
+
+Status: `in_review`  
+Type: `prompt`  
+Priority: `1`  
+Backward compatibility: `compatible`  
+Migration required: `false`  
+
+Problem:
+
+codexctl.py currently renders runtime CODEX_PROMPT.md as a documentation-heavy prompt that can embed full Context Pack content and prompt-authoring explanations instead of a compact execution contract.
+
+Proposal:
+
+Update codexctl.py prompt rendering so CODEX_PROMPT.md uses the execute-profile MVP shape: Profile: execute, task identity, role, objective, task input, full scope, out-of-scope, allowed files, full acceptance criteria, compact verification text, manifest-only Context section, compact execution rules, missing-info policy, and final report format. Omit Execution Steps and full Context Pack body. Add or update tests proving compact context rendering.
+
+Rationale:
+
+The attached Codex execution request asks for compact runtime prompt generation so Codex receives a bounded execution contract instead of a long documentation dump.
+
+Approved by: `human_owner` at `2026-06-20T15:44:09Z`  
+Approval notes: Approved  
+
+Affected files:
+
+- scripts/codexctl.py
+- tests/test_legacy_ctl_wrappers.py
+
+Risks:
+
+- Boundary risk: Prompt rendering must not embed the full AI_PROJECT/generated/CONTEXT_PACK.md body into CODEX_PROMPT.md.
+- Boundary risk: Do not implement --profile, profile-specific role switching, task schema changes, execution_steps, verification_checks, or task splitting in this change.
+- Boundary risk: Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**; generated prompt/status output must be produced only through the owning CLI.
+
+Impact:
+
+- Creates a compact execute-profile runtime prompt shape for codexctl.py while keeping profile support postponed.
+- CODEX_PROMPT.md with context should keep only Context Pack path, hash, docs/tasks revisions, and selected source refs; it should not render Retrieved Context Pack Content.
+
+Linked tasks:
+
+- TASK-079

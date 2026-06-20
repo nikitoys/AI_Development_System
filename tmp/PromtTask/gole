@@ -1,0 +1,15 @@
+EPIC: Task Contract Compiler
+
+Goal:
+Transform planning-level tasks into atomic executable tasks with compact executor/verifier prompts and readiness gates.
+
+TASK-001 Define compiled task contract schema
+TASK-002 Add task quality / abstractness scorer
+TASK-003 Add context refs resolver using existing contextctl index
+TASK-004 Add compile preview command
+TASK-005 Add atomic task splitter with max depth / max count limits
+TASK-006 Add executor prompt compiler with compact section policy
+TASK-007 Add verifier prompt compiler
+TASK-008 Add readiness gate
+TASK-009 Add compile apply workflow with Human Owner confirmation
+TASK-010 Integrate compiled atomic tasks with existing prepare_for_codex pipeline
