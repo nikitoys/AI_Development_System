@@ -3,19 +3,19 @@
 
 # Pipeline Status
 
-Revision: `27`
-Current session: `PSESS-008`
-Sessions: `8`
+Revision: `43`
+Current session: `PSESS-012`
+Sessions: `12`
 
 ## Current Session
 
-- ID: `PSESS-008`
-- Status: `failed`
+- ID: `PSESS-012`
+- Status: `blocked`
 - Policy: `supervised_executable_local_commit`
 - Current task: `TASK-069`
 - Current step: `run_next`
-- Step status: `failed`
-- Stop reason: `UNSAFE_CONDITION: Codex Execution Adapter stopped: local_command_nonzero_exit`
+- Step status: `blocked`
+- Stop reason: `BLOCKED: Codex Execution Adapter stopped: structured_execution_report_missing`
 
 ## Sessions
 
@@ -29,3 +29,7 @@ Sessions: `8`
 | `PSESS-006` | `completed` | `supervised` | `TASK-068` | `run_next` | queue_complete |
 | `PSESS-007` | `stopped` | `supervised_executable_local_commit` | `TASK-076` | `` | Owner stop |
 | `PSESS-008` | `failed` | `supervised_executable_local_commit` | `TASK-069` | `run_next` | UNSAFE_CONDITION: Codex Execution Adapter stopped: local_command_nonzero_exit |
+| `PSESS-009` | `completed` | `supervised_executable_local_commit` | `TASK-077` | `run_next` | queue_complete |
+| `PSESS-010` | `completed` | `supervised_executable_local_commit` | `TASK-069` | `run_next` | queue_complete |
+| `PSESS-011` | `completed` | `supervised_executable_local_commit` | `TASK-069` | `run_next` | queue_complete |
+| `PSESS-012` | `blocked` | `supervised_executable_local_commit` | `TASK-069` | `run_next` | BLOCKED: Codex Execution Adapter stopped: structured_execution_report_missing |

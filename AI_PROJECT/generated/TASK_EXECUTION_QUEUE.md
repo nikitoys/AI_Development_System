@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `652`
+Revision: `664`
 
 ## Executable Now
 
@@ -141,16 +141,18 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPE-17 (TASK-068)` [done] `EPIC-007` priority `1` — PIPE-17 Add Custom Pipeline Policy Preset Store
   - `status_not_executable`: status is done
-- `PIPE-18 (TASK-069)` [in_progress] `EPIC-007` priority `1` — PIPE-18 Add Pipeline Policy CRUD Commands
-  - `status_not_executable`: status is in_progress
+- `PIPE-18 (TASK-069)` [blocked] `EPIC-007` priority `1` — PIPE-18 Add Pipeline Policy CRUD Commands
+  - `status_not_executable`: status is blocked
 - `PIPE-23 (TASK-074)` [done] `EPIC-007` priority `1` — PIPE-23 Add Auto-Create Missing Changes Policy Checkbox
   - `status_not_executable`: status is done
 - `PIPE-24 (TASK-075)` [done] `EPIC-007` priority `1` — PIPE-24 Add Owner-Approved Session Changes Policy Checkbox
   - `status_not_executable`: status is done
 - `PIPE-25 (TASK-076)` [done] `EPIC-007` priority `1` — PIPE-25 Add Full Self-Running Pipeline Mode
   - `status_not_executable`: status is done
-- `PIPE-26 (TASK-077)` [in_review] `EPIC-007` priority `1` — PIPE-26 Fix Codex Adapter Prompt Transport
-  - `status_not_executable`: status is in_review
+- `PIPE-26 (TASK-077)` [done] `EPIC-007` priority `1` — PIPE-26 Fix Codex Adapter Prompt Transport
+  - `status_not_executable`: status is done
+- `PIPE-27 (TASK-078)` [in_progress] `EPIC-007` priority `1` — PIPE-27 Add Persistent Pipeline Session Detail Page
+  - `status_not_executable`: status is in_progress
 - `TIG-01 (TASK-012)` [done] `EPIC-004` priority `1` — TIG-01 Document task identity and execution graph design
   - `status_not_executable`: status is done
 - `TIG-02 (TASK-013)` [done] `EPIC-004` priority `1` — TIG-02 Add epic keys to plan model

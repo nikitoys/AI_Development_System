@@ -597,7 +597,10 @@ The Pipeline page shows:
 - policy preset preview;
 - queue preview;
 - current session gates and steps;
+- links to persistent per-session pages such as `/pipeline/sessions/PSESS-012`;
 - recent pipeline audit entries.
+
+Each session detail page remains available after the session completes, blocks, fails, stops or is archived. Running sessions poll every two seconds and stop polling when the session leaves `running`. The detail page shows the session header, progress overview, live step, expandable step records, bounded stdout/stderr snippets, artifacts, queue snapshot, related audit events, changed files when report or gate data exists, blockers and bounded raw debug data. It must not render full `CODEX_PROMPT.md` content or expose push, merge, reset, restore, clean, rebase or discard actions.
 
 Normal UI flow:
 
@@ -608,8 +611,9 @@ Normal UI flow:
 4. Run Next for one guarded step, or Run Until Blocker for confirmed batch flow.
 5. Read the action result panel.
 6. If blocked, resolve the owner action before running again.
-7. Refresh Status when generated pipeline output should be updated.
-8. Stop Session when the owner intentionally ends a run.
+7. Open the session ID link when you need the persistent live or historical execution record.
+8. Refresh Status when generated pipeline output should be updated.
+9. Stop Session when the owner intentionally ends a run.
 ```
 
 UI write actions route through registered `aictl.py` commands. The UI does not write protected JSON, JSONL or generated Markdown directly.

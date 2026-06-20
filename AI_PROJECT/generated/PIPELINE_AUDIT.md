@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `27`
-State revision: `27`
-Current session: `PSESS-008`
+Events: `43`
+State revision: `43`
+Current session: `PSESS-012`
 
 ## Timeline
 
@@ -38,6 +38,22 @@ Current session: `PSESS-008`
 | `2026-06-20T12:01:22Z` | `step.started` | `pipeline.step.start` | `PSESS-008` | `` | `` | PSESS-008 |
 | `2026-06-20T12:01:29Z` | `token_gate.result` | `pipeline.step.result` | `PSESS-008` | `TASK-069` | `token_budget_gate` | token_budget_gate pass \| changes=CHG-054 |
 | `2026-06-20T12:01:31Z` | `codex_run.result` | `pipeline.step.result` | `PSESS-008` | `TASK-069` | `codex_execution_adapter` | codex_execution_adapter fail \| changes=CHG-054 \| Codex Execution Adapter stopped: local_command_nonzero_exit |
+| `2026-06-20T12:50:23Z` | `session.create` | `pipeline.session.create` | `PSESS-009` | `TASK-077` | `` | PSESS-009 |
+| `2026-06-20T12:50:37Z` | `step.started` | `pipeline.step.start` | `PSESS-009` | `` | `` | PSESS-009 |
+| `2026-06-20T12:50:37Z` | `queue.planned` | `pipeline.step.result` | `PSESS-009` | `` | `queue_planner` | queue_planner blocked \| No executable task is available in the selected queue. |
+| `2026-06-20T12:50:37Z` | `completion` | `pipeline.session.complete` | `PSESS-009` | `` | `` | completed |
+| `2026-06-20T12:52:27Z` | `session.create` | `pipeline.session.create` | `PSESS-010` | `TASK-069` | `` | PSESS-010 |
+| `2026-06-20T12:52:36Z` | `step.started` | `pipeline.step.start` | `PSESS-010` | `` | `` | PSESS-010 |
+| `2026-06-20T12:52:36Z` | `queue.planned` | `pipeline.step.result` | `PSESS-010` | `` | `queue_planner` | queue_planner blocked \| No executable task is available in the selected queue. |
+| `2026-06-20T12:52:36Z` | `completion` | `pipeline.session.complete` | `PSESS-010` | `` | `` | completed |
+| `2026-06-20T12:53:13Z` | `session.create` | `pipeline.session.create` | `PSESS-011` | `TASK-069` | `` | PSESS-011 |
+| `2026-06-20T12:53:19Z` | `step.started` | `pipeline.step.start` | `PSESS-011` | `` | `` | PSESS-011 |
+| `2026-06-20T12:53:19Z` | `queue.planned` | `pipeline.step.result` | `PSESS-011` | `` | `queue_planner` | queue_planner blocked \| No executable task is available in the selected queue. |
+| `2026-06-20T12:53:19Z` | `completion` | `pipeline.session.complete` | `PSESS-011` | `` | `` | completed |
+| `2026-06-20T12:56:47Z` | `session.create` | `pipeline.session.create` | `PSESS-012` | `` | `` | PSESS-012 |
+| `2026-06-20T12:57:00Z` | `step.started` | `pipeline.step.start` | `PSESS-012` | `` | `` | PSESS-012 |
+| `2026-06-20T12:57:07Z` | `token_gate.result` | `pipeline.step.result` | `PSESS-012` | `TASK-069` | `token_budget_gate` | token_budget_gate pass \| changes=CHG-054 |
+| `2026-06-20T13:01:33Z` | `codex_run.result` | `pipeline.step.result` | `PSESS-012` | `TASK-069` | `codex_execution_adapter` | codex_execution_adapter blocked \| changes=CHG-054 \| Codex Execution Adapter stopped: structured_execution_report_missing |
 
 ## Event Type Coverage
 

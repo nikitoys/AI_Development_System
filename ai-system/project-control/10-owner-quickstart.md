@@ -68,6 +68,8 @@ Each workflow posts to `/actions`, delegates through registered `aictl.py` workf
 
 `Pipeline` shows the supervised batch pipeline cockpit for queue preview, policy selection, current session state, gate outcomes, run-next, run-until-blocker and recent pipeline audit entries. It is supervised automation only; it does not approve Evolution Changes, accept final work, push, merge, or bypass review gates.
 
+Pipeline session IDs link to persistent detail pages such as `http://127.0.0.1:8765/pipeline/sessions/PSESS-012`. Use a session detail page to watch a running session, inspect expandable step records, bounded Codex stdout/stderr snippets, artifacts, queue snapshot, related audit events, changed files and blockers, or reopen completed, blocked, failed, stopped and archived sessions later. The page uses simple polling while a session is `running` and stops polling in terminal or owner-action states. It does not render full `CODEX_PROMPT.md` content and does not expose destructive git actions.
+
 `Actions` contains direct forms for Task creation, Bulk Task Import, health and repair checks, Task workflows, Task transitions, current Task changes, generated-output refreshes, and Codex/context builds. Bulk Task Import supports pasted JSON and `.json` or `.txt` file upload; leave Confirm unchecked for preview and check Confirm only when the preview is ready to create Tasks.
 
 ## Command-Line Equivalents

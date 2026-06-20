@@ -366,6 +366,7 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("Queue Preview", body)
         self.assertIn("PIPE-13", body)
         self.assertIn("PSESS-001", body)
+        self.assertIn('href="/pipeline/sessions/PSESS-001"', body)
         self.assertIn("TOKEN_BUDGET_FAILURE", body)
         self.assertIn("Latest Pipeline Audit", body)
         self.assertIn("pipeline.step.result", body)
@@ -380,6 +381,169 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('value="pipeline.render"', body)
         self.assertIn("Refresh Status", body)
         self.assertIn('name="confirm" value="yes" required', body)
+
+    def test_pipeline_session_detail_route_renders_running_session(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "in_review",
+                        "title": "Persistent session detail page",
+                        "summary": "Add per-session Pipeline pages.",
+                        "epic_id": "EPIC-007",
+                        "epic_key": "PIPE",
+                        "order": 27,
+                    }
+                ],
+                current_task_id="TASK-078",
+                changes=[
+                    {
+                        "id": "CHG-061",
+                        "status": "ready",
+                        "title": "PIPE-27 session detail page",
+                        "linked_tasks": ["TASK-078"],
+                        "order": 61,
+                    }
+                ],
+                task_reports={
+                    "schema_version": 1,
+                    "revision": 1,
+                    "reports": [
+                        {
+                            "id": "RPT-001",
+                            "task_id": "TASK-078",
+                            "task_ref": "PIPE-27",
+                            "submitted_at": "2026-06-20T13:20:00Z",
+                            "report": {
+                                "changed_files": ["ai_project_ctl/web/server.py"],
+                                "generated_files": ["AI_PROJECT/generated/PIPELINE_STATUS.md"],
+                                "warnings": ["Review owner approval evidence."],
+                                "blockers": [],
+                                "checks": [],
+                            },
+                        }
+                    ],
+                },
+                pipeline=pipeline_detail_state(
+                    status="running",
+                    step_status="running",
+                    finished_at="",
+                    current_step_status="running",
+                ),
+                pipeline_events=[
+                    pipeline_detail_event(
+                        "EVT-101",
+                        "PSESS-020",
+                        "pipeline.step.result",
+                        {"name": "codex_execution_adapter", "status": "warn"},
+                    )
+                ],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/pipeline/sessions/PSESS-020", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn('data-auto-refresh="2"', body)
+        self.assertIn("Status Overview", body)
+        self.assertIn("Current Live Step", body)
+        self.assertIn("Steps", body)
+        self.assertIn("Artifacts", body)
+        self.assertIn("Queue Snapshot", body)
+        self.assertIn("Audit Events", body)
+        self.assertIn("Files Changed During Session", body)
+        self.assertIn("Problems / Blockers", body)
+        self.assertIn("Raw Debug", body)
+        self.assertIn("Run Next", body)
+        self.assertIn("Run Until Blocker", body)
+        self.assertIn("Stop Session", body)
+        self.assertIn("Approve Required Changes", body)
+        self.assertIn("Approve Auto-close", body)
+        self.assertIn("Close Reviewed Task", body)
+        self.assertIn('name="confirm" value="yes" required', body)
+        self.assertIn("stdout diagnostic", body)
+        self.assertIn("stderr diagnostic", body)
+        self.assertIn("captured:stdout:sha256:abc", body)
+        self.assertIn("status_not_executable", body)
+        self.assertIn("ai_project_ctl/web/server.py", body)
+        self.assertIn("AI_PROJECT/generated/CODEX_PROMPT.md", body)
+        self.assertNotIn("FULL CODEX PROMPT BODY", body)
+
+    def test_pipeline_session_detail_shows_resume_for_blocked_session(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "in_progress",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=pipeline_detail_state(
+                    status="blocked",
+                    step_status="blocked",
+                    finished_at="",
+                    current_step_status="blocked",
+                    stop_reason="BLOCKED: owner action required",
+                ),
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/pipeline/sessions/PSESS-020", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertNotIn('data-auto-refresh="2"', body)
+        self.assertIn("Auto-refresh stopped", body)
+        self.assertIn("Resume Session", body)
+        self.assertIn("Run Next", body)
+        self.assertIn("Run Until Blocker", body)
+
+    def test_pipeline_session_detail_renders_completed_historical_session(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "done",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=pipeline_detail_state(
+                    status="completed",
+                    step_status="passed",
+                    finished_at="2026-06-20T13:30:00Z",
+                    current_step_status="passed",
+                    stop_reason="queue_complete",
+                ),
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/pipeline/sessions/PSESS-020", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("PSESS-020", body)
+        self.assertIn("completed", body)
+        self.assertIn("queue_complete", body)
+        self.assertIn("Auto-refresh stopped", body)
+        self.assertNotIn('data-auto-refresh="2"', body)
+        self.assertIn("Session JSON", body)
 
     def test_current_execution_panel_shows_stale_prompt_context_and_selection_warning(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2887,6 +3051,192 @@ def large_task_view_state():
             },
         ],
         "current_task_id": "TASK-038",
+    }
+
+
+def pipeline_detail_state(
+    *,
+    status,
+    step_status,
+    finished_at,
+    current_step_status,
+    stop_reason="",
+):
+    return {
+        "schema_version": 1,
+        "revision": 4,
+        "created_at": "2026-06-20T13:10:00Z",
+        "updated_at": "2026-06-20T13:25:00Z",
+        "current_session_id": "PSESS-020",
+        "sessions": [
+            {
+                "id": "PSESS-020",
+                "status": status,
+                "selected_queue": {
+                    "selection": "ready_queue",
+                    "task_refs": ["PIPE-27"],
+                    "epic_ids": ["EPIC-007"],
+                    "statuses": ["ready"],
+                    "max_tasks": 1,
+                    "order_by": "execution",
+                    "include_blocked_tasks": False,
+                },
+                "policy_snapshot": {
+                    "name": "supervised_executable_autoclose",
+                    "queue": {
+                        "selection": "ready_queue",
+                        "max_tasks": 1,
+                        "include_blocked_tasks": False,
+                    },
+                    "evolution": {
+                        "create_missing_change": False,
+                        "approve_linked_change": False,
+                        "accept_linked_change": False,
+                        "require_approved_change_for_execution": True,
+                        "owner_approve_required_changes_for_session": False,
+                        "owner_approval_note": "",
+                    },
+                    "token_budget": {
+                        "require_gate_pass": True,
+                        "max_prompt_tokens": 32000,
+                        "max_context_tokens": 24000,
+                        "min_remaining_tokens": 6000,
+                        "reserved_output_tokens": 0,
+                    },
+                    "codex": {
+                        "mode": "run_codex",
+                        "require_human_selected_policy": True,
+                        "adapter_mode": "local_command",
+                        "local_command": ["codex", "exec"],
+                        "command_allowlist": ["codex exec"],
+                        "timeout_sec": 300,
+                        "require_report": True,
+                    },
+                    "review": {
+                        "require_machine_review": True,
+                        "required_machine_outcome": "pass",
+                        "require_codex_review": True,
+                        "required_codex_decision": "approve",
+                    },
+                    "rework": {
+                        "allow_rework_loop": True,
+                        "max_rework_attempts": 1,
+                        "require_owner_decision_for_rework": True,
+                    },
+                    "batch": {"max_steps": 5, "max_failures": 1},
+                    "closure": {
+                        "auto_close_task": True,
+                        "owner_approval_note": "Owner approved auto-close.",
+                    },
+                    "commit": {
+                        "create_local_commit": False,
+                        "mode": "disabled",
+                        "require_commit_readiness": False,
+                        "allow_push": False,
+                        "allow_merge": False,
+                    },
+                },
+                "current_task_id": "TASK-078",
+                "current_task_ref": "PIPE-27",
+                "current_step": "run_next",
+                "current_step_status": current_step_status,
+                "attempt_counters": {"steps": 1, "tasks": 1, "rework": 0},
+                "gate_outcomes": [
+                    pipeline_detail_gate("token_budget_gate", "pass"),
+                    pipeline_detail_gate("codex_execution_adapter", "warn"),
+                ],
+                "steps": [
+                    {
+                        "name": "run_next",
+                        "status": step_status,
+                        "started_at": "2026-06-20T13:11:00Z",
+                        "finished_at": finished_at,
+                        "task_id": "TASK-078",
+                        "gate_outcomes": [
+                            pipeline_detail_gate("token_budget_gate", "pass"),
+                            pipeline_detail_gate("codex_execution_adapter", "warn"),
+                        ],
+                        "result": {},
+                        "stop_reason": stop_reason,
+                        "audit_event_ids": ["EVT-100", "EVT-101"],
+                    }
+                ],
+                "linked_change_ids": ["CHG-061"],
+                "report_ids": ["RPT-001"],
+                "review_ids": ["REV-001"],
+                "commit_ids": ["abc1234"],
+                "audit_event_ids": ["EVT-100", "EVT-101"],
+                "stop_reason": stop_reason,
+                "created_at": "2026-06-20T13:10:00Z",
+                "updated_at": "2026-06-20T13:25:00Z",
+                "started_at": "2026-06-20T13:11:00Z",
+                "finished_at": finished_at,
+            }
+        ],
+    }
+
+
+def pipeline_detail_gate(name, status):
+    details = {
+        "policy": "supervised_executable_autoclose",
+        "selected_task": {
+            "id": "TASK-078",
+            "ref": "PIPE-27",
+            "legacy_id": "TASK-078",
+            "status": "ready",
+            "title": "Persistent session detail page",
+            "reasons": [
+                {"code": "status_not_executable", "detail": "example skipped task"}
+            ],
+        },
+        "queue_counts": {
+            "executable": 1,
+            "waiting": 0,
+            "blocked": 0,
+            "skipped": 1,
+        },
+        "change_gate": {"required": True, "change_ids": ["CHG-061"]},
+        "token_budget": {
+            "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+            "context_pack": {"path": "AI_PROJECT/generated/CONTEXT_PACK.md"},
+        },
+    }
+    if name == "codex_execution_adapter":
+        details["adapter"] = {
+            "status": "blocked",
+            "code": "CODEX_ADAPTER_REPORT_MISSING",
+            "stdout_ref": "captured:stdout:sha256:abc",
+            "stderr_ref": "captured:stderr:sha256:def",
+            "stdout_snippet": "stdout diagnostic",
+            "stderr_snippet": "stderr diagnostic",
+            "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+            "report_id": "RPT-001",
+        }
+        details["changed_files"] = ["ai_project_ctl/web/server.py"]
+        details["generated_files"] = ["AI_PROJECT/generated/PIPELINE_STATUS.md"]
+    return {
+        "name": name,
+        "status": status,
+        "recorded_at": "2026-06-20T13:20:00Z",
+        "details": details,
+    }
+
+
+def pipeline_detail_event(event_id, session_id, command, gate):
+    return {
+        "event_id": event_id,
+        "timestamp": "2026-06-20T13:20:00Z",
+        "actor": "tester",
+        "command": command,
+        "entity_type": "pipeline_session",
+        "entity_id": session_id,
+        "revision_before": 3,
+        "revision_after": 4,
+        "payload": {
+            "session_id": session_id,
+            "step": {"name": "run_next", "status": "running"},
+            "gate_outcome": gate,
+        },
     }
 
 
