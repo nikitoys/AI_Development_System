@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `912`
-Current task: `TASK-118`
+Revision: `915`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -2110,9 +2110,9 @@ Acceptance criteria:
 - run-until-blocker stops with clear owner_action_required on blocked collect-report or review outcomes.
 - max_steps still stops the batch run safely.
 
-### PIPEF-39 (TASK-118) — PIPE-039 Add CI exit-code mode for pipeline ⭐
+### PIPEF-39 (TASK-118) — PIPE-039 Add CI exit-code mode for pipeline
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_69240c03bede`, legacy `TASK-118`, aliases `TASK-118`, local `PIPEF` / `39`

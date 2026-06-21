@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `912`
+Revision: `915`
 
 ## Executable Now
 
@@ -249,5 +249,5 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-38 (TASK-117)` [done] `EPIC-009` priority `1` — PIPE-038 Rewrite run-until-blocker with phase outcomes
   - `status_not_executable`: status is done
-- `PIPEF-39 (TASK-118)` [in_progress] `EPIC-009` priority `1` — PIPE-039 Add CI exit-code mode for pipeline
-  - `status_not_executable`: status is in_progress
+- `PIPEF-39 (TASK-118)` [done] `EPIC-009` priority `1` — PIPE-039 Add CI exit-code mode for pipeline
+  - `status_not_executable`: status is done
