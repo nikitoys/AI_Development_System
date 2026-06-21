@@ -3,7 +3,7 @@
 
 # Pipeline Status
 
-Revision: `43`
+Revision: `46`
 Current session: `PSESS-012`
 Sessions: `12`
 
@@ -13,13 +13,13 @@ Sessions: `12`
 - Status: `blocked`
 - Policy: `supervised_executable_local_commit`
 - Current task: `TASK-069`
-- Current phase: `none`
-- Phase status: `none`
-- Blocked by: `none`
-- Next action: `none`
+- Current phase: `close`
+- Phase status: `blocked`
+- Blocked by: `CLOSE_PREFLIGHT_INCOMPLETE`
+- Next action: `Resolve required phase evidence for: prepare, execute, collect_report, verify, review; then rerun pipeline close --confirm.`
 - Current step: `run_next`
 - Step status: `blocked`
-- Stop reason: `BLOCKED: Codex Execution Adapter stopped: structured_execution_report_missing`
+- Stop reason: `Close preflight blocked: required phase evidence is incomplete.`
 
 ## Sessions
 
@@ -36,8 +36,12 @@ Sessions: `12`
 | `PSESS-009` | `completed` | `supervised_executable_local_commit` | `TASK-077` | `none` | `none` | none | none | `run_next` | queue_complete |
 | `PSESS-010` | `completed` | `supervised_executable_local_commit` | `TASK-069` | `none` | `none` | none | none | `run_next` | queue_complete |
 | `PSESS-011` | `completed` | `supervised_executable_local_commit` | `TASK-069` | `none` | `none` | none | none | `run_next` | queue_complete |
-| `PSESS-012` | `blocked` | `supervised_executable_local_commit` | `TASK-069` | `none` | `none` | none | none | `run_next` | BLOCKED: Codex Execution Adapter stopped: structured_execution_report_missing |
+| `PSESS-012` | `blocked` | `supervised_executable_local_commit` | `TASK-069` | `close` | `blocked` | CLOSE_PREFLIGHT_INCOMPLETE | Resolve required phase evidence for: prepare, execute, collect_report, verify, review; then rerun pipeline close --confirm. | `run_next` | Close preflight blocked: required phase evidence is incomplete. |
 
 ## Phase History
 
-_No phase history recorded._
+| Session | # | Phase | Status | Reason | Next Action | Changed | Generated | Events |
+| --- | ---: | --- | --- | --- | --- | ---: | ---: | ---: |
+| `PSESS-012` | 1 | `review` | `blocked` | Verify phase evidence is missing for this session. | Run pipeline phase verify before building the review prompt. | 0 | 0 | 1 |
+| `PSESS-012` | 2 | `review` | `blocked` | Verify phase evidence is missing for this session. | Run pipeline phase verify before building the review prompt. | 0 | 0 | 1 |
+| `PSESS-012` | 3 | `close` | `blocked` | Close preflight blocked: required phase evidence is incomplete. | Resolve required phase evidence for: prepare, execute, collect_report, verify, review; then rerun pipeline close --confirm. | 0 | 0 | 1 |

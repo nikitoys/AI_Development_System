@@ -444,20 +444,32 @@ def render_policy_store_status(state: Mapping[str, Any]) -> str:
         "",
         "## Built-In Presets",
         "",
-        "| Name | Immutable | Behavior | Codex Mode | Token Gate | Reviews | Auto Close | Local Commit |",
-        "| --- | --- | --- | --- | --- | --- | --- | --- |",
+        (
+            "| Name | Immutable | Behavior | Codex Mode | Project Tests | "
+            "Token Gate | Reviews | Auto Close | Local Commit |"
+        ),
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for name in preset_names():
-        lines.append(_summary_row(_policy_summary(name=name, policy=policy_preset(name), kind="built_in")))
+        lines.append(
+            _summary_row(
+                _policy_summary(
+                    name=name,
+                    policy=policy_preset(name),
+                    kind="built_in",
+                )
+            )
+        )
 
     lines.extend(["", "## Custom Presets", ""])
     if not custom:
         lines.append("_No custom pipeline policy presets recorded._")
     else:
         lines.append(
-            "| Name | Updated | Behavior | Codex Mode | Token Gate | Reviews | Auto Close | Local Commit |"
+            "| Name | Updated | Behavior | Codex Mode | Project Tests | "
+            "Token Gate | Reviews | Auto Close | Local Commit |"
         )
-        lines.append("| --- | --- | --- | --- | --- | --- | --- | --- |")
+        lines.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
         for summary in custom:
             lines.append(_summary_row(summary, include_updated=True))
     lines.append("")
@@ -616,6 +628,9 @@ def _policy_summary(
         "codex_mode": policy.codex.mode.value,
         "codex_adapter_mode": policy.codex.adapter_mode.value,
         "behavior_label": policy_behavior_label(policy),
+        "project_test_commands": len(policy.project_tests.commands),
+        "project_tests_blocking": policy.project_tests.blocking,
+        "project_tests_timeout_sec": policy.project_tests.timeout_sec,
         "requires_token_gate": policy.token_budget.require_gate_pass,
         "requires_approved_change": policy.evolution.require_approved_change_for_execution,
         "requires_machine_review": policy.review.require_machine_review,
@@ -640,12 +655,25 @@ def _summary_row(summary: Mapping[str, Any], *, include_updated: bool = False) -
         "`{}`".format(summary.get("updated_at") or "") if include_updated else "`yes`",
         "`{}`".format(summary.get("behavior_label") or ""),
         "`{}`".format(summary.get("codex_mode") or ""),
+        "`{}`".format(_project_tests_label(summary)),
         "`{}`".format("yes" if summary.get("requires_token_gate") else "no"),
         "`{}`".format(review),
         "`{}`".format("yes" if summary.get("auto_close_task") else "no"),
         "`{}`".format("yes" if summary.get("local_commit") else "no"),
     ]
     return "| {} |".format(" | ".join(cells))
+
+
+def _project_tests_label(summary: Mapping[str, Any]) -> str:
+    count = summary.get("project_test_commands") or 0
+    if not count:
+        return "none"
+    mode = "blocking" if summary.get("project_tests_blocking") else "advisory"
+    return "{} command(s), {}, {}s".format(
+        count,
+        mode,
+        summary.get("project_tests_timeout_sec") or "",
+    )
 
 
 def _coerce_policy(policy: PipelinePolicy | Mapping[str, Any]) -> PipelinePolicy:

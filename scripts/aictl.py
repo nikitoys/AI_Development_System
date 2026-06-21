@@ -64,11 +64,15 @@ from ai_project_ctl.pipeline.policy_store import (  # noqa: E402
 )
 from ai_project_ctl.pipeline.runner import run_next as run_pipeline_next  # noqa: E402
 from ai_project_ctl.pipeline.batch import run_until_blocker as run_pipeline_until_blocker  # noqa: E402
+from ai_project_ctl.pipeline.close_phase import close_phase  # noqa: E402
 from ai_project_ctl.pipeline.execute_phase import execute_phase  # noqa: E402
 from ai_project_ctl.pipeline.prepare_phase import prepare_phase  # noqa: E402
 from ai_project_ctl.pipeline.queue_phase import preview_queue_phase  # noqa: E402
 from ai_project_ctl.pipeline.report_phase import collect_report_phase  # noqa: E402
 from ai_project_ctl.pipeline.report_template import build_report_template  # noqa: E402
+from ai_project_ctl.pipeline.review_phase import review_phase  # noqa: E402
+from ai_project_ctl.pipeline.phase import pipeline_ci_exit_code  # noqa: E402
+from ai_project_ctl.pipeline.verify_phase import verify_phase  # noqa: E402
 
 
 class FacadeError(CommandError):
@@ -1028,12 +1032,18 @@ def _emit_workflow_result(result: CommandResult) -> None:
 def _emit_command_result(result: CommandResult, args: argparse.Namespace) -> int:
     if args.json:
         _print_json(result.to_dict())
-        return 0 if result.ok else 1
+        return _command_exit_code(result, args)
     print(result.message)
     if result.data.get("session_id"):
         print("Session: {}".format(result.data["session_id"]))
     for error in result.errors:
         print("ERROR: {}: {}".format(error.code, error.message), file=sys.stderr)
+    return _command_exit_code(result, args)
+
+
+def _command_exit_code(result: CommandResult, args: argparse.Namespace) -> int:
+    if getattr(args, "ci", False):
+        return pipeline_ci_exit_code(result)
     return 0 if result.ok else 1
 
 
@@ -1545,6 +1555,53 @@ def cmd_pipeline_collect_report(args: argparse.Namespace) -> int:
         args.session_id or "",
         root=args.root,
         actor=args.actor,
+        allow_existing_report=args.allow_existing_report,
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_verify(args: argparse.Namespace) -> int:
+    result = verify_phase(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_review(args: argparse.Namespace) -> int:
+    if not args.build_prompt_only and not args.manual_review_file and not args.reviewer_command:
+        if args.facade_command == "pipeline.phase.review":
+            return cmd_pipeline_phase_not_implemented(args)
+        raise FacadeError(
+            "COMMAND_NOT_IMPLEMENTED",
+            "Pipeline semantic review execution is not implemented yet. "
+            "Use --build-prompt-only to build the reviewer prompt or "
+            "--manual-review-file/--reviewer-command to evaluate a JSON review verdict.",
+            details={
+                "command": args.facade_command,
+                "phase": args.phase_name,
+                "session_id": args.session_id or "",
+            },
+        )
+    result = review_phase(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+        build_prompt_only=args.build_prompt_only,
+        manual_review_file=args.manual_review_file,
+        reviewer_command=args.reviewer_command,
+        reviewer_timeout_sec=args.reviewer_timeout_sec,
+    )
+    return _emit_pipeline_review_result(result, args)
+
+
+def cmd_pipeline_close(args: argparse.Namespace) -> int:
+    result = close_phase(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+        confirmed=args.confirm,
     )
     return _emit_command_result(result, args)
 
@@ -1583,6 +1640,39 @@ def _queue_item_label(item: Mapping[str, Any] | None) -> str:
     status = item.get("status") or ""
     suffix = " [{}]".format(status) if status else ""
     return "{}{}{}".format(label, " - {}".format(title) if title else "", suffix)
+
+
+def _emit_pipeline_review_result(result: CommandResult, args: argparse.Namespace) -> int:
+    if args.json:
+        _print_json(result.to_dict())
+        return 0 if result.ok else 1
+    print(result.message)
+    data = result.data if isinstance(result.data, Mapping) else {}
+    if data.get("session_id"):
+        print("Session: {}".format(data["session_id"]))
+    if data.get("task_id"):
+        print("Task: {}".format(data["task_id"]))
+    if data.get("report_id"):
+        print("Report: {}".format(data["report_id"]))
+    if data.get("review_prompt_sha256"):
+        print("Review prompt SHA-256: {}".format(data["review_prompt_sha256"]))
+    if data.get("review_prompt_bytes"):
+        print("Review prompt bytes: {}".format(data["review_prompt_bytes"]))
+    if data.get("review_prompt_json_field"):
+        print("Review prompt JSON field: {}".format(data["review_prompt_json_field"]))
+    if data.get("review_id"):
+        print("Review: {}".format(data["review_id"]))
+    if data.get("verdict"):
+        print("Verdict: {}".format(data["verdict"]))
+    if data.get("review_code"):
+        print("Review code: {}".format(data["review_code"]))
+    for error in result.errors:
+        print("ERROR: {}: {}".format(error.code, error.message), file=sys.stderr)
+    if result.next_actions:
+        print("Next actions:")
+        for action in result.next_actions:
+            print("  - {}".format(action))
+    return 0 if result.ok else 1
 
 
 def cmd_pipeline_phase_not_implemented(args: argparse.Namespace) -> int:
@@ -1947,6 +2037,36 @@ def _add_pipeline_queue_preview_args(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _add_pipeline_review_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("session_id", nargs="?")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--build-prompt-only",
+        action="store_true",
+        help=(
+            "Build and return the read-only semantic review prompt without "
+            "running a reviewer or changing task approval state"
+        ),
+    )
+    mode.add_argument(
+        "--manual-review-file",
+        help="Read a JSON-only semantic review verdict file and evaluate it",
+    )
+    mode.add_argument(
+        "--reviewer-command",
+        help=(
+            "Run a local reviewer command without a shell, pass the review "
+            "prompt through stdin, and parse stdout as JSON"
+        ),
+    )
+    parser.add_argument(
+        "--reviewer-timeout-sec",
+        type=int,
+        default=300,
+        help="Timeout for --reviewer-command. Default: 300.",
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Unified facade for AI Development System project-control commands"
@@ -2115,6 +2235,29 @@ def build_parser() -> argparse.ArgumentParser:
         facade_command="pipeline.report.template",
     )
 
+    p = pipeline_sub.add_parser(
+        "review",
+        help="Build or run the pipeline Codex review gate",
+    )
+    _add_pipeline_review_args(p)
+    p.set_defaults(
+        func=cmd_pipeline_review,
+        facade_command="pipeline.review",
+        phase_name="review",
+    )
+
+    p = pipeline_sub.add_parser(
+        "close",
+        help="Run close phase preflight after review APPROVE evidence",
+    )
+    p.add_argument("session_id", nargs="?")
+    p.add_argument("--confirm", action="store_true")
+    p.set_defaults(
+        func=cmd_pipeline_close,
+        facade_command="pipeline.close",
+        phase_name="close",
+    )
+
     policy = pipeline_sub.add_parser("policy", help="Pipeline policy preset store commands")
     policy_sub = policy.add_subparsers(dest="pipeline_policy_action", required=True)
 
@@ -2180,6 +2323,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = phase_sub.add_parser("collect-report", help="Collect the execution report phase")
     p.add_argument("session_id", nargs="?")
+    p.add_argument(
+        "--allow-existing-report",
+        action="store_true",
+        help="Allow an existing matching report as a supervised recovery override",
+    )
     p.set_defaults(
         func=cmd_pipeline_collect_report,
         facade_command="pipeline.phase.collect_report",
@@ -2189,23 +2337,24 @@ def build_parser() -> argparse.ArgumentParser:
     p = phase_sub.add_parser("verify", help="Run machine verification gate phase")
     p.add_argument("session_id", nargs="?")
     p.set_defaults(
-        func=cmd_pipeline_phase_not_implemented,
+        func=cmd_pipeline_verify,
         facade_command="pipeline.phase.verify",
         phase_name="verify",
     )
 
     p = phase_sub.add_parser("review", help="Run Codex review gate phase")
-    p.add_argument("session_id", nargs="?")
+    _add_pipeline_review_args(p)
     p.set_defaults(
-        func=cmd_pipeline_phase_not_implemented,
+        func=cmd_pipeline_review,
         facade_command="pipeline.phase.review",
         phase_name="review",
     )
 
     p = phase_sub.add_parser("close", help="Close reviewed task work phase")
     p.add_argument("session_id", nargs="?")
+    p.add_argument("--confirm", action="store_true")
     p.set_defaults(
-        func=cmd_pipeline_phase_not_implemented,
+        func=cmd_pipeline_close,
         facade_command="pipeline.phase.close",
         phase_name="close",
     )
@@ -2223,6 +2372,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = pipeline_sub.add_parser("run-next", help="Run one guarded pipeline step")
     p.add_argument("session_id", nargs="?")
+    p.add_argument(
+        "--ci",
+        action="store_true",
+        help=(
+            "Use CI exit codes: passed/completed=0, failed=1, blocked=2. "
+            "Without this flag, human safe-stop behavior is unchanged."
+        ),
+    )
     p.set_defaults(func=cmd_pipeline_run_next, facade_command="pipeline.run_next")
 
     p = pipeline_sub.add_parser(
@@ -2231,6 +2388,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("session_id", nargs="?")
     p.add_argument("--confirm", action="store_true")
+    p.add_argument(
+        "--ci",
+        action="store_true",
+        help=(
+            "Use CI exit codes: passed/completed=0, failed=1, blocked=2. "
+            "Without this flag, human safe-stop behavior is unchanged."
+        ),
+    )
     p.set_defaults(
         func=cmd_pipeline_run_until_blocker,
         facade_command="pipeline.run_until_blocker",

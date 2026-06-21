@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `817`
+Revision: `912`
 
 ## Executable Now
 
@@ -12,25 +12,6 @@ Revision: `817`
 - `PIPE-20 (TASK-071)` [planned] `EPIC-007` priority `1` — PIPE-20 Document Dynamic Pipeline Policy Presets
 - `PIPE-21 (TASK-072)` [planned] `EPIC-007` priority `1` — PIPE-21 Fix Pipeline Queue Epic Filter Behavior
 - `PIPE-22 (TASK-073)` [planned] `EPIC-007` priority `1` — PIPE-22 Add Pipeline Session Resume After Blocker
-- `PIPEF-21 (TASK-100)` [planned] `EPIC-009` priority `1` — PIPE-021 Extract report schema gate into verify
-- `PIPEF-22 (TASK-101)` [planned] `EPIC-009` priority `1` — PIPE-022 Add actual git diff gate
-- `PIPEF-23 (TASK-102)` [planned] `EPIC-009` priority `1` — PIPE-023 Compare report files with actual git diff
-- `PIPEF-24 (TASK-103)` [planned] `EPIC-009` priority `1` — PIPE-024 Enforce allowed files against actual diff
-- `PIPEF-25 (TASK-104)` [planned] `EPIC-009` priority `1` — PIPE-025 Enforce protected files against actual diff
-- `PIPEF-26 (TASK-105)` [planned] `EPIC-009` priority `1` — PIPE-026 Add project test policy
-- `PIPEF-27 (TASK-106)` [planned] `EPIC-009` priority `1` — PIPE-027 Record verify evidence
-- `PIPEF-28 (TASK-107)` [planned] `EPIC-009` priority `1` — PIPE-028 Add review prompt build command
-- `PIPEF-29 (TASK-108)` [planned] `EPIC-009` priority `1` — PIPE-029 Accept manual review file
-- `PIPEF-30 (TASK-109)` [planned] `EPIC-009` priority `1` — PIPE-030 Add reviewer command adapter
-- `PIPEF-31 (TASK-110)` [planned] `EPIC-009` priority `1` — PIPE-031 Handle review request changes outcome
-- `PIPEF-32 (TASK-111)` [planned] `EPIC-009` priority `1` — PIPE-032 Add close phase preflight
-- `PIPEF-33 (TASK-112)` [planned] `EPIC-009` priority `1` — PIPE-033 Extract task close action
-- `PIPEF-34 (TASK-113)` [planned] `EPIC-009` priority `1` — PIPE-034 Accept linked Evolution Change on close
-- `PIPEF-35 (TASK-114)` [planned] `EPIC-009` priority `1` — PIPE-035 Add optional local commit close step
-- `PIPEF-36 (TASK-115)` [planned] `EPIC-009` priority `1` — PIPE-036 Clear execution state after close
-- `PIPEF-37 (TASK-116)` [planned] `EPIC-009` priority `1` — PIPE-037 Rewrite run-next as phase dispatcher
-- `PIPEF-38 (TASK-117)` [planned] `EPIC-009` priority `1` — PIPE-038 Rewrite run-until-blocker with phase outcomes
-- `PIPEF-39 (TASK-118)` [planned] `EPIC-009` priority `1` — PIPE-039 Add CI exit-code mode for pipeline
 - `PIPEF-40 (TASK-119)` [planned] `EPIC-009` priority `1` — PIPE-040 Add tests for phase model and mutations
 - `PIPEF-41 (TASK-120)` [planned] `EPIC-009` priority `1` — PIPE-041 Add tests for queue prepare execute report phases
 - `PIPEF-42 (TASK-121)` [planned] `EPIC-009` priority `1` — PIPE-042 Add tests for git diff gate
@@ -230,5 +211,43 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-19 (TASK-098)` [done] `EPIC-009` priority `1` — PIPE-019 Validate collected report task identity
   - `status_not_executable`: status is done
-- `PIPEF-20 (TASK-099)` [in_progress] `EPIC-009` priority `1` — PIPE-020 Validate report freshness after execute
+- `PIPEF-20 (TASK-099)` [done] `EPIC-009` priority `1` — PIPE-020 Validate report freshness after execute
+  - `status_not_executable`: status is done
+- `PIPEF-21 (TASK-100)` [done] `EPIC-009` priority `1` — PIPE-021 Extract report schema gate into verify
+  - `status_not_executable`: status is done
+- `PIPEF-22 (TASK-101)` [done] `EPIC-009` priority `1` — PIPE-022 Add actual git diff gate
+  - `status_not_executable`: status is done
+- `PIPEF-23 (TASK-102)` [done] `EPIC-009` priority `1` — PIPE-023 Compare report files with actual git diff
+  - `status_not_executable`: status is done
+- `PIPEF-24 (TASK-103)` [done] `EPIC-009` priority `1` — PIPE-024 Enforce allowed files against actual diff
+  - `status_not_executable`: status is done
+- `PIPEF-25 (TASK-104)` [done] `EPIC-009` priority `1` — PIPE-025 Enforce protected files against actual diff
+  - `status_not_executable`: status is done
+- `PIPEF-26 (TASK-105)` [done] `EPIC-009` priority `1` — PIPE-026 Add project test policy
+  - `status_not_executable`: status is done
+- `PIPEF-27 (TASK-106)` [done] `EPIC-009` priority `1` — PIPE-027 Record verify evidence
+  - `status_not_executable`: status is done
+- `PIPEF-28 (TASK-107)` [done] `EPIC-009` priority `1` — PIPE-028 Add review prompt build command
+  - `status_not_executable`: status is done
+- `PIPEF-29 (TASK-108)` [done] `EPIC-009` priority `1` — PIPE-029 Accept manual review file
+  - `status_not_executable`: status is done
+- `PIPEF-30 (TASK-109)` [done] `EPIC-009` priority `1` — PIPE-030 Add reviewer command adapter
+  - `status_not_executable`: status is done
+- `PIPEF-31 (TASK-110)` [done] `EPIC-009` priority `1` — PIPE-031 Handle review request changes outcome
+  - `status_not_executable`: status is done
+- `PIPEF-32 (TASK-111)` [done] `EPIC-009` priority `1` — PIPE-032 Add close phase preflight
+  - `status_not_executable`: status is done
+- `PIPEF-33 (TASK-112)` [done] `EPIC-009` priority `1` — PIPE-033 Extract task close action
+  - `status_not_executable`: status is done
+- `PIPEF-34 (TASK-113)` [done] `EPIC-009` priority `1` — PIPE-034 Accept linked Evolution Change on close
+  - `status_not_executable`: status is done
+- `PIPEF-35 (TASK-114)` [done] `EPIC-009` priority `1` — PIPE-035 Add optional local commit close step
+  - `status_not_executable`: status is done
+- `PIPEF-36 (TASK-115)` [done] `EPIC-009` priority `1` — PIPE-036 Clear execution state after close
+  - `status_not_executable`: status is done
+- `PIPEF-37 (TASK-116)` [done] `EPIC-009` priority `1` — PIPE-037 Rewrite run-next as phase dispatcher
+  - `status_not_executable`: status is done
+- `PIPEF-38 (TASK-117)` [done] `EPIC-009` priority `1` — PIPE-038 Rewrite run-until-blocker with phase outcomes
+  - `status_not_executable`: status is done
+- `PIPEF-39 (TASK-118)` [in_progress] `EPIC-009` priority `1` — PIPE-039 Add CI exit-code mode for pipeline
   - `status_not_executable`: status is in_progress

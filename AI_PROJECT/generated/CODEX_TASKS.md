@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `817`
-Current task: `TASK-099`
+Revision: `912`
+Current task: `TASK-118`
 
 ## Epic `EPIC-001`
 
@@ -1806,9 +1806,9 @@ Acceptance criteria:
 - A report with matching task_id passes identity collection checks.
 - The blocked result includes the expected task id and observed report task id.
 
-### PIPEF-20 (TASK-099) — PIPE-020 Validate report freshness after execute ⭐
+### PIPEF-20 (TASK-099) — PIPE-020 Validate report freshness after execute
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_9d547d384917`, legacy `TASK-099`, aliases `TASK-099`, local `PIPEF` / `20`
@@ -1824,7 +1824,7 @@ Acceptance criteria:
 
 ### PIPEF-21 (TASK-100) — PIPE-021 Extract report schema gate into verify
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_30296d900021`, legacy `TASK-100`, aliases `TASK-100`, local `PIPEF` / `21`
@@ -1840,7 +1840,7 @@ Acceptance criteria:
 
 ### PIPEF-22 (TASK-101) — PIPE-022 Add actual git diff gate
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_d73d1dbcef99`, legacy `TASK-101`, aliases `TASK-101`, local `PIPEF` / `22`
@@ -1856,7 +1856,7 @@ Acceptance criteria:
 
 ### PIPEF-23 (TASK-102) — PIPE-023 Compare report files with actual git diff
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_9912805a733c`, legacy `TASK-102`, aliases `TASK-102`, local `PIPEF` / `23`
@@ -1872,7 +1872,7 @@ Acceptance criteria:
 
 ### PIPEF-24 (TASK-103) — PIPE-024 Enforce allowed files against actual diff
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_fde0437fb3fe`, legacy `TASK-103`, aliases `TASK-103`, local `PIPEF` / `24`
@@ -1888,7 +1888,7 @@ Acceptance criteria:
 
 ### PIPEF-25 (TASK-104) — PIPE-025 Enforce protected files against actual diff
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_be2522d9d039`, legacy `TASK-104`, aliases `TASK-104`, local `PIPEF` / `25`
@@ -1904,7 +1904,7 @@ Acceptance criteria:
 
 ### PIPEF-26 (TASK-105) — PIPE-026 Add project test policy
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_b2b885003472`, legacy `TASK-105`, aliases `TASK-105`, local `PIPEF` / `26`
@@ -1920,7 +1920,7 @@ Acceptance criteria:
 
 ### PIPEF-27 (TASK-106) — PIPE-027 Record verify evidence
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_9643b73441b8`, legacy `TASK-106`, aliases `TASK-106`, local `PIPEF` / `27`
@@ -1936,7 +1936,7 @@ Acceptance criteria:
 
 ### PIPEF-28 (TASK-107) — PIPE-028 Add review prompt build command
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_6375acbf3d8e`, legacy `TASK-107`, aliases `TASK-107`, local `PIPEF` / `28`
@@ -1952,7 +1952,7 @@ Acceptance criteria:
 
 ### PIPEF-29 (TASK-108) — PIPE-029 Accept manual review file
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_6d93844f1bf9`, legacy `TASK-108`, aliases `TASK-108`, local `PIPEF` / `29`
@@ -1968,7 +1968,7 @@ Acceptance criteria:
 
 ### PIPEF-30 (TASK-109) — PIPE-030 Add reviewer command adapter
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_de35437400fb`, legacy `TASK-109`, aliases `TASK-109`, local `PIPEF` / `30`
@@ -1984,7 +1984,7 @@ Acceptance criteria:
 
 ### PIPEF-31 (TASK-110) — PIPE-031 Handle review request changes outcome
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_9538af470a51`, legacy `TASK-110`, aliases `TASK-110`, local `PIPEF` / `31`
@@ -2000,7 +2000,7 @@ Acceptance criteria:
 
 ### PIPEF-32 (TASK-111) — PIPE-032 Add close phase preflight
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_e617943698e4`, legacy `TASK-111`, aliases `TASK-111`, local `PIPEF` / `32`
@@ -2016,7 +2016,7 @@ Acceptance criteria:
 
 ### PIPEF-33 (TASK-112) — PIPE-033 Extract task close action
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_00193f76204e`, legacy `TASK-112`, aliases `TASK-112`, local `PIPEF` / `33`
@@ -2032,7 +2032,7 @@ Acceptance criteria:
 
 ### PIPEF-34 (TASK-113) — PIPE-034 Accept linked Evolution Change on close
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_9f4eba5ef15d`, legacy `TASK-113`, aliases `TASK-113`, local `PIPEF` / `34`
@@ -2048,7 +2048,7 @@ Acceptance criteria:
 
 ### PIPEF-35 (TASK-114) — PIPE-035 Add optional local commit close step
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_2e14c59cc470`, legacy `TASK-114`, aliases `TASK-114`, local `PIPEF` / `35`
@@ -2064,7 +2064,7 @@ Acceptance criteria:
 
 ### PIPEF-36 (TASK-115) — PIPE-036 Clear execution state after close
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_16c2364694a6`, legacy `TASK-115`, aliases `TASK-115`, local `PIPEF` / `36`
@@ -2080,7 +2080,7 @@ Acceptance criteria:
 
 ### PIPEF-37 (TASK-116) — PIPE-037 Rewrite run-next as phase dispatcher
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_fa83e9639822`, legacy `TASK-116`, aliases `TASK-116`, local `PIPEF` / `37`
@@ -2096,7 +2096,7 @@ Acceptance criteria:
 
 ### PIPEF-38 (TASK-117) — PIPE-038 Rewrite run-until-blocker with phase outcomes
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_78e3f020194d`, legacy `TASK-117`, aliases `TASK-117`, local `PIPEF` / `38`
@@ -2110,9 +2110,9 @@ Acceptance criteria:
 - run-until-blocker stops with clear owner_action_required on blocked collect-report or review outcomes.
 - max_steps still stops the batch run safely.
 
-### PIPEF-39 (TASK-118) — PIPE-039 Add CI exit-code mode for pipeline
+### PIPEF-39 (TASK-118) — PIPE-039 Add CI exit-code mode for pipeline ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_69240c03bede`, legacy `TASK-118`, aliases `TASK-118`, local `PIPEF` / `39`

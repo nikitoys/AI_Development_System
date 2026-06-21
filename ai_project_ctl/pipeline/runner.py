@@ -37,11 +37,7 @@ from .report_gate import FAIL as REPORT_GATE_FAIL
 from .report_gate import evaluate_report_gate
 from .git_commit import PASS as COMMIT_PASS
 from .git_commit import run_local_commit
-from .session import (
-    complete_session,
-    record_step_result,
-    start_step,
-)
+from .session import record_phase_result, record_step_result
 from .state import (
     load_pipeline_state,
     load_reference_state,
@@ -52,7 +48,6 @@ from .token_budget import evaluate_token_budget
 
 
 RUN_NEXT_STEP = "run_next"
-ACTIVE_RUN_NEXT_STATUSES = {"planned", "running"}
 TERMINAL_CHANGE_STATUSES = {"approved", "in_progress", "in_review", "accepted"}
 SESSION_APPROVAL_CHANGE_STATUSES = {"ready", "proposed"}
 SCRIPTS_DIR = Path(__file__).resolve().parents[2] / "scripts"
@@ -68,789 +63,490 @@ def run_next(
     codex_adapter=None,
     codex_reviewer=None,
 ) -> CommandResult:
-    """Advance one supervised pipeline session step and stop on blockers."""
+    """Dispatch exactly one next required pipeline phase."""
 
     root_path = Path(root).resolve()
-    python_bin = python_executable or sys.executable
-    execution_runner = runner
+    selected = _resolve_session(root_path, session_id)
+    if not selected.ok:
+        return selected
 
-    session_context = _resolve_session(root_path, session_id)
-    if not session_context.ok:
-        return session_context
-
-    session = dict(session_context.data["session"])
+    session = dict(selected.data["session"])
     selected_session_id = str(session["id"])
-    if str(session.get("status") or "") not in ACTIVE_RUN_NEXT_STATUSES:
-        return _safe_stop_result(
-            session_id=selected_session_id,
-            stop_code="BLOCKED",
-            stop_reason="Pipeline session is not runnable: {}".format(session.get("status")),
-            selected_task=None,
-            policy_name=_policy_name(session),
-            queue_preview=None,
-            side_effects=[],
+    status = str(session.get("status") or "")
+    if status not in ACTIVE_RUN_NEXT_STATUSES:
+        return _terminal_run_next_result(
+            selected_session_id,
+            status=status,
+            reason="Pipeline session is not runnable: {}".format(status),
         )
 
-    side_effects: list[CommandResult] = []
-    started = start_step(
+    phase_name = _next_required_phase(session)
+    delegated = _dispatch_run_next_phase(
+        phase_name,
         selected_session_id,
-        RUN_NEXT_STEP,
         root=root_path,
         actor=actor,
+        python_executable=python_executable or sys.executable,
+        runner=runner,
+        codex_adapter=codex_adapter,
+        codex_reviewer=codex_reviewer,
     )
-    side_effects.append(started)
-    if not started.ok:
-        return _aggregate_failure(
-            "pipeline.run_next",
-            "Failed to start pipeline step.",
-            selected_session_id,
-            side_effects,
-        )
-
-    try:
-        policy = PipelinePolicy.from_dict(_mapping(session.get("policy_snapshot"), "policy_snapshot"))
-    except (KeyError, TypeError, ValueError) as exc:
-        return _record_stop(
-            selected_session_id,
-            stop_code="POLICY_VIOLATION",
-            stop_reason="Pipeline policy snapshot is invalid: {}".format(exc),
-            result_status="failed",
-            gate_name="policy_validation",
-            gate_status="fail",
-            gate_details={"policy": _policy_name(session), "error": str(exc)},
-            selected_task=None,
-            policy_name=_policy_name(session),
-            queue_preview=None,
-            side_effects=side_effects,
-            root=root_path,
-            actor=actor,
-        )
-    policy_result = policy.validate()
-    if not policy_result.ok:
-        return _record_stop(
-            selected_session_id,
-            stop_code="POLICY_VIOLATION",
-            stop_reason="Pipeline policy is invalid.",
-            result_status="failed",
-            gate_name="policy_validation",
-            gate_status="fail",
-            gate_details={
-                "policy": policy.name,
-                "errors": [issue.code for issue in policy_result.errors],
-            },
-            selected_task=None,
-            policy_name=policy.name,
-            queue_preview=None,
-            side_effects=side_effects,
-            root=root_path,
-            actor=actor,
-        )
-
-    refs = load_reference_state(root_path)
-    try:
-        tasks_state = _mapping(refs.get("tasks"), "tasks")
-        plan = _load_plan(root_path)
-        queue_preview = _preview_session_queue(session, policy, tasks_state, plan)
-    except (KeyError, TypeError, ValueError) as exc:
-        return _record_stop(
-            selected_session_id,
-            stop_code="UNSAFE_CONDITION",
-            stop_reason="Could not resolve selected queue safely: {}".format(exc),
-            result_status="failed",
-            gate_name="queue_planner",
-            gate_status="fail",
-            gate_details={"policy": policy.name, "error": str(exc)},
-            selected_task=None,
-            policy_name=policy.name,
-            queue_preview=None,
-            side_effects=side_effects,
-            root=root_path,
-            actor=actor,
-        )
-
-    selected = queue_preview.next_task
-
-    if selected is None:
-        completed = _record_stop(
-            selected_session_id,
-            stop_code="BLOCKED",
-            stop_reason="No executable task is available in the selected queue.",
-            result_status="blocked",
-            gate_name="queue_planner",
-            gate_status="blocked",
-            gate_details=_gate_details(
-                policy.name,
-                queue_preview,
-                selected,
-            ),
-            selected_task=None,
-            policy_name=policy.name,
-            queue_preview=queue_preview,
-            side_effects=side_effects,
-            root=root_path,
-            actor=actor,
-        )
-        if completed.ok:
-            final = complete_session(
-                selected_session_id,
-                root=root_path,
-                actor=actor,
-                reason="queue_complete",
-            )
-            completed.data.setdefault("side_effects", []).append(final.to_dict())
-            _merge_effects(completed, [final])
-        return completed
-
-    task_id = str(selected.id or "")
-    if not task_id:
-        return _record_stop(
-            selected_session_id,
-            stop_code="UNSAFE_CONDITION",
-            stop_reason="Queue planner selected a task without a stable task id.",
-            result_status="failed",
-            gate_name="queue_planner",
-            gate_status="fail",
-            gate_details=_gate_details(
-                policy.name,
-                queue_preview,
-                selected,
-            ),
-            selected_task=selected,
-            policy_name=policy.name,
-            queue_preview=queue_preview,
-            side_effects=side_effects,
-            root=root_path,
-            actor=actor,
-        )
-
-    selected_change_check = _ensure_approved_change_for_selected_task(
-        selected,
-        policy,
-        refs.get("evolution"),
+    delegated = _ensure_dispatched_phase_recorded(
+        delegated,
         session_id=selected_session_id,
         root=root_path,
         actor=actor,
-        python_executable=python_bin,
-        runner=execution_runner,
     )
-    if not selected_change_check.ok:
-        selected_change_check.data.setdefault("side_effects", [])
-        return _record_stop(
-            selected_session_id,
-            stop_code=str(selected_change_check.data.get("stop_code") or "BLOCKED"),
-            stop_reason=selected_change_check.message,
-            result_status="blocked",
-            gate_name="evolution_change_gate",
-            gate_status="blocked",
-            gate_details={
-                **_gate_details(policy.name, queue_preview, selected),
-                "change_gate": selected_change_check.data,
-            },
-            selected_task=selected,
-            policy_name=policy.name,
-            queue_preview=queue_preview,
-            side_effects=[*side_effects, selected_change_check],
-            root=root_path,
-            actor=actor,
-            linked_change_ids=_string_tuple(selected_change_check.data.get("change_ids")),
-        )
-    if selected_change_check.data.get("state_changed"):
-        refs = load_reference_state(root_path)
-    queue_change_gate = (
-        dict(selected_change_check.data)
-        if selected_change_check.data.get("required")
-        else {}
+    return _phase_dispatch_result(
+        delegated,
+        phase_name=phase_name,
+        session=session,
+        effects=(delegated,),
     )
 
-    if policy.codex.mode == CodexExecutionMode.DISABLED:
-        return _record_stop(
-            selected_session_id,
-            stop_code="BLOCKED",
-            stop_reason="Codex execution is disabled by pipeline policy.",
-            result_status="stopped",
-            gate_name="codex_execution_policy",
-            gate_status="skipped",
-            gate_details=_gate_details(
-                policy.name,
-                queue_preview,
-                selected,
-                change_gate=queue_change_gate,
-            ),
-            selected_task=selected,
-            policy_name=policy.name,
-            queue_preview=queue_preview,
-            side_effects=side_effects,
-            root=root_path,
+
+RUN_NEXT_PHASE_SEQUENCE = (
+    "queue_preview",
+    "prepare",
+    "execute",
+    "collect_report",
+    "verify",
+    "review",
+    "close",
+)
+RUN_NEXT_PHASE_ALIASES = {
+    "queue": "queue_preview",
+    "queue-preview": "queue_preview",
+    "collect-report": "collect_report",
+}
+ACTIVE_RUN_NEXT_STATUSES = {"planned", "running", "stopped", "blocked", "failed"}
+
+
+def _next_required_phase(session: Mapping[str, Any]) -> str:
+    latest = _latest_known_phase(session)
+    if latest is None:
+        return "queue_preview"
+
+    phase = _normalized_phase_name(latest.get("phase"))
+    status = str(latest.get("status") or "")
+    if status in {"blocked", "failed"}:
+        return _phase_after_blocker(phase, latest) or phase
+    if status in {"passed", "skipped"}:
+        return _phase_after(phase)
+    return phase or "queue_preview"
+
+
+def _latest_known_phase(session: Mapping[str, Any]) -> Mapping[str, Any] | None:
+    history = session.get("phase_history")
+    if not isinstance(history, Sequence) or isinstance(history, (str, bytes)):
+        return None
+    for entry in reversed(history):
+        if not isinstance(entry, Mapping):
+            continue
+        phase = _normalized_phase_name(entry.get("phase"))
+        if phase in RUN_NEXT_PHASE_SEQUENCE:
+            return entry
+    return None
+
+
+def _phase_after(phase: str) -> str:
+    selected = _normalized_phase_name(phase)
+    if selected not in RUN_NEXT_PHASE_SEQUENCE:
+        return "queue_preview"
+    if selected == "close":
+        return "queue_preview"
+    index = RUN_NEXT_PHASE_SEQUENCE.index(selected)
+    return RUN_NEXT_PHASE_SEQUENCE[index + 1]
+
+
+def _phase_after_blocker(
+    phase: str,
+    phase_result: Mapping[str, Any],
+) -> str:
+    blocked_by = _phase_blocked_by(phase_result)
+    if phase == "execute" and blocked_by in {
+        "MANUAL_HANDOFF_REQUIRED",
+        "CODEX_ADAPTER_MANUAL_HANDOFF_REQUIRED",
+    }:
+        return "collect_report"
+    return ""
+
+
+def _dispatch_run_next_phase(
+    phase_name: str,
+    session_id: str,
+    *,
+    root: Path,
+    actor: str,
+    python_executable: str,
+    runner: Runner | None,
+    codex_adapter,
+    codex_reviewer,
+) -> CommandResult:
+    if phase_name == "queue_preview":
+        from .queue_phase import preview_queue_phase
+
+        preview = preview_queue_phase(session_id, root=root)
+        return _record_queue_preview_dispatch(
+            preview,
+            session_id=session_id,
+            root=root,
             actor=actor,
         )
+    if phase_name == "prepare":
+        from .prepare_phase import prepare_phase
 
-    change_check = _ensure_approved_change(
-        task_id,
-        policy,
-        refs.get("evolution"),
-        root=root_path,
+        return prepare_phase(
+            session_id,
+            root=root,
+            actor=actor,
+            python_executable=python_executable,
+            runner=runner,
+        )
+    if phase_name == "execute":
+        from .execute_phase import execute_phase
+
+        return execute_phase(
+            session_id,
+            root=root,
+            actor=actor,
+            codex_adapter=codex_adapter,
+            execution_runner=runner,
+        )
+    if phase_name == "collect_report":
+        from .report_phase import collect_report_phase
+
+        return collect_report_phase(session_id, root=root, actor=actor)
+    if phase_name == "verify":
+        from .verify_phase import verify_phase
+
+        return verify_phase(session_id, root=root, actor=actor)
+    if phase_name == "review":
+        from .review_phase import review_phase
+
+        if codex_reviewer is not None:
+            return _review_callable_not_supported(
+                session_id,
+                root=root,
+                actor=actor,
+            )
+        return review_phase(
+            session_id,
+            root=root,
+            actor=actor,
+            build_prompt_only=True,
+        )
+    if phase_name == "close":
+        from .close_phase import close_phase
+
+        return close_phase(session_id, root=root, actor=actor, confirmed=True)
+    return CommandResult.failure(
+        command="pipeline.run_next",
+        domain="pipeline",
+        message="Unsupported pipeline phase: {}".format(phase_name),
+        errors=[
+            CommandMessage(
+                "PIPELINE_PHASE_UNSUPPORTED",
+                "run-next cannot dispatch phase: {}".format(phase_name),
+                details={"phase": phase_name},
+            )
+        ],
+    )
+
+
+def _record_queue_preview_dispatch(
+    preview: CommandResult,
+    *,
+    session_id: str,
+    root: Path,
+    actor: str,
+) -> CommandResult:
+    phase_result = _phase_result_payload(preview)
+    if not phase_result:
+        return preview
+
+    recorded = record_phase_result(
+        session_id,
+        phase_result,
+        root=root,
         actor=actor,
-        python_executable=python_bin,
-        runner=execution_runner,
+        command="pipeline.phase.queue_preview",
     )
-    if not change_check.ok:
-        change_check.data.setdefault("side_effects", [])
-        return _record_stop(
-            selected_session_id,
-            stop_code=str(change_check.data.get("stop_code") or "BLOCKED"),
-            stop_reason=change_check.message,
-            result_status="blocked",
-            gate_name="evolution_change_gate",
-            gate_status="blocked",
-            gate_details={
-                **_gate_details(
-                    policy.name,
-                    queue_preview,
-                    selected,
-                    change_gate=queue_change_gate,
-                ),
-                "change_gate": change_check.data,
-            },
-            selected_task=selected,
-            policy_name=policy.name,
-            queue_preview=queue_preview,
-            side_effects=[*side_effects, change_check],
-            root=root_path,
-            actor=actor,
-            linked_change_ids=_string_tuple(change_check.data.get("change_ids")),
-        )
+    recorded.message = preview.message
+    recorded.ok = preview.ok and str(phase_result.get("status") or "") != "failed"
+    recorded.errors.extend(preview.errors)
+    recorded.warnings.extend(preview.warnings)
+    recorded.data["queue_preview"] = dict(preview.data.get("queue_preview") or {})
+    recorded.data["queue_source"] = str(preview.data.get("queue_source") or "")
+    next_action = str(phase_result.get("next_action") or "")
+    if next_action and next_action not in recorded.next_actions:
+        recorded.next_actions.append(next_action)
+    return recorded
 
-    prepare = run_workflow(
-        "task.prepare_for_codex",
-        task_ref=task_id,
-        root=root_path,
-        actor=actor,
-        confirmed=True,
-        python_executable=python_bin,
-        runner=execution_runner,
-    )
-    side_effects.append(prepare)
-    if not prepare.ok:
-        return _record_stop(
-            selected_session_id,
-            stop_code="BLOCKED",
-            stop_reason="Task preparation workflow failed.",
-            result_status="blocked",
-            gate_name="task_prepare_for_codex",
-            gate_status="blocked",
-            gate_details={
-                **_gate_details(
-                    policy.name,
-                    queue_preview,
-                    selected,
-                    change_gate=queue_change_gate,
-                ),
-                "workflow": _workflow_summary(prepare),
-            },
-            selected_task=selected,
-            policy_name=policy.name,
-            queue_preview=queue_preview,
-            side_effects=side_effects,
-            root=root_path,
-            actor=actor,
-        )
 
-    if policy.codex.mode == CodexExecutionMode.BUILD_PROMPT_ONLY:
-        if policy.closure.auto_close_task:
-            return _record_stop(
-                selected_session_id,
-                stop_code="NOT_IMPLEMENTED",
-                stop_reason=(
-                    "Auto-close requires Codex execution, Codex Report, "
-                    "Machine Review, Codex Review and a close action."
-                ),
-                result_status="blocked",
-                gate_name="review_close_gate",
-                gate_status="blocked",
-                gate_details={
-                    **_gate_details(
-                        policy.name,
-                        queue_preview,
-                        selected,
-                        change_gate=queue_change_gate,
-                    ),
-                    "workflow": _workflow_summary(prepare),
-                },
-                selected_task=selected,
-                policy_name=policy.name,
-                queue_preview=queue_preview,
-                side_effects=side_effects,
-                root=root_path,
-                actor=actor,
-            )
-        if policy.commit.create_local_commit:
-            return _record_stop(
-                selected_session_id,
-                stop_code="COMMIT_READINESS_FAILED",
-                stop_reason=(
-                    "Local commit requires Codex execution, Machine Review PASS, "
-                    "Codex Review APPROVE and a closed task."
-                ),
-                result_status="blocked",
-                gate_name="commit_gate",
-                gate_status="blocked",
-                gate_details={
-                    **_gate_details(
-                        policy.name,
-                        queue_preview,
-                        selected,
-                        change_gate=queue_change_gate,
-                    ),
-                    "workflow": _workflow_summary(prepare),
-                },
-                selected_task=selected,
-                policy_name=policy.name,
-                queue_preview=queue_preview,
-                side_effects=side_effects,
-                root=root_path,
-                actor=actor,
-            )
-        return _record_stop(
-            selected_session_id,
-            stop_code="BLOCKED",
-            stop_reason="Codex prompt was built; policy stops before Codex execution.",
-            result_status="passed",
-            gate_name="codex_execution_policy",
-            gate_status="skipped",
-            gate_details={
-                **_gate_details(
-                    policy.name,
-                    queue_preview,
-                    selected,
-                    change_gate=queue_change_gate,
-                ),
-                "workflow": _workflow_summary(prepare),
-            },
-            selected_task=selected,
-            policy_name=policy.name,
-            queue_preview=queue_preview,
-            side_effects=side_effects,
-            root=root_path,
-            actor=actor,
-        )
+def _review_callable_not_supported(
+    session_id: str,
+    *,
+    root: Path,
+    actor: str,
+) -> CommandResult:
+    from .phase import PhaseResult
 
-    if policy.codex.mode == CodexExecutionMode.RUN_CODEX:
-        token_gate = evaluate_token_budget(
-            root=root_path,
-            policy=policy.token_budget,
-            strict=True,
-        )
-        token_gate_details = {
-            **_gate_details(
-                policy.name,
-                queue_preview,
-                selected,
-                change_gate=queue_change_gate,
-            ),
-            "workflow": _workflow_summary(prepare),
-            "token_budget": token_gate.to_dict(),
-            "codex_adapter_called": False,
-        }
-        if token_gate.status != TOKEN_BUDGET_PASS:
-            return _record_stop(
-                selected_session_id,
-                stop_code="TOKEN_BUDGET_FAILURE",
-                stop_reason="Token Budget Gate failed: {}".format(token_gate.reason),
-                result_status="blocked",
-                gate_name="token_budget_gate",
-                gate_status=token_gate.status,
-                gate_details=token_gate_details,
-                selected_task=selected,
-                policy_name=policy.name,
-                queue_preview=queue_preview,
-                side_effects=side_effects,
-                root=root_path,
-                actor=actor,
-            )
-
-        token_recorded = record_step_result(
-            selected_session_id,
-            RUN_NEXT_STEP,
-            "passed",
-            root=root_path,
-            actor=actor,
-            task_id=task_id,
-            gate_name="token_budget_gate",
-            gate_status=token_gate.status,
-            gate_details=token_gate_details,
-        )
-        side_effects.append(token_recorded)
-        if not token_recorded.ok:
-            return _aggregate_failure(
-                "pipeline.run_next",
-                "Failed to record Token Budget Gate result.",
-                selected_session_id,
-                side_effects,
-            )
-
-        adapter = codex_adapter or run_codex_adapter
-        adapter_result: CodexAdapterResult = adapter(
-            root=root_path,
-            task_id=task_id,
-            policy=policy,
-            token_gate=token_gate,
-            runner=execution_runner,
-        )
-        adapter_details = {
-            **_gate_details(
-                policy.name,
-                queue_preview,
-                selected,
-                change_gate=queue_change_gate,
-            ),
-            "workflow": _workflow_summary(prepare),
-            "token_budget": token_gate.to_dict(),
-            "codex_adapter_called": True,
-            "adapter": adapter_result.to_dict(),
-        }
-        if not adapter_result.ok:
-            return _record_stop(
-                selected_session_id,
-                stop_code=_adapter_stop_code(adapter_result),
-                stop_reason="Codex Execution Adapter stopped: {}".format(
-                    adapter_result.reason
-                ),
-                result_status=_adapter_step_status(adapter_result),
-                gate_name="codex_execution_adapter",
-                gate_status=_adapter_gate_status(adapter_result),
-                gate_details=adapter_details,
-                selected_task=selected,
-                policy_name=policy.name,
-                queue_preview=queue_preview,
-                side_effects=side_effects,
-                root=root_path,
-                actor=actor,
-            )
-
-        adapter_recorded = record_step_result(
-            selected_session_id,
-            RUN_NEXT_STEP,
-            "passed",
-            root=root_path,
-            actor=actor,
-            task_id=task_id,
-            gate_name="codex_execution_adapter",
-            gate_status="pass",
-            gate_details=adapter_details,
-            report_ids=(adapter_result.report_id,) if adapter_result.report_id else (),
-        )
-        side_effects.append(adapter_recorded)
-        if not adapter_recorded.ok:
-            return _aggregate_failure(
-                "pipeline.run_next",
-                "Failed to record Codex Execution Adapter result.",
-                selected_session_id,
-                side_effects,
-            )
-
-        report_gate = evaluate_report_gate(
-            root=root_path,
-            task=_task_by_id(tasks_state, task_id),
-            policy=policy,
-        )
-        report_gate_details = {
-            **adapter_details,
-            "report_gate": report_gate.to_dict(),
-            "report_id": report_gate.report_id or adapter_result.report_id,
-        }
-        if report_gate.status == REPORT_GATE_FAIL:
-            return _record_stop(
-                selected_session_id,
-                stop_code="CODEX_REPORT_GATE_FAILURE",
-                stop_reason="Codex Report Gate failed: {}".format(report_gate.reason),
-                result_status="blocked",
-                gate_name="codex_report_gate",
-                gate_status=report_gate.status,
-                gate_details=report_gate_details,
-                selected_task=selected,
-                policy_name=policy.name,
-                queue_preview=queue_preview,
-                side_effects=side_effects,
-                root=root_path,
-                actor=actor,
-            )
-
-        report_recorded = record_step_result(
-            selected_session_id,
-            RUN_NEXT_STEP,
-            "passed",
-            root=root_path,
-            actor=actor,
-            task_id=task_id,
-            gate_name="codex_report_gate",
-            gate_status=report_gate.status,
-            gate_details=report_gate_details,
-            report_ids=(report_gate.report_id,) if report_gate.report_id else (),
-        )
-        side_effects.append(report_recorded)
-        if not report_recorded.ok:
-            return _aggregate_failure(
-                "pipeline.run_next",
-                "Failed to record Codex Report Gate result.",
-                selected_session_id,
-                side_effects,
-            )
-
-        machine_review = evaluate_machine_review(
-            root=root_path,
-            task=_task_by_id(tasks_state, task_id),
-            policy=policy,
-            report_gate=report_gate,
-            runner=execution_runner,
-            python_executable=python_bin,
-            run_report_declared_tests=True,
-        )
-        machine_review_details = {
-            **report_gate_details,
-            "machine_review": machine_review.to_dict(),
-        }
-        if machine_review.status == MACHINE_REVIEW_FAIL:
-            return _record_stop(
-                selected_session_id,
-                stop_code="MACHINE_REVIEW_FAILURE",
-                stop_reason="Machine Review Gate failed: {}".format(machine_review.reason),
-                result_status="blocked",
-                gate_name="machine_review_gate",
-                gate_status=machine_review.status,
-                gate_details=machine_review_details,
-                selected_task=selected,
-                policy_name=policy.name,
-                queue_preview=queue_preview,
-                side_effects=side_effects,
-                root=root_path,
-                actor=actor,
-            )
-
-        machine_review_recorded = record_step_result(
-            selected_session_id,
-            RUN_NEXT_STEP,
-            "passed",
-            root=root_path,
-            actor=actor,
-            task_id=task_id,
-            gate_name="machine_review_gate",
-            gate_status=machine_review.status,
-            gate_details=machine_review_details,
-            report_ids=(machine_review.report_id,) if machine_review.report_id else (),
-        )
-        side_effects.append(machine_review_recorded)
-        if not machine_review_recorded.ok:
-            return _aggregate_failure(
-                "pipeline.run_next",
-                "Failed to record Machine Review Gate result.",
-                selected_session_id,
-                side_effects,
-            )
-
-        codex_review = evaluate_codex_review(
-            root=root_path,
-            task=_task_by_id(tasks_state, task_id),
-            report_gate=report_gate,
-            machine_review=machine_review,
-            reviewer=codex_reviewer,
-        )
-        codex_review_details = {
-            **machine_review_details,
-            "codex_review": codex_review.to_dict(),
-        }
-        if codex_review.status == CODEX_REVIEW_FAIL:
-            return _record_stop(
-                selected_session_id,
-                stop_code="CODEX_REVIEW_GATE_FAILURE",
-                stop_reason="Codex Review Gate failed: {}".format(codex_review.reason),
-                result_status="blocked",
-                gate_name="codex_review_gate",
-                gate_status="fail",
-                gate_details=codex_review_details,
-                selected_task=selected,
-                policy_name=policy.name,
-                queue_preview=queue_preview,
-                side_effects=side_effects,
-                root=root_path,
-                actor=actor,
-                report_ids=(codex_review.report_id,) if codex_review.report_id else (),
-                review_ids=(codex_review.review_id,) if codex_review.review_id else (),
-            )
-        if codex_review.status == CODEX_REVIEW_BLOCKED_STATUS:
-            if policy.closure.auto_close_task and codex_review.verdict == VERDICT_REQUEST_CHANGES:
-                codex_review_recorded = record_step_result(
-                    selected_session_id,
-                    RUN_NEXT_STEP,
-                    "passed",
-                    root=root_path,
-                    actor=actor,
-                    task_id=task_id,
-                    gate_name="codex_review_gate",
-                    gate_status="blocked",
-                    gate_details=codex_review_details,
-                    report_ids=(codex_review.report_id,) if codex_review.report_id else (),
-                    review_ids=(codex_review.review_id,) if codex_review.review_id else (),
-                )
-                side_effects.append(codex_review_recorded)
-                if not codex_review_recorded.ok:
-                    return _aggregate_failure(
-                        "pipeline.run_next",
-                        "Failed to record Codex Review Gate result.",
-                        selected_session_id,
-                        side_effects,
-                    )
-                return _apply_review_close_policy(
-                    session=session,
-                    policy=policy,
-                    report_gate=report_gate,
-                    machine_review=machine_review,
-                    codex_review=codex_review,
-                    gate_details=codex_review_details,
-                    selected_session_id=selected_session_id,
-                    selected=selected,
-                    queue_preview=queue_preview,
-                    side_effects=side_effects,
-                    root=root_path,
-                    actor=actor,
-                    python_executable=python_bin,
-                    runner=execution_runner,
-                )
-
-            if codex_review.verdict == VERDICT_REQUEST_CHANGES:
-                stop_code = "CODEX_REVIEW_REQUEST_CHANGES"
-            elif codex_review.verdict == VERDICT_BLOCKED:
-                stop_code = "CODEX_REVIEW_BLOCKED"
-            else:
-                stop_code = "CODEX_REVIEW_GATE_FAILURE"
-            return _record_stop(
-                selected_session_id,
-                stop_code=stop_code,
-                stop_reason=codex_review.reason,
-                result_status="blocked",
-                gate_name="codex_review_gate",
-                gate_status="blocked",
-                gate_details=codex_review_details,
-                selected_task=selected,
-                policy_name=policy.name,
-                queue_preview=queue_preview,
-                side_effects=side_effects,
-                root=root_path,
-                actor=actor,
-                report_ids=(codex_review.report_id,) if codex_review.report_id else (),
-                review_ids=(codex_review.review_id,) if codex_review.review_id else (),
-            )
-
-        codex_review_recorded = record_step_result(
-            selected_session_id,
-            RUN_NEXT_STEP,
-            "passed",
-            root=root_path,
-            actor=actor,
-            task_id=task_id,
-            gate_name="codex_review_gate",
-            gate_status=CODEX_REVIEW_PASS,
-            gate_details=codex_review_details,
-            report_ids=(codex_review.report_id,) if codex_review.report_id else (),
-            review_ids=(codex_review.review_id,) if codex_review.review_id else (),
-        )
-        side_effects.append(codex_review_recorded)
-        if not codex_review_recorded.ok:
-            return _aggregate_failure(
-                "pipeline.run_next",
-                "Failed to record Codex Review Gate result.",
-                selected_session_id,
-                side_effects,
-            )
-
-        if policy.closure.auto_close_task:
-            close_result = _apply_review_close_policy(
-                session=session,
-                policy=policy,
-                report_gate=report_gate,
-                machine_review=machine_review,
-                codex_review=codex_review,
-                gate_details=codex_review_details,
-                selected_session_id=selected_session_id,
-                selected=selected,
-                queue_preview=queue_preview,
-                side_effects=side_effects,
-                root=root_path,
-                actor=actor,
-                python_executable=python_bin,
-                runner=execution_runner,
-            )
-            if (
-                not policy.commit.create_local_commit
-                or not close_result.ok
-                or close_result.data.get("stop_code") != CODE_TASK_AUTO_CLOSED
-            ):
-                return close_result
-            return _apply_local_commit_policy(
-                policy=policy,
-                report_gate=report_gate,
-                machine_review=machine_review,
-                codex_review=codex_review,
-                gate_details=codex_review_details,
-                selected_session_id=selected_session_id,
-                selected=selected,
-                queue_preview=queue_preview,
-                side_effects=side_effects,
-                root=root_path,
-                actor=actor,
-                runner=execution_runner,
-            )
-        if policy.commit.create_local_commit:
-            return _apply_local_commit_policy(
-                policy=policy,
-                report_gate=report_gate,
-                machine_review=machine_review,
-                codex_review=codex_review,
-                gate_details=codex_review_details,
-                selected_session_id=selected_session_id,
-                selected=selected,
-                queue_preview=queue_preview,
-                side_effects=side_effects,
-                root=root_path,
-                actor=actor,
-                runner=execution_runner,
-            )
-
-        return _record_stop(
-            selected_session_id,
-            stop_code="BLOCKED",
-            stop_reason="Codex Review Gate approved; policy stops before auto-close or commit.",
-            result_status="passed",
-            gate_name="pipeline_policy",
-            gate_status="skipped",
-            gate_details=codex_review_details,
-            selected_task=selected,
-            policy_name=policy.name,
-            queue_preview=queue_preview,
-            side_effects=side_effects,
-            root=root_path,
-            actor=actor,
-        )
-
-    return _record_stop(
-        selected_session_id,
-        stop_code="POLICY_VIOLATION",
-        stop_reason="Unsupported Codex execution mode: {}".format(policy.codex.mode.value),
-        result_status="failed",
-        gate_name="codex_execution_policy",
-        gate_status="fail",
-        gate_details=_gate_details(
-            policy.name,
-            queue_preview,
-            selected,
-            change_gate=queue_change_gate,
+    phase = PhaseResult.blocked(
+        "review",
+        reason=(
+            "Review phase dispatch does not support an in-process reviewer callable; "
+            "use review phase build-prompt-only, manual-review-file, or reviewer-command."
         ),
-        selected_task=selected,
-        policy_name=policy.name,
-        queue_preview=queue_preview,
-        side_effects=side_effects,
-        root=root_path,
-        actor=actor,
+        next_action=(
+            "Run pipeline phase review with build-prompt-only and provide the "
+            "review result through an approved review input."
+        ),
+        artifacts={
+            "blocked_by": "REVIEW_CALLABLE_UNSUPPORTED",
+            "session_id": session_id,
+        },
     )
+    result = record_phase_result(
+        session_id,
+        phase,
+        root=root,
+        actor=actor,
+        command="pipeline.phase.review",
+    )
+    result.message = phase.reason
+    result.owner_action_required = phase.reason
+    if phase.next_action:
+        result.next_actions.append(phase.next_action)
+    return result
+
+
+def _phase_dispatch_result(
+    delegated: CommandResult,
+    *,
+    phase_name: str,
+    session: Mapping[str, Any],
+    effects: Sequence[CommandResult],
+) -> CommandResult:
+    phase_result = _phase_result_payload(delegated)
+    if not phase_result:
+        result = CommandResult.failure(
+            command="pipeline.run_next",
+            domain="pipeline",
+            message="Delegated phase did not return a phase_result payload.",
+            errors=list(delegated.errors)
+            or [
+                CommandMessage(
+                    "PIPELINE_PHASE_RESULT_MISSING",
+                    "Delegated phase did not return data.phase_result.",
+                    details={"phase": phase_name, "command": delegated.command},
+                )
+            ],
+        )
+        result.data = {"session_id": str(session.get("id") or ""), "phase": phase_name}
+        _merge_effects(result, effects)
+        return result
+
+    artifacts = _mapping_or_empty(phase_result.get("artifacts"))
+    status = str(phase_result.get("status") or "")
+    reason = str(phase_result.get("reason") or delegated.message or "")
+    next_action = str(phase_result.get("next_action") or "")
+    blocked_by = _phase_blocked_by(phase_result)
+    selected_task = _phase_selected_task(phase_result, delegated, session)
+    stop_code = _phase_stop_code(status, blocked_by)
+
+    result = CommandResult(
+        ok=delegated.ok,
+        command="pipeline.run_next",
+        domain="pipeline",
+        message=reason or delegated.message,
+        data={
+            "session_id": str(session.get("id") or ""),
+            "dispatched_phase": str(phase_result.get("phase") or phase_name),
+            "phase_status": status,
+            "phase_result": phase_result,
+            "blocked_by": blocked_by,
+            "next_action": next_action,
+            "selected_task": selected_task,
+            "queue_counts": _mapping_or_empty(artifacts.get("queue_counts")),
+            "side_effects": [effect.to_dict() for effect in effects],
+        },
+        warnings=list(delegated.warnings),
+        errors=list(delegated.errors),
+        revision_before=delegated.revision_before,
+        revision_after=delegated.revision_after,
+    )
+    if stop_code:
+        result.data["stop_code"] = stop_code
+        result.data["stop_reason"] = reason
+        result.owner_action_required = reason
+    if next_action:
+        result.next_actions.append(next_action)
+    _merge_effects(result, effects)
+    return result
+
+
+def _ensure_dispatched_phase_recorded(
+    delegated: CommandResult,
+    *,
+    session_id: str,
+    root: Path,
+    actor: str,
+) -> CommandResult:
+    phase_result = _phase_result_payload(delegated)
+    if not phase_result:
+        return delegated
+    session = _session_by_id(root, session_id)
+    if _latest_phase_matches(session, phase_result):
+        return delegated
+
+    recorded = record_phase_result(
+        session_id,
+        phase_result,
+        root=root,
+        actor=actor,
+        task_id=_phase_task_id(phase_result, delegated, session),
+        command=str(delegated.command or "pipeline.run_next"),
+    )
+    delegated.data.setdefault("side_effects", []).append(recorded.to_dict())
+    _merge_effects(delegated, (recorded,))
+    if not recorded.ok:
+        delegated.ok = False
+        delegated.errors.extend(recorded.errors)
+    return delegated
+
+
+def _terminal_run_next_result(
+    session_id: str,
+    *,
+    status: str,
+    reason: str,
+) -> CommandResult:
+    stop_code = "QUEUE_COMPLETE" if status == "completed" else "SESSION_NOT_RUNNABLE"
+    result = CommandResult.success(
+        command="pipeline.run_next",
+        domain="pipeline",
+        message="{}: {}".format(stop_code, reason),
+        data={
+            "session_id": session_id,
+            "stop_code": stop_code,
+            "stop_reason": reason,
+            "phase_result": {
+                "phase": "run_next",
+                "status": "blocked",
+                "reason": reason,
+                "next_action": "Create or select an active pipeline session before rerunning.",
+                "blocked_by": stop_code,
+                "artifacts": {"blocked_by": stop_code, "session_status": status},
+                "changed_files": [],
+                "generated_files": [],
+                "events": [],
+            },
+            "blocked_by": stop_code,
+            "next_action": "Create or select an active pipeline session before rerunning.",
+        },
+    )
+    result.owner_action_required = reason
+    result.next_actions.append("Create or select an active pipeline session before rerunning.")
+    return result
+
+
+def _phase_result_payload(result: CommandResult) -> dict[str, Any]:
+    data = result.data if isinstance(result.data, Mapping) else {}
+    raw = data.get("phase_result")
+    if not isinstance(raw, Mapping):
+        return {}
+    payload = dict(raw)
+    artifacts = _mapping_or_empty(payload.get("artifacts"))
+    blocked_by = str(payload.get("blocked_by") or artifacts.get("blocked_by") or "")
+    if blocked_by:
+        artifacts["blocked_by"] = blocked_by
+    payload["artifacts"] = artifacts
+    from .phase import PhaseResult
+
+    normalized = PhaseResult.from_dict(payload).to_dict()
+    if blocked_by:
+        normalized["blocked_by"] = blocked_by
+    return normalized
+
+
+def _phase_blocked_by(phase_result: Mapping[str, Any]) -> str:
+    artifacts = _mapping_or_empty(phase_result.get("artifacts"))
+    return str(phase_result.get("blocked_by") or artifacts.get("blocked_by") or "")
+
+
+def _phase_stop_code(status: str, blocked_by: str) -> str:
+    if status == "blocked":
+        return blocked_by or "PIPELINE_PHASE_BLOCKED"
+    if status == "failed":
+        return blocked_by or "PIPELINE_PHASE_FAILED"
+    return ""
+
+
+def _phase_selected_task(
+    phase_result: Mapping[str, Any],
+    delegated: CommandResult,
+    session: Mapping[str, Any],
+) -> Mapping[str, Any] | None:
+    artifacts = _mapping_or_empty(phase_result.get("artifacts"))
+    for key in ("selected_task", "next_task"):
+        value = artifacts.get(key)
+        if isinstance(value, Mapping):
+            return dict(value)
+    value = delegated.data.get("selected_task") if isinstance(delegated.data, Mapping) else None
+    if isinstance(value, Mapping):
+        return dict(value)
+    task_id = str(
+        artifacts.get("task_id")
+        or delegated.data.get("task_id")
+        or session.get("current_task_id")
+        or ""
+    )
+    if not task_id:
+        return None
+    return {"id": task_id, "ref": str(session.get("current_task_ref") or task_id)}
+
+
+def _phase_task_id(
+    phase_result: Mapping[str, Any],
+    delegated: CommandResult,
+    session: Mapping[str, Any],
+) -> str:
+    selected = _phase_selected_task(phase_result, delegated, session)
+    if isinstance(selected, Mapping):
+        return str(selected.get("id") or "")
+    return ""
+
+
+def _session_by_id(root: Path, session_id: str) -> Mapping[str, Any]:
+    for session in load_pipeline_state(root).get("sessions", []):
+        if isinstance(session, Mapping) and session.get("id") == session_id:
+            return session
+    return {}
+
+
+def _latest_phase_matches(
+    session: Mapping[str, Any],
+    phase_result: Mapping[str, Any],
+) -> bool:
+    latest = _latest_known_phase(session)
+    if latest is None:
+        return False
+    return (
+        _normalized_phase_name(latest.get("phase"))
+        == _normalized_phase_name(phase_result.get("phase"))
+        and str(latest.get("status") or "") == str(phase_result.get("status") or "")
+        and str(latest.get("reason") or "") == str(phase_result.get("reason") or "")
+    )
+
+
+def _normalized_phase_name(value: Any) -> str:
+    selected = str(value or "").strip()
+    return RUN_NEXT_PHASE_ALIASES.get(selected, selected)
+
+
+def _mapping_or_empty(value: Any) -> dict[str, Any]:
+    return dict(value) if isinstance(value, Mapping) else {}
 
 
 def _apply_review_close_policy(

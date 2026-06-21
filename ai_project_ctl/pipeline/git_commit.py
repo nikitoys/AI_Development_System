@@ -179,11 +179,16 @@ def evaluate_commit_readiness(
     root_path = Path(root).resolve()
     refs = load_reference_state(root_path)
     task = _task_by_id(refs.get("tasks"), task_id)
-    linked_changes = _linked_changes_for_task(task_id, refs.get("evolution"))
+    task_refs = _task_reference_values(task, task_id)
+    linked_changes = _linked_changes_for_task(task_refs, refs.get("evolution"))
     accepted_changes = [
-        change for change in linked_changes if str(change.get("status") or "") == "accepted"
+        change
+        for change in linked_changes
+        if str(change.get("status") or "") == "accepted"
     ]
-    change_ids = tuple(str(change.get("id")) for change in linked_changes if change.get("id"))
+    change_ids = tuple(
+        str(change.get("id")) for change in linked_changes if change.get("id")
+    )
     accepted_change_ids = tuple(
         str(change.get("id")) for change in accepted_changes if change.get("id")
     )
@@ -611,18 +616,48 @@ def _task_by_id(tasks_state: Any, task_id: str) -> Mapping[str, Any]:
     return {}
 
 
-def _linked_changes_for_task(task_id: str, evolution_state: Any) -> list[Mapping[str, Any]]:
+def _linked_changes_for_task(
+    task_refs: Sequence[str],
+    evolution_state: Any,
+) -> list[Mapping[str, Any]]:
     if not isinstance(evolution_state, Mapping):
         return []
+    selected_refs = {str(item) for item in task_refs if str(item).strip()}
     linked: list[Mapping[str, Any]] = []
     for change in evolution_state.get("changes", []):
         if not isinstance(change, Mapping):
             continue
         linked_tasks = change.get("linked_tasks") or []
-        if isinstance(linked_tasks, Sequence) and not isinstance(linked_tasks, (str, bytes)):
-            if task_id in {str(item) for item in linked_tasks}:
+        if isinstance(linked_tasks, Sequence) and not isinstance(
+            linked_tasks,
+            (str, bytes),
+        ):
+            if selected_refs & {str(item) for item in linked_tasks}:
                 linked.append(change)
     return linked
+
+
+def _task_reference_values(task: Mapping[str, Any], task_id: str) -> tuple[str, ...]:
+    refs = [
+        task_id,
+        str(task.get("id") or ""),
+        str(task.get("ref") or ""),
+        str(task.get("uid") or ""),
+        str(task.get("legacy_id") or ""),
+    ]
+    aliases = task.get("aliases")
+    if isinstance(aliases, Sequence) and not isinstance(aliases, (str, bytes)):
+        refs.extend(str(alias) for alias in aliases)
+    return tuple(_unique_strings(refs))
+
+
+def _unique_strings(values: Sequence[str]) -> list[str]:
+    result: list[str] = []
+    for value in values:
+        text = str(value or "").strip()
+        if text and text not in result:
+            result.append(text)
+    return result
 
 
 def _commit_message(

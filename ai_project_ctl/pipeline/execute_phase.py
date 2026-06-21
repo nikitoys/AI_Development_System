@@ -337,6 +337,11 @@ def _adapter_artifacts(
         "prepare_artifacts": _bounded_prepare_artifacts(prepare_artifacts),
         "token_budget": token_gate.to_dict(),
         "codex_adapter_called": True,
+        "execute_started_at": adapter_result.started_at,
+        "execute_finished_at": adapter_result.finished_at,
+        "before_report_id": adapter_result.before_report_id,
+        "after_report_id": adapter_result.after_report_id,
+        "report_id": adapter_result.report_id,
         "execute_evidence": _adapter_evidence(adapter_result),
         "adapter": adapter_data,
         "adapter_summary": {
@@ -379,6 +384,11 @@ def _adapter_evidence(adapter_result: CodexAdapterResult) -> dict[str, Any]:
         "stderr_bytes": adapter_result.stderr_bytes,
         "report_ids": _adapter_report_ids(adapter_result),
         "report_required": adapter_result.report_required,
+        "started_at": adapter_result.started_at,
+        "finished_at": adapter_result.finished_at,
+        "before_report_id": adapter_result.before_report_id,
+        "after_report_id": adapter_result.after_report_id,
+        "report_id": adapter_result.report_id,
     }
 
 

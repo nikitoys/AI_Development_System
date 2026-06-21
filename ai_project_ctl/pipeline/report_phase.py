@@ -7,6 +7,7 @@ validation, project tests, or downstream verification gates.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -20,8 +21,10 @@ from .state import load_pipeline_state, pipeline_state_path, task_reports_state_
 
 COMMAND_NAME = "pipeline.phase.collect_report"
 PHASE_NAME = "collect_report"
+EXECUTE_PHASE_NAME = "execute"
 REPORT_MISSING = "REPORT_MISSING"
 REPORT_TASK_MISMATCH = "REPORT_TASK_MISMATCH"
+REPORT_STALE = "REPORT_STALE"
 
 
 def collect_report_phase(
@@ -29,6 +32,7 @@ def collect_report_phase(
     *,
     root: str | Path = ".",
     actor: str = "human_owner",
+    allow_existing_report: bool = False,
 ) -> CommandResult:
     """Collect the latest structured report for the selected session task."""
 
@@ -143,9 +147,37 @@ def collect_report_phase(
             next_action="Submit a report for the selected task, then rerun collect-report.",
         )
 
+    freshness = _report_freshness(
+        session,
+        record,
+        allow_existing_report=allow_existing_report,
+    )
+    if not bool(freshness.get("fresh")):
+        return _blocked(
+            REPORT_STALE,
+            "Structured report is older than the current execute phase.",
+            session_id=selected_session_id,
+            task_id=task_id,
+            root=root_path,
+            actor=actor,
+            artifacts={
+                "session_id": selected_session_id,
+                **identity_evidence,
+                "freshness": freshness,
+            },
+            next_action=(
+                "Submit a fresh report for the current execute phase, then rerun "
+                "collect-report. For supervised recovery only, rerun with "
+                "--allow-existing-report."
+            ),
+        )
+
     phase = PhaseResult.passed(
         PHASE_NAME,
-        reason="Structured execution report collected for selected task.",
+        reason=(
+            "Structured execution report collected for selected task "
+            "(freshness_basis={})."
+        ).format(freshness.get("basis") or "unknown"),
         next_action="Run pipeline phase verify.",
         artifacts={
             "session_id": selected_session_id,
@@ -157,6 +189,9 @@ def collect_report_phase(
             "submitted_by": str(record.get("submitted_by") or ""),
             "source_file": str(record.get("source_file") or ""),
             "report_found": True,
+            "freshness": freshness,
+            "freshness_basis": str(freshness.get("basis") or ""),
+            "allow_existing_report": allow_existing_report,
         },
     )
     return _phase_command(
@@ -293,6 +328,157 @@ def _report_identity_mismatch(
         return "reported_task_ref"
 
     return ""
+
+
+def _report_freshness(
+    session: Mapping[str, Any],
+    record: Mapping[str, Any],
+    *,
+    allow_existing_report: bool,
+) -> dict[str, Any]:
+    execute = _latest_execute_evidence(session)
+    check = {
+        "fresh": False,
+        "basis": "",
+        "reason": "",
+        "allow_existing_report": allow_existing_report,
+        "report_id": str(record.get("id") or ""),
+        "report_submitted_at": str(record.get("submitted_at") or ""),
+        "execute_started_at": str(execute.get("started_at") or ""),
+        "execute_finished_at": str(execute.get("finished_at") or ""),
+        "execute_before_report_id": str(execute.get("before_report_id") or ""),
+        "execute_after_report_id": str(execute.get("after_report_id") or ""),
+        "execute_report_id": str(execute.get("report_id") or ""),
+        "execute_phase_status": str(execute.get("phase_status") or ""),
+    }
+    if allow_existing_report:
+        check["fresh"] = True
+        check["basis"] = "recovery_override"
+        check["reason"] = "allow_existing_report override was explicitly used."
+        return check
+
+    report_id = check["report_id"]
+    before_report_id = check["execute_before_report_id"]
+    after_report_id = check["execute_after_report_id"]
+    execute_report_id = check["execute_report_id"]
+
+    if execute_report_id and report_id == execute_report_id:
+        check["fresh"] = True
+        check["basis"] = "report_id"
+        check["reason"] = "Report id matches the report produced by execute."
+        return check
+    if (
+        after_report_id
+        and after_report_id != before_report_id
+        and report_id == after_report_id
+    ):
+        check["fresh"] = True
+        check["basis"] = "report_id"
+        check["reason"] = "Report id changed during execute."
+        return check
+    if before_report_id and report_id == before_report_id:
+        check["basis"] = "report_id"
+        check["reason"] = "Report id was already present before execute."
+        return check
+
+    submitted_at = _parse_utc_instant(check["report_submitted_at"])
+    execute_started_at = _parse_utc_instant(check["execute_started_at"])
+    if submitted_at is not None and execute_started_at is not None:
+        check["basis"] = "timestamp"
+        if submitted_at >= execute_started_at:
+            check["fresh"] = True
+            check["reason"] = "Report timestamp is at or after execute start."
+        else:
+            check["reason"] = "Report timestamp predates execute start."
+        return check
+
+    if not check["execute_started_at"]:
+        check["reason"] = "No execute phase evidence is available."
+    elif not check["report_submitted_at"]:
+        check["reason"] = "Report timestamp is missing."
+    else:
+        check["reason"] = (
+            "Report or execute timestamp is not a timezone-aware ISO instant."
+        )
+    return check
+
+
+def _latest_execute_evidence(session: Mapping[str, Any]) -> dict[str, Any]:
+    history = session.get("phase_history")
+    if not isinstance(history, list):
+        return {}
+    for entry in reversed(history):
+        if not isinstance(entry, Mapping):
+            continue
+        if str(entry.get("phase") or "") != EXECUTE_PHASE_NAME:
+            continue
+        artifacts = entry.get("artifacts")
+        if not isinstance(artifacts, Mapping):
+            artifacts = {}
+        evidence = artifacts.get("execute_evidence")
+        if not isinstance(evidence, Mapping):
+            evidence = {}
+        adapter = artifacts.get("adapter")
+        if not isinstance(adapter, Mapping):
+            adapter = {}
+        adapter_summary = artifacts.get("adapter_summary")
+        if not isinstance(adapter_summary, Mapping):
+            adapter_summary = {}
+        return {
+            "phase_status": str(entry.get("status") or ""),
+            "started_at": _first_text(
+                artifacts.get("execute_started_at"),
+                evidence.get("started_at"),
+                adapter.get("started_at"),
+            ),
+            "finished_at": _first_text(
+                artifacts.get("execute_finished_at"),
+                evidence.get("finished_at"),
+                adapter.get("finished_at"),
+            ),
+            "before_report_id": _first_text(
+                artifacts.get("before_report_id"),
+                evidence.get("before_report_id"),
+                adapter_summary.get("before_report_id"),
+                adapter.get("before_report_id"),
+            ),
+            "after_report_id": _first_text(
+                artifacts.get("after_report_id"),
+                evidence.get("after_report_id"),
+                adapter_summary.get("after_report_id"),
+                adapter.get("after_report_id"),
+            ),
+            "report_id": _first_text(
+                artifacts.get("report_id"),
+                evidence.get("report_id"),
+                adapter_summary.get("report_id"),
+                adapter.get("report_id"),
+            ),
+        }
+    return {}
+
+
+def _first_text(*values: Any) -> str:
+    for value in values:
+        text = str(value or "").strip()
+        if text:
+            return text
+    return ""
+
+
+def _parse_utc_instant(value: str) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = "{}+00:00".format(text[:-1])
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed.astimezone(timezone.utc)
 
 
 def _identity_value(value: Any) -> str:

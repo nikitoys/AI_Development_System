@@ -21,6 +21,9 @@ class PhaseStatus(str, Enum):
 
 
 PHASE_STATUSES = tuple(status.value for status in PhaseStatus)
+CI_EXIT_PASSED = 0
+CI_EXIT_FAILED = 1
+CI_EXIT_BLOCKED = 2
 _PHASE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 
@@ -141,6 +144,72 @@ class PhaseResult:
             "events": list(self.events),
             "next_actions": [self.next_action] if self.next_action else [],
         }
+
+
+def pipeline_ci_exit_code(result: object) -> int:
+    """Return CI exit code for pipeline command outcomes.
+
+    CI mode maps passed and completed outcomes to 0, failed outcomes to 1,
+    and blocked safe-stop outcomes to 2.
+    """
+
+    data = getattr(result, "data", {})
+    if not isinstance(data, Mapping):
+        data = {}
+    if not bool(getattr(result, "ok", False)):
+        return CI_EXIT_FAILED
+
+    outcome = _pipeline_ci_outcome(data)
+    if outcome in {"passed", "completed"}:
+        return CI_EXIT_PASSED
+    if outcome == "failed":
+        return CI_EXIT_FAILED
+    if outcome == "blocked":
+        return CI_EXIT_BLOCKED
+    return CI_EXIT_PASSED
+
+
+def _pipeline_ci_outcome(data: Mapping[str, Any]) -> str:
+    stop_code = str(data.get("stop_code") or "").strip()
+    if stop_code == "QUEUE_COMPLETE":
+        return "completed"
+
+    for value in (
+        data.get("phase_status"),
+        _phase_result_status(data.get("phase_result")),
+        _latest_step_phase_status(data.get("step_results")),
+        data.get("session_status"),
+        data.get("current_step_status"),
+    ):
+        selected = _pipeline_ci_status(value)
+        if selected:
+            return selected
+
+    if stop_code:
+        return "blocked"
+    return "passed"
+
+
+def _phase_result_status(value: object) -> object:
+    if isinstance(value, Mapping):
+        return value.get("status")
+    return None
+
+
+def _latest_step_phase_status(value: object) -> object:
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes, bytearray)):
+        return None
+    for item in reversed(value):
+        if isinstance(item, Mapping):
+            return item.get("phase_status")
+    return None
+
+
+def _pipeline_ci_status(value: object) -> str:
+    selected = str(value or "").strip().lower()
+    if selected in {"passed", "completed", "failed", "blocked"}:
+        return selected
+    return ""
 
 
 def _phase_name(value: object) -> str:
@@ -279,8 +348,12 @@ def _string_tuple(value: object, field_name: str) -> tuple[str, ...]:
 
 
 __all__ = [
+    "CI_EXIT_BLOCKED",
+    "CI_EXIT_FAILED",
+    "CI_EXIT_PASSED",
     "PHASE_STATUSES",
     "PhaseResult",
     "PhaseStatus",
     "PipelinePhaseError",
+    "pipeline_ci_exit_code",
 ]
