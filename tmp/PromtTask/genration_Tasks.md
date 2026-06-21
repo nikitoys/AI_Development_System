@@ -17,7 +17,7 @@ Return exactly this top-level shape:
   "split_recommended": false,
   "reason": "",
   "task": {
-    "epic_id": "",
+    "epic": "",
     "title": "",
     "summary": "",
     "description": "",
@@ -43,7 +43,7 @@ Each item in `proposed_splits` must use the same task fields as `task`, without 
 
 ## 2. Required Task Fields
 
-### `epic_id`
+### `epic`
 
 Use the provided Epic ID.
 If no Epic ID is provided, leave it empty and make the missing Epic clear in `reason`.

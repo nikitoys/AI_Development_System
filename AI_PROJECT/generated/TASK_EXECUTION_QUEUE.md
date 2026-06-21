@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `915`
+Revision: `920`
 
 ## Executable Now
 
@@ -18,6 +18,11 @@ Revision: `915`
 - `PIPEF-43 (TASK-122)` [planned] `EPIC-009` priority `1` — PIPE-043 Add fake Codex happy path integration test
 - `PIPEF-44 (TASK-123)` [planned] `EPIC-009` priority `1` — PIPE-044 Add fake reviewer close integration test
 - `PIPEF-45 (TASK-124)` [planned] `EPIC-009` priority `1` — PIPE-045 Update phase pipeline usage guide
+- `PIPEF-46 (TASK-125)` [planned] `EPIC-009` priority `1` — Add UI settings defaults and loader
+- `PIPEF-47 (TASK-126)` [planned] `EPIC-009` priority `1` — Add UI settings CLI commands
+- `PIPEF-48 (TASK-127)` [planned] `EPIC-009` priority `1` — Resolve pipeline policy from UI settings
+- `PIPEF-49 (TASK-128)` [planned] `EPIC-009` priority `1` — Add settings-backed single-task Run command
+- `PIPEF-50 (TASK-129)` [planned] `EPIC-009` priority `1` — Add Codex preflight for UI Run
 
 ## Waiting For Dependencies
 

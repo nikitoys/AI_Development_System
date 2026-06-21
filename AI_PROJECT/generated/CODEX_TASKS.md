@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `915`
+Revision: `920`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -2221,3 +2221,90 @@ Acceptance criteria:
 - The guide explains blocked outcomes as normal owner-action states.
 - The guide documents CI exit codes for passed, blocked, and failed outcomes.
 - ai-system/README.md links to the new usage guide.
+
+### PIPEF-46 (TASK-125) — Add UI settings defaults and loader
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_ca80acf6a7d4`, legacy `TASK-125`, aliases `TASK-125`, local `PIPEF` / `46`
+
+Add a UI settings module that returns built-in defaults and optionally overlays AI_PROJECT/config/ui_settings.json.
+
+Acceptance criteria:
+
+- Effective settings contain command_line set to codex exec by default.
+- Effective settings contain default_policy set to supervised_executable_local_commit by default.
+- Missing AI_PROJECT/config/ui_settings.json does not produce an error.
+- Existing ui_settings.json overrides default values.
+- Invalid non-object JSON settings fail with a clear validation error.
+
+### PIPEF-47 (TASK-126) — Add UI settings CLI commands
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_066a06b4cf1f`, legacy `TASK-126`, aliases `TASK-126`, local `PIPEF` / `47`
+
+Add aictl UI settings commands to show, initialize, and upsert project-local UI settings.
+
+Acceptance criteria:
+
+- ui settings show prints effective settings and indicates whether they came from defaults or project file.
+- ui settings init --confirm creates AI_PROJECT/config/ui_settings.json with minimal default settings.
+- ui settings init without --confirm refuses to write.
+- ui settings set command_line "codex exec" writes or updates the command_line key.
+- ui settings set some_random_key value adds a new top-level key with string value.
+- Settings writes preserve schema_version when present.
+
+### PIPEF-48 (TASK-127) — Resolve pipeline policy from UI settings
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_3a16c86f2cb8`, legacy `TASK-127`, aliases `TASK-127`, local `PIPEF` / `48`
+
+Add a settings-aware policy resolver that applies default_policy and command_line to executable pipeline runs.
+
+Acceptance criteria:
+
+- default_policy resolves to supervised_executable_local_commit when no settings file exists.
+- command_line codex exec maps to local command arguments equivalent to codex exec.
+- Executable policy allowlist matches the configured command_line.
+- Non-executable policies do not require command_line application.
+- Invalid or unknown default_policy fails with a clear error.
+
+### PIPEF-49 (TASK-128) — Add settings-backed single-task Run command
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_2cfb601bb104`, legacy `TASK-128`, aliases `TASK-128`, local `PIPEF` / `49`
+
+Add a CLI command that runs one selected task using effective UI settings for policy and command configuration.
+
+Acceptance criteria:
+
+- aictl ui run TASK_REF creates or delegates to a single-task pipeline session.
+- The command uses default_policy from effective UI settings.
+- The command uses command_line from effective UI settings for executable policies.
+- The command requires confirmation before executing run-until-blocker.
+- The command returns a clear completed, blocked, or failed result.
+- The command does not directly edit AI_PROJECT/state task files outside existing governed pipeline commands.
+
+### PIPEF-50 (TASK-129) — Add Codex preflight for UI Run
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_e7309de4e114`, legacy `TASK-129`, aliases `TASK-129`, local `PIPEF` / `50`
+
+Add a Codex executable preflight that checks the configured command before launching an executable Run.
+
+Acceptance criteria:
+
+- Preflight returns passed when the configured command exits successfully.
+- Preflight returns a blocked result when bwrap, RTM_NEWADDR, user namespace, or Operation not permitted appears in output.
+- Preflight uses the effective command_line setting.
+- Preflight does not write project-control state or generated files.
+- UI Run can use the preflight result to block executable execution before starting a session.
