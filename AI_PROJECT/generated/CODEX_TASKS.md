@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `920`
-Current task: `none`
+Revision: `942`
+Current task: `TASK-129`
 
 ## Epic `EPIC-001`
 
@@ -2224,7 +2224,7 @@ Acceptance criteria:
 
 ### PIPEF-46 (TASK-125) — Add UI settings defaults and loader
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_ca80acf6a7d4`, legacy `TASK-125`, aliases `TASK-125`, local `PIPEF` / `46`
@@ -2241,7 +2241,7 @@ Acceptance criteria:
 
 ### PIPEF-47 (TASK-126) — Add UI settings CLI commands
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_066a06b4cf1f`, legacy `TASK-126`, aliases `TASK-126`, local `PIPEF` / `47`
@@ -2259,7 +2259,7 @@ Acceptance criteria:
 
 ### PIPEF-48 (TASK-127) — Resolve pipeline policy from UI settings
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_3a16c86f2cb8`, legacy `TASK-127`, aliases `TASK-127`, local `PIPEF` / `48`
@@ -2276,7 +2276,7 @@ Acceptance criteria:
 
 ### PIPEF-49 (TASK-128) — Add settings-backed single-task Run command
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_2cfb601bb104`, legacy `TASK-128`, aliases `TASK-128`, local `PIPEF` / `49`
@@ -2292,9 +2292,9 @@ Acceptance criteria:
 - The command returns a clear completed, blocked, or failed result.
 - The command does not directly edit AI_PROJECT/state task files outside existing governed pipeline commands.
 
-### PIPEF-50 (TASK-129) — Add Codex preflight for UI Run
+### PIPEF-50 (TASK-129) — Add Codex preflight for UI Run ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_e7309de4e114`, legacy `TASK-129`, aliases `TASK-129`, local `PIPEF` / `50`

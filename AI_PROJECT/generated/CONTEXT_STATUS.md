@@ -1,15 +1,15 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/generated/CONTEXT_PACK.md -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-118 PIPE-039 Add CI exit-code mode for pipeline Add a CI-oriented exit-code mode where blocked and failed pipeline outcomes produce nonzero process exit codes. Make pipeline results usable by automation without losing human-readable safe-stop behavior. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add --ci flag to phase runner commands where appropriate. Map passed and completed outcomes to exit code 0. Map failed outcomes to exit code 1. Map blocked outcomes to exit code 2. Do not change behavior unrelated to this task. Do not refactor unrelated code. Do not edit protected project-control files manually. scripts/aictl.py ai_project_ctl/pipeline/phase.py pipeline run-next --ci exits 0 for passed or completed outcomes. pipeline run-next --ci exits 2 for blocked outcomes. pipeline run-next --ci exits 1 for failed outcomes. Default non-CI behavior remains compatible with human safe-stop usage. Check that JSON output still includes full outcome details in CI mode. Verify exit code mapping is documented in code comments or command help.","schema_version":1,"task_id":"TASK-118"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-129 Add Codex preflight for UI Run Add a Codex executable preflight that checks the configured command before launching an executable Run. This task prevents the Run command from starting executable sessions when the local Codex sandbox is unavailable. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add a Codex preflight service that reads command_line from effective UI settings. Run a minimal prompt through the configured command. Detect sandbox-unavailable output such as bwrap or RTM_NEWADDR. Expose the preflight through aictl for UI and backend usage. Do not attempt to repair OS-level sandbox permissions. Do not change Codex CLI configuration files. Do not mutate task, pipeline, or report state during preflight. ai_project_ctl/pipeline/codex_preflight.py ai_project_ctl/pipeline/codex_adapter.py ai_project_ctl/ui_settings.py scripts/aictl.py tests/pipeline/test_codex_preflight.py Preflight returns passed when the configured command exits successfully. Preflight returns a blocked result when bwrap, RTM_NEWADDR, user namespace, or Operation not permitted appears in output. Preflight uses the effective command_line setting. Preflight does not write project-control state or generated files. UI Run can use the preflight result to block executable execution before starting a session. Verify that sandbox detection is shared with or consistent with the Codex adapter.","schema_version":1,"task_id":"TASK-129"} -->
 
 # Context Status
 
 Context pack exists: `true`
 Mode: `task`
-Task ID: `TASK-118`
+Task ID: `TASK-129`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `912`
+Tasks revision: `942`
 Indexed source documents: `10`
 Indexed chunks: `891`
 Selected chunks: `8`
@@ -19,7 +19,6 @@ Excluded registered sources: `135`
 
 - ai-system/project-control/04-command-catalog.md
 - ai-system/project-control/06-prompt-package-spec.md
-- ai-system/project-control/07-validation-and-tests.md
 - ai-system/skills/README.md
 
 ## Exclusion Reasons

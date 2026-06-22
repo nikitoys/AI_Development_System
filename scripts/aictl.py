@@ -52,7 +52,13 @@ from ai_project_ctl.pipeline.session import (  # noqa: E402
     stop_session,
     validate_sessions as validate_pipeline_sessions,
 )
-from ai_project_ctl.pipeline.policy import policy_preset  # noqa: E402
+from ai_project_ctl.pipeline.codex_preflight import run_codex_preflight  # noqa: E402
+from ai_project_ctl.pipeline.policy import (  # noqa: E402
+    CodexAdapterMode,
+    CodexExecutionMode,
+    PipelinePolicy,
+    policy_preset,
+)
 from ai_project_ctl.pipeline.policy_store import (  # noqa: E402
     check_generated as check_pipeline_policy_generated,
     delete_policy_preset,
@@ -72,7 +78,15 @@ from ai_project_ctl.pipeline.report_phase import collect_report_phase  # noqa: E
 from ai_project_ctl.pipeline.report_template import build_report_template  # noqa: E402
 from ai_project_ctl.pipeline.review_phase import review_phase  # noqa: E402
 from ai_project_ctl.pipeline.phase import pipeline_ci_exit_code  # noqa: E402
+from ai_project_ctl.pipeline.ui_policy import resolve_ui_pipeline_policy  # noqa: E402
 from ai_project_ctl.pipeline.verify_phase import verify_phase  # noqa: E402
+from ai_project_ctl.ui_settings import (  # noqa: E402
+    init_ui_settings,
+    load_ui_settings,
+    ui_settings_path,
+    ui_settings_source,
+    upsert_ui_setting,
+)
 
 
 class FacadeError(CommandError):
@@ -1047,6 +1061,155 @@ def _command_exit_code(result: CommandResult, args: argparse.Namespace) -> int:
     return 0 if result.ok else 1
 
 
+def _ui_run_result(
+    task_ref: str,
+    policy_name: str,
+    session_result: CommandResult,
+    run_result: CommandResult,
+) -> CommandResult:
+    outcome = _ui_run_outcome(run_result)
+    session_id = str(
+        session_result.data.get("session_id") or run_result.data.get("session_id") or ""
+    )
+    data = {
+        "task_ref": task_ref,
+        "policy": policy_name,
+        "session_id": session_id,
+        "outcome": outcome,
+        "session": session_result.data.get("session"),
+        "run": run_result.to_dict(),
+    }
+
+    if outcome == "confirmation_required":
+        result = CommandResult.failure(
+            command="ui.run",
+            domain="ui",
+            message=(
+                "UI run confirmation required before executing pipeline session {}.".format(
+                    session_id or "(none)"
+                )
+            ),
+            errors=[
+                CommandMessage(
+                    "UI_RUN_CONFIRMATION_REQUIRED",
+                    "Rerun with --confirm to execute run-until-blocker for the selected task.",
+                )
+            ],
+        )
+        result.owner_action_required = (
+            "Review the single-task pipeline session and rerun with --confirm."
+        )
+    elif outcome == "completed":
+        result = CommandResult.success(
+            command="ui.run",
+            domain="ui",
+            message="UI run completed: {}".format(run_result.message),
+        )
+        result.owner_action_required = run_result.owner_action_required
+    elif outcome == "blocked":
+        result = CommandResult.success(
+            command="ui.run",
+            domain="ui",
+            message="UI run blocked: {}".format(run_result.message),
+        )
+        result.owner_action_required = run_result.owner_action_required
+    else:
+        result = CommandResult.failure(
+            command="ui.run",
+            domain="ui",
+            message="UI run failed: {}".format(run_result.message),
+            errors=list(run_result.errors),
+        )
+        result.owner_action_required = run_result.owner_action_required
+
+    result.data = data
+    _merge_command_result_effects(result, session_result, run_result)
+    return result
+
+
+def _ui_run_preflight_result(
+    task_ref: str,
+    policy_name: str,
+    preflight_result: CommandResult,
+) -> CommandResult:
+    status = str(preflight_result.data.get("status") or "")
+    blocked = status == "blocked"
+    outcome = "blocked" if blocked else "failed"
+    data = {
+        "task_ref": task_ref,
+        "policy": policy_name,
+        "session_id": "",
+        "outcome": outcome,
+        "session_status": outcome,
+        "preflight": preflight_result.to_dict(),
+        "session": None,
+        "run": None,
+    }
+    if blocked:
+        result = CommandResult.success(
+            command="ui.run",
+            domain="ui",
+            message="UI run blocked by Codex preflight: {}".format(
+                preflight_result.message
+            ),
+        )
+    else:
+        result = CommandResult.failure(
+            command="ui.run",
+            domain="ui",
+            message="UI run failed during Codex preflight: {}".format(
+                preflight_result.message
+            ),
+            errors=list(preflight_result.errors),
+        )
+    result.data = data
+    result.owner_action_required = preflight_result.owner_action_required
+    result.warnings.extend(preflight_result.warnings)
+    return result
+
+
+def _policy_requires_codex_preflight(policy: PipelinePolicy) -> bool:
+    return (
+        policy.codex.mode == CodexExecutionMode.RUN_CODEX
+        and policy.codex.adapter_mode == CodexAdapterMode.LOCAL_COMMAND
+    )
+
+
+def _ui_run_outcome(run_result: CommandResult) -> str:
+    error_codes = {error.code for error in run_result.errors}
+    if "PIPELINE_BATCH_CONFIRMATION_REQUIRED" in error_codes:
+        return "confirmation_required"
+    if not run_result.ok:
+        return "failed"
+    stop_code = str(run_result.data.get("stop_code") or "")
+    session_status = str(run_result.data.get("session_status") or "")
+    if stop_code == "QUEUE_COMPLETE" or session_status == "completed":
+        return "completed"
+    if session_status == "failed" or stop_code.endswith("_FAILED"):
+        return "failed"
+    return "blocked"
+
+
+def _merge_command_result_effects(
+    target: CommandResult,
+    *sources: CommandResult,
+) -> None:
+    for source in sources:
+        _extend_unique(target.changed_files, source.changed_files)
+        _extend_unique(target.generated_files, source.generated_files)
+        _extend_unique(target.events, source.events)
+        target.warnings.extend(source.warnings)
+
+
+def _extend_unique(target: list[str], values: Sequence[str]) -> None:
+    seen = set(target)
+    for value in values:
+        text = str(value)
+        if text and text not in seen:
+            target.append(text)
+            seen.add(text)
+
+
 def _validation_result_to_command(
     command_name: str,
     domain: str,
@@ -1820,6 +1983,111 @@ def cmd_codex_prompt_build(args: argparse.Namespace) -> int:
     )
 
 
+def cmd_ui_settings_show(args: argparse.Namespace) -> int:
+    settings = load_ui_settings(root=args.root)
+    source = ui_settings_source(root=args.root)
+    path = str(ui_settings_path(args.root))
+    result = CommandResult.success(
+        command="ui.settings.show",
+        domain="ui",
+        message="UI settings loaded.",
+        data={"settings": settings, "source": source, "path": path},
+    )
+    if args.json:
+        _print_json(result.to_dict())
+        return 0
+
+    print("Source: {}".format(source))
+    print("Path: {}".format(path))
+    print(json.dumps(settings, ensure_ascii=False, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_ui_preflight(args: argparse.Namespace) -> int:
+    result = run_codex_preflight(root=args.root, timeout_sec=args.timeout_sec)
+    return _emit_command_result(result, args)
+
+
+def cmd_ui_settings_init(args: argparse.Namespace) -> int:
+    path = init_ui_settings(root=args.root, confirm=args.confirm)
+    result = CommandResult.success(
+        command="ui.settings.init",
+        domain="ui",
+        message="OK: initialized UI settings",
+        data={
+            "path": str(path),
+            "settings": load_ui_settings(root=args.root),
+            "source": ui_settings_source(root=args.root),
+        },
+    )
+    result.changed_files.append(str(path))
+    return _emit_command_result(result, args)
+
+
+def cmd_ui_settings_set(args: argparse.Namespace) -> int:
+    path = upsert_ui_setting(args.key, args.value, root=args.root)
+    result = CommandResult.success(
+        command="ui.settings.set",
+        domain="ui",
+        message="OK: updated UI setting {}".format(args.key),
+        data={
+            "key": args.key,
+            "value": args.value,
+            "path": str(path),
+            "settings": load_ui_settings(root=args.root),
+            "source": ui_settings_source(root=args.root),
+        },
+    )
+    result.changed_files.append(str(path))
+    return _emit_command_result(result, args)
+
+
+def cmd_ui_run(args: argparse.Namespace) -> int:
+    selected_policy = resolve_ui_pipeline_policy(root=args.root)
+    if args.preflight and args.confirm and _policy_requires_codex_preflight(selected_policy):
+        preflight_result = run_codex_preflight(root=args.root)
+        if str(preflight_result.data.get("status") or "") != "passed":
+            result = _ui_run_preflight_result(
+                args.task_ref,
+                selected_policy.name,
+                preflight_result,
+            )
+            return _emit_command_result(result, args)
+
+    session_result = create_session(
+        root=args.root,
+        actor=args.actor,
+        policy=selected_policy,
+        policy_name=selected_policy.name,
+        task_refs=(args.task_ref,),
+        max_tasks=1,
+        order_by="selected",
+    )
+    if not session_result.ok:
+        result = _ui_run_result(
+            args.task_ref,
+            selected_policy.name,
+            session_result,
+            session_result,
+        )
+        return _emit_command_result(result, args)
+
+    session_id = str(session_result.data.get("session_id") or "")
+    run_result = run_pipeline_until_blocker(
+        session_id,
+        root=args.root,
+        actor=args.actor,
+        confirmed=args.confirm,
+    )
+    result = _ui_run_result(
+        args.task_ref,
+        selected_policy.name,
+        session_result,
+        run_result,
+    )
+    return _emit_command_result(result, args)
+
+
 def cmd_docs_render(args: argparse.Namespace) -> int:
     _ensure_implemented("docs.render")
     return _run_delegated(
@@ -2511,6 +2779,51 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--with-context", action="store_true")
     p.add_argument("--context-pack")
     p.set_defaults(func=cmd_codex_prompt_build, facade_command="codex.prompt.build")
+
+    ui = sub.add_parser("ui", help="UI support commands")
+    ui_sub = ui.add_subparsers(dest="ui_action", required=True)
+
+    p = ui_sub.add_parser("run", help="Run one selected task using effective UI settings")
+    p.add_argument("task_ref")
+    p.add_argument("--confirm", action="store_true")
+    p.add_argument(
+        "--preflight",
+        action="store_true",
+        help="Run configured Codex command preflight before confirmed executable run",
+    )
+    p.add_argument(
+        "--ci",
+        action="store_true",
+        help=(
+            "Use CI exit codes: completed=0, failed=1, blocked=2. "
+            "Without this flag, human safe-stop behavior is unchanged."
+        ),
+    )
+    p.set_defaults(func=cmd_ui_run, facade_command="ui.run")
+
+    p = ui_sub.add_parser("preflight", help="Check effective UI Codex command readiness")
+    p.add_argument("--timeout-sec", type=int, default=30)
+    p.add_argument(
+        "--ci",
+        action="store_true",
+        help="Use CI exit codes: passed=0, failed=1, blocked=2.",
+    )
+    p.set_defaults(func=cmd_ui_preflight, facade_command="ui.preflight")
+
+    settings = ui_sub.add_parser("settings", help="Project-local UI settings commands")
+    settings_sub = settings.add_subparsers(dest="ui_settings_action", required=True)
+
+    p = settings_sub.add_parser("show", help="Show effective UI settings")
+    p.set_defaults(func=cmd_ui_settings_show, facade_command="ui.settings.show")
+
+    p = settings_sub.add_parser("init", help="Initialize project-local UI settings")
+    p.add_argument("--confirm", action="store_true")
+    p.set_defaults(func=cmd_ui_settings_init, facade_command="ui.settings.init")
+
+    p = settings_sub.add_parser("set", help="Upsert one project-local UI setting")
+    p.add_argument("key")
+    p.add_argument("value")
+    p.set_defaults(func=cmd_ui_settings_set, facade_command="ui.settings.set")
 
     docs = sub.add_parser("docs", help="Documentation-control facade commands")
     docs_sub = docs.add_subparsers(dest="docs_action", required=True)

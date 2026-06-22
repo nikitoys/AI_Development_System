@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `920`
+Revision: `942`
 
 ## Executable Now
 
@@ -18,11 +18,6 @@ Revision: `920`
 - `PIPEF-43 (TASK-122)` [planned] `EPIC-009` priority `1` — PIPE-043 Add fake Codex happy path integration test
 - `PIPEF-44 (TASK-123)` [planned] `EPIC-009` priority `1` — PIPE-044 Add fake reviewer close integration test
 - `PIPEF-45 (TASK-124)` [planned] `EPIC-009` priority `1` — PIPE-045 Update phase pipeline usage guide
-- `PIPEF-46 (TASK-125)` [planned] `EPIC-009` priority `1` — Add UI settings defaults and loader
-- `PIPEF-47 (TASK-126)` [planned] `EPIC-009` priority `1` — Add UI settings CLI commands
-- `PIPEF-48 (TASK-127)` [planned] `EPIC-009` priority `1` — Resolve pipeline policy from UI settings
-- `PIPEF-49 (TASK-128)` [planned] `EPIC-009` priority `1` — Add settings-backed single-task Run command
-- `PIPEF-50 (TASK-129)` [planned] `EPIC-009` priority `1` — Add Codex preflight for UI Run
 
 ## Waiting For Dependencies
 
@@ -256,3 +251,13 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-39 (TASK-118)` [done] `EPIC-009` priority `1` — PIPE-039 Add CI exit-code mode for pipeline
   - `status_not_executable`: status is done
+- `PIPEF-46 (TASK-125)` [done] `EPIC-009` priority `1` — Add UI settings defaults and loader
+  - `status_not_executable`: status is done
+- `PIPEF-47 (TASK-126)` [done] `EPIC-009` priority `1` — Add UI settings CLI commands
+  - `status_not_executable`: status is done
+- `PIPEF-48 (TASK-127)` [done] `EPIC-009` priority `1` — Resolve pipeline policy from UI settings
+  - `status_not_executable`: status is done
+- `PIPEF-49 (TASK-128)` [done] `EPIC-009` priority `1` — Add settings-backed single-task Run command
+  - `status_not_executable`: status is done
+- `PIPEF-50 (TASK-129)` [in_progress] `EPIC-009` priority `1` — Add Codex preflight for UI Run
+  - `status_not_executable`: status is in_progress

@@ -502,6 +502,12 @@ def _redact_prompt_echo(text: str, prompt_text: str) -> str:
 
 
 def _is_sandbox_unavailable(stdout: str, stderr: str) -> bool:
+    return is_sandbox_unavailable_output(stdout, stderr)
+
+
+def is_sandbox_unavailable_output(stdout: str, stderr: str) -> bool:
+    """Return true when captured Codex output indicates sandbox incompatibility."""
+
     return bool(SANDBOX_UNAVAILABLE_RE.search("\n".join((stdout, stderr))))
 
 
