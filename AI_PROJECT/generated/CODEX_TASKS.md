@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `669`
-Current task: `TASK-079`
+Revision: `942`
+Current task: `TASK-129`
 
 ## Epic `EPIC-001`
 
@@ -242,9 +242,9 @@ Acceptance criteria:
 - Validation passes in environments without vector dependencies.
 - Required smoke checks pass or blockers are reported.
 
-### TASK-079 — Compact codexctl execute prompt renderer ⭐
+### TASK-079 — Compact codexctl execute prompt renderer
 
-Status: `in_review`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_4b2c0921708a`, legacy `TASK-079`, aliases `TASK-079`
@@ -1474,7 +1474,7 @@ Acceptance criteria:
 
 ### PIPE-27 (TASK-078) — PIPE-27 Add Persistent Pipeline Session Detail Page
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_bc97855d54fb`, legacy `TASK-078`, aliases `TASK-078`, local `PIPE` / `27`
@@ -1499,3 +1499,812 @@ Acceptance criteria:
 - Unbounded stdout/stderr logs are never stored or rendered.
 - Historical completed sessions can be opened and inspected.
 - Tests and project-control validations pass.
+
+## Epic `EPIC-009`
+
+### PIPEF-01 (TASK-080) — PIPE-001 Add Pipeline PhaseResult model
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_0e3009920745`, legacy `TASK-080`, aliases `TASK-080`, local `PIPEF` / `1`
+
+Add a reusable Pipeline PhaseResult model so every pipeline phase can return one stable, compact outcome contract.
+
+Acceptance criteria:
+
+- PhaseResult can be constructed for passed, blocked, failed, and skipped outcomes.
+- PhaseResult serializes to JSON-compatible data with phase, status, reason, next_action, artifacts, changed_files, generated_files, and events.
+- Invalid phase names or statuses are rejected with a stable pipeline error.
+- No existing pipeline runner behavior is changed by this task.
+
+### PIPEF-02 (TASK-081) — PIPE-002 Extend pipeline sessions with phase fields
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_11c4232541ae`, legacy `TASK-081`, aliases `TASK-081`, local `PIPEF` / `2`
+
+Extend pipeline session state to store the current phase, phase status, blocker reason, next action, and phase history.
+
+Acceptance criteria:
+
+- Newly created pipeline sessions include the phase fields with safe empty defaults.
+- Existing sessions without phase fields continue to pass pipeline validation.
+- Validation rejects malformed phase_history entries when phase fields are present.
+- No generated files are manually edited.
+
+### PIPEF-03 (TASK-082) — PIPE-003 Add phase start and result mutations
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_873cda2f03f6`, legacy `TASK-082`, aliases `TASK-082`, local `PIPEF` / `3`
+
+Add governed mutation helpers for starting a pipeline phase and recording a phase result on a session.
+
+Acceptance criteria:
+
+- Starting a phase records the current phase and running or planned phase status without corrupting step data.
+- Recording a passed phase clears blocked_by and stores the next action.
+- Recording a blocked or failed phase preserves a stable blocker code or reason.
+- All phase mutations write audit events and refresh generated pipeline status through the existing mutation path.
+
+### PIPEF-04 (TASK-083) — PIPE-004 Render phase status in pipeline status output
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_36c75a3cfd8d`, legacy `TASK-083`, aliases `TASK-083`, local `PIPEF` / `4`
+
+Render the current pipeline phase, phase status, blocker, and next action in generated PIPELINE_STATUS.md.
+
+Acceptance criteria:
+
+- PIPELINE_STATUS.md shows Current phase, Phase status, Blocked by, and Next action for the current session.
+- Sessions without phase fields render safe fallback values instead of crashing.
+- Phase history rendering is deterministic across repeated renders.
+- pipeline check-generated can detect stale phase status output.
+
+### PIPEF-05 (TASK-084) — PIPE-005 Register phase pipeline commands
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_cb924136906c`, legacy `TASK-084`, aliases `TASK-084`, local `PIPEF` / `5`
+
+Register the planned phase-based pipeline commands in the command registry and CLI skeleton without implementing phase behavior yet.
+
+Acceptance criteria:
+
+- aictl command list --domain pipeline includes the new phase command names.
+- aictl command describe works for each new phase command.
+- Calling an unimplemented phase command returns a stable not-implemented result instead of crashing.
+- Existing pipeline commands still parse and dispatch as before.
+
+### PIPEF-06 (TASK-085) — PIPE-006 Add pipeline queue preview CLI
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_636788ea2870`, legacy `TASK-085`, aliases `TASK-085`, local `PIPEF` / `6`
+
+Add a read-only pipeline queue preview command that selects the next executable task without mutating project state.
+
+Acceptance criteria:
+
+- pipeline queue preview returns a queue PhaseResult or equivalent read-only payload.
+- The command reports next_task when an executable task exists.
+- The command returns waiting, blocked, and skipped items with reason data.
+- Running the command does not change AI_PROJECT/state, AI_PROJECT/events, or AI_PROJECT/generated.
+
+### PIPEF-07 (TASK-086) — PIPE-007 Normalize queue preview output
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_f7d812720daf`, legacy `TASK-086`, aliases `TASK-086`, local `PIPEF` / `7`
+
+Normalize queue preview output into a compact, stable JSON structure with next task, categories, and reason codes.
+
+Acceptance criteria:
+
+- Queue output contains next_task, executable, waiting, blocked, skipped, and reasons keys.
+- Each non-executable item includes at least one stable reason code.
+- The output is deterministic for the same task state and filters.
+- The normalizer does not mutate QueuePreview or task state.
+
+### PIPEF-08 (TASK-087) — PIPE-008 Return no-task queue outcome
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_883aff079cb5`, legacy `TASK-087`, aliases `TASK-087`, local `PIPEF` / `8`
+
+Return a blocked queue phase outcome when no executable task is available instead of treating an empty queue as a system failure.
+
+Acceptance criteria:
+
+- An empty queue returns a blocked phase outcome with blocked_by NO_EXECUTABLE_TASK.
+- A queue with only waiting or blocked tasks includes categorized reasons in artifacts.
+- The command exits through the normal phase result path, not an exception.
+- No state, events, or generated files are modified.
+
+### PIPEF-09 (TASK-088) — PIPE-009 Narrow Change gate to selected task
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_72da12661a9c`, legacy `TASK-088`, aliases `TASK-088`, local `PIPEF` / `9`
+
+Limit prepare-time Evolution Change approval checks to the selected next task by default.
+
+Acceptance criteria:
+
+- Prepare for one selected task does not create or require Evolution Changes for waiting tasks.
+- Prepare for one selected task does not create or require Evolution Changes for blocked tasks.
+- Approved linked Change detection still passes when the selected task has an approved, in_progress, in_review, or accepted Change.
+- Missing approved Change for the selected task still blocks execution or creates a missing Change according to policy.
+
+### PIPEF-10 (TASK-089) — PIPE-010 Extract prepare phase service
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_9bddf8617da4`, legacy `TASK-089`, aliases `TASK-089`, local `PIPEF` / `10`
+
+Extract a dedicated prepare phase service that sets up the selected task, Context Pack, and Codex prompt without running Codex.
+
+Acceptance criteria:
+
+- pipeline prepare can prepare the selected task without invoking the Codex adapter.
+- The task.prepare_for_codex workflow is invoked only after the selected-task Change gate passes or is intentionally satisfied.
+- A failed prepare workflow returns a blocked or failed prepare PhaseResult with workflow evidence.
+- Successful prepare sets next_action to execute.
+
+### PIPEF-11 (TASK-090) — PIPE-011 Record prepare artifacts
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_709c8d3aac54`, legacy `TASK-090`, aliases `TASK-090`, local `PIPEF` / `11`
+
+Record prepare artifacts on the pipeline session so execute can use the exact generated prompt and context from prepare.
+
+Acceptance criteria:
+
+- A successful prepare result includes task_id, context_pack_path, prompt_path, and prompt_sha256.
+- The session phase history records the same prepare artifact metadata.
+- Execute can read the prepared prompt path and checksum from session evidence.
+- Repeated rendering of pipeline status shows the prepared task and prompt reference without large prompt content.
+
+### PIPEF-12 (TASK-091) — PIPE-012 Add prepare idempotency check
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_4f7a82f8792b`, legacy `TASK-091`, aliases `TASK-091`, local `PIPEF` / `12`
+
+Make repeated prepare calls for the same session and task safe by detecting fresh existing context and prompt artifacts.
+
+Acceptance criteria:
+
+- Running prepare twice for the same unchanged task does not produce conflicting session evidence.
+- Prepare rebuilds when the prompt is missing.
+- Prepare rebuilds when the selected task differs from stored prepare artifacts.
+- The result clearly states whether prepare reused or rebuilt artifacts.
+
+### PIPEF-13 (TASK-092) — PIPE-013 Extract execute phase service
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_6d923b53b481`, legacy `TASK-092`, aliases `TASK-092`, local `PIPEF` / `13`
+
+Extract a dedicated execute phase service that runs or prepares Codex execution without performing report, verify, review, or close work.
+
+Acceptance criteria:
+
+- pipeline execute fails or blocks clearly when prepare evidence is missing.
+- pipeline execute calls the Codex adapter only for policies that allow execution.
+- pipeline execute does not run report gate, machine review, semantic review, close, or commit.
+- Successful execute sets next_action to collect-report.
+
+### PIPEF-14 (TASK-093) — PIPE-014 Decouple report requirement from execute
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_c4834becc0c9`, legacy `TASK-093`, aliases `TASK-093`, local `PIPEF` / `14`
+
+Move structured report presence requirements out of the execute phase so report collection is handled by collect-report.
+
+Acceptance criteria:
+
+- Execute can return passed when the local command succeeds but no report is collected yet.
+- Execute result includes before_report_id and after_report_id when available.
+- Collect-report remains responsible for blocking on missing required report.
+- Existing adapter failures such as timeout, nonzero command, or stale prompt still produce blocked or failed execute outcomes.
+
+### PIPEF-15 (TASK-094) — PIPE-015 Add manual handoff execute mode
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_7a4766c21fbc`, legacy `TASK-094`, aliases `TASK-094`, local `PIPEF` / `15`
+
+Add an explicit manual handoff execute outcome that tells the owner how to run Codex manually and submit a structured report.
+
+Acceptance criteria:
+
+- Manual handoff mode returns status blocked, not failed.
+- The result includes enough information to find the generated prompt.
+- The result includes the structured report submission command or equivalent instruction.
+- No downstream gates are run while manual handoff is unresolved.
+
+### PIPEF-16 (TASK-095) — PIPE-016 Record execute adapter result
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_dc4b0820b89a`, legacy `TASK-095`, aliases `TASK-095`, local `PIPEF` / `16`
+
+Persist Codex adapter execution evidence in the session phase history for debugging and downstream gates.
+
+Acceptance criteria:
+
+- Execute phase history contains adapter evidence after every execute attempt.
+- Stored evidence does not contain the full prompt text.
+- Stored evidence does not contain unbounded stdout or stderr.
+- Downstream phases can determine whether execute passed, blocked, or failed from session evidence.
+
+### PIPEF-17 (TASK-096) — PIPE-017 Add pipeline report template command
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_b759fa4bdb90`, legacy `TASK-096`, aliases `TASK-096`, local `PIPEF` / `17`
+
+Add a pipeline report template command that emits a valid structured report skeleton for the selected task.
+
+Acceptance criteria:
+
+- pipeline report template --task TASK_REF outputs JSON with every required report field.
+- The template includes the selected task_id and optional task_ref when resolvable.
+- The template includes empty changed_files, generated_files, checks, warnings, blockers, and notes arrays.
+- The command does not mutate task_reports.json or any pipeline session state.
+
+### PIPEF-18 (TASK-097) — PIPE-018 Add collect-report phase service
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_1caa1f6c5e32`, legacy `TASK-097`, aliases `TASK-097`, local `PIPEF` / `18`
+
+Add a collect-report phase that finds the latest structured execution report for the current pipeline task.
+
+Acceptance criteria:
+
+- pipeline collect-report returns passed when a structured report exists for the selected task.
+- pipeline collect-report returns blocked, not failed, when the report is missing.
+- The result includes report_id and task_id when a report is found.
+- The phase does not run report schema validation or project tests.
+
+### PIPEF-19 (TASK-098) — PIPE-019 Validate collected report task identity
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_f48405c9bd54`, legacy `TASK-098`, aliases `TASK-098`, local `PIPEF` / `19`
+
+Ensure collect-report accepts only structured reports that belong to the current pipeline task.
+
+Acceptance criteria:
+
+- A report whose task_id differs from the selected task blocks collect-report.
+- A report with mismatched reported_task_id blocks collect-report when present.
+- A report with matching task_id passes identity collection checks.
+- The blocked result includes the expected task id and observed report task id.
+
+### PIPEF-20 (TASK-099) — PIPE-020 Validate report freshness after execute
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_9d547d384917`, legacy `TASK-099`, aliases `TASK-099`, local `PIPEF` / `20`
+
+Ensure collect-report can distinguish a report created for the current execution from an older report.
+
+Acceptance criteria:
+
+- A report submitted after the current execute phase passes freshness checks.
+- An older report blocks collect-report unless allow-existing-report is explicitly used.
+- The result explains whether freshness was based on timestamp, report id, or recovery override.
+- The override is visible in phase artifacts for review.
+
+### PIPEF-21 (TASK-100) — PIPE-021 Extract report schema gate into verify
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_30296d900021`, legacy `TASK-100`, aliases `TASK-100`, local `PIPEF` / `21`
+
+Add a verify phase entry point that runs the structured report gate for the collected report.
+
+Acceptance criteria:
+
+- A valid collected report allows verify to continue to later gates.
+- An invalid report schema blocks or fails verify with report gate issue codes.
+- Report blockers in the structured report prevent verify from passing.
+- Report gate evidence is recorded in the verify phase result.
+
+### PIPEF-22 (TASK-101) — PIPE-022 Add actual git diff gate
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_d73d1dbcef99`, legacy `TASK-101`, aliases `TASK-101`, local `PIPEF` / `22`
+
+Add a git diff gate that reports the actual changed, staged, unstaged, and untracked files in the working tree.
+
+Acceptance criteria:
+
+- The gate returns pass for a clean working tree when no changes are expected.
+- The gate lists modified tracked files from actual git state.
+- The gate lists untracked files from actual git state.
+- The gate returns a stable blocked or failed result if git is unavailable or the path is not a repository.
+
+### PIPEF-23 (TASK-102) — PIPE-023 Compare report files with actual git diff
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_9912805a733c`, legacy `TASK-102`, aliases `TASK-102`, local `PIPEF` / `23`
+
+Block verify when structured report changed_files do not match the actual git diff evidence.
+
+Acceptance criteria:
+
+- Verify blocks when actual changed files are missing from report.changed_files.
+- Verify warns or blocks according to policy when report.changed_files includes files not present in actual diff.
+- The blocked result lists missing and extra file paths.
+- A matching report and actual diff passes this gate.
+
+### PIPEF-24 (TASK-103) — PIPE-024 Enforce allowed files against actual diff
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_fde0437fb3fe`, legacy `TASK-103`, aliases `TASK-103`, local `PIPEF` / `24`
+
+Enforce task allowed_files against the actual git diff instead of relying only on the structured report.
+
+Acceptance criteria:
+
+- Actual changed files inside task.allowed_files pass allowed-files verification.
+- Actual changed files outside task.allowed_files block verify.
+- Governed generated files are treated according to generated file policy instead of broad allow-all behavior.
+- The blocked result lists every out-of-scope path.
+
+### PIPEF-25 (TASK-104) — PIPE-025 Enforce protected files against actual diff
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_be2522d9d039`, legacy `TASK-104`, aliases `TASK-104`, local `PIPEF` / `25`
+
+Block verify when actual git diff includes protected project-control state, event, or ungoverned generated files.
+
+Acceptance criteria:
+
+- Actual changes under AI_PROJECT/state block verify unless made by governed control commands outside executor scope.
+- Actual changes under AI_PROJECT/events block verify unless made by governed control commands outside executor scope.
+- Ungoverned changes under AI_PROJECT/generated block verify.
+- The blocked result lists protected paths and reason codes.
+
+### PIPEF-26 (TASK-105) — PIPE-026 Add project test policy
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_b2b885003472`, legacy `TASK-105`, aliases `TASK-105`, local `PIPEF` / `26`
+
+Add pipeline policy support for explicit project test commands used by the verify phase.
+
+Acceptance criteria:
+
+- Pipeline policy can serialize and deserialize project_tests configuration.
+- Invalid timeout or malformed commands fail policy validation.
+- Default built-in presets remain valid after the new policy field is added.
+- No project test command runs as part of this task.
+
+### PIPEF-27 (TASK-106) — PIPE-027 Record verify evidence
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_9643b73441b8`, legacy `TASK-106`, aliases `TASK-106`, local `PIPEF` / `27`
+
+Record report, git diff, allowed-files, protected-files, and project-test gate evidence in verify phase artifacts.
+
+Acceptance criteria:
+
+- A passed verify phase records report_gate and git_diff_gate evidence.
+- A blocked verify phase records the gate that caused the blocker.
+- Project test evidence is recorded when project tests are configured.
+- The evidence object is compact enough for pipeline status rendering.
+
+### PIPEF-28 (TASK-107) — PIPE-028 Add review prompt build command
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_6375acbf3d8e`, legacy `TASK-107`, aliases `TASK-107`, local `PIPEF` / `28`
+
+Add a review phase mode that builds the semantic Codex review prompt without requiring a reviewer to run immediately.
+
+Acceptance criteria:
+
+- The command builds a review prompt for the selected task after verify evidence exists.
+- The command does not approve, request changes, close tasks, or run Codex execution.
+- The result includes prompt path or prompt checksum evidence.
+- Missing verify evidence blocks review prompt generation with a clear next action.
+
+### PIPEF-29 (TASK-108) — PIPE-029 Accept manual review file
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_6d93844f1bf9`, legacy `TASK-108`, aliases `TASK-108`, local `PIPEF` / `29`
+
+Allow the review phase to accept a manual semantic review JSON file and validate it through the existing Codex review evaluator.
+
+Acceptance criteria:
+
+- A valid manual review file with verdict APPROVE passes the review phase.
+- A valid manual review file with verdict REQUEST_CHANGES blocks the review phase.
+- Malformed manual review JSON fails or blocks with a stable review output error.
+- The review phase records review_id, verdict, findings, and risks in bounded artifacts.
+
+### PIPEF-30 (TASK-109) — PIPE-030 Add reviewer command adapter
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_de35437400fb`, legacy `TASK-109`, aliases `TASK-109`, local `PIPEF` / `30`
+
+Add a reviewer command adapter that sends the review prompt to a local command and parses JSON reviewer output.
+
+Acceptance criteria:
+
+- A reviewer command returning valid APPROVE JSON can pass the review phase.
+- A reviewer command returning REQUEST_CHANGES JSON blocks the review phase.
+- A reviewer command timeout or nonzero exit returns a stable blocked or failed review outcome.
+- Reviewer command evidence is stored without unbounded stdout or stderr.
+
+### PIPEF-31 (TASK-110) — PIPE-031 Handle review request changes outcome
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_9538af470a51`, legacy `TASK-110`, aliases `TASK-110`, local `PIPEF` / `31`
+
+Map semantic review REQUEST_CHANGES into a normal blocked pipeline outcome with a clear rework next action.
+
+Acceptance criteria:
+
+- REQUEST_CHANGES does not produce a failed system result.
+- The blocked review result includes reviewer findings.
+- The next_action tells the owner how to proceed with rework.
+- APPROVE and BLOCKED verdicts continue to map to their intended outcomes.
+
+### PIPEF-32 (TASK-111) — PIPE-032 Add close phase preflight
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_e617943698e4`, legacy `TASK-111`, aliases `TASK-111`, local `PIPEF` / `32`
+
+Add a close phase preflight that requires successful prepare, execute, collect-report, verify, and APPROVE review evidence.
+
+Acceptance criteria:
+
+- pipeline close --confirm blocks when prepare evidence is missing.
+- pipeline close --confirm blocks when verify did not pass.
+- pipeline close --confirm blocks when review did not return APPROVE.
+- A complete approved phase history allows close preflight to pass.
+
+### PIPEF-33 (TASK-112) — PIPE-033 Extract task close action
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_00193f76204e`, legacy `TASK-112`, aliases `TASK-112`, local `PIPEF` / `33`
+
+Implement the close phase task lifecycle action that approves and marks the reviewed task done after preflight passes.
+
+Acceptance criteria:
+
+- The selected task transitions to done only after review APPROVE evidence exists.
+- Close records task approval or close workflow evidence.
+- Task close failures produce blocked or failed close outcomes with workflow details.
+- No Evolution Change acceptance or commit is performed by this task.
+
+### PIPEF-34 (TASK-113) — PIPE-034 Accept linked Evolution Change on close
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_9f4eba5ef15d`, legacy `TASK-113`, aliases `TASK-113`, local `PIPEF` / `34`
+
+Allow the close phase to accept linked Evolution Changes after the selected task has been closed successfully.
+
+Acceptance criteria:
+
+- A linked acceptable Change can move to accepted after the task is done.
+- A linked Change is not accepted before the task close action succeeds.
+- Non-acceptable Change statuses are reported as blocked or skipped with reason data.
+- Close artifacts include accepted_change_ids when acceptance succeeds.
+
+### PIPEF-35 (TASK-114) — PIPE-035 Add optional local commit close step
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_2e14c59cc470`, legacy `TASK-114`, aliases `TASK-114`, local `PIPEF` / `35`
+
+Add an optional local-only commit step to close when policy explicitly allows local commits.
+
+Acceptance criteria:
+
+- No commit is created when commit policy is disabled.
+- A local commit is created only when policy enables local-only commit and readiness checks pass.
+- The result records the local commit hash when commit succeeds.
+- Push and merge are not performed or authorized by this step.
+
+### PIPEF-36 (TASK-115) — PIPE-036 Clear execution state after close
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_16c2364694a6`, legacy `TASK-115`, aliases `TASK-115`, local `PIPEF` / `36`
+
+Clear stale Codex and current execution state after the selected task is closed.
+
+Acceptance criteria:
+
+- After close, current Codex execution no longer targets the closed task.
+- Cleanup is skipped with a clear reason if execution state targets another task.
+- Generated output is refreshed through existing render or clear commands.
+- No protected state or generated file is edited manually.
+
+### PIPEF-37 (TASK-116) — PIPE-037 Rewrite run-next as phase dispatcher
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_fa83e9639822`, legacy `TASK-116`, aliases `TASK-116`, local `PIPEF` / `37`
+
+Rewrite pipeline run-next to dispatch exactly one next required phase instead of executing the full lifecycle monolith.
+
+Acceptance criteria:
+
+- run-next executes at most one phase per call.
+- run-next no longer directly performs prepare, execute, verify, review, and close logic in one function body.
+- Blocked phase outcomes are returned with blocked_by and next_action.
+- Existing tests or smoke checks for run-next are updated to expect phase dispatch behavior.
+
+### PIPEF-38 (TASK-117) — PIPE-038 Rewrite run-until-blocker with phase outcomes
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_78e3f020194d`, legacy `TASK-117`, aliases `TASK-117`, local `PIPEF` / `38`
+
+Rewrite pipeline run-until-blocker to continue across passed phases and stop on blocked, failed, or completed outcomes.
+
+Acceptance criteria:
+
+- run-until-blocker continues after a passed prepare phase.
+- run-until-blocker continues after a passed verify phase.
+- run-until-blocker stops with clear owner_action_required on blocked collect-report or review outcomes.
+- max_steps still stops the batch run safely.
+
+### PIPEF-39 (TASK-118) — PIPE-039 Add CI exit-code mode for pipeline
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_69240c03bede`, legacy `TASK-118`, aliases `TASK-118`, local `PIPEF` / `39`
+
+Add a CI-oriented exit-code mode where blocked and failed pipeline outcomes produce nonzero process exit codes.
+
+Acceptance criteria:
+
+- pipeline run-next --ci exits 0 for passed or completed outcomes.
+- pipeline run-next --ci exits 2 for blocked outcomes.
+- pipeline run-next --ci exits 1 for failed outcomes.
+- Default non-CI behavior remains compatible with human safe-stop usage.
+
+### PIPEF-40 (TASK-119) — PIPE-040 Add tests for phase model and mutations
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_5bcaf7cb78cb`, legacy `TASK-119`, aliases `TASK-119`, local `PIPEF` / `40`
+
+Add tests for PhaseResult serialization, session phase fields, and governed phase mutation helpers.
+
+Acceptance criteria:
+
+- Tests pass for all PhaseResult statuses.
+- Tests prove legacy pipeline sessions remain valid.
+- Tests prove phase results append to phase_history.
+- Tests prove terminal sessions reject new phase mutations.
+
+### PIPEF-41 (TASK-120) — PIPE-041 Add tests for queue prepare execute report phases
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_5c3a3cffb80a`, legacy `TASK-120`, aliases `TASK-120`, local `PIPEF` / `41`
+
+Add tests for the queue, prepare, execute, and collect-report phase boundaries using fake state and adapters.
+
+Acceptance criteria:
+
+- Queue tests prove no state or generated files are written by preview.
+- Prepare tests verify Codex adapter is not called.
+- Execute tests verify report gate is not called.
+- Collect-report tests verify task identity and missing report outcomes.
+
+### PIPEF-42 (TASK-121) — PIPE-042 Add tests for git diff gate
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_5517275e5470`, legacy `TASK-121`, aliases `TASK-121`, local `PIPEF` / `42`
+
+Add focused tests for actual git diff gate and file-scope comparison behavior.
+
+Acceptance criteria:
+
+- The git diff gate detects changed tracked files.
+- The git diff gate detects untracked files.
+- Verify comparison blocks when actual files are missing from the report.
+- Protected file changes are blocked with stable reason codes.
+
+### PIPEF-43 (TASK-122) — PIPE-043 Add fake Codex happy path integration test
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_6d574d8b0795`, legacy `TASK-122`, aliases `TASK-122`, local `PIPEF` / `43`
+
+Add an integration test where a fake Codex adapter creates a structured report and the pipeline advances through verify.
+
+Acceptance criteria:
+
+- The integration test reaches verify passed with fake Codex execution.
+- The test uses only temporary project state and local fake commands.
+- The report contains changed_files matching actual diff evidence.
+- Phase history includes queue, prepare, execute, collect-report, and verify outcomes.
+
+### PIPEF-44 (TASK-123) — PIPE-044 Add fake reviewer close integration test
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_99b00cf46e71`, legacy `TASK-123`, aliases `TASK-123`, local `PIPEF` / `44`
+
+Add an integration test where a fake reviewer returns APPROVE and the pipeline reaches close.
+
+Acceptance criteria:
+
+- The integration test reaches review passed with fake reviewer output.
+- The close phase runs only after review APPROVE.
+- The selected task reaches done or the expected governed close status.
+- The test records review_id and close artifacts in phase history.
+
+### PIPEF-45 (TASK-124) — PIPE-045 Update phase pipeline usage guide
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_925d6a510dc5`, legacy `TASK-124`, aliases `TASK-124`, local `PIPEF` / `45`
+
+Add user-facing documentation for the phase-based pipeline commands, outcomes, and common blocked states.
+
+Acceptance criteria:
+
+- The guide shows the command sequence: queue preview, prepare, execute, collect-report, verify, review, close.
+- The guide explains blocked outcomes as normal owner-action states.
+- The guide documents CI exit codes for passed, blocked, and failed outcomes.
+- ai-system/README.md links to the new usage guide.
+
+### PIPEF-46 (TASK-125) — Add UI settings defaults and loader
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_ca80acf6a7d4`, legacy `TASK-125`, aliases `TASK-125`, local `PIPEF` / `46`
+
+Add a UI settings module that returns built-in defaults and optionally overlays AI_PROJECT/config/ui_settings.json.
+
+Acceptance criteria:
+
+- Effective settings contain command_line set to codex exec by default.
+- Effective settings contain default_policy set to supervised_executable_local_commit by default.
+- Missing AI_PROJECT/config/ui_settings.json does not produce an error.
+- Existing ui_settings.json overrides default values.
+- Invalid non-object JSON settings fail with a clear validation error.
+
+### PIPEF-47 (TASK-126) — Add UI settings CLI commands
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_066a06b4cf1f`, legacy `TASK-126`, aliases `TASK-126`, local `PIPEF` / `47`
+
+Add aictl UI settings commands to show, initialize, and upsert project-local UI settings.
+
+Acceptance criteria:
+
+- ui settings show prints effective settings and indicates whether they came from defaults or project file.
+- ui settings init --confirm creates AI_PROJECT/config/ui_settings.json with minimal default settings.
+- ui settings init without --confirm refuses to write.
+- ui settings set command_line "codex exec" writes or updates the command_line key.
+- ui settings set some_random_key value adds a new top-level key with string value.
+- Settings writes preserve schema_version when present.
+
+### PIPEF-48 (TASK-127) — Resolve pipeline policy from UI settings
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_3a16c86f2cb8`, legacy `TASK-127`, aliases `TASK-127`, local `PIPEF` / `48`
+
+Add a settings-aware policy resolver that applies default_policy and command_line to executable pipeline runs.
+
+Acceptance criteria:
+
+- default_policy resolves to supervised_executable_local_commit when no settings file exists.
+- command_line codex exec maps to local command arguments equivalent to codex exec.
+- Executable policy allowlist matches the configured command_line.
+- Non-executable policies do not require command_line application.
+- Invalid or unknown default_policy fails with a clear error.
+
+### PIPEF-49 (TASK-128) — Add settings-backed single-task Run command
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_2cfb601bb104`, legacy `TASK-128`, aliases `TASK-128`, local `PIPEF` / `49`
+
+Add a CLI command that runs one selected task using effective UI settings for policy and command configuration.
+
+Acceptance criteria:
+
+- aictl ui run TASK_REF creates or delegates to a single-task pipeline session.
+- The command uses default_policy from effective UI settings.
+- The command uses command_line from effective UI settings for executable policies.
+- The command requires confirmation before executing run-until-blocker.
+- The command returns a clear completed, blocked, or failed result.
+- The command does not directly edit AI_PROJECT/state task files outside existing governed pipeline commands.
+
+### PIPEF-50 (TASK-129) — Add Codex preflight for UI Run ⭐
+
+Status: `in_progress`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_e7309de4e114`, legacy `TASK-129`, aliases `TASK-129`, local `PIPEF` / `50`
+
+Add a Codex executable preflight that checks the configured command before launching an executable Run.
+
+Acceptance criteria:
+
+- Preflight returns passed when the configured command exits successfully.
+- Preflight returns a blocked result when bwrap, RTM_NEWADDR, user namespace, or Operation not permitted appears in output.
+- Preflight uses the effective command_line setting.
+- Preflight does not write project-control state or generated files.
+- UI Run can use the preflight result to block executable execution before starting a session.

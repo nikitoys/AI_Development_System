@@ -184,6 +184,32 @@ class CodexExecutionPolicy:
 
 
 @dataclass(frozen=True)
+class ProjectTestsPolicy:
+    commands: Any = ()
+    timeout_sec: Any = 300
+    blocking: Any = True
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "commands": _commands_to_list(self.commands),
+            "timeout_sec": self.timeout_sec,
+            "blocking": self.blocking,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any] | None) -> "ProjectTestsPolicy":
+        if data is None:
+            return cls()
+        if not isinstance(data, Mapping):
+            raise TypeError("Expected mapping for policy field: project_tests")
+        return cls(
+            commands=_command_matrix(data.get("commands", ())),
+            timeout_sec=data.get("timeout_sec", cls.timeout_sec),
+            blocking=data.get("blocking", cls.blocking),
+        )
+
+
+@dataclass(frozen=True)
 class ReviewPolicy:
     require_machine_review: bool = False
     required_machine_outcome: MachineReviewOutcome = MachineReviewOutcome.NONE
@@ -310,6 +336,7 @@ class PipelinePolicy:
     evolution: EvolutionChangePolicy = EvolutionChangePolicy()
     token_budget: TokenBudgetPolicy = TokenBudgetPolicy()
     codex: CodexExecutionPolicy = CodexExecutionPolicy()
+    project_tests: ProjectTestsPolicy = ProjectTestsPolicy()
     review: ReviewPolicy = ReviewPolicy()
     rework: ReworkPolicy = ReworkPolicy()
     batch: BatchPolicy = BatchPolicy()
@@ -324,7 +351,7 @@ class PipelinePolicy:
         return validate_policy(self)
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        data = {
             "name": self.name,
             "queue": self.queue.to_dict(),
             "evolution": self.evolution.to_dict(),
@@ -336,6 +363,9 @@ class PipelinePolicy:
             "closure": self.closure.to_dict(),
             "commit": self.commit.to_dict(),
         }
+        if self.project_tests != ProjectTestsPolicy():
+            data["project_tests"] = self.project_tests.to_dict()
+        return data
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "PipelinePolicy":
@@ -345,6 +375,9 @@ class PipelinePolicy:
             evolution=EvolutionChangePolicy.from_dict(_mapping(data, "evolution")),
             token_budget=TokenBudgetPolicy.from_dict(_mapping(data, "token_budget")),
             codex=CodexExecutionPolicy.from_dict(_mapping(data, "codex")),
+            project_tests=ProjectTestsPolicy.from_dict(
+                data.get("project_tests") if isinstance(data, Mapping) else None
+            ),
             review=ReviewPolicy.from_dict(_mapping(data, "review")),
             rework=ReworkPolicy.from_dict(_mapping(data, "rework")),
             batch=BatchPolicy.from_dict(data.get("batch") if isinstance(data, Mapping) else None),
@@ -403,6 +436,7 @@ def validate_policy(policy: PipelinePolicy) -> ValidationResult:
         )
 
     _validate_token_thresholds(policy, result)
+    _validate_project_tests_policy(policy, result)
 
     if (
         policy.codex.mode == CodexExecutionMode.RUN_CODEX
@@ -689,6 +723,83 @@ def _validate_batch_policy(policy: PipelinePolicy, result: ValidationResult) -> 
         )
 
 
+def _validate_project_tests_policy(policy: PipelinePolicy, result: ValidationResult) -> None:
+    project_tests = policy.project_tests
+    if not isinstance(project_tests.timeout_sec, int) or isinstance(
+        project_tests.timeout_sec,
+        bool,
+    ):
+        result.add_error(
+            "POLICY_PROJECT_TESTS_INVALID_TIMEOUT",
+            "Project test timeout must be an integer number of seconds.",
+            path="project_tests.timeout_sec",
+        )
+    elif project_tests.timeout_sec < 1:
+        result.add_error(
+            "POLICY_PROJECT_TESTS_INVALID_TIMEOUT",
+            "Project test timeout must be at least one second.",
+            path="project_tests.timeout_sec",
+        )
+    elif project_tests.timeout_sec > 3600:
+        result.add_error(
+            "POLICY_PROJECT_TESTS_TIMEOUT_TOO_LARGE",
+            "Project test timeout must not exceed 3600 seconds.",
+            path="project_tests.timeout_sec",
+        )
+
+    if not isinstance(project_tests.blocking, bool):
+        result.add_error(
+            "POLICY_PROJECT_TESTS_INVALID_BLOCKING",
+            "Project test blocking flag must be a boolean.",
+            path="project_tests.blocking",
+        )
+
+    commands = project_tests.commands
+    if isinstance(commands, (str, bytes, bytearray)) or not isinstance(commands, (list, tuple)):
+        result.add_error(
+            "POLICY_PROJECT_TESTS_INVALID_COMMANDS",
+            "Project test commands must be a list of explicit argv arrays.",
+            path="project_tests.commands",
+        )
+        return
+
+    for index, command in enumerate(commands):
+        path = "project_tests.commands[{}]".format(index)
+        if isinstance(command, (str, bytes, bytearray)) or not isinstance(command, (list, tuple)):
+            result.add_error(
+                "POLICY_PROJECT_TEST_COMMAND_MUST_BE_ARGV",
+                "Project test command must be an explicit argv array, not a shell string.",
+                path=path,
+            )
+            continue
+        if not command:
+            result.add_error(
+                "POLICY_PROJECT_TEST_COMMAND_EMPTY",
+                "Project test command must include at least one argv element.",
+                path=path,
+            )
+            continue
+
+        invalid_part = False
+        for part_index, part in enumerate(command):
+            if not isinstance(part, str) or not part.strip():
+                result.add_error(
+                    "POLICY_PROJECT_TEST_COMMAND_INVALID_PART",
+                    "Project test command argv elements must be non-empty strings.",
+                    path="{}[{}]".format(path, part_index),
+                )
+                invalid_part = True
+        if invalid_part:
+            continue
+
+        if len(command) == 1 and _looks_like_shell_command(command[0]):
+            result.add_error(
+                "POLICY_PROJECT_TEST_COMMAND_MUST_BE_ARGV",
+                "Project test command must be split into explicit argv elements.",
+                path=path,
+            )
+
+
 def _validate_codex_adapter_policy(policy: PipelinePolicy, result: ValidationResult) -> None:
     if policy.codex.timeout_sec < 1:
         result.add_error(
@@ -774,6 +885,39 @@ def _string_tuple(value: Any) -> tuple[str, ...]:
     if not isinstance(value, (list, tuple)):
         return ()
     return tuple(str(item) for item in value if str(item).strip())
+
+
+def _command_matrix(value: Any) -> Any:
+    if value is None:
+        return ()
+    if isinstance(value, (str, bytes, bytearray)) or not isinstance(value, (list, tuple)):
+        return value
+    commands: list[Any] = []
+    for command in value:
+        if isinstance(command, (str, bytes, bytearray)) or not isinstance(command, (list, tuple)):
+            commands.append(command)
+        else:
+            commands.append(tuple(command))
+    return tuple(commands)
+
+
+def _commands_to_list(value: Any) -> Any:
+    if isinstance(value, (str, bytes, bytearray)) or not isinstance(value, (list, tuple)):
+        return value
+    commands: list[Any] = []
+    for command in value:
+        if isinstance(command, (str, bytes, bytearray)) or not isinstance(command, (list, tuple)):
+            commands.append(command)
+        else:
+            commands.append(list(command))
+    return commands
+
+
+def _looks_like_shell_command(value: str) -> bool:
+    try:
+        return len(shlex.split(value)) > 1
+    except ValueError:
+        return True
 
 
 def policy_behavior_label(policy: PipelinePolicy) -> str:

@@ -70,6 +70,8 @@ class CodexAdapterResult:
     stdout_bytes: int = 0
     stderr_bytes: int = 0
     report_required: bool = True
+    before_report_id: str = ""
+    after_report_id: str = ""
     report_id: str = ""
     report_instruction: str = ""
 
@@ -101,6 +103,8 @@ class CodexAdapterResult:
             "stdout_bytes": self.stdout_bytes,
             "stderr_bytes": self.stderr_bytes,
             "report_required": self.report_required,
+            "before_report_id": self.before_report_id,
+            "after_report_id": self.after_report_id,
             "report_id": self.report_id,
             "report_instruction": self.report_instruction,
         }
@@ -135,6 +139,8 @@ def run_codex_adapter(
         returncode: int | None = None,
         stdout: str = "",
         stderr: str = "",
+        before_report_id: str = "",
+        after_report_id: str = "",
         report_id: str = "",
         report_instruction: str = "",
     ) -> CodexAdapterResult:
@@ -168,6 +174,8 @@ def run_codex_adapter(
             stdout_bytes=stdout_bytes,
             stderr_bytes=stderr_bytes,
             report_required=policy.codex.require_report,
+            before_report_id=before_report_id,
+            after_report_id=after_report_id,
             report_id=report_id,
             report_instruction=report_instruction,
         )
@@ -243,6 +251,7 @@ def run_codex_adapter(
             runner=runner,
         )
     except subprocess.TimeoutExpired as exc:
+        after_report = _latest_report_id(root_path, task_id)
         return finish(
             status="failed",
             code=CODE_LOCAL_COMMAND_TIMEOUT,
@@ -251,11 +260,14 @@ def run_codex_adapter(
             timed_out=True,
             stdout=_decode_output(exc.stdout),
             stderr=_decode_output(exc.stderr),
+            before_report_id=before_report,
+            after_report_id=after_report,
             report_instruction=instruction,
         )
 
     stdout = _decode_output(completed.stdout)
     stderr = _decode_output(completed.stderr)
+    after_report = _latest_report_id(root_path, task_id)
     if completed.returncode != 0:
         if _is_sandbox_unavailable(stdout, stderr):
             return finish(
@@ -266,6 +278,8 @@ def run_codex_adapter(
                 returncode=completed.returncode,
                 stdout=stdout,
                 stderr=stderr,
+                before_report_id=before_report,
+                after_report_id=after_report,
                 report_instruction=instruction,
             )
         return finish(
@@ -276,10 +290,11 @@ def run_codex_adapter(
             returncode=completed.returncode,
             stdout=stdout,
             stderr=stderr,
+            before_report_id=before_report,
+            after_report_id=after_report,
             report_instruction=instruction,
         )
 
-    after_report = _latest_report_id(root_path, task_id)
     if policy.codex.require_report and (not after_report or after_report == before_report):
         return finish(
             status="blocked",
@@ -289,9 +304,17 @@ def run_codex_adapter(
             returncode=completed.returncode,
             stdout=stdout,
             stderr=stderr,
+            before_report_id=before_report,
+            after_report_id=after_report,
             report_instruction=instruction,
         )
 
+    report_id = (
+        after_report
+        if after_report
+        and (not policy.codex.require_report or after_report != before_report)
+        else ""
+    )
     return finish(
         status="passed",
         code=CODE_LOCAL_COMMAND_PASSED,
@@ -300,7 +323,9 @@ def run_codex_adapter(
         returncode=completed.returncode,
         stdout=stdout,
         stderr=stderr,
-        report_id=after_report,
+        before_report_id=before_report,
+        after_report_id=after_report,
+        report_id=report_id,
         report_instruction=instruction,
     )
 
@@ -477,6 +502,12 @@ def _redact_prompt_echo(text: str, prompt_text: str) -> str:
 
 
 def _is_sandbox_unavailable(stdout: str, stderr: str) -> bool:
+    return is_sandbox_unavailable_output(stdout, stderr)
+
+
+def is_sandbox_unavailable_output(stdout: str, stderr: str) -> bool:
+    """Return true when captured Codex output indicates sandbox incompatibility."""
+
     return bool(SANDBOX_UNAVAILABLE_RE.search("\n".join((stdout, stderr))))
 
 

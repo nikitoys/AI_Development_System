@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 669,
-  "current_task_id": "TASK-079",
+  "revision": 942,
+  "current_task_id": "TASK-129",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-20T15:53:14Z",
+  "updated_at": "2026-06-22T10:38:40Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -6077,7 +6077,7 @@
       "id": "TASK-078",
       "epic_id": "EPIC-007",
       "title": "PIPE-27 Add Persistent Pipeline Session Detail Page",
-      "status": "in_progress",
+      "status": "done",
       "summary": "Add a persistent per-session Pipeline page with real-time steps, expandable logs, session actions, artifacts, audit events, and historical availability.",
       "description": "Create a dedicated Web Control Center page for each pipeline session, for example /pipeline/sessions/PSESS-012. The page must let the Human Owner watch a running session in real time, inspect all steps and logs, execute safe session actions, and reopen the page later as a permanent execution record.",
       "priority": 1,
@@ -6195,11 +6195,11 @@
         "The page should be useful both as a live monitor and as a historical post-mortem view."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T16:35:05Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-20T13:05:41Z",
-      "updated_at": "2026-06-20T13:07:36Z",
+      "updated_at": "2026-06-20T16:35:05Z",
       "uid": "tsk_bc97855d54fb",
       "ref": "PIPE-27",
       "legacy_id": "TASK-078",
@@ -6213,7 +6213,7 @@
       "id": "TASK-079",
       "epic_id": "EPIC-003",
       "title": "Compact codexctl execute prompt renderer",
-      "status": "in_review",
+      "status": "done",
       "summary": "Render CODEX_PROMPT.md as a compact execute-profile contract instead of embedding full Context Pack content.",
       "description": "Implement approved CHG-062 by updating scripts/codexctl.py prompt rendering and focused tests so context-aware Codex prompt packages remain compact and bounded.",
       "priority": 1,
@@ -6267,16 +6267,2862 @@
       ],
       "notes": [],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T16:33:30Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-20T15:44:36Z",
-      "updated_at": "2026-06-20T15:53:14Z",
+      "updated_at": "2026-06-20T16:33:31Z",
       "uid": "tsk_4b2c0921708a",
       "legacy_id": "TASK-079",
       "aliases": [
         "TASK-079"
       ]
+    },
+    {
+      "id": "TASK-080",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-001 Add Pipeline PhaseResult model",
+      "status": "done",
+      "summary": "Add a reusable Pipeline PhaseResult model so every pipeline phase can return one stable, compact outcome contract.",
+      "description": "Introduce the shared data shape that later queue, prepare, execute, verify, review, and close phases will use.",
+      "priority": 1,
+      "order": 1,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create a pipeline phase result module with a typed PhaseResult representation.",
+        "Support phase statuses passed, blocked, failed, and skipped.",
+        "Expose conversion helpers for CommandResult-compatible JSON payloads.",
+        "Add lightweight validation for required phase result fields."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/phase.py"
+      ],
+      "acceptance_criteria": [
+        "PhaseResult can be constructed for passed, blocked, failed, and skipped outcomes.",
+        "PhaseResult serializes to JSON-compatible data with phase, status, reason, next_action, artifacts, changed_files, generated_files, and events.",
+        "Invalid phase names or statuses are rejected with a stable pipeline error.",
+        "No existing pipeline runner behavior is changed by this task."
+      ],
+      "review_instructions": [
+        "Check that the model is generic and does not hard-code one specific phase.",
+        "Check that the JSON shape remains compact enough for generated status output."
+      ],
+      "notes": [
+        "This task is foundational and should not add CLI commands.",
+        "Draft ref: PIPE-001."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T17:17:14Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:32Z",
+      "updated_at": "2026-06-20T17:17:15Z",
+      "uid": "tsk_0e3009920745",
+      "ref": "PIPEF-01",
+      "legacy_id": "TASK-080",
+      "aliases": [
+        "TASK-080"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 1
+    },
+    {
+      "id": "TASK-081",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-002 Extend pipeline sessions with phase fields",
+      "status": "done",
+      "summary": "Extend pipeline session state to store the current phase, phase status, blocker reason, next action, and phase history.",
+      "description": "Add backward-compatible session fields so old pipeline state can still validate while new phase data is available.",
+      "priority": 1,
+      "order": 2,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add current_phase, current_phase_status, blocked_by, next_action, and phase_history fields to new sessions.",
+        "Update pipeline state validation to accept missing phase fields on legacy sessions.",
+        "Normalize missing phase fields during safe state mutation where appropriate.",
+        "Keep existing step fields unchanged for compatibility."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/session.py",
+        "ai_project_ctl/pipeline/state.py"
+      ],
+      "acceptance_criteria": [
+        "Newly created pipeline sessions include the phase fields with safe empty defaults.",
+        "Existing sessions without phase fields continue to pass pipeline validation.",
+        "Validation rejects malformed phase_history entries when phase fields are present.",
+        "No generated files are manually edited."
+      ],
+      "review_instructions": [
+        "Confirm that this is backward-compatible with existing pipeline_sessions.json.",
+        "Check that step history and phase history are not conflated."
+      ],
+      "notes": [
+        "Draft ref: PIPE-002."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T17:27:38Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:33Z",
+      "updated_at": "2026-06-20T17:27:38Z",
+      "uid": "tsk_11c4232541ae",
+      "ref": "PIPEF-02",
+      "legacy_id": "TASK-081",
+      "aliases": [
+        "TASK-081"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 2
+    },
+    {
+      "id": "TASK-082",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-003 Add phase start and result mutations",
+      "status": "done",
+      "summary": "Add governed mutation helpers for starting a pipeline phase and recording a phase result on a session.",
+      "description": "Introduce the service-level API used by future phase commands instead of overloading generic step results.",
+      "priority": 1,
+      "order": 3,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Implement start_phase for active pipeline sessions.",
+        "Implement record_phase_result using the PhaseResult model.",
+        "Append each completed phase outcome to phase_history.",
+        "Update current_phase, current_phase_status, blocked_by, and next_action atomically."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/session.py",
+        "ai_project_ctl/pipeline/phase.py"
+      ],
+      "acceptance_criteria": [
+        "Starting a phase records the current phase and running or planned phase status without corrupting step data.",
+        "Recording a passed phase clears blocked_by and stores the next action.",
+        "Recording a blocked or failed phase preserves a stable blocker code or reason.",
+        "All phase mutations write audit events and refresh generated pipeline status through the existing mutation path."
+      ],
+      "review_instructions": [
+        "Confirm all mutations use the existing pipeline lock and audit path.",
+        "Check that terminal sessions cannot accept new phase results."
+      ],
+      "notes": [
+        "Draft ref: PIPE-003."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T17:36:00Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:33Z",
+      "updated_at": "2026-06-20T17:36:01Z",
+      "uid": "tsk_873cda2f03f6",
+      "ref": "PIPEF-03",
+      "legacy_id": "TASK-082",
+      "aliases": [
+        "TASK-082"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 3
+    },
+    {
+      "id": "TASK-083",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-004 Render phase status in pipeline status output",
+      "status": "done",
+      "summary": "Render the current pipeline phase, phase status, blocker, and next action in generated PIPELINE_STATUS.md.",
+      "description": "Make the generated human-readable status explain where a pipeline session is stopped and what the owner should do next.",
+      "priority": 1,
+      "order": 4,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Update pipeline status rendering to include phase fields for each session.",
+        "Highlight the current session phase, blocked_by, and next_action.",
+        "Render compact phase history without duplicating large artifacts.",
+        "Keep existing session and step summary sections readable."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/state.py"
+      ],
+      "acceptance_criteria": [
+        "PIPELINE_STATUS.md shows Current phase, Phase status, Blocked by, and Next action for the current session.",
+        "Sessions without phase fields render safe fallback values instead of crashing.",
+        "Phase history rendering is deterministic across repeated renders.",
+        "pipeline check-generated can detect stale phase status output."
+      ],
+      "review_instructions": [
+        "Check that generated output remains readable with multiple sessions.",
+        "Verify no protected generated file is edited manually."
+      ],
+      "notes": [
+        "Draft ref: PIPE-004."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T17:46:58Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:34Z",
+      "updated_at": "2026-06-20T17:47:00Z",
+      "uid": "tsk_36c75a3cfd8d",
+      "ref": "PIPEF-04",
+      "legacy_id": "TASK-083",
+      "aliases": [
+        "TASK-083"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 4
+    },
+    {
+      "id": "TASK-084",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-005 Register phase pipeline commands",
+      "status": "done",
+      "summary": "Register the planned phase-based pipeline commands in the command registry and CLI skeleton without implementing phase behavior yet.",
+      "description": "Expose command metadata for queue preview, prepare, execute, collect-report, verify, review, and close phases.",
+      "priority": 1,
+      "order": 5,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add command registry descriptors for all phase-based pipeline commands.",
+        "Add CLI parser entries that can be wired to phase implementations incrementally.",
+        "Return a clear not-implemented CommandResult for commands whose service does not exist yet.",
+        "Keep existing pipeline run-next and run-until-blocker commands available."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/core/registry.py",
+        "scripts/aictl.py"
+      ],
+      "acceptance_criteria": [
+        "aictl command list --domain pipeline includes the new phase command names.",
+        "aictl command describe works for each new phase command.",
+        "Calling an unimplemented phase command returns a stable not-implemented result instead of crashing.",
+        "Existing pipeline commands still parse and dispatch as before."
+      ],
+      "review_instructions": [
+        "Check registry read/write metadata for each phase command.",
+        "Confirm CLI names are consistent with the phase names used in PhaseResult."
+      ],
+      "notes": [
+        "Draft ref: PIPE-005."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T18:06:35Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:35Z",
+      "updated_at": "2026-06-20T18:06:36Z",
+      "uid": "tsk_cb924136906c",
+      "ref": "PIPEF-05",
+      "legacy_id": "TASK-084",
+      "aliases": [
+        "TASK-084"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 5
+    },
+    {
+      "id": "TASK-085",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-006 Add pipeline queue preview CLI",
+      "status": "done",
+      "summary": "Add a read-only pipeline queue preview command that selects the next executable task without mutating project state.",
+      "description": "Wrap the existing queue planner behind a user-facing phase command.",
+      "priority": 1,
+      "order": 6,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create a queue phase service that calls preview_queue for the selected session or explicit filters.",
+        "Add aictl pipeline queue preview CLI dispatch.",
+        "Support JSON output for next task and categorized queue items.",
+        "Ensure the command does not write state, events, or generated files."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/queue_phase.py",
+        "scripts/aictl.py"
+      ],
+      "acceptance_criteria": [
+        "pipeline queue preview returns a queue PhaseResult or equivalent read-only payload.",
+        "The command reports next_task when an executable task exists.",
+        "The command returns waiting, blocked, and skipped items with reason data.",
+        "Running the command does not change AI_PROJECT/state, AI_PROJECT/events, or AI_PROJECT/generated."
+      ],
+      "review_instructions": [
+        "Confirm this command is read-only even when a current session exists.",
+        "Check that queue ordering matches existing task execution ordering."
+      ],
+      "notes": [
+        "Draft ref: PIPE-006."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T18:26:18Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:35Z",
+      "updated_at": "2026-06-20T18:26:18Z",
+      "uid": "tsk_636788ea2870",
+      "ref": "PIPEF-06",
+      "legacy_id": "TASK-085",
+      "aliases": [
+        "TASK-085"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 6
+    },
+    {
+      "id": "TASK-086",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-007 Normalize queue preview output",
+      "status": "done",
+      "summary": "Normalize queue preview output into a compact, stable JSON structure with next task, categories, and reason codes.",
+      "description": "Make queue results easy for humans, CLI consumers, and later phase dispatchers to consume.",
+      "priority": 1,
+      "order": 7,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a queue output normalizer for next_task, executable, waiting, blocked, skipped, and reasons.",
+        "Preserve original queue item identifiers such as id, ref, title, status, and epic_id.",
+        "Collect top-level reason summaries for non-executable selected tasks.",
+        "Keep the raw internal QueuePreview available only inside artifacts when needed."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/queue_phase.py"
+      ],
+      "acceptance_criteria": [
+        "Queue output contains next_task, executable, waiting, blocked, skipped, and reasons keys.",
+        "Each non-executable item includes at least one stable reason code.",
+        "The output is deterministic for the same task state and filters.",
+        "The normalizer does not mutate QueuePreview or task state."
+      ],
+      "review_instructions": [
+        "Check that no large task descriptions are copied into the queue output.",
+        "Verify that invalid task refs are represented as skipped with reason codes."
+      ],
+      "notes": [
+        "Draft ref: PIPE-007."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T18:35:48Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:36Z",
+      "updated_at": "2026-06-20T18:35:49Z",
+      "uid": "tsk_f7d812720daf",
+      "ref": "PIPEF-07",
+      "legacy_id": "TASK-086",
+      "aliases": [
+        "TASK-086"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 7
+    },
+    {
+      "id": "TASK-087",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-008 Return no-task queue outcome",
+      "status": "done",
+      "summary": "Return a blocked queue phase outcome when no executable task is available instead of treating an empty queue as a system failure.",
+      "description": "Make an empty or fully blocked queue a clear owner-action state.",
+      "priority": 1,
+      "order": 8,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Detect when queue preview has no next_task.",
+        "Return status blocked with blocked_by NO_EXECUTABLE_TASK.",
+        "Populate next_action with concise guidance to create or unblock a ready task.",
+        "Keep no-task handling read-only."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/queue_phase.py"
+      ],
+      "acceptance_criteria": [
+        "An empty queue returns a blocked phase outcome with blocked_by NO_EXECUTABLE_TASK.",
+        "A queue with only waiting or blocked tasks includes categorized reasons in artifacts.",
+        "The command exits through the normal phase result path, not an exception.",
+        "No state, events, or generated files are modified."
+      ],
+      "review_instructions": [
+        "Confirm the no-task outcome is blocked, not failed.",
+        "Check that queue completion and queue blocked can be distinguished by reason data."
+      ],
+      "notes": [
+        "Draft ref: PIPE-008."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T18:49:58Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:37Z",
+      "updated_at": "2026-06-20T18:49:59Z",
+      "uid": "tsk_883aff079cb5",
+      "ref": "PIPEF-08",
+      "legacy_id": "TASK-087",
+      "aliases": [
+        "TASK-087"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 8
+    },
+    {
+      "id": "TASK-088",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-009 Narrow Change gate to selected task",
+      "status": "done",
+      "summary": "Limit prepare-time Evolution Change approval checks to the selected next task by default.",
+      "description": "Prevent prepare from creating or requiring changes for waiting or blocked queue items unless an explicit full-queue preflight is later requested.",
+      "priority": 1,
+      "order": 9,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Refactor Change gate selection so default prepare behavior uses only queue_preview.next_task.",
+        "Keep existing queue-wide helper available for future explicit full-queue preflight behavior.",
+        "Update gate details to identify the selected task and linked changes inspected.",
+        "Preserve existing approved-change semantics for the selected task."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/runner.py",
+        "ai_project_ctl/pipeline/prepare_phase.py"
+      ],
+      "acceptance_criteria": [
+        "Prepare for one selected task does not create or require Evolution Changes for waiting tasks.",
+        "Prepare for one selected task does not create or require Evolution Changes for blocked tasks.",
+        "Approved linked Change detection still passes when the selected task has an approved, in_progress, in_review, or accepted Change.",
+        "Missing approved Change for the selected task still blocks execution or creates a missing Change according to policy."
+      ],
+      "review_instructions": [
+        "Check that queue-wide behavior is not silently removed if used by existing runner code.",
+        "Verify selected-task gate data is visible in phase artifacts."
+      ],
+      "notes": [
+        "Draft ref: PIPE-009."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T19:03:00Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:37Z",
+      "updated_at": "2026-06-20T19:03:00Z",
+      "uid": "tsk_72da12661a9c",
+      "ref": "PIPEF-09",
+      "legacy_id": "TASK-088",
+      "aliases": [
+        "TASK-088"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 9
+    },
+    {
+      "id": "TASK-089",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-010 Extract prepare phase service",
+      "status": "done",
+      "summary": "Extract a dedicated prepare phase service that sets up the selected task, Context Pack, and Codex prompt without running Codex.",
+      "description": "Use the existing task.prepare_for_codex workflow through a phase-specific boundary.",
+      "priority": 1,
+      "order": 10,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create prepare_phase service that resolves the selected task from the session or queue preview.",
+        "Run selected-task approved Change gate before preparing execution context.",
+        "Call the existing task.prepare_for_codex workflow for current task, validation, context, prompt, and doctor steps.",
+        "Return a PhaseResult that stops before any Codex execution."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/prepare_phase.py",
+        "scripts/aictl.py"
+      ],
+      "acceptance_criteria": [
+        "pipeline prepare can prepare the selected task without invoking the Codex adapter.",
+        "The task.prepare_for_codex workflow is invoked only after the selected-task Change gate passes or is intentionally satisfied.",
+        "A failed prepare workflow returns a blocked or failed prepare PhaseResult with workflow evidence.",
+        "Successful prepare sets next_action to execute."
+      ],
+      "review_instructions": [
+        "Confirm prepare does not call run_codex_adapter, report gate, machine review, semantic review, close, or commit.",
+        "Check that prepare surfaces workflow step failures clearly."
+      ],
+      "notes": [
+        "Draft ref: PIPE-010."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T19:24:11Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:38Z",
+      "updated_at": "2026-06-20T19:24:11Z",
+      "uid": "tsk_9bddf8617da4",
+      "ref": "PIPEF-10",
+      "legacy_id": "TASK-089",
+      "aliases": [
+        "TASK-089"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 10
+    },
+    {
+      "id": "TASK-090",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-011 Record prepare artifacts",
+      "status": "done",
+      "summary": "Record prepare artifacts on the pipeline session so execute can use the exact generated prompt and context from prepare.",
+      "description": "Persist the minimal evidence needed to detect stale prompts and support later phase execution.",
+      "priority": 1,
+      "order": 11,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Capture task_id, context_pack_path, prompt_path, and prompt_sha256 after prepare.",
+        "Store prepare artifact metadata in the phase result artifacts.",
+        "Persist prepare artifact metadata into the session phase history.",
+        "Expose the prompt path and checksum in JSON output."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/prepare_phase.py",
+        "ai_project_ctl/pipeline/session.py"
+      ],
+      "acceptance_criteria": [
+        "A successful prepare result includes task_id, context_pack_path, prompt_path, and prompt_sha256.",
+        "The session phase history records the same prepare artifact metadata.",
+        "Execute can read the prepared prompt path and checksum from session evidence.",
+        "Repeated rendering of pipeline status shows the prepared task and prompt reference without large prompt content."
+      ],
+      "review_instructions": [
+        "Check that artifact paths are repository-relative where possible.",
+        "Verify prompt content itself is not duplicated into pipeline session state."
+      ],
+      "notes": [
+        "Draft ref: PIPE-011."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T19:40:03Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:39Z",
+      "updated_at": "2026-06-20T19:40:10Z",
+      "uid": "tsk_709c8d3aac54",
+      "ref": "PIPEF-11",
+      "legacy_id": "TASK-090",
+      "aliases": [
+        "TASK-090"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 11
+    },
+    {
+      "id": "TASK-091",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-012 Add prepare idempotency check",
+      "status": "done",
+      "summary": "Make repeated prepare calls for the same session and task safe by detecting fresh existing context and prompt artifacts.",
+      "description": "Reduce unnecessary state churn and avoid stale prompt confusion when prepare is run more than once.",
+      "priority": 1,
+      "order": 12,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Detect whether the latest prepare artifacts still match the current selected task.",
+        "Reuse fresh prompt metadata when no rebuild is required.",
+        "Rebuild context and prompt only when the selected task or generated artifacts are missing or stale.",
+        "Return a clear artifact freshness reason in the prepare result."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/prepare_phase.py"
+      ],
+      "acceptance_criteria": [
+        "Running prepare twice for the same unchanged task does not produce conflicting session evidence.",
+        "Prepare rebuilds when the prompt is missing.",
+        "Prepare rebuilds when the selected task differs from stored prepare artifacts.",
+        "The result clearly states whether prepare reused or rebuilt artifacts."
+      ],
+      "review_instructions": [
+        "Check that idempotency does not hide stale task lifecycle state.",
+        "Verify stale generated output is still detected by existing check-generated commands."
+      ],
+      "notes": [
+        "Draft ref: PIPE-012."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T20:17:00Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:40Z",
+      "updated_at": "2026-06-20T20:17:01Z",
+      "uid": "tsk_4f7a82f8792b",
+      "ref": "PIPEF-12",
+      "legacy_id": "TASK-091",
+      "aliases": [
+        "TASK-091"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 12
+    },
+    {
+      "id": "TASK-092",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-013 Extract execute phase service",
+      "status": "done",
+      "summary": "Extract a dedicated execute phase service that runs or prepares Codex execution without performing report, verify, review, or close work.",
+      "description": "Separate Codex adapter execution from downstream pipeline gates.",
+      "priority": 1,
+      "order": 13,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create execute_phase service that loads prepare artifacts from the current session.",
+        "Call run_codex_adapter using the session policy and prepared prompt evidence.",
+        "Expose adapter status, command, return code, duration, and output refs in the PhaseResult.",
+        "Wire aictl pipeline execute to the execute phase service."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/execute_phase.py",
+        "scripts/aictl.py"
+      ],
+      "acceptance_criteria": [
+        "pipeline execute fails or blocks clearly when prepare evidence is missing.",
+        "pipeline execute calls the Codex adapter only for policies that allow execution.",
+        "pipeline execute does not run report gate, machine review, semantic review, close, or commit.",
+        "Successful execute sets next_action to collect-report."
+      ],
+      "review_instructions": [
+        "Confirm execute reads prepare artifacts instead of rebuilding the prompt.",
+        "Check that adapter output snippets remain bounded and redacted."
+      ],
+      "notes": [
+        "Draft ref: PIPE-013."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T20:35:11Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:40Z",
+      "updated_at": "2026-06-20T20:35:11Z",
+      "uid": "tsk_6d923b53b481",
+      "ref": "PIPEF-13",
+      "legacy_id": "TASK-092",
+      "aliases": [
+        "TASK-092"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 13
+    },
+    {
+      "id": "TASK-093",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-014 Decouple report requirement from execute",
+      "status": "done",
+      "summary": "Move structured report presence requirements out of the execute phase so report collection is handled by collect-report.",
+      "description": "Allow execution to complete even when Codex does not submit the report during the same process.",
+      "priority": 1,
+      "order": 14,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Adjust execute phase handling so missing new report becomes a collect-report next action, not an execute failure.",
+        "Preserve adapter evidence about whether a report was observed before and after execution.",
+        "Keep policy.require_report meaningful for collect-report and verify phases.",
+        "Avoid changing report schema validation in this task."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/execute_phase.py",
+        "ai_project_ctl/pipeline/codex_adapter.py"
+      ],
+      "acceptance_criteria": [
+        "Execute can return passed when the local command succeeds but no report is collected yet.",
+        "Execute result includes before_report_id and after_report_id when available.",
+        "Collect-report remains responsible for blocking on missing required report.",
+        "Existing adapter failures such as timeout, nonzero command, or stale prompt still produce blocked or failed execute outcomes."
+      ],
+      "review_instructions": [
+        "Check that this does not silently accept missing reports as verified work.",
+        "Verify the behavior is controlled by phase boundaries rather than weakening report validation."
+      ],
+      "notes": [
+        "Draft ref: PIPE-014."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T20:45:26Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:41Z",
+      "updated_at": "2026-06-20T20:45:26Z",
+      "uid": "tsk_c4834becc0c9",
+      "ref": "PIPEF-14",
+      "legacy_id": "TASK-093",
+      "aliases": [
+        "TASK-093"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 14
+    },
+    {
+      "id": "TASK-094",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-015 Add manual handoff execute mode",
+      "status": "done",
+      "summary": "Add an explicit manual handoff execute outcome that tells the owner how to run Codex manually and submit a structured report.",
+      "description": "Make manual execution a normal blocked state rather than an ambiguous adapter failure.",
+      "priority": 1,
+      "order": 15,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Map manual handoff adapter mode to a blocked execute PhaseResult.",
+        "Include prompt_path and report submission instruction in artifacts.",
+        "Set blocked_by to MANUAL_HANDOFF_REQUIRED.",
+        "Set next_action to run Codex manually and submit the structured report."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/execute_phase.py"
+      ],
+      "acceptance_criteria": [
+        "Manual handoff mode returns status blocked, not failed.",
+        "The result includes enough information to find the generated prompt.",
+        "The result includes the structured report submission command or equivalent instruction.",
+        "No downstream gates are run while manual handoff is unresolved."
+      ],
+      "review_instructions": [
+        "Check that manual handoff does not mutate task completion or review state.",
+        "Verify the instruction does not include raw prompt content."
+      ],
+      "notes": [
+        "Draft ref: PIPE-015."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T20:57:36Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:42Z",
+      "updated_at": "2026-06-20T20:57:36Z",
+      "uid": "tsk_7a4766c21fbc",
+      "ref": "PIPEF-15",
+      "legacy_id": "TASK-094",
+      "aliases": [
+        "TASK-094"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 15
+    },
+    {
+      "id": "TASK-095",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-016 Record execute adapter result",
+      "status": "done",
+      "summary": "Persist Codex adapter execution evidence in the session phase history for debugging and downstream gates.",
+      "description": "Make execute results traceable without storing unbounded stdout, stderr, or prompt content.",
+      "priority": 1,
+      "order": 16,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Store adapter status, code, reason, command_ref, returncode, duration, output refs, and report ids in execute artifacts.",
+        "Record the execute PhaseResult through the phase mutation service.",
+        "Bound any stdout and stderr summaries using the existing adapter snippet strategy.",
+        "Expose execute evidence in JSON output and generated pipeline status."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/execute_phase.py",
+        "ai_project_ctl/pipeline/session.py"
+      ],
+      "acceptance_criteria": [
+        "Execute phase history contains adapter evidence after every execute attempt.",
+        "Stored evidence does not contain the full prompt text.",
+        "Stored evidence does not contain unbounded stdout or stderr.",
+        "Downstream phases can determine whether execute passed, blocked, or failed from session evidence."
+      ],
+      "review_instructions": [
+        "Check that sensitive prompt echo redaction remains effective.",
+        "Verify repeated execute attempts append distinct phase history entries."
+      ],
+      "notes": [
+        "Draft ref: PIPE-016."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T21:09:15Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:43Z",
+      "updated_at": "2026-06-20T21:09:15Z",
+      "uid": "tsk_dc4b0820b89a",
+      "ref": "PIPEF-16",
+      "legacy_id": "TASK-095",
+      "aliases": [
+        "TASK-095"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 16
+    },
+    {
+      "id": "TASK-096",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-017 Add pipeline report template command",
+      "status": "done",
+      "summary": "Add a pipeline report template command that emits a valid structured report skeleton for the selected task.",
+      "description": "Give Codex or a human executor a concrete JSON shape that satisfies the report gate schema.",
+      "priority": 1,
+      "order": 17,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create a report template helper for the current or explicitly provided task.",
+        "Populate required report keys with safe empty defaults and the selected task_id.",
+        "Add aictl pipeline report template CLI command.",
+        "Keep the command read-only and do not submit the report automatically."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/report_template.py",
+        "scripts/aictl.py"
+      ],
+      "acceptance_criteria": [
+        "pipeline report template --task TASK_REF outputs JSON with every required report field.",
+        "The template includes the selected task_id and optional task_ref when resolvable.",
+        "The template includes empty changed_files, generated_files, checks, warnings, blockers, and notes arrays.",
+        "The command does not mutate task_reports.json or any pipeline session state."
+      ],
+      "review_instructions": [
+        "Check that the template matches the report gate allowed fields.",
+        "Verify the command output is JSON-only when --json is requested."
+      ],
+      "notes": [
+        "Draft ref: PIPE-017."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T21:22:22Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:43Z",
+      "updated_at": "2026-06-20T21:22:22Z",
+      "uid": "tsk_b759fa4bdb90",
+      "ref": "PIPEF-17",
+      "legacy_id": "TASK-096",
+      "aliases": [
+        "TASK-096"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 17
+    },
+    {
+      "id": "TASK-097",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-018 Add collect-report phase service",
+      "status": "done",
+      "summary": "Add a collect-report phase that finds the latest structured execution report for the current pipeline task.",
+      "description": "Separate report discovery from execute and verify.",
+      "priority": 1,
+      "order": 18,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create collect_report_phase service that resolves the current session task.",
+        "Find the latest task report for that task from task report state.",
+        "Return passed with report_id when a report is available.",
+        "Return blocked with REPORT_MISSING when no report is available."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/report_phase.py",
+        "scripts/aictl.py"
+      ],
+      "acceptance_criteria": [
+        "pipeline collect-report returns passed when a structured report exists for the selected task.",
+        "pipeline collect-report returns blocked, not failed, when the report is missing.",
+        "The result includes report_id and task_id when a report is found.",
+        "The phase does not run report schema validation or project tests."
+      ],
+      "review_instructions": [
+        "Confirm collect-report does not accept reports for a different task.",
+        "Check missing task report state is handled as blocked when appropriate."
+      ],
+      "notes": [
+        "Draft ref: PIPE-018."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T21:35:19Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:44Z",
+      "updated_at": "2026-06-20T21:35:19Z",
+      "uid": "tsk_1caa1f6c5e32",
+      "ref": "PIPEF-18",
+      "legacy_id": "TASK-097",
+      "aliases": [
+        "TASK-097"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 18
+    },
+    {
+      "id": "TASK-098",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-019 Validate collected report task identity",
+      "status": "done",
+      "summary": "Ensure collect-report accepts only structured reports that belong to the current pipeline task.",
+      "description": "Prevent accidental or stale cross-task reports from advancing the pipeline.",
+      "priority": 1,
+      "order": 19,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Compare collected report task_id with the selected pipeline task id.",
+        "Reject mismatched reported_task_id or task_ref when identity fields are present.",
+        "Return blocked with REPORT_TASK_MISMATCH for identity mismatch.",
+        "Include identity evidence in collect-report artifacts."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/report_phase.py"
+      ],
+      "acceptance_criteria": [
+        "A report whose task_id differs from the selected task blocks collect-report.",
+        "A report with mismatched reported_task_id blocks collect-report when present.",
+        "A report with matching task_id passes identity collection checks.",
+        "The blocked result includes the expected task id and observed report task id."
+      ],
+      "review_instructions": [
+        "Check that identity validation is consistent with report gate identity rules.",
+        "Verify this task does not duplicate full report schema validation."
+      ],
+      "notes": [
+        "Draft ref: PIPE-019."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T21:44:50Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:45Z",
+      "updated_at": "2026-06-20T21:44:51Z",
+      "uid": "tsk_f48405c9bd54",
+      "ref": "PIPEF-19",
+      "legacy_id": "TASK-098",
+      "aliases": [
+        "TASK-098"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 19
+    },
+    {
+      "id": "TASK-099",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-020 Validate report freshness after execute",
+      "status": "done",
+      "summary": "Ensure collect-report can distinguish a report created for the current execution from an older report.",
+      "description": "Prevent old task reports from accidentally satisfying a new execute phase.",
+      "priority": 1,
+      "order": 20,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Record execute start and finish evidence usable by collect-report.",
+        "Compare the collected report timestamp or report id against execute evidence.",
+        "Block stale reports by default with REPORT_STALE.",
+        "Support an explicit allow-existing-report option for supervised recovery."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/report_phase.py",
+        "ai_project_ctl/pipeline/execute_phase.py",
+        "scripts/aictl.py"
+      ],
+      "acceptance_criteria": [
+        "A report submitted after the current execute phase passes freshness checks.",
+        "An older report blocks collect-report unless allow-existing-report is explicitly used.",
+        "The result explains whether freshness was based on timestamp, report id, or recovery override.",
+        "The override is visible in phase artifacts for review."
+      ],
+      "review_instructions": [
+        "Check that freshness logic is deterministic and does not rely on local timezone formatting.",
+        "Verify the recovery override cannot silently hide task identity mismatch."
+      ],
+      "notes": [
+        "Draft ref: PIPE-020."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T22:02:40Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:45Z",
+      "updated_at": "2026-06-20T22:02:40Z",
+      "uid": "tsk_9d547d384917",
+      "ref": "PIPEF-20",
+      "legacy_id": "TASK-099",
+      "aliases": [
+        "TASK-099"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 20
+    },
+    {
+      "id": "TASK-100",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-021 Extract report schema gate into verify",
+      "status": "done",
+      "summary": "Add a verify phase entry point that runs the structured report gate for the collected report.",
+      "description": "Start the verify phase with existing schema, task identity, blocker, checks, token usage, and file scope validation.",
+      "priority": 1,
+      "order": 21,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create verify_phase service and aictl pipeline verify CLI dispatch.",
+        "Call evaluate_report_gate for the current pipeline task.",
+        "Convert report gate pass, warn, and fail outcomes into verify PhaseResult outcomes.",
+        "Store report gate evidence in verify artifacts."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/verify_phase.py",
+        "scripts/aictl.py"
+      ],
+      "acceptance_criteria": [
+        "A valid collected report allows verify to continue to later gates.",
+        "An invalid report schema blocks or fails verify with report gate issue codes.",
+        "Report blockers in the structured report prevent verify from passing.",
+        "Report gate evidence is recorded in the verify phase result."
+      ],
+      "review_instructions": [
+        "Check that warn status policy is explicit and not silently treated as full approval.",
+        "Verify this task does not run semantic review or close behavior."
+      ],
+      "notes": [
+        "Draft ref: PIPE-021."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T22:17:44Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:46Z",
+      "updated_at": "2026-06-20T22:17:45Z",
+      "uid": "tsk_30296d900021",
+      "ref": "PIPEF-21",
+      "legacy_id": "TASK-100",
+      "aliases": [
+        "TASK-100"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 21
+    },
+    {
+      "id": "TASK-101",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-022 Add actual git diff gate",
+      "status": "done",
+      "summary": "Add a git diff gate that reports the actual changed, staged, unstaged, and untracked files in the working tree.",
+      "description": "Provide reliable file-change evidence independent of the structured report.",
+      "priority": 1,
+      "order": 22,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create git_diff_gate module for deterministic working tree inspection.",
+        "Collect tracked changed files from git diff and git status.",
+        "Collect untracked files from git status porcelain output.",
+        "Return a compact gate result with status, code, reason, and file lists."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/git_diff_gate.py"
+      ],
+      "acceptance_criteria": [
+        "The gate returns pass for a clean working tree when no changes are expected.",
+        "The gate lists modified tracked files from actual git state.",
+        "The gate lists untracked files from actual git state.",
+        "The gate returns a stable blocked or failed result if git is unavailable or the path is not a repository."
+      ],
+      "review_instructions": [
+        "Check that command execution is bounded and does not mutate the repository.",
+        "Verify paths are normalized relative to the repository root."
+      ],
+      "notes": [
+        "Draft ref: PIPE-022."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T22:31:04Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:47Z",
+      "updated_at": "2026-06-20T22:31:04Z",
+      "uid": "tsk_d73d1dbcef99",
+      "ref": "PIPEF-22",
+      "legacy_id": "TASK-101",
+      "aliases": [
+        "TASK-101"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 22
+    },
+    {
+      "id": "TASK-102",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-023 Compare report files with actual git diff",
+      "status": "done",
+      "summary": "Block verify when structured report changed_files do not match the actual git diff evidence.",
+      "description": "Prevent Codex or manual reports from omitting or inventing changed files.",
+      "priority": 1,
+      "order": 23,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Compare report_gate.changed_files against git_diff_gate changed file evidence.",
+        "Detect actual changed files missing from the report.",
+        "Detect report-listed changed files that are not present in actual diff when appropriate.",
+        "Add comparison evidence to verify artifacts."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/verify_phase.py",
+        "ai_project_ctl/pipeline/git_diff_gate.py"
+      ],
+      "acceptance_criteria": [
+        "Verify blocks when actual changed files are missing from report.changed_files.",
+        "Verify warns or blocks according to policy when report.changed_files includes files not present in actual diff.",
+        "The blocked result lists missing and extra file paths.",
+        "A matching report and actual diff passes this gate."
+      ],
+      "review_instructions": [
+        "Check handling of generated files and clean working tree cases.",
+        "Verify comparison behavior is deterministic with sorted paths."
+      ],
+      "notes": [
+        "Draft ref: PIPE-023."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T22:56:54Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:48Z",
+      "updated_at": "2026-06-20T22:56:54Z",
+      "uid": "tsk_9912805a733c",
+      "ref": "PIPEF-23",
+      "legacy_id": "TASK-102",
+      "aliases": [
+        "TASK-102"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 23
+    },
+    {
+      "id": "TASK-103",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-024 Enforce allowed files against actual diff",
+      "status": "done",
+      "summary": "Enforce task allowed_files against the actual git diff instead of relying only on the structured report.",
+      "description": "Make file-scope enforcement resistant to incomplete reports.",
+      "priority": 1,
+      "order": 24,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Match actual changed files against the selected task allowed_files patterns.",
+        "Allow governed generated output only through explicit generated file evidence.",
+        "Block verify for out-of-scope actual changed files.",
+        "Record allowed-files gate evidence in verify artifacts."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/verify_phase.py",
+        "ai_project_ctl/pipeline/git_diff_gate.py"
+      ],
+      "acceptance_criteria": [
+        "Actual changed files inside task.allowed_files pass allowed-files verification.",
+        "Actual changed files outside task.allowed_files block verify.",
+        "Governed generated files are treated according to generated file policy instead of broad allow-all behavior.",
+        "The blocked result lists every out-of-scope path."
+      ],
+      "review_instructions": [
+        "Check glob matching semantics against existing machine review behavior.",
+        "Verify protected files are not accidentally allowed through broad patterns."
+      ],
+      "notes": [
+        "Draft ref: PIPE-024."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T23:08:04Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:48Z",
+      "updated_at": "2026-06-20T23:08:05Z",
+      "uid": "tsk_fde0437fb3fe",
+      "ref": "PIPEF-24",
+      "legacy_id": "TASK-103",
+      "aliases": [
+        "TASK-103"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 24
+    },
+    {
+      "id": "TASK-104",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-025 Enforce protected files against actual diff",
+      "status": "done",
+      "summary": "Block verify when actual git diff includes protected project-control state, event, or ungoverned generated files.",
+      "description": "Protect AI_PROJECT state, events, and generated outputs from direct or untracked mutation.",
+      "priority": 1,
+      "order": 25,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Detect actual changes under AI_PROJECT/state and AI_PROJECT/events.",
+        "Detect generated file changes not produced by governed generated output paths.",
+        "Block verify for protected file violations.",
+        "Record protected-file gate evidence in verify artifacts."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/verify_phase.py",
+        "ai_project_ctl/pipeline/git_diff_gate.py"
+      ],
+      "acceptance_criteria": [
+        "Actual changes under AI_PROJECT/state block verify unless made by governed control commands outside executor scope.",
+        "Actual changes under AI_PROJECT/events block verify unless made by governed control commands outside executor scope.",
+        "Ungoverned changes under AI_PROJECT/generated block verify.",
+        "The blocked result lists protected paths and reason codes."
+      ],
+      "review_instructions": [
+        "Check that this gate aligns with existing protected project file checks.",
+        "Verify generated output produced by the pipeline itself is not falsely attributed to Codex edits."
+      ],
+      "notes": [
+        "Draft ref: PIPE-025."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T23:28:12Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:49Z",
+      "updated_at": "2026-06-20T23:28:12Z",
+      "uid": "tsk_be2522d9d039",
+      "ref": "PIPEF-25",
+      "legacy_id": "TASK-104",
+      "aliases": [
+        "TASK-104"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 25
+    },
+    {
+      "id": "TASK-105",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-026 Add project test policy",
+      "status": "done",
+      "summary": "Add pipeline policy support for explicit project test commands used by the verify phase.",
+      "description": "Allow product tests to be configured separately from project-control validation checks.",
+      "priority": 1,
+      "order": 26,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a project_tests policy section with commands, timeout_sec, and blocking fields.",
+        "Validate project test policy values and command shape.",
+        "Expose project test policy in policy serialization and preset loading.",
+        "Keep default presets safe with no automatic project tests unless configured."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/policy.py",
+        "ai_project_ctl/pipeline/policy_store.py"
+      ],
+      "acceptance_criteria": [
+        "Pipeline policy can serialize and deserialize project_tests configuration.",
+        "Invalid timeout or malformed commands fail policy validation.",
+        "Default built-in presets remain valid after the new policy field is added.",
+        "No project test command runs as part of this task."
+      ],
+      "review_instructions": [
+        "Check that command validation does not allow shell-only strings without explicit parsing rules.",
+        "Verify policy backward compatibility for existing stored presets."
+      ],
+      "notes": [
+        "Draft ref: PIPE-026."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-20T23:47:52Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:50Z",
+      "updated_at": "2026-06-20T23:47:52Z",
+      "uid": "tsk_b2b885003472",
+      "ref": "PIPEF-26",
+      "legacy_id": "TASK-105",
+      "aliases": [
+        "TASK-105"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 26
+    },
+    {
+      "id": "TASK-106",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-027 Record verify evidence",
+      "status": "done",
+      "summary": "Record report, git diff, allowed-files, protected-files, and project-test gate evidence in verify phase artifacts.",
+      "description": "Make verify outcomes reviewable and usable by later semantic review.",
+      "priority": 1,
+      "order": 27,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Aggregate verify gate results into one compact verify evidence object.",
+        "Persist verify evidence through record_phase_result.",
+        "Expose verify evidence in JSON output.",
+        "Keep evidence bounded and avoid storing full command output."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/verify_phase.py",
+        "ai_project_ctl/pipeline/session.py"
+      ],
+      "acceptance_criteria": [
+        "A passed verify phase records report_gate and git_diff_gate evidence.",
+        "A blocked verify phase records the gate that caused the blocker.",
+        "Project test evidence is recorded when project tests are configured.",
+        "The evidence object is compact enough for pipeline status rendering."
+      ],
+      "review_instructions": [
+        "Check that verify evidence contains enough detail for review without dumping large logs.",
+        "Verify phase history records one coherent verify result per attempt."
+      ],
+      "notes": [
+        "Draft ref: PIPE-027."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-21T00:08:01Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:51Z",
+      "updated_at": "2026-06-21T00:08:02Z",
+      "uid": "tsk_9643b73441b8",
+      "ref": "PIPEF-27",
+      "legacy_id": "TASK-106",
+      "aliases": [
+        "TASK-106"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 27
+    },
+    {
+      "id": "TASK-107",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-028 Add review prompt build command",
+      "status": "done",
+      "summary": "Add a review phase mode that builds the semantic Codex review prompt without requiring a reviewer to run immediately.",
+      "description": "Support manual and external reviewer workflows by exposing the prompt as a controlled artifact.",
+      "priority": 1,
+      "order": 28,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create review_phase service support for build-prompt-only mode.",
+        "Call build_codex_review_prompt using current task, report gate, and machine or verify evidence.",
+        "Write or return the review prompt through a bounded artifact path or JSON field.",
+        "Add CLI support for pipeline review --build-prompt-only."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/review_phase.py",
+        "scripts/aictl.py"
+      ],
+      "acceptance_criteria": [
+        "The command builds a review prompt for the selected task after verify evidence exists.",
+        "The command does not approve, request changes, close tasks, or run Codex execution.",
+        "The result includes prompt path or prompt checksum evidence.",
+        "Missing verify evidence blocks review prompt generation with a clear next action."
+      ],
+      "review_instructions": [
+        "Check that the prompt is read-only and does not instruct the reviewer to edit files.",
+        "Verify the expected JSON verdict schema is present in the prompt."
+      ],
+      "notes": [
+        "Draft ref: PIPE-028."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-21T18:16:57Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:51Z",
+      "updated_at": "2026-06-21T18:16:57Z",
+      "uid": "tsk_6375acbf3d8e",
+      "ref": "PIPEF-28",
+      "legacy_id": "TASK-107",
+      "aliases": [
+        "TASK-107"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 28
+    },
+    {
+      "id": "TASK-108",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-029 Accept manual review file",
+      "status": "done",
+      "summary": "Allow the review phase to accept a manual semantic review JSON file and validate it through the existing Codex review evaluator.",
+      "description": "Close the current missing reviewer-output gap for supervised manual workflows.",
+      "priority": 1,
+      "order": 29,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add --manual-review-file support to pipeline review.",
+        "Read manual review JSON and pass it as reviewer_output to evaluate_codex_review.",
+        "Map APPROVE, REQUEST_CHANGES, and BLOCKED verdicts into review PhaseResult outcomes.",
+        "Record review_id and reviewer evidence in phase artifacts."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/review_phase.py",
+        "scripts/aictl.py"
+      ],
+      "acceptance_criteria": [
+        "A valid manual review file with verdict APPROVE passes the review phase.",
+        "A valid manual review file with verdict REQUEST_CHANGES blocks the review phase.",
+        "Malformed manual review JSON fails or blocks with a stable review output error.",
+        "The review phase records review_id, verdict, findings, and risks in bounded artifacts."
+      ],
+      "review_instructions": [
+        "Check that manual review cannot bypass failed verify evidence.",
+        "Verify no Markdown wrapper is accepted when JSON-only output is expected."
+      ],
+      "notes": [
+        "Draft ref: PIPE-029."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-21T18:28:56Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:52Z",
+      "updated_at": "2026-06-21T18:28:56Z",
+      "uid": "tsk_6d93844f1bf9",
+      "ref": "PIPEF-29",
+      "legacy_id": "TASK-108",
+      "aliases": [
+        "TASK-108"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 29
+    },
+    {
+      "id": "TASK-109",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-030 Add reviewer command adapter",
+      "status": "done",
+      "summary": "Add a reviewer command adapter that sends the review prompt to a local command and parses JSON reviewer output.",
+      "description": "Enable automated semantic review while preserving explicit policy boundaries.",
+      "priority": 1,
+      "order": 30,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add --reviewer-command support to pipeline review.",
+        "Pass the generated review prompt to the reviewer command through stdin.",
+        "Capture bounded stdout, stderr, returncode, and duration evidence.",
+        "Parse reviewer stdout as JSON reviewer output for evaluate_codex_review."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/review_phase.py",
+        "scripts/aictl.py"
+      ],
+      "acceptance_criteria": [
+        "A reviewer command returning valid APPROVE JSON can pass the review phase.",
+        "A reviewer command returning REQUEST_CHANGES JSON blocks the review phase.",
+        "A reviewer command timeout or nonzero exit returns a stable blocked or failed review outcome.",
+        "Reviewer command evidence is stored without unbounded stdout or stderr."
+      ],
+      "review_instructions": [
+        "Check command execution safety and timeout handling.",
+        "Verify reviewer command is not allowed to mutate task lifecycle state."
+      ],
+      "notes": [
+        "Draft ref: PIPE-030."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-21T18:45:26Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:53Z",
+      "updated_at": "2026-06-21T18:45:26Z",
+      "uid": "tsk_de35437400fb",
+      "ref": "PIPEF-30",
+      "legacy_id": "TASK-109",
+      "aliases": [
+        "TASK-109"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 30
+    },
+    {
+      "id": "TASK-110",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-031 Handle review request changes outcome",
+      "status": "done",
+      "summary": "Map semantic review REQUEST_CHANGES into a normal blocked pipeline outcome with a clear rework next action.",
+      "description": "Treat requested changes as product feedback rather than a system failure.",
+      "priority": 1,
+      "order": 31,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Detect CODEX_REVIEW_REQUEST_CHANGES from manual or command reviewer output.",
+        "Return review status blocked with blocked_by CODEX_REVIEW_REQUEST_CHANGES.",
+        "Set next_action to create rework or move the task to changes_requested.",
+        "Record findings and risks needed for rework planning."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/review_phase.py"
+      ],
+      "acceptance_criteria": [
+        "REQUEST_CHANGES does not produce a failed system result.",
+        "The blocked review result includes reviewer findings.",
+        "The next_action tells the owner how to proceed with rework.",
+        "APPROVE and BLOCKED verdicts continue to map to their intended outcomes."
+      ],
+      "review_instructions": [
+        "Check that Major or Critical findings cannot be combined with APPROVE.",
+        "Verify the outcome is compatible with later rework-loop policy."
+      ],
+      "notes": [
+        "Draft ref: PIPE-031."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-21T18:54:14Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:53Z",
+      "updated_at": "2026-06-21T18:54:14Z",
+      "uid": "tsk_9538af470a51",
+      "ref": "PIPEF-31",
+      "legacy_id": "TASK-110",
+      "aliases": [
+        "TASK-110"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 31
+    },
+    {
+      "id": "TASK-111",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-032 Add close phase preflight",
+      "status": "done",
+      "summary": "Add a close phase preflight that requires successful prepare, execute, collect-report, verify, and APPROVE review evidence.",
+      "description": "Prevent task closure before the phase-based pipeline has completed required gates.",
+      "priority": 1,
+      "order": 32,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create close_phase service with preflight validation.",
+        "Require current task evidence and required phase outcomes before close.",
+        "Require review verdict APPROVE before any task lifecycle close action.",
+        "Return blocked with missing gate details when preflight is incomplete."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/close_phase.py",
+        "scripts/aictl.py"
+      ],
+      "acceptance_criteria": [
+        "pipeline close --confirm blocks when prepare evidence is missing.",
+        "pipeline close --confirm blocks when verify did not pass.",
+        "pipeline close --confirm blocks when review did not return APPROVE.",
+        "A complete approved phase history allows close preflight to pass."
+      ],
+      "review_instructions": [
+        "Check that close cannot be called as a shortcut around review.",
+        "Verify preflight reads phase history deterministically."
+      ],
+      "notes": [
+        "Draft ref: PIPE-032."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-21T19:07:07Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:54Z",
+      "updated_at": "2026-06-21T19:07:07Z",
+      "uid": "tsk_e617943698e4",
+      "ref": "PIPEF-32",
+      "legacy_id": "TASK-111",
+      "aliases": [
+        "TASK-111"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 32
+    },
+    {
+      "id": "TASK-112",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-033 Extract task close action",
+      "status": "done",
+      "summary": "Implement the close phase task lifecycle action that approves and marks the reviewed task done after preflight passes.",
+      "description": "Move task closure out of the monolithic runner into the explicit close phase.",
+      "priority": 1,
+      "order": 33,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Use existing task close or review-close workflow for owner-approved task closure.",
+        "Require confirmation and owner notes where the existing lifecycle requires them.",
+        "Move the selected task to done only after close preflight passes.",
+        "Record task closure workflow evidence in close artifacts."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/close_phase.py"
+      ],
+      "acceptance_criteria": [
+        "The selected task transitions to done only after review APPROVE evidence exists.",
+        "Close records task approval or close workflow evidence.",
+        "Task close failures produce blocked or failed close outcomes with workflow details.",
+        "No Evolution Change acceptance or commit is performed by this task."
+      ],
+      "review_instructions": [
+        "Check that task lifecycle transitions use existing governed commands.",
+        "Verify close does not directly edit task state JSON."
+      ],
+      "notes": [
+        "Draft ref: PIPE-033."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-21T19:25:36Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:55Z",
+      "updated_at": "2026-06-21T19:25:37Z",
+      "uid": "tsk_00193f76204e",
+      "ref": "PIPEF-33",
+      "legacy_id": "TASK-112",
+      "aliases": [
+        "TASK-112"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 33
+    },
+    {
+      "id": "TASK-113",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-034 Accept linked Evolution Change on close",
+      "status": "done",
+      "summary": "Allow the close phase to accept linked Evolution Changes after the selected task has been closed successfully.",
+      "description": "Finish the governance loop by moving the approved linked Change to accepted only when task completion requirements are met.",
+      "priority": 1,
+      "order": 34,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Resolve linked Evolution Changes for the selected closed task.",
+        "Run existing evolution accept workflow when policy allows Change acceptance.",
+        "Record accepted change ids in close artifacts.",
+        "Block or skip acceptance clearly when linked changes are missing or not acceptable."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/close_phase.py"
+      ],
+      "acceptance_criteria": [
+        "A linked acceptable Change can move to accepted after the task is done.",
+        "A linked Change is not accepted before the task close action succeeds.",
+        "Non-acceptable Change statuses are reported as blocked or skipped with reason data.",
+        "Close artifacts include accepted_change_ids when acceptance succeeds."
+      ],
+      "review_instructions": [
+        "Check that existing Evolution lifecycle transition rules are respected.",
+        "Verify owner approval is not invented by the pipeline."
+      ],
+      "notes": [
+        "Draft ref: PIPE-034."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-21T19:42:21Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:55Z",
+      "updated_at": "2026-06-21T19:42:21Z",
+      "uid": "tsk_9f4eba5ef15d",
+      "ref": "PIPEF-34",
+      "legacy_id": "TASK-113",
+      "aliases": [
+        "TASK-113"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 34
+    },
+    {
+      "id": "TASK-114",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-035 Add optional local commit close step",
+      "status": "done",
+      "summary": "Add an optional local-only commit step to close when policy explicitly allows local commits.",
+      "description": "Keep commit creation separate from push or merge behavior.",
+      "priority": 1,
+      "order": 35,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Invoke existing local commit helper after task close and review approval checks pass.",
+        "Require commit readiness policy before creating a local commit.",
+        "Record commit hash and commit gate evidence in close artifacts.",
+        "Ensure push and merge remain impossible through pipeline policy."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/close_phase.py",
+        "ai_project_ctl/pipeline/git_commit.py"
+      ],
+      "acceptance_criteria": [
+        "No commit is created when commit policy is disabled.",
+        "A local commit is created only when policy enables local-only commit and readiness checks pass.",
+        "The result records the local commit hash when commit succeeds.",
+        "Push and merge are not performed or authorized by this step."
+      ],
+      "review_instructions": [
+        "Check that commit policy validation still forbids push and merge.",
+        "Verify commit failure does not falsely mark close as fully completed."
+      ],
+      "notes": [
+        "Draft ref: PIPE-035."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-21T19:59:06Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:56Z",
+      "updated_at": "2026-06-21T19:59:07Z",
+      "uid": "tsk_2e14c59cc470",
+      "ref": "PIPEF-35",
+      "legacy_id": "TASK-114",
+      "aliases": [
+        "TASK-114"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 35
+    },
+    {
+      "id": "TASK-115",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-036 Clear execution state after close",
+      "status": "done",
+      "summary": "Clear stale Codex and current execution state after the selected task is closed.",
+      "description": "Prevent generated current-execution output from continuing to point at a completed task.",
+      "priority": 1,
+      "order": 36,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Clear current Codex execution state when it targets the closed task.",
+        "Refresh generated current execution and task outputs through governed commands.",
+        "Record cleanup actions in close artifacts.",
+        "Skip cleanup safely when current execution targets a different task."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/close_phase.py"
+      ],
+      "acceptance_criteria": [
+        "After close, current Codex execution no longer targets the closed task.",
+        "Cleanup is skipped with a clear reason if execution state targets another task.",
+        "Generated output is refreshed through existing render or clear commands.",
+        "No protected state or generated file is edited manually."
+      ],
+      "review_instructions": [
+        "Check this uses existing codexctl or workflow commands.",
+        "Verify cleanup does not clear unrelated active execution state."
+      ],
+      "notes": [
+        "Draft ref: PIPE-036."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-21T20:13:11Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:57Z",
+      "updated_at": "2026-06-21T20:13:12Z",
+      "uid": "tsk_16c2364694a6",
+      "ref": "PIPEF-36",
+      "legacy_id": "TASK-115",
+      "aliases": [
+        "TASK-115"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 36
+    },
+    {
+      "id": "TASK-116",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-037 Rewrite run-next as phase dispatcher",
+      "status": "done",
+      "summary": "Rewrite pipeline run-next to dispatch exactly one next required phase instead of executing the full lifecycle monolith.",
+      "description": "Use phase outcomes as the execution contract for supervised single-step automation.",
+      "priority": 1,
+      "order": 37,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Determine the next required phase from session phase history.",
+        "Delegate to queue, prepare, execute, collect-report, verify, review, or close services.",
+        "Return the delegated PhaseResult through a CommandResult-compatible wrapper.",
+        "Keep legacy safety gates available during transition without duplicating phase logic."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/runner.py"
+      ],
+      "acceptance_criteria": [
+        "run-next executes at most one phase per call.",
+        "run-next no longer directly performs prepare, execute, verify, review, and close logic in one function body.",
+        "Blocked phase outcomes are returned with blocked_by and next_action.",
+        "Existing tests or smoke checks for run-next are updated to expect phase dispatch behavior."
+      ],
+      "review_instructions": [
+        "Check that the old monolithic path is not left as a conflicting second execution path.",
+        "Verify run-next remains safe for dry-run and supervised policies."
+      ],
+      "notes": [
+        "Draft ref: PIPE-037."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-21T20:37:44Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:58Z",
+      "updated_at": "2026-06-21T20:37:45Z",
+      "uid": "tsk_fa83e9639822",
+      "ref": "PIPEF-37",
+      "legacy_id": "TASK-116",
+      "aliases": [
+        "TASK-116"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 37
+    },
+    {
+      "id": "TASK-117",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-038 Rewrite run-until-blocker with phase outcomes",
+      "status": "done",
+      "summary": "Rewrite pipeline run-until-blocker to continue across passed phases and stop on blocked, failed, or completed outcomes.",
+      "description": "Make batch execution useful for phase-based supervised runs.",
+      "priority": 1,
+      "order": 38,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Update the batch runner loop to inspect PhaseResult status and next_action.",
+        "Continue after passed queue, prepare, execute, collect-report, verify, and review phases when allowed.",
+        "Stop on blocked or failed phase outcomes with owner action required.",
+        "Respect max_steps and max_failures using phase attempts."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/batch.py"
+      ],
+      "acceptance_criteria": [
+        "run-until-blocker continues after a passed prepare phase.",
+        "run-until-blocker continues after a passed verify phase.",
+        "run-until-blocker stops with clear owner_action_required on blocked collect-report or review outcomes.",
+        "max_steps still stops the batch run safely."
+      ],
+      "review_instructions": [
+        "Check that batch never loops indefinitely on the same blocked phase.",
+        "Verify batch does not push, merge, or auto-approve owner decisions."
+      ],
+      "notes": [
+        "Draft ref: PIPE-038."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-21T21:05:36Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:58Z",
+      "updated_at": "2026-06-21T21:05:38Z",
+      "uid": "tsk_78e3f020194d",
+      "ref": "PIPEF-38",
+      "legacy_id": "TASK-117",
+      "aliases": [
+        "TASK-117"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 38
+    },
+    {
+      "id": "TASK-118",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-039 Add CI exit-code mode for pipeline",
+      "status": "done",
+      "summary": "Add a CI-oriented exit-code mode where blocked and failed pipeline outcomes produce nonzero process exit codes.",
+      "description": "Make pipeline results usable by automation without losing human-readable safe-stop behavior.",
+      "priority": 1,
+      "order": 39,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add --ci flag to phase runner commands where appropriate.",
+        "Map passed and completed outcomes to exit code 0.",
+        "Map failed outcomes to exit code 1.",
+        "Map blocked outcomes to exit code 2."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "scripts/aictl.py",
+        "ai_project_ctl/pipeline/phase.py"
+      ],
+      "acceptance_criteria": [
+        "pipeline run-next --ci exits 0 for passed or completed outcomes.",
+        "pipeline run-next --ci exits 2 for blocked outcomes.",
+        "pipeline run-next --ci exits 1 for failed outcomes.",
+        "Default non-CI behavior remains compatible with human safe-stop usage."
+      ],
+      "review_instructions": [
+        "Check that JSON output still includes full outcome details in CI mode.",
+        "Verify exit code mapping is documented in code comments or command help."
+      ],
+      "notes": [
+        "Draft ref: PIPE-039."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-21T21:32:51Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-20T17:04:59Z",
+      "updated_at": "2026-06-21T21:32:52Z",
+      "uid": "tsk_69240c03bede",
+      "ref": "PIPEF-39",
+      "legacy_id": "TASK-118",
+      "aliases": [
+        "TASK-118"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 39
+    },
+    {
+      "id": "TASK-119",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-040 Add tests for phase model and mutations",
+      "status": "planned",
+      "summary": "Add tests for PhaseResult serialization, session phase fields, and governed phase mutation helpers.",
+      "description": "Protect the foundational phase state behavior before rewriting the runner.",
+      "priority": 1,
+      "order": 40,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Test PhaseResult construction and JSON conversion.",
+        "Test session creation with phase field defaults.",
+        "Test start_phase and record_phase_result mutations.",
+        "Test validation behavior for legacy sessions without phase fields."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "tests/test_pipeline_phase.py",
+        "tests/test_pipeline_session_phase.py"
+      ],
+      "acceptance_criteria": [
+        "Tests pass for all PhaseResult statuses.",
+        "Tests prove legacy pipeline sessions remain valid.",
+        "Tests prove phase results append to phase_history.",
+        "Tests prove terminal sessions reject new phase mutations."
+      ],
+      "review_instructions": [
+        "Check tests use temporary state and do not depend on local repository state.",
+        "Verify tests do not require external Codex or network access."
+      ],
+      "notes": [
+        "Draft ref: PIPE-040."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-20T17:05:00Z",
+      "updated_at": "2026-06-20T17:05:00Z",
+      "uid": "tsk_5bcaf7cb78cb",
+      "ref": "PIPEF-40",
+      "legacy_id": "TASK-119",
+      "aliases": [
+        "TASK-119"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 40
+    },
+    {
+      "id": "TASK-120",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-041 Add tests for queue prepare execute report phases",
+      "status": "planned",
+      "summary": "Add tests for the queue, prepare, execute, and collect-report phase boundaries using fake state and adapters.",
+      "description": "Verify early phase behavior without relying on real Codex execution.",
+      "priority": 1,
+      "order": 41,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Test queue preview read-only behavior.",
+        "Test prepare blocks on missing approved Change when policy requires it.",
+        "Test execute uses fake adapter evidence and does not run downstream gates.",
+        "Test collect-report returns blocked for missing report and passed for matching report."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "tests/test_pipeline_queue_phase.py",
+        "tests/test_pipeline_prepare_execute_report.py"
+      ],
+      "acceptance_criteria": [
+        "Queue tests prove no state or generated files are written by preview.",
+        "Prepare tests verify Codex adapter is not called.",
+        "Execute tests verify report gate is not called.",
+        "Collect-report tests verify task identity and missing report outcomes."
+      ],
+      "review_instructions": [
+        "Check fake adapters are deterministic and local.",
+        "Verify tests cover blocked outcomes as normal behavior."
+      ],
+      "notes": [
+        "Draft ref: PIPE-041."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-20T17:05:00Z",
+      "updated_at": "2026-06-20T17:05:00Z",
+      "uid": "tsk_5c3a3cffb80a",
+      "ref": "PIPEF-41",
+      "legacy_id": "TASK-120",
+      "aliases": [
+        "TASK-120"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 41
+    },
+    {
+      "id": "TASK-121",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-042 Add tests for git diff gate",
+      "status": "planned",
+      "summary": "Add focused tests for actual git diff gate and file-scope comparison behavior.",
+      "description": "Protect verify from accepting incomplete or dishonest structured reports.",
+      "priority": 1,
+      "order": 42,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Test clean working tree behavior.",
+        "Test reported changed file matching actual diff.",
+        "Test actual changed file missing from report.",
+        "Test out-of-scope and protected file detection."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "tests/test_pipeline_git_diff_gate.py"
+      ],
+      "acceptance_criteria": [
+        "The git diff gate detects changed tracked files.",
+        "The git diff gate detects untracked files.",
+        "Verify comparison blocks when actual files are missing from the report.",
+        "Protected file changes are blocked with stable reason codes."
+      ],
+      "review_instructions": [
+        "Check tests create isolated temporary git repositories.",
+        "Verify tests do not modify the real project working tree."
+      ],
+      "notes": [
+        "Draft ref: PIPE-042."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-20T17:05:01Z",
+      "updated_at": "2026-06-20T17:05:01Z",
+      "uid": "tsk_5517275e5470",
+      "ref": "PIPEF-42",
+      "legacy_id": "TASK-121",
+      "aliases": [
+        "TASK-121"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 42
+    },
+    {
+      "id": "TASK-122",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-043 Add fake Codex happy path integration test",
+      "status": "planned",
+      "summary": "Add an integration test where a fake Codex adapter creates a structured report and the pipeline advances through verify.",
+      "description": "Prove the phase pipeline can pass through execution and verification without external Codex.",
+      "priority": 1,
+      "order": 43,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create a fake Codex adapter that writes an allowed file and submits a structured report.",
+        "Run queue, prepare, execute, collect-report, and verify phases in sequence.",
+        "Assert each phase passes on the happy path.",
+        "Assert phase history records the expected sequence."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "tests/test_pipeline_phase_happy_path.py"
+      ],
+      "acceptance_criteria": [
+        "The integration test reaches verify passed with fake Codex execution.",
+        "The test uses only temporary project state and local fake commands.",
+        "The report contains changed_files matching actual diff evidence.",
+        "Phase history includes queue, prepare, execute, collect-report, and verify outcomes."
+      ],
+      "review_instructions": [
+        "Check that fake Codex does not call external tools.",
+        "Verify the test fails if report and git diff diverge."
+      ],
+      "notes": [
+        "Draft ref: PIPE-043."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-20T17:05:02Z",
+      "updated_at": "2026-06-20T17:05:02Z",
+      "uid": "tsk_6d574d8b0795",
+      "ref": "PIPEF-43",
+      "legacy_id": "TASK-122",
+      "aliases": [
+        "TASK-122"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 43
+    },
+    {
+      "id": "TASK-123",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-044 Add fake reviewer close integration test",
+      "status": "planned",
+      "summary": "Add an integration test where a fake reviewer returns APPROVE and the pipeline reaches close.",
+      "description": "Prove the supervised happy path can complete after semantic review approval.",
+      "priority": 1,
+      "order": 44,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create a fake reviewer that returns valid APPROVE JSON.",
+        "Run review after verified fake execution evidence.",
+        "Run close preflight and task close action with confirmation in a temporary project.",
+        "Assert final task status and phase history outcomes."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "tests/test_pipeline_phase_review_close.py"
+      ],
+      "acceptance_criteria": [
+        "The integration test reaches review passed with fake reviewer output.",
+        "The close phase runs only after review APPROVE.",
+        "The selected task reaches done or the expected governed close status.",
+        "The test records review_id and close artifacts in phase history."
+      ],
+      "review_instructions": [
+        "Check that close does not require real Codex or network access.",
+        "Verify REQUEST_CHANGES is covered by a separate blocked-path assertion if practical."
+      ],
+      "notes": [
+        "Draft ref: PIPE-044."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-20T17:05:03Z",
+      "updated_at": "2026-06-20T17:05:03Z",
+      "uid": "tsk_99b00cf46e71",
+      "ref": "PIPEF-44",
+      "legacy_id": "TASK-123",
+      "aliases": [
+        "TASK-123"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 44
+    },
+    {
+      "id": "TASK-124",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-045 Update phase pipeline usage guide",
+      "status": "planned",
+      "summary": "Add user-facing documentation for the phase-based pipeline commands, outcomes, and common blocked states.",
+      "description": "Make the new pipeline usable without reading implementation code.",
+      "priority": 1,
+      "order": 45,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Document the phase command sequence from queue preview to close.",
+        "Document passed, blocked, failed, and skipped outcomes.",
+        "Document manual handoff, missing report, review request changes, and CI exit-code behavior.",
+        "Add a compact quickstart with exact aictl commands."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai-system/pipeline-phase-usage.md",
+        "ai-system/README.md"
+      ],
+      "acceptance_criteria": [
+        "The guide shows the command sequence: queue preview, prepare, execute, collect-report, verify, review, close.",
+        "The guide explains blocked outcomes as normal owner-action states.",
+        "The guide documents CI exit codes for passed, blocked, and failed outcomes.",
+        "ai-system/README.md links to the new usage guide."
+      ],
+      "review_instructions": [
+        "Check that documentation does not claim fully autonomous execution where manual gates remain required.",
+        "Verify command examples match actual CLI names."
+      ],
+      "notes": [
+        "Draft ref: PIPE-045."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-20T17:05:03Z",
+      "updated_at": "2026-06-20T17:05:03Z",
+      "uid": "tsk_925d6a510dc5",
+      "ref": "PIPEF-45",
+      "legacy_id": "TASK-124",
+      "aliases": [
+        "TASK-124"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 45
+    },
+    {
+      "id": "TASK-125",
+      "epic_id": "EPIC-009",
+      "title": "Add UI settings defaults and loader",
+      "status": "done",
+      "summary": "Add a UI settings module that returns built-in defaults and optionally overlays AI_PROJECT/config/ui_settings.json.",
+      "description": "This task creates the minimal settings source used later by UI and Run commands.",
+      "priority": 1,
+      "order": 46,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a ui_settings module with built-in defaults for command_line and default_policy.",
+        "Load AI_PROJECT/config/ui_settings.json when it exists.",
+        "Return built-in defaults when the config file or AI_PROJECT directory is missing.",
+        "Validate that loaded settings are a JSON object before merging."
+      ],
+      "out_of_scope": [
+        "Do not add CLI commands in this task.",
+        "Do not integrate settings with pipeline execution yet.",
+        "Do not create or modify runtime task state."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/ui_settings.py",
+        "tests/test_ui_settings.py"
+      ],
+      "acceptance_criteria": [
+        "Effective settings contain command_line set to codex exec by default.",
+        "Effective settings contain default_policy set to supervised_executable_local_commit by default.",
+        "Missing AI_PROJECT/config/ui_settings.json does not produce an error.",
+        "Existing ui_settings.json overrides default values.",
+        "Invalid non-object JSON settings fail with a clear validation error."
+      ],
+      "review_instructions": [
+        "Check that loading settings is read-only and does not create files."
+      ],
+      "notes": [
+        "Use AI_PROJECT/config/ui_settings.json as the project-local override path."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-22T09:04:13Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-21T21:49:57Z",
+      "updated_at": "2026-06-22T09:04:14Z",
+      "uid": "tsk_ca80acf6a7d4",
+      "ref": "PIPEF-46",
+      "legacy_id": "TASK-125",
+      "aliases": [
+        "TASK-125"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 46
+    },
+    {
+      "id": "TASK-126",
+      "epic_id": "EPIC-009",
+      "title": "Add UI settings CLI commands",
+      "status": "done",
+      "summary": "Add aictl UI settings commands to show, initialize, and upsert project-local UI settings.",
+      "description": "This task exposes settings editing for the future UI without requiring manual JSON edits.",
+      "priority": 1,
+      "order": 47,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Register aictl ui settings show.",
+        "Register aictl ui settings init --confirm.",
+        "Register aictl ui settings set KEY VALUE.",
+        "Implement set as an upsert that creates a missing key or updates an existing key."
+      ],
+      "out_of_scope": [
+        "Do not add frontend UI screens.",
+        "Do not apply settings to pipeline execution yet.",
+        "Do not allow settings commands to edit task or pipeline state files."
+      ],
+      "allowed_files": [
+        "scripts/aictl.py",
+        "ai_project_ctl/ui_settings.py",
+        "tests/test_ui_settings.py"
+      ],
+      "acceptance_criteria": [
+        "ui settings show prints effective settings and indicates whether they came from defaults or project file.",
+        "ui settings init --confirm creates AI_PROJECT/config/ui_settings.json with minimal default settings.",
+        "ui settings init without --confirm refuses to write.",
+        "ui settings set command_line \"codex exec\" writes or updates the command_line key.",
+        "ui settings set some_random_key value adds a new top-level key with string value.",
+        "Settings writes preserve schema_version when present."
+      ],
+      "review_instructions": [
+        "Verify that set performs an upsert and does not reject unknown keys."
+      ],
+      "notes": [
+        "Unknown keys are allowed because this file is also a UI-extensible settings store."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-22T09:32:29Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-21T21:49:58Z",
+      "updated_at": "2026-06-22T09:32:29Z",
+      "uid": "tsk_066a06b4cf1f",
+      "ref": "PIPEF-47",
+      "legacy_id": "TASK-126",
+      "aliases": [
+        "TASK-126"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 47
+    },
+    {
+      "id": "TASK-127",
+      "epic_id": "EPIC-009",
+      "title": "Resolve pipeline policy from UI settings",
+      "status": "done",
+      "summary": "Add a settings-aware policy resolver that applies default_policy and command_line to executable pipeline runs.",
+      "description": "This task bridges the UI settings file with pipeline policy construction without changing built-in preset definitions.",
+      "priority": 1,
+      "order": 48,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a policy resolver that reads effective UI settings.",
+        "Resolve default_policy to an existing pipeline policy preset.",
+        "Apply command_line to local Codex command fields for executable policies.",
+        "Validate that command_line is non-empty before executable execution."
+      ],
+      "out_of_scope": [
+        "Do not add the one-click Run command in this task.",
+        "Do not change built-in policy preset names.",
+        "Do not bypass existing pipeline policy validation."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/ui_settings.py",
+        "ai_project_ctl/pipeline/ui_policy.py",
+        "ai_project_ctl/pipeline/policy.py",
+        "tests/test_ui_settings.py",
+        "tests/pipeline/test_ui_settings_policy.py"
+      ],
+      "acceptance_criteria": [
+        "default_policy resolves to supervised_executable_local_commit when no settings file exists.",
+        "command_line codex exec maps to local command arguments equivalent to codex exec.",
+        "Executable policy allowlist matches the configured command_line.",
+        "Non-executable policies do not require command_line application.",
+        "Invalid or unknown default_policy fails with a clear error."
+      ],
+      "review_instructions": [
+        "Verify that built-in presets remain available and unchanged."
+      ],
+      "notes": [
+        "This task may add a new helper module instead of mutating policy presets directly."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-22T10:22:00Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-21T21:49:59Z",
+      "updated_at": "2026-06-22T10:22:03Z",
+      "uid": "tsk_3a16c86f2cb8",
+      "ref": "PIPEF-48",
+      "legacy_id": "TASK-127",
+      "aliases": [
+        "TASK-127"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 48
+    },
+    {
+      "id": "TASK-128",
+      "epic_id": "EPIC-009",
+      "title": "Add settings-backed single-task Run command",
+      "status": "done",
+      "summary": "Add a CLI command that runs one selected task using effective UI settings for policy and command configuration.",
+      "description": "This command is the backend action that a future per-task UI Run button can call.",
+      "priority": 1,
+      "order": 49,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Register aictl ui run TASK_REF.",
+        "Create a single-task pipeline session using the effective default_policy.",
+        "Set max_tasks to 1 for the selected task.",
+        "Run the pipeline until blocker or completion when confirmed."
+      ],
+      "out_of_scope": [
+        "Do not add frontend button rendering.",
+        "Do not auto-run queues of multiple tasks.",
+        "Do not push or merge commits."
+      ],
+      "allowed_files": [
+        "scripts/aictl.py",
+        "ai_project_ctl/ui_settings.py",
+        "ai_project_ctl/pipeline/ui_policy.py",
+        "tests/test_ui_run_command.py"
+      ],
+      "acceptance_criteria": [
+        "aictl ui run TASK_REF creates or delegates to a single-task pipeline session.",
+        "The command uses default_policy from effective UI settings.",
+        "The command uses command_line from effective UI settings for executable policies.",
+        "The command requires confirmation before executing run-until-blocker.",
+        "The command returns a clear completed, blocked, or failed result.",
+        "The command does not directly edit AI_PROJECT/state task files outside existing governed pipeline commands."
+      ],
+      "review_instructions": [
+        "Verify that this command remains a backend wrapper over governed pipeline commands."
+      ],
+      "notes": [
+        "This is the backend foundation for a future task-row Run button."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-22T10:38:27Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-21T21:50:00Z",
+      "updated_at": "2026-06-22T10:38:27Z",
+      "uid": "tsk_2cfb601bb104",
+      "ref": "PIPEF-49",
+      "legacy_id": "TASK-128",
+      "aliases": [
+        "TASK-128"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 49
+    },
+    {
+      "id": "TASK-129",
+      "epic_id": "EPIC-009",
+      "title": "Add Codex preflight for UI Run",
+      "status": "in_progress",
+      "summary": "Add a Codex executable preflight that checks the configured command before launching an executable Run.",
+      "description": "This task prevents the Run command from starting executable sessions when the local Codex sandbox is unavailable.",
+      "priority": 1,
+      "order": 50,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a Codex preflight service that reads command_line from effective UI settings.",
+        "Run a minimal prompt through the configured command.",
+        "Detect sandbox-unavailable output such as bwrap or RTM_NEWADDR.",
+        "Expose the preflight through aictl for UI and backend usage."
+      ],
+      "out_of_scope": [
+        "Do not attempt to repair OS-level sandbox permissions.",
+        "Do not change Codex CLI configuration files.",
+        "Do not mutate task, pipeline, or report state during preflight."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/codex_preflight.py",
+        "ai_project_ctl/pipeline/codex_adapter.py",
+        "ai_project_ctl/ui_settings.py",
+        "scripts/aictl.py",
+        "tests/pipeline/test_codex_preflight.py"
+      ],
+      "acceptance_criteria": [
+        "Preflight returns passed when the configured command exits successfully.",
+        "Preflight returns a blocked result when bwrap, RTM_NEWADDR, user namespace, or Operation not permitted appears in output.",
+        "Preflight uses the effective command_line setting.",
+        "Preflight does not write project-control state or generated files.",
+        "UI Run can use the preflight result to block executable execution before starting a session."
+      ],
+      "review_instructions": [
+        "Verify that sandbox detection is shared with or consistent with the Codex adapter."
+      ],
+      "notes": [
+        "The preflight should diagnose local execution readiness, not modify the environment."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-21T21:50:01Z",
+      "updated_at": "2026-06-22T10:38:40Z",
+      "uid": "tsk_e7309de4e114",
+      "ref": "PIPEF-50",
+      "legacy_id": "TASK-129",
+      "aliases": [
+        "TASK-129"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 50
     }
   ]
 }

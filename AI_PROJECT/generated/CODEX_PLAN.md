@@ -5,7 +5,7 @@
 
 Project: **AI Development System**
 Status: `active`
-Revision: `12`
+Revision: `13`
 
 ## Idea
 
@@ -48,3 +48,4 @@ Epics:
 - `EPIC-006` / `WFA` — Control Plane Workflow Automation (`planned`)
 - `EPIC-007` / `PIPE` — Supervised Batch Pipeline Runner (`planned`)
 - `EPIC-008` / `BUG` — Bug Fixes (`planned`)
+- `EPIC-009` / `PIPEF` — Phase-based Pipeline Execution Model (`active`)

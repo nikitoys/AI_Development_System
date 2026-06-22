@@ -21,6 +21,8 @@ from .state import load_pipeline_state, load_reference_state
 
 
 CONTINUE_CODES = {"TASK_AUTO_CLOSED", "LOCAL_COMMIT_CREATED"}
+CONTINUE_PHASE_STATUSES = {"passed", "skipped"}
+STOP_PHASE_STATUSES = {"blocked", "failed"}
 
 
 def run_until_blocker(
@@ -93,7 +95,7 @@ def run_until_blocker(
                 owner_action_required="Review the completed pipeline session.",
             )
 
-        if _step_count(session) >= policy.batch.max_steps:
+        if _attempt_count(session) >= policy.batch.max_steps:
             stopped = stop_session(
                 selected_session_id,
                 "MAX_STEPS_REACHED: Batch runner reached max_steps {}.".format(
@@ -115,6 +117,33 @@ def run_until_blocker(
                 owner_action_required="Inspect the session before resuming with a new run.",
             )
 
+        if _failure_count(session) >= policy.batch.max_failures:
+            summary["failures"] = _failure_count(session)
+            stopped = stop_session(
+                selected_session_id,
+                "MAX_FAILURES_REACHED: Batch runner reached max_failures {}.".format(
+                    policy.batch.max_failures
+                ),
+                root=root_path,
+                actor=actor,
+                status="stopped",
+            )
+            effects.append(stopped)
+            _merge_effects_into_summary(summary, stopped)
+            return _success(
+                selected_session_id,
+                "MAX_FAILURES_REACHED",
+                "Batch runner reached max_failures {}.".format(
+                    policy.batch.max_failures
+                ),
+                summary,
+                effects,
+                session=_find_session(root_path, selected_session_id) or session,
+                owner_action_required=(
+                    "Inspect failed pipeline phase attempts before resuming."
+                ),
+            )
+
         step = run_next(
             selected_session_id,
             root=root_path,
@@ -129,6 +158,26 @@ def run_until_blocker(
         summary["step_results"].append(_step_summary(step))
         _merge_effects_into_summary(summary, step)
 
+        session = _find_session(root_path, selected_session_id) or session
+        _merge_session_lists(summary, session, root_path)
+
+        phase_result = _phase_result(step)
+        phase_status = _phase_status(step, phase_result)
+        if phase_status in STOP_PHASE_STATUSES:
+            if phase_status == "failed":
+                failures = max(failures + 1, _failure_count(session))
+                summary["failures"] = failures
+            summary["blockers"].append(_phase_blocker(step, phase_result))
+            return _success(
+                selected_session_id,
+                _phase_stop_code(step, phase_result),
+                _phase_stop_reason(step, phase_result),
+                summary,
+                effects,
+                session=session,
+                owner_action_required=_phase_owner_action_required(step, phase_result),
+            )
+
         if not step.ok:
             failures += 1
             summary["failures"] = failures
@@ -140,8 +189,6 @@ def run_until_blocker(
                 "Batch runner stopped after a run-next command failure.",
             )
 
-        session = _find_session(root_path, selected_session_id) or session
-        _merge_session_lists(summary, session, root_path)
         if str(session.get("status") or "") == "completed":
             return _success(
                 selected_session_id,
@@ -152,6 +199,15 @@ def run_until_blocker(
                 session=session,
                 owner_action_required="Review the completed pipeline session.",
             )
+
+        if phase_status in CONTINUE_PHASE_STATUSES:
+            selected_task = _selected_task_id(step)
+            if _phase_name(phase_result) == "close" and selected_task:
+                if selected_task not in summary["completed_tasks"]:
+                    summary["completed_tasks"].append(selected_task)
+                if selected_task not in summary["changed_tasks"]:
+                    summary["changed_tasks"].append(selected_task)
+            continue
 
         stop_code = str(step.data.get("stop_code") or "")
         selected_task = _selected_task_id(step)
@@ -282,20 +338,148 @@ def _step_count(session: Mapping[str, Any]) -> int:
     return 0
 
 
+def _attempt_count(session: Mapping[str, Any]) -> int:
+    return max(_step_count(session), len(_phase_history(session)))
+
+
+def _failure_count(session: Mapping[str, Any]) -> int:
+    phase_failures = sum(
+        1
+        for item in _phase_history(session)
+        if str(item.get("status") or "") == "failed"
+    )
+    step_failures = sum(
+        1
+        for item in _step_history(session)
+        if str(item.get("status") or "") == "failed"
+    )
+    return max(
+        phase_failures,
+        step_failures,
+    )
+
+
+def _phase_history(session: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+    history = session.get("phase_history")
+    if not isinstance(history, Sequence) or isinstance(history, (str, bytes)):
+        return []
+    return [item for item in history if isinstance(item, Mapping)]
+
+
+def _step_history(session: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+    history = session.get("steps")
+    if not isinstance(history, Sequence) or isinstance(history, (str, bytes)):
+        return []
+    return [item for item in history if isinstance(item, Mapping)]
+
+
 def _selected_task_id(result: CommandResult) -> str:
     selected = result.data.get("selected_task")
     if isinstance(selected, Mapping):
         return str(selected.get("id") or "")
+    phase_result = _phase_result(result)
+    artifacts = phase_result.get("artifacts")
+    if isinstance(artifacts, Mapping):
+        for key in ("selected_task", "next_task"):
+            selected = artifacts.get(key)
+            if isinstance(selected, Mapping):
+                return str(selected.get("id") or "")
+        task_id = str(artifacts.get("task_id") or "")
+        if task_id:
+            return task_id
     return ""
 
 
 def _step_summary(result: CommandResult) -> dict[str, Any]:
+    phase_result = _phase_result(result)
     return {
         "ok": result.ok,
         "stop_code": result.data.get("stop_code"),
         "stop_reason": result.data.get("stop_reason"),
+        "dispatched_phase": result.data.get("dispatched_phase")
+        or phase_result.get("phase"),
+        "phase_status": result.data.get("phase_status")
+        or phase_result.get("status"),
+        "next_action": result.data.get("next_action")
+        or phase_result.get("next_action"),
         "selected_task": result.data.get("selected_task"),
         "queue_counts": result.data.get("queue_counts"),
+    }
+
+
+def _phase_result(result: CommandResult) -> dict[str, Any]:
+    raw = result.data.get("phase_result")
+    return dict(raw) if isinstance(raw, Mapping) else {}
+
+
+def _phase_name(phase_result: Mapping[str, Any]) -> str:
+    return str(phase_result.get("phase") or "")
+
+
+def _phase_status(
+    result: CommandResult,
+    phase_result: Mapping[str, Any],
+) -> str:
+    return str(result.data.get("phase_status") or phase_result.get("status") or "")
+
+
+def _phase_stop_code(
+    result: CommandResult,
+    phase_result: Mapping[str, Any],
+) -> str:
+    stop_code = str(result.data.get("stop_code") or "")
+    if stop_code:
+        return stop_code
+    artifacts = phase_result.get("artifacts")
+    blocked_by = ""
+    if isinstance(artifacts, Mapping):
+        blocked_by = str(artifacts.get("blocked_by") or "")
+    blocked_by = str(phase_result.get("blocked_by") or blocked_by)
+    status = str(phase_result.get("status") or "")
+    if status == "blocked":
+        return blocked_by or "PIPELINE_PHASE_BLOCKED"
+    if status == "failed":
+        return blocked_by or "PIPELINE_PHASE_FAILED"
+    return "PIPELINE_PHASE_STOPPED"
+
+
+def _phase_stop_reason(
+    result: CommandResult,
+    phase_result: Mapping[str, Any],
+) -> str:
+    return str(
+        phase_result.get("reason")
+        or result.data.get("stop_reason")
+        or result.message
+        or "Pipeline phase stopped the batch runner."
+    )
+
+
+def _phase_owner_action_required(
+    result: CommandResult,
+    phase_result: Mapping[str, Any],
+) -> str:
+    return str(
+        phase_result.get("next_action")
+        or result.data.get("next_action")
+        or result.owner_action_required
+        or _phase_stop_reason(result, phase_result)
+    )
+
+
+def _phase_blocker(
+    result: CommandResult,
+    phase_result: Mapping[str, Any],
+) -> dict[str, Any]:
+    return {
+        "code": _phase_stop_code(result, phase_result),
+        "reason": _phase_stop_reason(result, phase_result),
+        "task_id": _selected_task_id(result),
+        "phase": _phase_name(phase_result),
+        "status": str(phase_result.get("status") or ""),
+        "next_action": str(
+            phase_result.get("next_action") or result.data.get("next_action") or ""
+        ),
     }
 
 

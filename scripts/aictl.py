@@ -52,7 +52,13 @@ from ai_project_ctl.pipeline.session import (  # noqa: E402
     stop_session,
     validate_sessions as validate_pipeline_sessions,
 )
-from ai_project_ctl.pipeline.policy import policy_preset  # noqa: E402
+from ai_project_ctl.pipeline.codex_preflight import run_codex_preflight  # noqa: E402
+from ai_project_ctl.pipeline.policy import (  # noqa: E402
+    CodexAdapterMode,
+    CodexExecutionMode,
+    PipelinePolicy,
+    policy_preset,
+)
 from ai_project_ctl.pipeline.policy_store import (  # noqa: E402
     check_generated as check_pipeline_policy_generated,
     delete_policy_preset,
@@ -64,6 +70,23 @@ from ai_project_ctl.pipeline.policy_store import (  # noqa: E402
 )
 from ai_project_ctl.pipeline.runner import run_next as run_pipeline_next  # noqa: E402
 from ai_project_ctl.pipeline.batch import run_until_blocker as run_pipeline_until_blocker  # noqa: E402
+from ai_project_ctl.pipeline.close_phase import close_phase  # noqa: E402
+from ai_project_ctl.pipeline.execute_phase import execute_phase  # noqa: E402
+from ai_project_ctl.pipeline.prepare_phase import prepare_phase  # noqa: E402
+from ai_project_ctl.pipeline.queue_phase import preview_queue_phase  # noqa: E402
+from ai_project_ctl.pipeline.report_phase import collect_report_phase  # noqa: E402
+from ai_project_ctl.pipeline.report_template import build_report_template  # noqa: E402
+from ai_project_ctl.pipeline.review_phase import review_phase  # noqa: E402
+from ai_project_ctl.pipeline.phase import pipeline_ci_exit_code  # noqa: E402
+from ai_project_ctl.pipeline.ui_policy import resolve_ui_pipeline_policy  # noqa: E402
+from ai_project_ctl.pipeline.verify_phase import verify_phase  # noqa: E402
+from ai_project_ctl.ui_settings import (  # noqa: E402
+    init_ui_settings,
+    load_ui_settings,
+    ui_settings_path,
+    ui_settings_source,
+    upsert_ui_setting,
+)
 
 
 class FacadeError(CommandError):
@@ -1023,13 +1046,168 @@ def _emit_workflow_result(result: CommandResult) -> None:
 def _emit_command_result(result: CommandResult, args: argparse.Namespace) -> int:
     if args.json:
         _print_json(result.to_dict())
-        return 0 if result.ok else 1
+        return _command_exit_code(result, args)
     print(result.message)
     if result.data.get("session_id"):
         print("Session: {}".format(result.data["session_id"]))
     for error in result.errors:
         print("ERROR: {}: {}".format(error.code, error.message), file=sys.stderr)
+    return _command_exit_code(result, args)
+
+
+def _command_exit_code(result: CommandResult, args: argparse.Namespace) -> int:
+    if getattr(args, "ci", False):
+        return pipeline_ci_exit_code(result)
     return 0 if result.ok else 1
+
+
+def _ui_run_result(
+    task_ref: str,
+    policy_name: str,
+    session_result: CommandResult,
+    run_result: CommandResult,
+) -> CommandResult:
+    outcome = _ui_run_outcome(run_result)
+    session_id = str(
+        session_result.data.get("session_id") or run_result.data.get("session_id") or ""
+    )
+    data = {
+        "task_ref": task_ref,
+        "policy": policy_name,
+        "session_id": session_id,
+        "outcome": outcome,
+        "session": session_result.data.get("session"),
+        "run": run_result.to_dict(),
+    }
+
+    if outcome == "confirmation_required":
+        result = CommandResult.failure(
+            command="ui.run",
+            domain="ui",
+            message=(
+                "UI run confirmation required before executing pipeline session {}.".format(
+                    session_id or "(none)"
+                )
+            ),
+            errors=[
+                CommandMessage(
+                    "UI_RUN_CONFIRMATION_REQUIRED",
+                    "Rerun with --confirm to execute run-until-blocker for the selected task.",
+                )
+            ],
+        )
+        result.owner_action_required = (
+            "Review the single-task pipeline session and rerun with --confirm."
+        )
+    elif outcome == "completed":
+        result = CommandResult.success(
+            command="ui.run",
+            domain="ui",
+            message="UI run completed: {}".format(run_result.message),
+        )
+        result.owner_action_required = run_result.owner_action_required
+    elif outcome == "blocked":
+        result = CommandResult.success(
+            command="ui.run",
+            domain="ui",
+            message="UI run blocked: {}".format(run_result.message),
+        )
+        result.owner_action_required = run_result.owner_action_required
+    else:
+        result = CommandResult.failure(
+            command="ui.run",
+            domain="ui",
+            message="UI run failed: {}".format(run_result.message),
+            errors=list(run_result.errors),
+        )
+        result.owner_action_required = run_result.owner_action_required
+
+    result.data = data
+    _merge_command_result_effects(result, session_result, run_result)
+    return result
+
+
+def _ui_run_preflight_result(
+    task_ref: str,
+    policy_name: str,
+    preflight_result: CommandResult,
+) -> CommandResult:
+    status = str(preflight_result.data.get("status") or "")
+    blocked = status == "blocked"
+    outcome = "blocked" if blocked else "failed"
+    data = {
+        "task_ref": task_ref,
+        "policy": policy_name,
+        "session_id": "",
+        "outcome": outcome,
+        "session_status": outcome,
+        "preflight": preflight_result.to_dict(),
+        "session": None,
+        "run": None,
+    }
+    if blocked:
+        result = CommandResult.success(
+            command="ui.run",
+            domain="ui",
+            message="UI run blocked by Codex preflight: {}".format(
+                preflight_result.message
+            ),
+        )
+    else:
+        result = CommandResult.failure(
+            command="ui.run",
+            domain="ui",
+            message="UI run failed during Codex preflight: {}".format(
+                preflight_result.message
+            ),
+            errors=list(preflight_result.errors),
+        )
+    result.data = data
+    result.owner_action_required = preflight_result.owner_action_required
+    result.warnings.extend(preflight_result.warnings)
+    return result
+
+
+def _policy_requires_codex_preflight(policy: PipelinePolicy) -> bool:
+    return (
+        policy.codex.mode == CodexExecutionMode.RUN_CODEX
+        and policy.codex.adapter_mode == CodexAdapterMode.LOCAL_COMMAND
+    )
+
+
+def _ui_run_outcome(run_result: CommandResult) -> str:
+    error_codes = {error.code for error in run_result.errors}
+    if "PIPELINE_BATCH_CONFIRMATION_REQUIRED" in error_codes:
+        return "confirmation_required"
+    if not run_result.ok:
+        return "failed"
+    stop_code = str(run_result.data.get("stop_code") or "")
+    session_status = str(run_result.data.get("session_status") or "")
+    if stop_code == "QUEUE_COMPLETE" or session_status == "completed":
+        return "completed"
+    if session_status == "failed" or stop_code.endswith("_FAILED"):
+        return "failed"
+    return "blocked"
+
+
+def _merge_command_result_effects(
+    target: CommandResult,
+    *sources: CommandResult,
+) -> None:
+    for source in sources:
+        _extend_unique(target.changed_files, source.changed_files)
+        _extend_unique(target.generated_files, source.generated_files)
+        _extend_unique(target.events, source.events)
+        target.warnings.extend(source.warnings)
+
+
+def _extend_unique(target: list[str], values: Sequence[str]) -> None:
+    seen = set(target)
+    for value in values:
+        text = str(value)
+        if text and text not in seen:
+            target.append(text)
+            seen.add(text)
 
 
 def _validation_result_to_command(
@@ -1322,6 +1500,12 @@ def cmd_pipeline_check_generated(args: argparse.Namespace) -> int:
     return _emit_command_result(result, args)
 
 
+def cmd_pipeline_report_template(args: argparse.Namespace) -> int:
+    template = build_report_template(args.task or "", root=args.root)
+    print(json.dumps(template, ensure_ascii=False, indent=2, sort_keys=True))
+    return 0
+
+
 def cmd_pipeline_policy_list(args: argparse.Namespace) -> int:
     _ensure_implemented("pipeline.policy.list")
     payload = pipeline_policy_status_payload(root=args.root)
@@ -1480,6 +1664,196 @@ def cmd_pipeline_run_until_blocker(args: argparse.Namespace) -> int:
     return _emit_command_result(result, args)
 
 
+def cmd_pipeline_queue_preview(args: argparse.Namespace) -> int:
+    result = preview_queue_phase(
+        args.session_id or "",
+        root=args.root,
+        task_refs=_tuple_or_empty(args.task_ref),
+        epic_ids=_tuple_or_empty(args.epic),
+        statuses=_tuple_or_empty(args.status_filter),
+        max_tasks=args.max_tasks,
+        order_by=args.order_by,
+    )
+    if args.json:
+        _print_json(result.to_dict())
+        return 0 if result.ok else 1
+
+    print(result.message)
+    data = result.data if isinstance(result.data, Mapping) else {}
+    if data.get("session_id"):
+        print("Session: {}".format(data["session_id"]))
+    preview = data.get("queue_preview") if isinstance(data.get("queue_preview"), Mapping) else {}
+    if preview:
+        _emit_queue_preview_text(preview)
+    for error in result.errors:
+        print("ERROR: {}: {}".format(error.code, error.message), file=sys.stderr)
+    return 0 if result.ok else 1
+
+
+def cmd_pipeline_prepare(args: argparse.Namespace) -> int:
+    result = prepare_phase(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+        task_refs=_tuple_or_empty(args.task_ref),
+        epic_ids=_tuple_or_empty(args.epic),
+        statuses=_tuple_or_empty(args.status_filter),
+        max_tasks=args.max_tasks,
+        order_by=args.order_by,
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_execute(args: argparse.Namespace) -> int:
+    result = execute_phase(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_collect_report(args: argparse.Namespace) -> int:
+    result = collect_report_phase(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+        allow_existing_report=args.allow_existing_report,
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_verify(args: argparse.Namespace) -> int:
+    result = verify_phase(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+    )
+    return _emit_command_result(result, args)
+
+
+def cmd_pipeline_review(args: argparse.Namespace) -> int:
+    if not args.build_prompt_only and not args.manual_review_file and not args.reviewer_command:
+        if args.facade_command == "pipeline.phase.review":
+            return cmd_pipeline_phase_not_implemented(args)
+        raise FacadeError(
+            "COMMAND_NOT_IMPLEMENTED",
+            "Pipeline semantic review execution is not implemented yet. "
+            "Use --build-prompt-only to build the reviewer prompt or "
+            "--manual-review-file/--reviewer-command to evaluate a JSON review verdict.",
+            details={
+                "command": args.facade_command,
+                "phase": args.phase_name,
+                "session_id": args.session_id or "",
+            },
+        )
+    result = review_phase(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+        build_prompt_only=args.build_prompt_only,
+        manual_review_file=args.manual_review_file,
+        reviewer_command=args.reviewer_command,
+        reviewer_timeout_sec=args.reviewer_timeout_sec,
+    )
+    return _emit_pipeline_review_result(result, args)
+
+
+def cmd_pipeline_close(args: argparse.Namespace) -> int:
+    result = close_phase(
+        args.session_id or "",
+        root=args.root,
+        actor=args.actor,
+        confirmed=args.confirm,
+    )
+    return _emit_command_result(result, args)
+
+
+def _emit_queue_preview_text(preview: Mapping[str, Any]) -> None:
+    next_task = preview.get("next_task")
+    print("Next task: {}".format(_queue_item_label(next_task) if isinstance(next_task, Mapping) else "none"))
+    categories = preview.get("categories")
+    if not isinstance(categories, Mapping):
+        return
+    for category in ("executable", "waiting", "blocked", "skipped"):
+        items = categories.get(category) or []
+        if not isinstance(items, Sequence) or isinstance(items, (str, bytes)):
+            continue
+        print("{}: {}".format(category, len(items)))
+        for item in items:
+            if not isinstance(item, Mapping):
+                continue
+            print("  - {}".format(_queue_item_label(item)))
+            reasons = item.get("reasons") or []
+            if not isinstance(reasons, Sequence) or isinstance(reasons, (str, bytes)):
+                continue
+            for reason in reasons:
+                if not isinstance(reason, Mapping):
+                    continue
+                code = reason.get("code") or "reason"
+                detail = reason.get("detail") or ""
+                print("    {}{}".format(code, ": {}".format(detail) if detail else ""))
+
+
+def _queue_item_label(item: Mapping[str, Any] | None) -> str:
+    if not isinstance(item, Mapping):
+        return "none"
+    label = item.get("ref") or item.get("selected_ref") or item.get("id") or "unknown"
+    title = item.get("title") or ""
+    status = item.get("status") or ""
+    suffix = " [{}]".format(status) if status else ""
+    return "{}{}{}".format(label, " - {}".format(title) if title else "", suffix)
+
+
+def _emit_pipeline_review_result(result: CommandResult, args: argparse.Namespace) -> int:
+    if args.json:
+        _print_json(result.to_dict())
+        return 0 if result.ok else 1
+    print(result.message)
+    data = result.data if isinstance(result.data, Mapping) else {}
+    if data.get("session_id"):
+        print("Session: {}".format(data["session_id"]))
+    if data.get("task_id"):
+        print("Task: {}".format(data["task_id"]))
+    if data.get("report_id"):
+        print("Report: {}".format(data["report_id"]))
+    if data.get("review_prompt_sha256"):
+        print("Review prompt SHA-256: {}".format(data["review_prompt_sha256"]))
+    if data.get("review_prompt_bytes"):
+        print("Review prompt bytes: {}".format(data["review_prompt_bytes"]))
+    if data.get("review_prompt_json_field"):
+        print("Review prompt JSON field: {}".format(data["review_prompt_json_field"]))
+    if data.get("review_id"):
+        print("Review: {}".format(data["review_id"]))
+    if data.get("verdict"):
+        print("Verdict: {}".format(data["verdict"]))
+    if data.get("review_code"):
+        print("Review code: {}".format(data["review_code"]))
+    for error in result.errors:
+        print("ERROR: {}: {}".format(error.code, error.message), file=sys.stderr)
+    if result.next_actions:
+        print("Next actions:")
+        for action in result.next_actions:
+            print("  - {}".format(action))
+    return 0 if result.ok else 1
+
+
+def cmd_pipeline_phase_not_implemented(args: argparse.Namespace) -> int:
+    try:
+        _ensure_implemented(args.facade_command)
+    except FacadeError:
+        raise
+    raise FacadeError(
+        "COMMAND_NOT_IMPLEMENTED",
+        "Pipeline phase service is not implemented yet: {}".format(args.facade_command),
+        details={
+            "command": args.facade_command,
+            "phase": args.phase_name,
+            "session_id": args.session_id or "",
+        },
+    )
+
+
 def cmd_pipeline_step_start(args: argparse.Namespace) -> int:
     _ensure_implemented("pipeline.step.start")
     result = start_step(
@@ -1607,6 +1981,111 @@ def cmd_codex_prompt_build(args: argparse.Namespace) -> int:
         args,
         _script_argv("codexctl.py", args, command_args),
     )
+
+
+def cmd_ui_settings_show(args: argparse.Namespace) -> int:
+    settings = load_ui_settings(root=args.root)
+    source = ui_settings_source(root=args.root)
+    path = str(ui_settings_path(args.root))
+    result = CommandResult.success(
+        command="ui.settings.show",
+        domain="ui",
+        message="UI settings loaded.",
+        data={"settings": settings, "source": source, "path": path},
+    )
+    if args.json:
+        _print_json(result.to_dict())
+        return 0
+
+    print("Source: {}".format(source))
+    print("Path: {}".format(path))
+    print(json.dumps(settings, ensure_ascii=False, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_ui_preflight(args: argparse.Namespace) -> int:
+    result = run_codex_preflight(root=args.root, timeout_sec=args.timeout_sec)
+    return _emit_command_result(result, args)
+
+
+def cmd_ui_settings_init(args: argparse.Namespace) -> int:
+    path = init_ui_settings(root=args.root, confirm=args.confirm)
+    result = CommandResult.success(
+        command="ui.settings.init",
+        domain="ui",
+        message="OK: initialized UI settings",
+        data={
+            "path": str(path),
+            "settings": load_ui_settings(root=args.root),
+            "source": ui_settings_source(root=args.root),
+        },
+    )
+    result.changed_files.append(str(path))
+    return _emit_command_result(result, args)
+
+
+def cmd_ui_settings_set(args: argparse.Namespace) -> int:
+    path = upsert_ui_setting(args.key, args.value, root=args.root)
+    result = CommandResult.success(
+        command="ui.settings.set",
+        domain="ui",
+        message="OK: updated UI setting {}".format(args.key),
+        data={
+            "key": args.key,
+            "value": args.value,
+            "path": str(path),
+            "settings": load_ui_settings(root=args.root),
+            "source": ui_settings_source(root=args.root),
+        },
+    )
+    result.changed_files.append(str(path))
+    return _emit_command_result(result, args)
+
+
+def cmd_ui_run(args: argparse.Namespace) -> int:
+    selected_policy = resolve_ui_pipeline_policy(root=args.root)
+    if args.preflight and args.confirm and _policy_requires_codex_preflight(selected_policy):
+        preflight_result = run_codex_preflight(root=args.root)
+        if str(preflight_result.data.get("status") or "") != "passed":
+            result = _ui_run_preflight_result(
+                args.task_ref,
+                selected_policy.name,
+                preflight_result,
+            )
+            return _emit_command_result(result, args)
+
+    session_result = create_session(
+        root=args.root,
+        actor=args.actor,
+        policy=selected_policy,
+        policy_name=selected_policy.name,
+        task_refs=(args.task_ref,),
+        max_tasks=1,
+        order_by="selected",
+    )
+    if not session_result.ok:
+        result = _ui_run_result(
+            args.task_ref,
+            selected_policy.name,
+            session_result,
+            session_result,
+        )
+        return _emit_command_result(result, args)
+
+    session_id = str(session_result.data.get("session_id") or "")
+    run_result = run_pipeline_until_blocker(
+        session_id,
+        root=args.root,
+        actor=args.actor,
+        confirmed=args.confirm,
+    )
+    result = _ui_run_result(
+        args.task_ref,
+        selected_policy.name,
+        session_result,
+        run_result,
+    )
+    return _emit_command_result(result, args)
 
 
 def cmd_docs_render(args: argparse.Namespace) -> int:
@@ -1813,6 +2292,49 @@ def _add_project_doctor_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--strict-prompt", action="store_true")
 
 
+def _add_pipeline_queue_preview_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("session_id", nargs="?")
+    parser.add_argument("--task-ref", action="append")
+    parser.add_argument("--epic", action="append")
+    parser.add_argument("--status-filter", action="append")
+    parser.add_argument("--max-tasks", type=int)
+    parser.add_argument(
+        "--order-by",
+        default="execution",
+        choices=("execution", "owner", "selected"),
+    )
+
+
+def _add_pipeline_review_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("session_id", nargs="?")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--build-prompt-only",
+        action="store_true",
+        help=(
+            "Build and return the read-only semantic review prompt without "
+            "running a reviewer or changing task approval state"
+        ),
+    )
+    mode.add_argument(
+        "--manual-review-file",
+        help="Read a JSON-only semantic review verdict file and evaluate it",
+    )
+    mode.add_argument(
+        "--reviewer-command",
+        help=(
+            "Run a local reviewer command without a shell, pass the review "
+            "prompt through stdin, and parse stdout as JSON"
+        ),
+    )
+    parser.add_argument(
+        "--reviewer-timeout-sec",
+        type=int,
+        default=300,
+        help="Timeout for --reviewer-command. Default: 300.",
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Unified facade for AI Development System project-control commands"
@@ -1968,6 +2490,42 @@ def build_parser() -> argparse.ArgumentParser:
     p = pipeline_sub.add_parser("check-generated", help="Check pipeline generated status freshness")
     p.set_defaults(func=cmd_pipeline_check_generated, facade_command="pipeline.check_generated")
 
+    report = pipeline_sub.add_parser("report", help="Pipeline report helper commands")
+    report_sub = report.add_subparsers(dest="pipeline_report_action", required=True)
+
+    p = report_sub.add_parser(
+        "template",
+        help="Print a read-only structured execution report template",
+    )
+    p.add_argument("--task", help="Task ID, ref, UID, legacy ID, or alias. Defaults to current task.")
+    p.set_defaults(
+        func=cmd_pipeline_report_template,
+        facade_command="pipeline.report.template",
+    )
+
+    p = pipeline_sub.add_parser(
+        "review",
+        help="Build or run the pipeline Codex review gate",
+    )
+    _add_pipeline_review_args(p)
+    p.set_defaults(
+        func=cmd_pipeline_review,
+        facade_command="pipeline.review",
+        phase_name="review",
+    )
+
+    p = pipeline_sub.add_parser(
+        "close",
+        help="Run close phase preflight after review APPROVE evidence",
+    )
+    p.add_argument("session_id", nargs="?")
+    p.add_argument("--confirm", action="store_true")
+    p.set_defaults(
+        func=cmd_pipeline_close,
+        facade_command="pipeline.close",
+        phase_name="close",
+    )
+
     policy = pipeline_sub.add_parser("policy", help="Pipeline policy preset store commands")
     policy_sub = policy.add_subparsers(dest="pipeline_policy_action", required=True)
 
@@ -2004,8 +2562,92 @@ def build_parser() -> argparse.ArgumentParser:
         facade_command="pipeline.policy.check_generated",
     )
 
+    phase = pipeline_sub.add_parser("phase", help="Planned phase-based pipeline commands")
+    phase_sub = phase.add_subparsers(dest="pipeline_phase_action", required=True)
+
+    p = phase_sub.add_parser("queue-preview", help="Preview the selected pipeline queue phase")
+    _add_pipeline_queue_preview_args(p)
+    p.set_defaults(
+        func=cmd_pipeline_queue_preview,
+        facade_command="pipeline.phase.queue_preview",
+        phase_name="queue_preview",
+    )
+
+    p = phase_sub.add_parser("prepare", help="Prepare context and prompt artifacts phase")
+    _add_pipeline_queue_preview_args(p)
+    p.set_defaults(
+        func=cmd_pipeline_prepare,
+        facade_command="pipeline.phase.prepare",
+        phase_name="prepare",
+    )
+
+    p = phase_sub.add_parser("execute", help="Execute prepared Codex work phase")
+    p.add_argument("session_id", nargs="?")
+    p.set_defaults(
+        func=cmd_pipeline_execute,
+        facade_command="pipeline.phase.execute",
+        phase_name="execute",
+    )
+
+    p = phase_sub.add_parser("collect-report", help="Collect the execution report phase")
+    p.add_argument("session_id", nargs="?")
+    p.add_argument(
+        "--allow-existing-report",
+        action="store_true",
+        help="Allow an existing matching report as a supervised recovery override",
+    )
+    p.set_defaults(
+        func=cmd_pipeline_collect_report,
+        facade_command="pipeline.phase.collect_report",
+        phase_name="collect_report",
+    )
+
+    p = phase_sub.add_parser("verify", help="Run machine verification gate phase")
+    p.add_argument("session_id", nargs="?")
+    p.set_defaults(
+        func=cmd_pipeline_verify,
+        facade_command="pipeline.phase.verify",
+        phase_name="verify",
+    )
+
+    p = phase_sub.add_parser("review", help="Run Codex review gate phase")
+    _add_pipeline_review_args(p)
+    p.set_defaults(
+        func=cmd_pipeline_review,
+        facade_command="pipeline.phase.review",
+        phase_name="review",
+    )
+
+    p = phase_sub.add_parser("close", help="Close reviewed task work phase")
+    p.add_argument("session_id", nargs="?")
+    p.add_argument("--confirm", action="store_true")
+    p.set_defaults(
+        func=cmd_pipeline_close,
+        facade_command="pipeline.phase.close",
+        phase_name="close",
+    )
+
+    queue = pipeline_sub.add_parser("queue", help="Read-only pipeline queue commands")
+    queue_sub = queue.add_subparsers(dest="pipeline_queue_action", required=True)
+
+    p = queue_sub.add_parser("preview", help="Preview the selected pipeline queue")
+    _add_pipeline_queue_preview_args(p)
+    p.set_defaults(
+        func=cmd_pipeline_queue_preview,
+        facade_command="pipeline.phase.queue_preview",
+        phase_name="queue_preview",
+    )
+
     p = pipeline_sub.add_parser("run-next", help="Run one guarded pipeline step")
     p.add_argument("session_id", nargs="?")
+    p.add_argument(
+        "--ci",
+        action="store_true",
+        help=(
+            "Use CI exit codes: passed/completed=0, failed=1, blocked=2. "
+            "Without this flag, human safe-stop behavior is unchanged."
+        ),
+    )
     p.set_defaults(func=cmd_pipeline_run_next, facade_command="pipeline.run_next")
 
     p = pipeline_sub.add_parser(
@@ -2014,6 +2656,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("session_id", nargs="?")
     p.add_argument("--confirm", action="store_true")
+    p.add_argument(
+        "--ci",
+        action="store_true",
+        help=(
+            "Use CI exit codes: passed/completed=0, failed=1, blocked=2. "
+            "Without this flag, human safe-stop behavior is unchanged."
+        ),
+    )
     p.set_defaults(
         func=cmd_pipeline_run_until_blocker,
         facade_command="pipeline.run_until_blocker",
@@ -2129,6 +2779,51 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--with-context", action="store_true")
     p.add_argument("--context-pack")
     p.set_defaults(func=cmd_codex_prompt_build, facade_command="codex.prompt.build")
+
+    ui = sub.add_parser("ui", help="UI support commands")
+    ui_sub = ui.add_subparsers(dest="ui_action", required=True)
+
+    p = ui_sub.add_parser("run", help="Run one selected task using effective UI settings")
+    p.add_argument("task_ref")
+    p.add_argument("--confirm", action="store_true")
+    p.add_argument(
+        "--preflight",
+        action="store_true",
+        help="Run configured Codex command preflight before confirmed executable run",
+    )
+    p.add_argument(
+        "--ci",
+        action="store_true",
+        help=(
+            "Use CI exit codes: completed=0, failed=1, blocked=2. "
+            "Without this flag, human safe-stop behavior is unchanged."
+        ),
+    )
+    p.set_defaults(func=cmd_ui_run, facade_command="ui.run")
+
+    p = ui_sub.add_parser("preflight", help="Check effective UI Codex command readiness")
+    p.add_argument("--timeout-sec", type=int, default=30)
+    p.add_argument(
+        "--ci",
+        action="store_true",
+        help="Use CI exit codes: passed=0, failed=1, blocked=2.",
+    )
+    p.set_defaults(func=cmd_ui_preflight, facade_command="ui.preflight")
+
+    settings = ui_sub.add_parser("settings", help="Project-local UI settings commands")
+    settings_sub = settings.add_subparsers(dest="ui_settings_action", required=True)
+
+    p = settings_sub.add_parser("show", help="Show effective UI settings")
+    p.set_defaults(func=cmd_ui_settings_show, facade_command="ui.settings.show")
+
+    p = settings_sub.add_parser("init", help="Initialize project-local UI settings")
+    p.add_argument("--confirm", action="store_true")
+    p.set_defaults(func=cmd_ui_settings_init, facade_command="ui.settings.init")
+
+    p = settings_sub.add_parser("set", help="Upsert one project-local UI setting")
+    p.add_argument("key")
+    p.add_argument("value")
+    p.set_defaults(func=cmd_ui_settings_set, facade_command="ui.settings.set")
 
     docs = sub.add_parser("docs", help="Documentation-control facade commands")
     docs_sub = docs.add_subparsers(dest="docs_action", required=True)

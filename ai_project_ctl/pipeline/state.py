@@ -30,6 +30,14 @@ SESSION_STATUSES = {
 ACTIVE_SESSION_STATUSES = {"planned", "running", "stopped", "blocked", "failed"}
 STEP_STATUSES = {"planned", "running", "passed", "failed", "blocked", "skipped", "stopped"}
 GATE_STATUSES = {"pass", "warn", "fail", "blocked", "skipped", "unknown"}
+PHASE_STATUSES = {"passed", "failed", "blocked", "skipped"}
+PHASE_FIELDS = (
+    "current_phase",
+    "current_phase_status",
+    "blocked_by",
+    "next_action",
+    "phase_history",
+)
 
 REFERENCE_LIST_FIELDS = (
     "linked_change_ids",
@@ -205,6 +213,10 @@ def render_pipeline_status(state: Mapping[str, Any]) -> str:
                     _policy_name(current.get("policy_snapshot"))
                 ),
                 "- Current task: `{}`".format(current.get("current_task_id") or "none"),
+                "- Current phase: `{}`".format(_phase_display(current, "current_phase")),
+                "- Phase status: `{}`".format(_phase_display(current, "current_phase_status")),
+                "- Blocked by: `{}`".format(_phase_display(current, "blocked_by")),
+                "- Next action: `{}`".format(_phase_display(current, "next_action")),
                 "- Current step: `{}`".format(current.get("current_step") or "none"),
                 "- Step status: `{}`".format(current.get("current_step_status") or "none"),
                 "- Stop reason: `{}`".format(current.get("stop_reason") or "none"),
@@ -217,20 +229,35 @@ def render_pipeline_status(state: Mapping[str, Any]) -> str:
         lines.append("_No pipeline sessions recorded._")
     else:
         lines.append(
-            "| Session | Status | Policy | Current Task | Current Step | Stop Reason |"
+            "| Session | Status | Policy | Current Task | Current Phase | Phase Status | Blocked By | Next Action | Current Step | Stop Reason |"
         )
-        lines.append("| --- | --- | --- | --- | --- | --- |")
+        lines.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
         for session in sessions:
             lines.append(
-                "| `{}` | `{}` | `{}` | `{}` | `{}` | {} |".format(
+                "| `{}` | `{}` | `{}` | `{}` | `{}` | `{}` | {} | {} | `{}` | {} |".format(
                     session.get("id") or "",
                     session.get("status") or "",
                     _policy_name(session.get("policy_snapshot")),
                     session.get("current_task_id") or "",
+                    _phase_display(session, "current_phase"),
+                    _phase_display(session, "current_phase_status"),
+                    _markdown_cell(_phase_display(session, "blocked_by")),
+                    _markdown_cell(_phase_display(session, "next_action")),
                     session.get("current_step") or "",
                     _markdown_cell(session.get("stop_reason") or ""),
                 )
             )
+
+    lines.extend(["", "## Phase History", ""])
+    history_rows = _phase_history_rows(sessions)
+    if not history_rows:
+        lines.append("_No phase history recorded._")
+    else:
+        lines.append(
+            "| Session | # | Phase | Status | Reason | Next Action | Changed | Generated | Events |"
+        )
+        lines.append("| --- | ---: | --- | --- | --- | --- | ---: | ---: | ---: |")
+        lines.extend(history_rows)
 
     lines.append("")
     return "\n".join(lines)
@@ -246,10 +273,29 @@ def session_summary(session: Mapping[str, Any]) -> dict[str, Any]:
         "status": session.get("status"),
         "policy": _policy_name(session.get("policy_snapshot")),
         "current_task_id": session.get("current_task_id"),
+        "current_phase": session.get("current_phase"),
+        "current_phase_status": session.get("current_phase_status"),
+        "blocked_by": session.get("blocked_by"),
+        "next_action": session.get("next_action"),
         "current_step": session.get("current_step"),
         "current_step_status": session.get("current_step_status"),
         "stop_reason": session.get("stop_reason"),
     }
+
+
+def normalize_pipeline_phase_fields(state: dict[str, Any]) -> None:
+    """Add safe phase defaults to sessions being rewritten by governed commands."""
+
+    sessions = state.get("sessions")
+    if not isinstance(sessions, list):
+        return
+    for session in sessions:
+        if isinstance(session, dict):
+            session.setdefault("current_phase", "")
+            session.setdefault("current_phase_status", "")
+            session.setdefault("blocked_by", "")
+            session.setdefault("next_action", "")
+            session.setdefault("phase_history", [])
 
 
 def _validate_session(
@@ -302,6 +348,7 @@ def _validate_session(
     _validate_attempt_counters(result, session.get("attempt_counters"), path + ".attempt_counters")
     _validate_steps(result, session.get("steps"), path + ".steps", tasks_state)
     _validate_gate_outcomes(result, session.get("gate_outcomes"), path + ".gate_outcomes")
+    _validate_phase_fields(result, session, path)
 
     current_task_id = session.get("current_task_id")
     if current_task_id and tasks_state is not None and current_task_id not in _task_id_set(tasks_state):
@@ -326,6 +373,91 @@ def _validate_session(
         path + ".report_ids",
         task_reports_state,
     )
+
+
+def _validate_phase_fields(
+    result: ValidationResult,
+    session: Mapping[str, Any],
+    path: str,
+) -> None:
+    if not any(field in session for field in PHASE_FIELDS):
+        return
+
+    for field in ("current_phase", "current_phase_status", "blocked_by", "next_action"):
+        if field not in session:
+            result.add_error(
+                "PIPELINE_MISSING_PHASE_FIELD",
+                "{}.{} is required when phase fields are present".format(path, field),
+                path=path + "." + field,
+            )
+            continue
+        _require_string(result, session.get(field), path + "." + field)
+
+    status = session.get("current_phase_status")
+    if isinstance(status, str) and status and status not in PHASE_STATUSES:
+        result.add_error(
+            "PIPELINE_INVALID_PHASE_STATUS",
+            "{}.current_phase_status must be one of {}".format(
+                path,
+                ", ".join(sorted(PHASE_STATUSES)),
+            ),
+            path=path + ".current_phase_status",
+        )
+
+    if "phase_history" not in session:
+        result.add_error(
+            "PIPELINE_MISSING_PHASE_FIELD",
+            "{}.phase_history is required when phase fields are present".format(path),
+            path=path + ".phase_history",
+        )
+        return
+    _validate_phase_history(result, session.get("phase_history"), path + ".phase_history")
+
+
+def _validate_phase_history(result: ValidationResult, value: Any, path: str) -> None:
+    if not isinstance(value, list):
+        result.add_error(
+            "PIPELINE_INVALID_PHASE_HISTORY",
+            "{} must be a list".format(path),
+            path=path,
+        )
+        return
+
+    for index, item in enumerate(value):
+        item_path = "{}[{}]".format(path, index)
+        if not isinstance(item, Mapping):
+            result.add_error(
+                "PIPELINE_INVALID_PHASE_HISTORY_ENTRY",
+                "{} must be an object".format(item_path),
+                path=item_path,
+            )
+            continue
+
+        _require_string(result, item.get("phase"), item_path + ".phase", allow_empty=False)
+        status = item.get("status")
+        if status not in PHASE_STATUSES:
+            result.add_error(
+                "PIPELINE_INVALID_PHASE_STATUS",
+                "{}.status must be one of {}".format(
+                    item_path,
+                    ", ".join(sorted(PHASE_STATUSES)),
+                ),
+                path=item_path + ".status",
+            )
+
+        for field in ("reason", "next_action"):
+            _require_optional_string(result, item.get(field), item_path + "." + field)
+
+        artifacts = item.get("artifacts", {})
+        if not isinstance(artifacts, Mapping):
+            result.add_error(
+                "PIPELINE_INVALID_PHASE_ARTIFACTS",
+                "{}.artifacts must be an object".format(item_path),
+                path=item_path + ".artifacts",
+            )
+
+        for field in ("changed_files", "generated_files", "events"):
+            _validate_string_list(result, item.get(field, []), item_path + "." + field)
 
 
 def _validate_queue(
@@ -629,9 +761,58 @@ def _policy_name(value: Any) -> str:
     return ""
 
 
+def _phase_display(session: Mapping[str, Any], field: str) -> str:
+    value = session.get(field)
+    if isinstance(value, str) and value.strip():
+        return _one_line(value)
+    return "none"
+
+
+def _phase_history_rows(sessions: Sequence[Mapping[str, Any]]) -> list[str]:
+    rows: list[str] = []
+    for session in sessions:
+        session_id = session.get("id") or ""
+        history = session.get("phase_history")
+        if not isinstance(history, list):
+            continue
+        for index, item in enumerate(history, start=1):
+            if not isinstance(item, Mapping):
+                continue
+            rows.append(
+                "| `{}` | {} | `{}` | `{}` | {} | {} | {} | {} | {} |".format(
+                    session_id,
+                    index,
+                    _phase_entry_value(item, "phase"),
+                    _phase_entry_value(item, "status"),
+                    _markdown_cell(item.get("reason") or ""),
+                    _markdown_cell(item.get("next_action") or ""),
+                    _list_count(item.get("changed_files")),
+                    _list_count(item.get("generated_files")),
+                    _list_count(item.get("events")),
+                )
+            )
+    return rows
+
+
+def _phase_entry_value(item: Mapping[str, Any], field: str) -> str:
+    value = item.get(field)
+    if isinstance(value, str) and value.strip():
+        return _one_line(value)
+    return "none"
+
+
+def _list_count(value: Any) -> int:
+    if isinstance(value, list):
+        return len(value)
+    return 0
+
+
 def _markdown_cell(value: Any) -> str:
-    text = str(value or "")
-    return text.replace("|", "\\|").replace("\n", " ")
+    return _one_line(value).replace("|", "\\|")
+
+
+def _one_line(value: Any) -> str:
+    return str(value or "").replace("\n", " ").strip()
 
 
 def _load_optional_json(path: Path) -> Mapping[str, Any] | None:

@@ -1,12 +1,12 @@
 # Codex Prompt Package
 
-Generated: 2026-06-20T15:53:42Z
+Generated: 2026-06-22T10:38:41Z
 
 Profile: execute
-Task: TASK-079
-Status: in_review
-Revision: tasks 669
-Verification: standard
+Task: TASK-129 / PIPEF-50
+Status: in_progress
+Revision: tasks 942
+Verification: strict
 
 ## Role
 
@@ -14,60 +14,48 @@ You are Codex Executor. Execute one bounded task. Do not self-approve.
 
 ## Objective
 
-Render CODEX_PROMPT.md as a compact execute-profile contract instead of embedding full Context Pack content.
+Add a Codex executable preflight that checks the configured command before launching an executable Run.
 
 ## Task Input
 
-Task: TASK-079
-Summary: Render CODEX_PROMPT.md as a compact execute-profile contract instead of embedding full Context Pack content.
+Task: TASK-129
+Summary: Add a Codex executable preflight that checks the configured command before launching an executable Run.
 
 ## Scope
 
-- Modify scripts/codexctl.py prompt rendering.
-- Render Profile: execute as the MVP default; do not implement --profile.
-- Use existing task fields only for identity, role, objective, scope, out-of-scope, allowed files, acceptance criteria, and verification mode.
-- Render Objective from task.summary with fallback to task.title.
-- Render full task.scope and full task.acceptance_criteria without category splitting.
-- Omit Execution Steps because task.execution_steps is not part of the current task schema.
-- Render Verification mode plus compact default check instruction.
-- Render Context as manifest-only when Context Pack is attached, keeping path, hash, docs revision, tasks revision, and selected source refs.
-- Do not embed the full AI_PROJECT/generated/CONTEXT_PACK.md body into CODEX_PROMPT.md.
-- Keep compact Execution Rules, Missing Info policy, and Final Report format.
-- Add or update tests proving compact context rendering.
+- Add a Codex preflight service that reads command_line from effective UI settings.
+- Run a minimal prompt through the configured command.
+- Detect sandbox-unavailable output such as bwrap or RTM_NEWADDR.
+- Expose the preflight through aictl for UI and backend usage.
 
 ## Out of Scope
 
-- Do not implement --profile.
-- Do not add profile-specific role switching.
-- Do not change task schema.
-- Do not add execution_steps or verification_checks.
-- Do not implement task splitting.
-- Do not modify contextctl.py.
-- Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Do not attempt to repair OS-level sandbox permissions.
+- Do not change Codex CLI configuration files.
+- Do not mutate task, pipeline, or report state during preflight.
 
 ## Allowed Files
 
 Editable:
-- scripts/codexctl.py
-- tests/test_legacy_ctl_wrappers.py
+- ai_project_ctl/pipeline/codex_preflight.py
+- ai_project_ctl/pipeline/codex_adapter.py
+- ai_project_ctl/ui_settings.py
+- scripts/aictl.py
+- tests/pipeline/test_codex_preflight.py
 
 Do not edit other files.
 
 ## Acceptance Criteria
 
-- codexctl.py build --task <TASK> still works without Context Pack.
-- codexctl.py build --task <TASK> --with-context produces a compact Context section.
-- Generated CODEX_PROMPT.md does not embed the full CONTEXT_PACK.md body.
-- Generated CODEX_PROMPT.md includes Context Pack path, hash, docs revision, tasks revision, and selected source refs when context is attached.
-- Execution Steps section is omitted for current tasks because task.execution_steps does not exist.
-- Verification renders mode plus compact default check instruction.
-- Existing wrapper tests still pass.
-- Add or update tests to prove compact context rendering.
-- Generated CODEX_PROMPT.md omits the legacy full retrieved-context body section.
+- Preflight returns passed when the configured command exits successfully.
+- Preflight returns a blocked result when bwrap, RTM_NEWADDR, user namespace, or Operation not permitted appears in output.
+- Preflight uses the effective command_line setting.
+- Preflight does not write project-control state or generated files.
+- UI Run can use the preflight result to block executable execution before starting a session.
 
 ## Verification
 
-Mode: standard
+Mode: strict
 
 Run the smallest relevant checks for the changed files.
 If a check cannot be run, say why.
@@ -75,18 +63,18 @@ If a check cannot be run, say why.
 ## Context
 
 Context Pack: AI_PROJECT/generated/CONTEXT_PACK.md
-Hash: 0bdf28caa824796aa71c7dde9aa60cb7352367db459677700ad4a4098f125c80
-Revisions: docs 28, tasks 669
+Hash: 5c53aafdbe0b65418ba39a4629dfa5e457acea2b97537711272f60b5c5b750f2
+Revisions: docs 28, tasks 942
 
 Refs:
-- ai-system/project-control/06-prompt-package-spec.md lines 580-670
 - ai-system/project-control/06-prompt-package-spec.md lines 797-833
-- ai-system/project-control/04-command-catalog.md lines 65-119
-- ai-system/project-control/06-prompt-package-spec.md lines 874-906
-- ai-system/skills/README.md lines 34-43
-- ai-system/project-control/03-state-model.md lines 104-125
-- ai-system/project-control/06-prompt-package-spec.md lines 123-162
 - ai-system/skills/README.md lines 80-92
+- ai-system/project-control/04-command-catalog.md lines 65-119
+- ai-system/project-control/04-command-catalog.md lines 21-64
+- ai-system/skills/README.md lines 34-43
+- ai-system/project-control/06-prompt-package-spec.md lines 874-906
+- ai-system/project-control/06-prompt-package-spec.md lines 580-670
+- ai-system/project-control/04-command-catalog.md lines 2294-2321
 
 Context is read-only. It does not expand Scope, Allowed Files, or Acceptance Criteria.
 If context conflicts with this prompt, report the conflict.

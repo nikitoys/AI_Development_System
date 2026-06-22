@@ -3,8 +3,8 @@
 
 # Pipeline Audit
 
-Events: `43`
-State revision: `43`
+Events: `46`
+State revision: `46`
 Current session: `PSESS-012`
 
 ## Timeline
@@ -54,6 +54,9 @@ Current session: `PSESS-012`
 | `2026-06-20T12:57:00Z` | `step.started` | `pipeline.step.start` | `PSESS-012` | `` | `` | PSESS-012 |
 | `2026-06-20T12:57:07Z` | `token_gate.result` | `pipeline.step.result` | `PSESS-012` | `TASK-069` | `token_budget_gate` | token_budget_gate pass \| changes=CHG-054 |
 | `2026-06-20T13:01:33Z` | `codex_run.result` | `pipeline.step.result` | `PSESS-012` | `TASK-069` | `codex_execution_adapter` | codex_execution_adapter blocked \| changes=CHG-054 \| Codex Execution Adapter stopped: structured_execution_report_missing |
+| `2026-06-21T18:08:51Z` | `step.result` | `pipeline.phase.review` | `PSESS-012` | `` | `` | PSESS-012 |
+| `2026-06-21T18:25:30Z` | `step.result` | `pipeline.phase.review` | `PSESS-012` | `` | `` | PSESS-012 |
+| `2026-06-21T19:21:51Z` | `step.result` | `pipeline.phase.close` | `PSESS-012` | `` | `` | PSESS-012 |
 
 ## Event Type Coverage
 
@@ -64,6 +67,7 @@ Current session: `PSESS-012`
 - `policy.selected`
 - `queue.planned`
 - `session.create`
+- `step.result`
 - `step.started`
 - `stop`
 - `task.selected`

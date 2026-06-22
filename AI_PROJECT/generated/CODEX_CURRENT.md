@@ -3,85 +3,77 @@
 
 # Current Codex Task
 
-Revision: `669`
+Revision: `942`
 
-Task: `TASK-079` — **Compact codexctl execute prompt renderer**
-Epic: `EPIC-003`
-Status: `in_review`
-Verification: `standard`
-UID: `tsk_4b2c0921708a`
-Legacy ID: `TASK-079`
-Aliases: `TASK-079`
+Task: `PIPEF-50 (TASK-129)` — **Add Codex preflight for UI Run**
+Epic: `EPIC-009`
+Status: `in_progress`
+Verification: `strict`
+Ref: `PIPEF-50`
+UID: `tsk_e7309de4e114`
+Legacy ID: `TASK-129`
+Aliases: `TASK-129`
+Epic Key / Local Seq: `PIPEF` / `50`
 
 ## Prompt Control Fields
 
 Active Role: `Codex Executor`
 Active Stage: `Task Execution`
-Active Document: `scripts/codexctl.py`
-Expected Result: `Compact CODEX_PROMPT.md renderer implemented for execute-profile MVP`
+Active Document: `AI_PROJECT/generated/CODEX_CURRENT.md`
+Expected Result: `Task completed according to acceptance criteria`
 
 ## Summary
 
-Render CODEX_PROMPT.md as a compact execute-profile contract instead of embedding full Context Pack content.
+Add a Codex executable preflight that checks the configured command before launching an executable Run.
 
 ## Description
 
-Implement approved CHG-062 by updating scripts/codexctl.py prompt rendering and focused tests so context-aware Codex prompt packages remain compact and bounded.
+This task prevents the Run command from starting executable sessions when the local Codex sandbox is unavailable.
 
 ## Scope
 
-- Modify scripts/codexctl.py prompt rendering.
-- Render Profile: execute as the MVP default; do not implement --profile.
-- Use existing task fields only for identity, role, objective, scope, out-of-scope, allowed files, acceptance criteria, and verification mode.
-- Render Objective from task.summary with fallback to task.title.
-- Render full task.scope and full task.acceptance_criteria without category splitting.
-- Omit Execution Steps because task.execution_steps is not part of the current task schema.
-- Render Verification mode plus compact default check instruction.
-- Render Context as manifest-only when Context Pack is attached, keeping path, hash, docs revision, tasks revision, and selected source refs.
-- Do not embed the full AI_PROJECT/generated/CONTEXT_PACK.md body into CODEX_PROMPT.md.
-- Keep compact Execution Rules, Missing Info policy, and Final Report format.
-- Add or update tests proving compact context rendering.
+- Add a Codex preflight service that reads command_line from effective UI settings.
+- Run a minimal prompt through the configured command.
+- Detect sandbox-unavailable output such as bwrap or RTM_NEWADDR.
+- Expose the preflight through aictl for UI and backend usage.
 
 ## Out of Scope
 
-- Do not implement --profile.
-- Do not add profile-specific role switching.
-- Do not change task schema.
-- Do not add execution_steps or verification_checks.
-- Do not implement task splitting.
-- Do not modify contextctl.py.
-- Do not manually edit AI_PROJECT/state/**, AI_PROJECT/events/**, or AI_PROJECT/generated/**.
+- Do not attempt to repair OS-level sandbox permissions.
+- Do not change Codex CLI configuration files.
+- Do not mutate task, pipeline, or report state during preflight.
 
 ## Allowed Files
 
-- scripts/codexctl.py
-- tests/test_legacy_ctl_wrappers.py
+- ai_project_ctl/pipeline/codex_preflight.py
+- ai_project_ctl/pipeline/codex_adapter.py
+- ai_project_ctl/ui_settings.py
+- scripts/aictl.py
+- tests/pipeline/test_codex_preflight.py
 
 ## Acceptance Criteria
 
-- codexctl.py build --task <TASK> still works without Context Pack.
-- codexctl.py build --task <TASK> --with-context produces a compact Context section.
-- Generated CODEX_PROMPT.md does not embed the full CONTEXT_PACK.md body.
-- Generated CODEX_PROMPT.md includes Context Pack path, hash, docs revision, tasks revision, and selected source refs when context is attached.
-- Execution Steps section is omitted for current tasks because task.execution_steps does not exist.
-- Verification renders mode plus compact default check instruction.
-- Existing wrapper tests still pass.
-- Add or update tests to prove compact context rendering.
-- Generated CODEX_PROMPT.md omits the legacy full retrieved-context body section.
+- Preflight returns passed when the configured command exits successfully.
+- Preflight returns a blocked result when bwrap, RTM_NEWADDR, user namespace, or Operation not permitted appears in output.
+- Preflight uses the effective command_line setting.
+- Preflight does not write project-control state or generated files.
+- UI Run can use the preflight result to block executable execution before starting a session.
 
 ## Review Instructions
 
-- Run python -m py_compile scripts/codexctl.py.
-- Run relevant tests for legacy ctl wrappers.
-- Run a local codex prompt build with context if fixtures allow it.
+- Verify that sandbox detection is shared with or consistent with the Codex adapter.
+
+## Notes
+
+- The preflight should diagnose local execution readiness, not modify the environment.
 
 ## Useful CLI
 
 ```bash
-python scripts/taskctl.py task transition TASK-079 --to in_progress
-python scripts/taskctl.py task transition TASK-079 --to in_review
-python scripts/taskctl.py task approve TASK-079 --notes "..."
-python scripts/taskctl.py task transition TASK-079 --to done
-python scripts/aictl.py task report submit --task TASK-079 --file /path/to/report.json --confirm
+python scripts/taskctl.py task transition TASK-129 --to in_progress
+python scripts/taskctl.py task transition TASK-129 --to in_review
+python scripts/taskctl.py task approve TASK-129 --notes "..."
+python scripts/taskctl.py task transition TASK-129 --to done
+python scripts/aictl.py task report submit --task TASK-129 --file /path/to/report.json --confirm
 python scripts/taskctl.py prompt build --write
 ```
