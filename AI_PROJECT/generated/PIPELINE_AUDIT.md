@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `46`
-State revision: `46`
-Current session: `PSESS-012`
+Events: `58`
+State revision: `58`
+Current session: `PSESS-016`
 
 ## Timeline
 
@@ -57,6 +57,18 @@ Current session: `PSESS-012`
 | `2026-06-21T18:08:51Z` | `step.result` | `pipeline.phase.review` | `PSESS-012` | `` | `` | PSESS-012 |
 | `2026-06-21T18:25:30Z` | `step.result` | `pipeline.phase.review` | `PSESS-012` | `` | `` | PSESS-012 |
 | `2026-06-21T19:21:51Z` | `step.result` | `pipeline.phase.close` | `PSESS-012` | `` | `` | PSESS-012 |
+| `2026-06-22T14:04:28Z` | `session.create` | `pipeline.session.create` | `PSESS-013` | `` | `` | PSESS-013 |
+| `2026-06-22T14:04:28Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-013` | `` | `` | PSESS-013 |
+| `2026-06-22T14:05:22Z` | `session.create` | `pipeline.session.create` | `PSESS-014` | `` | `` | PSESS-014 |
+| `2026-06-22T14:05:22Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-014` | `` | `` | PSESS-014 |
+| `2026-06-22T14:07:26Z` | `session.create` | `pipeline.session.create` | `PSESS-015` | `` | `` | PSESS-015 |
+| `2026-06-22T14:07:26Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-015` | `` | `` | PSESS-015 |
+| `2026-06-22T14:07:26Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-015` | `` | `` | PSESS-015 |
+| `2026-06-22T14:11:00Z` | `session.create` | `pipeline.session.create` | `PSESS-016` | `` | `` | PSESS-016 |
+| `2026-06-22T14:11:00Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-016` | `` | `` | PSESS-016 |
+| `2026-06-22T14:11:00Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-016` | `` | `` | PSESS-016 |
+| `2026-06-23T14:35:24Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-016` | `` | `` | changes=CHG-064 |
+| `2026-06-23T14:41:27Z` | `step.result` | `pipeline.phase.execute` | `PSESS-016` | `` | `` | PSESS-016 |
 
 ## Event Type Coverage
 

@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `942`
-Current task: `TASK-129`
+Revision: `976`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -2128,7 +2128,7 @@ Acceptance criteria:
 
 ### PIPEF-40 (TASK-119) — PIPE-040 Add tests for phase model and mutations
 
-Status: `planned`
+Status: `ready`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_5bcaf7cb78cb`, legacy `TASK-119`, aliases `TASK-119`, local `PIPEF` / `40`
@@ -2292,9 +2292,9 @@ Acceptance criteria:
 - The command returns a clear completed, blocked, or failed result.
 - The command does not directly edit AI_PROJECT/state task files outside existing governed pipeline commands.
 
-### PIPEF-50 (TASK-129) — Add Codex preflight for UI Run ⭐
+### PIPEF-50 (TASK-129) — Add Codex preflight for UI Run
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_e7309de4e114`, legacy `TASK-129`, aliases `TASK-129`, local `PIPEF` / `50`
@@ -2308,3 +2308,106 @@ Acceptance criteria:
 - Preflight uses the effective command_line setting.
 - Preflight does not write project-control state or generated files.
 - UI Run can use the preflight result to block executable execution before starting a session.
+
+### PIPEF-51 (TASK-130) — PIPE-046 Add phase history view helpers for Web Pipeline UI
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_548b331d6f92`, legacy `TASK-130`, aliases `TASK-130`, local `PIPEF` / `51`
+
+Add Web UI helpers that normalize phase-based pipeline sessions from phase_history while preserving legacy steps fallback.
+
+Acceptance criteria:
+
+- A session with phase_history renders phase rows from phase_history instead of creating a fake planned step.
+- A legacy session without phase_history continues to render through steps and gate_outcomes.
+- Phase labels are stable and human-readable in the Web Pipeline UI.
+- No existing Web Control Center tests regress.
+- Focused tests cover both phase_history and legacy fallback rendering.
+
+### PIPEF-52 (TASK-131) — PIPE-047 Render phase flow and current phase status in Web Pipeline UI
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_8a1c2d07282e`, legacy `TASK-131`, aliases `TASK-131`, local `PIPEF` / `52`
+
+Render the new phase-based pipeline flow and current phase status in the Web Pipeline page.
+
+Acceptance criteria:
+
+- A PSESS-016-like session shows Queue passed, Prepare passed and Codex Execute failed.
+- The session summary shows execute as the current failed phase when current_phase is execute.
+- The UI no longer shows all checkpoints as planned when phase_history contains real outcomes.
+- Legacy sessions still render their old gate flow.
+- Tests assert the phase status labels in rendered HTML.
+
+### PIPEF-53 (TASK-132) — PIPE-048 Render phase execution artifacts and failure evidence
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_7ab0576e73fe`, legacy `TASK-132`, aliases `TASK-132`, local `PIPEF` / `53`
+
+Show phase execution artifacts, failure evidence and log snippets for failed phase-based pipeline sessions.
+
+Acceptance criteria:
+
+- A CODEX_ADAPTER_TIMEOUT phase shows CODEX_ADAPTER_TIMEOUT in the Web UI.
+- The UI displays timeout_sec and duration_sec for failed execute phases.
+- The UI displays command_ref for local Codex execution.
+- Large stderr snippets are bounded by the existing Web UI log snippet limit.
+- Tests cover rendering of execute_evidence and adapter artifacts.
+
+### PIPEF-54 (TASK-133) — PIPE-049 Apply UI execution timeout settings to effective policy
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_a0392e704045`, legacy `TASK-133`, aliases `TASK-133`, local `PIPEF` / `54`
+
+Allow UI settings to configure Codex execution timeout and preflight timeout for UI runs.
+
+Acceptance criteria:
+
+- UI settings can include execution_timeout_sec and the resolved UI policy uses it as codex.timeout_sec.
+- String values such as "3600" are accepted for timeout settings.
+- Invalid timeout values produce a stable UI settings or policy error.
+- ui run --preflight uses preflight_timeout_sec from settings instead of hard-coded 30 seconds.
+- command_line still overrides local_command and command_allowlist for UI runs.
+- Existing UI settings and UI run tests pass.
+
+### PIPEF-55 (TASK-134) — PIPE-050 Update Web Pipeline actions for phase-based sessions
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_1c8988bcc50b`, legacy `TASK-134`, aliases `TASK-134`, local `PIPEF` / `55`
+
+Update Web Pipeline page actions and owner guidance for phase-based session states.
+
+Acceptance criteria:
+
+- Failed phase-based sessions do not appear as actively running in action guidance.
+- The UI shows owner action guidance from session.next_action or latest phase next_action.
+- Stop Session remains available only for stoppable session statuses.
+- Resume or Run actions remain guarded by existing confirmation behavior.
+- Tests cover action rendering for failed execute and blocked prepare sessions.
+
+### PIPEF-56 (TASK-135) — PIPE-051 Document phase-based Web Pipeline display behavior
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_764223596ec1`, legacy `TASK-135`, aliases `TASK-135`, local `PIPEF` / `56`
+
+Document how the Web Control Center displays phase-based pipeline sessions and timeout settings.
+
+Acceptance criteria:
+
+- Documentation explains phase_history-based Web Pipeline rendering.
+- Documentation explains the difference between command_line and policy local_command.
+- Documentation explains preflight timeout versus execution timeout.
+- Documentation includes a troubleshooting note for CODEX_ADAPTER_TIMEOUT.
+- Generated documentation checks can be rerun without manual edits to generated files.

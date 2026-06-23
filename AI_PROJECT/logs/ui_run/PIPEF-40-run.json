@@ -1,0 +1,364 @@
+{
+  "changed_files": [
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+  ],
+  "command": "ui.run",
+  "data": {
+    "outcome": "blocked",
+    "policy": "supervised_executable_local_commit",
+    "run": {
+      "changed_files": [
+        "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+        "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+        "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+        "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+      ],
+      "command": "pipeline.run_until_blocker",
+      "data": {
+        "accepted_changes": [],
+        "blockers": [
+          {
+            "code": "NO_EXECUTABLE_TASK",
+            "next_action": "Create or unblock a ready task, then rerun queue preview.",
+            "phase": "queue_preview",
+            "reason": "No executable task is available in the selected queue.",
+            "status": "blocked",
+            "task_id": ""
+          }
+        ],
+        "changed_files": [
+          "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+          "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+          "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+          "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+        ],
+        "changed_tasks": [],
+        "commits": [],
+        "completed_tasks": [],
+        "current_step": "",
+        "current_step_status": "planned",
+        "current_task_id": "",
+        "events": [
+          "EVT-48B0F5429579"
+        ],
+        "failures": 0,
+        "generated_files": [
+          "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+          "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+        ],
+        "limits": {
+          "max_failures": 1,
+          "max_rework_attempts": 1,
+          "max_steps": 5,
+          "max_tasks": 1
+        },
+        "policy": "supervised_executable_local_commit",
+        "requested_changes": [],
+        "session_id": "PSESS-014",
+        "session_status": "blocked",
+        "side_effects": [
+          {
+            "changed_files": [
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+            ],
+            "command": "pipeline.run_next",
+            "data": {
+              "blocked_by": "NO_EXECUTABLE_TASK",
+              "dispatched_phase": "queue_preview",
+              "next_action": "Create or unblock a ready task, then rerun queue preview.",
+              "phase_result": {
+                "artifacts": {
+                  "blocked_by": "NO_EXECUTABLE_TASK",
+                  "next_task": null,
+                  "queue_categories": {
+                    "blocked": [],
+                    "executable": [],
+                    "skipped": [
+                      {
+                        "epic_id": "EPIC-009",
+                        "id": "TASK-119",
+                        "legacy_id": "TASK-119",
+                        "reason_codes": [
+                          "status_not_executable"
+                        ],
+                        "reasons": [
+                          {
+                            "code": "status_not_executable",
+                            "detail": "status is in_progress"
+                          }
+                        ],
+                        "ref": "PIPEF-40",
+                        "selected_ref": "PIPEF-40",
+                        "status": "in_progress",
+                        "title": "PIPE-040 Add tests for phase model and mutations",
+                        "uid": "tsk_5bcaf7cb78cb"
+                      }
+                    ],
+                    "waiting": []
+                  },
+                  "queue_counts": {
+                    "blocked": 0,
+                    "executable": 0,
+                    "skipped": 1,
+                    "waiting": 0
+                  },
+                  "reason_summary": [
+                    {
+                      "categories": [
+                        "skipped"
+                      ],
+                      "code": "status_not_executable",
+                      "count": 1
+                    }
+                  ],
+                  "session_id": "PSESS-014",
+                  "source": "session"
+                },
+                "blocked_by": "NO_EXECUTABLE_TASK",
+                "changed_files": [],
+                "events": [
+                  "EVT-48B0F5429579"
+                ],
+                "generated_files": [],
+                "next_action": "Create or unblock a ready task, then rerun queue preview.",
+                "phase": "queue_preview",
+                "reason": "No executable task is available in the selected queue.",
+                "status": "blocked"
+              },
+              "phase_status": "blocked",
+              "queue_counts": {
+                "blocked": 0,
+                "executable": 0,
+                "skipped": 1,
+                "waiting": 0
+              },
+              "selected_task": null,
+              "session_id": "PSESS-014",
+              "side_effects": [
+                {
+                  "changed_files": [
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+                  ],
+                  "command": "pipeline.phase.queue_preview",
+                  "data": {
+                    "phase_result": {
+                      "artifacts": {
+                        "blocked_by": "NO_EXECUTABLE_TASK",
+                        "next_task": null,
+                        "queue_categories": {
+                          "blocked": [],
+                          "executable": [],
+                          "skipped": [
+                            {
+                              "epic_id": "EPIC-009",
+                              "id": "TASK-119",
+                              "legacy_id": "TASK-119",
+                              "reason_codes": [
+                                "status_not_executable"
+                              ],
+                              "reasons": [
+                                {
+                                  "code": "status_not_executable",
+                                  "detail": "status is in_progress"
+                                }
+                              ],
+                              "ref": "PIPEF-40",
+                              "selected_ref": "PIPEF-40",
+                              "status": "in_progress",
+                              "title": "PIPE-040 Add tests for phase model and mutations",
+                              "uid": "tsk_5bcaf7cb78cb"
+                            }
+                          ],
+                          "waiting": []
+                        },
+                        "queue_counts": {
+                          "blocked": 0,
+                          "executable": 0,
+                          "skipped": 1,
+                          "waiting": 0
+                        },
+                        "reason_summary": [
+                          {
+                            "categories": [
+                              "skipped"
+                            ],
+                            "code": "status_not_executable",
+                            "count": 1
+                          }
+                        ],
+                        "session_id": "PSESS-014",
+                        "source": "session"
+                      },
+                      "changed_files": [],
+                      "events": [
+                        "EVT-48B0F5429579"
+                      ],
+                      "generated_files": [],
+                      "next_action": "Create or unblock a ready task, then rerun queue preview.",
+                      "phase": "queue_preview",
+                      "reason": "No executable task is available in the selected queue.",
+                      "status": "blocked"
+                    },
+                    "queue_preview": {
+                      "blocked": [],
+                      "executable": [],
+                      "next_task": null,
+                      "reasons": [
+                        {
+                          "categories": [
+                            "skipped"
+                          ],
+                          "code": "status_not_executable",
+                          "count": 1
+                        }
+                      ],
+                      "skipped": [
+                        {
+                          "epic_id": "EPIC-009",
+                          "id": "TASK-119",
+                          "legacy_id": "TASK-119",
+                          "reason_codes": [
+                            "status_not_executable"
+                          ],
+                          "reasons": [
+                            {
+                              "code": "status_not_executable",
+                              "detail": "status is in_progress"
+                            }
+                          ],
+                          "ref": "PIPEF-40",
+                          "selected_ref": "PIPEF-40",
+                          "status": "in_progress",
+                          "title": "PIPE-040 Add tests for phase model and mutations",
+                          "uid": "tsk_5bcaf7cb78cb"
+                        }
+                      ],
+                      "waiting": []
+                    },
+                    "queue_source": "session",
+                    "session_id": "PSESS-014"
+                  },
+                  "domain": "pipeline",
+                  "errors": [],
+                  "events": [
+                    "EVT-48B0F5429579"
+                  ],
+                  "generated_files": [
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+                  ],
+                  "message": "No executable task is available in the selected queue.",
+                  "next_actions": [
+                    "Create or unblock a ready task, then rerun queue preview."
+                  ],
+                  "ok": true,
+                  "owner_action_required": null,
+                  "revision_after": 50,
+                  "revision_before": 49,
+                  "warnings": []
+                }
+              ],
+              "stop_code": "NO_EXECUTABLE_TASK",
+              "stop_reason": "No executable task is available in the selected queue."
+            },
+            "domain": "pipeline",
+            "errors": [],
+            "events": [
+              "EVT-48B0F5429579"
+            ],
+            "generated_files": [
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+            ],
+            "message": "No executable task is available in the selected queue.",
+            "next_actions": [
+              "Create or unblock a ready task, then rerun queue preview."
+            ],
+            "ok": true,
+            "owner_action_required": "No executable task is available in the selected queue.",
+            "revision_after": 50,
+            "revision_before": 49,
+            "warnings": []
+          }
+        ],
+        "step_results": [
+          {
+            "dispatched_phase": "queue_preview",
+            "next_action": "Create or unblock a ready task, then rerun queue preview.",
+            "ok": true,
+            "phase_status": "blocked",
+            "queue_counts": {
+              "blocked": 0,
+              "executable": 0,
+              "skipped": 1,
+              "waiting": 0
+            },
+            "selected_task": null,
+            "stop_code": "NO_EXECUTABLE_TASK",
+            "stop_reason": "No executable task is available in the selected queue."
+          }
+        ],
+        "steps_run": 1,
+        "stop_code": "NO_EXECUTABLE_TASK",
+        "stop_reason": "No executable task is available in the selected queue."
+      },
+      "domain": "pipeline",
+      "errors": [],
+      "events": [
+        "EVT-48B0F5429579"
+      ],
+      "generated_files": [
+        "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+        "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+      ],
+      "message": "NO_EXECUTABLE_TASK: No executable task is available in the selected queue.",
+      "next_actions": [],
+      "ok": true,
+      "owner_action_required": "Create or unblock a ready task, then rerun queue preview.",
+      "revision_after": null,
+      "revision_before": null,
+      "warnings": []
+    },
+    "session": {
+      "blocked_by": "",
+      "current_phase": "",
+      "current_phase_status": "",
+      "current_step": "",
+      "current_step_status": "planned",
+      "current_task_id": "",
+      "id": "PSESS-014",
+      "next_action": "",
+      "policy": "supervised_executable_local_commit",
+      "status": "planned",
+      "stop_reason": ""
+    },
+    "session_id": "PSESS-014",
+    "task_ref": "PIPEF-40"
+  },
+  "domain": "ui",
+  "errors": [],
+  "events": [
+    "EVT-D34071D8CC5B",
+    "EVT-48B0F5429579"
+  ],
+  "generated_files": [
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+  ],
+  "message": "UI run blocked: NO_EXECUTABLE_TASK: No executable task is available in the selected queue.",
+  "next_actions": [],
+  "ok": true,
+  "owner_action_required": "Create or unblock a ready task, then rerun queue preview.",
+  "revision_after": null,
+  "revision_before": null,
+  "warnings": []
+}

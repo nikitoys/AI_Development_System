@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `942`
+Revision: `976`
 
 ## Executable Now
 
@@ -12,12 +12,15 @@ Revision: `942`
 - `PIPE-20 (TASK-071)` [planned] `EPIC-007` priority `1` — PIPE-20 Document Dynamic Pipeline Policy Presets
 - `PIPE-21 (TASK-072)` [planned] `EPIC-007` priority `1` — PIPE-21 Fix Pipeline Queue Epic Filter Behavior
 - `PIPE-22 (TASK-073)` [planned] `EPIC-007` priority `1` — PIPE-22 Add Pipeline Session Resume After Blocker
-- `PIPEF-40 (TASK-119)` [planned] `EPIC-009` priority `1` — PIPE-040 Add tests for phase model and mutations
+- `PIPEF-40 (TASK-119)` [ready] `EPIC-009` priority `1` — PIPE-040 Add tests for phase model and mutations
 - `PIPEF-41 (TASK-120)` [planned] `EPIC-009` priority `1` — PIPE-041 Add tests for queue prepare execute report phases
 - `PIPEF-42 (TASK-121)` [planned] `EPIC-009` priority `1` — PIPE-042 Add tests for git diff gate
 - `PIPEF-43 (TASK-122)` [planned] `EPIC-009` priority `1` — PIPE-043 Add fake Codex happy path integration test
 - `PIPEF-44 (TASK-123)` [planned] `EPIC-009` priority `1` — PIPE-044 Add fake reviewer close integration test
 - `PIPEF-45 (TASK-124)` [planned] `EPIC-009` priority `1` — PIPE-045 Update phase pipeline usage guide
+- `PIPEF-54 (TASK-133)` [planned] `EPIC-009` priority `1` — PIPE-049 Apply UI execution timeout settings to effective policy
+- `PIPEF-55 (TASK-134)` [planned] `EPIC-009` priority `1` — PIPE-050 Update Web Pipeline actions for phase-based sessions
+- `PIPEF-56 (TASK-135)` [planned] `EPIC-009` priority `1` — PIPE-051 Document phase-based Web Pipeline display behavior
 
 ## Waiting For Dependencies
 
@@ -259,5 +262,11 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-49 (TASK-128)` [done] `EPIC-009` priority `1` — Add settings-backed single-task Run command
   - `status_not_executable`: status is done
-- `PIPEF-50 (TASK-129)` [in_progress] `EPIC-009` priority `1` — Add Codex preflight for UI Run
-  - `status_not_executable`: status is in_progress
+- `PIPEF-50 (TASK-129)` [done] `EPIC-009` priority `1` — Add Codex preflight for UI Run
+  - `status_not_executable`: status is done
+- `PIPEF-51 (TASK-130)` [done] `EPIC-009` priority `1` — PIPE-046 Add phase history view helpers for Web Pipeline UI
+  - `status_not_executable`: status is done
+- `PIPEF-52 (TASK-131)` [done] `EPIC-009` priority `1` — PIPE-047 Render phase flow and current phase status in Web Pipeline UI
+  - `status_not_executable`: status is done
+- `PIPEF-53 (TASK-132)` [done] `EPIC-009` priority `1` — PIPE-048 Render phase execution artifacts and failure evidence
+  - `status_not_executable`: status is done

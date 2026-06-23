@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 942,
-  "current_task_id": "TASK-129",
+  "revision": 976,
+  "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-22T10:38:40Z",
+  "updated_at": "2026-06-23T21:43:14Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -8493,7 +8493,7 @@
       "id": "TASK-119",
       "epic_id": "EPIC-009",
       "title": "PIPE-040 Add tests for phase model and mutations",
-      "status": "planned",
+      "status": "ready",
       "summary": "Add tests for PhaseResult serialization, session phase fields, and governed phase mutation helpers.",
       "description": "Protect the foundational phase state behavior before rewriting the runner.",
       "priority": 1,
@@ -8536,7 +8536,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-20T17:05:00Z",
-      "updated_at": "2026-06-20T17:05:00Z",
+      "updated_at": "2026-06-23T14:52:00Z",
       "uid": "tsk_5bcaf7cb78cb",
       "ref": "PIPEF-40",
       "legacy_id": "TASK-119",
@@ -9068,7 +9068,7 @@
       "id": "TASK-129",
       "epic_id": "EPIC-009",
       "title": "Add Codex preflight for UI Run",
-      "status": "in_progress",
+      "status": "done",
       "summary": "Add a Codex executable preflight that checks the configured command before launching an executable Run.",
       "description": "This task prevents the Run command from starting executable sessions when the local Codex sandbox is unavailable.",
       "priority": 1,
@@ -9110,11 +9110,11 @@
         "The preflight should diagnose local execution readiness, not modify the environment."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-22T10:53:48Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-21T21:50:01Z",
-      "updated_at": "2026-06-22T10:38:40Z",
+      "updated_at": "2026-06-22T10:53:49Z",
       "uid": "tsk_e7309de4e114",
       "ref": "PIPEF-50",
       "legacy_id": "TASK-129",
@@ -9123,6 +9123,356 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 50
+    },
+    {
+      "id": "TASK-130",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-046 Add phase history view helpers for Web Pipeline UI",
+      "status": "done",
+      "summary": "Add Web UI helpers that normalize phase-based pipeline sessions from phase_history while preserving legacy steps fallback.",
+      "description": "This prepares the Web Control Center to render the new phase-based pipeline state without depending only on legacy gate_outcomes.",
+      "priority": 1,
+      "order": 51,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add helper logic that reads session.phase_history and returns ordered phase display rows.",
+        "Map phase names to stable Web UI labels for queue_preview, prepare, execute, collect_report, verify, review and close.",
+        "Keep existing steps and gate_outcomes rendering as fallback when phase_history is absent.",
+        "Add focused tests for phase_history normalization and legacy fallback behavior."
+      ],
+      "out_of_scope": [
+        "Do not change pipeline execution behavior.",
+        "Do not change task lifecycle transitions.",
+        "Do not edit generated pipeline files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "A session with phase_history renders phase rows from phase_history instead of creating a fake planned step.",
+        "A legacy session without phase_history continues to render through steps and gate_outcomes.",
+        "Phase labels are stable and human-readable in the Web Pipeline UI.",
+        "No existing Web Control Center tests regress.",
+        "Focused tests cover both phase_history and legacy fallback rendering."
+      ],
+      "review_instructions": [
+        "Verify that the implementation is read-only with respect to pipeline state."
+      ],
+      "notes": [
+        "This task is UI/read-model only; backend pipeline state should remain unchanged."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-23T21:17:38Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-23T15:08:52Z",
+      "updated_at": "2026-06-23T21:17:39Z",
+      "uid": "tsk_548b331d6f92",
+      "ref": "PIPEF-51",
+      "legacy_id": "TASK-130",
+      "aliases": [
+        "TASK-130"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 51
+    },
+    {
+      "id": "TASK-131",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-047 Render phase flow and current phase status in Web Pipeline UI",
+      "status": "done",
+      "summary": "Render the new phase-based pipeline flow and current phase status in the Web Pipeline page.",
+      "description": "The Web UI should show real phase progress such as Queue passed, Prepare passed and Codex Execute failed.",
+      "priority": 1,
+      "order": 52,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Render phase_history as the primary Pipeline flow table when it exists.",
+        "Display current_phase and current_phase_status in the session summary.",
+        "Display session stop_reason and next_action from the phase-based session state.",
+        "Remove or suppress misleading zero-checkpoint messaging when phase_history has recorded phases."
+      ],
+      "out_of_scope": [
+        "Do not change pipeline session mutation logic.",
+        "Do not change Codex adapter execution behavior.",
+        "Do not refactor unrelated Web UI pages."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "A PSESS-016-like session shows Queue passed, Prepare passed and Codex Execute failed.",
+        "The session summary shows execute as the current failed phase when current_phase is execute.",
+        "The UI no longer shows all checkpoints as planned when phase_history contains real outcomes.",
+        "Legacy sessions still render their old gate flow.",
+        "Tests assert the phase status labels in rendered HTML."
+      ],
+      "review_instructions": [
+        "Check that phase_history takes precedence only when present."
+      ],
+      "notes": [
+        "This fixes the visual mismatch between backend phase state and Web UI checkpoint display."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-23T21:31:30Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-23T15:08:54Z",
+      "updated_at": "2026-06-23T21:31:30Z",
+      "uid": "tsk_8a1c2d07282e",
+      "ref": "PIPEF-52",
+      "legacy_id": "TASK-131",
+      "aliases": [
+        "TASK-131"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 52
+    },
+    {
+      "id": "TASK-132",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-048 Render phase execution artifacts and failure evidence",
+      "status": "done",
+      "summary": "Show phase execution artifacts, failure evidence and log snippets for failed phase-based pipeline sessions.",
+      "description": "When execute fails, the Web UI should expose the useful adapter evidence without requiring the owner to inspect raw JSON.",
+      "priority": 1,
+      "order": 53,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Render phase artifacts from phase_history entries in the Pipeline details panel.",
+        "Show execute failure fields including error_code, command_ref, timeout_sec, duration_sec and reason.",
+        "Show bounded stdout and stderr snippets from execute_evidence or adapter artifacts.",
+        "Show prompt path, context pack path and report instruction when available."
+      ],
+      "out_of_scope": [
+        "Do not store new execution evidence in pipeline state.",
+        "Do not increase Codex timeout in this task.",
+        "Do not expose unbounded logs in the Web UI."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "A CODEX_ADAPTER_TIMEOUT phase shows CODEX_ADAPTER_TIMEOUT in the Web UI.",
+        "The UI displays timeout_sec and duration_sec for failed execute phases.",
+        "The UI displays command_ref for local Codex execution.",
+        "Large stderr snippets are bounded by the existing Web UI log snippet limit.",
+        "Tests cover rendering of execute_evidence and adapter artifacts."
+      ],
+      "review_instructions": [
+        "Verify that large log fields are escaped and truncated safely."
+      ],
+      "notes": [
+        "This is a diagnostics UI task and should not alter execution semantics."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-23T21:43:14Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-23T15:08:55Z",
+      "updated_at": "2026-06-23T21:43:14Z",
+      "uid": "tsk_7ab0576e73fe",
+      "ref": "PIPEF-53",
+      "legacy_id": "TASK-132",
+      "aliases": [
+        "TASK-132"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 53
+    },
+    {
+      "id": "TASK-133",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-049 Apply UI execution timeout settings to effective policy",
+      "status": "planned",
+      "summary": "Allow UI settings to configure Codex execution timeout and preflight timeout for UI runs.",
+      "description": "The effective UI policy should apply command_line and execution timeout consistently so real Codex runs are not limited to the built-in 300 second default.",
+      "priority": 1,
+      "order": 54,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add optional execution_timeout_sec handling to effective UI settings.",
+        "Apply execution_timeout_sec to policy.codex.timeout_sec when resolving UI pipeline policy.",
+        "Make ui run --preflight use preflight_timeout_sec from settings when no explicit CLI timeout is provided.",
+        "Parse numeric timeout settings safely when stored as strings by ui settings set."
+      ],
+      "out_of_scope": [
+        "Do not change built-in policy preset defaults.",
+        "Do not remove command_line behavior.",
+        "Do not change non-UI pipeline session creation semantics."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/ui_settings.py",
+        "ai_project_ctl/pipeline/ui_policy.py",
+        "scripts/aictl.py",
+        "tests/test_ui_settings.py",
+        "tests/pipeline/test_ui_settings_policy.py",
+        "tests/test_ui_run_command.py",
+        "tests/pipeline/test_codex_preflight.py"
+      ],
+      "acceptance_criteria": [
+        "UI settings can include execution_timeout_sec and the resolved UI policy uses it as codex.timeout_sec.",
+        "String values such as \"3600\" are accepted for timeout settings.",
+        "Invalid timeout values produce a stable UI settings or policy error.",
+        "ui run --preflight uses preflight_timeout_sec from settings instead of hard-coded 30 seconds.",
+        "command_line still overrides local_command and command_allowlist for UI runs.",
+        "Existing UI settings and UI run tests pass."
+      ],
+      "review_instructions": [
+        "Verify that direct pipeline session create remains governed by stored policy presets."
+      ],
+      "notes": [
+        "This addresses the 300 second Codex adapter timeout observed in phase execute."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-23T15:08:56Z",
+      "updated_at": "2026-06-23T15:08:56Z",
+      "uid": "tsk_a0392e704045",
+      "ref": "PIPEF-54",
+      "legacy_id": "TASK-133",
+      "aliases": [
+        "TASK-133"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 54
+    },
+    {
+      "id": "TASK-134",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-050 Update Web Pipeline actions for phase-based sessions",
+      "status": "planned",
+      "summary": "Update Web Pipeline page actions and owner guidance for phase-based session states.",
+      "description": "The Web UI should offer appropriate actions for phase-based sessions and explain failed, blocked and waiting states clearly.",
+      "priority": 1,
+      "order": 55,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Review Pipeline page actions shown for planned, running, blocked, failed and stopped phase-based sessions.",
+        "Ensure failed execute sessions show useful owner next actions.",
+        "Keep Stop Session and resume actions consistent with session terminal and waiting states.",
+        "Add tests for action visibility on phase-based failed and blocked sessions."
+      ],
+      "out_of_scope": [
+        "Do not add automatic retry behavior.",
+        "Do not auto-approve Evolution Changes.",
+        "Do not change restricted action confirmation rules."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "Failed phase-based sessions do not appear as actively running in action guidance.",
+        "The UI shows owner action guidance from session.next_action or latest phase next_action.",
+        "Stop Session remains available only for stoppable session statuses.",
+        "Resume or Run actions remain guarded by existing confirmation behavior.",
+        "Tests cover action rendering for failed execute and blocked prepare sessions."
+      ],
+      "review_instructions": [
+        "Check that owner approval actions remain explicit and non-automatic."
+      ],
+      "notes": [
+        "This task improves UI guidance only; it should not modify pipeline policy safety rules."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-23T15:08:57Z",
+      "updated_at": "2026-06-23T15:08:57Z",
+      "uid": "tsk_1c8988bcc50b",
+      "ref": "PIPEF-55",
+      "legacy_id": "TASK-134",
+      "aliases": [
+        "TASK-134"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 55
+    },
+    {
+      "id": "TASK-135",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-051 Document phase-based Web Pipeline display behavior",
+      "status": "planned",
+      "summary": "Document how the Web Control Center displays phase-based pipeline sessions and timeout settings.",
+      "description": "Owner-facing documentation should explain phase_history display, legacy fallback and UI timeout configuration.",
+      "priority": 1,
+      "order": 56,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Document that Web Pipeline UI uses phase_history for phase-based sessions.",
+        "Document the legacy steps and gate_outcomes fallback for older sessions.",
+        "Document command_line, preflight_timeout_sec and execution_timeout_sec UI settings.",
+        "Add troubleshooting notes for CODEX_ADAPTER_TIMEOUT and missing report evidence."
+      ],
+      "out_of_scope": [
+        "Do not change generated documentation manually.",
+        "Do not document unimplemented automation behavior as available.",
+        "Do not change pipeline code in this documentation task."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/08-usage-guide.md",
+        "ai-system/project-control/10-owner-quickstart.md"
+      ],
+      "acceptance_criteria": [
+        "Documentation explains phase_history-based Web Pipeline rendering.",
+        "Documentation explains the difference between command_line and policy local_command.",
+        "Documentation explains preflight timeout versus execution timeout.",
+        "Documentation includes a troubleshooting note for CODEX_ADAPTER_TIMEOUT.",
+        "Generated documentation checks can be rerun without manual edits to generated files."
+      ],
+      "review_instructions": [
+        "Verify that the docs do not overstate automation maturity."
+      ],
+      "notes": [
+        "Run the appropriate render/check-generated command after documentation edits."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-23T15:08:58Z",
+      "updated_at": "2026-06-23T15:08:58Z",
+      "uid": "tsk_764223596ec1",
+      "ref": "PIPEF-56",
+      "legacy_id": "TASK-135",
+      "aliases": [
+        "TASK-135"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 56
     }
   ]
 }

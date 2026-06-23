@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 46,
+  "revision": 58,
   "created_at": "2026-06-19T21:27:58Z",
-  "updated_at": "2026-06-21T19:21:51Z",
-  "current_session_id": "PSESS-012",
+  "updated_at": "2026-06-23T14:41:27Z",
+  "current_session_id": "PSESS-016",
   "sessions": [
     {
       "id": "PSESS-001",
@@ -4678,6 +4678,1031 @@
           ]
         }
       ]
+    },
+    {
+      "id": "PSESS-013",
+      "status": "blocked",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-40"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": false,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": false,
+          "owner_approval_note": ""
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 300,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "",
+      "current_task_ref": "",
+      "current_phase": "queue_preview",
+      "current_phase_status": "blocked",
+      "blocked_by": "NO_EXECUTABLE_TASK",
+      "next_action": "Create or unblock a ready task, then rerun queue preview.",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "blocked",
+          "reason": "No executable task is available in the selected queue.",
+          "next_action": "Create or unblock a ready task, then rerun queue preview.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-013",
+            "next_task": null,
+            "queue_counts": {
+              "executable": 0,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 1
+            },
+            "queue_categories": {
+              "executable": [],
+              "waiting": [],
+              "blocked": [],
+              "skipped": [
+                {
+                  "id": "TASK-119",
+                  "ref": "PIPEF-40",
+                  "uid": "tsk_5bcaf7cb78cb",
+                  "legacy_id": "TASK-119",
+                  "title": "PIPE-040 Add tests for phase model and mutations",
+                  "status": "in_progress",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-40",
+                  "reason_codes": [
+                    "status_not_executable"
+                  ],
+                  "reasons": [
+                    {
+                      "code": "status_not_executable",
+                      "detail": "status is in_progress"
+                    }
+                  ]
+                }
+              ]
+            },
+            "reason_summary": [
+              {
+                "code": "status_not_executable",
+                "count": 1,
+                "categories": [
+                  "skipped"
+                ]
+              }
+            ],
+            "blocked_by": "NO_EXECUTABLE_TASK"
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-EF632505EC24"
+          ]
+        }
+      ],
+      "current_step": "",
+      "current_step_status": "planned",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-D3D0FF114BC7",
+        "EVT-EF632505EC24"
+      ],
+      "stop_reason": "No executable task is available in the selected queue.",
+      "created_at": "2026-06-22T14:04:28Z",
+      "updated_at": "2026-06-22T14:04:28Z",
+      "started_at": "2026-06-22T14:04:28Z",
+      "finished_at": ""
+    },
+    {
+      "id": "PSESS-014",
+      "status": "blocked",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-40"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": false,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": false,
+          "owner_approval_note": ""
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 300,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "",
+      "current_task_ref": "",
+      "current_phase": "queue_preview",
+      "current_phase_status": "blocked",
+      "blocked_by": "NO_EXECUTABLE_TASK",
+      "next_action": "Create or unblock a ready task, then rerun queue preview.",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "blocked",
+          "reason": "No executable task is available in the selected queue.",
+          "next_action": "Create or unblock a ready task, then rerun queue preview.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-014",
+            "next_task": null,
+            "queue_counts": {
+              "executable": 0,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 1
+            },
+            "queue_categories": {
+              "executable": [],
+              "waiting": [],
+              "blocked": [],
+              "skipped": [
+                {
+                  "id": "TASK-119",
+                  "ref": "PIPEF-40",
+                  "uid": "tsk_5bcaf7cb78cb",
+                  "legacy_id": "TASK-119",
+                  "title": "PIPE-040 Add tests for phase model and mutations",
+                  "status": "in_progress",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-40",
+                  "reason_codes": [
+                    "status_not_executable"
+                  ],
+                  "reasons": [
+                    {
+                      "code": "status_not_executable",
+                      "detail": "status is in_progress"
+                    }
+                  ]
+                }
+              ]
+            },
+            "reason_summary": [
+              {
+                "code": "status_not_executable",
+                "count": 1,
+                "categories": [
+                  "skipped"
+                ]
+              }
+            ],
+            "blocked_by": "NO_EXECUTABLE_TASK"
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-48B0F5429579"
+          ]
+        }
+      ],
+      "current_step": "",
+      "current_step_status": "planned",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-D34071D8CC5B",
+        "EVT-48B0F5429579"
+      ],
+      "stop_reason": "No executable task is available in the selected queue.",
+      "created_at": "2026-06-22T14:05:22Z",
+      "updated_at": "2026-06-22T14:05:22Z",
+      "started_at": "2026-06-22T14:05:22Z",
+      "finished_at": ""
+    },
+    {
+      "id": "PSESS-015",
+      "status": "blocked",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-40"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": false,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": false,
+          "owner_approval_note": ""
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 300,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-119",
+      "current_task_ref": "",
+      "current_phase": "prepare",
+      "current_phase_status": "blocked",
+      "blocked_by": "BLOCKED",
+      "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-015",
+            "next_task": {
+              "id": "TASK-119",
+              "ref": "PIPEF-40",
+              "uid": "tsk_5bcaf7cb78cb",
+              "legacy_id": "TASK-119",
+              "title": "PIPE-040 Add tests for phase model and mutations",
+              "status": "ready",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-40"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-119",
+                  "ref": "PIPEF-40",
+                  "uid": "tsk_5bcaf7cb78cb",
+                  "legacy_id": "TASK-119",
+                  "title": "PIPE-040 Add tests for phase model and mutations",
+                  "status": "ready",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-40"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-11223612B5FF"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "blocked",
+          "reason": "Approved linked Evolution Changes are required before execution.",
+          "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+          "artifacts": {
+            "blocked_by": "BLOCKED",
+            "source": "session",
+            "session_id": "PSESS-015",
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-119",
+              "ref": "PIPEF-40",
+              "uid": "tsk_5bcaf7cb78cb",
+              "legacy_id": "TASK-119",
+              "title": "PIPE-040 Add tests for phase model and mutations",
+              "status": "ready",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 40,
+              "local_seq": 40,
+              "selected_ref": "PIPEF-40",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "stop_code": "BLOCKED",
+              "scope": "selected_task",
+              "inspected_task_ids": [
+                "TASK-119"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-119",
+                  "task_ref": "PIPEF-40",
+                  "change_ids": []
+                }
+              ],
+              "selected_task_id": "TASK-119",
+              "selected_task_ref": "PIPEF-40",
+              "created_change_ids": [],
+              "linked_change_ids": [],
+              "change_ids": [],
+              "tasks_requiring_approval": [
+                "TASK-119"
+              ],
+              "workflows": []
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-AE6CCF39D897"
+          ]
+        }
+      ],
+      "current_step": "",
+      "current_step_status": "planned",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-EA016E753A47",
+        "EVT-11223612B5FF",
+        "EVT-AE6CCF39D897"
+      ],
+      "stop_reason": "Approved linked Evolution Changes are required before execution.",
+      "created_at": "2026-06-22T14:07:26Z",
+      "updated_at": "2026-06-22T14:07:26Z",
+      "started_at": "2026-06-22T14:07:26Z",
+      "finished_at": ""
+    },
+    {
+      "id": "PSESS-016",
+      "status": "failed",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-40"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": false,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": false,
+          "owner_approval_note": ""
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 300,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-119",
+      "current_task_ref": "",
+      "current_phase": "execute",
+      "current_phase_status": "failed",
+      "blocked_by": "",
+      "next_action": "In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-119 --file <REPORT.json> --confirm",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-016",
+            "next_task": {
+              "id": "TASK-119",
+              "ref": "PIPEF-40",
+              "uid": "tsk_5bcaf7cb78cb",
+              "legacy_id": "TASK-119",
+              "title": "PIPE-040 Add tests for phase model and mutations",
+              "status": "ready",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-40"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-119",
+                  "ref": "PIPEF-40",
+                  "uid": "tsk_5bcaf7cb78cb",
+                  "legacy_id": "TASK-119",
+                  "title": "PIPE-040 Add tests for phase model and mutations",
+                  "status": "ready",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-40"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-99CBB7835846"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "blocked",
+          "reason": "Approved linked Evolution Changes are required before execution.",
+          "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+          "artifacts": {
+            "blocked_by": "BLOCKED",
+            "source": "session",
+            "session_id": "PSESS-016",
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-119",
+              "ref": "PIPEF-40",
+              "uid": "tsk_5bcaf7cb78cb",
+              "legacy_id": "TASK-119",
+              "title": "PIPE-040 Add tests for phase model and mutations",
+              "status": "ready",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 40,
+              "local_seq": 40,
+              "selected_ref": "PIPEF-40",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "stop_code": "BLOCKED",
+              "scope": "selected_task",
+              "inspected_task_ids": [
+                "TASK-119"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-119",
+                  "task_ref": "PIPEF-40",
+                  "change_ids": []
+                }
+              ],
+              "selected_task_id": "TASK-119",
+              "selected_task_ref": "PIPEF-40",
+              "created_change_ids": [],
+              "linked_change_ids": [],
+              "change_ids": [],
+              "tasks_requiring_approval": [
+                "TASK-119"
+              ],
+              "workflows": []
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-8FFCA00B1A66"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "passed",
+          "reason": "Task preparation rebuilt artifacts; Codex execution has not been started.",
+          "next_action": "Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 81b5ba2818abb4904b0e8a2259fb87e02eecf7ce3a8b674e3b0fdb4e6899f232).",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-016",
+            "task_id": "TASK-119",
+            "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+            "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+            "prompt_sha256": "81b5ba2818abb4904b0e8a2259fb87e02eecf7ce3a8b674e3b0fdb4e6899f232",
+            "artifact_freshness": {
+              "status": "rebuilt",
+              "reason": "context_tasks_revision_stale",
+              "rebuild_required_before_prepare": true,
+              "fresh_before_prepare": false
+            },
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-119",
+              "ref": "PIPEF-40",
+              "uid": "tsk_5bcaf7cb78cb",
+              "legacy_id": "TASK-119",
+              "title": "PIPE-040 Add tests for phase model and mutations",
+              "status": "ready",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 40,
+              "local_seq": 40,
+              "selected_ref": "PIPEF-40",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "scope": "selected_task",
+              "inspected_task_ids": [
+                "TASK-119"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-119",
+                  "task_ref": "PIPEF-40",
+                  "change_ids": [
+                    "CHG-064"
+                  ]
+                }
+              ],
+              "selected_task_id": "TASK-119",
+              "selected_task_ref": "PIPEF-40",
+              "change_ids": [
+                "CHG-064"
+              ]
+            },
+            "workflow": {
+              "ok": true,
+              "message": "Workflow completed.",
+              "steps": [
+                {
+                  "id": "resolve",
+                  "status": "ok"
+                },
+                {
+                  "id": "current_set",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_validate",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_graph",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_in_progress",
+                  "status": "ok"
+                },
+                {
+                  "id": "context_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "codex_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "doctor",
+                  "status": "ok"
+                }
+              ],
+              "errors": []
+            },
+            "codex_adapter_called": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-FF17E0B18D7B"
+          ]
+        },
+        {
+          "phase": "execute",
+          "status": "failed",
+          "reason": "Codex execution adapter failed: local_command_timeout (status=failed, code=CODEX_ADAPTER_TIMEOUT, returncode=none)",
+          "next_action": "In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-119 --file <REPORT.json> --confirm",
+          "artifacts": {
+            "error_code": "CODEX_ADAPTER_TIMEOUT",
+            "session_id": "PSESS-016",
+            "task_id": "TASK-119",
+            "policy": "supervised_executable_local_commit",
+            "prepare_artifacts": {
+              "task_id": "TASK-119",
+              "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+              "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "81b5ba2818abb4904b0e8a2259fb87e02eecf7ce3a8b674e3b0fdb4e6899f232"
+            },
+            "token_budget": {
+              "status": "pass",
+              "code": "TOKEN_BUDGET_PASS",
+              "reason": "within_token_budget",
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "81b5ba2818abb4904b0e8a2259fb87e02eecf7ce3a8b674e3b0fdb4e6899f232",
+              "prompt_bytes": 2705,
+              "prompt_tokens": 677,
+              "context_bytes": 0,
+              "context_tokens": 0,
+              "token_count_strategy": "local_byte_estimate",
+              "token_count_estimated": true,
+              "token_count_unavailable": false,
+              "token_count_unavailable_reason": "",
+              "model_context_limit": 32000,
+              "max_context_tokens": 24000,
+              "reserved_output_tokens": 0,
+              "min_remaining_tokens": 6000,
+              "remaining_tokens": 31323,
+              "context_requires_compact_or_split": false,
+              "context_requirement_reasons": [],
+              "context_pack": {}
+            },
+            "codex_adapter_called": true,
+            "execute_started_at": "2026-06-23T14:36:27Z",
+            "execute_finished_at": "2026-06-23T14:41:27Z",
+            "before_report_id": "",
+            "after_report_id": "",
+            "report_id": "",
+            "execute_evidence": {
+              "status": "failed",
+              "code": "CODEX_ADAPTER_TIMEOUT",
+              "reason": "local_command_timeout",
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": null,
+              "duration_sec": 300.01586,
+              "stdout_ref": "",
+              "stderr_ref": "captured:stderr:sha256:c3df26d031bf5a8bef7b6e8a8a4293b8540141479e7d03db4c85ab5ffd0b6fd8",
+              "stdout_snippet": "",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.140.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: medium\nreasoning summaries: none\nsession id: 019ef4e9-5561-7023-95a7-46ea71bb23aa\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: Task execution\nActive Document: TASK-119 / PIPEF-40 prompt package\nExpected Result: Add the bounded tests in the allowed test files and run focused verification.\n\nI’m going to load the repository rules and the relevant system-control guidance first, then inspect the two allowed test files and the implementation they exercise before editing.\nexec\n/usr/bin/zsh -lc \"sed -n '1,220p' ai-system/interaction-modes.md\" in /home/nikitoys/AI-Development-System\nexec\n/usr/bin/zsh -lc \"pwd && sed -n '1,220p' ai-system/owner-guide.md\" in /home/nikitoys/AI-Development-System\n succeeded in 4ms:\n/home/nikitoys/AI-Development-System\n# Human Owner Guide\n\nStatus: Draft  \nVersion: v0.1.0\n\n## Purpose\n\nThis document explains how the Human Owner should interact with the AI Development System.\n\nThe Human Owner does not need to know every inter\n[truncated: 322804 bytes total]",
+              "stdout_bytes": 0,
+              "stderr_bytes": 325561,
+              "report_ids": [],
+              "report_required": true,
+              "started_at": "2026-06-23T14:36:27Z",
+              "finished_at": "2026-06-23T14:41:27Z",
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": ""
+            },
+            "adapter": {
+              "status": "failed",
+              "code": "CODEX_ADAPTER_TIMEOUT",
+              "reason": "local_command_timeout",
+              "mode": "local_command",
+              "started_at": "2026-06-23T14:36:27Z",
+              "finished_at": "2026-06-23T14:41:27Z",
+              "duration_sec": 300.01586,
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "81b5ba2818abb4904b0e8a2259fb87e02eecf7ce3a8b674e3b0fdb4e6899f232",
+              "prompt_transport": "stdin",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "timeout_sec": 300,
+              "timed_out": true,
+              "returncode": null,
+              "stdout_ref": "",
+              "stderr_ref": "captured:stderr:sha256:c3df26d031bf5a8bef7b6e8a8a4293b8540141479e7d03db4c85ab5ffd0b6fd8",
+              "stdout_snippet": "",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.140.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: medium\nreasoning summaries: none\nsession id: 019ef4e9-5561-7023-95a7-46ea71bb23aa\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: Task execution\nActive Document: TASK-119 / PIPEF-40 prompt package\nExpected Result: Add the bounded tests in the allowed test files and run focused verification.\n\nI’m going to load the repository rules and the relevant system-control guidance first, then inspect the two allowed test files and the implementation they exercise before editing.\nexec\n/usr/bin/zsh -lc \"sed -n '1,220p' ai-system/interaction-modes.md\" in /home/nikitoys/AI-Development-System\nexec\n/usr/bin/zsh -lc \"pwd && sed -n '1,220p' ai-system/owner-guide.md\" in /home/nikitoys/AI-Development-System\n succeeded in 4ms:\n/home/nikitoys/AI-Development-System\n# Human Owner Guide\n\nStatus: Draft  \nVersion: v0.1.0\n\n## Purpose\n\nThis document explains how the Human Owner should interact with the AI Development System.\n\nThe Human Owner does not need to know every inter\n[truncated: 322804 bytes total]",
+              "stdout_bytes": 0,
+              "stderr_bytes": 325561,
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": "",
+              "report_instruction": "In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-119 --file <REPORT.json> --confirm"
+            },
+            "adapter_summary": {
+              "status": "failed",
+              "code": "CODEX_ADAPTER_TIMEOUT",
+              "reason": "local_command_timeout",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": null,
+              "duration_sec": 300.01586,
+              "stdout_ref": "",
+              "stderr_ref": "captured:stderr:sha256:c3df26d031bf5a8bef7b6e8a8a4293b8540141479e7d03db4c85ab5ffd0b6fd8",
+              "stdout_snippet": "",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.140.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: medium\nreasoning summaries: none\nsession id: 019ef4e9-5561-7023-95a7-46ea71bb23aa\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: Task execution\nActive Document: TASK-119 / PIPEF-40 prompt package\nExpected Result: Add the bounded tests in the allowed test files and run focused verification.\n\nI’m going to load the repository rules and the relevant system-control guidance first, then inspect the two allowed test files and the implementation they exercise before editing.\nexec\n/usr/bin/zsh -lc \"sed -n '1,220p' ai-system/interaction-modes.md\" in /home/nikitoys/AI-Development-System\nexec\n/usr/bin/zsh -lc \"pwd && sed -n '1,220p' ai-system/owner-guide.md\" in /home/nikitoys/AI-Development-System\n succeeded in 4ms:\n/home/nikitoys/AI-Development-System\n# Human Owner Guide\n\nStatus: Draft  \nVersion: v0.1.0\n\n## Purpose\n\nThis document explains how the Human Owner should interact with the AI Development System.\n\nThe Human Owner does not need to know every inter\n[truncated: 322804 bytes total]",
+              "stdout_bytes": 0,
+              "stderr_bytes": 325561,
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": "",
+              "report_ids": []
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-6FA0C9AEC0CD"
+          ]
+        }
+      ],
+      "current_step": "",
+      "current_step_status": "planned",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-3C63F423A484",
+        "EVT-99CBB7835846",
+        "EVT-8FFCA00B1A66",
+        "EVT-FF17E0B18D7B",
+        "EVT-6FA0C9AEC0CD"
+      ],
+      "stop_reason": "Codex execution adapter failed: local_command_timeout (status=failed, code=CODEX_ADAPTER_TIMEOUT, returncode=none)",
+      "created_at": "2026-06-22T14:11:00Z",
+      "updated_at": "2026-06-23T14:41:27Z",
+      "started_at": "2026-06-22T14:11:00Z",
+      "finished_at": ""
     }
   ]
 }
