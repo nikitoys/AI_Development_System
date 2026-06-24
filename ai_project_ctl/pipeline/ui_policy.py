@@ -10,12 +10,14 @@ from typing import Any, Mapping
 from ai_project_ctl.core.result import CommandError
 from ai_project_ctl.ui_settings import (
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+    REQUIRE_CODEX_REVIEW_SETTING,
     UISettingsError,
     load_ui_settings,
     optional_ui_timeout_sec,
 )
 
 from .policy import CodexAdapterMode, CodexExecutionMode, PipelinePolicy
+from .policy import apply_codex_review_requirement
 from .policy_store import load_policy_preset
 
 
@@ -52,6 +54,10 @@ def resolve_pipeline_policy_from_settings(
 
     policy_name = _required_text(settings, "default_policy")
     policy = _load_policy(policy_name, root=root)
+    policy = apply_codex_review_requirement(
+        policy,
+        require_codex_review=_require_codex_review(settings),
+    )
     execution_timeout_sec = _execution_timeout_sec(settings)
     if execution_timeout_sec is not None:
         policy = replace(
@@ -71,6 +77,15 @@ def resolve_pipeline_policy_from_settings(
             command_allowlist=(command_key,),
         ),
     )
+
+
+def _require_codex_review(settings: Mapping[str, Any]) -> bool:
+    value = settings.get(REQUIRE_CODEX_REVIEW_SETTING, True)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true"}
+    return bool(value)
 
 
 def _load_policy(policy_name: str, *, root: str | Path) -> PipelinePolicy:

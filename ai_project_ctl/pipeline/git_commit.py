@@ -14,7 +14,12 @@ from .codex_review import VERDICT_APPROVE
 from .codex_review import CodexReviewResult
 from .machine_review import PASS as MACHINE_REVIEW_PASS
 from .machine_review import MachineReviewResult
-from .policy import CommitMode, PipelinePolicy
+from .policy import (
+    CommitMode,
+    PipelinePolicy,
+    disables_codex_review_by_policy,
+    requires_codex_review_approve,
+)
 from .report_gate import PASS as REPORT_GATE_PASS
 from .report_gate import ReportGateResult
 from .state import load_reference_state
@@ -214,7 +219,7 @@ def evaluate_commit_readiness(
             accepted_change_ids=accepted_change_ids,
         )
 
-    gate_blocker = _gate_blocker(report_gate, machine_review, codex_review)
+    gate_blocker = _gate_blocker(policy, report_gate, machine_review, codex_review)
     if gate_blocker:
         code, reason = gate_blocker
         return _readiness(
@@ -506,6 +511,7 @@ def _policy_blockers(policy: PipelinePolicy) -> list[str]:
 
 
 def _gate_blocker(
+    policy: PipelinePolicy,
     report_gate: ReportGateResult,
     machine_review: MachineReviewResult,
     codex_review: CodexReviewResult,
@@ -514,6 +520,13 @@ def _gate_blocker(
         return CODE_REPORT_NOT_PASS, "Codex Report Gate must be PASS before local commit."
     if machine_review.status != MACHINE_REVIEW_PASS:
         return CODE_MACHINE_REVIEW_NOT_PASS, "Machine Review must be PASS before local commit."
+    if disables_codex_review_by_policy(policy):
+        return None
+    if not requires_codex_review_approve(policy):
+        return (
+            CODE_POLICY_INVALID,
+            "Local commit policy must explicitly require or disable Codex Review.",
+        )
     if codex_review.status != CODEX_REVIEW_PASS or codex_review.verdict != VERDICT_APPROVE:
         return (
             CODE_CODEX_REVIEW_NOT_APPROVED,

@@ -1,6 +1,8 @@
 {
   "command_line": "codex exec --sandbox danger-full-access",
   "default_policy": "supervised_executable_local_commit_1h",
+  "require_codex_review": false,
   "allow_internal_change_gate_bypass": true,
-  "preflight_timeout_sec": "120"
+  "preflight_timeout_sec": "120",
+  "execution_timeout_sec": ""
 }

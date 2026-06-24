@@ -1,6 +1,6 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/state/docs.json + AI_PROJECT/state/tasks.json -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-155 PIPE-071 Add pipeline regression test for Run report auto-collection Add an end-to-end regression test proving a UI Run session can proceed past collect-report when Codex emits a valid report. This protects the Run workflow from returning to CODEX_ADAPTER_REPORT_MISSING after successful Codex execution. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add a pipeline or UI run test with a fake Codex runner that emits the structured report block. Assert that execute records the auto-submitted report id. Assert that collect-report passes without manual task report submit. Assert that missing structured report output still blocks with the expected report-missing code. Do not run real Codex in tests. Do not change production pipeline behavior in this task. Do not weaken existing report gate tests. tests/test_ui_run_command.py tests/test_pipeline_runner.py tests/test_pipeline_report_gate.py tests/pipeline/test_codex_adapter.py The regression test uses a fake local-command runner, not real Codex. A valid emitted report allows collect-report to pass. The test verifies the report id is stored and linked to the selected task. A no-report runner still produces CODEX_ADAPTER_REPORT_MISSING. Existing pipeline tests continue to pass. Check that the regression covers the Run path rather than only the parser unit path.","schema_version":1,"task_id":"TASK-155"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-161 Make Codex Review optional in pipeline Allow the pipeline to skip semantic Codex Review when `require_codex_review` is false while keeping Machine Review required. This task implements the behavior behind the Settings checkbox without weakening deterministic review gates. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Resolve `require_codex_review=false` into an effective pipeline policy that does not require Codex Review APPROVE. Record the review phase as skipped without building a Codex Review prompt when Codex Review is disabled by policy. Allow close phase to proceed without Codex Review only when policy explicitly disables it and Machine Review evidence passes. Allow local commit readiness to skip Codex Review approval only when policy explicitly disables it. Preserve current Codex Review requirements when `require_codex_review=true`. Add tests for skipped review, close preflight, and local commit readiness with Codex Review disabled. Do not disable Machine Review. Do not remove or weaken Report Gate checks. Do not change Codex Review behavior when `require_codex_review=true`. Do not change unrelated pipeline phases. ai_project_ctl/pipeline/ui_policy.py ai_project_ctl/pipeline/policy.py ai_project_ctl/pipeline/review_phase.py ai_project_ctl/pipeline/close_phase.py ai_project_ctl/pipeline/git_commit.py tests/test_pipeline_codex_review_toggle.py When `require_codex_review=true`, existing Codex Review APPROVE requirements remain unchanged. When `require_codex_review=false`, review phase records `status=skipped` and does not build or return a Codex Review prompt. Machine Review remains required before close and cannot be bypassed by disabling Codex Review. Close phase accepts skipped Codex Review only when the effective policy disables Codex Review. Local commit readiness does not block on missing Codex Review only when the effective policy disables Codex Review. Tests prove that disabling Codex Review does not disable Report Gate or Machine Review. Reject if Codex Review disabling also disables Machine Review. Reject if close can proceed without Machine Review PASS. Reject if Codex Review is skipped when `require_codex_review=true`. Reject if local commit ignores Codex Review when policy still requires it.","schema_version":1,"task_id":"TASK-161"} -->
 
 # Context Pack
 
@@ -8,41 +8,46 @@ This generated Context Pack is derived output only. It is not source of truth.
 It does not expand task scope, allowed files, out-of-scope items, or acceptance criteria.
 
 Mode: `task`
-Task ID: `TASK-155`
+Task ID: `TASK-161`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1087`
+Tasks revision: `1105`
 
 ## Query
 
 ```text
-TASK-155 PIPE-071 Add pipeline regression test for Run report auto-collection Add an end-to-end regression test proving a UI Run session can proceed past collect-report when Codex emits a valid report. This protects the Run workflow from returning to CODEX_ADAPTER_REPORT_MISSING after successful Codex execution. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add a pipeline or UI run test with a fake Codex runner that emits the structured report block. Assert that execute records the auto-submitted report id. Assert that collect-report passes without manual task report submit. Assert that missing structured report output still blocks with the expected report-missing code. Do not run real Codex in tests. Do not change production pipeline behavior in this task. Do not weaken existing report gate tests. tests/test_ui_run_command.py tests/test_pipeline_runner.py tests/test_pipeline_report_gate.py tests/pipeline/test_codex_adapter.py The regression test uses a fake local-command runner, not real Codex. A valid emitted report allows collect-report to pass. The test verifies the report id is stored and linked to the selected task. A no-report runner still produces CODEX_ADAPTER_REPORT_MISSING. Existing pipeline tests continue to pass. Check that the regression covers the Run path rather than only the parser unit path.
+TASK-161 Make Codex Review optional in pipeline Allow the pipeline to skip semantic Codex Review when `require_codex_review` is false while keeping Machine Review required. This task implements the behavior behind the Settings checkbox without weakening deterministic review gates. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Resolve `require_codex_review=false` into an effective pipeline policy that does not require Codex Review APPROVE. Record the review phase as skipped without building a Codex Review prompt when Codex Review is disabled by policy. Allow close phase to proceed without Codex Review only when policy explicitly disables it and Machine Review evidence passes. Allow local commit readiness to skip Codex Review approval only when policy explicitly disables it. Preserve current Codex Review requirements when `require_codex_review=true`. Add tests for skipped review, close preflight, and local commit readiness with Codex Review disabled. Do not disable Machine Review. Do not remove or weaken Report Gate checks. Do not change Codex Review behavior when `require_codex_review=true`. Do not change unrelated pipeline phases. ai_project_ctl/pipeline/ui_policy.py ai_project_ctl/pipeline/policy.py ai_project_ctl/pipeline/review_phase.py ai_project_ctl/pipeline/close_phase.py ai_project_ctl/pipeline/git_commit.py tests/test_pipeline_codex_review_toggle.py When `require_codex_review=true`, existing Codex Review APPROVE requirements remain unchanged. When `require_codex_review=false`, review phase records `status=skipped` and does not build or return a Codex Review prompt. Machine Review remains required before close and cannot be bypassed by disabling Codex Review. Close phase accepts skipped Codex Review only when the effective policy disables Codex Review. Local commit readiness does not block on missing Codex Review only when the effective policy disables Codex Review. Tests prove that disabling Codex Review does not disable Report Gate or Machine Review. Reject if Codex Review disabling also disables Machine Review. Reject if close can proceed without Machine Review PASS. Reject if Codex Review is skipped when `require_codex_review=true`. Reject if local commit ignores Codex Review when policy still requires it.
 ```
 
 ## Task Boundary Snapshot
 
-Task: `TASK-155` - PIPE-071 Add pipeline regression test for Run report auto-collection
+Task: `TASK-161` - Make Codex Review optional in pipeline
 Status: `in_progress`
 
 Scope:
-- Add a pipeline or UI run test with a fake Codex runner that emits the structured report block.
-- Assert that execute records the auto-submitted report id.
-- Assert that collect-report passes without manual task report submit.
-- Assert that missing structured report output still blocks with the expected report-missing code.
+- Resolve `require_codex_review=false` into an effective pipeline policy that does not require Codex Review APPROVE.
+- Record the review phase as skipped without building a Codex Review prompt when Codex Review is disabled by policy.
+- Allow close phase to proceed without Codex Review only when policy explicitly disables it and Machine Review evidence passes.
+- Allow local commit readiness to skip Codex Review approval only when policy explicitly disables it.
+- Preserve current Codex Review requirements when `require_codex_review=true`.
+- Add tests for skipped review, close preflight, and local commit readiness with Codex Review disabled.
 
 Allowed Files:
-- tests/test_ui_run_command.py
-- tests/test_pipeline_runner.py
-- tests/test_pipeline_report_gate.py
-- tests/pipeline/test_codex_adapter.py
+- ai_project_ctl/pipeline/ui_policy.py
+- ai_project_ctl/pipeline/policy.py
+- ai_project_ctl/pipeline/review_phase.py
+- ai_project_ctl/pipeline/close_phase.py
+- ai_project_ctl/pipeline/git_commit.py
+- tests/test_pipeline_codex_review_toggle.py
 
 Acceptance Criteria:
-- The regression test uses a fake local-command runner, not real Codex.
-- A valid emitted report allows collect-report to pass.
-- The test verifies the report id is stored and linked to the selected task.
-- A no-report runner still produces CODEX_ADAPTER_REPORT_MISSING.
-- Existing pipeline tests continue to pass.
+- When `require_codex_review=true`, existing Codex Review APPROVE requirements remain unchanged.
+- When `require_codex_review=false`, review phase records `status=skipped` and does not build or return a Codex Review prompt.
+- Machine Review remains required before close and cannot be bypassed by disabling Codex Review.
+- Close phase accepts skipped Codex Review only when the effective policy disables Codex Review.
+- Local commit readiness does not block on missing Codex Review only when the effective policy disables Codex Review.
+- Tests prove that disabling Codex Review does not disable Report Gate or Machine Review.
 
 ## Index Summary
 
@@ -57,14 +62,14 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 | Score | Source | Heading | Lines | Content hash | Chunk hash | Reasons |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 99 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 874-906 | `3444e8d40e40` | `6cf68be89257` | heading token match: and, py, to; metadata token match: and, md, py, to; content token match: a, an, and, can, codex, execution, existing, for |
-| 98 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | heading token match: existing; metadata token match: existing, md; content token match: a, acceptance, add, after, ai_project, allows, and, behavior |
-| 89 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 797-833 | `3444e8d40e40` | `24706f89c068` | metadata token match: md; content token match: a, acceptance, add, and, change, codex, criteria, from |
-| 84 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: to; metadata token match: md, to; content token match: a, acceptance, and, can, check, criteria, execution, for |
-| 82 | `ai-system/project-control/07-validation-and-tests.md` | 20. Acceptance Criteria For Validation Layer | 1368-1386 | `61710bd7deee` | `9ed7e5fda92c` | heading token match: acceptance, criteria, for; metadata token match: acceptance, and, criteria, for, md, tests; content token match: a, acceptance, and, can, criteria, do, for, generated |
-| 79 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 580-670 | `3444e8d40e40` | `4b3949b96350` | metadata token match: md; content token match: acceptance, ai_project, and, change, criteria, do, execution, expected |
-| 75 | `ai-system/project-control/06-prompt-package-spec.md` | 3. Current Implementation | 123-162 | `3444e8d40e40` | `4fe051d2de08` | metadata token match: md; content token match: a, ai_project, allows, an, and, behavior, codex, execution |
-| 73 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Scope | 21-64 | `f824429b0a39` | `9c998142f16f` | metadata token match: md; content token match: a, add, and, change, codex, execution, for, generated |
+| 128 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 874-906 | `3444e8d40e40` | `6cf68be89257` | heading token match: and, py, to; metadata token match: and, md, prompt, py, to; content token match: a, an, and, be, before, build, building, by |
+| 128 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: to; metadata token match: md, to; content token match: a, acceptance, and, approval, as, be, before, can |
+| 122 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | heading token match: existing; metadata token match: existing, md; content token match: a, acceptance, add, ai_project, allow, and, approval, approve |
+| 110 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 797-833 | `3444e8d40e40` | `24706f89c068` | metadata token match: md, prompt; content token match: a, acceptance, add, and, before, build, by, change |
+| 105 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 580-670 | `3444e8d40e40` | `4b3949b96350` | heading token match: prompt; metadata token match: md, prompt; content token match: acceptance, ai_project, and, be, build, by, change, checks |
+| 104 | `ai-system/project-control/04-command-catalog.md` | 18. Additional Command Domains > Pipeline Commands | 2294-2321 | `f824429b0a39` | `efe882b18c98` | heading token match: pipeline; metadata token match: md, pipeline; content token match: acceptance, ai_project, ai_project_ctl, and, approval, change, codex, current |
+| 97 | `ai-system/project-control/06-prompt-package-spec.md` | 3. Current Implementation | 123-162 | `3444e8d40e40` | `4fe051d2de08` | heading token match: current; metadata token match: current, md, prompt; content token match: a, ai_project, allow, an, and, behavior, build, building |
+| 95 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Scope | 21-64 | `f824429b0a39` | `9c998142f16f` | metadata token match: md; content token match: a, add, ai_project_ctl, and, as, be, change, codex |
 
 ## Selected Context
 
@@ -74,10 +79,10 @@ Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 17. Relationship To taskctl.py And codexctl.py
 Lines: `874-906`
-Score: `99`
+Score: `128`
 Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
 Chunk hash: `6cf68be892579b77502246852781af90dc2942f367d5af5b0a3c4a4ee727323f`
-Reasons: heading token match: and, py, to; metadata token match: and, md, py, to; content token match: a, an, and, can, codex, execution, existing, for
+Reasons: heading token match: and, py, to; metadata token match: and, md, prompt, py, to; content token match: a, an, and, be, before, build, building, by
 
 ```text
 # 17. Relationship To taskctl.py And codexctl.py
@@ -118,12 +123,35 @@ Before building the package, task state must be valid.
 
 Title: Skills Layer Roadmap
 Status: `active`  Type: `guide`
+Heading: Skills Layer Roadmap > Recommended Skills To Create
+Lines: `80-92`
+Score: `128`
+Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
+Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
+Reasons: heading token match: to; metadata token match: md, to; content token match: a, acceptance, and, approval, as, be, before, can
+
+```text
+## Recommended Skills To Create
+
+| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
+| --- | --- | --- | --- | --- | --- |
+| Documentation Control Skill | Guide documentation registration, status changes, generated indexes and documentation validation. | `docctl.py` | P0 | Register documents, set draft/review status, render/check generated docs, explain documentation lifecycle. | Mark documents active without Human Owner approval; manually edit `docs.json`, doc events or generated doc indexes. |
+| Protected Files Skill | Keep agents inside the protected-files boundary and detect unsafe project-control edits. | `check-protected-project-files.py`, `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Explain protected paths, run protected-files checks, route repairs through CLIs. | Edit protected state/events/generated files manually; use ad hoc scripts to mutate protected files; hide drift. |
+| Review Gate Skill | Guide review intake before a Task can be accepted or closed. | `taskctl.py`; future review control CLI if approved | P1 | Check scope, allowed files, acceptance criteria, validation output and review status; recommend APPROVED, REWORK, REJECTED or DEFERRED. | Self-approve work; mark a Task done without the required approval path; ignore Critical or Major findings. |
+
+[...truncated by contextctl...]
+```
+
+### 3. `ai-system/skills/README.md`
+
+Title: Skills Layer Roadmap
+Status: `active`  Type: `guide`
 Heading: Skills Layer Roadmap > Existing Useful Skills
 Lines: `34-43`
-Score: `98`
+Score: `122`
 Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
 Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
-Reasons: heading token match: existing; metadata token match: existing, md; content token match: a, acceptance, add, after, ai_project, allows, and, behavior
+Reasons: heading token match: existing; metadata token match: existing, md; content token match: a, acceptance, add, ai_project, allow, and, approval, approve
 
 ```text
 ## Existing Useful Skills
@@ -137,16 +165,16 @@ Reasons: heading token match: existing; metadata token match: existing, md; cont
 [...truncated by contextctl...]
 ```
 
-### 3. `ai-system/project-control/06-prompt-package-spec.md`
+### 4. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 14. Context Budget Rules > Context Pack Boundary
 Lines: `797-833`
-Score: `89`
+Score: `110`
 Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
 Chunk hash: `24706f89c068bb280d5630a712f0d9b260c02079a14823cc0a350875c71ba831`
-Reasons: metadata token match: md; content token match: a, acceptance, add, and, change, codex, criteria, from
+Reasons: metadata token match: md, prompt; content token match: a, acceptance, add, and, before, build, by, change
 
 ```text
 ## Context Pack Boundary
@@ -187,71 +215,16 @@ If validation fails, `codexctl.py` must fail clearly and must not include stale 
 ---
 ```
 
-### 4. `ai-system/skills/README.md`
-
-Title: Skills Layer Roadmap
-Status: `active`  Type: `guide`
-Heading: Skills Layer Roadmap > Recommended Skills To Create
-Lines: `80-92`
-Score: `84`
-Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
-Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
-Reasons: heading token match: to; metadata token match: md, to; content token match: a, acceptance, and, can, check, criteria, execution, for
-
-```text
-## Recommended Skills To Create
-
-| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
-| --- | --- | --- | --- | --- | --- |
-| Documentation Control Skill | Guide documentation registration, status changes, generated indexes and documentation validation. | `docctl.py` | P0 | Register documents, set draft/review status, render/check generated docs, explain documentation lifecycle. | Mark documents active without Human Owner approval; manually edit `docs.json`, doc events or generated doc indexes. |
-| Protected Files Skill | Keep agents inside the protected-files boundary and detect unsafe project-control edits. | `check-protected-project-files.py`, `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Explain protected paths, run protected-files checks, route repairs through CLIs. | Edit protected state/events/generated files manually; use ad hoc scripts to mutate protected files; hide drift. |
-| Review Gate Skill | Guide review intake before a Task can be accepted or closed. | `taskctl.py`; future review control CLI if approved | P1 | Check scope, allowed files, acceptance criteria, validation output and review status; recommend APPROVED, REWORK, REJECTED or DEFERRED. | Self-approve work; mark a Task done without the required approval path; ignore Critical or Major findings. |
-
-[...truncated by contextctl...]
-```
-
-### 5. `ai-system/project-control/07-validation-and-tests.md`
-
-Title: Project Control Validation and Tests
-Status: `active`  Type: `process`
-Heading: 20. Acceptance Criteria For Validation Layer
-Lines: `1368-1386`
-Score: `82`
-Content hash: `61710bd7deeed5b710aa500acaf478c77f7ad43ffcd3943c0245da65015ff2c9`
-Chunk hash: `9ed7e5fda92cce9da485202d3c05867d3fcf000f7ab294fcf2397088db94d3cf`
-Reasons: heading token match: acceptance, criteria, for; metadata token match: acceptance, and, criteria, for, md, tests; content token match: a, acceptance, and, can, criteria, do, for, generated
-
-```text
-# 20. Acceptance Criteria For Validation Layer
-
-Validation and tests are acceptable when:
-
-```text id="xnp5jd"
-- happy path passes in a temp root;
-- invalid lifecycle transitions fail;
-- missing parent references fail;
-- generated task drift is detected;
-- prompt build requires selected or explicit Task;
-- audit events are written for successful mutations;
-- failed commands do not write success events;
-- task validation checks plan references by default;
-- generated Markdown can be regenerated;
-- smoke test can run locally and in CI.
-```
-
----
-```
-
-### 6. `ai-system/project-control/06-prompt-package-spec.md`
+### 5. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 12. Prompt Package Template
 Lines: `580-670`
-Score: `79`
+Score: `105`
 Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
 Chunk hash: `4b3949b963506d03a8ca61d2f28eb70f0cc2ca715a4c20495bab284ca4d8fcb0`
-Reasons: metadata token match: md; content token match: acceptance, ai_project, and, change, criteria, do, execution, expected
+Reasons: heading token match: prompt; metadata token match: md, prompt; content token match: acceptance, ai_project, and, be, build, by, change, checks
 
 ```text
 # 12. Prompt Package Template
@@ -324,16 +297,57 @@ Execution Rules:
 [...truncated by contextctl...]
 ```
 
+### 6. `ai-system/project-control/04-command-catalog.md`
+
+Title: Project Control Command Catalog
+Status: `active`  Type: `reference`
+Heading: 18. Additional Command Domains > Pipeline Commands
+Lines: `2294-2321`
+Score: `104`
+Content hash: `f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6`
+Chunk hash: `efe882b18c987d13ed38a60c38d0a9ba2dccd1c95061f72f79901f6f007ad46a`
+Reasons: heading token match: pipeline; metadata token match: md, pipeline; content token match: acceptance, ai_project, ai_project_ctl, and, approval, change, codex, current
+
+```text
+## Pipeline Commands
+
+```text
+pipeline status
+pipeline validate
+pipeline render
+pipeline check-generated
+pipeline session create
+pipeline session start-step
+pipeline session step-result
+pipeline session stop
+pipeline session complete
+pipeline run-next
+pipeline run-until-blocker
+```
+
+Current implementation entry point:
+
+```bash
+python scripts/aictl.py pipeline ...
+```
+
+Pipeline commands manage supervised pipeline sessions, selected queues, policy snapshots, gate outcomes, stop reasons, generated pipeline status and generated pipeline audit output. They must route through `aictl.py` and the `ai_project_ctl/pipeline/**` services. They must not manually edit `AI_PROJECT/state/pipeline_sessions.json`, `AI_PROJECT/events/pipeline-events.jsonl`, `AI_PROJECT/generated/PIPELINE_STATUS.md` or `AI_PROJECT/generated/PIPELINE_AUDIT.md`.
+
+`pipeline run-next` advances at most one guarded step. `pipeline run-until-blocker` composes `run-next`, requires `--confirm`, stops on the first blocker or queue completion and does not introduce background execution.
+
+Pipeline policies must not authorize push, merge, automatic Evolution Change approval, automatic Evolution Change acceptance, or Human Owner final acceptance. Local commits, when policy-enabled, are local-only and require passing report, machine review, Codex review and commit-readiness gates.
+```
+
 ### 7. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 3. Current Implementation
 Lines: `123-162`
-Score: `75`
+Score: `97`
 Content hash: `3444e8d40e40cf20b4ec3bcdb6b1509741fe88fb0a35430a00b200bb2894c9ac`
 Chunk hash: `4fe051d2de08383b0737cc69ca48f864bb8341acd7154ddc8b2d3a70fb1ad30a`
-Reasons: metadata token match: md; content token match: a, ai_project, allows, an, and, behavior, codex, execution
+Reasons: heading token match: current; metadata token match: current, md, prompt; content token match: a, ai_project, allow, an, and, behavior, build, building
 
 ```text
 # 3. Current Implementation
@@ -383,10 +397,10 @@ Title: Project Control Command Catalog
 Status: `active`  Type: `reference`
 Heading: Project Control Command Catalog > Scope
 Lines: `21-64`
-Score: `73`
+Score: `95`
 Content hash: `f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6`
 Chunk hash: `9c998142f16f19b020151b13a6a80db5dfffa618771f91cbdd39a8467a7ee582`
-Reasons: metadata token match: md; content token match: a, add, and, change, codex, execution, for, generated
+Reasons: metadata token match: md; content token match: a, add, ai_project_ctl, and, as, be, change, codex
 
 ```text
 ## Scope

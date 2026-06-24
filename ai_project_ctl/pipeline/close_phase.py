@@ -32,7 +32,7 @@ from .git_commit import (
 )
 from .machine_review import evaluate_machine_review
 from .phase import PhaseResult
-from .policy import PipelinePolicy
+from .policy import PipelinePolicy, disables_codex_review_by_policy
 from .report_gate import evaluate_report_gate
 from .session import record_phase_result
 from .state import load_pipeline_state, load_reference_state, pipeline_state_path
@@ -892,6 +892,19 @@ def _preflight_evidence(
         for phase_name, phase in phases.items()
     }
     missing = []
+    policy_result = _preflight_policy(session)
+    if isinstance(policy_result, dict):
+        missing.append(
+            _missing_gate(
+                "policy",
+                "POLICY_SNAPSHOT_INVALID",
+                "Session policy snapshot is invalid.",
+                **policy_result,
+            )
+        )
+        codex_review_disabled = False
+    else:
+        codex_review_disabled = disables_codex_review_by_policy(policy_result)
 
     for phase_name in REQUIRED_PASSED_PHASES:
         phase = phases[phase_name]
@@ -938,24 +951,50 @@ def _preflight_evidence(
         review_status = str(review_phase.get("status") or "")
         review_artifacts = _mapping(review_phase.get("artifacts"))
         verdict = str(review_artifacts.get("verdict") or "").strip()
-        if review_status != "passed":
-            missing.append(
-                _missing_gate(
-                    REVIEW_PHASE_NAME,
-                    "PHASE_NOT_PASSED",
-                    "Review phase must pass before close.",
-                    observed_status=review_status,
+        if codex_review_disabled:
+            if review_status != "skipped":
+                missing.append(
+                    _missing_gate(
+                        REVIEW_PHASE_NAME,
+                        "REVIEW_SKIP_REQUIRED",
+                        (
+                            "Review phase must be skipped when Codex Review is "
+                            "disabled by policy."
+                        ),
+                        observed_status=review_status,
+                    )
                 )
-            )
-        if verdict != VERDICT_APPROVE:
-            missing.append(
-                _missing_gate(
-                    REVIEW_PHASE_NAME,
-                    "REVIEW_APPROVE_REQUIRED",
-                    "Review verdict must be APPROVE before close.",
-                    observed_verdict=verdict,
+            if not _review_skip_matches_policy(review_artifacts):
+                missing.append(
+                    _missing_gate(
+                        REVIEW_PHASE_NAME,
+                        "REVIEW_SKIP_POLICY_MISMATCH",
+                        (
+                            "Skipped review evidence must explicitly record the "
+                            "Codex Review disable policy."
+                        ),
+                        observed_skip_reason=str(review_artifacts.get("skip_reason") or ""),
+                    )
                 )
-            )
+        else:
+            if review_status != "passed":
+                missing.append(
+                    _missing_gate(
+                        REVIEW_PHASE_NAME,
+                        "PHASE_NOT_PASSED",
+                        "Review phase must pass before close.",
+                        observed_status=review_status,
+                    )
+                )
+            if verdict != VERDICT_APPROVE:
+                missing.append(
+                    _missing_gate(
+                        REVIEW_PHASE_NAME,
+                        "REVIEW_APPROVE_REQUIRED",
+                        "Review verdict must be APPROVE before close.",
+                        observed_verdict=verdict,
+                    )
+                )
         task_mismatch = _task_mismatch(review_phase, task_id)
         if task_mismatch:
             missing.append(
@@ -973,6 +1012,7 @@ def _preflight_evidence(
     return {
         "preflight_passed": not missing,
         "required_phases": list(REQUIRED_PHASE_ORDER),
+        "codex_review_required": not codex_review_disabled,
         "missing_gates": missing,
         "phase_statuses": statuses,
         "report_consistency": report_consistency["details"],
@@ -994,10 +1034,7 @@ def _run_close_workflow(
     decision = ReviewCloseDecision(
         action=ACTION_CLOSE_TASK,
         stop_code=CODE_TASK_AUTO_CLOSED,
-        reason=(
-            "Task close completed after close phase preflight, review APPROVE "
-            "evidence, and owner approval notes."
-        ),
+        reason=_close_workflow_reason(evidence),
         result_status="passed",
         gate_status="pass",
         notes=approval_notes,
@@ -1018,6 +1055,18 @@ def _run_close_workflow(
         task_id=task_id,
         python_executable=sys.executable,
         runner=None,
+    )
+
+
+def _close_workflow_reason(evidence: Mapping[str, Any]) -> str:
+    if evidence.get("codex_review_required") is False:
+        return (
+            "Task close completed after close phase preflight, skipped Codex Review "
+            "policy evidence, Machine Review evidence, and owner approval notes."
+        )
+    return (
+        "Task close completed after close phase preflight, review APPROVE "
+        "evidence, and owner approval notes."
     )
 
 
@@ -1138,6 +1187,34 @@ def _unique_strings(values: Any) -> list[str]:
         if text and text not in result:
             result.append(text)
     return result
+
+
+def _preflight_policy(session: Mapping[str, Any]) -> PipelinePolicy | dict[str, Any]:
+    try:
+        policy = PipelinePolicy.from_dict(
+            _required_mapping(session.get("policy_snapshot"), "policy_snapshot")
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        return {"error": str(exc)}
+
+    validation = policy.validate()
+    if not validation.ok:
+        return {
+            "policy": policy.name,
+            "policy_errors": [issue.to_message().to_dict() for issue in validation.errors],
+        }
+    return policy
+
+
+def _review_skip_matches_policy(artifacts: Mapping[str, Any]) -> bool:
+    return (
+        artifacts.get("codex_review_required") is False
+        and artifacts.get("policy_require_codex_review") is False
+        and str(artifacts.get("skip_reason") or "") == "disabled_by_policy"
+        and str(artifacts.get("review_status") or "") == "skipped"
+        and str(artifacts.get("review_prompt_built") or "").lower() in {"", "false"}
+        and str(artifacts.get("review_prompt_returned") or "").lower() in {"", "false"}
+    )
 
 
 def _report_consistency(
@@ -1388,6 +1465,8 @@ def _phase_summary(phase: Mapping[str, Any] | None) -> dict[str, Any]:
         "report_id": str(artifacts.get("report_id") or ""),
         "review_id": str(artifacts.get("review_id") or ""),
         "verdict": str(artifacts.get("verdict") or ""),
+        "skip_reason": str(artifacts.get("skip_reason") or ""),
+        "codex_review_required": artifacts.get("codex_review_required"),
     }
 
 

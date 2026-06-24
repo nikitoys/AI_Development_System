@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 import shlex
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 from ai_project_ctl.core.result import CommandError
 from ai_project_ctl.core.store import StoreError, read_json_file, write_json_file
@@ -15,11 +15,17 @@ UI_SETTINGS_FILE_NAME = "ui_settings.json"
 TIMEOUT_SETTING_MIN_SEC = 1
 TIMEOUT_SETTING_MAX_SEC = 3600
 INTERNAL_CHANGE_GATE_BYPASS_SETTING = "allow_internal_change_gate_bypass"
+REQUIRE_CODEX_REVIEW_SETTING = "require_codex_review"
+BOOLEAN_UI_SETTING_KEYS = (
+    INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+    REQUIRE_CODEX_REVIEW_SETTING,
+)
 BOOLEAN_SETTING_FALSE_STRINGS = {"0", "false"}
 BOOLEAN_SETTING_TRUE_STRINGS = {"1", "true"}
 DEFAULT_UI_SETTINGS: dict[str, Any] = {
     "command_line": "codex exec",
     "default_policy": "supervised_executable_local_commit",
+    REQUIRE_CODEX_REVIEW_SETTING: True,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING: False,
 }
 SOURCE_DEFAULTS = "defaults"
@@ -79,10 +85,8 @@ def load_ui_settings(*, root: str | Path = ".") -> dict[str, Any]:
 
 
 def _normalize_boolean_settings(settings: dict[str, Any]) -> None:
-    settings[INTERNAL_CHANGE_GATE_BYPASS_SETTING] = _ui_boolean_setting(
-        settings,
-        INTERNAL_CHANGE_GATE_BYPASS_SETTING,
-    )
+    for key in BOOLEAN_UI_SETTING_KEYS:
+        settings[key] = _ui_boolean_setting(settings, key)
 
 
 def _ui_boolean_setting(settings: Mapping[str, Any], key: str) -> bool:
@@ -201,6 +205,42 @@ def init_ui_settings(*, root: str | Path = ".", confirm: bool = False) -> Path:
     return path
 
 
+def apply_ui_settings(
+    values: Mapping[str, Any],
+    *,
+    allowed_keys: Sequence[str],
+    root: str | Path = ".",
+) -> Path:
+    """Apply allowlisted UI settings in one project-local write."""
+
+    allowed = tuple(allowed_keys)
+    disallowed = sorted(str(key) for key in values if key not in allowed)
+    if disallowed:
+        raise UISettingsError(
+            "UI_SETTINGS_KEY_NOT_ALLOWED",
+            "UI settings apply received keys outside the allowlist.",
+            details={
+                "keys": disallowed,
+                "allowed_keys": list(allowed),
+            },
+        )
+
+    path = ui_settings_path(root)
+    if path.exists():
+        settings = default_ui_settings()
+        settings.update(_read_project_settings(path))
+    else:
+        settings = default_ui_settings()
+
+    for key in allowed:
+        if key in values:
+            _set_ui_setting_value(settings, key, values[key])
+
+    _normalize_boolean_settings(settings)
+    write_json_file(path, settings)
+    return path
+
+
 def upsert_ui_setting(key: str, value: str, *, root: str | Path = ".") -> Path:
     path = ui_settings_path(root)
     if path.exists():
@@ -208,10 +248,14 @@ def upsert_ui_setting(key: str, value: str, *, root: str | Path = ".") -> Path:
         settings.update(_read_project_settings(path))
     else:
         settings = default_ui_settings()
-    if key == INTERNAL_CHANGE_GATE_BYPASS_SETTING:
-        settings[key] = _parse_ui_boolean_value(key, value)
-    else:
-        settings[key] = value
+    _set_ui_setting_value(settings, key, value)
     _normalize_boolean_settings(settings)
     write_json_file(path, settings)
     return path
+
+
+def _set_ui_setting_value(settings: dict[str, Any], key: str, value: Any) -> None:
+    if key in BOOLEAN_UI_SETTING_KEYS:
+        settings[key] = _parse_ui_boolean_value(key, value)
+    else:
+        settings[key] = value

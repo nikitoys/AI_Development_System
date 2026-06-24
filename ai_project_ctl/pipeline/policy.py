@@ -479,6 +479,53 @@ def validate_policy(policy: PipelinePolicy) -> ValidationResult:
     return result
 
 
+def apply_codex_review_requirement(
+    policy: PipelinePolicy,
+    *,
+    require_codex_review: bool,
+) -> PipelinePolicy:
+    """Return the effective policy after applying the Codex Review toggle."""
+
+    if require_codex_review:
+        return policy
+    return replace(
+        policy,
+        review=replace(
+            policy.review,
+            require_codex_review=False,
+            required_codex_decision=CodexReviewDecision.NONE,
+        ),
+    )
+
+
+def requires_machine_review_pass(policy: PipelinePolicy) -> bool:
+    """Return whether the policy explicitly requires deterministic review PASS."""
+
+    return (
+        policy.review.require_machine_review
+        and policy.review.required_machine_outcome == MachineReviewOutcome.PASS
+    )
+
+
+def requires_codex_review_approve(policy: PipelinePolicy) -> bool:
+    """Return whether the policy explicitly requires semantic Codex Review APPROVE."""
+
+    return (
+        policy.review.require_codex_review
+        and policy.review.required_codex_decision == CodexReviewDecision.APPROVE
+    )
+
+
+def disables_codex_review_by_policy(policy: PipelinePolicy) -> bool:
+    """Return whether semantic Codex Review is explicitly disabled safely."""
+
+    return (
+        requires_machine_review_pass(policy)
+        and not policy.review.require_codex_review
+        and policy.review.required_codex_decision == CodexReviewDecision.NONE
+    )
+
+
 def preset_names() -> tuple[str, ...]:
     return tuple(_LISTED_PRESETS)
 
@@ -634,18 +681,15 @@ def _validate_token_thresholds(
 
 
 def _validate_auto_close(policy: PipelinePolicy, result: ValidationResult) -> None:
-    if (
-        not policy.review.require_machine_review
-        or policy.review.required_machine_outcome != MachineReviewOutcome.PASS
-    ):
+    if not requires_machine_review_pass(policy):
         result.add_error(
             "POLICY_AUTO_CLOSE_REQUIRES_MACHINE_REVIEW_PASS",
             "Auto-close requires Machine Review PASS.",
             path="review.required_machine_outcome",
         )
-    if (
-        not policy.review.require_codex_review
-        or policy.review.required_codex_decision != CodexReviewDecision.APPROVE
+    if not (
+        requires_codex_review_approve(policy)
+        or disables_codex_review_by_policy(policy)
     ):
         result.add_error(
             "POLICY_AUTO_CLOSE_REQUIRES_CODEX_REVIEW_APPROVE",
@@ -688,10 +732,13 @@ def _validate_commit_policy(policy: PipelinePolicy, result: ValidationResult) ->
             "Local commit policy must require commit readiness.",
             path="commit.require_commit_readiness",
         )
-    if not _requires_approved_reviews(policy):
+    if not _requires_commit_review_gates(policy):
         result.add_error(
             "POLICY_COMMIT_REQUIRES_APPROVED_REVIEWS",
-            "Local commit policy must require Machine Review PASS and Codex Review APPROVE.",
+            (
+                "Local commit policy must require Machine Review PASS and either "
+                "Codex Review APPROVE or an explicit Codex Review disable policy."
+            ),
             path="review",
         )
 
@@ -851,12 +898,10 @@ def _validate_codex_adapter_policy(policy: PipelinePolicy, result: ValidationRes
         )
 
 
-def _requires_approved_reviews(policy: PipelinePolicy) -> bool:
-    return (
-        policy.review.require_machine_review
-        and policy.review.required_machine_outcome == MachineReviewOutcome.PASS
-        and policy.review.require_codex_review
-        and policy.review.required_codex_decision == CodexReviewDecision.APPROVE
+def _requires_commit_review_gates(policy: PipelinePolicy) -> bool:
+    return requires_machine_review_pass(policy) and (
+        requires_codex_review_approve(policy)
+        or disables_codex_review_by_policy(policy)
     )
 
 

@@ -14,6 +14,7 @@ from ai_project_ctl.core.registry import command_describe
 from ai_project_ctl.core.result import CommandResult
 from ai_project_ctl.ui_settings import (
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+    REQUIRE_CODEX_REVIEW_SETTING,
     ui_settings_path,
 )
 from ai_project_ctl.web.actions import (
@@ -109,37 +110,60 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('href="/settings" class="active">Settings</a>', body)
         self.assertIn("defaults", body)
         self.assertIn(str(ui_settings_path(root)), body)
+        self.assertEqual(body.count('class="panel settings-panel"'), 1)
+        self.assertEqual(body.count('method="post" action="/actions"'), 1)
+        self.assertEqual(body.count('<button type="submit">Apply Settings</button>'), 1)
+        self.assertIn("Pipeline", body)
+        self.assertIn("Review Gates", body)
+        self.assertIn("Timeouts", body)
+        self.assertIn("Advanced", body)
         self.assertIn("<code>command_line</code>", body)
-        self.assertIn("<code>codex exec</code>", body)
+        self.assertIn('name="command_line" value="codex exec"', body)
         self.assertIn("<code>default_policy</code>", body)
-        self.assertIn("<code>supervised_executable_local_commit</code>", body)
+        self.assertIn('name="default_policy" value="supervised_executable_local_commit"', body)
+        self.assertIn("Machine Review", body)
+        self.assertIn("<code>machine_review</code>", body)
+        self.assertIn('<input type="checkbox" checked disabled>Locked ON', body)
+        self.assertIn("Require Codex Review before close", body)
+        self.assertIn("Disable to skip semantic LLM review and save tokens.", body)
+        self.assertIn(
+            'type="hidden" name="require_codex_review" value="false"',
+            body,
+        )
+        self.assertIn(
+            'type="checkbox" name="require_codex_review" value="true" checked>'
+            "Require Codex Review before close",
+            body,
+        )
         self.assertIn("<code>allow_internal_change_gate_bypass</code>", body)
-        self.assertIn("<code>false</code>", body)
-        self.assertIn("Internal Change Gate Bypass", body)
         self.assertIn(
-            "Internal Change gate bypass is for internal project-control tasks only",
+            "Internal project-control tasks only. Does not approve Changes",
             body,
         )
         self.assertIn(
-            'name="key" value="allow_internal_change_gate_bypass"',
+            'type="hidden" name="allow_internal_change_gate_bypass" value="false"',
             body,
         )
-        self.assertIn('name="value" value="false"', body)
         self.assertIn(
-            'type="checkbox" name="value" value="true">Allow internal Change gate bypass',
+            'type="checkbox" name="allow_internal_change_gate_bypass" value="true">'
+            "Allow internal Change gate bypass",
             body,
         )
         self.assertNotIn(
-            'type="checkbox" name="value" value="true" checked>Allow internal Change gate bypass',
+            'type="checkbox" name="allow_internal_change_gate_bypass" value="true" checked>'
+            "Allow internal Change gate bypass",
             body,
         )
-        self.assertIn("Update UI Setting", body)
-        self.assertIn('value="ui.settings.set"', body)
-        self.assertIn('<option value="command_line">command_line</option>', body)
-        self.assertIn('<option value="default_policy">default_policy</option>', body)
+        self.assertIn('value="ui.settings.apply"', body)
+        self.assertIn('href="/settings">Reset</a>', body)
         self.assertIn('name="confirm" value="yes" required', body)
         self.assertNotIn('name="change_gate"', body)
         self.assertNotIn('name="bypass"', body)
+        self.assertNotIn("Effective UI Settings", body)
+        self.assertNotIn("Internal Change Gate Bypass", body)
+        self.assertNotIn("Update UI Setting", body)
+        self.assertNotIn('value="ui.settings.set"', body)
+        self.assertNotIn('<select name="key"', body)
         self.assertNotIn('value="ui.settings.init"', body)
 
     def test_settings_page_renders_project_file_ui_settings(self):
@@ -163,29 +187,48 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(status.value, 200)
         self.assertIn("project_file", body)
         self.assertIn(str(path), body)
+        self.assertEqual(body.count('class="panel settings-panel"'), 1)
+        self.assertEqual(body.count('<button type="submit">Apply Settings</button>'), 1)
+        self.assertIn("Pipeline", body)
+        self.assertIn("Review Gates", body)
+        self.assertIn("Timeouts", body)
+        self.assertIn("Advanced", body)
         self.assertIn("<code>command_line</code>", body)
-        self.assertIn("<code>codex exec --json</code>", body)
+        self.assertIn('name="command_line" value="codex exec --json"', body)
         self.assertIn("<code>default_policy</code>", body)
-        self.assertIn("<code>supervised</code>", body)
-        self.assertIn("<code>allow_internal_change_gate_bypass</code>", body)
-        self.assertIn("<code>true</code>", body)
-        self.assertIn("Internal Change Gate Bypass", body)
+        self.assertIn('name="default_policy" value="supervised"', body)
+        self.assertIn("Machine Review", body)
+        self.assertIn('<input type="checkbox" checked disabled>Locked ON', body)
         self.assertIn(
-            "Internal Change gate bypass is for internal project-control tasks only",
+            'type="checkbox" name="require_codex_review" value="true" checked>'
+            "Require Codex Review before close",
+            body,
+        )
+        self.assertIn("<code>allow_internal_change_gate_bypass</code>", body)
+        self.assertIn(
+            "Internal project-control tasks only. Does not approve Changes",
             body,
         )
         self.assertIn(
-            'type="checkbox" name="value" value="true" checked>Allow internal Change gate bypass',
+            'type="hidden" name="allow_internal_change_gate_bypass" value="false"',
+            body,
+        )
+        self.assertIn(
+            'type="checkbox" name="allow_internal_change_gate_bypass" value="true" checked>'
+            "Allow internal Change gate bypass",
             body,
         )
         self.assertIn("<code>execution_timeout_sec</code>", body)
-        self.assertIn("<code>1800</code>", body)
+        self.assertIn('name="execution_timeout_sec" value="1800"', body)
         self.assertIn("<code>preflight_timeout_sec</code>", body)
-        self.assertIn("<code>45</code>", body)
-        self.assertIn("Update UI Setting", body)
-        self.assertIn('value="ui.settings.set"', body)
-        self.assertIn('<option value="execution_timeout_sec">execution_timeout_sec</option>', body)
-        self.assertIn('<option value="preflight_timeout_sec">preflight_timeout_sec</option>', body)
+        self.assertIn('name="preflight_timeout_sec" value="45"', body)
+        self.assertIn('value="ui.settings.apply"', body)
+        self.assertNotIn("Effective UI Settings", body)
+        self.assertNotIn("Internal Change Gate Bypass", body)
+        self.assertNotIn("Update UI Setting", body)
+        self.assertNotIn('value="ui.settings.set"', body)
+        self.assertNotIn('<option value="execution_timeout_sec">execution_timeout_sec</option>', body)
+        self.assertNotIn('<option value="preflight_timeout_sec">preflight_timeout_sec</option>', body)
         self.assertNotIn('value="ui.settings.init"', body)
         self.assertNotIn('name="change_gate"', body)
         self.assertNotIn('name="bypass"', body)
@@ -2669,7 +2712,7 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("codex exec --json", body)
         self.assertIn(str(path), body)
 
-    def test_ui_settings_web_action_metadata_includes_internal_change_gate_bypass(self):
+    def test_ui_settings_web_action_metadata_includes_boolean_settings(self):
         settings_action = next(
             action
             for action in available_actions()
@@ -2683,6 +2726,10 @@ class WebControlCenterTests(unittest.TestCase):
 
         self.assertIn(
             INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+            key_argument["choices"],
+        )
+        self.assertIn(
+            REQUIRE_CODEX_REVIEW_SETTING,
             key_argument["choices"],
         )
 
@@ -2724,6 +2771,110 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIs(false_data["settings"][INTERNAL_CHANGE_GATE_BYPASS_SETTING], False)
         self.assertEqual(false_data["key"], INTERNAL_CHANGE_GATE_BYPASS_SETTING)
         self.assertEqual(false_data["value"], "false")
+
+    def test_ui_settings_web_action_updates_require_codex_review_values(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = ui_settings_path(root)
+            executor = WebActionExecutor(root, actor="tester")
+
+            false_result = executor.execute(
+                {
+                    "action": "ui.settings.set",
+                    "confirm": "yes",
+                    "key": REQUIRE_CODEX_REVIEW_SETTING,
+                    "value": "false",
+                }
+            )
+            false_settings = json.loads(path.read_text(encoding="utf-8"))
+            false_data = false_result.to_dict()["result"]["data"]
+
+            true_result = executor.execute(
+                {
+                    "action": "ui.settings.set",
+                    "confirm": "yes",
+                    "key": REQUIRE_CODEX_REVIEW_SETTING,
+                    "value": "1",
+                }
+            )
+            true_settings = json.loads(path.read_text(encoding="utf-8"))
+            true_data = true_result.to_dict()["result"]["data"]
+
+        self.assertTrue(false_result.ok)
+        self.assertIs(false_settings[REQUIRE_CODEX_REVIEW_SETTING], False)
+        self.assertIs(false_data["settings"][REQUIRE_CODEX_REVIEW_SETTING], False)
+        self.assertEqual(false_data["key"], REQUIRE_CODEX_REVIEW_SETTING)
+        self.assertEqual(false_data["value"], "false")
+        self.assertTrue(true_result.ok)
+        self.assertIs(true_settings[REQUIRE_CODEX_REVIEW_SETTING], True)
+        self.assertIs(true_data["settings"][REQUIRE_CODEX_REVIEW_SETTING], True)
+        self.assertEqual(true_data["key"], REQUIRE_CODEX_REVIEW_SETTING)
+        self.assertEqual(true_data["value"], "1")
+
+    def test_ui_settings_apply_web_action_saves_allowlisted_settings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = ui_settings_path(root)
+
+            result = WebActionExecutor(root, actor="tester").execute(
+                {
+                    "action": "ui.settings.apply",
+                    "confirm": "yes",
+                    "command_line": "codex exec --json",
+                    "default_policy": "supervised",
+                    REQUIRE_CODEX_REVIEW_SETTING: "false",
+                    INTERNAL_CHANGE_GATE_BYPASS_SETTING: "false",
+                    "execution_timeout_sec": "1800",
+                    "preflight_timeout_sec": "45",
+                }
+            )
+
+            settings = json.loads(path.read_text(encoding="utf-8"))
+            payload = result.to_dict()
+            data = payload["result"]["data"]
+
+        self.assertTrue(result.ok)
+        self.assertEqual(settings["command_line"], "codex exec --json")
+        self.assertEqual(settings["default_policy"], "supervised")
+        self.assertIs(settings[REQUIRE_CODEX_REVIEW_SETTING], False)
+        self.assertIs(settings[INTERNAL_CHANGE_GATE_BYPASS_SETTING], False)
+        self.assertEqual(settings["execution_timeout_sec"], "1800")
+        self.assertEqual(settings["preflight_timeout_sec"], "45")
+        self.assertEqual(data["settings"], settings)
+        self.assertEqual(data["path"], str(path))
+        self.assertIn(str(path), payload["result"]["changed_files"])
+        self.assertEqual(payload["registered_command"]["name"], "ui.settings.apply")
+        self.assertEqual(
+            data["applied_keys"],
+            [
+                "command_line",
+                "default_policy",
+                REQUIRE_CODEX_REVIEW_SETTING,
+                INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+                "execution_timeout_sec",
+                "preflight_timeout_sec",
+            ],
+        )
+
+    def test_ui_settings_apply_web_action_rejects_disallowed_key(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor(root, actor="tester").execute(
+                    {
+                        "action": "ui.settings.apply",
+                        "confirm": "yes",
+                        "some_random_key": "value",
+                    }
+                )
+
+            self.assertEqual(raised.exception.code, "WEB_UI_SETTING_KEY_NOT_ALLOWED")
+            self.assertIn(
+                REQUIRE_CODEX_REVIEW_SETTING,
+                raised.exception.details["allowed_keys"],
+            )
+            self.assertFalse(ui_settings_path(root).exists())
 
     def test_ui_settings_web_action_requires_confirmation(self):
         with tempfile.TemporaryDirectory() as tmp:

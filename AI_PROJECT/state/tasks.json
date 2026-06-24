@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1087,
-  "current_task_id": "TASK-155",
+  "revision": 1108,
+  "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-24T18:22:33Z",
+  "updated_at": "2026-06-24T20:31:09Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -10577,7 +10577,7 @@
       "id": "TASK-155",
       "epic_id": "EPIC-009",
       "title": "PIPE-071 Add pipeline regression test for Run report auto-collection",
-      "status": "in_progress",
+      "status": "done",
       "summary": "Add an end-to-end regression test proving a UI Run session can proceed past collect-report when Codex emits a valid report.",
       "description": "This protects the Run workflow from returning to CODEX_ADAPTER_REPORT_MISSING after successful Codex execution.",
       "priority": 1,
@@ -10618,11 +10618,11 @@
         "This task may be done after the implementation tasks or adjusted to the final test layout."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-24T19:37:16Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-24T11:22:59Z",
-      "updated_at": "2026-06-24T18:22:33Z",
+      "updated_at": "2026-06-24T19:37:17Z",
       "uid": "tsk_d572bda0c446",
       "ref": "PIPEF-76",
       "legacy_id": "TASK-155",
@@ -10815,6 +10815,209 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 79
+    },
+    {
+      "id": "TASK-159",
+      "epic_id": "EPIC-005",
+      "title": "Add batch UI settings apply action",
+      "status": "done",
+      "summary": "Add backend support for saving all Web Control Center UI settings at once, including the new `require_codex_review` setting.",
+      "description": "This task adds the settings data model and write action needed by the unified Settings form.",
+      "priority": 1,
+      "order": 14,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add `require_codex_review` to default UI settings with default value `true`.",
+        "Parse `require_codex_review` as a boolean setting using the same rules as existing boolean UI settings.",
+        "Add a backend helper that applies all allowlisted UI settings in one write to `AI_PROJECT/config/ui_settings.json`.",
+        "Add a Web Control Center action `ui.settings.apply` that uses the batch apply helper and returns effective settings.",
+        "Keep existing `ui.settings.set` behavior compatible.",
+        "Add tests for defaults, boolean parsing, allowlisted batch saving, and checkbox false values."
+      ],
+      "out_of_scope": [
+        "Do not change the visual layout of the Settings page in this task.",
+        "Do not change pipeline execution or review semantics in this task.",
+        "Do not disable Machine Review.",
+        "Do not refactor unrelated code."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/ui_settings.py",
+        "ai_project_ctl/web/actions.py",
+        "tests/test_ui_settings.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "`require_codex_review` is present in effective UI settings and defaults to `true`.",
+        "`require_codex_review` accepts boolean values and the strings `true`, `false`, `1`, and `0` consistently with existing boolean settings.",
+        "`ui.settings.apply` saves all submitted allowlisted settings in one state write.",
+        "Unchecked checkbox submissions save `require_codex_review=false` and `allow_internal_change_gate_bypass=false` through hidden field handling.",
+        "`ui.settings.set` remains available and existing behavior is unchanged.",
+        "Relevant UI settings and Web Control Center tests pass."
+      ],
+      "review_instructions": [
+        "Reject if the new setting can contain non-boolean values.",
+        "Reject if `ui.settings.set` compatibility is broken.",
+        "Reject if this task changes pipeline review behavior."
+      ],
+      "notes": [
+        "This is the backend settings/action task only.",
+        "The follow-up UI task should render the unified panel using `ui.settings.apply`."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-24T19:53:33Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-24T19:32:35Z",
+      "updated_at": "2026-06-24T19:53:33Z",
+      "uid": "tsk_704047330e84",
+      "ref": "CTL-14",
+      "legacy_id": "TASK-159",
+      "aliases": [
+        "TASK-159"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 14
+    },
+    {
+      "id": "TASK-160",
+      "epic_id": "EPIC-005",
+      "title": "Render unified Web Settings panel",
+      "status": "done",
+      "summary": "Replace the fragmented Settings page with one editable panel that exposes all UI settings as rows and saves them with one Apply button.",
+      "description": "The page should look like one cohesive Settings panel rather than separate read-only and key-value update sections.",
+      "priority": 1,
+      "order": 15,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Replace the separate Settings sections with one `section.panel.settings-panel` containing a single form.",
+        "Render grouped rows for Pipeline, Review Gates, Timeouts, and Advanced settings inside the one panel.",
+        "Show Machine Review as locked ON and not editable.",
+        "Render `require_codex_review` and `allow_internal_change_gate_bypass` as editable checkboxes with hidden false inputs.",
+        "Render `command_line`, `default_policy`, `execution_timeout_sec`, and `preflight_timeout_sec` as editable controls.",
+        "Add one footer with Reset and Apply Settings actions.",
+        "Add or update Web Control Center rendering tests for the unified layout."
+      ],
+      "out_of_scope": [
+        "Do not change settings persistence behavior beyond using `ui.settings.apply`.",
+        "Do not change pipeline execution or review semantics in this task.",
+        "Do not disable Machine Review.",
+        "Do not refactor unrelated Web Control Center pages."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "`/settings` renders one visible Settings panel instead of separate Effective UI Settings, Internal Change Gate Bypass, and Update UI Setting panels.",
+        "The one panel contains Pipeline, Review Gates, Timeouts, and Advanced groups.",
+        "The page has exactly one primary Apply Settings button for the Settings form.",
+        "Machine Review is visibly ON or locked and cannot be edited.",
+        "`Require Codex Review before close` is visible as an editable checkbox with helper text about saving tokens.",
+        "`Allow internal Change gate bypass` is moved into the Advanced group.",
+        "Web Control Center tests verify the new layout and absence of the old generic key-value Settings form."
+      ],
+      "review_instructions": [
+        "Reject if Settings is still split into multiple settings panels.",
+        "Reject if Machine Review becomes editable or can be disabled.",
+        "Reject if the implementation only adds another separate panel instead of one unified form."
+      ],
+      "notes": [
+        "Target layout: one outer panel, one form, grouped rows, and one footer.",
+        "Header should show Settings, the settings source, and `AI_PROJECT/config/ui_settings.json`.",
+        "Visual groups: Pipeline, Review Gates, Timeouts, Advanced.",
+        "Codex Review helper text: `Disable to skip semantic LLM review and save tokens.`"
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-24T20:12:04Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-24T19:32:36Z",
+      "updated_at": "2026-06-24T20:12:04Z",
+      "uid": "tsk_23f8c5181e82",
+      "ref": "CTL-15",
+      "legacy_id": "TASK-160",
+      "aliases": [
+        "TASK-160"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 15
+    },
+    {
+      "id": "TASK-161",
+      "epic_id": "EPIC-009",
+      "title": "Make Codex Review optional in pipeline",
+      "status": "done",
+      "summary": "Allow the pipeline to skip semantic Codex Review when `require_codex_review` is false while keeping Machine Review required.",
+      "description": "This task implements the behavior behind the Settings checkbox without weakening deterministic review gates.",
+      "priority": 1,
+      "order": 80,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Resolve `require_codex_review=false` into an effective pipeline policy that does not require Codex Review APPROVE.",
+        "Record the review phase as skipped without building a Codex Review prompt when Codex Review is disabled by policy.",
+        "Allow close phase to proceed without Codex Review only when policy explicitly disables it and Machine Review evidence passes.",
+        "Allow local commit readiness to skip Codex Review approval only when policy explicitly disables it.",
+        "Preserve current Codex Review requirements when `require_codex_review=true`.",
+        "Add tests for skipped review, close preflight, and local commit readiness with Codex Review disabled."
+      ],
+      "out_of_scope": [
+        "Do not disable Machine Review.",
+        "Do not remove or weaken Report Gate checks.",
+        "Do not change Codex Review behavior when `require_codex_review=true`.",
+        "Do not change unrelated pipeline phases."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/ui_policy.py",
+        "ai_project_ctl/pipeline/policy.py",
+        "ai_project_ctl/pipeline/review_phase.py",
+        "ai_project_ctl/pipeline/close_phase.py",
+        "ai_project_ctl/pipeline/git_commit.py",
+        "tests/test_pipeline_codex_review_toggle.py"
+      ],
+      "acceptance_criteria": [
+        "When `require_codex_review=true`, existing Codex Review APPROVE requirements remain unchanged.",
+        "When `require_codex_review=false`, review phase records `status=skipped` and does not build or return a Codex Review prompt.",
+        "Machine Review remains required before close and cannot be bypassed by disabling Codex Review.",
+        "Close phase accepts skipped Codex Review only when the effective policy disables Codex Review.",
+        "Local commit readiness does not block on missing Codex Review only when the effective policy disables Codex Review.",
+        "Tests prove that disabling Codex Review does not disable Report Gate or Machine Review."
+      ],
+      "review_instructions": [
+        "Reject if Codex Review disabling also disables Machine Review.",
+        "Reject if close can proceed without Machine Review PASS.",
+        "Reject if Codex Review is skipped when `require_codex_review=true`.",
+        "Reject if local commit ignores Codex Review when policy still requires it."
+      ],
+      "notes": [
+        "Goal is token saving by skipping semantic LLM review, not reducing deterministic safety checks.",
+        "Review skip artifacts should include explicit audit evidence such as `codex_review_required=false` and `skip_reason=disabled_by_policy`."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-24T20:31:09Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-24T19:32:36Z",
+      "updated_at": "2026-06-24T20:31:09Z",
+      "uid": "tsk_4de2bd4cbb90",
+      "ref": "PIPEF-80",
+      "legacy_id": "TASK-161",
+      "aliases": [
+        "TASK-161"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 80
     }
   ]
 }

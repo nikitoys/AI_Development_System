@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1087`
+Revision: `1108`
 
 ## Executable Now
 
@@ -67,6 +67,10 @@ _No tasks waiting only on dependencies._
 - `CTL-12 (TASK-030)` [done] `EPIC-005` priority `1` — Task L - Documentation and owner quickstart
   - `status_not_executable`: status is done
 - `CTL-13 (TASK-031)` [done] `EPIC-005` priority `1` — CTL-13 Optimize Web Control Center performance
+  - `status_not_executable`: status is done
+- `CTL-14 (TASK-159)` [done] `EPIC-005` priority `1` — Add batch UI settings apply action
+  - `status_not_executable`: status is done
+- `CTL-15 (TASK-160)` [done] `EPIC-005` priority `1` — Render unified Web Settings panel
   - `status_not_executable`: status is done
 - `TASK-002` [done] `EPIC-002` priority `1` — Document Skills Layer Roadmap
   - `status_not_executable`: status is done
@@ -306,7 +310,9 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-75 (TASK-154)` [done] `EPIC-009` priority `1` — PIPE-070 Auto-submit parsed Codex report in local-command adapter
   - `status_not_executable`: status is done
-- `PIPEF-76 (TASK-155)` [in_progress] `EPIC-009` priority `1` — PIPE-071 Add pipeline regression test for Run report auto-collection
-  - `status_not_executable`: status is in_progress
+- `PIPEF-76 (TASK-155)` [done] `EPIC-009` priority `1` — PIPE-071 Add pipeline regression test for Run report auto-collection
+  - `status_not_executable`: status is done
 - `PIPEF-79 (TASK-158)` [done] `EPIC-009` priority `1` — PIPE-074 Allow internal bypass setting in Web settings action
+  - `status_not_executable`: status is done
+- `PIPEF-80 (TASK-161)` [done] `EPIC-009` priority `1` — Make Codex Review optional in pipeline
   - `status_not_executable`: status is done
