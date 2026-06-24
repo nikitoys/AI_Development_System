@@ -51,9 +51,9 @@ TASK_FOCUS_STATUSES = {"ready", "in_progress", "in_review", "changes_requested"}
 TASK_GROUP_OPTIONS = {"none", "epic", "status"}
 CHANGE_ACTION_STATUSES = {"ready", "approved", "in_progress", "in_review"}
 TASK_REPAIR_STATUSES = {"ready", "in_progress", "in_review", "changes_requested"}
-PIPELINE_RUNNABLE_STATUSES = {"planned", "running", "stopped", "blocked", "failed"}
+PIPELINE_RUNNABLE_STATUSES = {"planned", "running"}
 PIPELINE_STOPPABLE_STATUSES = {"planned", "running"}
-PIPELINE_RESUMABLE_STATUSES = {"stopped", "blocked", "failed"}
+PIPELINE_RESUMABLE_STATUSES = {"stopped", "blocked"}
 PIPELINE_FLOW_GATES = (
     ("queue_planner", "Queue"),
     ("evolution_change_gate", "Change"),
@@ -636,55 +636,17 @@ def pipeline_session_action_controls(data: Mapping[str, Any]) -> str:
     safe_forms = [
         action_form("pipeline.render", [], button_label="Refresh Session"),
     ]
-    if status in PIPELINE_RUNNABLE_STATUSES:
-        safe_forms.append(
-            action_form(
-                "pipeline.run_next",
-                [hidden_field("session_id", session_id)],
-                button_label="Run Next",
-            )
-        )
-        safe_forms.append(
-            action_form(
-                "pipeline.run_until_blocker",
-                [hidden_field("session_id", session_id)],
-                button_label="Run Until Blocker",
-            )
-        )
-    if status in PIPELINE_RESUMABLE_STATUSES:
-        safe_forms.append(
-            action_form(
-                "pipeline.run_next",
-                [hidden_field("session_id", session_id)],
-                button_label="Resume Session",
-            )
-        )
+    guidance = pipeline_session_action_guidance(session)
+    if guidance:
+        safe_forms.append(guidance)
+    safe_forms.extend(pipeline_session_run_action_forms(session_id, status))
 
     restricted = [
         '<p class="muted">Restricted actions are separated and require confirmation. '
         "Push, merge, reset, restore, clean, rebase and discard actions are not exposed.</p>"
     ]
     if status in PIPELINE_STOPPABLE_STATUSES:
-        restricted.append(
-            action_form(
-                "pipeline.session.stop",
-                [
-                    hidden_field("session_id", session_id),
-                    input_field("reason", "Reason", "Owner stop", required=True),
-                    filter_select(
-                        "status",
-                        "Status",
-                        (
-                            ("stopped", "stopped"),
-                            ("blocked", "blocked"),
-                            ("failed", "failed"),
-                        ),
-                        "stopped",
-                    ),
-                ],
-                button_label="Stop Session",
-            )
-        )
+        restricted.append(pipeline_session_stop_action_form(session_id))
     else:
         restricted.append(
             '<p class="empty">Stop Session is unavailable for status {}.</p>'.format(
@@ -1253,6 +1215,83 @@ def pipeline_session_stop_reason(session: Mapping[str, Any]) -> str:
 def pipeline_session_next_action(session: Mapping[str, Any]) -> str:
     latest_phase = pipeline_latest_phase(session)
     return str(session.get("next_action") or latest_phase.get("next_action") or "").strip()
+
+
+def pipeline_session_action_guidance(session: Mapping[str, Any]) -> str:
+    status = str(session.get("status") or "unknown")
+    next_action = pipeline_session_next_action(session)
+    if next_action:
+        return '<p class="muted"><strong>Owner guidance:</strong> {}</p>'.format(
+            escape(next_action)
+        )
+    if status == "failed":
+        message = (
+            "Session failed and is not running. Inspect the failure evidence before "
+            "starting a new session."
+        )
+    elif status == "blocked":
+        message = "Session is blocked and waiting for owner action."
+    elif status == "stopped":
+        message = "Session is stopped and can be resumed."
+    elif status in {"completed", "archived"}:
+        message = "Session is terminal."
+    else:
+        message = ""
+    if not message:
+        return ""
+    return '<p class="muted">{}</p>'.format(escape(message))
+
+
+def pipeline_session_run_action_forms(session_id: str, status: str) -> list[str]:
+    if not session_id:
+        return []
+    if status in PIPELINE_RUNNABLE_STATUSES:
+        return [
+            action_form(
+                "pipeline.run_next",
+                [hidden_field("session_id", session_id)],
+                button_label="Run Next",
+            ),
+            action_form(
+                "pipeline.run_until_blocker",
+                [hidden_field("session_id", session_id)],
+                button_label="Run Until Blocker",
+            ),
+        ]
+    if status in PIPELINE_RESUMABLE_STATUSES:
+        return [
+            action_form(
+                "pipeline.run_next",
+                [hidden_field("session_id", session_id)],
+                button_label="Resume Session",
+            )
+        ]
+    return [
+        '<p class="empty">Run actions are unavailable for status {}.</p>'.format(
+            escape(status)
+        )
+    ]
+
+
+def pipeline_session_stop_action_form(session_id: str) -> str:
+    return action_form(
+        "pipeline.session.stop",
+        [
+            hidden_field("session_id", session_id),
+            input_field("reason", "Reason", "Owner stop", required=True),
+            filter_select(
+                "status",
+                "Status",
+                (
+                    ("stopped", "stopped"),
+                    ("blocked", "blocked"),
+                    ("failed", "failed"),
+                ),
+                "stopped",
+            ),
+        ],
+        button_label="Stop Session",
+    )
 
 
 def pipeline_latest_gate(session_or_step: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -1899,34 +1938,19 @@ def pipeline_action_controls(data: Mapping[str, Any], pipeline: Mapping[str, Any
     ]
     session_id = str(session.get("id") or "")
     if session_id:
-        forms.extend(
-            [
-                action_form(
-                    "pipeline.run_next",
-                    [hidden_field("session_id", session_id)],
-                    button_label="Run Next",
-                ),
-                action_form(
-                    "pipeline.run_until_blocker",
-                    [hidden_field("session_id", session_id)],
-                    button_label="Run Until Blocker",
-                ),
-                action_form(
-                    "pipeline.session.stop",
-                    [
-                        hidden_field("session_id", session_id),
-                        input_field("reason", "Reason", "Owner stop", required=True),
-                        filter_select(
-                            "status",
-                            "Status",
-                            (("stopped", "stopped"), ("blocked", "blocked"), ("failed", "failed")),
-                            "stopped",
-                        ),
-                    ],
-                    button_label="Stop Session",
-                ),
-            ]
-        )
+        session_status = str(session.get("status") or "unknown")
+        guidance = pipeline_session_action_guidance(session)
+        if guidance:
+            forms.append(guidance)
+        forms.extend(pipeline_session_run_action_forms(session_id, session_status))
+        if session_status in PIPELINE_STOPPABLE_STATUSES:
+            forms.append(pipeline_session_stop_action_form(session_id))
+        else:
+            forms.append(
+                '<p class="empty">Stop Session is unavailable for status {}.</p>'.format(
+                    escape(session_status)
+                )
+            )
     return '<div class="pipeline-actions">{}</div>'.format("".join(forms))
 
 

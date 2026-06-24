@@ -1,0 +1,78 @@
+{
+  "changed_files": [
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+  ],
+  "command": "pipeline.phase.collect_report",
+  "data": {
+    "phase_result": {
+      "artifacts": {
+        "allow_existing_report": true,
+        "expected_task_id": "TASK-135",
+        "freshness": {
+          "allow_existing_report": true,
+          "basis": "recovery_override",
+          "execute_after_report_id": "",
+          "execute_before_report_id": "",
+          "execute_finished_at": "2026-06-24T09:18:34Z",
+          "execute_phase_status": "passed",
+          "execute_report_id": "",
+          "execute_started_at": "2026-06-24T09:11:42Z",
+          "fresh": true,
+          "reason": "allow_existing_report override was explicitly used.",
+          "report_id": "RPT-007",
+          "report_submitted_at": "2026-06-24T10:00:16Z"
+        },
+        "freshness_basis": "recovery_override",
+        "observed_report_task_id": "TASK-135",
+        "record_task_id": "TASK-135",
+        "record_task_ref": "PIPEF-56",
+        "report_found": true,
+        "report_id": "RPT-007",
+        "report_task_id": "TASK-135",
+        "reported_task_id": "TASK-135",
+        "reported_task_ref": "PIPEF-56",
+        "selected_task_ref": "",
+        "session_id": "PSESS-017",
+        "source_file": "/tmp/TASK-135-report-fixed.json",
+        "structured_report_task_id": "TASK-135",
+        "structured_report_task_ref": "PIPEF-56",
+        "submitted_at": "2026-06-24T10:00:16Z",
+        "submitted_by": "human_owner",
+        "task_id": "TASK-135"
+      },
+      "changed_files": [],
+      "events": [
+        "EVT-58DFC9E8911E"
+      ],
+      "generated_files": [],
+      "next_action": "Run pipeline phase verify.",
+      "phase": "collect_report",
+      "reason": "Structured execution report collected for selected task (freshness_basis=recovery_override).",
+      "status": "passed"
+    },
+    "report_id": "RPT-007",
+    "session_id": "PSESS-017",
+    "task_id": "TASK-135"
+  },
+  "domain": "pipeline",
+  "errors": [],
+  "events": [
+    "EVT-58DFC9E8911E"
+  ],
+  "generated_files": [
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+  ],
+  "message": "Structured execution report collected for selected task (freshness_basis=recovery_override).",
+  "next_actions": [
+    "Run pipeline phase verify."
+  ],
+  "ok": true,
+  "owner_action_required": null,
+  "revision_after": 68,
+  "revision_before": 67,
+  "warnings": []
+}

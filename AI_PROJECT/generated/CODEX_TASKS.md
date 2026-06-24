@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `976`
+Revision: `992`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -2362,7 +2362,7 @@ Acceptance criteria:
 
 ### PIPEF-54 (TASK-133) — PIPE-049 Apply UI execution timeout settings to effective policy
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_a0392e704045`, legacy `TASK-133`, aliases `TASK-133`, local `PIPEF` / `54`
@@ -2380,7 +2380,7 @@ Acceptance criteria:
 
 ### PIPEF-55 (TASK-134) — PIPE-050 Update Web Pipeline actions for phase-based sessions
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_1c8988bcc50b`, legacy `TASK-134`, aliases `TASK-134`, local `PIPEF` / `55`
@@ -2397,7 +2397,7 @@ Acceptance criteria:
 
 ### PIPEF-56 (TASK-135) — PIPE-051 Document phase-based Web Pipeline display behavior
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_764223596ec1`, legacy `TASK-135`, aliases `TASK-135`, local `PIPEF` / `56`

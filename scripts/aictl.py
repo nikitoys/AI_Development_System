@@ -52,7 +52,10 @@ from ai_project_ctl.pipeline.session import (  # noqa: E402
     stop_session,
     validate_sessions as validate_pipeline_sessions,
 )
-from ai_project_ctl.pipeline.codex_preflight import run_codex_preflight  # noqa: E402
+from ai_project_ctl.pipeline.codex_preflight import (  # noqa: E402
+    DEFAULT_PREFLIGHT_TIMEOUT_SEC,
+    run_codex_preflight,
+)
 from ai_project_ctl.pipeline.policy import (  # noqa: E402
     CodexAdapterMode,
     CodexExecutionMode,
@@ -83,6 +86,7 @@ from ai_project_ctl.pipeline.verify_phase import verify_phase  # noqa: E402
 from ai_project_ctl.ui_settings import (  # noqa: E402
     init_ui_settings,
     load_ui_settings,
+    optional_ui_timeout_sec,
     ui_settings_path,
     ui_settings_source,
     upsert_ui_setting,
@@ -2004,7 +2008,10 @@ def cmd_ui_settings_show(args: argparse.Namespace) -> int:
 
 
 def cmd_ui_preflight(args: argparse.Namespace) -> int:
-    result = run_codex_preflight(root=args.root, timeout_sec=args.timeout_sec)
+    result = run_codex_preflight(
+        root=args.root,
+        timeout_sec=_ui_preflight_timeout_sec(args.root, args.timeout_sec),
+    )
     return _emit_command_result(result, args)
 
 
@@ -2044,8 +2051,18 @@ def cmd_ui_settings_set(args: argparse.Namespace) -> int:
 
 def cmd_ui_run(args: argparse.Namespace) -> int:
     selected_policy = resolve_ui_pipeline_policy(root=args.root)
-    if args.preflight and args.confirm and _policy_requires_codex_preflight(selected_policy):
-        preflight_result = run_codex_preflight(root=args.root)
+    if (
+        args.preflight
+        and args.confirm
+        and _policy_requires_codex_preflight(selected_policy)
+    ):
+        preflight_result = run_codex_preflight(
+            root=args.root,
+            timeout_sec=_ui_preflight_timeout_sec(
+                args.root,
+                args.preflight_timeout_sec,
+            ),
+        )
         if str(preflight_result.data.get("status") or "") != "passed":
             result = _ui_run_preflight_result(
                 args.task_ref,
@@ -2086,6 +2103,19 @@ def cmd_ui_run(args: argparse.Namespace) -> int:
         run_result,
     )
     return _emit_command_result(result, args)
+
+
+def _ui_preflight_timeout_sec(
+    root: str | Path,
+    explicit_timeout_sec: int | None,
+) -> int:
+    if explicit_timeout_sec is not None:
+        return explicit_timeout_sec
+    settings = load_ui_settings(root=root)
+    return (
+        optional_ui_timeout_sec(settings, "preflight_timeout_sec")
+        or DEFAULT_PREFLIGHT_TIMEOUT_SEC
+    )
 
 
 def cmd_docs_render(args: argparse.Namespace) -> int:
@@ -2792,6 +2822,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Run configured Codex command preflight before confirmed executable run",
     )
     p.add_argument(
+        "--preflight-timeout-sec",
+        type=int,
+        default=None,
+        help="Override UI preflight timeout for this run",
+    )
+    p.add_argument(
         "--ci",
         action="store_true",
         help=(
@@ -2802,7 +2838,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_ui_run, facade_command="ui.run")
 
     p = ui_sub.add_parser("preflight", help="Check effective UI Codex command readiness")
-    p.add_argument("--timeout-sec", type=int, default=30)
+    p.add_argument("--timeout-sec", type=int, default=None)
     p.add_argument(
         "--ci",
         action="store_true",

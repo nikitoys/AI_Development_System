@@ -3,15 +3,15 @@
 
 # AI Development System Evolution
 
-Revision: `2083`
-Changes: `64`
+Revision: `2124`
+Changes: `66`
 
 ## Summary
 
 - `accepted`: 51
-- `approved`: 8
+- `approved`: 9
 - `in_review`: 1
-- `ready`: 4
+- `ready`: 5
 
 ## Changes
 
@@ -4149,3 +4149,106 @@ Impact:
 Linked tasks:
 
 - TASK-119
+
+### CHG-065 — PIPE-051 Document phase-based Web Pipeline display behavior
+
+Status: `ready`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-56 requires an explicit Evolution Change Proposal before implementation: Document how the Web Control Center displays phase-based pipeline sessions and timeout settings.
+
+Proposal:
+
+Implement the bounded task scope: Document that Web Pipeline UI uses phase_history for phase-based sessions.; Document the legacy steps and gate_outcomes fallback for older sessions.; Document command_line, preflight_timeout_sec and execution_timeout_sec UI settings.; Add troubleshooting notes for CODEX_ADAPTER_TIMEOUT and missing report evidence.
+
+Rationale:
+
+Owner-facing documentation should explain phase_history display, legacy fallback and UI timeout configuration.
+
+Affected files:
+
+- ai-system/project-control/08-usage-guide.md
+- ai-system/project-control/10-owner-quickstart.md
+
+Risks:
+
+- Boundary risk: Do not change generated documentation manually.
+- Boundary risk: Do not document unimplemented automation behavior as available.
+- Boundary risk: Do not change pipeline code in this documentation task.
+- Verify that the docs do not overstate automation maturity.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-135.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Document that Web Pipeline UI uses phase_history for phase-based sessions.
+- Document the legacy steps and gate_outcomes fallback for older sessions.
+- Document command_line, preflight_timeout_sec and execution_timeout_sec UI settings.
+- Add troubleshooting notes for CODEX_ADAPTER_TIMEOUT and missing report evidence.
+- Documentation explains phase_history-based Web Pipeline rendering.
+- Documentation explains the difference between command_line and policy local_command.
+- Documentation explains preflight timeout versus execution timeout.
+
+Linked tasks:
+
+- TASK-135
+
+### CHG-066 — PIPE-051 Document phase-based Web Pipeline display behavior
+
+Status: `approved`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-56 requires an explicit Evolution Change Proposal before implementation: Document how the Web Control Center displays phase-based pipeline sessions and timeout settings.
+
+Proposal:
+
+Implement the bounded task scope: Document that Web Pipeline UI uses phase_history for phase-based sessions.; Document the legacy steps and gate_outcomes fallback for older sessions.; Document command_line, preflight_timeout_sec and execution_timeout_sec UI settings.; Add troubleshooting notes for CODEX_ADAPTER_TIMEOUT and missing report evidence.
+
+Rationale:
+
+Owner-facing documentation should explain phase_history display, legacy fallback and UI timeout configuration.
+
+Approved by: `human_owner` at `2026-06-24T09:02:41Z`  
+Approval notes: Approve  
+
+Affected files:
+
+- ai-system/project-control/08-usage-guide.md
+- ai-system/project-control/10-owner-quickstart.md
+
+Risks:
+
+- Boundary risk: Do not change generated documentation manually.
+- Boundary risk: Do not document unimplemented automation behavior as available.
+- Boundary risk: Do not change pipeline code in this documentation task.
+- Verify that the docs do not overstate automation maturity.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-135.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Document that Web Pipeline UI uses phase_history for phase-based sessions.
+- Document the legacy steps and gate_outcomes fallback for older sessions.
+- Document command_line, preflight_timeout_sec and execution_timeout_sec UI settings.
+- Add troubleshooting notes for CODEX_ADAPTER_TIMEOUT and missing report evidence.
+- Documentation explains phase_history-based Web Pipeline rendering.
+- Documentation explains the difference between command_line and policy local_command.
+- Documentation explains preflight timeout versus execution timeout.
+
+Linked tasks:
+
+- TASK-135

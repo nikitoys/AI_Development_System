@@ -3,23 +3,23 @@
 
 # Pipeline Status
 
-Revision: `58`
-Current session: `PSESS-016`
-Sessions: `16`
+Revision: `69`
+Current session: `PSESS-017`
+Sessions: `17`
 
 ## Current Session
 
-- ID: `PSESS-016`
-- Status: `failed`
-- Policy: `supervised_executable_local_commit`
-- Current task: `TASK-119`
-- Current phase: `execute`
-- Phase status: `failed`
-- Blocked by: `none`
-- Next action: `In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-119 --file <REPORT.json> --confirm`
+- ID: `PSESS-017`
+- Status: `blocked`
+- Policy: `supervised_executable_local_commit_1h`
+- Current task: `TASK-135`
+- Current phase: `verify`
+- Phase status: `blocked`
+- Blocked by: `GIT_DIFF_GATE_DIFF_MISMATCH`
+- Next action: `Update the structured report file lists or resolve unintended working-tree changes, then rerun verify.`
 - Current step: `none`
 - Step status: `planned`
-- Stop reason: `Codex execution adapter failed: local_command_timeout (status=failed, code=CODEX_ADAPTER_TIMEOUT, returncode=none)`
+- Stop reason: `Git diff gate blocked: missing_from_report: AI_PROJECT/events/codex-events.jsonl, AI_PROJECT/events/context-events.jsonl, AI_PROJECT/events/evolution-events.jsonl, AI_PROJECT/events/pipeline-events.jsonl, AI_PROJECT/events/task-events.jsonl, AI_PROJECT/events/task-report-events.jsonl, AI_PROJECT/generated/CODEX_CURRENT.md, AI_PROJECT/generated/CODEX_PROMPT.md, AI_PROJECT/generated/CODEX_STATUS.md, AI_PROJECT/generated/CODEX_TASKS.md, AI_PROJECT/generated/CONTEXT_PACK.md, AI_PROJECT/generated/CONTEXT_STATUS.md, AI_PROJECT/generated/EVOLUTION.md, AI_PROJECT/generated/PIPELINE_AUDIT.md, AI_PROJECT/generated/PIPELINE_STATUS.md, AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md, AI_PROJECT/logs/ui_run/PIPEF-56-run.json, AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json, AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json, AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json, AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json, AI_PROJECT/logs/ui_run/TASK-135-report-submit.json, AI_PROJECT/state/current_execution.json, AI_PROJECT/state/evolution.json, AI_PROJECT/state/pipeline_sessions.json, AI_PROJECT/state/task_reports.json, AI_PROJECT/state/tasks.json, ai_project_ctl/pipeline/ui_policy.py, ai_project_ctl/ui_settings.py, ai_project_ctl/web/server.py, scripts/aictl.py, tests/pipeline/test_codex_preflight.py, tests/pipeline/test_ui_settings_policy.py, tests/test_ui_run_command.py, tests/test_ui_settings.py, tests/test_web_control_center.py.`
 
 ## Sessions
 
@@ -41,6 +41,7 @@ Sessions: `16`
 | `PSESS-014` | `blocked` | `supervised_executable_local_commit` | `` | `queue_preview` | `blocked` | NO_EXECUTABLE_TASK | Create or unblock a ready task, then rerun queue preview. | `` | No executable task is available in the selected queue. |
 | `PSESS-015` | `blocked` | `supervised_executable_local_commit` | `TASK-119` | `prepare` | `blocked` | BLOCKED | Satisfy the selected-task Change gate, then rerun prepare. | `` | Approved linked Evolution Changes are required before execution. |
 | `PSESS-016` | `failed` | `supervised_executable_local_commit` | `TASK-119` | `execute` | `failed` | none | In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-119 --file <REPORT.json> --confirm | `` | Codex execution adapter failed: local_command_timeout (status=failed, code=CODEX_ADAPTER_TIMEOUT, returncode=none) |
+| `PSESS-017` | `blocked` | `supervised_executable_local_commit_1h` | `TASK-135` | `verify` | `blocked` | GIT_DIFF_GATE_DIFF_MISMATCH | Update the structured report file lists or resolve unintended working-tree changes, then rerun verify. | `` | Git diff gate blocked: missing_from_report: AI_PROJECT/events/codex-events.jsonl, AI_PROJECT/events/context-events.jsonl, AI_PROJECT/events/evolution-events.jsonl, AI_PROJECT/events/pipeline-events.jsonl, AI_PROJECT/events/task-events.jsonl, AI_PROJECT/events/task-report-events.jsonl, AI_PROJECT/generated/CODEX_CURRENT.md, AI_PROJECT/generated/CODEX_PROMPT.md, AI_PROJECT/generated/CODEX_STATUS.md, AI_PROJECT/generated/CODEX_TASKS.md, AI_PROJECT/generated/CONTEXT_PACK.md, AI_PROJECT/generated/CONTEXT_STATUS.md, AI_PROJECT/generated/EVOLUTION.md, AI_PROJECT/generated/PIPELINE_AUDIT.md, AI_PROJECT/generated/PIPELINE_STATUS.md, AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md, AI_PROJECT/logs/ui_run/PIPEF-56-run.json, AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json, AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json, AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json, AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json, AI_PROJECT/logs/ui_run/TASK-135-report-submit.json, AI_PROJECT/state/current_execution.json, AI_PROJECT/state/evolution.json, AI_PROJECT/state/pipeline_sessions.json, AI_PROJECT/state/task_reports.json, AI_PROJECT/state/tasks.json, ai_project_ctl/pipeline/ui_policy.py, ai_project_ctl/ui_settings.py, ai_project_ctl/web/server.py, scripts/aictl.py, tests/pipeline/test_codex_preflight.py, tests/pipeline/test_ui_settings_policy.py, tests/test_ui_run_command.py, tests/test_ui_settings.py, tests/test_web_control_center.py. |
 
 ## Phase History
 
@@ -57,3 +58,13 @@ Sessions: `16`
 | `PSESS-016` | 2 | `prepare` | `blocked` | Approved linked Evolution Changes are required before execution. | Satisfy the selected-task Change gate, then rerun prepare. | 0 | 0 | 1 |
 | `PSESS-016` | 3 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 81b5ba2818abb4904b0e8a2259fb87e02eecf7ce3a8b674e3b0fdb4e6899f232). | 0 | 0 | 1 |
 | `PSESS-016` | 4 | `execute` | `failed` | Codex execution adapter failed: local_command_timeout (status=failed, code=CODEX_ADAPTER_TIMEOUT, returncode=none) | In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-119 --file <REPORT.json> --confirm | 0 | 0 | 1 |
+| `PSESS-017` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-017` | 2 | `prepare` | `blocked` | Approved linked Evolution Changes are required before execution. | Satisfy the selected-task Change gate, then rerun prepare. | 0 | 0 | 1 |
+| `PSESS-017` | 3 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 882502dd239f52d2534041f362e3e477c77e365b5a165ff16b4af614bc167df3). | 0 | 0 | 1 |
+| `PSESS-017` | 4 | `execute` | `passed` | Codex execution adapter completed; structured report collection is pending. (status=blocked, code=CODEX_ADAPTER_REPORT_MISSING, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 1 |
+| `PSESS-017` | 5 | `collect_report` | `blocked` | No structured execution report exists for selected task. | Submit a structured execution report, then rerun collect-report: python scripts/aictl.py task report submit --task TASK-135 --file <REPORT.json> --confirm | 0 | 0 | 1 |
+| `PSESS-017` | 6 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=timestamp). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-017` | 7 | `verify` | `blocked` | Report gate failed: report.token_usage missing required field(s): context_tokens, prompt_tokens, token_count_estimated, token_count_strategy | Fix the structured report or task output, then rerun verify. | 2 | 1 | 1 |
+| `PSESS-017` | 8 | `verify` | `blocked` | Latest report gate target differs from the collected report. | Rerun collect-report, then rerun verify. | 0 | 0 | 1 |
+| `PSESS-017` | 9 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=recovery_override). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-017` | 10 | `verify` | `blocked` | Git diff gate blocked: missing_from_report: AI_PROJECT/events/codex-events.jsonl, AI_PROJECT/events/context-events.jsonl, AI_PROJECT/events/evolution-events.jsonl, AI_PROJECT/events/pipeline-events.jsonl, AI_PROJECT/events/task-events.jsonl, AI_PROJECT/events/task-report-events.jsonl, AI_PROJECT/generated/CODEX_CURRENT.md, AI_PROJECT/generated/CODEX_PROMPT.md, AI_PROJECT/generated/CODEX_STATUS.md, AI_PROJECT/generated/CODEX_TASKS.md, AI_PROJECT/generated/CONTEXT_PACK.md, AI_PROJECT/generated/CONTEXT_STATUS.md, AI_PROJECT/generated/EVOLUTION.md, AI_PROJECT/generated/PIPELINE_AUDIT.md, AI_PROJECT/generated/PIPELINE_STATUS.md, AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md, AI_PROJECT/logs/ui_run/PIPEF-56-run.json, AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json, AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json, AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json, AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json, AI_PROJECT/logs/ui_run/TASK-135-report-submit.json, AI_PROJECT/state/current_execution.json, AI_PROJECT/state/evolution.json, AI_PROJECT/state/pipeline_sessions.json, AI_PROJECT/state/task_reports.json, AI_PROJECT/state/tasks.json, ai_project_ctl/pipeline/ui_policy.py, ai_project_ctl/ui_settings.py, ai_project_ctl/web/server.py, scripts/aictl.py, tests/pipeline/test_codex_preflight.py, tests/pipeline/test_ui_settings_policy.py, tests/test_ui_run_command.py, tests/test_ui_settings.py, tests/test_web_control_center.py. | Update the structured report file lists or resolve unintended working-tree changes, then rerun verify. | 2 | 1 | 1 |

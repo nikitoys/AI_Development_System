@@ -374,14 +374,139 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('value="pipeline.session.create"', body)
         self.assertIn("Create Session", body)
         self.assertIn('value="pipeline.run_next"', body)
-        self.assertIn("Run Next", body)
-        self.assertIn('value="pipeline.run_until_blocker"', body)
-        self.assertIn("Run Until Blocker", body)
-        self.assertIn('value="pipeline.session.stop"', body)
-        self.assertIn("Stop Session", body)
+        self.assertIn("Resume Session", body)
+        self.assertNotIn('value="pipeline.run_until_blocker"', body)
+        self.assertNotIn("<button type=\"submit\">Run Next</button>", body)
+        self.assertNotIn('value="pipeline.session.stop"', body)
+        self.assertIn("Stop Session is unavailable for status blocked.", body)
         self.assertIn('value="pipeline.render"', body)
         self.assertIn("Refresh Status", body)
         self.assertIn('name="confirm" value="yes" required', body)
+
+    def test_pipeline_page_shows_failed_execute_guidance_without_run_controls(self):
+        phase_history = [
+            {
+                "phase": "queue_preview",
+                "status": "passed",
+                "reason": "Queue selected PIPE-27.",
+                "next_action": "Prepare Codex prompt.",
+            },
+            {
+                "phase": "execute",
+                "status": "failed",
+                "reason": "Codex Execute failed.",
+                "next_action": "Inspect execution failure.",
+                "artifacts": {"blocked_by": "codex_adapter"},
+            },
+        ]
+        pipeline = pipeline_detail_state(
+            status="failed",
+            step_status="failed",
+            finished_at="2026-06-20T13:30:00Z",
+            current_step_status="failed",
+            stop_reason="Codex Execute failed.",
+            next_action="",
+            steps=[],
+            gate_outcomes=[],
+            phase_history=phase_history,
+        )
+        pipeline["sessions"][0]["next_action"] = ""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "in_progress",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=pipeline,
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/pipeline", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn(
+            "<span>Next Action</span><strong>Inspect execution failure.</strong>",
+            body,
+        )
+        self.assertIn("<strong>Owner guidance:</strong> Inspect execution failure.", body)
+        self.assertIn("Run actions are unavailable for status failed.", body)
+        self.assertNotIn("<button type=\"submit\">Run Next</button>", body)
+        self.assertNotIn("<button type=\"submit\">Resume Session</button>", body)
+        self.assertNotIn('value="pipeline.run_until_blocker"', body)
+        self.assertNotIn('value="pipeline.session.stop"', body)
+        self.assertIn("Stop Session is unavailable for status failed.", body)
+
+    def test_pipeline_page_shows_resume_for_blocked_prepare_phase(self):
+        phase_history = [
+            {
+                "phase": "queue_preview",
+                "status": "passed",
+                "reason": "Queue selected PIPE-27.",
+                "next_action": "Prepare Codex prompt.",
+            },
+            {
+                "phase": "prepare",
+                "status": "blocked",
+                "reason": "Prompt package blocked.",
+                "next_action": "Resolve prompt blocker.",
+                "artifacts": {"blocked_by": "owner"},
+            },
+        ]
+        pipeline = pipeline_detail_state(
+            status="blocked",
+            step_status="blocked",
+            finished_at="",
+            current_step_status="blocked",
+            stop_reason="Prompt package blocked.",
+            next_action="",
+            steps=[],
+            gate_outcomes=[],
+            phase_history=phase_history,
+        )
+        pipeline["sessions"][0]["next_action"] = ""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "in_progress",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=pipeline,
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/pipeline", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn(
+            "<span>Next Action</span><strong>Resolve prompt blocker.</strong>",
+            body,
+        )
+        self.assertIn("<strong>Owner guidance:</strong> Resolve prompt blocker.", body)
+        self.assertIn('value="pipeline.run_next"', body)
+        self.assertIn("<button type=\"submit\">Resume Session</button>", body)
+        self.assertIn('name="confirm" value="yes" required', body)
+        self.assertNotIn("<button type=\"submit\">Run Next</button>", body)
+        self.assertNotIn('value="pipeline.run_until_blocker"', body)
+        self.assertNotIn('value="pipeline.session.stop"', body)
+        self.assertIn("Stop Session is unavailable for status blocked.", body)
 
     def test_pipeline_session_detail_route_renders_running_session(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -711,8 +836,11 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertNotIn('data-auto-refresh="2"', body)
         self.assertIn("Auto-refresh stopped", body)
         self.assertIn("Resume Session", body)
-        self.assertIn("Run Next", body)
-        self.assertIn("Run Until Blocker", body)
+        self.assertIn('value="pipeline.run_next"', body)
+        self.assertNotIn("<button type=\"submit\">Run Next</button>", body)
+        self.assertNotIn('value="pipeline.run_until_blocker"', body)
+        self.assertNotIn('value="pipeline.session.stop"', body)
+        self.assertIn("Stop Session is unavailable for status blocked.", body)
 
     def test_pipeline_session_detail_renders_completed_historical_session(self):
         with tempfile.TemporaryDirectory() as tmp:

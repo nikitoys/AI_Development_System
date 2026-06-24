@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `976`
+Revision: `992`
 
 ## Executable Now
 
@@ -18,9 +18,6 @@ Revision: `976`
 - `PIPEF-43 (TASK-122)` [planned] `EPIC-009` priority `1` — PIPE-043 Add fake Codex happy path integration test
 - `PIPEF-44 (TASK-123)` [planned] `EPIC-009` priority `1` — PIPE-044 Add fake reviewer close integration test
 - `PIPEF-45 (TASK-124)` [planned] `EPIC-009` priority `1` — PIPE-045 Update phase pipeline usage guide
-- `PIPEF-54 (TASK-133)` [planned] `EPIC-009` priority `1` — PIPE-049 Apply UI execution timeout settings to effective policy
-- `PIPEF-55 (TASK-134)` [planned] `EPIC-009` priority `1` — PIPE-050 Update Web Pipeline actions for phase-based sessions
-- `PIPEF-56 (TASK-135)` [planned] `EPIC-009` priority `1` — PIPE-051 Document phase-based Web Pipeline display behavior
 
 ## Waiting For Dependencies
 
@@ -269,4 +266,10 @@ _No tasks waiting only on dependencies._
 - `PIPEF-52 (TASK-131)` [done] `EPIC-009` priority `1` — PIPE-047 Render phase flow and current phase status in Web Pipeline UI
   - `status_not_executable`: status is done
 - `PIPEF-53 (TASK-132)` [done] `EPIC-009` priority `1` — PIPE-048 Render phase execution artifacts and failure evidence
+  - `status_not_executable`: status is done
+- `PIPEF-54 (TASK-133)` [done] `EPIC-009` priority `1` — PIPE-049 Apply UI execution timeout settings to effective policy
+  - `status_not_executable`: status is done
+- `PIPEF-55 (TASK-134)` [done] `EPIC-009` priority `1` — PIPE-050 Update Web Pipeline actions for phase-based sessions
+  - `status_not_executable`: status is done
+- `PIPEF-56 (TASK-135)` [done] `EPIC-009` priority `1` — PIPE-051 Document phase-based Web Pipeline display behavior
   - `status_not_executable`: status is done

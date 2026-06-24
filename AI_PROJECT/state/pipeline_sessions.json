@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 58,
+  "revision": 69,
   "created_at": "2026-06-19T21:27:58Z",
-  "updated_at": "2026-06-23T14:41:27Z",
-  "current_session_id": "PSESS-016",
+  "updated_at": "2026-06-24T10:12:46Z",
+  "current_session_id": "PSESS-017",
   "sessions": [
     {
       "id": "PSESS-001",
@@ -5702,6 +5702,1927 @@
       "created_at": "2026-06-22T14:11:00Z",
       "updated_at": "2026-06-23T14:41:27Z",
       "started_at": "2026-06-22T14:11:00Z",
+      "finished_at": ""
+    },
+    {
+      "id": "PSESS-017",
+      "status": "blocked",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-56"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit_1h",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": false,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": false,
+          "owner_approval_note": ""
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 3600,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-135",
+      "current_task_ref": "",
+      "current_phase": "verify",
+      "current_phase_status": "blocked",
+      "blocked_by": "GIT_DIFF_GATE_DIFF_MISMATCH",
+      "next_action": "Update the structured report file lists or resolve unintended working-tree changes, then rerun verify.",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-017",
+            "next_task": {
+              "id": "TASK-135",
+              "ref": "PIPEF-56",
+              "uid": "tsk_764223596ec1",
+              "legacy_id": "TASK-135",
+              "title": "PIPE-051 Document phase-based Web Pipeline display behavior",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-56"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-135",
+                  "ref": "PIPEF-56",
+                  "uid": "tsk_764223596ec1",
+                  "legacy_id": "TASK-135",
+                  "title": "PIPE-051 Document phase-based Web Pipeline display behavior",
+                  "status": "planned",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-56"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-EBC8338B7D17"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "blocked",
+          "reason": "Approved linked Evolution Changes are required before execution.",
+          "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+          "artifacts": {
+            "blocked_by": "BLOCKED",
+            "source": "session",
+            "session_id": "PSESS-017",
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-135",
+              "ref": "PIPEF-56",
+              "uid": "tsk_764223596ec1",
+              "legacy_id": "TASK-135",
+              "title": "PIPE-051 Document phase-based Web Pipeline display behavior",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 56,
+              "local_seq": 56,
+              "selected_ref": "PIPEF-56",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "stop_code": "BLOCKED",
+              "scope": "selected_task",
+              "inspected_task_ids": [
+                "TASK-135"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-135",
+                  "task_ref": "PIPEF-56",
+                  "change_ids": []
+                }
+              ],
+              "selected_task_id": "TASK-135",
+              "selected_task_ref": "PIPEF-56",
+              "created_change_ids": [],
+              "linked_change_ids": [],
+              "change_ids": [],
+              "tasks_requiring_approval": [
+                "TASK-135"
+              ],
+              "workflows": []
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-F0A109E63906"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "passed",
+          "reason": "Task preparation rebuilt artifacts; Codex execution has not been started.",
+          "next_action": "Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 882502dd239f52d2534041f362e3e477c77e365b5a165ff16b4af614bc167df3).",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-017",
+            "task_id": "TASK-135",
+            "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+            "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+            "prompt_sha256": "882502dd239f52d2534041f362e3e477c77e365b5a165ff16b4af614bc167df3",
+            "artifact_freshness": {
+              "status": "rebuilt",
+              "reason": "codex_status_not_ready",
+              "rebuild_required_before_prepare": true,
+              "fresh_before_prepare": false
+            },
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-135",
+              "ref": "PIPEF-56",
+              "uid": "tsk_764223596ec1",
+              "legacy_id": "TASK-135",
+              "title": "PIPE-051 Document phase-based Web Pipeline display behavior",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 56,
+              "local_seq": 56,
+              "selected_ref": "PIPEF-56",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "scope": "selected_task",
+              "inspected_task_ids": [
+                "TASK-135"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-135",
+                  "task_ref": "PIPEF-56",
+                  "change_ids": [
+                    "CHG-065",
+                    "CHG-066"
+                  ]
+                }
+              ],
+              "selected_task_id": "TASK-135",
+              "selected_task_ref": "PIPEF-56",
+              "change_ids": [
+                "CHG-066"
+              ]
+            },
+            "workflow": {
+              "ok": true,
+              "message": "Workflow completed.",
+              "steps": [
+                {
+                  "id": "resolve",
+                  "status": "ok"
+                },
+                {
+                  "id": "current_set",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_validate",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_graph",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_in_progress",
+                  "status": "ok"
+                },
+                {
+                  "id": "context_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "codex_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "doctor",
+                  "status": "ok"
+                }
+              ],
+              "errors": []
+            },
+            "codex_adapter_called": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-CB67CFA654B6"
+          ]
+        },
+        {
+          "phase": "execute",
+          "status": "passed",
+          "reason": "Codex execution adapter completed; structured report collection is pending. (status=blocked, code=CODEX_ADAPTER_REPORT_MISSING, returncode=0)",
+          "next_action": "Run pipeline phase collect-report.",
+          "artifacts": {
+            "session_id": "PSESS-017",
+            "task_id": "TASK-135",
+            "policy": "supervised_executable_local_commit_1h",
+            "prepare_artifacts": {
+              "task_id": "TASK-135",
+              "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+              "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "882502dd239f52d2534041f362e3e477c77e365b5a165ff16b4af614bc167df3"
+            },
+            "token_budget": {
+              "status": "pass",
+              "code": "TOKEN_BUDGET_PASS",
+              "reason": "within_token_budget",
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "882502dd239f52d2534041f362e3e477c77e365b5a165ff16b4af614bc167df3",
+              "prompt_bytes": 3015,
+              "prompt_tokens": 754,
+              "context_bytes": 0,
+              "context_tokens": 0,
+              "token_count_strategy": "local_byte_estimate",
+              "token_count_estimated": true,
+              "token_count_unavailable": false,
+              "token_count_unavailable_reason": "",
+              "model_context_limit": 32000,
+              "max_context_tokens": 24000,
+              "reserved_output_tokens": 0,
+              "min_remaining_tokens": 6000,
+              "remaining_tokens": 31246,
+              "context_requires_compact_or_split": false,
+              "context_requirement_reasons": [],
+              "context_pack": {}
+            },
+            "codex_adapter_called": true,
+            "execute_started_at": "2026-06-24T09:11:42Z",
+            "execute_finished_at": "2026-06-24T09:18:34Z",
+            "before_report_id": "",
+            "after_report_id": "",
+            "report_id": "",
+            "execute_evidence": {
+              "status": "blocked",
+              "code": "CODEX_ADAPTER_REPORT_MISSING",
+              "reason": "structured_execution_report_missing",
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 411.283127,
+              "stdout_ref": "captured:stdout:sha256:00121f7e2c4cdb360166f1f896df724ece15e3d283cee4bda874778e31e21e89",
+              "stderr_ref": "captured:stderr:sha256:6a353251c965867a9a3d550819169496d47d872cf1ff902f91e8c6136379bf03",
+              "stdout_snippet": "Summary:\nUpdated the Web Control Center docs to cover `phase_history` rendering, legacy `steps`/`gate_outcomes` fallback, UI `command_line` versus resolved policy `codex.local_command`, preflight versus execution timeouts, `CODEX_ADAPTER_TIMEOUT`, and missing report evidence.\n\nChanged files:\n- [08-usage-guide.md](/home/nikitoys/AI-Development-System/ai-system/project-control/08-usage-guide.md:469)\n- [10-owner-quickstart.md](/home/nikitoys/AI-Development-System/ai-system/project-control/10-owner-quickstart.md:71)\n- [DOCS_GAPS.md](/home/nikitoys/AI-Development-System/AI_PROJECT/generated/DOCS_GAPS.md:1) regenerated via `docctl.py render`, not manually edited\n\nCommands run:\n- `python scripts/taskctl.py task show TASK-135`\n- `python scripts/docctl.py validate`\n- `python scripts/docctl.py check-generated`\n- `python scripts/docctl.py render`\n- `git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md`\n\nVerification result:\n- `docctl.py validate`: OK with existing warnings, including content-hash warnings for the edited docs because I did not run a broader `docctl.py scan`.\n- `docctl.py check-generated`: passed after `docctl.py rende\n[truncated: 1625 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019ef8e6-5e7a-7b10-9b15-228c823772c1\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: Bounded task execution\nActive Document: TASK-135 / PIPEF-56 prompt package\nExpected Result: Update only the allowed project-control documentation files and run the smallest relevant checks\n\nI’ll use the AI Development System navigation and project-control rules first, then inspect the two editable docs plus the referenced source context before making a narrow documentation change.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\ncodex\nI’m using `documentation-navigation`, `clarification-gate`, and `project-control-gateway` because this is a bounded docs edit inside the AI Development System with project-control constraints. I’m reading their instructions and the repository’s mandatory control docs before touching the allowed files.\nexec\n/usr/bin/zsh -lc 'cat /home/nikitoys/AI-\n[truncated: 637417 bytes total]",
+              "stdout_bytes": 1625,
+              "stderr_bytes": 640481,
+              "report_ids": [],
+              "report_required": true,
+              "started_at": "2026-06-24T09:11:42Z",
+              "finished_at": "2026-06-24T09:18:34Z",
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": ""
+            },
+            "adapter": {
+              "status": "blocked",
+              "code": "CODEX_ADAPTER_REPORT_MISSING",
+              "reason": "structured_execution_report_missing",
+              "mode": "local_command",
+              "started_at": "2026-06-24T09:11:42Z",
+              "finished_at": "2026-06-24T09:18:34Z",
+              "duration_sec": 411.283127,
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "882502dd239f52d2534041f362e3e477c77e365b5a165ff16b4af614bc167df3",
+              "prompt_transport": "stdin",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "timeout_sec": 3600,
+              "timed_out": false,
+              "returncode": 0,
+              "stdout_ref": "captured:stdout:sha256:00121f7e2c4cdb360166f1f896df724ece15e3d283cee4bda874778e31e21e89",
+              "stderr_ref": "captured:stderr:sha256:6a353251c965867a9a3d550819169496d47d872cf1ff902f91e8c6136379bf03",
+              "stdout_snippet": "Summary:\nUpdated the Web Control Center docs to cover `phase_history` rendering, legacy `steps`/`gate_outcomes` fallback, UI `command_line` versus resolved policy `codex.local_command`, preflight versus execution timeouts, `CODEX_ADAPTER_TIMEOUT`, and missing report evidence.\n\nChanged files:\n- [08-usage-guide.md](/home/nikitoys/AI-Development-System/ai-system/project-control/08-usage-guide.md:469)\n- [10-owner-quickstart.md](/home/nikitoys/AI-Development-System/ai-system/project-control/10-owner-quickstart.md:71)\n- [DOCS_GAPS.md](/home/nikitoys/AI-Development-System/AI_PROJECT/generated/DOCS_GAPS.md:1) regenerated via `docctl.py render`, not manually edited\n\nCommands run:\n- `python scripts/taskctl.py task show TASK-135`\n- `python scripts/docctl.py validate`\n- `python scripts/docctl.py check-generated`\n- `python scripts/docctl.py render`\n- `git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md`\n\nVerification result:\n- `docctl.py validate`: OK with existing warnings, including content-hash warnings for the edited docs because I did not run a broader `docctl.py scan`.\n- `docctl.py check-generated`: passed after `docctl.py rende\n[truncated: 1625 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019ef8e6-5e7a-7b10-9b15-228c823772c1\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: Bounded task execution\nActive Document: TASK-135 / PIPEF-56 prompt package\nExpected Result: Update only the allowed project-control documentation files and run the smallest relevant checks\n\nI’ll use the AI Development System navigation and project-control rules first, then inspect the two editable docs plus the referenced source context before making a narrow documentation change.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\ncodex\nI’m using `documentation-navigation`, `clarification-gate`, and `project-control-gateway` because this is a bounded docs edit inside the AI Development System with project-control constraints. I’m reading their instructions and the repository’s mandatory control docs before touching the allowed files.\nexec\n/usr/bin/zsh -lc 'cat /home/nikitoys/AI-\n[truncated: 637417 bytes total]",
+              "stdout_bytes": 1625,
+              "stderr_bytes": 640481,
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": "",
+              "report_instruction": "In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-135 --file <REPORT.json> --confirm"
+            },
+            "adapter_summary": {
+              "status": "blocked",
+              "code": "CODEX_ADAPTER_REPORT_MISSING",
+              "reason": "structured_execution_report_missing",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 411.283127,
+              "stdout_ref": "captured:stdout:sha256:00121f7e2c4cdb360166f1f896df724ece15e3d283cee4bda874778e31e21e89",
+              "stderr_ref": "captured:stderr:sha256:6a353251c965867a9a3d550819169496d47d872cf1ff902f91e8c6136379bf03",
+              "stdout_snippet": "Summary:\nUpdated the Web Control Center docs to cover `phase_history` rendering, legacy `steps`/`gate_outcomes` fallback, UI `command_line` versus resolved policy `codex.local_command`, preflight versus execution timeouts, `CODEX_ADAPTER_TIMEOUT`, and missing report evidence.\n\nChanged files:\n- [08-usage-guide.md](/home/nikitoys/AI-Development-System/ai-system/project-control/08-usage-guide.md:469)\n- [10-owner-quickstart.md](/home/nikitoys/AI-Development-System/ai-system/project-control/10-owner-quickstart.md:71)\n- [DOCS_GAPS.md](/home/nikitoys/AI-Development-System/AI_PROJECT/generated/DOCS_GAPS.md:1) regenerated via `docctl.py render`, not manually edited\n\nCommands run:\n- `python scripts/taskctl.py task show TASK-135`\n- `python scripts/docctl.py validate`\n- `python scripts/docctl.py check-generated`\n- `python scripts/docctl.py render`\n- `git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md`\n\nVerification result:\n- `docctl.py validate`: OK with existing warnings, including content-hash warnings for the edited docs because I did not run a broader `docctl.py scan`.\n- `docctl.py check-generated`: passed after `docctl.py rende\n[truncated: 1625 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019ef8e6-5e7a-7b10-9b15-228c823772c1\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: Bounded task execution\nActive Document: TASK-135 / PIPEF-56 prompt package\nExpected Result: Update only the allowed project-control documentation files and run the smallest relevant checks\n\nI’ll use the AI Development System navigation and project-control rules first, then inspect the two editable docs plus the referenced source context before making a narrow documentation change.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\ncodex\nI’m using `documentation-navigation`, `clarification-gate`, and `project-control-gateway` because this is a bounded docs edit inside the AI Development System with project-control constraints. I’m reading their instructions and the repository’s mandatory control docs before touching the allowed files.\nexec\n/usr/bin/zsh -lc 'cat /home/nikitoys/AI-\n[truncated: 637417 bytes total]",
+              "stdout_bytes": 1625,
+              "stderr_bytes": 640481,
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": "",
+              "report_ids": []
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-86383195F666"
+          ]
+        },
+        {
+          "phase": "collect_report",
+          "status": "blocked",
+          "reason": "No structured execution report exists for selected task.",
+          "next_action": "Submit a structured execution report, then rerun collect-report: python scripts/aictl.py task report submit --task TASK-135 --file <REPORT.json> --confirm",
+          "artifacts": {
+            "blocked_by": "REPORT_MISSING",
+            "session_id": "PSESS-017",
+            "task_id": "TASK-135",
+            "report_id": ""
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-42AAE6C07860"
+          ]
+        },
+        {
+          "phase": "collect_report",
+          "status": "passed",
+          "reason": "Structured execution report collected for selected task (freshness_basis=timestamp).",
+          "next_action": "Run pipeline phase verify.",
+          "artifacts": {
+            "session_id": "PSESS-017",
+            "task_id": "TASK-135",
+            "report_id": "RPT-006",
+            "report_task_id": "TASK-135",
+            "expected_task_id": "TASK-135",
+            "selected_task_ref": "",
+            "record_task_id": "TASK-135",
+            "record_task_ref": "PIPEF-56",
+            "observed_report_task_id": "TASK-135",
+            "structured_report_task_id": "TASK-135",
+            "structured_report_task_ref": "PIPEF-56",
+            "reported_task_id": "TASK-135",
+            "reported_task_ref": "PIPEF-56",
+            "submitted_at": "2026-06-24T09:54:26Z",
+            "submitted_by": "human_owner",
+            "source_file": "/tmp/TASK-135-report.json",
+            "report_found": true,
+            "freshness": {
+              "fresh": true,
+              "basis": "timestamp",
+              "reason": "Report timestamp is at or after execute start.",
+              "allow_existing_report": false,
+              "report_id": "RPT-006",
+              "report_submitted_at": "2026-06-24T09:54:26Z",
+              "execute_started_at": "2026-06-24T09:11:42Z",
+              "execute_finished_at": "2026-06-24T09:18:34Z",
+              "execute_before_report_id": "",
+              "execute_after_report_id": "",
+              "execute_report_id": "",
+              "execute_phase_status": "passed"
+            },
+            "freshness_basis": "timestamp",
+            "allow_existing_report": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-9F21610F4070"
+          ]
+        },
+        {
+          "phase": "verify",
+          "status": "blocked",
+          "reason": "Report gate failed: report.token_usage missing required field(s): context_tokens, prompt_tokens, token_count_estimated, token_count_strategy",
+          "next_action": "Fix the structured report or task output, then rerun verify.",
+          "artifacts": {
+            "blocked_by": "CODEX_REPORT_TOKEN_USAGE_REQUIRED",
+            "session_id": "PSESS-017",
+            "task_id": "TASK-135",
+            "report_id": "RPT-006",
+            "collected_report_id": "RPT-006",
+            "policy": "supervised_executable_local_commit_1h",
+            "collect_report_phase": {
+              "phase": "collect_report",
+              "status": "passed",
+              "reason": "Structured execution report collected for selected task (freshness_basis=timestamp).",
+              "report_id": "RPT-006",
+              "task_id": "TASK-135"
+            },
+            "report_gate_status": "fail",
+            "report_gate_code": "CODEX_REPORT_TOKEN_USAGE_REQUIRED",
+            "report_gate": {
+              "status": "fail",
+              "code": "CODEX_REPORT_TOKEN_USAGE_REQUIRED",
+              "reason": "report.token_usage missing required field(s): context_tokens, prompt_tokens, token_count_estimated, token_count_strategy",
+              "report_id": "RPT-006",
+              "task_id": "TASK-135",
+              "issues": [
+                {
+                  "code": "CODEX_REPORT_TOKEN_USAGE_REQUIRED",
+                  "message": "report.token_usage missing required field(s): context_tokens, prompt_tokens, token_count_estimated, token_count_strategy",
+                  "path": "token_usage"
+                }
+              ],
+              "warnings": [
+                {
+                  "code": "CODEX_REPORT_WARN",
+                  "message": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+                  "path": "warnings"
+                }
+              ],
+              "changed_files": [
+                "ai-system/project-control/08-usage-guide.md",
+                "ai-system/project-control/10-owner-quickstart.md"
+              ],
+              "generated_files": [
+                "AI_PROJECT/generated/DOCS_GAPS.md"
+              ],
+              "token_usage": {},
+              "checks": [
+                {
+                  "name": "Task inspection",
+                  "command": "python scripts/taskctl.py task show TASK-135",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": false,
+                  "details": "Task context inspected before editing."
+                },
+                {
+                  "name": "Documentation validation",
+                  "command": "python scripts/docctl.py validate",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "Validation completed with existing warnings, including content-hash warnings for edited docs because broader docctl.py scan was not run."
+                },
+                {
+                  "name": "Generated documentation freshness",
+                  "command": "python scripts/docctl.py check-generated",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "Passed after regenerating documentation outputs."
+                },
+                {
+                  "name": "Documentation render",
+                  "command": "python scripts/docctl.py render",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "Regenerated AI_PROJECT/generated/DOCS_GAPS.md."
+                },
+                {
+                  "name": "Diff whitespace check",
+                  "command": "git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "No diff whitespace errors reported by Codex execution summary."
+                }
+              ]
+            },
+            "verify_evidence": {
+              "schema_version": 1,
+              "phase": "verify",
+              "status": "blocked",
+              "task_id": "TASK-135",
+              "report_id": "RPT-006",
+              "blocked_by": "CODEX_REPORT_TOKEN_USAGE_REQUIRED",
+              "report_gate": {
+                "status": "fail",
+                "code": "CODEX_REPORT_TOKEN_USAGE_REQUIRED",
+                "reason": "report.token_usage missing required field(s): context_tokens, prompt_tokens, token_count_estimated, token_count_strategy",
+                "report_id": "RPT-006",
+                "task_id": "TASK-135",
+                "changed_files": [
+                  "ai-system/project-control/08-usage-guide.md",
+                  "ai-system/project-control/10-owner-quickstart.md"
+                ],
+                "generated_files": [
+                  "AI_PROJECT/generated/DOCS_GAPS.md"
+                ],
+                "issues": [
+                  {
+                    "code": "CODEX_REPORT_TOKEN_USAGE_REQUIRED",
+                    "message": "report.token_usage missing required field(s): context_tokens, prompt_tokens, token_count_estimated, token_count_strategy",
+                    "path": "token_usage"
+                  }
+                ],
+                "warnings": [
+                  {
+                    "code": "CODEX_REPORT_WARN",
+                    "message": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+                    "path": "warnings"
+                  }
+                ],
+                "checks": [
+                  {
+                    "name": "Task inspection",
+                    "result": "passed",
+                    "blocking": false,
+                    "command": "python scripts/taskctl.py task show TASK-135"
+                  },
+                  {
+                    "name": "Documentation validation",
+                    "result": "passed",
+                    "blocking": true,
+                    "command": "python scripts/docctl.py validate"
+                  },
+                  {
+                    "name": "Generated documentation freshness",
+                    "result": "passed",
+                    "blocking": true,
+                    "command": "python scripts/docctl.py check-generated"
+                  },
+                  {
+                    "name": "Documentation render",
+                    "result": "passed",
+                    "blocking": true,
+                    "command": "python scripts/docctl.py render"
+                  },
+                  {
+                    "name": "Diff whitespace check",
+                    "result": "passed",
+                    "blocking": true,
+                    "command": "git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md"
+                  }
+                ]
+              }
+            }
+          },
+          "changed_files": [
+            "ai-system/project-control/08-usage-guide.md",
+            "ai-system/project-control/10-owner-quickstart.md"
+          ],
+          "generated_files": [
+            "AI_PROJECT/generated/DOCS_GAPS.md"
+          ],
+          "events": [
+            "EVT-D7FD43767708"
+          ]
+        },
+        {
+          "phase": "verify",
+          "status": "blocked",
+          "reason": "Latest report gate target differs from the collected report.",
+          "next_action": "Rerun collect-report, then rerun verify.",
+          "artifacts": {
+            "blocked_by": "REPORT_CHANGED_AFTER_COLLECT",
+            "session_id": "PSESS-017",
+            "task_id": "TASK-135",
+            "report_id": "RPT-007",
+            "collected_report_id": "RPT-006",
+            "policy": "supervised_executable_local_commit_1h",
+            "collect_report_phase": {
+              "phase": "collect_report",
+              "status": "passed",
+              "reason": "Structured execution report collected for selected task (freshness_basis=timestamp).",
+              "report_id": "RPT-006",
+              "task_id": "TASK-135"
+            },
+            "report_gate_status": "warn",
+            "report_gate_code": "CODEX_REPORT_WARN",
+            "report_gate": {
+              "status": "warn",
+              "code": "CODEX_REPORT_WARN",
+              "reason": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+              "report_id": "RPT-007",
+              "task_id": "TASK-135",
+              "issues": [],
+              "warnings": [
+                {
+                  "code": "CODEX_REPORT_WARN",
+                  "message": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+                  "path": "warnings"
+                }
+              ],
+              "changed_files": [
+                "ai-system/project-control/08-usage-guide.md",
+                "ai-system/project-control/10-owner-quickstart.md"
+              ],
+              "generated_files": [
+                "AI_PROJECT/generated/DOCS_GAPS.md"
+              ],
+              "token_usage": {
+                "context_tokens": 0,
+                "prompt_tokens": 0,
+                "token_count_estimated": true,
+                "token_count_strategy": "manual_report_not_measured"
+              },
+              "checks": [
+                {
+                  "name": "Task inspection",
+                  "command": "python scripts/taskctl.py task show TASK-135",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": false,
+                  "details": "Task context inspected before editing."
+                },
+                {
+                  "name": "Documentation validation",
+                  "command": "python scripts/docctl.py validate",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "Validation completed with existing warnings, including content-hash warnings for edited docs because broader docctl.py scan was not run."
+                },
+                {
+                  "name": "Generated documentation freshness",
+                  "command": "python scripts/docctl.py check-generated",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "Passed after regenerating documentation outputs."
+                },
+                {
+                  "name": "Documentation render",
+                  "command": "python scripts/docctl.py render",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "Regenerated AI_PROJECT/generated/DOCS_GAPS.md."
+                },
+                {
+                  "name": "Diff whitespace check",
+                  "command": "git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "No diff whitespace errors reported by Codex execution summary."
+                }
+              ]
+            },
+            "verify_evidence": {
+              "schema_version": 1,
+              "phase": "verify",
+              "status": "blocked",
+              "task_id": "TASK-135",
+              "report_id": "RPT-007",
+              "blocked_by": "REPORT_CHANGED_AFTER_COLLECT",
+              "report_gate": {
+                "status": "warn",
+                "code": "CODEX_REPORT_WARN",
+                "reason": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+                "report_id": "RPT-007",
+                "task_id": "TASK-135",
+                "changed_files": [
+                  "ai-system/project-control/08-usage-guide.md",
+                  "ai-system/project-control/10-owner-quickstart.md"
+                ],
+                "generated_files": [
+                  "AI_PROJECT/generated/DOCS_GAPS.md"
+                ],
+                "issues": [],
+                "warnings": [
+                  {
+                    "code": "CODEX_REPORT_WARN",
+                    "message": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+                    "path": "warnings"
+                  }
+                ],
+                "checks": [
+                  {
+                    "name": "Task inspection",
+                    "result": "passed",
+                    "blocking": false,
+                    "command": "python scripts/taskctl.py task show TASK-135"
+                  },
+                  {
+                    "name": "Documentation validation",
+                    "result": "passed",
+                    "blocking": true,
+                    "command": "python scripts/docctl.py validate"
+                  },
+                  {
+                    "name": "Generated documentation freshness",
+                    "result": "passed",
+                    "blocking": true,
+                    "command": "python scripts/docctl.py check-generated"
+                  },
+                  {
+                    "name": "Documentation render",
+                    "result": "passed",
+                    "blocking": true,
+                    "command": "python scripts/docctl.py render"
+                  },
+                  {
+                    "name": "Diff whitespace check",
+                    "result": "passed",
+                    "blocking": true,
+                    "command": "git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md"
+                  }
+                ]
+              }
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-F5D0C134A6FE"
+          ]
+        },
+        {
+          "phase": "collect_report",
+          "status": "passed",
+          "reason": "Structured execution report collected for selected task (freshness_basis=recovery_override).",
+          "next_action": "Run pipeline phase verify.",
+          "artifacts": {
+            "session_id": "PSESS-017",
+            "task_id": "TASK-135",
+            "report_id": "RPT-007",
+            "report_task_id": "TASK-135",
+            "expected_task_id": "TASK-135",
+            "selected_task_ref": "",
+            "record_task_id": "TASK-135",
+            "record_task_ref": "PIPEF-56",
+            "observed_report_task_id": "TASK-135",
+            "structured_report_task_id": "TASK-135",
+            "structured_report_task_ref": "PIPEF-56",
+            "reported_task_id": "TASK-135",
+            "reported_task_ref": "PIPEF-56",
+            "submitted_at": "2026-06-24T10:00:16Z",
+            "submitted_by": "human_owner",
+            "source_file": "/tmp/TASK-135-report-fixed.json",
+            "report_found": true,
+            "freshness": {
+              "fresh": true,
+              "basis": "recovery_override",
+              "reason": "allow_existing_report override was explicitly used.",
+              "allow_existing_report": true,
+              "report_id": "RPT-007",
+              "report_submitted_at": "2026-06-24T10:00:16Z",
+              "execute_started_at": "2026-06-24T09:11:42Z",
+              "execute_finished_at": "2026-06-24T09:18:34Z",
+              "execute_before_report_id": "",
+              "execute_after_report_id": "",
+              "execute_report_id": "",
+              "execute_phase_status": "passed"
+            },
+            "freshness_basis": "recovery_override",
+            "allow_existing_report": true
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-58DFC9E8911E"
+          ]
+        },
+        {
+          "phase": "verify",
+          "status": "blocked",
+          "reason": "Git diff gate blocked: missing_from_report: AI_PROJECT/events/codex-events.jsonl, AI_PROJECT/events/context-events.jsonl, AI_PROJECT/events/evolution-events.jsonl, AI_PROJECT/events/pipeline-events.jsonl, AI_PROJECT/events/task-events.jsonl, AI_PROJECT/events/task-report-events.jsonl, AI_PROJECT/generated/CODEX_CURRENT.md, AI_PROJECT/generated/CODEX_PROMPT.md, AI_PROJECT/generated/CODEX_STATUS.md, AI_PROJECT/generated/CODEX_TASKS.md, AI_PROJECT/generated/CONTEXT_PACK.md, AI_PROJECT/generated/CONTEXT_STATUS.md, AI_PROJECT/generated/EVOLUTION.md, AI_PROJECT/generated/PIPELINE_AUDIT.md, AI_PROJECT/generated/PIPELINE_STATUS.md, AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md, AI_PROJECT/logs/ui_run/PIPEF-56-run.json, AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json, AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json, AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json, AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json, AI_PROJECT/logs/ui_run/TASK-135-report-submit.json, AI_PROJECT/state/current_execution.json, AI_PROJECT/state/evolution.json, AI_PROJECT/state/pipeline_sessions.json, AI_PROJECT/state/task_reports.json, AI_PROJECT/state/tasks.json, ai_project_ctl/pipeline/ui_policy.py, ai_project_ctl/ui_settings.py, ai_project_ctl/web/server.py, scripts/aictl.py, tests/pipeline/test_codex_preflight.py, tests/pipeline/test_ui_settings_policy.py, tests/test_ui_run_command.py, tests/test_ui_settings.py, tests/test_web_control_center.py.",
+          "next_action": "Update the structured report file lists or resolve unintended working-tree changes, then rerun verify.",
+          "artifacts": {
+            "blocked_by": "GIT_DIFF_GATE_DIFF_MISMATCH",
+            "mismatch_policy": "git_diff_mismatch_blocks_verify",
+            "session_id": "PSESS-017",
+            "task_id": "TASK-135",
+            "report_id": "RPT-007",
+            "collected_report_id": "RPT-007",
+            "policy": "supervised_executable_local_commit_1h",
+            "collect_report_phase": {
+              "phase": "collect_report",
+              "status": "passed",
+              "reason": "Structured execution report collected for selected task (freshness_basis=recovery_override).",
+              "report_id": "RPT-007",
+              "task_id": "TASK-135"
+            },
+            "report_gate_status": "warn",
+            "report_gate_code": "CODEX_REPORT_WARN",
+            "report_gate": {
+              "status": "warn",
+              "code": "CODEX_REPORT_WARN",
+              "reason": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+              "report_id": "RPT-007",
+              "task_id": "TASK-135",
+              "issues": [],
+              "warnings": [
+                {
+                  "code": "CODEX_REPORT_WARN",
+                  "message": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+                  "path": "warnings"
+                }
+              ],
+              "changed_files": [
+                "ai-system/project-control/08-usage-guide.md",
+                "ai-system/project-control/10-owner-quickstart.md"
+              ],
+              "generated_files": [
+                "AI_PROJECT/generated/DOCS_GAPS.md"
+              ],
+              "token_usage": {
+                "context_tokens": 0,
+                "prompt_tokens": 0,
+                "token_count_estimated": true,
+                "token_count_strategy": "manual_report_not_measured"
+              },
+              "checks": [
+                {
+                  "name": "Task inspection",
+                  "command": "python scripts/taskctl.py task show TASK-135",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": false,
+                  "details": "Task context inspected before editing."
+                },
+                {
+                  "name": "Documentation validation",
+                  "command": "python scripts/docctl.py validate",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "Validation completed with existing warnings, including content-hash warnings for edited docs because broader docctl.py scan was not run."
+                },
+                {
+                  "name": "Generated documentation freshness",
+                  "command": "python scripts/docctl.py check-generated",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "Passed after regenerating documentation outputs."
+                },
+                {
+                  "name": "Documentation render",
+                  "command": "python scripts/docctl.py render",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "Regenerated AI_PROJECT/generated/DOCS_GAPS.md."
+                },
+                {
+                  "name": "Diff whitespace check",
+                  "command": "git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md",
+                  "result": "passed",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "No diff whitespace errors reported by Codex execution summary."
+                }
+              ]
+            },
+            "git_diff_gate_status": "blocked",
+            "git_diff_gate_code": "GIT_DIFF_GATE_DIFF_MISMATCH",
+            "git_diff_gate": {
+              "status": "blocked",
+              "code": "GIT_DIFF_GATE_DIFF_MISMATCH",
+              "reason": "working_tree_diff_does_not_match_expected_files",
+              "repo_root": "/home/nikitoys/AI-Development-System",
+              "expected_files": [
+                "AI_PROJECT/generated/DOCS_GAPS.md",
+                "ai-system/project-control/08-usage-guide.md",
+                "ai-system/project-control/10-owner-quickstart.md"
+              ],
+              "changed_files": [
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/evolution-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/DOCS_GAPS.md",
+                "AI_PROJECT/generated/EVOLUTION.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/logs/ui_run/PIPEF-56-run.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json",
+                "AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json",
+                "AI_PROJECT/logs/ui_run/TASK-135-report-submit.json",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/evolution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json",
+                "ai-system/project-control/08-usage-guide.md",
+                "ai-system/project-control/10-owner-quickstart.md",
+                "ai_project_ctl/pipeline/ui_policy.py",
+                "ai_project_ctl/ui_settings.py",
+                "ai_project_ctl/web/server.py",
+                "scripts/aictl.py",
+                "tests/pipeline/test_codex_preflight.py",
+                "tests/pipeline/test_ui_settings_policy.py",
+                "tests/test_ui_run_command.py",
+                "tests/test_ui_settings.py",
+                "tests/test_web_control_center.py"
+              ],
+              "tracked_files": [
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/evolution-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/DOCS_GAPS.md",
+                "AI_PROJECT/generated/EVOLUTION.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/evolution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json",
+                "ai-system/project-control/08-usage-guide.md",
+                "ai-system/project-control/10-owner-quickstart.md",
+                "ai_project_ctl/pipeline/ui_policy.py",
+                "ai_project_ctl/ui_settings.py",
+                "ai_project_ctl/web/server.py",
+                "scripts/aictl.py",
+                "tests/pipeline/test_codex_preflight.py",
+                "tests/pipeline/test_ui_settings_policy.py",
+                "tests/test_ui_run_command.py",
+                "tests/test_ui_settings.py",
+                "tests/test_web_control_center.py"
+              ],
+              "staged_files": [],
+              "unstaged_files": [
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/evolution-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/DOCS_GAPS.md",
+                "AI_PROJECT/generated/EVOLUTION.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/evolution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json",
+                "ai-system/project-control/08-usage-guide.md",
+                "ai-system/project-control/10-owner-quickstart.md",
+                "ai_project_ctl/pipeline/ui_policy.py",
+                "ai_project_ctl/ui_settings.py",
+                "ai_project_ctl/web/server.py",
+                "scripts/aictl.py",
+                "tests/pipeline/test_codex_preflight.py",
+                "tests/pipeline/test_ui_settings_policy.py",
+                "tests/test_ui_run_command.py",
+                "tests/test_ui_settings.py",
+                "tests/test_web_control_center.py"
+              ],
+              "untracked_files": [
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/logs/ui_run/PIPEF-56-run.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json",
+                "AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json",
+                "AI_PROJECT/logs/ui_run/TASK-135-report-submit.json"
+              ],
+              "unexpected_files": [
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/evolution-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/EVOLUTION.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/logs/ui_run/PIPEF-56-run.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json",
+                "AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json",
+                "AI_PROJECT/logs/ui_run/TASK-135-report-submit.json",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/evolution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json",
+                "ai_project_ctl/pipeline/ui_policy.py",
+                "ai_project_ctl/ui_settings.py",
+                "ai_project_ctl/web/server.py",
+                "scripts/aictl.py",
+                "tests/pipeline/test_codex_preflight.py",
+                "tests/pipeline/test_ui_settings_policy.py",
+                "tests/test_ui_run_command.py",
+                "tests/test_ui_settings.py",
+                "tests/test_web_control_center.py"
+              ],
+              "missing_files": [],
+              "status_entries": [
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/events/codex-events.jsonl"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/events/context-events.jsonl"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/events/evolution-events.jsonl"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/events/pipeline-events.jsonl"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/events/task-events.jsonl"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/events/task-report-events.jsonl"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/CODEX_CURRENT.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/CODEX_STATUS.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/CODEX_TASKS.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/CONTEXT_PACK.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/CONTEXT_STATUS.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/DOCS_GAPS.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/EVOLUTION.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/PIPELINE_AUDIT.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/PIPELINE_STATUS.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/state/current_execution.json"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/state/evolution.json"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/state/pipeline_sessions.json"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/state/task_reports.json"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/state/tasks.json"
+                },
+                {
+                  "status": " M",
+                  "path": "ai-system/project-control/08-usage-guide.md"
+                },
+                {
+                  "status": " M",
+                  "path": "ai-system/project-control/10-owner-quickstart.md"
+                },
+                {
+                  "status": " M",
+                  "path": "ai_project_ctl/pipeline/ui_policy.py"
+                },
+                {
+                  "status": " M",
+                  "path": "ai_project_ctl/ui_settings.py"
+                },
+                {
+                  "status": " M",
+                  "path": "ai_project_ctl/web/server.py"
+                },
+                {
+                  "status": " M",
+                  "path": "scripts/aictl.py"
+                },
+                {
+                  "status": " M",
+                  "path": "tests/pipeline/test_codex_preflight.py"
+                },
+                {
+                  "status": " M",
+                  "path": "tests/pipeline/test_ui_settings_policy.py"
+                },
+                {
+                  "status": " M",
+                  "path": "tests/test_ui_run_command.py"
+                },
+                {
+                  "status": " M",
+                  "path": "tests/test_ui_settings.py"
+                },
+                {
+                  "status": " M",
+                  "path": "tests/test_web_control_center.py"
+                },
+                {
+                  "status": "??",
+                  "path": "AI_PROJECT/generated/CODEX_PROMPT.md"
+                },
+                {
+                  "status": "??",
+                  "path": "AI_PROJECT/logs/ui_run/PIPEF-56-run.json"
+                },
+                {
+                  "status": "??",
+                  "path": "AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json"
+                },
+                {
+                  "status": "??",
+                  "path": "AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json"
+                },
+                {
+                  "status": "??",
+                  "path": "AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json"
+                },
+                {
+                  "status": "??",
+                  "path": "AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json"
+                },
+                {
+                  "status": "??",
+                  "path": "AI_PROJECT/logs/ui_run/TASK-135-report-submit.json"
+                }
+              ],
+              "commands": [
+                {
+                  "ok": true,
+                  "code": "GIT_DIFF_GATE_PASS",
+                  "reason": "command_succeeded",
+                  "command": [
+                    "git",
+                    "rev-parse",
+                    "--show-toplevel"
+                  ],
+                  "returncode": 0,
+                  "stdout": "/home/nikitoys/AI-Development-System\n",
+                  "stderr": ""
+                },
+                {
+                  "ok": true,
+                  "code": "GIT_DIFF_GATE_PASS",
+                  "reason": "command_succeeded",
+                  "command": [
+                    "git",
+                    "status",
+                    "--porcelain=v1",
+                    "-z",
+                    "--untracked-files=all"
+                  ],
+                  "returncode": 0,
+                  "stdout": " M AI_PROJECT/events/codex-events.jsonl\u0000 M AI_PROJECT/events/context-events.jsonl\u0000 M AI_PROJECT/events/evolution-events.jsonl\u0000 M AI_PROJECT/events/pipeline-events.jsonl\u0000 M AI_PROJECT/events/task-events.jsonl\u0000 M AI_PROJECT/events/task-report-events.jsonl\u0000 M AI_PROJECT/generated/CODEX_CURRENT.md\u0000 M AI_PROJECT/generated/CODEX_STATUS.md\u0000 M AI_PROJECT/generated/CODEX_TASKS.md\u0000 M AI_PROJECT/generated/CONTEXT_PACK.md\u0000 M AI_PROJECT/generated/CONTEXT_STATUS.md\u0000 M AI_PROJECT/generated/DOCS_GAPS.md\u0000 M AI_PROJECT/generated/EVOLUTION.md\u0000 M AI_PROJECT/generated/PIPELINE_AUDIT.md\u0000 M AI_PROJECT/generated/PIPELINE_STATUS.md\u0000 M AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md\u0000 M AI_PROJECT/state/current_execution.json\u0000 M AI_PROJECT/state/evolution.json\u0000 M AI_PROJECT/state/pipeline_sessions.json\u0000 M AI_PROJECT/state/task_reports.json\u0000 M AI_PROJECT/state/tasks.json\u0000 M ai-system/project-control/08-usage-guide.md\u0000 M ai-system/project-control/10-owner-quickstart.md\u0000 M ai_project_ctl/pipeline/ui_policy.py\u0000 M ai_project_ctl/ui_settings.py\u0000 M ai_project_ctl/web/server.py\u0000 M scripts/aictl.py\u0000 M tests/pipeline/test_codex_preflight.py\u0000 M tests/pipeline/test_ui_settings_policy.py\u0000 M tests/test_ui_run_command.py\u0000 M tests/test_ui_settings.py\u0000 M tests/test_web_control_center.py\u0000?? AI_PROJECT/generated/CODEX_PROMPT.md\u0000?? AI_PROJECT/logs/ui_run/PIPEF-56-run.json\u0000?? AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json\u0000?? AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json\u0000?? AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json\u0000?? AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json\u0000?? AI_PROJECT/logs/ui_run/TASK-135-report-submit.json\u0000",
+                  "stderr": ""
+                },
+                {
+                  "ok": true,
+                  "code": "GIT_DIFF_GATE_PASS",
+                  "reason": "command_succeeded",
+                  "command": [
+                    "git",
+                    "diff",
+                    "--cached",
+                    "--name-only",
+                    "-z",
+                    "--"
+                  ],
+                  "returncode": 0,
+                  "stdout": "",
+                  "stderr": ""
+                },
+                {
+                  "ok": true,
+                  "code": "GIT_DIFF_GATE_PASS",
+                  "reason": "command_succeeded",
+                  "command": [
+                    "git",
+                    "diff",
+                    "--name-only",
+                    "-z",
+                    "--"
+                  ],
+                  "returncode": 0,
+                  "stdout": "AI_PROJECT/events/codex-events.jsonl\u0000AI_PROJECT/events/context-events.jsonl\u0000AI_PROJECT/events/evolution-events.jsonl\u0000AI_PROJECT/events/pipeline-events.jsonl\u0000AI_PROJECT/events/task-events.jsonl\u0000AI_PROJECT/events/task-report-events.jsonl\u0000AI_PROJECT/generated/CODEX_CURRENT.md\u0000AI_PROJECT/generated/CODEX_STATUS.md\u0000AI_PROJECT/generated/CODEX_TASKS.md\u0000AI_PROJECT/generated/CONTEXT_PACK.md\u0000AI_PROJECT/generated/CONTEXT_STATUS.md\u0000AI_PROJECT/generated/DOCS_GAPS.md\u0000AI_PROJECT/generated/EVOLUTION.md\u0000AI_PROJECT/generated/PIPELINE_AUDIT.md\u0000AI_PROJECT/generated/PIPELINE_STATUS.md\u0000AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md\u0000AI_PROJECT/state/current_execution.json\u0000AI_PROJECT/state/evolution.json\u0000AI_PROJECT/state/pipeline_sessions.json\u0000AI_PROJECT/state/task_reports.json\u0000AI_PROJECT/state/tasks.json\u0000ai-system/project-control/08-usage-guide.md\u0000ai-system/project-control/10-owner-quickstart.md\u0000ai_project_ctl/pipeline/ui_policy.py\u0000ai_project_ctl/ui_settings.py\u0000ai_project_ctl/web/server.py\u0000scripts/aictl.py\u0000tests/pipeline/test_codex_preflight.py\u0000tests/pipeline/test_ui_settings_policy.py\u0000tests/test_ui_run_command.py\u0000tests/test_ui_settings.py\u0000tests/test_web_control_center.py\u0000",
+                  "stderr": ""
+                }
+              ]
+            },
+            "report_git_diff_comparison": {
+              "status": "blocked",
+              "policy": "reported_files_must_match_actual_git_diff",
+              "report_changed_files": [
+                "ai-system/project-control/08-usage-guide.md",
+                "ai-system/project-control/10-owner-quickstart.md"
+              ],
+              "report_generated_files": [
+                "AI_PROJECT/generated/DOCS_GAPS.md"
+              ],
+              "reported_files": [
+                "AI_PROJECT/generated/DOCS_GAPS.md",
+                "ai-system/project-control/08-usage-guide.md",
+                "ai-system/project-control/10-owner-quickstart.md"
+              ],
+              "actual_changed_files": [
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/evolution-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/DOCS_GAPS.md",
+                "AI_PROJECT/generated/EVOLUTION.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/logs/ui_run/PIPEF-56-run.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json",
+                "AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json",
+                "AI_PROJECT/logs/ui_run/TASK-135-report-submit.json",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/evolution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json",
+                "ai-system/project-control/08-usage-guide.md",
+                "ai-system/project-control/10-owner-quickstart.md",
+                "ai_project_ctl/pipeline/ui_policy.py",
+                "ai_project_ctl/ui_settings.py",
+                "ai_project_ctl/web/server.py",
+                "scripts/aictl.py",
+                "tests/pipeline/test_codex_preflight.py",
+                "tests/pipeline/test_ui_settings_policy.py",
+                "tests/test_ui_run_command.py",
+                "tests/test_ui_settings.py",
+                "tests/test_web_control_center.py"
+              ],
+              "missing_from_report": [
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/evolution-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/EVOLUTION.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/logs/ui_run/PIPEF-56-run.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json",
+                "AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json",
+                "AI_PROJECT/logs/ui_run/TASK-135-report-submit.json",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/evolution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json",
+                "ai_project_ctl/pipeline/ui_policy.py",
+                "ai_project_ctl/ui_settings.py",
+                "ai_project_ctl/web/server.py",
+                "scripts/aictl.py",
+                "tests/pipeline/test_codex_preflight.py",
+                "tests/pipeline/test_ui_settings_policy.py",
+                "tests/test_ui_run_command.py",
+                "tests/test_ui_settings.py",
+                "tests/test_web_control_center.py"
+              ],
+              "extra_in_report": []
+            },
+            "protected_files_gate_status": "pass",
+            "protected_files_gate_code": "PROTECTED_FILES_GATE_PASS",
+            "protected_files_gate": {
+              "status": "pass",
+              "code": "PROTECTED_FILES_GATE_PASS",
+              "reason": "protected project-control file changes are governed or absent",
+              "actual_changed_files": [
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/evolution-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/DOCS_GAPS.md",
+                "AI_PROJECT/generated/EVOLUTION.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/logs/ui_run/PIPEF-56-run.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json",
+                "AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json",
+                "AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json",
+                "AI_PROJECT/logs/ui_run/TASK-135-report-submit.json",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/evolution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json",
+                "ai-system/project-control/08-usage-guide.md",
+                "ai-system/project-control/10-owner-quickstart.md",
+                "ai_project_ctl/pipeline/ui_policy.py",
+                "ai_project_ctl/ui_settings.py",
+                "ai_project_ctl/web/server.py",
+                "scripts/aictl.py",
+                "tests/pipeline/test_codex_preflight.py",
+                "tests/pipeline/test_ui_settings_policy.py",
+                "tests/test_ui_run_command.py",
+                "tests/test_ui_settings.py",
+                "tests/test_web_control_center.py"
+              ],
+              "reported_files": [
+                "AI_PROJECT/generated/DOCS_GAPS.md",
+                "ai-system/project-control/08-usage-guide.md",
+                "ai-system/project-control/10-owner-quickstart.md"
+              ],
+              "governed_control_files": [
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/evolution-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/pipeline-policy-events.jsonl",
+                "AI_PROJECT/events/plan-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/evolution.json",
+                "AI_PROJECT/state/pipeline_policy_presets.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/plan.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json",
+                "ai-system/project-control/08-usage-guide.md",
+                "ai-system/project-control/10-owner-quickstart.md"
+              ],
+              "governed_generated_files": [
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_PLAN.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/DOCS_GAPS.md",
+                "AI_PROJECT/generated/DOCS_INDEX.md",
+                "AI_PROJECT/generated/EVOLUTION.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_POLICIES.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md"
+              ],
+              "allowed_protected_files": [
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/evolution-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/DOCS_GAPS.md",
+                "AI_PROJECT/generated/EVOLUTION.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/evolution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json"
+              ],
+              "violations": []
+            },
+            "verify_evidence": {
+              "schema_version": 1,
+              "phase": "verify",
+              "status": "blocked",
+              "task_id": "TASK-135",
+              "report_id": "RPT-007",
+              "blocked_by": "GIT_DIFF_GATE_DIFF_MISMATCH",
+              "report_gate": {
+                "status": "warn",
+                "code": "CODEX_REPORT_WARN",
+                "reason": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+                "report_id": "RPT-007",
+                "task_id": "TASK-135",
+                "changed_files": [
+                  "ai-system/project-control/08-usage-guide.md",
+                  "ai-system/project-control/10-owner-quickstart.md"
+                ],
+                "generated_files": [
+                  "AI_PROJECT/generated/DOCS_GAPS.md"
+                ],
+                "issues": [],
+                "warnings": [
+                  {
+                    "code": "CODEX_REPORT_WARN",
+                    "message": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+                    "path": "warnings"
+                  }
+                ],
+                "checks": [
+                  {
+                    "name": "Task inspection",
+                    "result": "passed",
+                    "blocking": false,
+                    "command": "python scripts/taskctl.py task show TASK-135"
+                  },
+                  {
+                    "name": "Documentation validation",
+                    "result": "passed",
+                    "blocking": true,
+                    "command": "python scripts/docctl.py validate"
+                  },
+                  {
+                    "name": "Generated documentation freshness",
+                    "result": "passed",
+                    "blocking": true,
+                    "command": "python scripts/docctl.py check-generated"
+                  },
+                  {
+                    "name": "Documentation render",
+                    "result": "passed",
+                    "blocking": true,
+                    "command": "python scripts/docctl.py render"
+                  },
+                  {
+                    "name": "Diff whitespace check",
+                    "result": "passed",
+                    "blocking": true,
+                    "command": "git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md"
+                  }
+                ]
+              },
+              "git_diff_gate": {
+                "status": "blocked",
+                "code": "GIT_DIFF_GATE_DIFF_MISMATCH",
+                "reason": "working_tree_diff_does_not_match_expected_files",
+                "expected_files": [
+                  "AI_PROJECT/generated/DOCS_GAPS.md",
+                  "ai-system/project-control/08-usage-guide.md",
+                  "ai-system/project-control/10-owner-quickstart.md"
+                ],
+                "actual_changed_files": [
+                  "AI_PROJECT/events/codex-events.jsonl",
+                  "AI_PROJECT/events/context-events.jsonl",
+                  "AI_PROJECT/events/evolution-events.jsonl",
+                  "AI_PROJECT/events/pipeline-events.jsonl",
+                  "AI_PROJECT/events/task-events.jsonl",
+                  "AI_PROJECT/events/task-report-events.jsonl",
+                  "AI_PROJECT/generated/CODEX_CURRENT.md",
+                  "AI_PROJECT/generated/CODEX_PROMPT.md",
+                  "AI_PROJECT/generated/CODEX_STATUS.md",
+                  "AI_PROJECT/generated/CODEX_TASKS.md",
+                  "AI_PROJECT/generated/CONTEXT_PACK.md",
+                  "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                  "AI_PROJECT/generated/DOCS_GAPS.md",
+                  "AI_PROJECT/generated/EVOLUTION.md",
+                  "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                  "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                  "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                  "AI_PROJECT/logs/ui_run/PIPEF-56-run.json",
+                  "AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json",
+                  "AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json",
+                  "AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json",
+                  "AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json",
+                  "AI_PROJECT/logs/ui_run/TASK-135-report-submit.json",
+                  "AI_PROJECT/state/current_execution.json",
+                  "AI_PROJECT/state/evolution.json",
+                  "AI_PROJECT/state/pipeline_sessions.json",
+                  "AI_PROJECT/state/task_reports.json",
+                  "AI_PROJECT/state/tasks.json",
+                  "ai-system/project-control/08-usage-guide.md",
+                  "ai-system/project-control/10-owner-quickstart.md",
+                  "ai_project_ctl/pipeline/ui_policy.py",
+                  "ai_project_ctl/ui_settings.py",
+                  "ai_project_ctl/web/server.py",
+                  "scripts/aictl.py",
+                  "tests/pipeline/test_codex_preflight.py",
+                  "tests/pipeline/test_ui_settings_policy.py",
+                  "tests/test_ui_run_command.py",
+                  "tests/test_ui_settings.py",
+                  "tests/test_web_control_center.py"
+                ],
+                "tracked_files": [
+                  "AI_PROJECT/events/codex-events.jsonl",
+                  "AI_PROJECT/events/context-events.jsonl",
+                  "AI_PROJECT/events/evolution-events.jsonl",
+                  "AI_PROJECT/events/pipeline-events.jsonl",
+                  "AI_PROJECT/events/task-events.jsonl",
+                  "AI_PROJECT/events/task-report-events.jsonl",
+                  "AI_PROJECT/generated/CODEX_CURRENT.md",
+                  "AI_PROJECT/generated/CODEX_STATUS.md",
+                  "AI_PROJECT/generated/CODEX_TASKS.md",
+                  "AI_PROJECT/generated/CONTEXT_PACK.md",
+                  "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                  "AI_PROJECT/generated/DOCS_GAPS.md",
+                  "AI_PROJECT/generated/EVOLUTION.md",
+                  "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                  "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                  "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                  "AI_PROJECT/state/current_execution.json",
+                  "AI_PROJECT/state/evolution.json",
+                  "AI_PROJECT/state/pipeline_sessions.json",
+                  "AI_PROJECT/state/task_reports.json",
+                  "AI_PROJECT/state/tasks.json",
+                  "ai-system/project-control/08-usage-guide.md",
+                  "ai-system/project-control/10-owner-quickstart.md",
+                  "ai_project_ctl/pipeline/ui_policy.py",
+                  "ai_project_ctl/ui_settings.py",
+                  "ai_project_ctl/web/server.py",
+                  "scripts/aictl.py",
+                  "tests/pipeline/test_codex_preflight.py",
+                  "tests/pipeline/test_ui_settings_policy.py",
+                  "tests/test_ui_run_command.py",
+                  "tests/test_ui_settings.py",
+                  "tests/test_web_control_center.py"
+                ],
+                "staged_files": [],
+                "unstaged_files": [
+                  "AI_PROJECT/events/codex-events.jsonl",
+                  "AI_PROJECT/events/context-events.jsonl",
+                  "AI_PROJECT/events/evolution-events.jsonl",
+                  "AI_PROJECT/events/pipeline-events.jsonl",
+                  "AI_PROJECT/events/task-events.jsonl",
+                  "AI_PROJECT/events/task-report-events.jsonl",
+                  "AI_PROJECT/generated/CODEX_CURRENT.md",
+                  "AI_PROJECT/generated/CODEX_STATUS.md",
+                  "AI_PROJECT/generated/CODEX_TASKS.md",
+                  "AI_PROJECT/generated/CONTEXT_PACK.md",
+                  "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                  "AI_PROJECT/generated/DOCS_GAPS.md",
+                  "AI_PROJECT/generated/EVOLUTION.md",
+                  "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                  "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                  "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                  "AI_PROJECT/state/current_execution.json",
+                  "AI_PROJECT/state/evolution.json",
+                  "AI_PROJECT/state/pipeline_sessions.json",
+                  "AI_PROJECT/state/task_reports.json",
+                  "AI_PROJECT/state/tasks.json",
+                  "ai-system/project-control/08-usage-guide.md",
+                  "ai-system/project-control/10-owner-quickstart.md",
+                  "ai_project_ctl/pipeline/ui_policy.py",
+                  "ai_project_ctl/ui_settings.py",
+                  "ai_project_ctl/web/server.py",
+                  "scripts/aictl.py",
+                  "tests/pipeline/test_codex_preflight.py",
+                  "tests/pipeline/test_ui_settings_policy.py",
+                  "tests/test_ui_run_command.py",
+                  "tests/test_ui_settings.py",
+                  "tests/test_web_control_center.py"
+                ],
+                "untracked_files": [
+                  "AI_PROJECT/generated/CODEX_PROMPT.md",
+                  "AI_PROJECT/logs/ui_run/PIPEF-56-run.json",
+                  "AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json",
+                  "AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json",
+                  "AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json",
+                  "AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json",
+                  "AI_PROJECT/logs/ui_run/TASK-135-report-submit.json"
+                ],
+                "missing_from_report": [
+                  "AI_PROJECT/events/codex-events.jsonl",
+                  "AI_PROJECT/events/context-events.jsonl",
+                  "AI_PROJECT/events/evolution-events.jsonl",
+                  "AI_PROJECT/events/pipeline-events.jsonl",
+                  "AI_PROJECT/events/task-events.jsonl",
+                  "AI_PROJECT/events/task-report-events.jsonl",
+                  "AI_PROJECT/generated/CODEX_CURRENT.md",
+                  "AI_PROJECT/generated/CODEX_PROMPT.md",
+                  "AI_PROJECT/generated/CODEX_STATUS.md",
+                  "AI_PROJECT/generated/CODEX_TASKS.md",
+                  "AI_PROJECT/generated/CONTEXT_PACK.md",
+                  "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                  "AI_PROJECT/generated/EVOLUTION.md",
+                  "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                  "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                  "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                  "AI_PROJECT/logs/ui_run/PIPEF-56-run.json",
+                  "AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json",
+                  "AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json",
+                  "AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json",
+                  "AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json",
+                  "AI_PROJECT/logs/ui_run/TASK-135-report-submit.json",
+                  "AI_PROJECT/state/current_execution.json",
+                  "AI_PROJECT/state/evolution.json",
+                  "AI_PROJECT/state/pipeline_sessions.json",
+                  "AI_PROJECT/state/task_reports.json",
+                  "AI_PROJECT/state/tasks.json",
+                  "ai_project_ctl/pipeline/ui_policy.py",
+                  "ai_project_ctl/ui_settings.py",
+                  "ai_project_ctl/web/server.py",
+                  "scripts/aictl.py",
+                  "tests/pipeline/test_codex_preflight.py",
+                  "tests/pipeline/test_ui_settings_policy.py",
+                  "tests/test_ui_run_command.py",
+                  "tests/test_ui_settings.py",
+                  "tests/test_web_control_center.py"
+                ],
+                "extra_in_report": [],
+                "command_count": 4
+              },
+              "protected_files_gate": {
+                "status": "pass",
+                "code": "PROTECTED_FILES_GATE_PASS",
+                "reason": "protected project-control file changes are governed or absent",
+                "actual_changed_files": [
+                  "AI_PROJECT/events/codex-events.jsonl",
+                  "AI_PROJECT/events/context-events.jsonl",
+                  "AI_PROJECT/events/evolution-events.jsonl",
+                  "AI_PROJECT/events/pipeline-events.jsonl",
+                  "AI_PROJECT/events/task-events.jsonl",
+                  "AI_PROJECT/events/task-report-events.jsonl",
+                  "AI_PROJECT/generated/CODEX_CURRENT.md",
+                  "AI_PROJECT/generated/CODEX_PROMPT.md",
+                  "AI_PROJECT/generated/CODEX_STATUS.md",
+                  "AI_PROJECT/generated/CODEX_TASKS.md",
+                  "AI_PROJECT/generated/CONTEXT_PACK.md",
+                  "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                  "AI_PROJECT/generated/DOCS_GAPS.md",
+                  "AI_PROJECT/generated/EVOLUTION.md",
+                  "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                  "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                  "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                  "AI_PROJECT/logs/ui_run/PIPEF-56-run.json",
+                  "AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json",
+                  "AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json",
+                  "AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json",
+                  "AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json",
+                  "AI_PROJECT/logs/ui_run/TASK-135-report-submit.json",
+                  "AI_PROJECT/state/current_execution.json",
+                  "AI_PROJECT/state/evolution.json",
+                  "AI_PROJECT/state/pipeline_sessions.json",
+                  "AI_PROJECT/state/task_reports.json",
+                  "AI_PROJECT/state/tasks.json",
+                  "ai-system/project-control/08-usage-guide.md",
+                  "ai-system/project-control/10-owner-quickstart.md",
+                  "ai_project_ctl/pipeline/ui_policy.py",
+                  "ai_project_ctl/ui_settings.py",
+                  "ai_project_ctl/web/server.py",
+                  "scripts/aictl.py",
+                  "tests/pipeline/test_codex_preflight.py",
+                  "tests/pipeline/test_ui_settings_policy.py",
+                  "tests/test_ui_run_command.py",
+                  "tests/test_ui_settings.py",
+                  "tests/test_web_control_center.py"
+                ],
+                "reported_files": [
+                  "AI_PROJECT/generated/DOCS_GAPS.md",
+                  "ai-system/project-control/08-usage-guide.md",
+                  "ai-system/project-control/10-owner-quickstart.md"
+                ],
+                "allowed_protected_files": [
+                  "AI_PROJECT/events/codex-events.jsonl",
+                  "AI_PROJECT/events/context-events.jsonl",
+                  "AI_PROJECT/events/evolution-events.jsonl",
+                  "AI_PROJECT/events/pipeline-events.jsonl",
+                  "AI_PROJECT/events/task-events.jsonl",
+                  "AI_PROJECT/events/task-report-events.jsonl",
+                  "AI_PROJECT/generated/CODEX_CURRENT.md",
+                  "AI_PROJECT/generated/CODEX_PROMPT.md",
+                  "AI_PROJECT/generated/CODEX_STATUS.md",
+                  "AI_PROJECT/generated/CODEX_TASKS.md",
+                  "AI_PROJECT/generated/CONTEXT_PACK.md",
+                  "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                  "AI_PROJECT/generated/DOCS_GAPS.md",
+                  "AI_PROJECT/generated/EVOLUTION.md",
+                  "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                  "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                  "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                  "AI_PROJECT/state/current_execution.json",
+                  "AI_PROJECT/state/evolution.json",
+                  "AI_PROJECT/state/pipeline_sessions.json",
+                  "AI_PROJECT/state/task_reports.json",
+                  "AI_PROJECT/state/tasks.json"
+                ],
+                "violations": []
+              }
+            }
+          },
+          "changed_files": [
+            "ai-system/project-control/08-usage-guide.md",
+            "ai-system/project-control/10-owner-quickstart.md"
+          ],
+          "generated_files": [
+            "AI_PROJECT/generated/DOCS_GAPS.md"
+          ],
+          "events": [
+            "EVT-DB81A4C25C7B"
+          ]
+        }
+      ],
+      "current_step": "",
+      "current_step_status": "planned",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-46B06277C4E5",
+        "EVT-EBC8338B7D17",
+        "EVT-F0A109E63906",
+        "EVT-CB67CFA654B6",
+        "EVT-86383195F666",
+        "EVT-42AAE6C07860",
+        "EVT-9F21610F4070",
+        "EVT-D7FD43767708",
+        "EVT-F5D0C134A6FE",
+        "EVT-58DFC9E8911E",
+        "EVT-DB81A4C25C7B"
+      ],
+      "stop_reason": "Git diff gate blocked: missing_from_report: AI_PROJECT/events/codex-events.jsonl, AI_PROJECT/events/context-events.jsonl, AI_PROJECT/events/evolution-events.jsonl, AI_PROJECT/events/pipeline-events.jsonl, AI_PROJECT/events/task-events.jsonl, AI_PROJECT/events/task-report-events.jsonl, AI_PROJECT/generated/CODEX_CURRENT.md, AI_PROJECT/generated/CODEX_PROMPT.md, AI_PROJECT/generated/CODEX_STATUS.md, AI_PROJECT/generated/CODEX_TASKS.md, AI_PROJECT/generated/CONTEXT_PACK.md, AI_PROJECT/generated/CONTEXT_STATUS.md, AI_PROJECT/generated/EVOLUTION.md, AI_PROJECT/generated/PIPELINE_AUDIT.md, AI_PROJECT/generated/PIPELINE_STATUS.md, AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md, AI_PROJECT/logs/ui_run/PIPEF-56-run.json, AI_PROJECT/logs/ui_run/PSESS-017-collect-report-refresh.json, AI_PROJECT/logs/ui_run/PSESS-017-verify-fixed.json, AI_PROJECT/logs/ui_run/PSESS-017-verify-refresh.json, AI_PROJECT/logs/ui_run/TASK-135-report-submit-fixed.json, AI_PROJECT/logs/ui_run/TASK-135-report-submit.json, AI_PROJECT/state/current_execution.json, AI_PROJECT/state/evolution.json, AI_PROJECT/state/pipeline_sessions.json, AI_PROJECT/state/task_reports.json, AI_PROJECT/state/tasks.json, ai_project_ctl/pipeline/ui_policy.py, ai_project_ctl/ui_settings.py, ai_project_ctl/web/server.py, scripts/aictl.py, tests/pipeline/test_codex_preflight.py, tests/pipeline/test_ui_settings_policy.py, tests/test_ui_run_command.py, tests/test_ui_settings.py, tests/test_web_control_center.py.",
+      "created_at": "2026-06-24T09:01:02Z",
+      "updated_at": "2026-06-24T10:12:46Z",
+      "started_at": "2026-06-24T09:01:03Z",
       "finished_at": ""
     }
   ]

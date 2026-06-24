@@ -10,6 +10,7 @@ from ai_project_ctl.ui_settings import (
     default_ui_settings,
     init_ui_settings,
     load_ui_settings,
+    optional_ui_timeout_sec,
     upsert_ui_setting,
     ui_settings_path,
 )
@@ -68,6 +69,30 @@ class UISettingsTests(unittest.TestCase):
             self.assertEqual(settings["default_policy"], "supervised")
             self.assertEqual(settings["schema_version"], 1)
             self.assertEqual(settings["custom_label"], "pilot")
+
+    def test_optional_timeout_settings_accept_integer_strings(self):
+        settings = {
+            "execution_timeout_sec": "3600",
+            "preflight_timeout_sec": 45,
+        }
+
+        self.assertEqual(
+            optional_ui_timeout_sec(settings, "execution_timeout_sec"),
+            3600,
+        )
+        self.assertEqual(optional_ui_timeout_sec(settings, "preflight_timeout_sec"), 45)
+        self.assertIsNone(optional_ui_timeout_sec(settings, "missing_timeout_sec"))
+
+    def test_invalid_timeout_setting_fails_with_clear_error(self):
+        with self.assertRaises(UISettingsError) as raised:
+            optional_ui_timeout_sec(
+                {"execution_timeout_sec": "slow"},
+                "execution_timeout_sec",
+            )
+
+        self.assertEqual(raised.exception.code, "UI_SETTINGS_TIMEOUT_INVALID")
+        self.assertEqual(raised.exception.path, "execution_timeout_sec")
+        self.assertIn("integer number of seconds", raised.exception.message)
 
     def test_non_object_settings_file_fails_with_clear_error(self):
         with tempfile.TemporaryDirectory() as tmp:

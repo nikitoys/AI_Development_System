@@ -12,6 +12,8 @@ from ai_project_ctl.core.store import StoreError, read_json_file, write_json_fil
 
 
 UI_SETTINGS_FILE_NAME = "ui_settings.json"
+TIMEOUT_SETTING_MIN_SEC = 1
+TIMEOUT_SETTING_MAX_SEC = 3600
 DEFAULT_UI_SETTINGS: dict[str, Any] = {
     "command_line": "codex exec",
     "default_policy": "supervised_executable_local_commit",
@@ -102,6 +104,46 @@ def ui_command_line_argv(
             path="command_line",
         )
     return command
+
+
+def optional_ui_timeout_sec(settings: Mapping[str, Any], key: str) -> int | None:
+    """Return an optional UI timeout setting as integer seconds."""
+
+    if key not in settings or settings.get(key) is None:
+        return None
+
+    value = settings[key]
+    if isinstance(value, bool):
+        _raise_timeout_setting_error(key, value)
+    elif isinstance(value, int):
+        timeout_sec = value
+    elif isinstance(value, str):
+        text = value.strip()
+        if not text or not text.isdecimal():
+            _raise_timeout_setting_error(key, value)
+        timeout_sec = int(text)
+    else:
+        _raise_timeout_setting_error(key, value)
+
+    if timeout_sec < TIMEOUT_SETTING_MIN_SEC or timeout_sec > TIMEOUT_SETTING_MAX_SEC:
+        _raise_timeout_setting_error(key, value)
+    return timeout_sec
+
+
+def _raise_timeout_setting_error(key: str, value: Any) -> None:
+    raise UISettingsError(
+        "UI_SETTINGS_TIMEOUT_INVALID",
+        (
+            "UI setting {} must be an integer number of seconds between {} and {}."
+        ).format(key, TIMEOUT_SETTING_MIN_SEC, TIMEOUT_SETTING_MAX_SEC),
+        path=key,
+        details={
+            "setting": key,
+            "value": value,
+            "min_sec": TIMEOUT_SETTING_MIN_SEC,
+            "max_sec": TIMEOUT_SETTING_MAX_SEC,
+        },
+    )
 
 
 def init_ui_settings(*, root: str | Path = ".", confirm: bool = False) -> Path:
