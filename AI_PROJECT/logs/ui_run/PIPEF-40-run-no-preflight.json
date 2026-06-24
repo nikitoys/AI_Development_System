@@ -1,0 +1,774 @@
+{
+  "changed_files": [
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+  ],
+  "command": "ui.run",
+  "data": {
+    "outcome": "blocked",
+    "policy": "supervised_executable_local_commit",
+    "run": {
+      "changed_files": [
+        "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+        "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+        "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+        "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+      ],
+      "command": "pipeline.run_until_blocker",
+      "data": {
+        "accepted_changes": [],
+        "blockers": [
+          {
+            "code": "BLOCKED",
+            "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+            "phase": "prepare",
+            "reason": "Approved linked Evolution Changes are required before execution.",
+            "status": "blocked",
+            "task_id": "TASK-119"
+          }
+        ],
+        "changed_files": [
+          "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+          "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+          "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+          "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+        ],
+        "changed_tasks": [],
+        "commits": [],
+        "completed_tasks": [],
+        "current_step": "",
+        "current_step_status": "planned",
+        "current_task_id": "TASK-119",
+        "events": [
+          "EVT-99CBB7835846",
+          "EVT-8FFCA00B1A66"
+        ],
+        "failures": 0,
+        "generated_files": [
+          "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+          "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+        ],
+        "limits": {
+          "max_failures": 1,
+          "max_rework_attempts": 1,
+          "max_steps": 5,
+          "max_tasks": 1
+        },
+        "policy": "supervised_executable_local_commit",
+        "requested_changes": [],
+        "session_id": "PSESS-016",
+        "session_status": "blocked",
+        "side_effects": [
+          {
+            "changed_files": [
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+            ],
+            "command": "pipeline.run_next",
+            "data": {
+              "blocked_by": "",
+              "dispatched_phase": "queue_preview",
+              "next_action": "Run pipeline run-next when ready.",
+              "phase_result": {
+                "artifacts": {
+                  "next_task": {
+                    "epic_id": "EPIC-009",
+                    "id": "TASK-119",
+                    "legacy_id": "TASK-119",
+                    "ref": "PIPEF-40",
+                    "selected_ref": "PIPEF-40",
+                    "status": "ready",
+                    "title": "PIPE-040 Add tests for phase model and mutations",
+                    "uid": "tsk_5bcaf7cb78cb"
+                  },
+                  "queue_categories": {
+                    "blocked": [],
+                    "executable": [
+                      {
+                        "epic_id": "EPIC-009",
+                        "id": "TASK-119",
+                        "legacy_id": "TASK-119",
+                        "ref": "PIPEF-40",
+                        "selected_ref": "PIPEF-40",
+                        "status": "ready",
+                        "title": "PIPE-040 Add tests for phase model and mutations",
+                        "uid": "tsk_5bcaf7cb78cb"
+                      }
+                    ],
+                    "skipped": [],
+                    "waiting": []
+                  },
+                  "queue_counts": {
+                    "blocked": 0,
+                    "executable": 1,
+                    "skipped": 0,
+                    "waiting": 0
+                  },
+                  "reason_summary": [],
+                  "session_id": "PSESS-016",
+                  "source": "session"
+                },
+                "changed_files": [],
+                "events": [
+                  "EVT-99CBB7835846"
+                ],
+                "generated_files": [],
+                "next_action": "Run pipeline run-next when ready.",
+                "phase": "queue_preview",
+                "reason": "Next executable task is available.",
+                "status": "passed"
+              },
+              "phase_status": "passed",
+              "queue_counts": {
+                "blocked": 0,
+                "executable": 1,
+                "skipped": 0,
+                "waiting": 0
+              },
+              "selected_task": {
+                "epic_id": "EPIC-009",
+                "id": "TASK-119",
+                "legacy_id": "TASK-119",
+                "ref": "PIPEF-40",
+                "selected_ref": "PIPEF-40",
+                "status": "ready",
+                "title": "PIPE-040 Add tests for phase model and mutations",
+                "uid": "tsk_5bcaf7cb78cb"
+              },
+              "session_id": "PSESS-016",
+              "side_effects": [
+                {
+                  "changed_files": [
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+                  ],
+                  "command": "pipeline.phase.queue_preview",
+                  "data": {
+                    "phase_result": {
+                      "artifacts": {
+                        "next_task": {
+                          "epic_id": "EPIC-009",
+                          "id": "TASK-119",
+                          "legacy_id": "TASK-119",
+                          "ref": "PIPEF-40",
+                          "selected_ref": "PIPEF-40",
+                          "status": "ready",
+                          "title": "PIPE-040 Add tests for phase model and mutations",
+                          "uid": "tsk_5bcaf7cb78cb"
+                        },
+                        "queue_categories": {
+                          "blocked": [],
+                          "executable": [
+                            {
+                              "epic_id": "EPIC-009",
+                              "id": "TASK-119",
+                              "legacy_id": "TASK-119",
+                              "ref": "PIPEF-40",
+                              "selected_ref": "PIPEF-40",
+                              "status": "ready",
+                              "title": "PIPE-040 Add tests for phase model and mutations",
+                              "uid": "tsk_5bcaf7cb78cb"
+                            }
+                          ],
+                          "skipped": [],
+                          "waiting": []
+                        },
+                        "queue_counts": {
+                          "blocked": 0,
+                          "executable": 1,
+                          "skipped": 0,
+                          "waiting": 0
+                        },
+                        "reason_summary": [],
+                        "session_id": "PSESS-016",
+                        "source": "session"
+                      },
+                      "changed_files": [],
+                      "events": [
+                        "EVT-99CBB7835846"
+                      ],
+                      "generated_files": [],
+                      "next_action": "Run pipeline run-next when ready.",
+                      "phase": "queue_preview",
+                      "reason": "Next executable task is available.",
+                      "status": "passed"
+                    },
+                    "queue_preview": {
+                      "blocked": [],
+                      "executable": [
+                        {
+                          "epic_id": "EPIC-009",
+                          "id": "TASK-119",
+                          "legacy_id": "TASK-119",
+                          "ref": "PIPEF-40",
+                          "selected_ref": "PIPEF-40",
+                          "status": "ready",
+                          "title": "PIPE-040 Add tests for phase model and mutations",
+                          "uid": "tsk_5bcaf7cb78cb"
+                        }
+                      ],
+                      "next_task": {
+                        "epic_id": "EPIC-009",
+                        "id": "TASK-119",
+                        "legacy_id": "TASK-119",
+                        "ref": "PIPEF-40",
+                        "selected_ref": "PIPEF-40",
+                        "status": "ready",
+                        "title": "PIPE-040 Add tests for phase model and mutations",
+                        "uid": "tsk_5bcaf7cb78cb"
+                      },
+                      "reasons": [],
+                      "skipped": [],
+                      "waiting": []
+                    },
+                    "queue_source": "session",
+                    "session_id": "PSESS-016"
+                  },
+                  "domain": "pipeline",
+                  "errors": [],
+                  "events": [
+                    "EVT-99CBB7835846"
+                  ],
+                  "generated_files": [
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+                  ],
+                  "message": "Next executable task is available.",
+                  "next_actions": [
+                    "Run pipeline run-next when ready."
+                  ],
+                  "ok": true,
+                  "owner_action_required": null,
+                  "revision_after": 55,
+                  "revision_before": 54,
+                  "warnings": []
+                }
+              ]
+            },
+            "domain": "pipeline",
+            "errors": [],
+            "events": [
+              "EVT-99CBB7835846"
+            ],
+            "generated_files": [
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+            ],
+            "message": "Next executable task is available.",
+            "next_actions": [
+              "Run pipeline run-next when ready."
+            ],
+            "ok": true,
+            "owner_action_required": null,
+            "revision_after": 55,
+            "revision_before": 54,
+            "warnings": []
+          },
+          {
+            "changed_files": [
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+            ],
+            "command": "pipeline.run_next",
+            "data": {
+              "blocked_by": "BLOCKED",
+              "dispatched_phase": "prepare",
+              "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+              "phase_result": {
+                "artifacts": {
+                  "blocked_by": "BLOCKED",
+                  "change_gate": {
+                    "change_ids": [],
+                    "created_change_ids": [],
+                    "inspected_task_ids": [
+                      "TASK-119"
+                    ],
+                    "linked_change_ids": [],
+                    "linked_changes_inspected": [
+                      {
+                        "change_ids": [],
+                        "task_id": "TASK-119",
+                        "task_ref": "PIPEF-40"
+                      }
+                    ],
+                    "required": true,
+                    "scope": "selected_task",
+                    "selected_task_id": "TASK-119",
+                    "selected_task_ref": "PIPEF-40",
+                    "stop_code": "BLOCKED",
+                    "tasks_requiring_approval": [
+                      "TASK-119"
+                    ],
+                    "workflows": []
+                  },
+                  "queue_counts": {
+                    "blocked": 0,
+                    "executable": 1,
+                    "skipped": 0,
+                    "waiting": 0
+                  },
+                  "selected_task": {
+                    "category": "executable",
+                    "epic_id": "EPIC-009",
+                    "executable": true,
+                    "id": "TASK-119",
+                    "legacy_id": "TASK-119",
+                    "local_seq": 40,
+                    "order": 40,
+                    "priority": 1,
+                    "reasons": [],
+                    "ref": "PIPEF-40",
+                    "selected_ref": "PIPEF-40",
+                    "status": "ready",
+                    "title": "PIPE-040 Add tests for phase model and mutations",
+                    "uid": "tsk_5bcaf7cb78cb"
+                  },
+                  "session_id": "PSESS-016",
+                  "source": "session"
+                },
+                "blocked_by": "BLOCKED",
+                "changed_files": [],
+                "events": [],
+                "generated_files": [],
+                "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+                "phase": "prepare",
+                "reason": "Approved linked Evolution Changes are required before execution.",
+                "status": "blocked"
+              },
+              "phase_status": "blocked",
+              "queue_counts": {
+                "blocked": 0,
+                "executable": 1,
+                "skipped": 0,
+                "waiting": 0
+              },
+              "selected_task": {
+                "category": "executable",
+                "epic_id": "EPIC-009",
+                "executable": true,
+                "id": "TASK-119",
+                "legacy_id": "TASK-119",
+                "local_seq": 40,
+                "order": 40,
+                "priority": 1,
+                "reasons": [],
+                "ref": "PIPEF-40",
+                "selected_ref": "PIPEF-40",
+                "status": "ready",
+                "title": "PIPE-040 Add tests for phase model and mutations",
+                "uid": "tsk_5bcaf7cb78cb"
+              },
+              "session_id": "PSESS-016",
+              "side_effects": [
+                {
+                  "changed_files": [
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+                  ],
+                  "command": "pipeline.phase.prepare",
+                  "data": {
+                    "change_gate": {
+                      "change_ids": [],
+                      "created_change_ids": [],
+                      "inspected_task_ids": [
+                        "TASK-119"
+                      ],
+                      "linked_change_ids": [],
+                      "linked_changes_inspected": [
+                        {
+                          "change_ids": [],
+                          "task_id": "TASK-119",
+                          "task_ref": "PIPEF-40"
+                        }
+                      ],
+                      "required": true,
+                      "scope": "selected_task",
+                      "selected_task_id": "TASK-119",
+                      "selected_task_ref": "PIPEF-40",
+                      "stop_code": "BLOCKED",
+                      "tasks_requiring_approval": [
+                        "TASK-119"
+                      ],
+                      "workflows": []
+                    },
+                    "phase_result": {
+                      "artifacts": {
+                        "blocked_by": "BLOCKED",
+                        "change_gate": {
+                          "change_ids": [],
+                          "created_change_ids": [],
+                          "inspected_task_ids": [
+                            "TASK-119"
+                          ],
+                          "linked_change_ids": [],
+                          "linked_changes_inspected": [
+                            {
+                              "change_ids": [],
+                              "task_id": "TASK-119",
+                              "task_ref": "PIPEF-40"
+                            }
+                          ],
+                          "required": true,
+                          "scope": "selected_task",
+                          "selected_task_id": "TASK-119",
+                          "selected_task_ref": "PIPEF-40",
+                          "stop_code": "BLOCKED",
+                          "tasks_requiring_approval": [
+                            "TASK-119"
+                          ],
+                          "workflows": []
+                        },
+                        "queue_counts": {
+                          "blocked": 0,
+                          "executable": 1,
+                          "skipped": 0,
+                          "waiting": 0
+                        },
+                        "selected_task": {
+                          "category": "executable",
+                          "epic_id": "EPIC-009",
+                          "executable": true,
+                          "id": "TASK-119",
+                          "legacy_id": "TASK-119",
+                          "local_seq": 40,
+                          "order": 40,
+                          "priority": 1,
+                          "reasons": [],
+                          "ref": "PIPEF-40",
+                          "selected_ref": "PIPEF-40",
+                          "status": "ready",
+                          "title": "PIPE-040 Add tests for phase model and mutations",
+                          "uid": "tsk_5bcaf7cb78cb"
+                        },
+                        "session_id": "PSESS-016",
+                        "source": "session"
+                      },
+                      "changed_files": [],
+                      "events": [],
+                      "generated_files": [],
+                      "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+                      "phase": "prepare",
+                      "reason": "Approved linked Evolution Changes are required before execution.",
+                      "status": "blocked"
+                    },
+                    "queue_source": "session",
+                    "selected_task": {
+                      "category": "executable",
+                      "epic_id": "EPIC-009",
+                      "executable": true,
+                      "id": "TASK-119",
+                      "legacy_id": "TASK-119",
+                      "local_seq": 40,
+                      "order": 40,
+                      "priority": 1,
+                      "reasons": [],
+                      "ref": "PIPEF-40",
+                      "selected_ref": "PIPEF-40",
+                      "status": "ready",
+                      "title": "PIPE-040 Add tests for phase model and mutations",
+                      "uid": "tsk_5bcaf7cb78cb"
+                    },
+                    "session_id": "PSESS-016",
+                    "side_effects": [
+                      {
+                        "changed_files": [],
+                        "command": "pipeline.change_gate",
+                        "data": {
+                          "change_ids": [],
+                          "created_change_ids": [],
+                          "inspected_task_ids": [
+                            "TASK-119"
+                          ],
+                          "linked_change_ids": [],
+                          "linked_changes_inspected": [
+                            {
+                              "change_ids": [],
+                              "task_id": "TASK-119",
+                              "task_ref": "PIPEF-40"
+                            }
+                          ],
+                          "required": true,
+                          "scope": "selected_task",
+                          "selected_task_id": "TASK-119",
+                          "selected_task_ref": "PIPEF-40",
+                          "stop_code": "BLOCKED",
+                          "tasks_requiring_approval": [
+                            "TASK-119"
+                          ],
+                          "workflows": []
+                        },
+                        "domain": "pipeline",
+                        "errors": [
+                          {
+                            "code": "PIPELINE_CHANGE_APPROVAL_REQUIRED",
+                            "message": "Approve linked Changes before Codex execution."
+                          }
+                        ],
+                        "events": [],
+                        "generated_files": [],
+                        "message": "Approved linked Evolution Changes are required before execution.",
+                        "next_actions": [],
+                        "ok": false,
+                        "owner_action_required": null,
+                        "revision_after": null,
+                        "revision_before": null,
+                        "warnings": []
+                      },
+                      {
+                        "changed_files": [
+                          "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+                          "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+                          "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+                          "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+                        ],
+                        "command": "pipeline.phase.prepare",
+                        "data": {
+                          "phase_result": {
+                            "artifacts": {
+                              "blocked_by": "BLOCKED",
+                              "change_gate": {
+                                "change_ids": [],
+                                "created_change_ids": [],
+                                "inspected_task_ids": [
+                                  "TASK-119"
+                                ],
+                                "linked_change_ids": [],
+                                "linked_changes_inspected": [
+                                  {
+                                    "change_ids": [],
+                                    "task_id": "TASK-119",
+                                    "task_ref": "PIPEF-40"
+                                  }
+                                ],
+                                "required": true,
+                                "scope": "selected_task",
+                                "selected_task_id": "TASK-119",
+                                "selected_task_ref": "PIPEF-40",
+                                "stop_code": "BLOCKED",
+                                "tasks_requiring_approval": [
+                                  "TASK-119"
+                                ],
+                                "workflows": []
+                              },
+                              "queue_counts": {
+                                "blocked": 0,
+                                "executable": 1,
+                                "skipped": 0,
+                                "waiting": 0
+                              },
+                              "selected_task": {
+                                "category": "executable",
+                                "epic_id": "EPIC-009",
+                                "executable": true,
+                                "id": "TASK-119",
+                                "legacy_id": "TASK-119",
+                                "local_seq": 40,
+                                "order": 40,
+                                "priority": 1,
+                                "reasons": [],
+                                "ref": "PIPEF-40",
+                                "selected_ref": "PIPEF-40",
+                                "status": "ready",
+                                "title": "PIPE-040 Add tests for phase model and mutations",
+                                "uid": "tsk_5bcaf7cb78cb"
+                              },
+                              "session_id": "PSESS-016",
+                              "source": "session"
+                            },
+                            "changed_files": [],
+                            "events": [
+                              "EVT-8FFCA00B1A66"
+                            ],
+                            "generated_files": [],
+                            "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+                            "phase": "prepare",
+                            "reason": "Approved linked Evolution Changes are required before execution.",
+                            "status": "blocked"
+                          },
+                          "session_id": "PSESS-016"
+                        },
+                        "domain": "pipeline",
+                        "errors": [],
+                        "events": [
+                          "EVT-8FFCA00B1A66"
+                        ],
+                        "generated_files": [
+                          "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+                          "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+                        ],
+                        "message": "OK: pipeline.phase.prepare revision 55 -> 56",
+                        "next_actions": [],
+                        "ok": true,
+                        "owner_action_required": null,
+                        "revision_after": 56,
+                        "revision_before": 55,
+                        "warnings": []
+                      }
+                    ]
+                  },
+                  "domain": "pipeline",
+                  "errors": [],
+                  "events": [
+                    "EVT-8FFCA00B1A66"
+                  ],
+                  "generated_files": [
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+                    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+                  ],
+                  "message": "Approved linked Evolution Changes are required before execution.",
+                  "next_actions": [
+                    "Satisfy the selected-task Change gate, then rerun prepare."
+                  ],
+                  "ok": true,
+                  "owner_action_required": "Approved linked Evolution Changes are required before execution.",
+                  "revision_after": null,
+                  "revision_before": null,
+                  "warnings": []
+                }
+              ],
+              "stop_code": "BLOCKED",
+              "stop_reason": "Approved linked Evolution Changes are required before execution."
+            },
+            "domain": "pipeline",
+            "errors": [],
+            "events": [
+              "EVT-8FFCA00B1A66"
+            ],
+            "generated_files": [
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+              "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+            ],
+            "message": "Approved linked Evolution Changes are required before execution.",
+            "next_actions": [
+              "Satisfy the selected-task Change gate, then rerun prepare."
+            ],
+            "ok": true,
+            "owner_action_required": "Approved linked Evolution Changes are required before execution.",
+            "revision_after": null,
+            "revision_before": null,
+            "warnings": []
+          }
+        ],
+        "step_results": [
+          {
+            "dispatched_phase": "queue_preview",
+            "next_action": "Run pipeline run-next when ready.",
+            "ok": true,
+            "phase_status": "passed",
+            "queue_counts": {
+              "blocked": 0,
+              "executable": 1,
+              "skipped": 0,
+              "waiting": 0
+            },
+            "selected_task": {
+              "epic_id": "EPIC-009",
+              "id": "TASK-119",
+              "legacy_id": "TASK-119",
+              "ref": "PIPEF-40",
+              "selected_ref": "PIPEF-40",
+              "status": "ready",
+              "title": "PIPE-040 Add tests for phase model and mutations",
+              "uid": "tsk_5bcaf7cb78cb"
+            },
+            "stop_code": null,
+            "stop_reason": null
+          },
+          {
+            "dispatched_phase": "prepare",
+            "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+            "ok": true,
+            "phase_status": "blocked",
+            "queue_counts": {
+              "blocked": 0,
+              "executable": 1,
+              "skipped": 0,
+              "waiting": 0
+            },
+            "selected_task": {
+              "category": "executable",
+              "epic_id": "EPIC-009",
+              "executable": true,
+              "id": "TASK-119",
+              "legacy_id": "TASK-119",
+              "local_seq": 40,
+              "order": 40,
+              "priority": 1,
+              "reasons": [],
+              "ref": "PIPEF-40",
+              "selected_ref": "PIPEF-40",
+              "status": "ready",
+              "title": "PIPE-040 Add tests for phase model and mutations",
+              "uid": "tsk_5bcaf7cb78cb"
+            },
+            "stop_code": "BLOCKED",
+            "stop_reason": "Approved linked Evolution Changes are required before execution."
+          }
+        ],
+        "steps_run": 2,
+        "stop_code": "BLOCKED",
+        "stop_reason": "Approved linked Evolution Changes are required before execution."
+      },
+      "domain": "pipeline",
+      "errors": [],
+      "events": [
+        "EVT-99CBB7835846",
+        "EVT-8FFCA00B1A66"
+      ],
+      "generated_files": [
+        "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+        "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+      ],
+      "message": "BLOCKED: Approved linked Evolution Changes are required before execution.",
+      "next_actions": [],
+      "ok": true,
+      "owner_action_required": "Satisfy the selected-task Change gate, then rerun prepare.",
+      "revision_after": null,
+      "revision_before": null,
+      "warnings": []
+    },
+    "session": {
+      "blocked_by": "",
+      "current_phase": "",
+      "current_phase_status": "",
+      "current_step": "",
+      "current_step_status": "planned",
+      "current_task_id": "",
+      "id": "PSESS-016",
+      "next_action": "",
+      "policy": "supervised_executable_local_commit",
+      "status": "planned",
+      "stop_reason": ""
+    },
+    "session_id": "PSESS-016",
+    "task_ref": "PIPEF-40"
+  },
+  "domain": "ui",
+  "errors": [],
+  "events": [
+    "EVT-3C63F423A484",
+    "EVT-99CBB7835846",
+    "EVT-8FFCA00B1A66"
+  ],
+  "generated_files": [
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+  ],
+  "message": "UI run blocked: BLOCKED: Approved linked Evolution Changes are required before execution.",
+  "next_actions": [],
+  "ok": true,
+  "owner_action_required": "Satisfy the selected-task Change gate, then rerun prepare.",
+  "revision_after": null,
+  "revision_before": null,
+  "warnings": []
+}

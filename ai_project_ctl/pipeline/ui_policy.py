@@ -8,7 +8,11 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from ai_project_ctl.core.result import CommandError
-from ai_project_ctl.ui_settings import load_ui_settings
+from ai_project_ctl.ui_settings import (
+    UISettingsError,
+    load_ui_settings,
+    optional_ui_timeout_sec,
+)
 
 from .policy import CodexAdapterMode, CodexExecutionMode, PipelinePolicy
 from .policy_store import load_policy_preset
@@ -40,6 +44,12 @@ def resolve_pipeline_policy_from_settings(
 
     policy_name = _required_text(settings, "default_policy")
     policy = _load_policy(policy_name, root=root)
+    execution_timeout_sec = _execution_timeout_sec(settings)
+    if execution_timeout_sec is not None:
+        policy = replace(
+            policy,
+            codex=replace(policy.codex, timeout_sec=execution_timeout_sec),
+        )
     if not _requires_local_command(policy):
         return policy
 
@@ -100,6 +110,18 @@ def _command_line_argv(settings: Mapping[str, Any]) -> tuple[str, ...]:
             path="command_line",
         )
     return command
+
+
+def _execution_timeout_sec(settings: Mapping[str, Any]) -> int | None:
+    try:
+        return optional_ui_timeout_sec(settings, "execution_timeout_sec")
+    except UISettingsError as exc:
+        raise UIPipelinePolicyError(
+            "UI_POLICY_EXECUTION_TIMEOUT_INVALID",
+            exc.message,
+            path=exc.path,
+            details={"source_code": exc.code, **exc.details},
+        ) from exc
 
 
 def _required_text(settings: Mapping[str, Any], key: str) -> str:

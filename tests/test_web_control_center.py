@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from ai_project_ctl.core.registry import command_describe
+from ai_project_ctl.core.result import CommandResult
 from ai_project_ctl.web.actions import WebActionError, WebActionExecutor
 from ai_project_ctl.web.read_model import (
     ReadOnlyProjectModel,
@@ -18,6 +19,7 @@ from ai_project_ctl.web.read_model import (
     require_read_only_command,
 )
 from ai_project_ctl.web.server import (
+    PIPELINE_LOG_SNIPPET_LIMIT,
     WEB_IMPORT_FILE_MAX_BYTES,
     WebServerError,
     make_handler,
@@ -373,14 +375,139 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('value="pipeline.session.create"', body)
         self.assertIn("Create Session", body)
         self.assertIn('value="pipeline.run_next"', body)
-        self.assertIn("Run Next", body)
-        self.assertIn('value="pipeline.run_until_blocker"', body)
-        self.assertIn("Run Until Blocker", body)
-        self.assertIn('value="pipeline.session.stop"', body)
-        self.assertIn("Stop Session", body)
+        self.assertIn("Resume Session", body)
+        self.assertNotIn('value="pipeline.run_until_blocker"', body)
+        self.assertNotIn("<button type=\"submit\">Run Next</button>", body)
+        self.assertNotIn('value="pipeline.session.stop"', body)
+        self.assertIn("Stop Session is unavailable for status blocked.", body)
         self.assertIn('value="pipeline.render"', body)
         self.assertIn("Refresh Status", body)
         self.assertIn('name="confirm" value="yes" required', body)
+
+    def test_pipeline_page_shows_failed_execute_guidance_without_run_controls(self):
+        phase_history = [
+            {
+                "phase": "queue_preview",
+                "status": "passed",
+                "reason": "Queue selected PIPE-27.",
+                "next_action": "Prepare Codex prompt.",
+            },
+            {
+                "phase": "execute",
+                "status": "failed",
+                "reason": "Codex Execute failed.",
+                "next_action": "Inspect execution failure.",
+                "artifacts": {"blocked_by": "codex_adapter"},
+            },
+        ]
+        pipeline = pipeline_detail_state(
+            status="failed",
+            step_status="failed",
+            finished_at="2026-06-20T13:30:00Z",
+            current_step_status="failed",
+            stop_reason="Codex Execute failed.",
+            next_action="",
+            steps=[],
+            gate_outcomes=[],
+            phase_history=phase_history,
+        )
+        pipeline["sessions"][0]["next_action"] = ""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "in_progress",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=pipeline,
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/pipeline", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn(
+            "<span>Next Action</span><strong>Inspect execution failure.</strong>",
+            body,
+        )
+        self.assertIn("<strong>Owner guidance:</strong> Inspect execution failure.", body)
+        self.assertIn("Run actions are unavailable for status failed.", body)
+        self.assertNotIn("<button type=\"submit\">Run Next</button>", body)
+        self.assertNotIn("<button type=\"submit\">Resume Session</button>", body)
+        self.assertNotIn('value="pipeline.run_until_blocker"', body)
+        self.assertNotIn('value="pipeline.session.stop"', body)
+        self.assertIn("Stop Session is unavailable for status failed.", body)
+
+    def test_pipeline_page_shows_resume_for_blocked_prepare_phase(self):
+        phase_history = [
+            {
+                "phase": "queue_preview",
+                "status": "passed",
+                "reason": "Queue selected PIPE-27.",
+                "next_action": "Prepare Codex prompt.",
+            },
+            {
+                "phase": "prepare",
+                "status": "blocked",
+                "reason": "Prompt package blocked.",
+                "next_action": "Resolve prompt blocker.",
+                "artifacts": {"blocked_by": "owner"},
+            },
+        ]
+        pipeline = pipeline_detail_state(
+            status="blocked",
+            step_status="blocked",
+            finished_at="",
+            current_step_status="blocked",
+            stop_reason="Prompt package blocked.",
+            next_action="",
+            steps=[],
+            gate_outcomes=[],
+            phase_history=phase_history,
+        )
+        pipeline["sessions"][0]["next_action"] = ""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "in_progress",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=pipeline,
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/pipeline", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn(
+            "<span>Next Action</span><strong>Resolve prompt blocker.</strong>",
+            body,
+        )
+        self.assertIn("<strong>Owner guidance:</strong> Resolve prompt blocker.", body)
+        self.assertIn('value="pipeline.run_next"', body)
+        self.assertIn("<button type=\"submit\">Resume Session</button>", body)
+        self.assertIn('name="confirm" value="yes" required', body)
+        self.assertNotIn("<button type=\"submit\">Run Next</button>", body)
+        self.assertNotIn('value="pipeline.run_until_blocker"', body)
+        self.assertNotIn('value="pipeline.session.stop"', body)
+        self.assertIn("Stop Session is unavailable for status blocked.", body)
 
     def test_pipeline_session_detail_route_renders_running_session(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -474,6 +601,210 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("AI_PROJECT/generated/CODEX_PROMPT.md", body)
         self.assertNotIn("FULL CODEX PROMPT BODY", body)
 
+    def test_pipeline_session_detail_renders_phase_history_without_fake_step(self):
+        phase_history = [
+            {
+                "phase": "queue_preview",
+                "status": "passed",
+                "reason": "Queue selected PIPE-27.",
+                "next_action": "Prepare Codex prompt.",
+                "changed_files": [],
+                "generated_files": [],
+                "events": ["EVT-200"],
+            },
+            {
+                "phase": "prepare",
+                "status": "passed",
+                "reason": "Prompt package ready.",
+                "next_action": "Run Codex execute.",
+                "changed_files": [],
+                "generated_files": ["AI_PROJECT/generated/CODEX_PROMPT.md"],
+                "events": ["EVT-201"],
+            },
+            {
+                "phase": "execute",
+                "status": "failed",
+                "reason": "Codex Execute failed.",
+                "next_action": "Inspect execution failure.",
+                "artifacts": {"blocked_by": "codex_adapter"},
+                "changed_files": ["ai_project_ctl/web/server.py"],
+                "generated_files": [],
+                "events": ["EVT-202"],
+            },
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "in_progress",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=pipeline_detail_state(
+                    status="failed",
+                    step_status="planned",
+                    finished_at="",
+                    current_step_status="failed",
+                    stop_reason="Codex Execute failed.",
+                    next_action="Inspect execution failure.",
+                    steps=[],
+                    gate_outcomes=[],
+                    phase_history=phase_history,
+                ),
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            detail = model.pipeline_session_detail("PSESS-020")
+            status, _, body = route("/pipeline/sessions/PSESS-020", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertEqual(
+            [row["label"] for row in detail["session"]["phase_rows"]],
+            ["Queue Preview", "Prepare", "Codex Execute"],
+        )
+        self.assertIn("3 of 7 pipeline phases have recorded outcomes.", body)
+        self.assertIn("Queue Preview", body)
+        self.assertIn("Prepare", body)
+        self.assertIn("Codex Execute", body)
+        self.assertIn('<span class="badge passed">passed</span>', body)
+        self.assertIn('<span class="badge failed">failed</span>', body)
+        self.assertIn("<span>Current Phase</span><strong>execute</strong>", body)
+        self.assertIn("<span>Phase Status</span><strong>failed</strong>", body)
+        self.assertIn("<span>Stop Reason</span><strong>Codex Execute failed.</strong>", body)
+        self.assertIn("<span>Next Action</span><strong>Inspect execution failure.</strong>", body)
+        self.assertNotIn("planned</span><span>run_next", body)
+        self.assertNotIn("flow checkpoints have recorded outcomes", body)
+
+    def test_pipeline_session_detail_renders_execute_phase_evidence(self):
+        long_stderr = (
+            "stderr-start "
+            + ("x" * (PIPELINE_LOG_SNIPPET_LIMIT + 20))
+            + " stderr-tail"
+        )
+        phase_history = [
+            {
+                "phase": "execute",
+                "status": "failed",
+                "reason": "Codex adapter timed out.",
+                "next_action": "Inspect execution failure.",
+                "artifacts": {
+                    "error_code": "CODEX_ADAPTER_TIMEOUT",
+                    "execute_evidence": {
+                        "code": "CODEX_ADAPTER_TIMEOUT",
+                        "reason": "Codex command exceeded timeout.",
+                        "command_ref": "codex exec --json",
+                        "duration_sec": 301.25,
+                        "stdout_snippet": "stdout diagnostic",
+                        "stderr_snippet": long_stderr,
+                        "stderr_ref": "captured:stderr:sha256:timeout",
+                    },
+                    "adapter": {
+                        "code": "CODEX_ADAPTER_TIMEOUT",
+                        "command_ref": "codex exec --json",
+                        "timeout_sec": 300,
+                        "duration_sec": 301.25,
+                        "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+                        "report_instruction": "Submit the task report after execution.",
+                    },
+                    "prepare_artifacts": {
+                        "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+                        "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+                    },
+                },
+                "changed_files": [],
+                "generated_files": [],
+                "events": ["EVT-202"],
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "in_progress",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=pipeline_detail_state(
+                    status="failed",
+                    step_status="planned",
+                    finished_at="",
+                    current_step_status="failed",
+                    stop_reason="Codex adapter timed out.",
+                    next_action="Inspect execution failure.",
+                    steps=[],
+                    gate_outcomes=[],
+                    phase_history=phase_history,
+                ),
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/pipeline/sessions/PSESS-020", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Execution Evidence", body)
+        self.assertIn("CODEX_ADAPTER_TIMEOUT", body)
+        self.assertIn("<span>Timeout</span><div>300</div>", body)
+        self.assertIn("<span>Duration</span><div>301.25</div>", body)
+        self.assertIn("codex exec --json", body)
+        self.assertIn("AI_PROJECT/generated/CODEX_PROMPT.md", body)
+        self.assertIn("AI_PROJECT/generated/CONTEXT_PACK.md", body)
+        self.assertIn("Submit the task report after execution.", body)
+        self.assertIn("stdout diagnostic", body)
+        self.assertIn("stderr-start", body)
+        self.assertIn("captured:stderr:sha256:timeout", body)
+        self.assertIn("[truncated:", body)
+        self.assertNotIn("stderr-tail", body)
+
+    def test_pipeline_session_detail_keeps_legacy_steps_without_phase_history(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "in_progress",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=pipeline_detail_state(
+                    status="blocked",
+                    step_status="blocked",
+                    finished_at="",
+                    current_step_status="blocked",
+                    stop_reason="BLOCKED: owner action required",
+                ),
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            detail = model.pipeline_session_detail("PSESS-020")
+            status, _, body = route("/pipeline/sessions/PSESS-020", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertEqual(detail["session"]["phase_rows"], [])
+        self.assertEqual(detail["session"]["steps"][0]["name"], "run_next")
+        self.assertIn("Gate Flow", body)
+        self.assertIn("token_budget_gate", body)
+        self.assertIn("run_next", body)
+
     def test_pipeline_session_detail_shows_resume_for_blocked_session(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -506,8 +837,11 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertNotIn('data-auto-refresh="2"', body)
         self.assertIn("Auto-refresh stopped", body)
         self.assertIn("Resume Session", body)
-        self.assertIn("Run Next", body)
-        self.assertIn("Run Until Blocker", body)
+        self.assertIn('value="pipeline.run_next"', body)
+        self.assertNotIn("<button type=\"submit\">Run Next</button>", body)
+        self.assertNotIn('value="pipeline.run_until_blocker"', body)
+        self.assertNotIn('value="pipeline.session.stop"', body)
+        self.assertIn("Stop Session is unavailable for status blocked.", body)
 
     def test_pipeline_session_detail_renders_completed_historical_session(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1770,6 +2104,32 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('value="EPIC-006"', body)
         self.assertIn("Workflow Automation", body)
 
+    def test_actions_page_renders_run_selected_task_form(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "CTL-01",
+                        "status": "ready",
+                        "title": "Ready task",
+                        "epic_id": "EPIC-001",
+                    }
+                ],
+                current_task_id="TASK-001",
+            )
+            status, _, body = route(
+                "/actions",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Run Selected Task", body)
+        self.assertIn('value="ui.run_selected_task"', body)
+        self.assertIn('name="task" value="CTL-01"', body)
+
     def test_task_import_web_action_previews_without_confirmation(self):
         calls = []
         payload = '{"tasks":[{"epic":"EPIC-006","title":"Imported"}]}'
@@ -2425,6 +2785,91 @@ class WebControlCenterTests(unittest.TestCase):
                 self.assertEqual(Path(argv[1]).name, "aictl.py")
                 self.assertEqual(argv[-len(expected_tail) :], expected_tail)
 
+    def test_ui_run_selected_task_web_action_creates_single_task_session(self):
+        class Policy:
+            name = "supervised_executable_local_commit"
+
+        session_result = CommandResult.success(
+            command="pipeline.session.create",
+            domain="pipeline",
+            message="Created pipeline session.",
+            data={"session_id": "PSESS-009", "session": {"id": "PSESS-009"}},
+        )
+        run_result = CommandResult.success(
+            command="pipeline.run_until_blocker",
+            domain="pipeline",
+            message="TOKEN_GATE_BLOCKED: Token evidence required.",
+            data={
+                "session_id": "PSESS-009",
+                "stop_code": "TOKEN_GATE_BLOCKED",
+                "stop_reason": "Token evidence required.",
+            },
+        )
+
+        with patch(
+            "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
+            return_value=Policy(),
+        ) as resolve_policy:
+            with patch(
+                "ai_project_ctl.web.actions.create_session",
+                return_value=session_result,
+            ) as create:
+                with patch(
+                    "ai_project_ctl.web.actions.run_until_blocker",
+                    return_value=run_result,
+                ) as run_until:
+                    with patch("ai_project_ctl.web.actions.subprocess.run") as run:
+                        result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                            {
+                                "action": "ui.run_selected_task",
+                                "confirm": "yes",
+                                "task": "TASK-001",
+                            }
+                        )
+
+        resolve_policy.assert_called_once_with(root=Path("/tmp/project"))
+        create.assert_called_once()
+        create_kwargs = create.call_args.kwargs
+        self.assertEqual(create_kwargs["actor"], "tester")
+        self.assertEqual(create_kwargs["policy_name"], Policy.name)
+        self.assertEqual(create_kwargs["task_refs"], ("TASK-001",))
+        self.assertEqual(create_kwargs["max_tasks"], 1)
+        self.assertEqual(create_kwargs["order_by"], "selected")
+        run_until.assert_called_once_with(
+            "PSESS-009",
+            root=Path("/tmp/project"),
+            actor="tester",
+            confirmed=True,
+        )
+        run.assert_not_called()
+
+        payload = result.to_dict()
+        self.assertTrue(result.ok)
+        self.assertEqual(payload["command"], "pipeline.run_until_blocker")
+        self.assertEqual(payload["result"]["data"]["session_id"], "PSESS-009")
+        self.assertEqual(payload["result"]["data"]["created_session"]["id"], "PSESS-009")
+        self.assertEqual(
+            payload["result"]["data"]["session_href"],
+            "/pipeline/sessions/PSESS-009",
+        )
+        self.assertEqual(
+            payload["result"]["data"]["redirect_target"],
+            "/pipeline/sessions/PSESS-009",
+        )
+
+    def test_ui_run_selected_task_action_requires_confirmation(self):
+        with patch("ai_project_ctl.web.actions.create_session") as create:
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor("/tmp/project", actor="tester").execute(
+                    {
+                        "action": "ui.run_selected_task",
+                        "task": "TASK-001",
+                    }
+                )
+
+        self.assertEqual(raised.exception.code, "WEB_ACTION_CONFIRMATION_REQUIRED")
+        create.assert_not_called()
+
     def test_pipeline_run_action_requires_confirmation(self):
         with patch("ai_project_ctl.web.actions.subprocess.run") as run:
             with self.assertRaises(WebActionError) as raised:
@@ -2574,6 +3019,7 @@ class WebControlCenterTests(unittest.TestCase):
                     "message": "TOKEN_BUDGET_FAILURE: Token Budget Gate failed.",
                     "data": {
                         "session_id": "PSESS-001",
+                        "session_href": "/pipeline/sessions/PSESS-001",
                         "stop_code": "TOKEN_BUDGET_FAILURE",
                         "stop_reason": "Token Budget Gate failed.",
                         "current_task_id": "TASK-064",
@@ -2621,6 +3067,7 @@ class WebControlCenterTests(unittest.TestCase):
         body = render_action_result(result)
 
         self.assertIn("Pipeline Result", body)
+        self.assertIn('href="/pipeline/sessions/PSESS-001"', body)
         self.assertIn("TOKEN_BUDGET_FAILURE", body)
         self.assertIn("Blockers", body)
         self.assertIn("Pipeline References", body)
@@ -3061,8 +3508,34 @@ def pipeline_detail_state(
     finished_at,
     current_step_status,
     stop_reason="",
+    next_action="",
+    steps=None,
+    gate_outcomes=None,
+    phase_history=None,
 ):
-    return {
+    if gate_outcomes is None:
+        gate_outcomes = [
+            pipeline_detail_gate("token_budget_gate", "pass"),
+            pipeline_detail_gate("codex_execution_adapter", "warn"),
+        ]
+    if steps is None:
+        steps = [
+            {
+                "name": "run_next",
+                "status": step_status,
+                "started_at": "2026-06-20T13:11:00Z",
+                "finished_at": finished_at,
+                "task_id": "TASK-078",
+                "gate_outcomes": [
+                    pipeline_detail_gate("token_budget_gate", "pass"),
+                    pipeline_detail_gate("codex_execution_adapter", "warn"),
+                ],
+                "result": {},
+                "stop_reason": stop_reason,
+                "audit_event_ids": ["EVT-100", "EVT-101"],
+            }
+        ]
+    state = {
         "schema_version": 1,
         "revision": 4,
         "created_at": "2026-06-20T13:10:00Z",
@@ -3141,32 +3614,15 @@ def pipeline_detail_state(
                 "current_step": "run_next",
                 "current_step_status": current_step_status,
                 "attempt_counters": {"steps": 1, "tasks": 1, "rework": 0},
-                "gate_outcomes": [
-                    pipeline_detail_gate("token_budget_gate", "pass"),
-                    pipeline_detail_gate("codex_execution_adapter", "warn"),
-                ],
-                "steps": [
-                    {
-                        "name": "run_next",
-                        "status": step_status,
-                        "started_at": "2026-06-20T13:11:00Z",
-                        "finished_at": finished_at,
-                        "task_id": "TASK-078",
-                        "gate_outcomes": [
-                            pipeline_detail_gate("token_budget_gate", "pass"),
-                            pipeline_detail_gate("codex_execution_adapter", "warn"),
-                        ],
-                        "result": {},
-                        "stop_reason": stop_reason,
-                        "audit_event_ids": ["EVT-100", "EVT-101"],
-                    }
-                ],
+                "gate_outcomes": gate_outcomes,
+                "steps": steps,
                 "linked_change_ids": ["CHG-061"],
                 "report_ids": ["RPT-001"],
                 "review_ids": ["REV-001"],
                 "commit_ids": ["abc1234"],
                 "audit_event_ids": ["EVT-100", "EVT-101"],
                 "stop_reason": stop_reason,
+                "next_action": next_action,
                 "created_at": "2026-06-20T13:10:00Z",
                 "updated_at": "2026-06-20T13:25:00Z",
                 "started_at": "2026-06-20T13:11:00Z",
@@ -3174,6 +3630,16 @@ def pipeline_detail_state(
             }
         ],
     }
+    if phase_history is not None:
+        session = state["sessions"][0]
+        session["phase_history"] = phase_history
+        if phase_history:
+            current_phase = phase_history[-1]
+            session["current_phase"] = current_phase.get("phase") or ""
+            session["current_phase_status"] = current_phase.get("status") or ""
+            if not session.get("next_action"):
+                session["next_action"] = current_phase.get("next_action") or ""
+    return state
 
 
 def pipeline_detail_gate(name, status):

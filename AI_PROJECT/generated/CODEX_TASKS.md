@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `942`
-Current task: `TASK-129`
+Revision: `1014`
+Current task: `TASK-145`
 
 ## Epic `EPIC-001`
 
@@ -2128,7 +2128,7 @@ Acceptance criteria:
 
 ### PIPEF-40 (TASK-119) — PIPE-040 Add tests for phase model and mutations
 
-Status: `planned`
+Status: `ready`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_5bcaf7cb78cb`, legacy `TASK-119`, aliases `TASK-119`, local `PIPEF` / `40`
@@ -2292,9 +2292,9 @@ Acceptance criteria:
 - The command returns a clear completed, blocked, or failed result.
 - The command does not directly edit AI_PROJECT/state task files outside existing governed pipeline commands.
 
-### PIPEF-50 (TASK-129) — Add Codex preflight for UI Run ⭐
+### PIPEF-50 (TASK-129) — Add Codex preflight for UI Run
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_e7309de4e114`, legacy `TASK-129`, aliases `TASK-129`, local `PIPEF` / `50`
@@ -2308,3 +2308,361 @@ Acceptance criteria:
 - Preflight uses the effective command_line setting.
 - Preflight does not write project-control state or generated files.
 - UI Run can use the preflight result to block executable execution before starting a session.
+
+### PIPEF-51 (TASK-130) — PIPE-046 Add phase history view helpers for Web Pipeline UI
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_548b331d6f92`, legacy `TASK-130`, aliases `TASK-130`, local `PIPEF` / `51`
+
+Add Web UI helpers that normalize phase-based pipeline sessions from phase_history while preserving legacy steps fallback.
+
+Acceptance criteria:
+
+- A session with phase_history renders phase rows from phase_history instead of creating a fake planned step.
+- A legacy session without phase_history continues to render through steps and gate_outcomes.
+- Phase labels are stable and human-readable in the Web Pipeline UI.
+- No existing Web Control Center tests regress.
+- Focused tests cover both phase_history and legacy fallback rendering.
+
+### PIPEF-52 (TASK-131) — PIPE-047 Render phase flow and current phase status in Web Pipeline UI
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_8a1c2d07282e`, legacy `TASK-131`, aliases `TASK-131`, local `PIPEF` / `52`
+
+Render the new phase-based pipeline flow and current phase status in the Web Pipeline page.
+
+Acceptance criteria:
+
+- A PSESS-016-like session shows Queue passed, Prepare passed and Codex Execute failed.
+- The session summary shows execute as the current failed phase when current_phase is execute.
+- The UI no longer shows all checkpoints as planned when phase_history contains real outcomes.
+- Legacy sessions still render their old gate flow.
+- Tests assert the phase status labels in rendered HTML.
+
+### PIPEF-53 (TASK-132) — PIPE-048 Render phase execution artifacts and failure evidence
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_7ab0576e73fe`, legacy `TASK-132`, aliases `TASK-132`, local `PIPEF` / `53`
+
+Show phase execution artifacts, failure evidence and log snippets for failed phase-based pipeline sessions.
+
+Acceptance criteria:
+
+- A CODEX_ADAPTER_TIMEOUT phase shows CODEX_ADAPTER_TIMEOUT in the Web UI.
+- The UI displays timeout_sec and duration_sec for failed execute phases.
+- The UI displays command_ref for local Codex execution.
+- Large stderr snippets are bounded by the existing Web UI log snippet limit.
+- Tests cover rendering of execute_evidence and adapter artifacts.
+
+### PIPEF-54 (TASK-133) — PIPE-049 Apply UI execution timeout settings to effective policy
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_a0392e704045`, legacy `TASK-133`, aliases `TASK-133`, local `PIPEF` / `54`
+
+Allow UI settings to configure Codex execution timeout and preflight timeout for UI runs.
+
+Acceptance criteria:
+
+- UI settings can include execution_timeout_sec and the resolved UI policy uses it as codex.timeout_sec.
+- String values such as "3600" are accepted for timeout settings.
+- Invalid timeout values produce a stable UI settings or policy error.
+- ui run --preflight uses preflight_timeout_sec from settings instead of hard-coded 30 seconds.
+- command_line still overrides local_command and command_allowlist for UI runs.
+- Existing UI settings and UI run tests pass.
+
+### PIPEF-55 (TASK-134) — PIPE-050 Update Web Pipeline actions for phase-based sessions
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_1c8988bcc50b`, legacy `TASK-134`, aliases `TASK-134`, local `PIPEF` / `55`
+
+Update Web Pipeline page actions and owner guidance for phase-based session states.
+
+Acceptance criteria:
+
+- Failed phase-based sessions do not appear as actively running in action guidance.
+- The UI shows owner action guidance from session.next_action or latest phase next_action.
+- Stop Session remains available only for stoppable session statuses.
+- Resume or Run actions remain guarded by existing confirmation behavior.
+- Tests cover action rendering for failed execute and blocked prepare sessions.
+
+### PIPEF-56 (TASK-135) — PIPE-051 Document phase-based Web Pipeline display behavior
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_764223596ec1`, legacy `TASK-135`, aliases `TASK-135`, local `PIPEF` / `56`
+
+Document how the Web Control Center displays phase-based pipeline sessions and timeout settings.
+
+Acceptance criteria:
+
+- Documentation explains phase_history-based Web Pipeline rendering.
+- Documentation explains the difference between command_line and policy local_command.
+- Documentation explains preflight timeout versus execution timeout.
+- Documentation includes a troubleshooting note for CODEX_ADAPTER_TIMEOUT.
+- Generated documentation checks can be rerun without manual edits to generated files.
+
+### PIPEF-57 (TASK-136) — PIPE-052 Add pipeline session status JSON endpoint
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_3b24331932c4`, legacy `TASK-136`, aliases `TASK-136`, local `PIPEF` / `57`
+
+Add a read-only JSON endpoint that returns compact live status for one pipeline session.
+
+Acceptance criteria:
+
+- The new endpoint returns JSON for an existing pipeline session.
+- The JSON payload contains status, current_phase, current_phase_status, stop_reason, next_action and phase_history summary.
+- The endpoint does not render full HTML.
+- Missing sessions return a stable non-success response.
+- Existing Web Control Center pages continue to render.
+
+### PIPEF-58 (TASK-137) — PIPE-053 Add partial polling refresh to Pipeline session page
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_f9cb256de173`, legacy `TASK-137`, aliases `TASK-137`, local `PIPEF` / `58`
+
+Update the Pipeline session page to poll compact session status and refresh only status-related UI blocks.
+
+Acceptance criteria:
+
+- Pipeline session pages include polling metadata for the current session.
+- The page can refresh status from JSON without reloading the whole document.
+- Polling interval is approximately two seconds.
+- Polling stops for blocked, failed, completed or stopped sessions.
+- The implementation uses standard browser APIs only.
+
+### PIPEF-59 (TASK-138) — PIPE-054 Add Web action for single-task UI run
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_877f5512287c`, legacy `TASK-138`, aliases `TASK-138`, local `PIPEF` / `59`
+
+Add a Web action that starts a single selected task through the effective UI run pipeline policy.
+
+Acceptance criteria:
+
+- The new Web action requires explicit confirmation.
+- The action creates a single-task pipeline session for the selected task.
+- The action uses the effective UI policy configured by UI settings.
+- The action response exposes the created session id.
+- Existing Web actions continue to pass their tests.
+
+### PIPEF-60 (TASK-139) — PIPE-055 Render Run and Resume controls beside task rows
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_5d977a401b64`, legacy `TASK-139`, aliases `TASK-139`, local `PIPEF` / `60`
+
+Add task-row controls that let the owner start or continue one selected task from the Web Tasks page.
+
+Acceptance criteria:
+
+- Runnable task rows show a confirmed Run form.
+- In-progress task rows show continuation guidance or a supported Resume control.
+- Terminal or inactive tasks do not show Run controls.
+- Task row controls submit the selected task reference.
+- Tests assert task-row action visibility for planned, ready, in_progress and done tasks.
+
+### PIPEF-61 (TASK-140) — PIPE-056 Stream Codex adapter output to runtime log files
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_f1d62b78004f`, legacy `TASK-140`, aliases `TASK-140`, local `PIPEF` / `61`
+
+Write Codex local-command stdout and stderr to session runtime log files while execution is running.
+
+Acceptance criteria:
+
+- Codex stdout is written to a per-session runtime stdout log during execution.
+- Codex stderr is written to a per-session runtime stderr log during execution.
+- Execute phase artifacts include enough metadata for the Web UI to locate log files.
+- Existing captured stdout and stderr refs still work after command completion.
+- Tests cover log writing for a local-command adapter run.
+
+### PIPEF-62 (TASK-141) — PIPE-057 Add pipeline session live log tail endpoint
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_ed7c7c10d9eb`, legacy `TASK-141`, aliases `TASK-141`, local `PIPEF` / `62`
+
+Add a read-only endpoint that returns appended chunks from a pipeline session runtime log.
+
+Acceptance criteria:
+
+- The endpoint can return the next chunk from a known session runtime log.
+- The response includes the new offset and whether the stream is still running when available.
+- Invalid stream names are rejected.
+- Large responses are bounded by a fixed server-side limit.
+- The endpoint cannot read files outside the session runtime log area.
+
+### PIPEF-63 (TASK-142) — PIPE-058 Add live Codex log panel to Pipeline session page
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_163fe8b208a9`, legacy `TASK-142`, aliases `TASK-142`, local `PIPEF` / `63`
+
+Display live stdout and stderr output for the current Codex execute phase in the Web Pipeline session page.
+
+Acceptance criteria:
+
+- A running execute phase shows a visible Codex Execute running status.
+- The page can append new stdout or stderr chunks without a full reload.
+- The log panel shows command_ref, elapsed time and timeout when available.
+- Completed execute phases still show captured snippets.
+- Tests assert that live log UI elements render for sessions with runtime log artifacts.
+
+### PIPEF-64 (TASK-143) — PIPE-059 Keep runtime pipeline logs out of task diff gates
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_3b9b49da1c41`, legacy `TASK-143`, aliases `TASK-143`, local `PIPEF` / `64`
+
+Ensure runtime UI and pipeline log files do not cause task verification diff gates to fail.
+
+Acceptance criteria:
+
+- Runtime log files under the chosen logs path do not appear as missing_from_report.
+- Real source, test and documentation changes still require report coverage.
+- Git ignore rules cover generated runtime log artifacts where appropriate.
+- Tests cover runtime log exclusion and normal source diff blocking.
+- The behavior is documented near the exclusion logic.
+
+### PIPEF-65 (TASK-144) — PIPE-060 Document Web live status and Codex log behavior
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_065318711223`, legacy `TASK-144`, aliases `TASK-144`, local `PIPEF` / `65`
+
+Document the Web UI live status refresh, task Run controls and Codex live log behavior for the owner.
+
+Acceptance criteria:
+
+- Documentation explains how to tell whether Codex is actually running.
+- Documentation explains when to use task-row Run versus Resume Session.
+- Documentation explains where live logs appear and what stdout versus stderr means.
+- Documentation explains how to respond to REPORT_MISSING.
+- Documentation explains that runtime logs should not be reported as implementation files.
+
+### PIPEF-66 (TASK-145) — PIPE-061 Add Web Settings page route ⭐
+
+Status: `in_progress`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_432c3c726e2d`, legacy `TASK-145`, aliases `TASK-145`, local `PIPEF` / `66`
+
+Add a Web Control Center Settings page that displays effective UI settings and their source file.
+
+Acceptance criteria:
+
+- The Web Control Center navigation includes a Settings page link.
+- The Settings page shows the effective UI settings source and path.
+- The Settings page renders command_line, default_policy and timeout settings when present.
+- The Settings page is read-only in this task.
+- Existing Web Control Center tests continue to pass.
+
+### PIPEF-67 (TASK-146) — PIPE-062 Add confirmed Web actions for UI settings updates
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_644b6c563035`, legacy `TASK-146`, aliases `TASK-146`, local `PIPEF` / `67`
+
+Add confirmed Web actions that update allowed project-local UI settings from the Settings page.
+
+Acceptance criteria:
+
+- Settings update actions require explicit confirmation.
+- Only allowlisted setting keys can be updated through the Web UI.
+- Successful updates write AI_PROJECT/config/ui_settings.json.
+- Action results show the updated key and settings path.
+- Tests cover successful update, missing confirmation and disallowed key behavior.
+
+### PIPEF-68 (TASK-147) — PIPE-063 Add internal change-gate bypass UI setting
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_b678836b5b83`, legacy `TASK-147`, aliases `TASK-147`, local `PIPEF` / `68`
+
+Add a disabled-by-default UI setting for explicitly bypassing approved Change requirements on internal project-control tasks.
+
+Acceptance criteria:
+
+- Effective UI settings include the new bypass setting with default false.
+- String values such as true, false, 1 and 0 are parsed predictably.
+- Invalid boolean values produce a stable settings error or validation failure.
+- Existing UI settings behavior remains compatible.
+- Tests cover the new setting defaults and parsing.
+
+### PIPEF-69 (TASK-148) — PIPE-064 Render internal Change gate bypass checkbox
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_c3115928f476`, legacy `TASK-148`, aliases `TASK-148`, local `PIPEF` / `69`
+
+Render a confirmed Settings page checkbox for toggling internal project-control Change gate bypass.
+
+Acceptance criteria:
+
+- The Settings page shows a checkbox for the internal Change gate bypass setting.
+- The checkbox reflects the effective current setting value.
+- Submitting the checkbox requires confirmation.
+- The UI includes clear warning text about internal-only use.
+- Tests cover checkbox rendering for enabled and disabled states.
+
+### PIPEF-70 (TASK-149) — PIPE-065 Apply internal Change gate bypass to UI runs
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_e84bda130e82`, legacy `TASK-149`, aliases `TASK-149`, local `PIPEF` / `70`
+
+Allow confirmed UI runs to skip approved Change requirements only for internal project-control tasks when the bypass setting is enabled.
+
+Acceptance criteria:
+
+- When the setting is disabled, UI runs still require an approved linked Change.
+- When the setting is enabled, eligible internal project-control tasks can pass prepare without an approved linked Change.
+- Non-internal tasks still block on missing approved Change even when the setting is enabled.
+- Bypass usage is recorded in phase artifacts or audit details.
+- Tests cover enabled, disabled and non-internal task behavior.
+
+### PIPEF-71 (TASK-150) — PIPE-066 Document Web Settings and internal bypass behavior
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_98a41c988bbe`, legacy `TASK-150`, aliases `TASK-150`, local `PIPEF` / `71`
+
+Document the Web Settings page and the internal Change gate bypass setting for the Human Owner.
+
+Acceptance criteria:
+
+- Documentation explains how to open and use the Web Settings page.
+- Documentation explains the internal Change gate bypass setting and its risks.
+- Documentation states that the bypass does not skip token, report, verify, review, close or commit gates.
+- Documentation explains that the setting is off by default.
+- Documentation validation and generated checks can be rerun after edits.

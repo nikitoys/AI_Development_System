@@ -1,0 +1,324 @@
+{
+  "changed_files": [
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/state/pipeline_sessions.json",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/events/pipeline-events.jsonl",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+  ],
+  "command": "pipeline.phase.verify",
+  "data": {
+    "allowed_files_gate_code": "",
+    "allowed_files_gate_status": "",
+    "git_diff_gate_code": "",
+    "git_diff_gate_status": "",
+    "phase_result": {
+      "artifacts": {
+        "blocked_by": "REPORT_CHANGED_AFTER_COLLECT",
+        "collect_report_phase": {
+          "phase": "collect_report",
+          "reason": "Structured execution report collected for selected task (freshness_basis=timestamp).",
+          "report_id": "RPT-006",
+          "status": "passed",
+          "task_id": "TASK-135"
+        },
+        "collected_report_id": "RPT-006",
+        "policy": "supervised_executable_local_commit_1h",
+        "report_gate": {
+          "changed_files": [
+            "ai-system/project-control/08-usage-guide.md",
+            "ai-system/project-control/10-owner-quickstart.md"
+          ],
+          "checks": [
+            {
+              "blocking": false,
+              "command": "python scripts/taskctl.py task show TASK-135",
+              "details": "Task context inspected before editing.",
+              "duration_sec": null,
+              "name": "Task inspection",
+              "result": "passed"
+            },
+            {
+              "blocking": true,
+              "command": "python scripts/docctl.py validate",
+              "details": "Validation completed with existing warnings, including content-hash warnings for edited docs because broader docctl.py scan was not run.",
+              "duration_sec": null,
+              "name": "Documentation validation",
+              "result": "passed"
+            },
+            {
+              "blocking": true,
+              "command": "python scripts/docctl.py check-generated",
+              "details": "Passed after regenerating documentation outputs.",
+              "duration_sec": null,
+              "name": "Generated documentation freshness",
+              "result": "passed"
+            },
+            {
+              "blocking": true,
+              "command": "python scripts/docctl.py render",
+              "details": "Regenerated AI_PROJECT/generated/DOCS_GAPS.md.",
+              "duration_sec": null,
+              "name": "Documentation render",
+              "result": "passed"
+            },
+            {
+              "blocking": true,
+              "command": "git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md",
+              "details": "No diff whitespace errors reported by Codex execution summary.",
+              "duration_sec": null,
+              "name": "Diff whitespace check",
+              "result": "passed"
+            }
+          ],
+          "code": "CODEX_REPORT_WARN",
+          "generated_files": [
+            "AI_PROJECT/generated/DOCS_GAPS.md"
+          ],
+          "issues": [],
+          "reason": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+          "report_id": "RPT-007",
+          "status": "warn",
+          "task_id": "TASK-135",
+          "token_usage": {
+            "context_tokens": 0,
+            "prompt_tokens": 0,
+            "token_count_estimated": true,
+            "token_count_strategy": "manual_report_not_measured"
+          },
+          "warnings": [
+            {
+              "code": "CODEX_REPORT_WARN",
+              "message": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+              "path": "warnings"
+            }
+          ]
+        },
+        "report_gate_code": "CODEX_REPORT_WARN",
+        "report_gate_status": "warn",
+        "report_id": "RPT-007",
+        "session_id": "PSESS-017",
+        "task_id": "TASK-135",
+        "verify_evidence": {
+          "blocked_by": "REPORT_CHANGED_AFTER_COLLECT",
+          "phase": "verify",
+          "report_gate": {
+            "changed_files": [
+              "ai-system/project-control/08-usage-guide.md",
+              "ai-system/project-control/10-owner-quickstart.md"
+            ],
+            "checks": [
+              {
+                "blocking": false,
+                "command": "python scripts/taskctl.py task show TASK-135",
+                "name": "Task inspection",
+                "result": "passed"
+              },
+              {
+                "blocking": true,
+                "command": "python scripts/docctl.py validate",
+                "name": "Documentation validation",
+                "result": "passed"
+              },
+              {
+                "blocking": true,
+                "command": "python scripts/docctl.py check-generated",
+                "name": "Generated documentation freshness",
+                "result": "passed"
+              },
+              {
+                "blocking": true,
+                "command": "python scripts/docctl.py render",
+                "name": "Documentation render",
+                "result": "passed"
+              },
+              {
+                "blocking": true,
+                "command": "git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md",
+                "name": "Diff whitespace check",
+                "result": "passed"
+              }
+            ],
+            "code": "CODEX_REPORT_WARN",
+            "generated_files": [
+              "AI_PROJECT/generated/DOCS_GAPS.md"
+            ],
+            "issues": [],
+            "reason": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+            "report_id": "RPT-007",
+            "status": "warn",
+            "task_id": "TASK-135",
+            "warnings": [
+              {
+                "code": "CODEX_REPORT_WARN",
+                "message": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+                "path": "warnings"
+              }
+            ]
+          },
+          "report_id": "RPT-007",
+          "schema_version": 1,
+          "status": "blocked",
+          "task_id": "TASK-135"
+        }
+      },
+      "changed_files": [],
+      "events": [
+        "EVT-F5D0C134A6FE"
+      ],
+      "generated_files": [],
+      "next_action": "Rerun collect-report, then rerun verify.",
+      "phase": "verify",
+      "reason": "Latest report gate target differs from the collected report.",
+      "status": "blocked"
+    },
+    "protected_files_gate_code": "",
+    "protected_files_gate_status": "",
+    "report_gate_code": "CODEX_REPORT_WARN",
+    "report_gate_status": "warn",
+    "report_id": "RPT-007",
+    "session_id": "PSESS-017",
+    "task_id": "TASK-135",
+    "verification": {
+      "blocked_by": "REPORT_CHANGED_AFTER_COLLECT",
+      "phase": "verify",
+      "report_gate": {
+        "changed_files": [
+          "ai-system/project-control/08-usage-guide.md",
+          "ai-system/project-control/10-owner-quickstart.md"
+        ],
+        "checks": [
+          {
+            "blocking": false,
+            "command": "python scripts/taskctl.py task show TASK-135",
+            "name": "Task inspection",
+            "result": "passed"
+          },
+          {
+            "blocking": true,
+            "command": "python scripts/docctl.py validate",
+            "name": "Documentation validation",
+            "result": "passed"
+          },
+          {
+            "blocking": true,
+            "command": "python scripts/docctl.py check-generated",
+            "name": "Generated documentation freshness",
+            "result": "passed"
+          },
+          {
+            "blocking": true,
+            "command": "python scripts/docctl.py render",
+            "name": "Documentation render",
+            "result": "passed"
+          },
+          {
+            "blocking": true,
+            "command": "git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md",
+            "name": "Diff whitespace check",
+            "result": "passed"
+          }
+        ],
+        "code": "CODEX_REPORT_WARN",
+        "generated_files": [
+          "AI_PROJECT/generated/DOCS_GAPS.md"
+        ],
+        "issues": [],
+        "reason": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+        "report_id": "RPT-007",
+        "status": "warn",
+        "task_id": "TASK-135",
+        "warnings": [
+          {
+            "code": "CODEX_REPORT_WARN",
+            "message": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+            "path": "warnings"
+          }
+        ]
+      },
+      "report_id": "RPT-007",
+      "schema_version": 1,
+      "status": "blocked",
+      "task_id": "TASK-135"
+    },
+    "verify_evidence": {
+      "blocked_by": "REPORT_CHANGED_AFTER_COLLECT",
+      "phase": "verify",
+      "report_gate": {
+        "changed_files": [
+          "ai-system/project-control/08-usage-guide.md",
+          "ai-system/project-control/10-owner-quickstart.md"
+        ],
+        "checks": [
+          {
+            "blocking": false,
+            "command": "python scripts/taskctl.py task show TASK-135",
+            "name": "Task inspection",
+            "result": "passed"
+          },
+          {
+            "blocking": true,
+            "command": "python scripts/docctl.py validate",
+            "name": "Documentation validation",
+            "result": "passed"
+          },
+          {
+            "blocking": true,
+            "command": "python scripts/docctl.py check-generated",
+            "name": "Generated documentation freshness",
+            "result": "passed"
+          },
+          {
+            "blocking": true,
+            "command": "python scripts/docctl.py render",
+            "name": "Documentation render",
+            "result": "passed"
+          },
+          {
+            "blocking": true,
+            "command": "git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md",
+            "name": "Diff whitespace check",
+            "result": "passed"
+          }
+        ],
+        "code": "CODEX_REPORT_WARN",
+        "generated_files": [
+          "AI_PROJECT/generated/DOCS_GAPS.md"
+        ],
+        "issues": [],
+        "reason": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+        "report_id": "RPT-007",
+        "status": "warn",
+        "task_id": "TASK-135",
+        "warnings": [
+          {
+            "code": "CODEX_REPORT_WARN",
+            "message": "Report contains warning(s): docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run.",
+            "path": "warnings"
+          }
+        ]
+      },
+      "report_id": "RPT-007",
+      "schema_version": 1,
+      "status": "blocked",
+      "task_id": "TASK-135"
+    }
+  },
+  "domain": "pipeline",
+  "errors": [],
+  "events": [
+    "EVT-F5D0C134A6FE"
+  ],
+  "generated_files": [
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_STATUS.md",
+    "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/PIPELINE_AUDIT.md"
+  ],
+  "message": "Latest report gate target differs from the collected report.",
+  "next_actions": [
+    "Rerun collect-report, then rerun verify."
+  ],
+  "ok": true,
+  "owner_action_required": null,
+  "revision_after": 67,
+  "revision_before": 66,
+  "warnings": []
+}

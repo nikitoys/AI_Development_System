@@ -64,6 +64,7 @@ class UIRunCommandTests(unittest.TestCase):
                 {
                     "default_policy": "supervised_executable_local_commit",
                     "command_line": "codex exec --json",
+                    "execution_timeout_sec": "1200",
                 },
             )
             run_result = CommandResult.success(
@@ -119,6 +120,7 @@ class UIRunCommandTests(unittest.TestCase):
                 session["policy_snapshot"]["codex"]["command_allowlist"],
                 ["codex exec --json"],
             )
+            self.assertEqual(session["policy_snapshot"]["codex"]["timeout_sec"], 1200)
             self.assertEqual(session["selected_queue"]["task_refs"], ["APP-01"])
             self.assertEqual(session["selected_queue"]["max_tasks"], 1)
 

@@ -51,6 +51,24 @@ class UIPipelinePolicyTests(unittest.TestCase):
         self.assertEqual(policy.codex.command_allowlist, ("codex exec --json",))
         self.assertTrue(policy.validate().ok)
 
+    def test_execution_timeout_setting_replaces_codex_timeout(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_settings(
+                root,
+                {
+                    "default_policy": "supervised_executable_local_commit",
+                    "command_line": "codex exec --json",
+                    "execution_timeout_sec": "1800",
+                },
+            )
+
+            policy = resolve_ui_pipeline_policy(root=root)
+
+        self.assertEqual(policy.codex.timeout_sec, 1800)
+        self.assertEqual(policy.codex.local_command, ("codex", "exec", "--json"))
+        self.assertTrue(policy.validate().ok)
+
     def test_non_executable_policy_does_not_require_command_line(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -107,6 +125,24 @@ class UIPipelinePolicyTests(unittest.TestCase):
                 resolve_ui_pipeline_policy(root=root)
 
         self.assertEqual(raised.exception.code, "UI_POLICY_COMMAND_LINE_REQUIRED")
+
+    def test_invalid_execution_timeout_fails_with_clear_policy_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_settings(
+                root,
+                {
+                    "default_policy": "supervised_executable_local_commit",
+                    "command_line": "codex exec",
+                    "execution_timeout_sec": "slow",
+                },
+            )
+
+            with self.assertRaises(UIPipelinePolicyError) as raised:
+                resolve_ui_pipeline_policy(root=root)
+
+        self.assertEqual(raised.exception.code, "UI_POLICY_EXECUTION_TIMEOUT_INVALID")
+        self.assertEqual(raised.exception.path, "execution_timeout_sec")
 
     def test_resolver_does_not_mutate_builtin_policy_presets(self):
         with tempfile.TemporaryDirectory() as tmp:

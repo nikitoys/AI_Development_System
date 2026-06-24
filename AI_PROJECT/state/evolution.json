@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 2059,
+  "revision": 2124,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-20T15:53:19Z",
+  "updated_at": "2026-06-24T09:02:41Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -3826,6 +3826,193 @@
       "order": 62,
       "created_at": "2026-06-20T15:41:04Z",
       "updated_at": "2026-06-20T15:53:19Z"
+    },
+    {
+      "id": "CHG-063",
+      "title": "PIPEF-40 Add tests for phase model and mutations",
+      "status": "approved",
+      "change_type": "tooling",
+      "rationale": "Execution policy requires an approved linked Evolution Change before Codex implementation.",
+      "problem": "Pipeline phase model and mutation behavior require regression coverage before automated execution.",
+      "proposal": "Add tests for phase model and pipeline mutation behavior required by PIPEF-40.",
+      "affected_areas": [],
+      "affected_files": [],
+      "risks": [],
+      "impact": [],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-22T14:10:56Z",
+      "approval_notes": "Approved for PIPEF-40 execution.",
+      "accepted_by": "",
+      "accepted_at": "",
+      "acceptance_notes": "",
+      "notes": [],
+      "priority": 1,
+      "order": 63,
+      "created_at": "2026-06-22T14:10:40Z",
+      "updated_at": "2026-06-22T14:10:56Z"
+    },
+    {
+      "id": "CHG-064",
+      "title": "PIPE-040 Add tests for phase model and mutations",
+      "status": "approved",
+      "change_type": "process",
+      "rationale": "Protect the foundational phase state behavior before rewriting the runner.",
+      "problem": "Task PIPEF-40 requires an explicit Evolution Change Proposal before implementation: Add tests for PhaseResult serialization, session phase fields, and governed phase mutation helpers.",
+      "proposal": "Implement the bounded task scope: Test PhaseResult construction and JSON conversion.; Test session creation with phase field defaults.; Test start_phase and record_phase_result mutations.; Test validation behavior for legacy sessions without phase fields.",
+      "affected_areas": [],
+      "affected_files": [
+        "tests/test_pipeline_phase.py",
+        "tests/test_pipeline_session_phase.py"
+      ],
+      "risks": [
+        "Boundary risk: Do not change behavior unrelated to this task.",
+        "Boundary risk: Do not refactor unrelated code.",
+        "Boundary risk: Do not edit protected project-control files manually.",
+        "Check tests use temporary state and do not depend on local repository state.",
+        "Verify tests do not require external Codex or network access.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-119.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Test PhaseResult construction and JSON conversion.",
+        "Test session creation with phase field defaults.",
+        "Test start_phase and record_phase_result mutations.",
+        "Test validation behavior for legacy sessions without phase fields.",
+        "Tests pass for all PhaseResult statuses.",
+        "Tests prove legacy pipeline sessions remain valid.",
+        "Tests prove phase results append to phase_history."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-119"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-23T14:34:11Z",
+      "approval_notes": "Approve",
+      "accepted_by": "",
+      "accepted_at": "",
+      "acceptance_notes": "",
+      "notes": [],
+      "priority": 1,
+      "order": 64,
+      "created_at": "2026-06-23T14:33:09Z",
+      "updated_at": "2026-06-23T14:34:11Z"
+    },
+    {
+      "id": "CHG-065",
+      "title": "PIPE-051 Document phase-based Web Pipeline display behavior",
+      "status": "ready",
+      "change_type": "docs",
+      "rationale": "Owner-facing documentation should explain phase_history display, legacy fallback and UI timeout configuration.",
+      "problem": "Task PIPEF-56 requires an explicit Evolution Change Proposal before implementation: Document how the Web Control Center displays phase-based pipeline sessions and timeout settings.",
+      "proposal": "Implement the bounded task scope: Document that Web Pipeline UI uses phase_history for phase-based sessions.; Document the legacy steps and gate_outcomes fallback for older sessions.; Document command_line, preflight_timeout_sec and execution_timeout_sec UI settings.; Add troubleshooting notes for CODEX_ADAPTER_TIMEOUT and missing report evidence.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai-system/project-control/08-usage-guide.md",
+        "ai-system/project-control/10-owner-quickstart.md"
+      ],
+      "risks": [
+        "Boundary risk: Do not change generated documentation manually.",
+        "Boundary risk: Do not document unimplemented automation behavior as available.",
+        "Boundary risk: Do not change pipeline code in this documentation task.",
+        "Verify that the docs do not overstate automation maturity.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-135.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Document that Web Pipeline UI uses phase_history for phase-based sessions.",
+        "Document the legacy steps and gate_outcomes fallback for older sessions.",
+        "Document command_line, preflight_timeout_sec and execution_timeout_sec UI settings.",
+        "Add troubleshooting notes for CODEX_ADAPTER_TIMEOUT and missing report evidence.",
+        "Documentation explains phase_history-based Web Pipeline rendering.",
+        "Documentation explains the difference between command_line and policy local_command.",
+        "Documentation explains preflight timeout versus execution timeout."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-135"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "",
+      "owner_approved_at": "",
+      "approval_notes": "",
+      "accepted_by": "",
+      "accepted_at": "",
+      "acceptance_notes": "",
+      "notes": [],
+      "priority": 1,
+      "order": 65,
+      "created_at": "2026-06-24T09:01:19Z",
+      "updated_at": "2026-06-24T09:01:23Z"
+    },
+    {
+      "id": "CHG-066",
+      "title": "PIPE-051 Document phase-based Web Pipeline display behavior",
+      "status": "approved",
+      "change_type": "docs",
+      "rationale": "Owner-facing documentation should explain phase_history display, legacy fallback and UI timeout configuration.",
+      "problem": "Task PIPEF-56 requires an explicit Evolution Change Proposal before implementation: Document how the Web Control Center displays phase-based pipeline sessions and timeout settings.",
+      "proposal": "Implement the bounded task scope: Document that Web Pipeline UI uses phase_history for phase-based sessions.; Document the legacy steps and gate_outcomes fallback for older sessions.; Document command_line, preflight_timeout_sec and execution_timeout_sec UI settings.; Add troubleshooting notes for CODEX_ADAPTER_TIMEOUT and missing report evidence.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai-system/project-control/08-usage-guide.md",
+        "ai-system/project-control/10-owner-quickstart.md"
+      ],
+      "risks": [
+        "Boundary risk: Do not change generated documentation manually.",
+        "Boundary risk: Do not document unimplemented automation behavior as available.",
+        "Boundary risk: Do not change pipeline code in this documentation task.",
+        "Verify that the docs do not overstate automation maturity.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-135.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Document that Web Pipeline UI uses phase_history for phase-based sessions.",
+        "Document the legacy steps and gate_outcomes fallback for older sessions.",
+        "Document command_line, preflight_timeout_sec and execution_timeout_sec UI settings.",
+        "Add troubleshooting notes for CODEX_ADAPTER_TIMEOUT and missing report evidence.",
+        "Documentation explains phase_history-based Web Pipeline rendering.",
+        "Documentation explains the difference between command_line and policy local_command.",
+        "Documentation explains preflight timeout versus execution timeout."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-135"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-24T09:02:41Z",
+      "approval_notes": "Approve",
+      "accepted_by": "",
+      "accepted_at": "",
+      "acceptance_notes": "",
+      "notes": [],
+      "priority": 1,
+      "order": 66,
+      "created_at": "2026-06-24T09:02:20Z",
+      "updated_at": "2026-06-24T09:02:41Z"
     }
   ]
 }

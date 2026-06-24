@@ -3,17 +3,17 @@
 
 # Current Codex Task
 
-Revision: `942`
+Revision: `1014`
 
-Task: `PIPEF-50 (TASK-129)` — **Add Codex preflight for UI Run**
+Task: `PIPEF-66 (TASK-145)` — **PIPE-061 Add Web Settings page route**
 Epic: `EPIC-009`
 Status: `in_progress`
 Verification: `strict`
-Ref: `PIPEF-50`
-UID: `tsk_e7309de4e114`
-Legacy ID: `TASK-129`
-Aliases: `TASK-129`
-Epic Key / Local Seq: `PIPEF` / `50`
+Ref: `PIPEF-66`
+UID: `tsk_432c3c726e2d`
+Legacy ID: `TASK-145`
+Aliases: `TASK-145`
+Epic Key / Local Seq: `PIPEF` / `66`
 
 ## Prompt Control Fields
 
@@ -24,56 +24,53 @@ Expected Result: `Task completed according to acceptance criteria`
 
 ## Summary
 
-Add a Codex executable preflight that checks the configured command before launching an executable Run.
+Add a Web Control Center Settings page that displays effective UI settings and their source file.
 
 ## Description
 
-This task prevents the Run command from starting executable sessions when the local Codex sandbox is unavailable.
+This creates the read-only Web UI surface for project-local settings before adding write actions.
 
 ## Scope
 
-- Add a Codex preflight service that reads command_line from effective UI settings.
-- Run a minimal prompt through the configured command.
-- Detect sandbox-unavailable output such as bwrap or RTM_NEWADDR.
-- Expose the preflight through aictl for UI and backend usage.
+- Add a Settings navigation item and route in the Web Control Center.
+- Render effective UI settings including source, path and current values.
+- Show settings in a human-readable form without requiring terminal commands.
+- Add focused tests that the Settings page renders with default and project-file settings.
 
 ## Out of Scope
 
-- Do not attempt to repair OS-level sandbox permissions.
-- Do not change Codex CLI configuration files.
-- Do not mutate task, pipeline, or report state during preflight.
+- Do not add settings mutation in this task.
+- Do not change pipeline execution behavior.
+- Do not expose non-UI project secrets or environment variables.
 
 ## Allowed Files
 
-- ai_project_ctl/pipeline/codex_preflight.py
-- ai_project_ctl/pipeline/codex_adapter.py
-- ai_project_ctl/ui_settings.py
-- scripts/aictl.py
-- tests/pipeline/test_codex_preflight.py
+- ai_project_ctl/web/server.py
+- tests/test_web_control_center.py
 
 ## Acceptance Criteria
 
-- Preflight returns passed when the configured command exits successfully.
-- Preflight returns a blocked result when bwrap, RTM_NEWADDR, user namespace, or Operation not permitted appears in output.
-- Preflight uses the effective command_line setting.
-- Preflight does not write project-control state or generated files.
-- UI Run can use the preflight result to block executable execution before starting a session.
+- The Web Control Center navigation includes a Settings page link.
+- The Settings page shows the effective UI settings source and path.
+- The Settings page renders command_line, default_policy and timeout settings when present.
+- The Settings page is read-only in this task.
+- Existing Web Control Center tests continue to pass.
 
 ## Review Instructions
 
-- Verify that sandbox detection is shared with or consistent with the Codex adapter.
+- Verify that the route is read-only and does not mutate settings.
 
 ## Notes
 
-- The preflight should diagnose local execution readiness, not modify the environment.
+- This is the foundation for owner-editable settings in the browser.
 
 ## Useful CLI
 
 ```bash
-python scripts/taskctl.py task transition TASK-129 --to in_progress
-python scripts/taskctl.py task transition TASK-129 --to in_review
-python scripts/taskctl.py task approve TASK-129 --notes "..."
-python scripts/taskctl.py task transition TASK-129 --to done
-python scripts/aictl.py task report submit --task TASK-129 --file /path/to/report.json --confirm
+python scripts/taskctl.py task transition TASK-145 --to in_progress
+python scripts/taskctl.py task transition TASK-145 --to in_review
+python scripts/taskctl.py task approve TASK-145 --notes "..."
+python scripts/taskctl.py task transition TASK-145 --to done
+python scripts/aictl.py task report submit --task TASK-145 --file /path/to/report.json --confirm
 python scripts/taskctl.py prompt build --write
 ```

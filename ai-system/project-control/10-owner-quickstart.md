@@ -68,7 +68,7 @@ Each workflow posts to `/actions`, delegates through registered `aictl.py` workf
 
 `Pipeline` shows the supervised batch pipeline cockpit for queue preview, policy selection, current session state, gate outcomes, run-next, run-until-blocker and recent pipeline audit entries. It is supervised automation only; it does not approve Evolution Changes, accept final work, push, merge, or bypass review gates.
 
-Pipeline session IDs link to persistent detail pages such as `http://127.0.0.1:8765/pipeline/sessions/PSESS-012`. Use a session detail page to watch a running session, inspect expandable step records, bounded Codex stdout/stderr snippets, artifacts, queue snapshot, related audit events, changed files and blockers, or reopen completed, blocked, failed, stopped and archived sessions later. The page uses simple polling while a session is `running` and stops polling in terminal or owner-action states. It does not render full `CODEX_PROMPT.md` content and does not expose destructive git actions.
+Pipeline session IDs link to persistent detail pages such as `http://127.0.0.1:8765/pipeline/sessions/PSESS-012`. Use a session detail page to watch a running session, inspect expandable phase or step records, bounded Codex stdout/stderr snippets, artifacts, queue snapshot, related audit events, changed files and blockers, or reopen completed, blocked, failed, stopped and archived sessions later. Current phase-based sessions render from `phase_history`; older sessions without `phase_history` fall back to legacy `steps` and `gate_outcomes`. The page uses simple polling while a session is `running` and stops polling in terminal or owner-action states. It does not render full `CODEX_PROMPT.md` content and does not expose destructive git actions.
 
 `Actions` contains direct forms for Task creation, Bulk Task Import, health and repair checks, Task workflows, Task transitions, current Task changes, generated-output refreshes, and Codex/context builds. Bulk Task Import supports pasted JSON and `.json` or `.txt` file upload; leave Confirm unchecked for preview and check Confirm only when the preview is ready to create Tasks.
 
@@ -202,6 +202,20 @@ Policy presets decide what is allowed, but they do not remove owner gates:
 - `supervised_executable_local_commit` adds local-only commit policy after executable run, approved review gates, auto-close and commit-readiness gates pass. Push and merge remain forbidden.
 
 Executable pipeline policies pass `AI_PROJECT/generated/CODEX_PROMPT.md` to the local Codex command through stdin by default. The configured command must exactly match the policy allowlist. Owner-configured sandbox flags are allowed only when both `local_command` and `command_allowlist` include the exact command.
+
+UI settings provide the owner-facing command and timeout values:
+
+```bash
+python scripts/aictl.py ui settings show
+python scripts/aictl.py ui settings set command_line "codex exec --json"
+python scripts/aictl.py ui settings set preflight_timeout_sec 45
+python scripts/aictl.py ui settings set execution_timeout_sec 1800
+python scripts/aictl.py ui preflight
+```
+
+`command_line` is the shell-style UI setting. For executable policies, it is parsed into the resolved policy `codex.local_command` and exact `codex.command_allowlist`; those policy fields are what the local adapter enforces. `preflight_timeout_sec` applies to the UI readiness check before session creation. `execution_timeout_sec` applies to the actual local Codex adapter run. Do not use one timeout as evidence for the other.
+
+If a session blocks with `CODEX_ADAPTER_TIMEOUT`, inspect the session detail `execute` phase for timeout, duration, command and bounded stdout/stderr evidence. If a close or commit gate says report evidence is missing, submit a structured report with `python scripts/aictl.py task report submit --task TASK-001 --file REPORT.json --confirm`; stdout or chat text is not report evidence until submitted through that command.
 
 Manual local Codex preflight examples:
 

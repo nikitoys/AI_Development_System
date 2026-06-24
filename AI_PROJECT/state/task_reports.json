@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 5,
+  "revision": 7,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-19T22:08:50Z",
+  "updated_at": "2026-06-24T10:00:16Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -563,12 +563,168 @@
         ],
         "owner_decision_required": true
       }
+    },
+    {
+      "id": "RPT-006",
+      "task_id": "TASK-135",
+      "task_ref": "PIPEF-56",
+      "submitted_at": "2026-06-24T09:54:26Z",
+      "submitted_by": "human_owner",
+      "source_file": "/tmp/TASK-135-report.json",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-135",
+        "task_ref": "PIPEF-56",
+        "reported_task_id": "TASK-135",
+        "reported_task_ref": "PIPEF-56",
+        "implementation_summary": "Updated Web Control Center documentation to cover phase_history rendering, legacy steps/gate_outcomes fallback, UI command_line versus resolved policy codex.local_command, preflight versus execution timeouts, CODEX_ADAPTER_TIMEOUT, and missing report evidence.",
+        "changed_files": [
+          "ai-system/project-control/08-usage-guide.md",
+          "ai-system/project-control/10-owner-quickstart.md"
+        ],
+        "generated_files": [
+          "AI_PROJECT/generated/DOCS_GAPS.md"
+        ],
+        "checks": [
+          {
+            "name": "Task inspection",
+            "command": "python scripts/taskctl.py task show TASK-135",
+            "result": "passed",
+            "duration_sec": null,
+            "blocking": false,
+            "details": "Task context inspected before editing."
+          },
+          {
+            "name": "Documentation validation",
+            "command": "python scripts/docctl.py validate",
+            "result": "passed",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Validation completed with existing warnings, including content-hash warnings for edited docs because broader docctl.py scan was not run."
+          },
+          {
+            "name": "Generated documentation freshness",
+            "command": "python scripts/docctl.py check-generated",
+            "result": "passed",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Passed after regenerating documentation outputs."
+          },
+          {
+            "name": "Documentation render",
+            "command": "python scripts/docctl.py render",
+            "result": "passed",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Regenerated AI_PROJECT/generated/DOCS_GAPS.md."
+          },
+          {
+            "name": "Diff whitespace check",
+            "command": "git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md",
+            "result": "passed",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "No diff whitespace errors reported by Codex execution summary."
+          }
+        ],
+        "warnings": [
+          "docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run."
+        ],
+        "blockers": [],
+        "notes": [
+          "DOCS_GAPS.md was regenerated via docctl.py render, not manually edited.",
+          "Codex execution completed successfully with returncode 0 but did not submit a structured report automatically."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {}
+      }
+    },
+    {
+      "id": "RPT-007",
+      "task_id": "TASK-135",
+      "task_ref": "PIPEF-56",
+      "submitted_at": "2026-06-24T10:00:16Z",
+      "submitted_by": "human_owner",
+      "source_file": "/tmp/TASK-135-report-fixed.json",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-135",
+        "task_ref": "PIPEF-56",
+        "reported_task_id": "TASK-135",
+        "reported_task_ref": "PIPEF-56",
+        "implementation_summary": "Updated Web Control Center documentation to cover phase_history rendering, legacy steps/gate_outcomes fallback, UI command_line versus resolved policy codex.local_command, preflight versus execution timeouts, CODEX_ADAPTER_TIMEOUT, and missing report evidence.",
+        "changed_files": [
+          "ai-system/project-control/08-usage-guide.md",
+          "ai-system/project-control/10-owner-quickstart.md"
+        ],
+        "generated_files": [
+          "AI_PROJECT/generated/DOCS_GAPS.md"
+        ],
+        "checks": [
+          {
+            "name": "Task inspection",
+            "command": "python scripts/taskctl.py task show TASK-135",
+            "result": "passed",
+            "duration_sec": null,
+            "blocking": false,
+            "details": "Task context inspected before editing."
+          },
+          {
+            "name": "Documentation validation",
+            "command": "python scripts/docctl.py validate",
+            "result": "passed",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Validation completed with existing warnings, including content-hash warnings for edited docs because broader docctl.py scan was not run."
+          },
+          {
+            "name": "Generated documentation freshness",
+            "command": "python scripts/docctl.py check-generated",
+            "result": "passed",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Passed after regenerating documentation outputs."
+          },
+          {
+            "name": "Documentation render",
+            "command": "python scripts/docctl.py render",
+            "result": "passed",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Regenerated AI_PROJECT/generated/DOCS_GAPS.md."
+          },
+          {
+            "name": "Diff whitespace check",
+            "command": "git diff --check -- ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md",
+            "result": "passed",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "No diff whitespace errors reported by Codex execution summary."
+          }
+        ],
+        "warnings": [
+          "docctl.py validate reported existing content-hash warnings for the edited docs because broader docctl.py scan was not run."
+        ],
+        "blockers": [],
+        "notes": [
+          "DOCS_GAPS.md was regenerated via docctl.py render, not manually edited.",
+          "Codex execution completed successfully with returncode 0 but did not submit a structured report automatically."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "context_tokens": 0,
+          "prompt_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_strategy": "manual_report_not_measured"
+        }
+      }
     }
   ],
   "latest_by_task": {
     "TASK-046": "RPT-002",
     "TASK-047": "RPT-003",
     "TASK-049": "RPT-004",
-    "TASK-058": "RPT-005"
+    "TASK-058": "RPT-005",
+    "TASK-135": "RPT-007"
   }
 }

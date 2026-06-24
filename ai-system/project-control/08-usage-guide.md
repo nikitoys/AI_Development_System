@@ -399,6 +399,7 @@ Use the Web Control Center as the normal daily cockpit:
 Dashboard  current execution, queue and project doctor summary
 Tasks      filtered Task workflow cockpit
 Evolution  Change Proposal management
+Pipeline   supervised batch pipeline cockpit and session detail pages
 Actions    Task creation, Bulk Task Import, repair/check and workflow forms
 Doctor     detailed project health findings
 Generated  read-only generated output previews
@@ -464,6 +465,29 @@ approved/in_review    Accept Change
 ```
 
 These actions are owner-facing workflow helpers. Approval and acceptance still require explicit Human Owner notes and still route through registered workflows and `evolutionctl.py`. Codex must not approve, accept, archive or supersede Evolution Changes on behalf of the Human Owner.
+
+## Pipeline Cockpit And Session Details
+
+Use the `Pipeline` page for supervised queue runs. It shows queue preview, effective policy selection, current session state, stop reasons, gate outcomes, `run-next`, `run-until-blocker` and recent pipeline audit entries. Pipeline commands still route through `aictl.py` and the pipeline services. They do not approve Evolution Changes, accept final work, push, merge or bypass review gates.
+
+Current phase-based sessions store phase progress in `phase_history`. The Web Pipeline session detail page uses `phase_history` first and renders each entry as an expandable phase panel with phase label, status, reason, next action, blocker, changed/generated file counts, event counts, execution evidence and bounded log snippets when those artifacts exist. The most recent phase opens by default. When `phase_history` is present, the detail page does not fabricate a legacy `run_next` step.
+
+Older sessions may not have `phase_history`. For those sessions, the detail page falls back to the legacy `steps` records and their `gate_outcomes`, showing the Gate Flow, Gate Outcomes, linked artifacts and logs. If an older session has no step records at all, the page may show a planned `run_next` placeholder so the detail page remains readable.
+
+Pipeline UI settings are project-local settings in `AI_PROJECT/config/ui_settings.json`. Manage them through `aictl.py`, not by editing protected project-control state:
+
+```bash
+python scripts/aictl.py ui settings show
+python scripts/aictl.py ui settings init --confirm
+python scripts/aictl.py ui settings set command_line "codex exec --json"
+python scripts/aictl.py ui settings set preflight_timeout_sec 45
+python scripts/aictl.py ui settings set execution_timeout_sec 1800
+python scripts/aictl.py ui preflight
+```
+
+`command_line` is the owner-facing, shell-style command string for local Codex execution. For executable policy presets, the UI policy resolver parses `command_line` into the effective policy `codex.local_command` tuple and sets `codex.command_allowlist` to that exact command string. `codex.local_command` is the lower-level policy field enforced by the adapter. Non-executable/prompt-only policies do not require `command_line`.
+
+`preflight_timeout_sec` controls only the UI Codex readiness check used by `aictl.py ui preflight` and by `aictl.py ui run --preflight` before a confirmed executable run creates a pipeline session. `execution_timeout_sec` controls the actual local Codex adapter execution timeout by replacing the resolved policy `codex.timeout_sec`. Both values are optional integer seconds from `1` through `3600`; preflight timeout does not change execution timeout, and execution timeout does not change preflight.
 
 ## Bulk Task Import In The UI
 
@@ -938,6 +962,28 @@ python scripts/contextctl.py check-generated
 ```
 
 `planctl.py` currently supports `render`, but does not expose a `check-generated` command.
+
+## `CODEX_ADAPTER_TIMEOUT`
+
+The local Codex adapter exceeded the effective execution timeout. Inspect the Pipeline session detail page for the failed `execute` phase. Its Execution Evidence can show `CODEX_ADAPTER_TIMEOUT`, command, timeout, duration, prompt path, Context Pack path and bounded stdout/stderr snippets or log references.
+
+Use `execution_timeout_sec` only for the actual executable Codex run. If the readiness check is timing out before a session starts, adjust `preflight_timeout_sec` or pass the explicit preflight timeout flag. If execution times out, either reduce the Task scope, fix the configured `command_line` or sandbox behavior, or increase `execution_timeout_sec` only when the Human Owner accepts the longer local run.
+
+## Missing Codex Report Evidence
+
+Executable pipeline policies require a structured Codex execution report after the local command finishes. If no report exists, the Codex Report Gate fails and auto-close or local commit gates remain blocked. Review pages may show this as:
+
+```text
+No Codex execution report submitted for this task.
+```
+
+Submit the report through the governed command:
+
+```bash
+python scripts/aictl.py task report submit --task TASK-001 --file REPORT.json --confirm
+```
+
+Do not treat stdout, chat text or generated prompt content as report evidence unless it has been submitted through the report command.
 
 ## Unsupported Operation
 

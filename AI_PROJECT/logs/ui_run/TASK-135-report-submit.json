@@ -1,0 +1,45 @@
+{
+  "changed_files": [],
+  "command": "task.report.submit",
+  "data": {
+    "delegate": [
+      "python",
+      "scripts/taskctl.py",
+      "--root",
+      ".",
+      "--actor",
+      "human_owner",
+      "task",
+      "report",
+      "submit",
+      "--task",
+      "TASK-135",
+      "--file",
+      "/tmp/TASK-135-report.json",
+      "--confirm",
+      "--json"
+    ],
+    "result": {
+      "event_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/events/task-report-events.jsonl",
+      "owner_decision_required": false,
+      "report_id": "RPT-006",
+      "revision_after": 6,
+      "revision_before": 5,
+      "state_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/state/task_reports.json",
+      "task_id": "TASK-135",
+      "task_ref": "PIPEF-56"
+    },
+    "returncode": 0
+  },
+  "domain": "task",
+  "errors": [],
+  "events": [],
+  "generated_files": [],
+  "message": "Delegated command completed.",
+  "next_actions": [],
+  "ok": true,
+  "owner_action_required": null,
+  "revision_after": null,
+  "revision_before": null,
+  "warnings": []
+}

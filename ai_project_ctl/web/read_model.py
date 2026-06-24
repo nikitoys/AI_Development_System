@@ -54,6 +54,15 @@ GENERATED_VIEW_FILES = (
 PIPELINE_DEFAULT_POLICY = "dry_run"
 PIPELINE_ORDER_OPTIONS = {"execution", "owner", "selected"}
 PIPELINE_DETAIL_AUDIT_LAST = 25
+PIPELINE_PHASE_LABELS = {
+    "queue_preview": "Queue Preview",
+    "prepare": "Prepare",
+    "execute": "Codex Execute",
+    "collect_report": "Collect Report",
+    "verify": "Verify",
+    "review": "Review",
+    "close": "Close",
+}
 
 COMMIT_COMPLETED_TASK_STATUSES = {"done"}
 COMMIT_ACCEPTED_CHANGE_STATUSES = {"accepted"}
@@ -976,6 +985,7 @@ def _validation_issue(issue: Any) -> dict[str, str]:
 def _pipeline_session_summary(session: Mapping[str, Any]) -> dict[str, Any]:
     policy = _mapping(session.get("policy_snapshot"))
     selected_queue = _mapping(session.get("selected_queue"))
+    phases = _pipeline_phase_rows(session)
     steps = [
         _pipeline_step_summary(step)
         for step in session.get("steps") or []
@@ -1002,6 +1012,12 @@ def _pipeline_session_summary(session: Mapping[str, Any]) -> dict[str, Any]:
         "started_at": session.get("started_at"),
         "finished_at": session.get("finished_at"),
         "attempt_counters": dict(_mapping(session.get("attempt_counters"))),
+        "current_phase": session.get("current_phase"),
+        "current_phase_status": session.get("current_phase_status"),
+        "blocked_by": session.get("blocked_by"),
+        "next_action": session.get("next_action"),
+        "phase_rows": phases,
+        "recent_phase_rows": phases[-5:],
         "gate_outcomes": gates,
         "recent_gates": gates[-5:],
         "steps": steps,
@@ -1012,6 +1028,41 @@ def _pipeline_session_summary(session: Mapping[str, Any]) -> dict[str, Any]:
         "commit_ids": _string_list(session.get("commit_ids")),
         "audit_event_ids": _string_list(session.get("audit_event_ids")),
     }
+
+
+def _pipeline_phase_rows(session: Mapping[str, Any]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    history = session.get("phase_history")
+    if not isinstance(history, Sequence) or isinstance(history, (str, bytes)):
+        return rows
+
+    for index, entry in enumerate(history, start=1):
+        if not isinstance(entry, Mapping):
+            continue
+        phase = str(entry.get("phase") or "").strip()
+        artifacts = _mapping(entry.get("artifacts"))
+        rows.append(
+            {
+                "index": index,
+                "phase": phase,
+                "label": _pipeline_phase_label(phase),
+                "status": str(entry.get("status") or "unknown"),
+                "reason": str(entry.get("reason") or ""),
+                "next_action": str(entry.get("next_action") or ""),
+                "changed_files_count": len(_string_list(entry.get("changed_files"))),
+                "generated_files_count": len(_string_list(entry.get("generated_files"))),
+                "event_count": len(_string_list(entry.get("events"))),
+                "blocked_by": str(artifacts.get("blocked_by") or ""),
+            }
+        )
+    return rows
+
+
+def _pipeline_phase_label(phase: str) -> str:
+    normalized = phase.strip().lower().replace("-", "_")
+    if normalized in PIPELINE_PHASE_LABELS:
+        return PIPELINE_PHASE_LABELS[normalized]
+    return normalized.replace("_", " ").title() if normalized else "Unknown Phase"
 
 
 def _pipeline_step_summary(step: Mapping[str, Any]) -> dict[str, Any]:

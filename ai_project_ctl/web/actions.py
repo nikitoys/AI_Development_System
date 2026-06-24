@@ -10,7 +10,10 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
 from ai_project_ctl.core.registry import command_describe
-from ai_project_ctl.core.result import CommandError
+from ai_project_ctl.core.result import CommandError, CommandResult
+from ai_project_ctl.pipeline.batch import run_until_blocker
+from ai_project_ctl.pipeline.session import create_session
+from ai_project_ctl.pipeline.ui_policy import resolve_ui_pipeline_policy
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[2]
@@ -204,17 +207,20 @@ class WebActionExecutor:
             )
 
         descriptor = require_web_write_command(action.command_name)
-        command = [
-            self.python_executable,
-            str(SCRIPTS_DIR / "aictl.py"),
-            "--root",
-            str(self.root),
-            "--actor",
-            self.actor,
-            "--json",
-            *action.builder(fields),
-        ]
-        process = self._run(command)
+        if action.action_id == "ui.run_selected_task":
+            process = self._create_ui_selected_task_session(fields)
+        else:
+            command = [
+                self.python_executable,
+                str(SCRIPTS_DIR / "aictl.py"),
+                "--root",
+                str(self.root),
+                "--actor",
+                self.actor,
+                "--json",
+                *action.builder(fields),
+            ]
+            process = self._run(command)
         parsed = _parse_json(process.stdout)
         if not process.ok:
             raise WebActionError(
@@ -236,6 +242,77 @@ class WebActionExecutor:
             process=process,
             descriptor=descriptor,
             parsed_stdout=parsed,
+        )
+
+    def _create_ui_selected_task_session(
+        self,
+        fields: Mapping[str, str],
+    ) -> ActionProcessResult:
+        task_ref = _task_ref(fields)
+        try:
+            selected_policy = resolve_ui_pipeline_policy(root=self.root)
+            session_result = create_session(
+                root=self.root,
+                actor=self.actor,
+                policy=selected_policy,
+                policy_name=selected_policy.name,
+                task_refs=(task_ref,),
+                max_tasks=1,
+                order_by="selected",
+            )
+        except CommandError as exc:
+            raise WebActionError(
+                exc.code,
+                exc.message,
+                path=exc.path,
+                details={"action": "ui.run_selected_task", **exc.details},
+            ) from exc
+
+        result = session_result
+        if session_result.ok:
+            session_id = str(session_result.data.get("session_id") or "")
+            result = run_until_blocker(
+                session_id,
+                root=self.root,
+                actor=self.actor,
+                confirmed=True,
+            )
+            _merge_command_result_effects(result, session_result)
+            result.data.setdefault("created_session", session_result.data.get("session"))
+
+        result.data.setdefault("task_ref", task_ref)
+        result.data.setdefault("policy", selected_policy.name)
+        session_id = str(result.data.get("session_id") or "")
+        if session_id:
+            target = "/pipeline/sessions/{}".format(session_id)
+            result.data["session_href"] = target
+            result.data["redirect_target"] = target
+            next_action = "Open pipeline session {}.".format(session_id)
+            if next_action not in result.next_actions:
+                result.next_actions.append(next_action)
+        command = [
+            self.python_executable,
+            str(SCRIPTS_DIR / "aictl.py"),
+            "--root",
+            str(self.root),
+            "--actor",
+            self.actor,
+            "--json",
+            "ui",
+            "run",
+            task_ref,
+            "--confirm",
+        ]
+        return ActionProcessResult(
+            command=command,
+            returncode=0 if result.ok else 1,
+            stdout=json.dumps(
+                result.to_dict(),
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+            + "\n",
+            stderr="",
         )
 
     def _run(self, command: Sequence[str]) -> ActionProcessResult:
@@ -425,6 +502,10 @@ def _build_pipeline_session_create(fields: Mapping[str, str]) -> list[str]:
     return args
 
 
+def _build_ui_run_selected_task(fields: Mapping[str, str]) -> list[str]:
+    return ["ui", "run", _task_ref(fields), "--confirm"]
+
+
 def _build_pipeline_run_next(fields: Mapping[str, str]) -> list[str]:
     args = ["pipeline", "run-next"]
     session_id = _field(fields, "session_id")
@@ -577,6 +658,26 @@ def _action_result_summary(
     return summary
 
 
+def _merge_command_result_effects(
+    target: CommandResult,
+    *sources: CommandResult,
+) -> None:
+    for source in sources:
+        _extend_unique(target.changed_files, source.changed_files)
+        _extend_unique(target.generated_files, source.generated_files)
+        _extend_unique(target.events, source.events)
+        target.warnings.extend(source.warnings)
+
+
+def _extend_unique(target: list[str], values: Sequence[str]) -> None:
+    seen = set(target)
+    for value in values:
+        text = str(value)
+        if text and text not in seen:
+            target.append(text)
+            seen.add(text)
+
+
 def _string_list(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
@@ -664,6 +765,12 @@ ACTIONS: dict[str, WebAction] = {
         command_name="pipeline.session.create",
         label="Create pipeline session",
         builder=_build_pipeline_session_create,
+    ),
+    "ui.run_selected_task": WebAction(
+        action_id="ui.run_selected_task",
+        command_name="pipeline.run_until_blocker",
+        label="Run selected task",
+        builder=_build_ui_run_selected_task,
     ),
     "pipeline.run_next": WebAction(
         action_id="pipeline.run_next",

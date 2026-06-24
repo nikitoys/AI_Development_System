@@ -123,6 +123,7 @@ class CodexPreflightTests(unittest.TestCase):
                         "{} -c \"import sys; sys.stdin.read(); print('ready')\""
                     ).format(sys.executable),
                     "default_policy": "supervised_executable_local_commit",
+                    "preflight_timeout_sec": "44",
                 },
             )
 
@@ -131,6 +132,7 @@ class CodexPreflightTests(unittest.TestCase):
             self.assertEqual(completed_process.returncode, 0, completed_process.stderr)
             payload = json.loads(completed_process.stdout)
             self.assertEqual(payload["data"]["status"], "passed")
+            self.assertEqual(payload["data"]["timeout_sec"], 44)
             self.assertFalse((root / "AI_PROJECT" / "state").exists())
             self.assertFalse((root / "AI_PROJECT" / "generated").exists())
 
@@ -138,6 +140,7 @@ class CodexPreflightTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write_batch_project_state(root, task_count=1)
+            write_settings(root, {"preflight_timeout_sec": "77"})
             blocked = CommandResult.success(
                 command="ui.preflight",
                 domain="ui",
@@ -166,16 +169,58 @@ class CodexPreflightTests(unittest.TestCase):
             args.json = True
 
             stdout = io.StringIO()
-            with mock.patch.object(aictl, "run_codex_preflight", return_value=blocked):
+            with mock.patch.object(
+                aictl,
+                "run_codex_preflight",
+                return_value=blocked,
+            ) as preflight:
                 with mock.patch.object(aictl, "create_session") as create_session:
                     with contextlib.redirect_stdout(stdout):
                         exit_code = args.func(args)
 
             self.assertEqual(exit_code, 0)
+            preflight.assert_called_once_with(root=str(root), timeout_sec=77)
             payload = json.loads(stdout.getvalue())
             self.assertEqual(payload["data"]["outcome"], "blocked")
             create_session.assert_not_called()
             self.assertFalse(pipeline_state_path(root).exists())
+
+    def test_ui_run_preflight_timeout_cli_overrides_setting(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_batch_project_state(root, task_count=1)
+            write_settings(root, {"preflight_timeout_sec": "77"})
+            blocked = CommandResult.success(
+                command="ui.preflight",
+                domain="ui",
+                message="Codex preflight blocked.",
+                data={"status": "blocked"},
+            )
+            args = aictl.build_parser().parse_args(
+                [
+                    "--root",
+                    str(root),
+                    "ui",
+                    "run",
+                    "APP-01",
+                    "--confirm",
+                    "--preflight",
+                    "--preflight-timeout-sec",
+                    "12",
+                ]
+            )
+            args.json = True
+
+            stdout = io.StringIO()
+            with mock.patch(
+                "scripts.aictl.run_codex_preflight",
+                return_value=blocked,
+            ) as preflight:
+                with contextlib.redirect_stdout(stdout):
+                    exit_code = args.func(args)
+
+            self.assertEqual(exit_code, 0)
+            preflight.assert_called_once_with(root=str(root), timeout_sec=12)
 
 
 if __name__ == "__main__":
