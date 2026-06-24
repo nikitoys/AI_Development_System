@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `992`
+Revision: `1014`
 
 ## Executable Now
 
@@ -18,6 +18,19 @@ Revision: `992`
 - `PIPEF-43 (TASK-122)` [planned] `EPIC-009` priority `1` — PIPE-043 Add fake Codex happy path integration test
 - `PIPEF-44 (TASK-123)` [planned] `EPIC-009` priority `1` — PIPE-044 Add fake reviewer close integration test
 - `PIPEF-45 (TASK-124)` [planned] `EPIC-009` priority `1` — PIPE-045 Update phase pipeline usage guide
+- `PIPEF-57 (TASK-136)` [planned] `EPIC-009` priority `1` — PIPE-052 Add pipeline session status JSON endpoint
+- `PIPEF-58 (TASK-137)` [planned] `EPIC-009` priority `1` — PIPE-053 Add partial polling refresh to Pipeline session page
+- `PIPEF-60 (TASK-139)` [planned] `EPIC-009` priority `1` — PIPE-055 Render Run and Resume controls beside task rows
+- `PIPEF-61 (TASK-140)` [planned] `EPIC-009` priority `1` — PIPE-056 Stream Codex adapter output to runtime log files
+- `PIPEF-62 (TASK-141)` [planned] `EPIC-009` priority `1` — PIPE-057 Add pipeline session live log tail endpoint
+- `PIPEF-63 (TASK-142)` [planned] `EPIC-009` priority `1` — PIPE-058 Add live Codex log panel to Pipeline session page
+- `PIPEF-64 (TASK-143)` [planned] `EPIC-009` priority `1` — PIPE-059 Keep runtime pipeline logs out of task diff gates
+- `PIPEF-65 (TASK-144)` [planned] `EPIC-009` priority `1` — PIPE-060 Document Web live status and Codex log behavior
+- `PIPEF-67 (TASK-146)` [planned] `EPIC-009` priority `1` — PIPE-062 Add confirmed Web actions for UI settings updates
+- `PIPEF-68 (TASK-147)` [planned] `EPIC-009` priority `1` — PIPE-063 Add internal change-gate bypass UI setting
+- `PIPEF-69 (TASK-148)` [planned] `EPIC-009` priority `1` — PIPE-064 Render internal Change gate bypass checkbox
+- `PIPEF-70 (TASK-149)` [planned] `EPIC-009` priority `1` — PIPE-065 Apply internal Change gate bypass to UI runs
+- `PIPEF-71 (TASK-150)` [planned] `EPIC-009` priority `1` — PIPE-066 Document Web Settings and internal bypass behavior
 
 ## Waiting For Dependencies
 
@@ -273,3 +286,7 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-56 (TASK-135)` [done] `EPIC-009` priority `1` — PIPE-051 Document phase-based Web Pipeline display behavior
   - `status_not_executable`: status is done
+- `PIPEF-59 (TASK-138)` [done] `EPIC-009` priority `1` — PIPE-054 Add Web action for single-task UI run
+  - `status_not_executable`: status is done
+- `PIPEF-66 (TASK-145)` [in_progress] `EPIC-009` priority `1` — PIPE-061 Add Web Settings page route
+  - `status_not_executable`: status is in_progress

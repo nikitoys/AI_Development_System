@@ -1,15 +1,15 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/generated/CONTEXT_PACK.md -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-135 PIPE-051 Document phase-based Web Pipeline display behavior Document how the Web Control Center displays phase-based pipeline sessions and timeout settings. Owner-facing documentation should explain phase_history display, legacy fallback and UI timeout configuration. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Document that Web Pipeline UI uses phase_history for phase-based sessions. Document the legacy steps and gate_outcomes fallback for older sessions. Document command_line, preflight_timeout_sec and execution_timeout_sec UI settings. Add troubleshooting notes for CODEX_ADAPTER_TIMEOUT and missing report evidence. Do not change generated documentation manually. Do not document unimplemented automation behavior as available. Do not change pipeline code in this documentation task. ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md Documentation explains phase_history-based Web Pipeline rendering. Documentation explains the difference between command_line and policy local_command. Documentation explains preflight timeout versus execution timeout. Documentation includes a troubleshooting note for CODEX_ADAPTER_TIMEOUT. Generated documentation checks can be rerun without manual edits to generated files. Verify that the docs do not overstate automation maturity.","schema_version":1,"task_id":"TASK-135"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-145 PIPE-061 Add Web Settings page route Add a Web Control Center Settings page that displays effective UI settings and their source file. This creates the read-only Web UI surface for project-local settings before adding write actions. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add a Settings navigation item and route in the Web Control Center. Render effective UI settings including source, path and current values. Show settings in a human-readable form without requiring terminal commands. Add focused tests that the Settings page renders with default and project-file settings. Do not add settings mutation in this task. Do not change pipeline execution behavior. Do not expose non-UI project secrets or environment variables. ai_project_ctl/web/server.py tests/test_web_control_center.py The Web Control Center navigation includes a Settings page link. The Settings page shows the effective UI settings source and path. The Settings page renders command_line, default_policy and timeout settings when present. The Settings page is read-only in this task. Existing Web Control Center tests continue to pass. Verify that the route is read-only and does not mutate settings.","schema_version":1,"task_id":"TASK-145"} -->
 
 # Context Status
 
 Context pack exists: `true`
 Mode: `task`
-Task ID: `TASK-135`
+Task ID: `TASK-145`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `989`
+Tasks revision: `1014`
 Indexed source documents: `10`
 Indexed chunks: `891`
 Selected chunks: `8`

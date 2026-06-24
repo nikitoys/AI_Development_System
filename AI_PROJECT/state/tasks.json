@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 992,
-  "current_task_id": null,
+  "revision": 1014,
+  "current_task_id": "TASK-145",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-24T10:16:33Z",
+  "updated_at": "2026-06-24T10:39:21Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -9473,6 +9473,873 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 56
+    },
+    {
+      "id": "TASK-136",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-052 Add pipeline session status JSON endpoint",
+      "status": "planned",
+      "summary": "Add a read-only JSON endpoint that returns compact live status for one pipeline session.",
+      "description": "This enables the Web Control Center to refresh session status without reloading the full HTML page.",
+      "priority": 1,
+      "order": 57,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a read-only route for compact pipeline session status JSON.",
+        "Return session id, status, current task, current phase, phase status, stop reason, next action and phase history summary.",
+        "Return stable errors for missing or invalid session ids.",
+        "Add focused tests for successful and missing-session responses."
+      ],
+      "out_of_scope": [
+        "Do not mutate pipeline session state.",
+        "Do not change pipeline execution behavior.",
+        "Do not add frontend polling in this task."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "The new endpoint returns JSON for an existing pipeline session.",
+        "The JSON payload contains status, current_phase, current_phase_status, stop_reason, next_action and phase_history summary.",
+        "The endpoint does not render full HTML.",
+        "Missing sessions return a stable non-success response.",
+        "Existing Web Control Center pages continue to render."
+      ],
+      "review_instructions": [
+        "Verify that the endpoint is read-only and does not invalidate or mutate caches unnecessarily."
+      ],
+      "notes": [
+        "This task supports lightweight status polling every few seconds."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T10:23:20Z",
+      "updated_at": "2026-06-24T10:23:20Z",
+      "uid": "tsk_3b24331932c4",
+      "ref": "PIPEF-57",
+      "legacy_id": "TASK-136",
+      "aliases": [
+        "TASK-136"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 57
+    },
+    {
+      "id": "TASK-137",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-053 Add partial polling refresh to Pipeline session page",
+      "status": "planned",
+      "summary": "Update the Pipeline session page to poll compact session status and refresh only status-related UI blocks.",
+      "description": "The page should update live session status without full-page reloads.",
+      "priority": 1,
+      "order": 58,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add minimal browser JavaScript for polling the session status endpoint.",
+        "Refresh only status summary, current phase, phase table, progress and owner next action.",
+        "Stop polling when the session reaches a terminal or owner-action-required state.",
+        "Add tests or HTML assertions for the polling script and data attributes."
+      ],
+      "out_of_scope": [
+        "Do not add live log streaming in this task.",
+        "Do not change backend pipeline phase execution.",
+        "Do not introduce external frontend dependencies."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "Pipeline session pages include polling metadata for the current session.",
+        "The page can refresh status from JSON without reloading the whole document.",
+        "Polling interval is approximately two seconds.",
+        "Polling stops for blocked, failed, completed or stopped sessions.",
+        "The implementation uses standard browser APIs only."
+      ],
+      "review_instructions": [
+        "Check that the page still works when JavaScript is disabled."
+      ],
+      "notes": [
+        "Keep the implementation small and compatible with the current standard-library web server."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T10:23:21Z",
+      "updated_at": "2026-06-24T10:23:21Z",
+      "uid": "tsk_f9cb256de173",
+      "ref": "PIPEF-58",
+      "legacy_id": "TASK-137",
+      "aliases": [
+        "TASK-137"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 58
+    },
+    {
+      "id": "TASK-138",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-054 Add Web action for single-task UI run",
+      "status": "done",
+      "summary": "Add a Web action that starts a single selected task through the effective UI run pipeline policy.",
+      "description": "This backend action is the server-side counterpart for a task-row Run button.",
+      "priority": 1,
+      "order": 59,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a confirmed Web action for running one selected task reference.",
+        "Use the same effective UI settings and policy resolution as the existing ui run command.",
+        "Create a single-task pipeline session with max_tasks set to one and selected order.",
+        "Return the created session id and redirect or link target for the session page."
+      ],
+      "out_of_scope": [
+        "Do not implement the task-row button rendering in this task.",
+        "Do not auto-approve Evolution Changes.",
+        "Do not bypass existing pipeline confirmation gates."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "The new Web action requires explicit confirmation.",
+        "The action creates a single-task pipeline session for the selected task.",
+        "The action uses the effective UI policy configured by UI settings.",
+        "The action response exposes the created session id.",
+        "Existing Web actions continue to pass their tests."
+      ],
+      "review_instructions": [
+        "Verify that the action does not expose push, merge, reset or discard behavior."
+      ],
+      "notes": [
+        "The action should behave like a web-safe equivalent of python scripts/aictl.py ui run TASK --confirm."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-24T10:37:20Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-24T10:23:22Z",
+      "updated_at": "2026-06-24T10:37:21Z",
+      "uid": "tsk_877f5512287c",
+      "ref": "PIPEF-59",
+      "legacy_id": "TASK-138",
+      "aliases": [
+        "TASK-138"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 59
+    },
+    {
+      "id": "TASK-139",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-055 Render Run and Resume controls beside task rows",
+      "status": "planned",
+      "summary": "Add task-row controls that let the owner start or continue one selected task from the Web Tasks page.",
+      "description": "The owner should not need to copy task refs into terminal commands for normal single-task execution.",
+      "priority": 1,
+      "order": 60,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Render a Run control for planned, ready and changes_requested task rows.",
+        "Render a Continue or Resume control for in_progress task rows when supported by the pipeline.",
+        "Hide run controls for done, archived and deferred task rows.",
+        "Show compact owner guidance when a task requires an approved linked Evolution Change."
+      ],
+      "out_of_scope": [
+        "Do not implement the backend run action in this task.",
+        "Do not change task lifecycle transitions.",
+        "Do not auto-create or auto-approve changes."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "Runnable task rows show a confirmed Run form.",
+        "In-progress task rows show continuation guidance or a supported Resume control.",
+        "Terminal or inactive tasks do not show Run controls.",
+        "Task row controls submit the selected task reference.",
+        "Tests assert task-row action visibility for planned, ready, in_progress and done tasks."
+      ],
+      "review_instructions": [
+        "Verify that forms require confirmation before starting execution."
+      ],
+      "notes": [
+        "This task is UI rendering only and should use the Web action added separately."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T10:23:23Z",
+      "updated_at": "2026-06-24T10:23:23Z",
+      "uid": "tsk_5d977a401b64",
+      "ref": "PIPEF-60",
+      "legacy_id": "TASK-139",
+      "aliases": [
+        "TASK-139"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 60
+    },
+    {
+      "id": "TASK-140",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-056 Stream Codex adapter output to runtime log files",
+      "status": "planned",
+      "summary": "Write Codex local-command stdout and stderr to session runtime log files while execution is running.",
+      "description": "This makes Codex execution observable before the process exits or times out.",
+      "priority": 1,
+      "order": 61,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Update the local-command Codex adapter to tee stdout and stderr into per-session runtime log files.",
+        "Record log file paths and byte offsets in execute phase artifacts.",
+        "Keep captured stdout and stderr summary behavior for existing downstream gates.",
+        "Add tests for successful log file creation and bounded metadata."
+      ],
+      "out_of_scope": [
+        "Do not change Codex prompt contents.",
+        "Do not change the structured report requirement.",
+        "Do not implement Web log polling in this task."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/codex_adapter.py",
+        "ai_project_ctl/pipeline/execute_phase.py",
+        "tests/pipeline/test_codex_adapter.py",
+        "tests/pipeline/test_execute_phase.py"
+      ],
+      "acceptance_criteria": [
+        "Codex stdout is written to a per-session runtime stdout log during execution.",
+        "Codex stderr is written to a per-session runtime stderr log during execution.",
+        "Execute phase artifacts include enough metadata for the Web UI to locate log files.",
+        "Existing captured stdout and stderr refs still work after command completion.",
+        "Tests cover log writing for a local-command adapter run."
+      ],
+      "review_instructions": [
+        "Verify that runtime logs are not treated as task implementation files."
+      ],
+      "notes": [
+        "Use a runtime or logs path that is intended to be ignored by Git."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T10:23:23Z",
+      "updated_at": "2026-06-24T10:23:23Z",
+      "uid": "tsk_f1d62b78004f",
+      "ref": "PIPEF-61",
+      "legacy_id": "TASK-140",
+      "aliases": [
+        "TASK-140"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 61
+    },
+    {
+      "id": "TASK-141",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-057 Add pipeline session live log tail endpoint",
+      "status": "planned",
+      "summary": "Add a read-only endpoint that returns appended chunks from a pipeline session runtime log.",
+      "description": "The Web UI needs a safe tail API to display live Codex execution output.",
+      "priority": 1,
+      "order": 62,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a read-only log tail endpoint for a session id, phase and stream name.",
+        "Support offset-based reads so the browser can request only new bytes.",
+        "Bound the maximum returned chunk size.",
+        "Return stable errors for missing logs, invalid streams or invalid offsets."
+      ],
+      "out_of_scope": [
+        "Do not implement the live log panel UI in this task.",
+        "Do not expose arbitrary file paths.",
+        "Do not mutate pipeline state."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "The endpoint can return the next chunk from a known session runtime log.",
+        "The response includes the new offset and whether the stream is still running when available.",
+        "Invalid stream names are rejected.",
+        "Large responses are bounded by a fixed server-side limit.",
+        "The endpoint cannot read files outside the session runtime log area."
+      ],
+      "review_instructions": [
+        "Check path traversal handling and log size bounds carefully."
+      ],
+      "notes": [
+        "This endpoint should be safe for local loopback use only."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T10:23:24Z",
+      "updated_at": "2026-06-24T10:23:24Z",
+      "uid": "tsk_ed7c7c10d9eb",
+      "ref": "PIPEF-62",
+      "legacy_id": "TASK-141",
+      "aliases": [
+        "TASK-141"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 62
+    },
+    {
+      "id": "TASK-142",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-058 Add live Codex log panel to Pipeline session page",
+      "status": "planned",
+      "summary": "Display live stdout and stderr output for the current Codex execute phase in the Web Pipeline session page.",
+      "description": "The owner should be able to expand a live log panel and see what Codex is doing while execute is running.",
+      "priority": 1,
+      "order": 63,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Render a live log panel for running or recently completed execute phases.",
+        "Poll the live log tail endpoint for stdout and stderr chunks.",
+        "Show command, elapsed time, timeout and running status near the log panel.",
+        "Preserve the existing post-completion captured log snippets."
+      ],
+      "out_of_scope": [
+        "Do not change Codex execution behavior.",
+        "Do not add terminal emulation.",
+        "Do not expose unbounded logs in the browser."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "A running execute phase shows a visible Codex Execute running status.",
+        "The page can append new stdout or stderr chunks without a full reload.",
+        "The log panel shows command_ref, elapsed time and timeout when available.",
+        "Completed execute phases still show captured snippets.",
+        "Tests assert that live log UI elements render for sessions with runtime log artifacts."
+      ],
+      "review_instructions": [
+        "Verify that log text is escaped before rendering."
+      ],
+      "notes": [
+        "This task depends logically on backend log files and tail endpoint, but do not reference same-import tasks in depends_on."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T10:23:25Z",
+      "updated_at": "2026-06-24T10:23:25Z",
+      "uid": "tsk_163fe8b208a9",
+      "ref": "PIPEF-63",
+      "legacy_id": "TASK-142",
+      "aliases": [
+        "TASK-142"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 63
+    },
+    {
+      "id": "TASK-143",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-059 Keep runtime pipeline logs out of task diff gates",
+      "status": "planned",
+      "summary": "Ensure runtime UI and pipeline log files do not cause task verification diff gates to fail.",
+      "description": "Runtime logs and local UI run artifacts should not be counted as implementation changes for a task.",
+      "priority": 1,
+      "order": 64,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Review where UI run logs and pipeline runtime logs are written.",
+        "Ensure runtime log paths are ignored by Git or excluded from diff gate comparison.",
+        "Add tests for diff gate behavior with runtime log files present.",
+        "Document the chosen runtime log path in a code comment or focused note."
+      ],
+      "out_of_scope": [
+        "Do not ignore source files, tests or project-control state files.",
+        "Do not weaken diff gate checks for real task implementation files.",
+        "Do not delete existing owner logs."
+      ],
+      "allowed_files": [
+        ".gitignore",
+        "ai_project_ctl/pipeline/verify_phase.py",
+        "ai_project_ctl/pipeline/diff_gate.py",
+        "tests/pipeline/test_verify_phase.py"
+      ],
+      "acceptance_criteria": [
+        "Runtime log files under the chosen logs path do not appear as missing_from_report.",
+        "Real source, test and documentation changes still require report coverage.",
+        "Git ignore rules cover generated runtime log artifacts where appropriate.",
+        "Tests cover runtime log exclusion and normal source diff blocking.",
+        "The behavior is documented near the exclusion logic."
+      ],
+      "review_instructions": [
+        "Verify that this does not hide AI_PROJECT/state changes unintentionally."
+      ],
+      "notes": [
+        "This addresses noisy verification failures caused by UI run JSON and live execution logs."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T10:23:26Z",
+      "updated_at": "2026-06-24T10:23:26Z",
+      "uid": "tsk_3b9b49da1c41",
+      "ref": "PIPEF-64",
+      "legacy_id": "TASK-143",
+      "aliases": [
+        "TASK-143"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 64
+    },
+    {
+      "id": "TASK-144",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-060 Document Web live status and Codex log behavior",
+      "status": "planned",
+      "summary": "Document the Web UI live status refresh, task Run controls and Codex live log behavior for the owner.",
+      "description": "Owner-facing docs should explain how to observe running pipeline sessions without guessing from terminal commands.",
+      "priority": 1,
+      "order": 65,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Document partial status refresh behavior on Pipeline session pages.",
+        "Document task-row Run and Resume controls.",
+        "Document live Codex stdout and stderr log panels.",
+        "Add troubleshooting notes for REPORT_MISSING and diff gate missing_from_report cases."
+      ],
+      "out_of_scope": [
+        "Do not document unimplemented behavior as complete.",
+        "Do not edit generated documentation manually.",
+        "Do not change Web UI code in this documentation task."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/08-usage-guide.md",
+        "ai-system/project-control/10-owner-quickstart.md"
+      ],
+      "acceptance_criteria": [
+        "Documentation explains how to tell whether Codex is actually running.",
+        "Documentation explains when to use task-row Run versus Resume Session.",
+        "Documentation explains where live logs appear and what stdout versus stderr means.",
+        "Documentation explains how to respond to REPORT_MISSING.",
+        "Documentation explains that runtime logs should not be reported as implementation files."
+      ],
+      "review_instructions": [
+        "Verify that docs match implemented behavior and do not overpromise."
+      ],
+      "notes": [
+        "Run documentation validation and generated checks after edits."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T10:23:26Z",
+      "updated_at": "2026-06-24T10:23:26Z",
+      "uid": "tsk_065318711223",
+      "ref": "PIPEF-65",
+      "legacy_id": "TASK-144",
+      "aliases": [
+        "TASK-144"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 65
+    },
+    {
+      "id": "TASK-145",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-061 Add Web Settings page route",
+      "status": "in_progress",
+      "summary": "Add a Web Control Center Settings page that displays effective UI settings and their source file.",
+      "description": "This creates the read-only Web UI surface for project-local settings before adding write actions.",
+      "priority": 1,
+      "order": 66,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a Settings navigation item and route in the Web Control Center.",
+        "Render effective UI settings including source, path and current values.",
+        "Show settings in a human-readable form without requiring terminal commands.",
+        "Add focused tests that the Settings page renders with default and project-file settings."
+      ],
+      "out_of_scope": [
+        "Do not add settings mutation in this task.",
+        "Do not change pipeline execution behavior.",
+        "Do not expose non-UI project secrets or environment variables."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "The Web Control Center navigation includes a Settings page link.",
+        "The Settings page shows the effective UI settings source and path.",
+        "The Settings page renders command_line, default_policy and timeout settings when present.",
+        "The Settings page is read-only in this task.",
+        "Existing Web Control Center tests continue to pass."
+      ],
+      "review_instructions": [
+        "Verify that the route is read-only and does not mutate settings."
+      ],
+      "notes": [
+        "This is the foundation for owner-editable settings in the browser."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T10:37:49Z",
+      "updated_at": "2026-06-24T10:39:21Z",
+      "uid": "tsk_432c3c726e2d",
+      "ref": "PIPEF-66",
+      "legacy_id": "TASK-145",
+      "aliases": [
+        "TASK-145"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 66
+    },
+    {
+      "id": "TASK-146",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-062 Add confirmed Web actions for UI settings updates",
+      "status": "planned",
+      "summary": "Add confirmed Web actions that update allowed project-local UI settings from the Settings page.",
+      "description": "This lets the Human Owner change supported UI settings without running terminal commands.",
+      "priority": 1,
+      "order": 67,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add Web actions for updating explicitly allowed UI settings keys.",
+        "Require confirmation before writing AI_PROJECT/config/ui_settings.json.",
+        "Reuse existing UI settings load and upsert behavior where possible.",
+        "Return action results that show changed key, new value and settings file path."
+      ],
+      "out_of_scope": [
+        "Do not allow arbitrary file writes.",
+        "Do not allow editing settings outside AI_PROJECT/config/ui_settings.json.",
+        "Do not add the internal change-gate bypass checkbox in this task."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "Settings update actions require explicit confirmation.",
+        "Only allowlisted setting keys can be updated through the Web UI.",
+        "Successful updates write AI_PROJECT/config/ui_settings.json.",
+        "Action results show the updated key and settings path.",
+        "Tests cover successful update, missing confirmation and disallowed key behavior."
+      ],
+      "review_instructions": [
+        "Verify that arbitrary setting keys are not accepted through Web actions unless intentionally allowed."
+      ],
+      "notes": [
+        "The CLI may still support generic upsert, but Web writes should be narrower."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T10:37:50Z",
+      "updated_at": "2026-06-24T10:37:50Z",
+      "uid": "tsk_644b6c563035",
+      "ref": "PIPEF-67",
+      "legacy_id": "TASK-146",
+      "aliases": [
+        "TASK-146"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 67
+    },
+    {
+      "id": "TASK-147",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-063 Add internal change-gate bypass UI setting",
+      "status": "planned",
+      "summary": "Add a disabled-by-default UI setting for explicitly bypassing approved Change requirements on internal project-control tasks.",
+      "description": "This introduces the setting data contract without yet changing pipeline execution behavior.",
+      "priority": 1,
+      "order": 68,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a default false setting for internal project-control Change gate bypass.",
+        "Parse boolean string values safely for the new setting.",
+        "Expose the setting through effective UI settings output.",
+        "Add tests for default, true, false and invalid values."
+      ],
+      "out_of_scope": [
+        "Do not bypass the Change gate in this task.",
+        "Do not change built-in pipeline policy presets.",
+        "Do not enable the setting by default."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/ui_settings.py",
+        "tests/test_ui_settings.py"
+      ],
+      "acceptance_criteria": [
+        "Effective UI settings include the new bypass setting with default false.",
+        "String values such as true, false, 1 and 0 are parsed predictably.",
+        "Invalid boolean values produce a stable settings error or validation failure.",
+        "Existing UI settings behavior remains compatible.",
+        "Tests cover the new setting defaults and parsing."
+      ],
+      "review_instructions": [
+        "Verify that this task adds only configuration support and does not weaken execution gates."
+      ],
+      "notes": [
+        "Suggested setting name: allow_internal_change_gate_bypass."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T10:37:51Z",
+      "updated_at": "2026-06-24T10:37:51Z",
+      "uid": "tsk_b678836b5b83",
+      "ref": "PIPEF-68",
+      "legacy_id": "TASK-147",
+      "aliases": [
+        "TASK-147"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 68
+    },
+    {
+      "id": "TASK-148",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-064 Render internal Change gate bypass checkbox",
+      "status": "planned",
+      "summary": "Render a confirmed Settings page checkbox for toggling internal project-control Change gate bypass.",
+      "description": "The Human Owner should be able to enable or disable the bypass setting from the Web Settings page.",
+      "priority": 1,
+      "order": 69,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a checkbox control for the internal Change gate bypass setting.",
+        "Make the checkbox submit through the confirmed UI settings Web action.",
+        "Show a warning that the bypass is for internal project-control tasks only.",
+        "Add tests for checked, unchecked and warning text rendering."
+      ],
+      "out_of_scope": [
+        "Do not implement bypass execution semantics in this task.",
+        "Do not enable bypass automatically.",
+        "Do not hide existing Change approval actions."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "The Settings page shows a checkbox for the internal Change gate bypass setting.",
+        "The checkbox reflects the effective current setting value.",
+        "Submitting the checkbox requires confirmation.",
+        "The UI includes clear warning text about internal-only use.",
+        "Tests cover checkbox rendering for enabled and disabled states."
+      ],
+      "review_instructions": [
+        "Verify that the warning text is visible near the checkbox."
+      ],
+      "notes": [
+        "This is a UI-only task and should use the settings write action added separately."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T10:37:52Z",
+      "updated_at": "2026-06-24T10:37:52Z",
+      "uid": "tsk_c3115928f476",
+      "ref": "PIPEF-69",
+      "legacy_id": "TASK-148",
+      "aliases": [
+        "TASK-148"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 69
+    },
+    {
+      "id": "TASK-149",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-065 Apply internal Change gate bypass to UI runs",
+      "status": "planned",
+      "summary": "Allow confirmed UI runs to skip approved Change requirements only for internal project-control tasks when the bypass setting is enabled.",
+      "description": "This implements the actual execution behavior behind the Settings checkbox with strict safety boundaries and audit evidence.",
+      "priority": 1,
+      "order": 70,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Define an internal project-control task predicate for safe bypass eligibility.",
+        "Apply the bypass only to UI-created single-task sessions when the setting is enabled.",
+        "Record explicit phase artifacts or audit details when the Change gate is bypassed.",
+        "Keep approved Change requirements unchanged for non-internal tasks and non-UI execution paths."
+      ],
+      "out_of_scope": [
+        "Do not disable the Change gate globally.",
+        "Do not bypass token, report, verify, review, close or commit gates.",
+        "Do not auto-approve or auto-create Evolution Changes."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/prepare_phase.py",
+        "ai_project_ctl/pipeline/runner.py",
+        "ai_project_ctl/pipeline/ui_policy.py",
+        "scripts/aictl.py",
+        "tests/pipeline/test_prepare_phase.py",
+        "tests/test_ui_run_command.py"
+      ],
+      "acceptance_criteria": [
+        "When the setting is disabled, UI runs still require an approved linked Change.",
+        "When the setting is enabled, eligible internal project-control tasks can pass prepare without an approved linked Change.",
+        "Non-internal tasks still block on missing approved Change even when the setting is enabled.",
+        "Bypass usage is recorded in phase artifacts or audit details.",
+        "Tests cover enabled, disabled and non-internal task behavior."
+      ],
+      "review_instructions": [
+        "Review the internal-task predicate carefully to avoid allowing product-code tasks through the bypass."
+      ],
+      "notes": [
+        "Internal project-control tasks should be narrowly defined, for example by allowed files under AI_PROJECT, ai_project_ctl, scripts/aictl.py, tests for project-control, or ai-system project-control docs."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T10:37:52Z",
+      "updated_at": "2026-06-24T10:37:52Z",
+      "uid": "tsk_e84bda130e82",
+      "ref": "PIPEF-70",
+      "legacy_id": "TASK-149",
+      "aliases": [
+        "TASK-149"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 70
+    },
+    {
+      "id": "TASK-150",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-066 Document Web Settings and internal bypass behavior",
+      "status": "planned",
+      "summary": "Document the Web Settings page and the internal Change gate bypass setting for the Human Owner.",
+      "description": "Owner-facing docs should explain when the bypass setting is appropriate and what it does not skip.",
+      "priority": 1,
+      "order": 71,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Document the Web Settings page and supported settings.",
+        "Document command_line, default_policy, timeout settings and the internal bypass checkbox.",
+        "Explain that the bypass is disabled by default and internal-task-only.",
+        "Explain which gates are not bypassed by the setting."
+      ],
+      "out_of_scope": [
+        "Do not document unimplemented behavior as available.",
+        "Do not edit generated documentation manually.",
+        "Do not change Web UI code in this documentation task."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/08-usage-guide.md",
+        "ai-system/project-control/10-owner-quickstart.md"
+      ],
+      "acceptance_criteria": [
+        "Documentation explains how to open and use the Web Settings page.",
+        "Documentation explains the internal Change gate bypass setting and its risks.",
+        "Documentation states that the bypass does not skip token, report, verify, review, close or commit gates.",
+        "Documentation explains that the setting is off by default.",
+        "Documentation validation and generated checks can be rerun after edits."
+      ],
+      "review_instructions": [
+        "Verify that the docs do not encourage bypassing governance for normal product tasks."
+      ],
+      "notes": [
+        "This task should be done after implementation behavior is clear."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T10:37:53Z",
+      "updated_at": "2026-06-24T10:37:53Z",
+      "uid": "tsk_98a41c988bbe",
+      "ref": "PIPEF-71",
+      "legacy_id": "TASK-150",
+      "aliases": [
+        "TASK-150"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 71
     }
   ]
 }

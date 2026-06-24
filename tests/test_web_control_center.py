@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from ai_project_ctl.core.registry import command_describe
+from ai_project_ctl.core.result import CommandResult
 from ai_project_ctl.web.actions import WebActionError, WebActionExecutor
 from ai_project_ctl.web.read_model import (
     ReadOnlyProjectModel,
@@ -2103,6 +2104,32 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('value="EPIC-006"', body)
         self.assertIn("Workflow Automation", body)
 
+    def test_actions_page_renders_run_selected_task_form(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "CTL-01",
+                        "status": "ready",
+                        "title": "Ready task",
+                        "epic_id": "EPIC-001",
+                    }
+                ],
+                current_task_id="TASK-001",
+            )
+            status, _, body = route(
+                "/actions",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Run Selected Task", body)
+        self.assertIn('value="ui.run_selected_task"', body)
+        self.assertIn('name="task" value="CTL-01"', body)
+
     def test_task_import_web_action_previews_without_confirmation(self):
         calls = []
         payload = '{"tasks":[{"epic":"EPIC-006","title":"Imported"}]}'
@@ -2758,6 +2785,91 @@ class WebControlCenterTests(unittest.TestCase):
                 self.assertEqual(Path(argv[1]).name, "aictl.py")
                 self.assertEqual(argv[-len(expected_tail) :], expected_tail)
 
+    def test_ui_run_selected_task_web_action_creates_single_task_session(self):
+        class Policy:
+            name = "supervised_executable_local_commit"
+
+        session_result = CommandResult.success(
+            command="pipeline.session.create",
+            domain="pipeline",
+            message="Created pipeline session.",
+            data={"session_id": "PSESS-009", "session": {"id": "PSESS-009"}},
+        )
+        run_result = CommandResult.success(
+            command="pipeline.run_until_blocker",
+            domain="pipeline",
+            message="TOKEN_GATE_BLOCKED: Token evidence required.",
+            data={
+                "session_id": "PSESS-009",
+                "stop_code": "TOKEN_GATE_BLOCKED",
+                "stop_reason": "Token evidence required.",
+            },
+        )
+
+        with patch(
+            "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
+            return_value=Policy(),
+        ) as resolve_policy:
+            with patch(
+                "ai_project_ctl.web.actions.create_session",
+                return_value=session_result,
+            ) as create:
+                with patch(
+                    "ai_project_ctl.web.actions.run_until_blocker",
+                    return_value=run_result,
+                ) as run_until:
+                    with patch("ai_project_ctl.web.actions.subprocess.run") as run:
+                        result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                            {
+                                "action": "ui.run_selected_task",
+                                "confirm": "yes",
+                                "task": "TASK-001",
+                            }
+                        )
+
+        resolve_policy.assert_called_once_with(root=Path("/tmp/project"))
+        create.assert_called_once()
+        create_kwargs = create.call_args.kwargs
+        self.assertEqual(create_kwargs["actor"], "tester")
+        self.assertEqual(create_kwargs["policy_name"], Policy.name)
+        self.assertEqual(create_kwargs["task_refs"], ("TASK-001",))
+        self.assertEqual(create_kwargs["max_tasks"], 1)
+        self.assertEqual(create_kwargs["order_by"], "selected")
+        run_until.assert_called_once_with(
+            "PSESS-009",
+            root=Path("/tmp/project"),
+            actor="tester",
+            confirmed=True,
+        )
+        run.assert_not_called()
+
+        payload = result.to_dict()
+        self.assertTrue(result.ok)
+        self.assertEqual(payload["command"], "pipeline.run_until_blocker")
+        self.assertEqual(payload["result"]["data"]["session_id"], "PSESS-009")
+        self.assertEqual(payload["result"]["data"]["created_session"]["id"], "PSESS-009")
+        self.assertEqual(
+            payload["result"]["data"]["session_href"],
+            "/pipeline/sessions/PSESS-009",
+        )
+        self.assertEqual(
+            payload["result"]["data"]["redirect_target"],
+            "/pipeline/sessions/PSESS-009",
+        )
+
+    def test_ui_run_selected_task_action_requires_confirmation(self):
+        with patch("ai_project_ctl.web.actions.create_session") as create:
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor("/tmp/project", actor="tester").execute(
+                    {
+                        "action": "ui.run_selected_task",
+                        "task": "TASK-001",
+                    }
+                )
+
+        self.assertEqual(raised.exception.code, "WEB_ACTION_CONFIRMATION_REQUIRED")
+        create.assert_not_called()
+
     def test_pipeline_run_action_requires_confirmation(self):
         with patch("ai_project_ctl.web.actions.subprocess.run") as run:
             with self.assertRaises(WebActionError) as raised:
@@ -2907,6 +3019,7 @@ class WebControlCenterTests(unittest.TestCase):
                     "message": "TOKEN_BUDGET_FAILURE: Token Budget Gate failed.",
                     "data": {
                         "session_id": "PSESS-001",
+                        "session_href": "/pipeline/sessions/PSESS-001",
                         "stop_code": "TOKEN_BUDGET_FAILURE",
                         "stop_reason": "Token Budget Gate failed.",
                         "current_task_id": "TASK-064",
@@ -2954,6 +3067,7 @@ class WebControlCenterTests(unittest.TestCase):
         body = render_action_result(result)
 
         self.assertIn("Pipeline Result", body)
+        self.assertIn('href="/pipeline/sessions/PSESS-001"', body)
         self.assertIn("TOKEN_BUDGET_FAILURE", body)
         self.assertIn("Blockers", body)
         self.assertIn("Pipeline References", body)

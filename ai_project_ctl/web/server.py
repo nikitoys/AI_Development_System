@@ -2624,6 +2624,11 @@ def render_actions(data: Mapping[str, Any]) -> str:
         "<h2>Task Workflows</h2>",
         table(("Workflow", "Command", "Step Preview"), workflow_rows, "No workflows."),
         action_form(
+            "ui.run_selected_task",
+            [input_field("task", "Task", default_task)],
+            button_label="Run Selected Task",
+        ),
+        action_form(
             "task.prepare_for_codex",
             [input_field("task", "Task", default_task)],
         ),
@@ -2971,8 +2976,23 @@ def _pipeline_result_panel(data: Mapping[str, Any]) -> list[str]:
     ):
         value = str(data.get(key) or "").strip()
         if value:
-            facts.append("<li><strong>{}</strong>: {}</li>".format(escape(label), escape(value)))
+            facts.append(
+                "<li><strong>{}</strong>: {}</li>".format(
+                    escape(label),
+                    escape(value),
+                )
+            )
     if facts:
+        session_href = str(
+            data.get("session_href") or data.get("redirect_target") or ""
+        ).strip()
+        if session_href:
+            facts.append(
+                '<li><strong>Session Page</strong>: <a href="{}">{}</a></li>'.format(
+                    escape(session_href),
+                    escape(session_href),
+                )
+            )
         sections.extend(
             [
                 '<section class="result-section">',
