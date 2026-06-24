@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 from ai_project_ctl.core.registry import command_describe
 from ai_project_ctl.core.result import CommandResult
+from ai_project_ctl.ui_settings import ui_settings_path
 from ai_project_ctl.web.actions import WebActionError, WebActionExecutor
 from ai_project_ctl.web.read_model import (
     ReadOnlyProjectModel,
@@ -89,6 +90,57 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(payload["doctor"]["overall_status"], "UNKNOWN")
         self.assertFalse(payload["doctor"]["cache"]["cached"])
 
+    def test_settings_page_renders_default_ui_settings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/settings", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn('href="/settings" class="active">Settings</a>', body)
+        self.assertIn("defaults", body)
+        self.assertIn(str(ui_settings_path(root)), body)
+        self.assertIn("<code>command_line</code>", body)
+        self.assertIn("<code>codex exec</code>", body)
+        self.assertIn("<code>default_policy</code>", body)
+        self.assertIn("<code>supervised_executable_local_commit</code>", body)
+        self.assertNotIn("<form", body)
+        self.assertNotIn('value="ui.settings.set"', body)
+
+    def test_settings_page_renders_project_file_ui_settings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            path = write_ui_settings(
+                root,
+                {
+                    "command_line": "codex exec --json",
+                    "default_policy": "supervised",
+                    "execution_timeout_sec": "1800",
+                    "preflight_timeout_sec": 45,
+                },
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/settings", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("project_file", body)
+        self.assertIn(str(path), body)
+        self.assertIn("<code>command_line</code>", body)
+        self.assertIn("<code>codex exec --json</code>", body)
+        self.assertIn("<code>default_policy</code>", body)
+        self.assertIn("<code>supervised</code>", body)
+        self.assertIn("<code>execution_timeout_sec</code>", body)
+        self.assertIn("<code>1800</code>", body)
+        self.assertIn("<code>preflight_timeout_sec</code>", body)
+        self.assertIn("<code>45</code>", body)
+        self.assertNotIn("<form", body)
+        self.assertNotIn('value="ui.settings.init"', body)
+        self.assertNotIn('value="ui.settings.set"', body)
+
     def test_tasks_page_filters_searches_groups_and_shows_readable_refs(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -163,6 +215,109 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('value="task.request_changes"', body)
         self.assertIn("Build Codex prompt with context", body)
         self.assertIn('name="confirm" value="yes" required', body)
+
+    def test_tasks_page_shows_task_row_run_resume_and_terminal_visibility(self):
+        pipeline = pipeline_detail_state(
+            status="blocked",
+            step_status="blocked",
+            finished_at="",
+            current_step_status="blocked",
+            stop_reason="Waiting for owner action.",
+            next_action="Resolve owner blocker, then resume.",
+        )
+        pipeline["current_session_id"] = "PSESS-ROW"
+        session = pipeline["sessions"][0]
+        session["id"] = "PSESS-ROW"
+        session["current_task_id"] = "TASK-203"
+        session["current_task_ref"] = "RUN-01"
+        session["selected_queue"]["task_refs"] = ["RUN-01"]
+        session["selected_queue"]["epic_ids"] = ["EPIC-ROW"]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-201",
+                        "ref": "PLAN-01",
+                        "legacy_id": "TASK-201",
+                        "status": "planned",
+                        "title": "Planned row run",
+                        "epic_id": "EPIC-ROW",
+                        "epic_key": "ROW",
+                        "order": 1,
+                    },
+                    {
+                        "id": "TASK-202",
+                        "ref": "READY-01",
+                        "legacy_id": "TASK-202",
+                        "status": "ready",
+                        "title": "Ready row run",
+                        "summary": "Requires an approved Evolution Change.",
+                        "epic_id": "EPIC-ROW",
+                        "epic_key": "ROW",
+                        "order": 2,
+                    },
+                    {
+                        "id": "TASK-203",
+                        "ref": "RUN-01",
+                        "legacy_id": "TASK-203",
+                        "status": "in_progress",
+                        "title": "In progress row resume",
+                        "epic_id": "EPIC-ROW",
+                        "epic_key": "ROW",
+                        "order": 3,
+                    },
+                    {
+                        "id": "TASK-204",
+                        "ref": "DONE-01",
+                        "legacy_id": "TASK-204",
+                        "status": "done",
+                        "title": "Done row terminal",
+                        "epic_id": "EPIC-ROW",
+                        "epic_key": "ROW",
+                        "order": 4,
+                    },
+                ],
+                current_task_id="TASK-203",
+                epics=[
+                    {
+                        "id": "EPIC-ROW",
+                        "key": "ROW",
+                        "status": "active",
+                        "title": "Row Controls",
+                    }
+                ],
+                changes=[
+                    {
+                        "id": "CHG-201",
+                        "status": "ready",
+                        "title": "Ready row required change",
+                        "linked_tasks": ["READY-01"],
+                    }
+                ],
+                pipeline=pipeline,
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/tasks?show_done=1&group=none", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn('value="ui.run_selected_task"', body)
+        self.assertIn('name="task" value="PLAN-01"', body)
+        self.assertIn('name="task" value="READY-01"', body)
+        self.assertIn(
+            "Requires approved linked Evolution Change before execution.",
+            body,
+        )
+        self.assertIn("CHG-201 ready", body)
+        self.assertIn("<button type=\"submit\">Resume</button>", body)
+        self.assertIn('value="pipeline.run_next"', body)
+        self.assertIn('name="session_id" value="PSESS-ROW"', body)
+        self.assertIn('name="confirm" value="yes" required', body)
+        self.assertIn("DONE-01", body)
+        self.assertNotIn('name="task" value="DONE-01"', body)
 
     def test_current_execution_panel_shows_ready_prompt_and_copy_instruction(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -3775,6 +3930,13 @@ def write_web_state(
             "".join(json.dumps(event) + "\n" for event in pipeline_events),
             encoding="utf-8",
         )
+
+
+def write_ui_settings(root, payload):
+    path = ui_settings_path(root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
 
 
 def multipart_body(fields, files):

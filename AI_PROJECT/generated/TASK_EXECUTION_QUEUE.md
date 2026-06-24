@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1014`
+Revision: `1025`
 
 ## Executable Now
 
@@ -12,7 +12,6 @@ Revision: `1014`
 - `PIPE-20 (TASK-071)` [planned] `EPIC-007` priority `1` — PIPE-20 Document Dynamic Pipeline Policy Presets
 - `PIPE-21 (TASK-072)` [planned] `EPIC-007` priority `1` — PIPE-21 Fix Pipeline Queue Epic Filter Behavior
 - `PIPE-22 (TASK-073)` [planned] `EPIC-007` priority `1` — PIPE-22 Add Pipeline Session Resume After Blocker
-- `PIPEF-40 (TASK-119)` [ready] `EPIC-009` priority `1` — PIPE-040 Add tests for phase model and mutations
 - `PIPEF-41 (TASK-120)` [planned] `EPIC-009` priority `1` — PIPE-041 Add tests for queue prepare execute report phases
 - `PIPEF-42 (TASK-121)` [planned] `EPIC-009` priority `1` — PIPE-042 Add tests for git diff gate
 - `PIPEF-43 (TASK-122)` [planned] `EPIC-009` priority `1` — PIPE-043 Add fake Codex happy path integration test
@@ -20,7 +19,6 @@ Revision: `1014`
 - `PIPEF-45 (TASK-124)` [planned] `EPIC-009` priority `1` — PIPE-045 Update phase pipeline usage guide
 - `PIPEF-57 (TASK-136)` [planned] `EPIC-009` priority `1` — PIPE-052 Add pipeline session status JSON endpoint
 - `PIPEF-58 (TASK-137)` [planned] `EPIC-009` priority `1` — PIPE-053 Add partial polling refresh to Pipeline session page
-- `PIPEF-60 (TASK-139)` [planned] `EPIC-009` priority `1` — PIPE-055 Render Run and Resume controls beside task rows
 - `PIPEF-61 (TASK-140)` [planned] `EPIC-009` priority `1` — PIPE-056 Stream Codex adapter output to runtime log files
 - `PIPEF-62 (TASK-141)` [planned] `EPIC-009` priority `1` — PIPE-057 Add pipeline session live log tail endpoint
 - `PIPEF-63 (TASK-142)` [planned] `EPIC-009` priority `1` — PIPE-058 Add live Codex log panel to Pipeline session page
@@ -264,6 +262,8 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-39 (TASK-118)` [done] `EPIC-009` priority `1` — PIPE-039 Add CI exit-code mode for pipeline
   - `status_not_executable`: status is done
+- `PIPEF-40 (TASK-119)` [in_progress] `EPIC-009` priority `1` — PIPE-040 Add tests for phase model and mutations
+  - `status_not_executable`: status is in_progress
 - `PIPEF-46 (TASK-125)` [done] `EPIC-009` priority `1` — Add UI settings defaults and loader
   - `status_not_executable`: status is done
 - `PIPEF-47 (TASK-126)` [done] `EPIC-009` priority `1` — Add UI settings CLI commands
@@ -288,5 +288,7 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-59 (TASK-138)` [done] `EPIC-009` priority `1` — PIPE-054 Add Web action for single-task UI run
   - `status_not_executable`: status is done
-- `PIPEF-66 (TASK-145)` [in_progress] `EPIC-009` priority `1` — PIPE-061 Add Web Settings page route
-  - `status_not_executable`: status is in_progress
+- `PIPEF-60 (TASK-139)` [done] `EPIC-009` priority `1` — PIPE-055 Render Run and Resume controls beside task rows
+  - `status_not_executable`: status is done
+- `PIPEF-66 (TASK-145)` [done] `EPIC-009` priority `1` — PIPE-061 Add Web Settings page route
+  - `status_not_executable`: status is done

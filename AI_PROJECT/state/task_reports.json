@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 7,
+  "revision": 8,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-24T10:00:16Z",
+  "updated_at": "2026-06-24T11:15:49Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -718,6 +718,67 @@
           "token_count_strategy": "manual_report_not_measured"
         }
       }
+    },
+    {
+      "id": "RPT-008",
+      "task_id": "TASK-119",
+      "task_ref": "PIPEF-40",
+      "submitted_at": "2026-06-24T11:15:49Z",
+      "submitted_by": "human_owner",
+      "source_file": "/tmp/TASK-119-report.json",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-119",
+        "task_ref": "PIPEF-40",
+        "reported_task_id": "TASK-119",
+        "reported_task_ref": "PIPEF-40",
+        "implementation_summary": "Added phase-session tests covering legacy sessions without phase fields, malformed phase-field validation, phase-result mutation from a planned session, phase_history appending, and completed/archived terminal rejection.",
+        "changed_files": [
+          "tests/test_pipeline_session_phase.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "Pytest focused suite",
+            "command": "python -m pytest tests/test_pipeline_phase.py tests/test_pipeline_session_phase.py",
+            "result": "skipped",
+            "duration_sec": null,
+            "blocking": false,
+            "details": "pytest is not installed in the current environment."
+          },
+          {
+            "name": "Unittest focused suite",
+            "command": "python -m unittest tests.test_pipeline_phase tests.test_pipeline_session_phase",
+            "result": "passed",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Focused unittest verification passed: 9 tests."
+          },
+          {
+            "name": "Diff whitespace check",
+            "command": "git diff --check -- tests/test_pipeline_session_phase.py tests/test_pipeline_phase.py",
+            "result": "passed",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "No diff whitespace errors reported by Codex execution summary."
+          }
+        ],
+        "warnings": [
+          "pytest is not installed, so pytest verification was skipped.",
+          "No distinct start_phase helper exists in the inspected source or command catalog; Codex covered existing phase-start behavior through available session mutation behavior."
+        ],
+        "blockers": [],
+        "notes": [
+          "Codex execution completed successfully with returncode 0 but did not submit a structured report automatically."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "context_tokens": 0,
+          "prompt_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_strategy": "manual_report_not_measured"
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -725,6 +786,7 @@
     "TASK-047": "RPT-003",
     "TASK-049": "RPT-004",
     "TASK-058": "RPT-005",
-    "TASK-135": "RPT-007"
+    "TASK-135": "RPT-007",
+    "TASK-119": "RPT-008"
   }
 }

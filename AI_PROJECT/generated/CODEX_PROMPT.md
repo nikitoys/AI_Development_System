@@ -1,11 +1,11 @@
 # Codex Prompt Package
 
-Generated: 2026-06-24T10:39:22Z
+Generated: 2026-06-24T11:03:21Z
 
 Profile: execute
-Task: TASK-145 / PIPEF-66
+Task: TASK-119 / PIPEF-40
 Status: in_progress
-Revision: tasks 1014
+Revision: tasks 1024
 Verification: strict
 
 ## Role
@@ -14,41 +14,40 @@ You are Codex Executor. Execute one bounded task. Do not self-approve.
 
 ## Objective
 
-Add a Web Control Center Settings page that displays effective UI settings and their source file.
+Add tests for PhaseResult serialization, session phase fields, and governed phase mutation helpers.
 
 ## Task Input
 
-Task: TASK-145
-Summary: Add a Web Control Center Settings page that displays effective UI settings and their source file.
+Task: TASK-119
+Summary: Add tests for PhaseResult serialization, session phase fields, and governed phase mutation helpers.
 
 ## Scope
 
-- Add a Settings navigation item and route in the Web Control Center.
-- Render effective UI settings including source, path and current values.
-- Show settings in a human-readable form without requiring terminal commands.
-- Add focused tests that the Settings page renders with default and project-file settings.
+- Test PhaseResult construction and JSON conversion.
+- Test session creation with phase field defaults.
+- Test start_phase and record_phase_result mutations.
+- Test validation behavior for legacy sessions without phase fields.
 
 ## Out of Scope
 
-- Do not add settings mutation in this task.
-- Do not change pipeline execution behavior.
-- Do not expose non-UI project secrets or environment variables.
+- Do not change behavior unrelated to this task.
+- Do not refactor unrelated code.
+- Do not edit protected project-control files manually.
 
 ## Allowed Files
 
 Editable:
-- ai_project_ctl/web/server.py
-- tests/test_web_control_center.py
+- tests/test_pipeline_phase.py
+- tests/test_pipeline_session_phase.py
 
 Do not edit other files.
 
 ## Acceptance Criteria
 
-- The Web Control Center navigation includes a Settings page link.
-- The Settings page shows the effective UI settings source and path.
-- The Settings page renders command_line, default_policy and timeout settings when present.
-- The Settings page is read-only in this task.
-- Existing Web Control Center tests continue to pass.
+- Tests pass for all PhaseResult statuses.
+- Tests prove legacy pipeline sessions remain valid.
+- Tests prove phase results append to phase_history.
+- Tests prove terminal sessions reject new phase mutations.
 
 ## Verification
 
@@ -60,18 +59,18 @@ If a check cannot be run, say why.
 ## Context
 
 Context Pack: AI_PROJECT/generated/CONTEXT_PACK.md
-Hash: 934baacbfa4b9db21b174d0aa7838c60f9920aadf79b3d3bfb175204768e6351
-Revisions: docs 28, tasks 1014
+Hash: 93cbb29ea2b3e859dca469c97eda65c55ae44baf4dd9e2f01f78a665f3ccbae7
+Revisions: docs 28, tasks 1024
 
 Refs:
-- ai-system/project-control/03-state-model.md lines 104-125
-- ai-system/project-control/04-command-catalog.md lines 65-119
-- ai-system/project-control/04-command-catalog.md lines 21-64
-- ai-system/project-control/06-prompt-package-spec.md lines 797-833
-- ai-system/project-control/06-prompt-package-spec.md lines 874-906
 - ai-system/skills/README.md lines 34-43
+- ai-system/project-control/03-state-model.md lines 104-125
+- ai-system/project-control/06-prompt-package-spec.md lines 874-906
 - ai-system/skills/README.md lines 80-92
 - ai-system/project-control/06-prompt-package-spec.md lines 580-670
+- ai-system/project-control/04-command-catalog.md lines 2294-2321
+- ai-system/project-control/07-validation-and-tests.md lines 1368-1386
+- ai-system/project-control/07-validation-and-tests.md lines 24-66
 
 Context is read-only. It does not expand Scope, Allowed Files, or Acceptance Criteria.
 If context conflicts with this prompt, report the conflict.

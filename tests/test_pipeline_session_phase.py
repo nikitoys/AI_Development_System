@@ -63,6 +63,41 @@ def load_events(root: Path) -> list[dict]:
     ]
 
 
+def legacy_session(**overrides: object) -> dict:
+    session = {
+        "id": "PSESS-001",
+        "status": "planned",
+        "selected_queue": {
+            "selection": "manual",
+            "task_refs": [],
+            "epic_ids": [],
+            "statuses": [],
+            "max_tasks": 1,
+            "order_by": "execution",
+        },
+        "policy_snapshot": policy_snapshot(),
+        "current_task_id": "",
+        "current_task_ref": "",
+        "current_step": "",
+        "current_step_status": "planned",
+        "attempt_counters": {"steps": 0, "tasks": 0, "rework": 0},
+        "gate_outcomes": [],
+        "steps": [],
+        "linked_change_ids": [],
+        "report_ids": [],
+        "review_ids": [],
+        "commit_ids": [],
+        "audit_event_ids": ["EVT-001"],
+        "stop_reason": "",
+        "created_at": "2026-06-23T00:00:00Z",
+        "updated_at": "2026-06-23T00:00:00Z",
+        "started_at": "",
+        "finished_at": "",
+    }
+    session.update(overrides)
+    return session
+
+
 class PipelineSessionPhaseTests(unittest.TestCase):
     def test_create_session_initializes_phase_defaults(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -81,42 +116,77 @@ class PipelineSessionPhaseTests(unittest.TestCase):
 
     def test_legacy_session_without_phase_fields_remains_valid(self):
         state = default_pipeline_state(now="2026-06-23T00:00:00Z")
-        state["sessions"].append(
-            {
-                "id": "PSESS-001",
-                "status": "planned",
-                "selected_queue": {
-                    "selection": "manual",
-                    "task_refs": [],
-                    "epic_ids": [],
-                    "statuses": [],
-                    "max_tasks": 1,
-                    "order_by": "execution",
-                },
-                "policy_snapshot": policy_snapshot(),
-                "current_task_id": "",
-                "current_task_ref": "",
-                "current_step": "",
-                "current_step_status": "planned",
-                "attempt_counters": {"steps": 0, "tasks": 0, "rework": 0},
-                "gate_outcomes": [],
-                "steps": [],
-                "linked_change_ids": [],
-                "report_ids": [],
-                "review_ids": [],
-                "commit_ids": [],
-                "audit_event_ids": ["EVT-001"],
-                "stop_reason": "",
-                "created_at": "2026-06-23T00:00:00Z",
-                "updated_at": "2026-06-23T00:00:00Z",
-                "started_at": "",
-                "finished_at": "",
-            }
-        )
+        state["sessions"].append(legacy_session())
 
         result = validate_pipeline_state(state)
 
         self.assertTrue(result.ok, [error.to_dict() for error in result.errors])
+
+    def test_validation_rejects_partial_or_malformed_phase_fields(self):
+        cases = [
+            (
+                legacy_session(current_phase="prepare"),
+                {"PIPELINE_MISSING_PHASE_FIELD"},
+            ),
+            (
+                legacy_session(
+                    current_phase="prepare",
+                    current_phase_status="unknown",
+                    blocked_by="",
+                    next_action="",
+                    phase_history=[],
+                ),
+                {"PIPELINE_INVALID_PHASE_STATUS"},
+            ),
+            (
+                legacy_session(
+                    current_phase="prepare",
+                    current_phase_status="passed",
+                    blocked_by="",
+                    next_action="",
+                    phase_history=[{"phase": "prepare", "status": "unknown"}],
+                ),
+                {"PIPELINE_INVALID_PHASE_STATUS"},
+            ),
+        ]
+
+        for session, expected_codes in cases:
+            with self.subTest(expected_codes=sorted(expected_codes)):
+                state = default_pipeline_state(now="2026-06-23T00:00:00Z")
+                state["sessions"].append(session)
+
+                result = validate_pipeline_state(state)
+
+                self.assertFalse(result.ok)
+                codes = {error.code for error in result.errors}
+                self.assertTrue(expected_codes.issubset(codes), codes)
+
+    def test_record_phase_result_starts_planned_session_phase_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_reference_state(root)
+            session_id = create_session(
+                root=root,
+                actor="tester",
+                current_task_id="TASK-001",
+            ).data["session_id"]
+
+            result = record_phase_result(
+                session_id,
+                PhaseResult.passed("prepare", reason="Prompt ready"),
+                root=root,
+                actor="tester",
+                command="pipeline.phase.prepare",
+            )
+
+            self.assertTrue(result.ok)
+            session = load_pipeline(root)["sessions"][0]
+            self.assertEqual(session["status"], "running")
+            self.assertEqual(session["current_phase"], "prepare")
+            self.assertEqual(session["current_phase_status"], "passed")
+            self.assertEqual(session["phase_history"][0]["phase"], "prepare")
+            self.assertEqual(session["phase_history"][0]["status"], "passed")
+            self.assertEqual(session["started_at"], session["updated_at"])
 
     def test_record_phase_result_appends_history_and_updates_current_fields(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -182,23 +252,33 @@ class PipelineSessionPhaseTests(unittest.TestCase):
                 ],
             )
 
-    def test_terminal_session_rejects_phase_result_mutation(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            write_reference_state(root)
-            session_id = create_session(root=root, actor="tester").data["session_id"]
-            complete_session(session_id, root=root, actor="tester")
+    def test_terminal_sessions_reject_phase_result_mutation(self):
+        for terminal_status in ("completed", "archived"):
+            with self.subTest(terminal_status=terminal_status):
+                with tempfile.TemporaryDirectory() as tmp:
+                    root = Path(tmp)
+                    write_reference_state(root)
+                    session_id = create_session(
+                        root=root,
+                        actor="tester",
+                        status="archived" if terminal_status == "archived" else "planned",
+                    ).data["session_id"]
+                    if terminal_status == "completed":
+                        complete_session(session_id, root=root, actor="tester")
 
-            with self.assertRaises(PipelineSessionError) as raised:
-                record_phase_result(
-                    session_id,
-                    PhaseResult.passed("prepare"),
-                    root=root,
-                    actor="tester",
-                    command="pipeline.phase.prepare",
-                )
+                    with self.assertRaises(PipelineSessionError) as raised:
+                        record_phase_result(
+                            session_id,
+                            PhaseResult.passed("prepare"),
+                            root=root,
+                            actor="tester",
+                            command="pipeline.phase.prepare",
+                        )
 
-            self.assertEqual(raised.exception.code, "PIPELINE_SESSION_NOT_ACTIVE")
+                    self.assertEqual(
+                        raised.exception.code,
+                        "PIPELINE_SESSION_NOT_ACTIVE",
+                    )
 
 
 def policy_snapshot() -> dict:

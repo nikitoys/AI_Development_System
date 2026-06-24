@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `1014`
-Current task: `TASK-145`
+Revision: `1025`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -2128,7 +2128,7 @@ Acceptance criteria:
 
 ### PIPEF-40 (TASK-119) — PIPE-040 Add tests for phase model and mutations
 
-Status: `ready`
+Status: `in_progress`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_5bcaf7cb78cb`, legacy `TASK-119`, aliases `TASK-119`, local `PIPEF` / `40`
@@ -2465,7 +2465,7 @@ Acceptance criteria:
 
 ### PIPEF-60 (TASK-139) — PIPE-055 Render Run and Resume controls beside task rows
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_5d977a401b64`, legacy `TASK-139`, aliases `TASK-139`, local `PIPEF` / `60`
@@ -2565,9 +2565,9 @@ Acceptance criteria:
 - Documentation explains how to respond to REPORT_MISSING.
 - Documentation explains that runtime logs should not be reported as implementation files.
 
-### PIPEF-66 (TASK-145) — PIPE-061 Add Web Settings page route ⭐
+### PIPEF-66 (TASK-145) — PIPE-061 Add Web Settings page route
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_432c3c726e2d`, legacy `TASK-145`, aliases `TASK-145`, local `PIPEF` / `66`
