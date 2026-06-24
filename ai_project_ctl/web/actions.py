@@ -15,6 +15,7 @@ from ai_project_ctl.pipeline.batch import run_until_blocker
 from ai_project_ctl.pipeline.session import create_session
 from ai_project_ctl.pipeline.ui_policy import resolve_ui_pipeline_policy
 from ai_project_ctl.ui_settings import (
+    INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     load_ui_settings,
     ui_settings_source,
     upsert_ui_setting,
@@ -50,6 +51,7 @@ PIPELINE_ORDER_OPTIONS = {"execution", "owner", "selected"}
 UI_SETTINGS_WEB_ALLOWED_KEYS = (
     "command_line",
     "default_policy",
+    INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     "execution_timeout_sec",
     "preflight_timeout_sec",
 )

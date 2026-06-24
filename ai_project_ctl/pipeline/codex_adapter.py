@@ -8,15 +8,20 @@ import re
 import shlex
 import subprocess
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
-from ai_project_ctl.core.store import read_json_file
+from ai_project_ctl import task_reports as task_report_service
+from ai_project_ctl.core.store import StoreError, read_json_file
 
+from .codex_report_parser import (
+    CODEX_REPORT_BLOCK_MISSING,
+    parse_codex_report_stdout,
+)
 from .policy import CodexAdapterMode, CodexExecutionMode, PipelinePolicy, PromptTransport
-from .state import task_reports_state_path
+from .state import task_reports_state_path, tasks_state_path
 from .token_budget import PASS as TOKEN_BUDGET_PASS
 from .token_budget import TokenBudgetGateResult
 
@@ -30,6 +35,7 @@ CODE_LOCAL_COMMAND_FAILED = "CODEX_ADAPTER_LOCAL_COMMAND_FAILED"
 CODE_SANDBOX_UNAVAILABLE = "CODEX_ADAPTER_SANDBOX_UNAVAILABLE"
 CODE_LOCAL_COMMAND_TIMEOUT = "CODEX_ADAPTER_TIMEOUT"
 CODE_REPORT_MISSING = "CODEX_ADAPTER_REPORT_MISSING"
+CODE_REPORT_INVALID = "CODEX_ADAPTER_REPORT_INVALID"
 CODE_LOCAL_COMMAND_PASSED = "CODEX_ADAPTER_LOCAL_COMMAND_PASSED"
 OUTPUT_SNIPPET_BYTES = 1200
 
@@ -73,6 +79,9 @@ class CodexAdapterResult:
     before_report_id: str = ""
     after_report_id: str = ""
     report_id: str = ""
+    report_parse_code: str = ""
+    report_parse_issue: Mapping[str, Any] = field(default_factory=dict)
+    report_submission_error: str = ""
     report_instruction: str = ""
 
     @property
@@ -106,6 +115,9 @@ class CodexAdapterResult:
             "before_report_id": self.before_report_id,
             "after_report_id": self.after_report_id,
             "report_id": self.report_id,
+            "report_parse_code": self.report_parse_code,
+            "report_parse_issue": dict(self.report_parse_issue),
+            "report_submission_error": self.report_submission_error,
             "report_instruction": self.report_instruction,
         }
 
@@ -142,6 +154,9 @@ def run_codex_adapter(
         before_report_id: str = "",
         after_report_id: str = "",
         report_id: str = "",
+        report_parse_code: str = "",
+        report_parse_issue: Mapping[str, Any] | None = None,
+        report_submission_error: str = "",
         report_instruction: str = "",
     ) -> CodexAdapterResult:
         finished_at = _utc_now()
@@ -177,6 +192,9 @@ def run_codex_adapter(
             before_report_id=before_report_id,
             after_report_id=after_report_id,
             report_id=report_id,
+            report_parse_code=report_parse_code,
+            report_parse_issue=dict(report_parse_issue or {}),
+            report_submission_error=report_submission_error,
             report_instruction=report_instruction,
         )
 
@@ -267,8 +285,8 @@ def run_codex_adapter(
 
     stdout = _decode_output(completed.stdout)
     stderr = _decode_output(completed.stderr)
-    after_report = _latest_report_id(root_path, task_id)
     if completed.returncode != 0:
+        after_report = _latest_report_id(root_path, task_id)
         if _is_sandbox_unavailable(stdout, stderr):
             return finish(
                 status="blocked",
@@ -292,6 +310,50 @@ def run_codex_adapter(
             stderr=stderr,
             before_report_id=before_report,
             after_report_id=after_report,
+            report_instruction=instruction,
+        )
+
+    report_parse = parse_codex_report_stdout(stdout)
+    after_report = _latest_report_id(root_path, task_id)
+    if report_parse.ok and (not after_report or after_report == before_report):
+        try:
+            submission = _submit_parsed_stdout_report(
+                root_path,
+                task_id=task_id,
+                report_payload=report_parse.report or {},
+                stdout=stdout,
+            )
+        except task_report_service.TaskReportError as exc:
+            return finish(
+                status="blocked",
+                code=CODE_REPORT_INVALID,
+                reason="structured_execution_report_rejected",
+                command=command,
+                returncode=completed.returncode,
+                stdout=stdout,
+                stderr=stderr,
+                before_report_id=before_report,
+                after_report_id=after_report,
+                report_parse_code=report_parse.code,
+                report_submission_error=str(exc),
+                report_instruction=instruction,
+            )
+        after_report = submission.report_id
+    elif not report_parse.ok and report_parse.code != CODEX_REPORT_BLOCK_MISSING:
+        return finish(
+            status="blocked",
+            code=CODE_REPORT_INVALID,
+            reason="structured_execution_report_invalid",
+            command=command,
+            returncode=completed.returncode,
+            stdout=stdout,
+            stderr=stderr,
+            before_report_id=before_report,
+            after_report_id=after_report,
+            report_parse_code=report_parse.code,
+            report_parse_issue=(
+                report_parse.issue.to_dict() if report_parse.issue is not None else {}
+            ),
             report_instruction=instruction,
         )
 
@@ -326,6 +388,7 @@ def run_codex_adapter(
         before_report_id=before_report,
         after_report_id=after_report,
         report_id=report_id,
+        report_parse_code=report_parse.code if report_parse.ok else "",
         report_instruction=instruction,
     )
 
@@ -458,6 +521,76 @@ def _latest_report_id(root: Path, task_id: str) -> str:
         return ""
     matches.sort(key=lambda item: str(item.get("submitted_at") or ""))
     return str(matches[-1].get("id") or "")
+
+
+def _submit_parsed_stdout_report(
+    root: Path,
+    *,
+    task_id: str,
+    report_payload: Mapping[str, Any],
+    stdout: str,
+) -> task_report_service.TaskReportSubmission:
+    tasks_state = _load_tasks_state(root)
+    task = _resolve_task(tasks_state, task_id)
+    return task_report_service.submit_task_report(
+        root=root,
+        tasks_state=tasks_state,
+        task=task,
+        report_payload=report_payload,
+        source_file=_stdout_report_source(stdout),
+        actor="codex",
+        command="codex_adapter.report.auto_submit",
+    )
+
+
+def _load_tasks_state(root: Path) -> Mapping[str, Any]:
+    path = tasks_state_path(root)
+    try:
+        data = read_json_file(path, missing_code="TASKS_NOT_INITIALIZED")
+    except StoreError as exc:
+        raise task_report_service.TaskReportError(str(exc)) from exc
+    if not isinstance(data, Mapping):
+        raise task_report_service.TaskReportError(
+            "TASKS_STATE_INVALID: {} must contain a JSON object".format(path)
+        )
+    return data
+
+
+def _resolve_task(tasks_state: Mapping[str, Any], task_id: str) -> Mapping[str, Any]:
+    matches = [
+        task
+        for task in tasks_state.get("tasks", [])
+        if isinstance(task, Mapping) and task_id in _task_reference_values(task)
+    ]
+    if not matches:
+        raise task_report_service.TaskReportError(
+            "TASK_REF_NOT_FOUND: {}".format(task_id)
+        )
+    if len(matches) > 1:
+        ids = ", ".join(str(task.get("id") or "") for task in matches)
+        raise task_report_service.TaskReportError(
+            "AMBIGUOUS_TASK_REF: {} ({})".format(task_id, ids)
+        )
+    return matches[0]
+
+
+def _task_reference_values(task: Mapping[str, Any]) -> set[str]:
+    values = {
+        str(task.get("id") or ""),
+        str(task.get("ref") or ""),
+        str(task.get("uid") or ""),
+        str(task.get("legacy_id") or ""),
+    }
+    aliases = task.get("aliases")
+    if isinstance(aliases, Sequence) and not isinstance(aliases, (str, bytes)):
+        values.update(str(alias) for alias in aliases if str(alias).strip())
+    values.discard("")
+    return values
+
+
+def _stdout_report_source(stdout: str) -> str:
+    digest = hashlib.sha256(stdout.encode("utf-8")).hexdigest()
+    return "captured:stdout:sha256:{}".format(digest)
 
 
 def _report_instruction(task_id: str) -> str:

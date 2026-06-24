@@ -25,6 +25,7 @@ from ai_project_ctl.web.actions import (
 )
 from ai_project_ctl.web.read_model import ReadOnlyProjectModel
 from ai_project_ctl.ui_settings import (
+    INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     load_ui_settings,
     ui_settings_path,
     ui_settings_source,
@@ -113,6 +114,7 @@ TASK_ROW_APPROVED_CHANGE_STATUSES = {"approved", "in_review", "accepted"}
 SETTINGS_DISPLAY_KEYS = (
     "command_line",
     "default_policy",
+    INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     "execution_timeout_sec",
     "preflight_timeout_sec",
 )
@@ -2440,6 +2442,8 @@ def render_settings(model: ReadOnlyProjectModel) -> str:
     settings = load_ui_settings(root=model.root)
     source = ui_settings_source(root=model.root)
     path = ui_settings_path(model.root)
+    bypass_checked = bool(settings.get(INTERNAL_CHANGE_GATE_BYPASS_SETTING))
+    bypass_checked_attr = " checked" if bypass_checked else ""
     rows = []
     for key in settings_display_keys(settings):
         rows.append(
@@ -2459,6 +2463,26 @@ def render_settings(model: ReadOnlyProjectModel) -> str:
         '<section class="panel">',
         "<h2>Effective UI Settings</h2>",
         table(("Setting", "Value", "Source"), rows, "No UI settings available."),
+        "</section>",
+        '<section class="panel action-panel">',
+        "<h2>Internal Change Gate Bypass</h2>",
+        (
+            '<p class="warn">Warning: Internal Change gate bypass is for internal '
+            "project-control tasks only. It does not approve Changes and must not "
+            "be used for product or normal project work.</p>"
+        ),
+        action_form(
+            "ui.settings.set",
+            [
+                hidden_field("key", INTERNAL_CHANGE_GATE_BYPASS_SETTING),
+                hidden_field("value", "false"),
+                (
+                    '<label class="checkline"><input type="checkbox" name="value" '
+                    'value="true"{}>Allow internal Change gate bypass</label>'
+                ).format(bypass_checked_attr),
+            ],
+            button_label="Save Bypass Setting",
+        ),
         "</section>",
         '<section class="panel action-panel">',
         "<h2>Update UI Setting</h2>",

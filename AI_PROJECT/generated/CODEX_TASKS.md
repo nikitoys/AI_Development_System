@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `1042`
-Current task: `none`
+Revision: `1087`
+Current task: `TASK-155`
 
 ## Epic `EPIC-001`
 
@@ -2128,7 +2128,7 @@ Acceptance criteria:
 
 ### PIPEF-40 (TASK-119) — PIPE-040 Add tests for phase model and mutations
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_5bcaf7cb78cb`, legacy `TASK-119`, aliases `TASK-119`, local `PIPEF` / `40`
@@ -2618,7 +2618,7 @@ Acceptance criteria:
 
 ### PIPEF-69 (TASK-148) — PIPE-064 Render internal Change gate bypass checkbox
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_c3115928f476`, legacy `TASK-148`, aliases `TASK-148`, local `PIPEF` / `69`
@@ -2635,7 +2635,7 @@ Acceptance criteria:
 
 ### PIPEF-70 (TASK-149) — PIPE-065 Apply internal Change gate bypass to UI runs
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_e84bda130e82`, legacy `TASK-149`, aliases `TASK-149`, local `PIPEF` / `70`
@@ -2669,7 +2669,7 @@ Acceptance criteria:
 
 ### PIPEF-72 (TASK-151) — PIPE-067 Add structured Codex report block to prompt package
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_66d6567e4211`, legacy `TASK-151`, aliases `TASK-151`, local `PIPEF` / `72`
@@ -2686,7 +2686,7 @@ Acceptance criteria:
 
 ### PIPEF-73 (TASK-152) — PIPE-068 Parse structured Codex report from stdout
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_5fa2f77182b7`, legacy `TASK-152`, aliases `TASK-152`, local `PIPEF` / `73`
@@ -2703,7 +2703,7 @@ Acceptance criteria:
 
 ### PIPEF-74 (TASK-153) — PIPE-069 Add task report submission service for pipeline use
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_27cdd9a118ba`, legacy `TASK-153`, aliases `TASK-153`, local `PIPEF` / `74`
@@ -2720,7 +2720,7 @@ Acceptance criteria:
 
 ### PIPEF-75 (TASK-154) — PIPE-070 Auto-submit parsed Codex report in local-command adapter
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_b8872924f7e8`, legacy `TASK-154`, aliases `TASK-154`, local `PIPEF` / `75`
@@ -2735,9 +2735,9 @@ Acceptance criteria:
 - Malformed structured report output produces a stable blocked or failed adapter result with evidence.
 - Tests cover auto-submit success and missing-report fallback.
 
-### PIPEF-76 (TASK-155) — PIPE-071 Add pipeline regression test for Run report auto-collection
+### PIPEF-76 (TASK-155) — PIPE-071 Add pipeline regression test for Run report auto-collection ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_d572bda0c446`, legacy `TASK-155`, aliases `TASK-155`, local `PIPEF` / `76`
@@ -2785,3 +2785,21 @@ Acceptance criteria:
 - Documentation explains why free-text summaries are not enough for collect-report.
 - Documentation explains the manual or Web recovery path for REPORT_MISSING sessions.
 - Documentation validation and generated checks can be rerun after edits.
+
+### PIPEF-79 (TASK-158) — PIPE-074 Allow internal bypass setting in Web settings action
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_183a81f45e29`, legacy `TASK-158`, aliases `TASK-158`, local `PIPEF` / `79`
+
+Allow the Web UI settings action to update the existing internal Change gate bypass setting.
+
+Acceptance criteria:
+
+- The Web settings action no longer rejects allow_internal_change_gate_bypass with WEB_UI_SETTING_KEY_NOT_ALLOWED.
+- The Web settings action can persist allow_internal_change_gate_bypass=true.
+- The Web settings action can persist allow_internal_change_gate_bypass=false.
+- Unknown setting keys are still rejected with WEB_UI_SETTING_KEY_NOT_ALLOWED.
+- The allowed keys metadata includes allow_internal_change_gate_bypass.
+- Focused Web Control Center tests pass.

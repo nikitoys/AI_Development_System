@@ -40,6 +40,31 @@ PREPARABLE_STATUSES = {
 PREPARABLE_REASON_CODES = {"status_not_executable"}
 CODEX_READY = "CODEX_READY"
 READY_STATUS = "ready"
+UI_RUN_COMMAND = "ui.run"
+INTERNAL_CHANGE_GATE_BYPASS_SETTING = "allow_internal_change_gate_bypass"
+INTERNAL_PROJECT_CONTROL_PREFIXES = (
+    "AI_PROJECT/",
+    "ai_project_ctl/",
+    "ai-system/project-control/",
+)
+INTERNAL_PROJECT_CONTROL_SCRIPT_FILES = {
+    "scripts/aictl.py",
+    "scripts/planctl.py",
+    "scripts/taskctl.py",
+    "scripts/codexctl.py",
+    "scripts/contextctl.py",
+    "scripts/evolutionctl.py",
+    "scripts/docctl.py",
+    "scripts/check-protected-project-files.py",
+    "scripts/smoke-project-control.py",
+    "scripts/smoke-doc-control.py",
+    "scripts/smoke-context-control.py",
+}
+INTERNAL_PROJECT_CONTROL_TEST_FILES = {
+    "tests/test_ui_run_command.py",
+    "tests/test_ui_settings.py",
+    "tests/test_web_control_center.py",
+}
 
 
 def prepare_phase(
@@ -138,16 +163,26 @@ def prepare_phase(
             details={"selected_task": selected.to_dict()},
         )
 
-    change_check = _ensure_approved_change_for_selected_task(
+    bypass_decision = _internal_change_gate_bypass_decision(
+        session,
         selected,
+        tasks_state,
         policy,
         refs.get("evolution"),
-        session_id=selected_session_id,
-        root=root_path,
-        actor=actor,
-        python_executable=python_bin,
-        runner=runner,
     )
+    if bypass_decision.get("bypassed"):
+        change_check = _bypassed_change_gate_result(selected, bypass_decision)
+    else:
+        change_check = _ensure_approved_change_for_selected_task(
+            selected,
+            policy,
+            refs.get("evolution"),
+            session_id=selected_session_id,
+            root=root_path,
+            actor=actor,
+            python_executable=python_bin,
+            runner=runner,
+        )
     side_effects: list[CommandResult] = [change_check]
     if not change_check.ok:
         phase = PhaseResult.blocked(
@@ -453,6 +488,201 @@ def _resolve_session(root: Path, session_id: str) -> CommandResult:
         "pipeline session not found: {}".format(selected_id),
         details={"session_id": selected_id},
     )
+
+
+def _internal_change_gate_bypass_decision(
+    session: Mapping[str, Any],
+    selected_task: QueuePreviewItem,
+    tasks_state: Mapping[str, Any],
+    policy: PipelinePolicy,
+    evolution_state: Any,
+) -> dict[str, Any]:
+    task_id = str(selected_task.id or "")
+    queue = session.get("selected_queue") if isinstance(session, Mapping) else {}
+    if not isinstance(queue, Mapping):
+        queue = {}
+    if not policy.evolution.require_approved_change_for_execution:
+        return {"bypassed": False, "reason": "change_gate_not_required"}
+    if not _is_confirmed_ui_single_task_queue(queue, selected_task):
+        return {"bypassed": False, "reason": "not_confirmed_ui_single_task_session"}
+    if queue.get(INTERNAL_CHANGE_GATE_BYPASS_SETTING) is not True:
+        return {"bypassed": False, "reason": "ui_bypass_setting_disabled"}
+
+    task = _task_by_id(tasks_state, task_id)
+    allowed_files = _task_allowed_files(task)
+    if not _is_internal_project_control_task(task):
+        return {
+            "bypassed": False,
+            "reason": "task_not_internal_project_control",
+            "allowed_files": list(allowed_files),
+        }
+
+    return {
+        "bypassed": True,
+        "reason": "confirmed_ui_internal_project_control_task",
+        "task_id": task_id,
+        "task_ref": _selected_task_ref(selected_task),
+        "session_id": str(session.get("id") or ""),
+        "allowed_files": list(allowed_files),
+        "linked_change_ids": _linked_change_ids_for_task(task_id, evolution_state),
+    }
+
+
+def _is_confirmed_ui_single_task_queue(
+    queue: Mapping[str, Any],
+    selected_task: QueuePreviewItem,
+) -> bool:
+    if str(queue.get("created_by_command") or "") != UI_RUN_COMMAND:
+        return False
+    if queue.get("ui_run_confirmed") is not True:
+        return False
+    task_refs = _string_tuple(queue.get("task_refs"))
+    if len(task_refs) != 1:
+        return False
+    if _optional_int(queue.get("max_tasks")) != 1:
+        return False
+    if str(queue.get("order_by") or "") != "selected":
+        return False
+
+    selected_refs = {
+        str(value)
+        for value in (
+            selected_task.id,
+            selected_task.ref,
+            selected_task.uid,
+            selected_task.legacy_id,
+            selected_task.selected_ref,
+        )
+        if value
+    }
+    return task_refs[0] in selected_refs
+
+
+def _is_internal_project_control_task(task: Mapping[str, Any] | None) -> bool:
+    allowed_files = _task_allowed_files(task)
+    return bool(allowed_files) and all(
+        _is_internal_project_control_file(path) for path in allowed_files
+    )
+
+
+def _task_by_id(
+    tasks_state: Mapping[str, Any],
+    task_id: str,
+) -> Mapping[str, Any] | None:
+    tasks = tasks_state.get("tasks")
+    if not isinstance(tasks, Sequence) or isinstance(tasks, (str, bytes)):
+        return None
+    for task in tasks:
+        if isinstance(task, Mapping) and str(task.get("id") or "") == task_id:
+            return task
+    return None
+
+
+def _task_allowed_files(task: Mapping[str, Any] | None) -> tuple[str, ...]:
+    if not isinstance(task, Mapping):
+        return ()
+    values = task.get("allowed_files")
+    if not isinstance(values, Sequence) or isinstance(values, (str, bytes)):
+        return ()
+    return tuple(str(value).strip() for value in values if str(value).strip())
+
+
+def _is_internal_project_control_file(value: str) -> bool:
+    path = _normalized_repo_pattern(value)
+    if not path:
+        return False
+    if path in INTERNAL_PROJECT_CONTROL_SCRIPT_FILES:
+        return True
+    if path in INTERNAL_PROJECT_CONTROL_TEST_FILES:
+        return True
+    if path.startswith("tests/pipeline/"):
+        return True
+    if path.startswith("tests/test_pipeline_") and path.endswith(".py"):
+        return True
+    return path.startswith(INTERNAL_PROJECT_CONTROL_PREFIXES)
+
+
+def _normalized_repo_pattern(value: str) -> str:
+    path = str(value or "").strip().replace("\\", "/")
+    while path.startswith("./"):
+        path = path[2:]
+    if (
+        not path
+        or path.startswith("/")
+        or path in {".", "*", "**"}
+        or path.startswith("../")
+        or "/../" in path
+        or path.endswith("/..")
+    ):
+        return ""
+    return path
+
+
+def _linked_change_ids_for_task(task_id: str, evolution_state: Any) -> list[str]:
+    if not isinstance(evolution_state, Mapping):
+        return []
+    linked: list[str] = []
+    for change in evolution_state.get("changes", []):
+        if not isinstance(change, Mapping):
+            continue
+        linked_tasks = change.get("linked_tasks")
+        if not isinstance(linked_tasks, Sequence) or isinstance(linked_tasks, (str, bytes)):
+            continue
+        if task_id in {str(value) for value in linked_tasks}:
+            change_id = str(change.get("id") or "")
+            if change_id and change_id not in linked:
+                linked.append(change_id)
+    return linked
+
+
+def _bypassed_change_gate_result(
+    selected_task: QueuePreviewItem,
+    decision: Mapping[str, Any],
+) -> CommandResult:
+    task_id = str(decision.get("task_id") or selected_task.id or "")
+    task_ref = str(decision.get("task_ref") or _selected_task_ref(selected_task))
+    linked_change_ids = [
+        str(change_id)
+        for change_id in decision.get("linked_change_ids", [])
+        if str(change_id)
+    ]
+    return CommandResult.success(
+        command="pipeline.change_gate",
+        domain="pipeline",
+        message="Approved Change gate bypassed for internal UI project-control task.",
+        data={
+            "required": True,
+            "scope": "selected_task",
+            "selected_task_id": task_id,
+            "selected_task_ref": task_ref,
+            "inspected_task_ids": [task_id] if task_id else [],
+            "linked_changes_inspected": [
+                {
+                    "task_id": task_id,
+                    "task_ref": task_ref,
+                    "change_ids": linked_change_ids,
+                }
+            ],
+            "linked_change_ids": linked_change_ids,
+            "change_ids": [],
+            "bypassed": True,
+            "bypass": {
+                "setting": INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+                "enabled": True,
+                "reason": str(decision.get("reason") or ""),
+                "created_by_command": UI_RUN_COMMAND,
+                "ui_run_confirmed": True,
+                "single_task_session": True,
+                "internal_project_control_task": True,
+                "session_id": str(decision.get("session_id") or ""),
+                "allowed_files": list(decision.get("allowed_files") or []),
+            },
+        },
+    )
+
+
+def _selected_task_ref(selected_task: QueuePreviewItem) -> str:
+    return str(selected_task.ref or selected_task.selected_ref or selected_task.id or "")
 
 
 def _failure(

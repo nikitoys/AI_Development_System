@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `2167`
-Changes: `68`
+Revision: `2256`
+Changes: `72`
 
 ## Summary
 
 - `accepted`: 51
-- `approved`: 11
+- `approved`: 15
 - `in_review`: 1
 - `ready`: 5
 
@@ -4359,3 +4359,220 @@ Impact:
 Linked tasks:
 
 - TASK-147
+
+### CHG-069 — PIPE-064 Render internal Change gate bypass checkbox
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-69 requires an explicit Evolution Change Proposal before implementation: Render a confirmed Settings page checkbox for toggling internal project-control Change gate bypass.
+
+Proposal:
+
+Implement the bounded task scope: Add a checkbox control for the internal Change gate bypass setting.; Make the checkbox submit through the confirmed UI settings Web action.; Show a warning that the bypass is for internal project-control tasks only.; Add tests for checked, unchecked and warning text rendering.
+
+Rationale:
+
+The Human Owner should be able to enable or disable the bypass setting from the Web Settings page.
+
+Approved by: `human_owner` at `2026-06-24T11:46:50Z`  
+Approval notes: Approve  
+
+Affected files:
+
+- ai_project_ctl/web/server.py
+- tests/test_web_control_center.py
+
+Risks:
+
+- Boundary risk: Do not implement bypass execution semantics in this task.
+- Boundary risk: Do not enable bypass automatically.
+- Boundary risk: Do not hide existing Change approval actions.
+- Verify that the warning text is visible near the checkbox.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-148.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add a checkbox control for the internal Change gate bypass setting.
+- Make the checkbox submit through the confirmed UI settings Web action.
+- Show a warning that the bypass is for internal project-control tasks only.
+- Add tests for checked, unchecked and warning text rendering.
+- The Settings page shows a checkbox for the internal Change gate bypass setting.
+- The checkbox reflects the effective current setting value.
+- Submitting the checkbox requires confirmation.
+
+Linked tasks:
+
+- TASK-148
+
+### CHG-070 — PIPE-065 Apply internal Change gate bypass to UI runs
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-70 requires an explicit Evolution Change Proposal before implementation: Allow confirmed UI runs to skip approved Change requirements only for internal project-control tasks when the bypass setting is enabled.
+
+Proposal:
+
+Implement the bounded task scope: Define an internal project-control task predicate for safe bypass eligibility.; Apply the bypass only to UI-created single-task sessions when the setting is enabled.; Record explicit phase artifacts or audit details when the Change gate is bypassed.; Keep approved Change requirements unchanged for non-internal tasks and non-UI execution paths.
+
+Rationale:
+
+This implements the actual execution behavior behind the Settings checkbox with strict safety boundaries and audit evidence.
+
+Approved by: `human_owner` at `2026-06-24T11:47:00Z`  
+Approval notes: Approve  
+
+Affected files:
+
+- ai_project_ctl/pipeline/prepare_phase.py
+- ai_project_ctl/pipeline/runner.py
+- ai_project_ctl/pipeline/ui_policy.py
+- scripts/aictl.py
+- tests/pipeline/test_prepare_phase.py
+- tests/test_ui_run_command.py
+
+Risks:
+
+- Boundary risk: Do not disable the Change gate globally.
+- Boundary risk: Do not bypass token, report, verify, review, close or commit gates.
+- Boundary risk: Do not auto-approve or auto-create Evolution Changes.
+- Review the internal-task predicate carefully to avoid allowing product-code tasks through the bypass.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-149.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Define an internal project-control task predicate for safe bypass eligibility.
+- Apply the bypass only to UI-created single-task sessions when the setting is enabled.
+- Record explicit phase artifacts or audit details when the Change gate is bypassed.
+- Keep approved Change requirements unchanged for non-internal tasks and non-UI execution paths.
+- When the setting is disabled, UI runs still require an approved linked Change.
+- When the setting is enabled, eligible internal project-control tasks can pass prepare without an approved linked Change.
+- Non-internal tasks still block on missing approved Change even when the setting is enabled.
+
+Linked tasks:
+
+- TASK-149
+
+### CHG-071 — PIPE-074 Allow internal bypass setting in Web settings action
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-79 requires an explicit Evolution Change Proposal before implementation: Allow the Web UI settings action to update the existing internal Change gate bypass setting.
+
+Proposal:
+
+Implement the bounded task scope: Import or reference the existing internal Change gate bypass setting constant in the Web actions module.; Add allow_internal_change_gate_bypass to the Web UI settings update allowlist.; Ensure ui.settings.set accepts true and false values for the bypass setting through the Web action.; Add focused tests for allowed bypass setting updates and continued rejection of unknown setting keys.
+
+Rationale:
+
+Fix the WEB_UI_SETTING_KEY_NOT_ALLOWED error for allow_internal_change_gate_bypass by adding the existing setting to the Web settings update allowlist.
+
+Approved by: `human_owner` at `2026-06-24T14:08:57Z`  
+Approval notes: Approve  
+
+Affected files:
+
+- ai_project_ctl/web/actions.py
+- tests/test_web_control_center.py
+
+Risks:
+
+- Boundary risk: Do not implement the actual Change gate bypass execution semantics.
+- Boundary risk: Do not change UI settings boolean parsing rules.
+- Boundary risk: Do not weaken the Web action allowlist for arbitrary settings.
+- Boundary risk: Do not change pipeline policy presets.
+- Verify that the fix only expands the allowlist by the one existing setting and does not allow arbitrary settings writes.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-158.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Import or reference the existing internal Change gate bypass setting constant in the Web actions module.
+- Add allow_internal_change_gate_bypass to the Web UI settings update allowlist.
+- Ensure ui.settings.set accepts true and false values for the bypass setting through the Web action.
+- Add focused tests for allowed bypass setting updates and continued rejection of unknown setting keys.
+- The Web settings action no longer rejects allow_internal_change_gate_bypass with WEB_UI_SETTING_KEY_NOT_ALLOWED.
+- The Web settings action can persist allow_internal_change_gate_bypass=true.
+- The Web settings action can persist allow_internal_change_gate_bypass=false.
+
+Linked tasks:
+
+- TASK-158
+
+### CHG-072 — PIPE-067 Add structured Codex report block to prompt package
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-72 requires an explicit Evolution Change Proposal before implementation: Update Codex prompt generation so executors must finish with a machine-readable structured report block.
+
+Proposal:
+
+Implement the bounded task scope: Replace the plain bullet-only Final Report prompt section with a structured report contract.; Define a fenced JSON block marker that Codex must emit at the end of execution.; Include required report fields used by task report submission, including token_usage.; Add focused tests or assertions for generated prompt report instructions.
+
+Rationale:
+
+The prompt should still be readable by humans, but it must include a deterministic JSON report contract that the pipeline adapter can parse.
+
+Approved by: `human_owner` at `2026-06-24T15:04:42Z`  
+Approval notes: Approve  
+
+Affected files:
+
+- scripts/codexctl.py
+- tests/test_codex_prompt_report_contract.py
+
+Risks:
+
+- Boundary risk: Do not implement stdout parsing in this task.
+- Boundary risk: Do not submit reports automatically in this task.
+- Boundary risk: Do not change task report validation rules.
+- Verify that the prompt contract is deterministic enough for a parser and does not ask Codex to edit AI_PROJECT state directly.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-151.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Replace the plain bullet-only Final Report prompt section with a structured report contract.
+- Define a fenced JSON block marker that Codex must emit at the end of execution.
+- Include required report fields used by task report submission, including token_usage.
+- Add focused tests or assertions for generated prompt report instructions.
+- Generated CODEX_PROMPT.md contains a clearly delimited machine-readable report JSON instruction.
+- The required JSON fields include task identity, changed_files, generated_files, checks, warnings, blockers and token_usage.
+- The prompt still tells Codex not to self-approve.
+
+Linked tasks:
+
+- TASK-151

@@ -81,7 +81,10 @@ from ai_project_ctl.pipeline.report_phase import collect_report_phase  # noqa: E
 from ai_project_ctl.pipeline.report_template import build_report_template  # noqa: E402
 from ai_project_ctl.pipeline.review_phase import review_phase  # noqa: E402
 from ai_project_ctl.pipeline.phase import pipeline_ci_exit_code  # noqa: E402
-from ai_project_ctl.pipeline.ui_policy import resolve_ui_pipeline_policy  # noqa: E402
+from ai_project_ctl.pipeline.ui_policy import (  # noqa: E402
+    resolve_ui_pipeline_policy,
+    ui_internal_change_gate_bypass_enabled,
+)
 from ai_project_ctl.pipeline.verify_phase import verify_phase  # noqa: E402
 from ai_project_ctl.ui_settings import (  # noqa: E402
     init_ui_settings,
@@ -2076,9 +2079,14 @@ def cmd_ui_run(args: argparse.Namespace) -> int:
         actor=args.actor,
         policy=selected_policy,
         policy_name=selected_policy.name,
-        task_refs=(args.task_ref,),
-        max_tasks=1,
-        order_by="selected",
+        selected_queue=_ui_run_selected_queue(
+            selected_policy,
+            args.task_ref,
+            confirmed=args.confirm,
+            allow_internal_change_gate_bypass=ui_internal_change_gate_bypass_enabled(
+                root=args.root
+            ),
+        ),
     )
     if not session_result.ok:
         result = _ui_run_result(
@@ -2103,6 +2111,28 @@ def cmd_ui_run(args: argparse.Namespace) -> int:
         run_result,
     )
     return _emit_command_result(result, args)
+
+
+def _ui_run_selected_queue(
+    policy: PipelinePolicy,
+    task_ref: str,
+    *,
+    confirmed: bool,
+    allow_internal_change_gate_bypass: bool,
+) -> dict[str, Any]:
+    selection = getattr(policy.queue.selection, "value", policy.queue.selection)
+    return {
+        "selection": str(selection),
+        "task_refs": [task_ref],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": policy.queue.include_blocked_tasks,
+        "created_by_command": "ui.run",
+        "ui_run_confirmed": bool(confirmed),
+        "allow_internal_change_gate_bypass": bool(allow_internal_change_gate_bypass),
+    }
 
 
 def _ui_preflight_timeout_sec(
