@@ -1,28 +1,17 @@
 {
   "schema_version": 1,
-  "revision": 318,
-  "status": "ready",
-  "code": "CODEX_READY",
-  "source_type": "task",
-  "source_id": "TASK-145",
-  "source_status": "in_progress",
+  "revision": 326,
+  "status": "blocked",
+  "code": "CODEX_NO_PROMPT_PACKAGE",
+  "source_type": "",
+  "source_id": "",
+  "source_status": "",
   "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
   "status_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_STATUS.md",
-  "prompt_exists": true,
-  "blocked_reason": "",
+  "prompt_exists": false,
+  "blocked_reason": "No executable Codex prompt package is currently selected.",
   "details": [],
   "created_at": "2026-06-16T15:22:41Z",
-  "updated_at": "2026-06-24T10:39:22Z",
-  "ready_at": "2026-06-24T10:39:22Z",
-  "last_build_at": "2026-06-24T10:39:22Z",
-  "context_pack": {
-    "relative_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
-    "path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CONTEXT_PACK.md",
-    "sha256": "934baacbfa4b9db21b174d0aa7838c60f9920aadf79b3d3bfb175204768e6351",
-    "mode": "task",
-    "task_id": "TASK-145",
-    "docs_revision": 28,
-    "tasks_revision": 1014,
-    "selected_source_count": 8
-  }
+  "updated_at": "2026-06-24T11:43:31Z",
+  "cleared_at": "2026-06-24T11:43:31Z"
 }

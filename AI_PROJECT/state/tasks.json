@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1014,
-  "current_task_id": "TASK-145",
+  "revision": 1042,
+  "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-24T10:39:21Z",
+  "updated_at": "2026-06-24T11:43:31Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -8493,7 +8493,7 @@
       "id": "TASK-119",
       "epic_id": "EPIC-009",
       "title": "PIPE-040 Add tests for phase model and mutations",
-      "status": "ready",
+      "status": "in_progress",
       "summary": "Add tests for PhaseResult serialization, session phase fields, and governed phase mutation helpers.",
       "description": "Protect the foundational phase state behavior before rewriting the runner.",
       "priority": 1,
@@ -8536,7 +8536,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-20T17:05:00Z",
-      "updated_at": "2026-06-23T14:52:00Z",
+      "updated_at": "2026-06-24T11:03:19Z",
       "uid": "tsk_5bcaf7cb78cb",
       "ref": "PIPEF-40",
       "legacy_id": "TASK-119",
@@ -9651,7 +9651,7 @@
       "id": "TASK-139",
       "epic_id": "EPIC-009",
       "title": "PIPE-055 Render Run and Resume controls beside task rows",
-      "status": "planned",
+      "status": "done",
       "summary": "Add task-row controls that let the owner start or continue one selected task from the Web Tasks page.",
       "description": "The owner should not need to copy task refs into terminal commands for normal single-task execution.",
       "priority": 1,
@@ -9690,11 +9690,11 @@
         "This task is UI rendering only and should use the Web action added separately."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-24T11:02:51Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-24T10:23:23Z",
-      "updated_at": "2026-06-24T10:23:23Z",
+      "updated_at": "2026-06-24T11:02:51Z",
       "uid": "tsk_5d977a401b64",
       "ref": "PIPEF-60",
       "legacy_id": "TASK-139",
@@ -9998,7 +9998,7 @@
       "id": "TASK-145",
       "epic_id": "EPIC-009",
       "title": "PIPE-061 Add Web Settings page route",
-      "status": "in_progress",
+      "status": "done",
       "summary": "Add a Web Control Center Settings page that displays effective UI settings and their source file.",
       "description": "This creates the read-only Web UI surface for project-local settings before adding write actions.",
       "priority": 1,
@@ -10037,11 +10037,11 @@
         "This is the foundation for owner-editable settings in the browser."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-24T10:51:58Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-24T10:37:49Z",
-      "updated_at": "2026-06-24T10:39:21Z",
+      "updated_at": "2026-06-24T10:51:59Z",
       "uid": "tsk_432c3c726e2d",
       "ref": "PIPEF-66",
       "legacy_id": "TASK-145",
@@ -10055,7 +10055,7 @@
       "id": "TASK-146",
       "epic_id": "EPIC-009",
       "title": "PIPE-062 Add confirmed Web actions for UI settings updates",
-      "status": "planned",
+      "status": "done",
       "summary": "Add confirmed Web actions that update allowed project-local UI settings from the Settings page.",
       "description": "This lets the Human Owner change supported UI settings without running terminal commands.",
       "priority": 1,
@@ -10095,11 +10095,11 @@
         "The CLI may still support generic upsert, but Web writes should be narrower."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-24T11:37:30Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-24T10:37:50Z",
-      "updated_at": "2026-06-24T10:37:50Z",
+      "updated_at": "2026-06-24T11:37:31Z",
       "uid": "tsk_644b6c563035",
       "ref": "PIPEF-67",
       "legacy_id": "TASK-146",
@@ -10113,7 +10113,7 @@
       "id": "TASK-147",
       "epic_id": "EPIC-009",
       "title": "PIPE-063 Add internal change-gate bypass UI setting",
-      "status": "planned",
+      "status": "done",
       "summary": "Add a disabled-by-default UI setting for explicitly bypassing approved Change requirements on internal project-control tasks.",
       "description": "This introduces the setting data contract without yet changing pipeline execution behavior.",
       "priority": 1,
@@ -10152,11 +10152,11 @@
         "Suggested setting name: allow_internal_change_gate_bypass."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-24T11:43:30Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-24T10:37:51Z",
-      "updated_at": "2026-06-24T10:37:51Z",
+      "updated_at": "2026-06-24T11:43:31Z",
       "uid": "tsk_b678836b5b83",
       "ref": "PIPEF-68",
       "legacy_id": "TASK-147",
@@ -10340,6 +10340,415 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 71
+    },
+    {
+      "id": "TASK-151",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-067 Add structured Codex report block to prompt package",
+      "status": "planned",
+      "summary": "Update Codex prompt generation so executors must finish with a machine-readable structured report block.",
+      "description": "The prompt should still be readable by humans, but it must include a deterministic JSON report contract that the pipeline adapter can parse.",
+      "priority": 1,
+      "order": 72,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Replace the plain bullet-only Final Report prompt section with a structured report contract.",
+        "Define a fenced JSON block marker that Codex must emit at the end of execution.",
+        "Include required report fields used by task report submission, including token_usage.",
+        "Add focused tests or assertions for generated prompt report instructions."
+      ],
+      "out_of_scope": [
+        "Do not implement stdout parsing in this task.",
+        "Do not submit reports automatically in this task.",
+        "Do not change task report validation rules."
+      ],
+      "allowed_files": [
+        "scripts/codexctl.py",
+        "tests/test_codex_prompt_report_contract.py"
+      ],
+      "acceptance_criteria": [
+        "Generated CODEX_PROMPT.md contains a clearly delimited machine-readable report JSON instruction.",
+        "The required JSON fields include task identity, changed_files, generated_files, checks, warnings, blockers and token_usage.",
+        "The prompt still tells Codex not to self-approve.",
+        "Existing prompt sections for scope, allowed files and acceptance criteria remain intact.",
+        "Focused tests verify the new final report contract appears in generated prompts."
+      ],
+      "review_instructions": [
+        "Verify that the prompt contract is deterministic enough for a parser and does not ask Codex to edit AI_PROJECT state directly."
+      ],
+      "notes": [
+        "This task prepares Codex output for automatic report collection but does not change adapter behavior."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T11:22:56Z",
+      "updated_at": "2026-06-24T11:22:56Z",
+      "uid": "tsk_66d6567e4211",
+      "ref": "PIPEF-72",
+      "legacy_id": "TASK-151",
+      "aliases": [
+        "TASK-151"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 72
+    },
+    {
+      "id": "TASK-152",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-068 Parse structured Codex report from stdout",
+      "status": "planned",
+      "summary": "Add a bounded parser that extracts a structured execution report JSON object from Codex stdout.",
+      "description": "The parser should recognize the report block contract emitted by the prompt and reject malformed or unsafe output.",
+      "priority": 1,
+      "order": 73,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a parser for the structured Codex report block in local-command stdout.",
+        "Validate that the parsed value is a JSON object with expected top-level report fields.",
+        "Return stable parse errors for missing, duplicate or malformed report blocks.",
+        "Add tests for valid, missing, duplicate and malformed stdout cases."
+      ],
+      "out_of_scope": [
+        "Do not submit parsed reports in this task.",
+        "Do not change Codex prompt generation in this task.",
+        "Do not parse arbitrary prose summaries as reports."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/codex_report_parser.py",
+        "tests/pipeline/test_codex_report_parser.py"
+      ],
+      "acceptance_criteria": [
+        "A valid fenced report JSON block can be extracted from stdout.",
+        "Missing report blocks produce a stable missing-report parse result.",
+        "Duplicate report blocks are rejected rather than guessed.",
+        "Malformed JSON is rejected with a stable error code.",
+        "The parser does not read or write repository state."
+      ],
+      "review_instructions": [
+        "Check that the parser only accepts the explicit report contract and does not infer reports from free text."
+      ],
+      "notes": [
+        "Keep the parser pure and easy to test without running Codex."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T11:22:56Z",
+      "updated_at": "2026-06-24T11:22:56Z",
+      "uid": "tsk_5fa2f77182b7",
+      "ref": "PIPEF-73",
+      "legacy_id": "TASK-152",
+      "aliases": [
+        "TASK-152"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 73
+    },
+    {
+      "id": "TASK-153",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-069 Add task report submission service for pipeline use",
+      "status": "planned",
+      "summary": "Extract or add a reusable task report submission service that can be called without shelling out to taskctl.",
+      "description": "The Codex adapter needs an internal API to persist a structured report safely after parsing stdout.",
+      "priority": 1,
+      "order": 74,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a reusable Python function for submitting a structured task report into task report state.",
+        "Reuse the same validation behavior required by task report submit.",
+        "Record report id, task id, source and audit event details consistently.",
+        "Add tests for successful submission and validation failure."
+      ],
+      "out_of_scope": [
+        "Do not change task report schema requirements.",
+        "Do not bypass report validation.",
+        "Do not make Codex adapter call this service in this task."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/task_reports.py",
+        "scripts/taskctl.py",
+        "scripts/aictl.py",
+        "tests/test_task_reports.py"
+      ],
+      "acceptance_criteria": [
+        "A structured report can be submitted through a reusable Python service.",
+        "The existing task report CLI path continues to work.",
+        "Invalid reports are rejected with stable validation errors.",
+        "Successful submission updates latest_by_task for the selected task.",
+        "Tests cover service submission and the CLI compatibility path."
+      ],
+      "review_instructions": [
+        "Verify that this keeps one validation path rather than creating divergent CLI and service behavior."
+      ],
+      "notes": [
+        "This task enables adapter-level auto-submit without invoking a nested CLI command."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T11:22:57Z",
+      "updated_at": "2026-06-24T11:22:57Z",
+      "uid": "tsk_27cdd9a118ba",
+      "ref": "PIPEF-74",
+      "legacy_id": "TASK-153",
+      "aliases": [
+        "TASK-153"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 74
+    },
+    {
+      "id": "TASK-154",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-070 Auto-submit parsed Codex report in local-command adapter",
+      "status": "planned",
+      "summary": "Make the local-command Codex adapter submit a parsed structured report automatically after successful execution.",
+      "description": "When Codex emits a valid structured report, the execute phase should not stop at REPORT_MISSING.",
+      "priority": 1,
+      "order": 75,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Call the structured stdout report parser after a zero-returncode local Codex run.",
+        "Submit the parsed report through the reusable task report service.",
+        "Set adapter report_id and passed status when the auto-submitted report is accepted.",
+        "Keep CODEX_ADAPTER_REPORT_MISSING behavior when no valid structured report is present."
+      ],
+      "out_of_scope": [
+        "Do not accept free-text summaries as structured reports.",
+        "Do not auto-submit reports after nonzero Codex exits.",
+        "Do not bypass collect-report, verify, review or commit phases."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/codex_adapter.py",
+        "ai_project_ctl/pipeline/codex_report_parser.py",
+        "ai_project_ctl/task_reports.py",
+        "tests/pipeline/test_codex_adapter.py"
+      ],
+      "acceptance_criteria": [
+        "A successful local-command run with a valid structured report auto-submits a task report.",
+        "The adapter result includes the new report_id and passes instead of blocking on report missing.",
+        "A successful local-command run without a structured report still blocks with CODEX_ADAPTER_REPORT_MISSING.",
+        "Malformed structured report output produces a stable blocked or failed adapter result with evidence.",
+        "Tests cover auto-submit success and missing-report fallback."
+      ],
+      "review_instructions": [
+        "Verify that auto-submit happens only for the selected task and only after report validation succeeds."
+      ],
+      "notes": [
+        "This is the main bug fix for Run sessions stopping at collect_report after Codex already completed work."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T11:22:58Z",
+      "updated_at": "2026-06-24T11:22:58Z",
+      "uid": "tsk_b8872924f7e8",
+      "ref": "PIPEF-75",
+      "legacy_id": "TASK-154",
+      "aliases": [
+        "TASK-154"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 75
+    },
+    {
+      "id": "TASK-155",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-071 Add pipeline regression test for Run report auto-collection",
+      "status": "planned",
+      "summary": "Add an end-to-end regression test proving a UI Run session can proceed past collect-report when Codex emits a valid report.",
+      "description": "This protects the Run workflow from returning to CODEX_ADAPTER_REPORT_MISSING after successful Codex execution.",
+      "priority": 1,
+      "order": 76,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a pipeline or UI run test with a fake Codex runner that emits the structured report block.",
+        "Assert that execute records the auto-submitted report id.",
+        "Assert that collect-report passes without manual task report submit.",
+        "Assert that missing structured report output still blocks with the expected report-missing code."
+      ],
+      "out_of_scope": [
+        "Do not run real Codex in tests.",
+        "Do not change production pipeline behavior in this task.",
+        "Do not weaken existing report gate tests."
+      ],
+      "allowed_files": [
+        "tests/test_ui_run_command.py",
+        "tests/test_pipeline_runner.py",
+        "tests/test_pipeline_report_gate.py",
+        "tests/pipeline/test_codex_adapter.py"
+      ],
+      "acceptance_criteria": [
+        "The regression test uses a fake local-command runner, not real Codex.",
+        "A valid emitted report allows collect-report to pass.",
+        "The test verifies the report id is stored and linked to the selected task.",
+        "A no-report runner still produces CODEX_ADAPTER_REPORT_MISSING.",
+        "Existing pipeline tests continue to pass."
+      ],
+      "review_instructions": [
+        "Check that the regression covers the Run path rather than only the parser unit path."
+      ],
+      "notes": [
+        "This task may be done after the implementation tasks or adjusted to the final test layout."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T11:22:59Z",
+      "updated_at": "2026-06-24T11:22:59Z",
+      "uid": "tsk_d572bda0c446",
+      "ref": "PIPEF-76",
+      "legacy_id": "TASK-155",
+      "aliases": [
+        "TASK-155"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 76
+    },
+    {
+      "id": "TASK-156",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-072 Add Web recovery action for report missing sessions",
+      "status": "planned",
+      "summary": "Add a Web owner action that creates a draft structured report from captured Codex output for REPORT_MISSING sessions.",
+      "description": "This provides a recovery path when Codex completed before auto-report support or emitted only a text summary.",
+      "priority": 1,
+      "order": 77,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Render a recovery action when a pipeline session is blocked by REPORT_MISSING.",
+        "Create a draft report JSON from captured stdout evidence and selected task identity.",
+        "Require owner confirmation before submitting the draft report.",
+        "Show clear warnings when the draft uses estimated token_usage or inferred fields."
+      ],
+      "out_of_scope": [
+        "Do not silently submit inferred reports without owner confirmation.",
+        "Do not skip collect-report or verify after recovery.",
+        "Do not treat free-text summaries as authoritative without warning."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/pipeline/report_recovery.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "REPORT_MISSING session pages show a report recovery action.",
+        "The recovery action requires explicit owner confirmation.",
+        "The generated draft report contains selected task id, task ref, changed_files, checks, warnings and token_usage.",
+        "The UI warns when values are inferred from captured Codex output.",
+        "After submission, the owner is guided to rerun collect-report."
+      ],
+      "review_instructions": [
+        "Verify that this remains a recovery workflow and does not bypass structured report validation."
+      ],
+      "notes": [
+        "This task is useful for sessions created before automatic structured report support is fully deployed."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T11:23:00Z",
+      "updated_at": "2026-06-24T11:23:00Z",
+      "uid": "tsk_4c8053ef44b5",
+      "ref": "PIPEF-77",
+      "legacy_id": "TASK-156",
+      "aliases": [
+        "TASK-156"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 77
+    },
+    {
+      "id": "TASK-157",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-073 Document Codex structured report auto-submit",
+      "status": "planned",
+      "summary": "Document how Codex structured reports are emitted, parsed, auto-submitted and recovered in Web UI.",
+      "description": "Owner-facing docs should explain why Run no longer normally stops at REPORT_MISSING and what to do when it still does.",
+      "priority": 1,
+      "order": 78,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Document the structured final report contract used by Codex prompts.",
+        "Document automatic task report submission after successful local Codex execution.",
+        "Document REPORT_MISSING fallback behavior and Web recovery action.",
+        "Add troubleshooting guidance for malformed report output."
+      ],
+      "out_of_scope": [
+        "Do not document unimplemented behavior as complete.",
+        "Do not edit generated documentation manually.",
+        "Do not change pipeline code in this documentation task."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/06-prompt-package-spec.md",
+        "ai-system/project-control/08-usage-guide.md",
+        "ai-system/project-control/10-owner-quickstart.md",
+        "ai-system/project-control/pipeline-runner.md"
+      ],
+      "acceptance_criteria": [
+        "Documentation explains the final structured report block expected from Codex.",
+        "Documentation explains when the adapter auto-submits a report.",
+        "Documentation explains why free-text summaries are not enough for collect-report.",
+        "Documentation explains the manual or Web recovery path for REPORT_MISSING sessions.",
+        "Documentation validation and generated checks can be rerun after edits."
+      ],
+      "review_instructions": [
+        "Verify that documentation matches implemented behavior and does not overpromise."
+      ],
+      "notes": [
+        "Write this after the implementation behavior is stable."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-24T11:23:00Z",
+      "updated_at": "2026-06-24T11:23:00Z",
+      "uid": "tsk_6ac4e09604aa",
+      "ref": "PIPEF-78",
+      "legacy_id": "TASK-157",
+      "aliases": [
+        "TASK-157"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 78
     }
   ]
 }

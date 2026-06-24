@@ -14,6 +14,11 @@ from ai_project_ctl.core.result import CommandError, CommandResult
 from ai_project_ctl.pipeline.batch import run_until_blocker
 from ai_project_ctl.pipeline.session import create_session
 from ai_project_ctl.pipeline.ui_policy import resolve_ui_pipeline_policy
+from ai_project_ctl.ui_settings import (
+    load_ui_settings,
+    ui_settings_source,
+    upsert_ui_setting,
+)
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[2]
@@ -42,6 +47,45 @@ PIPELINE_SESSION_STATUSES = {
 }
 PIPELINE_STOP_STATUSES = {"stopped", "blocked", "failed"}
 PIPELINE_ORDER_OPTIONS = {"execution", "owner", "selected"}
+UI_SETTINGS_WEB_ALLOWED_KEYS = (
+    "command_line",
+    "default_policy",
+    "execution_timeout_sec",
+    "preflight_timeout_sec",
+)
+LOCAL_ACTION_DESCRIPTORS: dict[str, dict[str, Any]] = {
+    "ui.settings.set": {
+        "name": "ui.settings.set",
+        "domain": "ui",
+        "description": "Update one allowlisted project-local UI setting.",
+        "kind": "write",
+        "arguments": [
+            {
+                "name": "key",
+                "description": "Allowlisted UI setting key.",
+                "type": "string",
+                "required": True,
+                "repeatable": False,
+                "choices": list(UI_SETTINGS_WEB_ALLOWED_KEYS),
+            },
+            {
+                "name": "value",
+                "description": "New setting value.",
+                "type": "string",
+                "required": True,
+                "repeatable": False,
+            },
+        ],
+        "read_write": {
+            "mutates_state": True,
+            "writes_events": False,
+            "renders_generated": False,
+            "validates": False,
+        },
+        "legacy_command": ["python scripts/aictl.py ui settings set <key> <value>"],
+        "availability": "implemented",
+    }
+}
 
 
 class WebActionError(CommandError):
@@ -118,7 +162,7 @@ def available_actions() -> list[dict[str, Any]]:
 
     rows = []
     for action in ACTIONS.values():
-        descriptor = require_web_write_command(action.command_name)
+        descriptor = describe_web_action(action)
         rows.append(
             {
                 "id": action.action_id,
@@ -130,6 +174,15 @@ def available_actions() -> list[dict[str, Any]]:
             }
         )
     return rows
+
+
+def describe_web_action(action: WebAction) -> dict[str, Any]:
+    """Return metadata for registered and Web-local write actions."""
+
+    local_descriptor = LOCAL_ACTION_DESCRIPTORS.get(action.command_name)
+    if local_descriptor is not None:
+        return dict(local_descriptor)
+    return require_web_write_command(action.command_name)
 
 
 def require_web_write_command(command_name: str) -> dict[str, Any]:
@@ -206,9 +259,11 @@ class WebActionExecutor:
                 details={"action": action_id},
             )
 
-        descriptor = require_web_write_command(action.command_name)
+        descriptor = describe_web_action(action)
         if action.action_id == "ui.run_selected_task":
             process = self._create_ui_selected_task_session(fields)
+        elif action.action_id == "ui.settings.set":
+            process = self._update_ui_setting(fields)
         else:
             command = [
                 self.python_executable,
@@ -311,6 +366,54 @@ class WebActionExecutor:
                 ensure_ascii=False,
                 sort_keys=True,
             )
+            + "\n",
+            stderr="",
+        )
+
+    def _update_ui_setting(self, fields: Mapping[str, str]) -> ActionProcessResult:
+        key = _allowed_ui_setting_key(fields)
+        value = _require_field(fields, "value")
+        try:
+            path = upsert_ui_setting(key, value, root=self.root)
+            result = CommandResult.success(
+                command="ui.settings.set",
+                domain="ui",
+                message="OK: updated UI setting {}".format(key),
+                data={
+                    "key": key,
+                    "value": value,
+                    "path": str(path),
+                    "settings": load_ui_settings(root=self.root),
+                    "source": ui_settings_source(root=self.root),
+                },
+            )
+            result.changed_files.append(str(path))
+        except CommandError as exc:
+            raise WebActionError(
+                exc.code,
+                exc.message,
+                path=exc.path,
+                details={"action": "ui.settings.set", **exc.details},
+            ) from exc
+
+        command = [
+            self.python_executable,
+            str(SCRIPTS_DIR / "aictl.py"),
+            "--root",
+            str(self.root),
+            "--actor",
+            self.actor,
+            "--json",
+            "ui",
+            "settings",
+            "set",
+            key,
+            value,
+        ]
+        return ActionProcessResult(
+            command=command,
+            returncode=0,
+            stdout=json.dumps(result.to_dict(), ensure_ascii=False, sort_keys=True)
             + "\n",
             stderr="",
         )
@@ -506,6 +609,16 @@ def _build_ui_run_selected_task(fields: Mapping[str, str]) -> list[str]:
     return ["ui", "run", _task_ref(fields), "--confirm"]
 
 
+def _build_ui_settings_set(fields: Mapping[str, str]) -> list[str]:
+    return [
+        "ui",
+        "settings",
+        "set",
+        _allowed_ui_setting_key(fields),
+        _require_field(fields, "value"),
+    ]
+
+
 def _build_pipeline_run_next(fields: Mapping[str, str]) -> list[str]:
     args = ["pipeline", "run-next"]
     session_id = _field(fields, "session_id")
@@ -575,6 +688,21 @@ def _build_workflow(
 
 def _task_ref(fields: Mapping[str, str]) -> str:
     return _field(fields, "task") or _require_field(fields, "task_id")
+
+
+def _allowed_ui_setting_key(fields: Mapping[str, str]) -> str:
+    key = _require_field(fields, "key")
+    if key not in UI_SETTINGS_WEB_ALLOWED_KEYS:
+        raise WebActionError(
+            "WEB_UI_SETTING_KEY_NOT_ALLOWED",
+            "Web UI settings action cannot update setting key: {}".format(key),
+            path=key,
+            details={
+                "key": key,
+                "allowed_keys": list(UI_SETTINGS_WEB_ALLOWED_KEYS),
+            },
+        )
+    return key
 
 
 def _require_field(fields: Mapping[str, str], name: str) -> str:
@@ -771,6 +899,12 @@ ACTIONS: dict[str, WebAction] = {
         command_name="pipeline.run_until_blocker",
         label="Run selected task",
         builder=_build_ui_run_selected_task,
+    ),
+    "ui.settings.set": WebAction(
+        action_id="ui.settings.set",
+        command_name="ui.settings.set",
+        label="Update UI setting",
+        builder=_build_ui_settings_set,
     ),
     "pipeline.run_next": WebAction(
         action_id="pipeline.run_next",

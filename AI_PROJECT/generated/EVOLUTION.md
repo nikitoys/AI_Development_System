@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `2124`
-Changes: `66`
+Revision: `2167`
+Changes: `68`
 
 ## Summary
 
 - `accepted`: 51
-- `approved`: 9
+- `approved`: 11
 - `in_review`: 1
 - `ready`: 5
 
@@ -4252,3 +4252,110 @@ Impact:
 Linked tasks:
 
 - TASK-135
+
+### CHG-067 — PIPE-062 Add confirmed Web actions for UI settings updates
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-67 requires an explicit Evolution Change Proposal before implementation: Add confirmed Web actions that update allowed project-local UI settings from the Settings page.
+
+Proposal:
+
+Implement the bounded task scope: Add Web actions for updating explicitly allowed UI settings keys.; Require confirmation before writing AI_PROJECT/config/ui_settings.json.; Reuse existing UI settings load and upsert behavior where possible.; Return action results that show changed key, new value and settings file path.
+
+Rationale:
+
+This lets the Human Owner change supported UI settings without running terminal commands.
+
+Approved by: `human_owner` at `2026-06-24T11:28:53Z`  
+Approval notes: Approve  
+
+Affected files:
+
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/web/server.py
+- tests/test_web_control_center.py
+
+Risks:
+
+- Boundary risk: Do not allow arbitrary file writes.
+- Boundary risk: Do not allow editing settings outside AI_PROJECT/config/ui_settings.json.
+- Boundary risk: Do not add the internal change-gate bypass checkbox in this task.
+- Verify that arbitrary setting keys are not accepted through Web actions unless intentionally allowed.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-146.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add Web actions for updating explicitly allowed UI settings keys.
+- Require confirmation before writing AI_PROJECT/config/ui_settings.json.
+- Reuse existing UI settings load and upsert behavior where possible.
+- Return action results that show changed key, new value and settings file path.
+- Settings update actions require explicit confirmation.
+- Only allowlisted setting keys can be updated through the Web UI.
+- Successful updates write AI_PROJECT/config/ui_settings.json.
+
+Linked tasks:
+
+- TASK-146
+
+### CHG-068 — PIPE-063 Add internal change-gate bypass UI setting
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-68 requires an explicit Evolution Change Proposal before implementation: Add a disabled-by-default UI setting for explicitly bypassing approved Change requirements on internal project-control tasks.
+
+Proposal:
+
+Implement the bounded task scope: Add a default false setting for internal project-control Change gate bypass.; Parse boolean string values safely for the new setting.; Expose the setting through effective UI settings output.; Add tests for default, true, false and invalid values.
+
+Rationale:
+
+This introduces the setting data contract without yet changing pipeline execution behavior.
+
+Approved by: `human_owner` at `2026-06-24T11:29:03Z`  
+Approval notes: Approve  
+
+Affected files:
+
+- ai_project_ctl/ui_settings.py
+- tests/test_ui_settings.py
+
+Risks:
+
+- Boundary risk: Do not bypass the Change gate in this task.
+- Boundary risk: Do not change built-in pipeline policy presets.
+- Boundary risk: Do not enable the setting by default.
+- Verify that this task adds only configuration support and does not weaken execution gates.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-147.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add a default false setting for internal project-control Change gate bypass.
+- Parse boolean string values safely for the new setting.
+- Expose the setting through effective UI settings output.
+- Add tests for default, true, false and invalid values.
+- Effective UI settings include the new bypass setting with default false.
+- String values such as true, false, 1 and 0 are parsed predictably.
+- Invalid boolean values produce a stable settings error or validation failure.
+
+Linked tasks:
+
+- TASK-147

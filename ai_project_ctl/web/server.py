@@ -17,12 +17,18 @@ from urllib.parse import parse_qs, unquote, urlparse
 from ai_project_ctl.core.result import CommandError
 from ai_project_ctl.core.workflows import BULK_IMPORT_MAX_BYTES
 from ai_project_ctl.web.actions import (
+    UI_SETTINGS_WEB_ALLOWED_KEYS,
     WebActionError,
     WebActionExecutor,
     WebActionResult,
     available_actions,
 )
 from ai_project_ctl.web.read_model import ReadOnlyProjectModel
+from ai_project_ctl.ui_settings import (
+    load_ui_settings,
+    ui_settings_path,
+    ui_settings_source,
+)
 
 
 LOCAL_HOSTS = {"localhost"}
@@ -35,6 +41,7 @@ WEB_ACTION_BODY_MAX_BYTES = WEB_IMPORT_FILE_MAX_BYTES + 16_384
 NAV_ITEMS = (
     ("/", "Dashboard"),
     ("/pipeline", "Pipeline"),
+    ("/settings", "Settings"),
     ("/tasks", "Tasks"),
     ("/evolution", "Evolution"),
     ("/epics", "Epics"),
@@ -99,6 +106,15 @@ TASK_ROW_WORKFLOWS = (
         "notes_label": "Change Request Notes",
         "notes_placeholder": "Describe the required rework.",
     },
+)
+TASK_ROW_RUN_STATUSES = {"planned", "ready", "changes_requested"}
+TASK_ROW_INACTIVE_STATUSES = {"done", "archived", "deferred"}
+TASK_ROW_APPROVED_CHANGE_STATUSES = {"approved", "in_review", "accepted"}
+SETTINGS_DISPLAY_KEYS = (
+    "command_line",
+    "default_policy",
+    "execution_timeout_sec",
+    "preflight_timeout_sec",
 )
 
 
@@ -321,6 +337,7 @@ def route(
             ),
             query=query,
         ),
+        "/settings": lambda: render_settings(model),
         "/tasks": lambda: render_tasks(model.dashboard(), query=query),
         "/evolution": lambda: render_evolution(model.dashboard(), query=query),
         "/epics": lambda: render_epics(model.dashboard()),
@@ -2419,6 +2436,45 @@ def render_generated(data: Mapping[str, Any]) -> str:
     return render_page("Generated", "".join(body), active="/generated")
 
 
+def render_settings(model: ReadOnlyProjectModel) -> str:
+    settings = load_ui_settings(root=model.root)
+    source = ui_settings_source(root=model.root)
+    path = ui_settings_path(model.root)
+    rows = []
+    for key in settings_display_keys(settings):
+        rows.append(
+            "<tr><td><code>{}</code></td><td>{}</td><td>{}</td></tr>".format(
+                escape(key),
+                settings_value(settings.get(key)),
+                escape(source),
+            )
+        )
+
+    body = [
+        '<section class="summary-grid">',
+        metric("Source", source),
+        metric("Path", str(path)),
+        metric("Values", str(len(settings))),
+        "</section>",
+        '<section class="panel">',
+        "<h2>Effective UI Settings</h2>",
+        table(("Setting", "Value", "Source"), rows, "No UI settings available."),
+        "</section>",
+        '<section class="panel action-panel">',
+        "<h2>Update UI Setting</h2>",
+        action_form(
+            "ui.settings.set",
+            [
+                select_field("key", "Setting", UI_SETTINGS_WEB_ALLOWED_KEYS),
+                input_field("value", "New Value"),
+            ],
+            button_label="Update Setting",
+        ),
+        "</section>",
+    ]
+    return render_page("Settings", "".join(body), active="/settings")
+
+
 def render_doctor(data: Mapping[str, Any]) -> str:
     doctor = data.get("doctor") or {}
     summary = doctor.get("summary") or {}
@@ -2802,6 +2858,7 @@ def action_result_panel(payload: Mapping[str, Any]) -> str:
     sections.extend(_step_panel(_result_steps(data, summary)))
     sections.extend(_file_list_panel("Changed Files", result.get("changed_files")))
     sections.extend(_file_list_panel("Generated Files", result.get("generated_files")))
+    sections.extend(_ui_settings_result_panel(data))
     sections.extend(_message_panel("Warnings", "warn", _messages(result.get("warnings"))))
     sections.extend(_message_panel("Errors", "fail", visible_errors))
     sections.extend(_pipeline_result_panel(data))
@@ -2838,6 +2895,7 @@ def _result_target(data: Mapping[str, Any]) -> str:
     change = _mapping(data.get("change"))
     epic = _mapping(data.get("epic"))
     for key, value in (
+        ("Setting", data.get("key")),
         ("Task", data.get("task_ref") or task.get("ref") or task.get("id")),
         ("Change", data.get("change_ref") or change.get("id")),
         ("Epic", data.get("epic_ref") or epic.get("id")),
@@ -2928,6 +2986,33 @@ def _file_list_panel(title: str, value: Any) -> list[str]:
         "<h3>{}</h3>".format(escape(title)),
         '<ul class="result-files">{}</ul>'.format(
             "".join("<li><code>{}</code></li>".format(escape(item)) for item in items)
+        ),
+        "</section>",
+    ]
+
+
+def _ui_settings_result_panel(data: Mapping[str, Any]) -> list[str]:
+    key = str(data.get("key") or "").strip()
+    path = str(data.get("path") or "").strip()
+    if not key or not path:
+        return []
+    value = str(data.get("value") or "")
+    facts = [
+        ("Updated key", key),
+        ("New value", value),
+        ("Settings path", path),
+    ]
+    return [
+        '<section class="result-section">',
+        "<h3>UI Setting</h3>",
+        '<ul class="result-actions">{}</ul>'.format(
+            "".join(
+                "<li><strong>{}</strong>: <code>{}</code></li>".format(
+                    escape(label),
+                    escape(item),
+                )
+                for label, item in facts
+            )
         ),
         "</section>",
     ]
@@ -3428,6 +3513,24 @@ def text_list(
     return '<ul class="compact-list">{}</ul>'.format(
         "".join("<li>{}</li>".format(escape(item)) for item in items)
     )
+
+
+def settings_display_keys(settings: Mapping[str, Any]) -> list[str]:
+    primary = [key for key in SETTINGS_DISPLAY_KEYS if key in settings]
+    extra = sorted(str(key) for key in settings if str(key) not in SETTINGS_DISPLAY_KEYS)
+    return primary + extra
+
+
+def settings_value(value: Any) -> str:
+    if isinstance(value, (dict, list)):
+        text = json.dumps(value, ensure_ascii=False, sort_keys=True)
+    elif isinstance(value, bool):
+        text = "true" if value else "false"
+    elif value is None:
+        text = "null"
+    else:
+        text = str(value)
+    return "<code>{}</code>".format(escape(text))
 
 
 def _mapping(value: Any) -> Mapping[str, Any]:
@@ -5088,11 +5191,189 @@ def task_identity_cell(task: Mapping[str, Any]) -> str:
 
 def task_row_actions(task: Mapping[str, Any], data: Mapping[str, Any]) -> str:
     specs = task_row_action_specs(task, data)
-    if not specs:
+    controls = []
+    run_control = task_row_run_control(task, data)
+    if run_control:
+        controls.append(run_control)
+    controls.extend(task_row_action(task, data, spec) for spec in specs)
+    if not controls:
         return '<span class="pill">No row workflows</span>'
-    return '<div class="row-actions">{}</div>'.format(
-        "".join(task_row_action(task, data, spec) for spec in specs)
+    return '<div class="row-actions">{}</div>'.format("".join(controls))
+
+
+def task_row_run_control(task: Mapping[str, Any], data: Mapping[str, Any]) -> str:
+    status = str(task.get("status") or "")
+    if status in TASK_ROW_INACTIVE_STATUSES:
+        return ""
+    if status in TASK_ROW_RUN_STATUSES:
+        return task_row_start_control(task)
+    if status == "in_progress":
+        return task_row_continue_control(task, data)
+    return ""
+
+
+def task_row_start_control(task: Mapping[str, Any]) -> str:
+    task_ref = str(task.get("ref") or task.get("id") or "")
+    if not task_ref:
+        return ""
+    return (
+        '<details class="row-action row-action-run">'
+        "<summary>Run</summary>"
+        "{}{}"
+        "</details>"
+    ).format(
+        task_row_change_guidance(task),
+        action_form(
+            "ui.run_selected_task",
+            [hidden_field("task", task_ref)],
+            button_label="Run",
+        ),
     )
+
+
+def task_row_continue_control(
+    task: Mapping[str, Any],
+    data: Mapping[str, Any],
+) -> str:
+    session = task_row_pipeline_session(task, data)
+    if not session:
+        return (
+            '<div class="row-action row-action-continue">'
+            "{}"
+            '<p class="muted">Continue from Pipeline after a session exists for this task.</p>'
+            "</div>"
+        ).format(task_row_change_guidance(task))
+
+    session_id = str(session.get("id") or "")
+    status = str(session.get("status") or "unknown")
+    if session_id and status in PIPELINE_RESUMABLE_STATUSES:
+        return task_row_session_control(
+            task,
+            session_id,
+            label="Resume",
+            guidance=pipeline_session_action_guidance(session),
+        )
+    if session_id and status in PIPELINE_RUNNABLE_STATUSES:
+        return task_row_session_control(
+            task,
+            session_id,
+            label="Continue",
+            guidance=pipeline_session_action_guidance(session),
+        )
+    guidance = pipeline_session_action_guidance(session)
+    if not guidance:
+        guidance = (
+            '<p class="muted">Continue is unavailable for pipeline session status {}.</p>'.format(
+                escape(status)
+            )
+        )
+    return (
+        '<div class="row-action row-action-continue">'
+        "{}{}"
+        "</div>"
+    ).format(task_row_change_guidance(task), guidance)
+
+
+def task_row_session_control(
+    task: Mapping[str, Any],
+    session_id: str,
+    *,
+    label: str,
+    guidance: str = "",
+) -> str:
+    return (
+        '<details class="row-action row-action-continue">'
+        "<summary>{}</summary>"
+        "{}{}{}"
+        "</details>"
+    ).format(
+        escape(label),
+        task_row_change_guidance(task),
+        guidance,
+        action_form(
+            "pipeline.run_next",
+            [hidden_field("session_id", session_id)],
+            button_label=label,
+        ),
+    )
+
+
+def task_row_pipeline_session(
+    task: Mapping[str, Any],
+    data: Mapping[str, Any],
+) -> Mapping[str, Any]:
+    pipeline = _mapping(data.get("pipeline"))
+    sessions: list[Mapping[str, Any]] = []
+    current = _mapping(pipeline.get("current_session"))
+    if current:
+        sessions.append(current)
+    seen = {str(current.get("id") or "")} if current else set()
+    for raw_session in pipeline.get("sessions") or []:
+        session = _mapping(raw_session)
+        session_id = str(session.get("id") or "")
+        if session and session_id not in seen:
+            sessions.append(session)
+            seen.add(session_id)
+
+    matched = [
+        session
+        for session in sessions
+        if pipeline_session_matches_task(session, task)
+    ]
+    for session in matched:
+        status = str(session.get("status") or "")
+        if status in PIPELINE_RUNNABLE_STATUSES or status in PIPELINE_RESUMABLE_STATUSES:
+            return session
+    return matched[0] if matched else {}
+
+
+def pipeline_session_matches_task(
+    session: Mapping[str, Any],
+    task: Mapping[str, Any],
+) -> bool:
+    refs = set(task_ref_values(task))
+    if not refs:
+        return False
+    direct_refs = {
+        str(session.get("current_task_id") or ""),
+        str(session.get("current_task_ref") or ""),
+    }
+    if refs.intersection(ref for ref in direct_refs if ref):
+        return True
+    queue = _mapping(session.get("selected_queue"))
+    return bool(refs.intersection(_string_items(queue.get("task_refs"))))
+
+
+def task_row_change_guidance(task: Mapping[str, Any]) -> str:
+    hints = _mapping(task.get("pipeline_hints"))
+    if not hints.get("requires_evolution_change"):
+        return ""
+    linked_changes = [
+        change
+        for change in hints.get("linked_changes") or []
+        if isinstance(change, Mapping)
+    ]
+    if any(
+        str(change.get("status") or "") in TASK_ROW_APPROVED_CHANGE_STATUSES
+        for change in linked_changes
+    ):
+        return ""
+    if linked_changes:
+        detail = "Linked Change: {}.".format(
+            ", ".join(
+                "{} {}".format(
+                    str(change.get("id") or "unknown"),
+                    str(change.get("status") or "unknown"),
+                ).strip()
+                for change in linked_changes
+            )
+        )
+    else:
+        detail = "No linked Evolution Change is available."
+    return (
+        '<p class="muted"><strong>Owner guidance:</strong> '
+        "Requires approved linked Evolution Change before execution. {}</p>"
+    ).format(escape(detail))
 
 
 def task_row_action_specs(

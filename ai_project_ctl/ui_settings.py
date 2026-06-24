@@ -14,9 +14,13 @@ from ai_project_ctl.core.store import StoreError, read_json_file, write_json_fil
 UI_SETTINGS_FILE_NAME = "ui_settings.json"
 TIMEOUT_SETTING_MIN_SEC = 1
 TIMEOUT_SETTING_MAX_SEC = 3600
+INTERNAL_CHANGE_GATE_BYPASS_SETTING = "allow_internal_change_gate_bypass"
+BOOLEAN_SETTING_FALSE_STRINGS = {"0", "false"}
+BOOLEAN_SETTING_TRUE_STRINGS = {"1", "true"}
 DEFAULT_UI_SETTINGS: dict[str, Any] = {
     "command_line": "codex exec",
     "default_policy": "supervised_executable_local_commit",
+    INTERNAL_CHANGE_GATE_BYPASS_SETTING: False,
 }
 SOURCE_DEFAULTS = "defaults"
 SOURCE_PROJECT_FILE = "project_file"
@@ -70,7 +74,40 @@ def load_ui_settings(*, root: str | Path = ".") -> dict[str, Any]:
 
     effective = default_ui_settings()
     effective.update(loaded)
+    _normalize_boolean_settings(effective)
     return effective
+
+
+def _normalize_boolean_settings(settings: dict[str, Any]) -> None:
+    settings[INTERNAL_CHANGE_GATE_BYPASS_SETTING] = _ui_boolean_setting(
+        settings,
+        INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+    )
+
+
+def _ui_boolean_setting(settings: Mapping[str, Any], key: str) -> bool:
+    return _parse_ui_boolean_value(key, settings.get(key))
+
+
+def _parse_ui_boolean_value(key: str, value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in BOOLEAN_SETTING_TRUE_STRINGS:
+            return True
+        if normalized in BOOLEAN_SETTING_FALSE_STRINGS:
+            return False
+    raise UISettingsError(
+        "UI_SETTINGS_BOOLEAN_INVALID",
+        "UI setting {} must be a boolean or one of: true, false, 1, 0.".format(key),
+        path=key,
+        details={
+            "setting": key,
+            "value": value,
+            "allowed_values": ["true", "false", "1", "0"],
+        },
+    )
 
 
 def ui_command_line_argv(
@@ -171,6 +208,10 @@ def upsert_ui_setting(key: str, value: str, *, root: str | Path = ".") -> Path:
         settings.update(_read_project_settings(path))
     else:
         settings = default_ui_settings()
-    settings[key] = value
+    if key == INTERNAL_CHANGE_GATE_BYPASS_SETTING:
+        settings[key] = _parse_ui_boolean_value(key, value)
+    else:
+        settings[key] = value
+    _normalize_boolean_settings(settings)
     write_json_file(path, settings)
     return path
