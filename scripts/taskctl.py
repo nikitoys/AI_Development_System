@@ -69,11 +69,11 @@ from ai_project_ctl.core.legacy import (  # noqa: E402
     state_dir as core_state_dir,
     utc_now as core_utc_now,
 )
+from ai_project_ctl import task_reports as task_report_service  # noqa: E402
 
 
 TASK_SCHEMA_VERSION = 1
 PLAN_SCHEMA_VERSION = 1
-TASK_REPORT_SCHEMA_VERSION = 1
 TASK_UID_PREFIX = "tsk_"
 TASK_REF_RE = re.compile(r"^([A-Z][A-Z0-9]{1,11})-(\d+)$")
 TASK_REF_SUFFIX_WIDTH = 2
@@ -132,76 +132,6 @@ TASK_LIST_FIELDS = {
     "notes": "Notes",
 }
 
-REPORT_TOP_LEVEL_KEYS = {
-    "schema_version",
-    "task_id",
-    "task_ref",
-    "implementation_summary",
-    "changed_files",
-    "generated_files",
-    "checks",
-    "warnings",
-    "blockers",
-    "notes",
-    "owner_decision_required",
-    "token_usage",
-}
-REPORT_REQUIRED_KEYS = {
-    "task_id",
-    "implementation_summary",
-    "changed_files",
-    "generated_files",
-    "checks",
-    "warnings",
-    "blockers",
-    "notes",
-    "owner_decision_required",
-}
-REPORT_CHECK_KEYS = {
-    "name",
-    "command",
-    "result",
-    "duration_sec",
-    "blocking",
-    "details",
-}
-REPORT_CHECK_REQUIRED_KEYS = {"name", "result"}
-REPORT_CHECK_RESULTS = {
-    "pass",
-    "passed",
-    "fail",
-    "failed",
-    "warn",
-    "warning",
-    "skipped",
-    "error",
-}
-REPORT_TOKEN_USAGE_NUMBER_KEYS = {
-    "prompt_tokens",
-    "context_tokens",
-    "completion_tokens",
-    "output_tokens",
-    "total_tokens",
-    "remaining_tokens",
-    "model_context_limit",
-    "max_context_tokens",
-    "reserved_output_tokens",
-    "min_remaining_tokens",
-}
-REPORT_TOKEN_USAGE_BOOL_KEYS = {
-    "token_count_estimated",
-    "token_count_unavailable",
-}
-REPORT_TOKEN_USAGE_STRING_KEYS = {
-    "token_count_strategy",
-    "token_count_unavailable_reason",
-}
-REPORT_TOKEN_USAGE_KEYS = (
-    REPORT_TOKEN_USAGE_NUMBER_KEYS
-    | REPORT_TOKEN_USAGE_BOOL_KEYS
-    | REPORT_TOKEN_USAGE_STRING_KEYS
-)
-
 
 class TaskError(Exception):
     pass
@@ -240,11 +170,11 @@ def task_events_path(root):
 
 
 def task_reports_path(root):
-    return state_dir(root) / "task_reports.json"
+    return task_report_service.task_reports_path(root)
 
 
 def task_report_events_path(root):
-    return events_dir(root) / "task-report-events.jsonl"
+    return task_report_service.task_report_events_path(root)
 
 
 def plan_path(root):
@@ -360,28 +290,18 @@ def default_tasks_state():
 
 
 def default_task_reports_state():
-    now = utc_now()
-    return {
-        "schema_version": TASK_REPORT_SCHEMA_VERSION,
-        "revision": 0,
-        "created_at": now,
-        "updated_at": now,
-        "reports": [],
-        "latest_by_task": {},
-    }
+    return task_report_service.default_task_reports_state()
 
 
 def load_task_reports(root, required=False):
-    path = task_reports_path(root)
-    if not path.exists():
-        if required:
-            raise TaskError("TASK_REPORTS_NOT_INITIALIZED: {}".format(path))
-        return default_task_reports_state()
-    return read_json(path, "TASK_REPORTS_NOT_INITIALIZED")
+    try:
+        return task_report_service.load_task_reports(root, required=required)
+    except task_report_service.TaskReportError as e:
+        raise TaskError(str(e))
 
 
 def save_task_reports(root, state):
-    write_json(task_reports_path(root), state)
+    task_report_service.save_task_reports(root, state)
 
 
 def require_keys(obj, keys, path, errors):
@@ -531,192 +451,18 @@ def resolve_task_ref(tasks, task_ref):
 
 
 def task_report_reference_matches(task, value):
-    if not isinstance(value, str) or not value.strip():
-        return False
-    return value.strip() in set(task_reference_values(task))
+    return task_report_service.task_report_reference_matches(task, value)
 
 
 def next_report_id(reports):
-    max_num = 0
-    head = "RPT-"
-    for report in reports:
-        report_id = str(report.get("id", ""))
-        if report_id.startswith(head):
-            suffix = report_id[len(head):]
-            if suffix.isdigit():
-                max_num = max(max_num, int(suffix))
-    return "{}{:03d}".format(head, max_num + 1)
+    return task_report_service.next_report_id(reports)
 
 
 def read_report_payload(path_text):
-    path = Path(path_text)
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except FileNotFoundError:
-        raise TaskError("REPORT_FILE_NOT_FOUND: {}".format(path))
-    except json.JSONDecodeError as e:
-        raise TaskError(
-            "INVALID_REPORT_JSON: {}:{}:{} {}".format(path, e.lineno, e.colno, e.msg)
-        )
-    if not isinstance(payload, dict):
-        raise TaskError("INVALID_REPORT_SCHEMA: report must be a JSON object")
-    return payload
-
-
-def normalize_report_token_usage(value, errors, path="report.token_usage"):
-    if value is None:
-        return {}
-    if not isinstance(value, dict):
-        errors.append("{} must be an object".format(path))
-        return {}
-
-    unknown = sorted(set(value.keys()) - REPORT_TOKEN_USAGE_KEYS)
-    if unknown:
-        errors.append("{} has unknown field(s): {}".format(path, ", ".join(unknown)))
-
-    normalized = {}
-    for key in sorted(REPORT_TOKEN_USAGE_NUMBER_KEYS & set(value.keys())):
-        number = value.get(key)
-        if not isinstance(number, int) or isinstance(number, bool) or number < 0:
-            errors.append("{}.{} must be a non-negative integer".format(path, key))
-        else:
-            normalized[key] = number
-    for key in sorted(REPORT_TOKEN_USAGE_BOOL_KEYS & set(value.keys())):
-        flag = value.get(key)
-        if not isinstance(flag, bool):
-            errors.append("{}.{} must be a boolean".format(path, key))
-        else:
-            normalized[key] = flag
-    for key in sorted(REPORT_TOKEN_USAGE_STRING_KEYS & set(value.keys())):
-        text = value.get(key)
-        if not isinstance(text, str):
-            errors.append("{}.{} must be a string".format(path, key))
-        else:
-            normalized[key] = text
-    return normalized
-
-
-def normalize_task_report_payload(payload, task):
-    errors = []
-    unknown = sorted(set(payload.keys()) - REPORT_TOP_LEVEL_KEYS)
-    if unknown:
-        errors.append("report has unknown field(s): {}".format(", ".join(unknown)))
-
-    missing = sorted(REPORT_REQUIRED_KEYS - set(payload.keys()))
-    if missing:
-        errors.append("report missing required field(s): {}".format(", ".join(missing)))
-
-    schema_version = payload.get("schema_version", TASK_REPORT_SCHEMA_VERSION)
-    if schema_version != TASK_REPORT_SCHEMA_VERSION:
-        errors.append("schema_version must be {}".format(TASK_REPORT_SCHEMA_VERSION))
-
-    task_id = payload.get("task_id")
-    require_string(task_id, "report.task_id", errors, allow_empty=False)
-    if isinstance(task_id, str) and task_id.strip() and not task_report_reference_matches(task, task_id):
-        errors.append("report.task_id does not match target task: {}".format(task_id))
-
-    task_ref = payload.get("task_ref", "")
-    if task_ref != "":
-        require_string(task_ref, "report.task_ref", errors, allow_empty=False)
-        if isinstance(task_ref, str) and task_ref.strip() and not task_report_reference_matches(task, task_ref):
-            errors.append("report.task_ref does not match target task: {}".format(task_ref))
-
-    implementation_summary = payload.get("implementation_summary")
-    require_string(
-        implementation_summary,
-        "report.implementation_summary",
-        errors,
-        allow_empty=False,
-    )
-
-    for field in ["changed_files", "generated_files", "warnings", "blockers", "notes"]:
-        require_string_list(payload.get(field), "report." + field, errors)
-
-    require_bool(
-        payload.get("owner_decision_required"),
-        "report.owner_decision_required",
-        errors,
-    )
-    token_usage = normalize_report_token_usage(payload.get("token_usage"), errors)
-
-    checks = payload.get("checks")
-    if not isinstance(checks, list):
-        errors.append("report.checks must be a list")
-        checks = []
-
-    normalized_checks = []
-    for index, check in enumerate(checks):
-        path = "report.checks[{}]".format(index)
-        if not isinstance(check, dict):
-            errors.append("{} must be an object".format(path))
-            continue
-        unknown_check_keys = sorted(set(check.keys()) - REPORT_CHECK_KEYS)
-        if unknown_check_keys:
-            errors.append(
-                "{} has unknown field(s): {}".format(
-                    path,
-                    ", ".join(unknown_check_keys),
-                )
-            )
-        missing_check_keys = sorted(REPORT_CHECK_REQUIRED_KEYS - set(check.keys()))
-        if missing_check_keys:
-            errors.append(
-                "{} missing required field(s): {}".format(
-                    path,
-                    ", ".join(missing_check_keys),
-                )
-            )
-        require_string(check.get("name"), path + ".name", errors, allow_empty=False)
-        require_string(check.get("result"), path + ".result", errors, allow_empty=False)
-        result = str(check.get("result") or "").strip().lower()
-        if result and result not in REPORT_CHECK_RESULTS:
-            errors.append(
-                "{}.result must be one of {}".format(
-                    path,
-                    ", ".join(sorted(REPORT_CHECK_RESULTS)),
-                )
-            )
-        if "command" in check:
-            require_string(check.get("command"), path + ".command", errors)
-        if "details" in check:
-            require_string(check.get("details"), path + ".details", errors)
-        duration = check.get("duration_sec")
-        if duration is not None:
-            if not isinstance(duration, (int, float)) or isinstance(duration, bool) or duration < 0:
-                errors.append(path + ".duration_sec must be a non-negative number")
-        blocking = check.get("blocking", False)
-        if not isinstance(blocking, bool):
-            errors.append(path + ".blocking must be a boolean")
-        normalized_checks.append(
-            {
-                "name": str(check.get("name") or ""),
-                "command": str(check.get("command") or ""),
-                "result": result,
-                "duration_sec": duration,
-                "blocking": blocking,
-                "details": str(check.get("details") or ""),
-            }
-        )
-
-    if errors:
-        raise TaskError("INVALID_REPORT_SCHEMA:\n- " + "\n- ".join(errors))
-
-    return {
-        "schema_version": TASK_REPORT_SCHEMA_VERSION,
-        "task_id": task.get("id"),
-        "task_ref": task.get("ref") or "",
-        "reported_task_id": task_id,
-        "reported_task_ref": task_ref,
-        "implementation_summary": implementation_summary,
-        "changed_files": list(payload.get("changed_files") or []),
-        "generated_files": list(payload.get("generated_files") or []),
-        "checks": normalized_checks,
-        "warnings": list(payload.get("warnings") or []),
-        "blockers": list(payload.get("blockers") or []),
-        "notes": list(payload.get("notes") or []),
-        "owner_decision_required": payload.get("owner_decision_required"),
-        "token_usage": token_usage,
-    }
+        return task_report_service.read_report_payload(path_text)
+    except task_report_service.TaskReportError as e:
+        raise TaskError(str(e))
 
 
 def task_id_map(tasks):
@@ -1714,143 +1460,7 @@ def validate_tasks(state, plan=None, check_plan=True):
 
 
 def validate_task_reports(report_state, tasks_state):
-    errors = []
-    require_keys(
-        report_state,
-        [
-            "schema_version",
-            "revision",
-            "created_at",
-            "updated_at",
-            "reports",
-            "latest_by_task",
-        ],
-        "task_reports_state",
-        errors,
-    )
-    if errors:
-        return errors
-
-    if report_state.get("schema_version") != TASK_REPORT_SCHEMA_VERSION:
-        errors.append(
-            "task_reports.schema_version must be {}".format(TASK_REPORT_SCHEMA_VERSION)
-        )
-    if not isinstance(report_state.get("revision"), int) or report_state.get("revision") < 0:
-        errors.append("task_reports.revision must be a non-negative integer")
-    require_string(report_state.get("created_at"), "task_reports.created_at", errors)
-    require_string(report_state.get("updated_at"), "task_reports.updated_at", errors)
-
-    reports = report_state.get("reports")
-    if not isinstance(reports, list):
-        errors.append("task_reports.reports must be a list")
-        reports = []
-    latest_by_task = report_state.get("latest_by_task")
-    if not isinstance(latest_by_task, dict):
-        errors.append("task_reports.latest_by_task must be an object")
-        latest_by_task = {}
-
-    tasks_by_id = task_id_map(tasks_state.get("tasks", []))
-    reports_by_id = {}
-
-    for index, record in enumerate(reports):
-        path = "task_reports.reports[{}]".format(index)
-        require_keys(
-            record,
-            [
-                "id",
-                "task_id",
-                "task_ref",
-                "submitted_at",
-                "submitted_by",
-                "source_file",
-                "report",
-            ],
-            path,
-            errors,
-        )
-        if not isinstance(record, dict):
-            continue
-        report_id = record.get("id")
-        require_string(report_id, path + ".id", errors, allow_empty=False)
-        if isinstance(report_id, str) and report_id.strip():
-            if report_id in reports_by_id:
-                errors.append("duplicate task report id: {}".format(report_id))
-            else:
-                reports_by_id[report_id] = record
-
-        task_id = record.get("task_id")
-        require_string(task_id, path + ".task_id", errors, allow_empty=False)
-        if isinstance(task_id, str) and task_id.strip() and task_id not in tasks_by_id:
-            errors.append("{}.task_id references missing task: {}".format(path, task_id))
-
-        for field in ["task_ref", "submitted_at", "submitted_by", "source_file"]:
-            require_string(record.get(field), path + "." + field, errors)
-
-        report = record.get("report")
-        if not isinstance(report, dict):
-            errors.append(path + ".report must be an object")
-            continue
-
-        report_task_id = report.get("task_id")
-        if report_task_id != task_id:
-            errors.append(path + ".report.task_id must match record task_id")
-
-        for field in ["changed_files", "generated_files", "warnings", "blockers", "notes"]:
-            require_string_list(report.get(field), path + ".report." + field, errors)
-        require_string(
-            report.get("implementation_summary"),
-            path + ".report.implementation_summary",
-            errors,
-            allow_empty=False,
-        )
-        require_bool(
-            report.get("owner_decision_required"),
-            path + ".report.owner_decision_required",
-            errors,
-        )
-        normalize_report_token_usage(
-            report.get("token_usage"),
-            errors,
-            path=path + ".report.token_usage",
-        )
-        checks = report.get("checks")
-        if not isinstance(checks, list):
-            errors.append(path + ".report.checks must be a list")
-        else:
-            for check_index, check in enumerate(checks):
-                check_path = "{}.report.checks[{}]".format(path, check_index)
-                if not isinstance(check, dict):
-                    errors.append(check_path + " must be an object")
-                    continue
-                require_string(check.get("name"), check_path + ".name", errors, allow_empty=False)
-                require_string(check.get("result"), check_path + ".result", errors, allow_empty=False)
-
-    for task_id, report_id in latest_by_task.items():
-        if not isinstance(task_id, str) or not task_id.strip():
-            errors.append("task_reports.latest_by_task keys must be non-empty strings")
-            continue
-        if not isinstance(report_id, str) or not report_id.strip():
-            errors.append(
-                "task_reports.latest_by_task[{}] must be a non-empty string".format(task_id)
-            )
-            continue
-        report = reports_by_id.get(report_id)
-        if report is None:
-            errors.append(
-                "task_reports.latest_by_task[{}] references missing report: {}".format(
-                    task_id,
-                    report_id,
-                )
-            )
-        elif report.get("task_id") != task_id:
-            errors.append(
-                "task_reports.latest_by_task[{}] points to report for {}".format(
-                    task_id,
-                    report.get("task_id"),
-                )
-            )
-
-    return errors
+    return task_report_service.validate_task_reports(report_state, tasks_state)
 
 
 def validate_optional_task_reports(root, tasks_state):
@@ -3263,68 +2873,19 @@ def cmd_task_report_submit(args):
 
     task = resolve_task_ref(state.get("tasks", []), args.task)
     report_payload = read_report_payload(args.file)
-    normalized_report = normalize_task_report_payload(report_payload, task)
+    try:
+        submission = task_report_service.submit_task_report(
+            root=root,
+            tasks_state=state,
+            task=task,
+            report_payload=report_payload,
+            source_file=args.file,
+            actor=args.actor,
+        )
+    except task_report_service.TaskReportError as e:
+        raise TaskError(str(e))
 
-    report_state = load_task_reports(root, required=False)
-    existing_errors = validate_task_reports(report_state, state)
-    if existing_errors:
-        raise TaskError("TASK_REPORTS_VALIDATION_FAILED:\n- " + "\n- ".join(existing_errors))
-
-    revision_before = report_state.get("revision", 0)
-    revision_after = revision_before + 1
-    report_id = next_report_id(report_state.get("reports", []))
-    submitted_at = utc_now()
-    source_file = str(Path(args.file).resolve())
-    task_id = task.get("id")
-    record = {
-        "id": report_id,
-        "task_id": task_id,
-        "task_ref": task.get("ref") or "",
-        "submitted_at": submitted_at,
-        "submitted_by": args.actor,
-        "source_file": source_file,
-        "report": normalized_report,
-    }
-
-    proposed = copy.deepcopy(report_state)
-    proposed["revision"] = revision_after
-    proposed["updated_at"] = submitted_at
-    proposed.setdefault("reports", []).append(record)
-    proposed.setdefault("latest_by_task", {})[task_id] = report_id
-
-    proposed_errors = validate_task_reports(proposed, state)
-    if proposed_errors:
-        raise TaskError("TASK_REPORTS_VALIDATION_FAILED:\n- " + "\n- ".join(proposed_errors))
-
-    ensure_project_dirs(root)
-    save_task_reports(root, proposed)
-    append_report_event(
-        root=root,
-        actor=args.actor,
-        command="task.report.submit",
-        entity_type="task_report",
-        entity_id=report_id,
-        revision_before=revision_before,
-        revision_after=revision_after,
-        payload={
-            "task_id": task_id,
-            "task_ref": task.get("ref") or "",
-            "report_id": report_id,
-            "source_file": source_file,
-            "owner_decision_required": normalized_report.get("owner_decision_required"),
-        },
-    )
-
-    result = {
-        "report_id": report_id,
-        "task_id": task_id,
-        "task_ref": task.get("ref") or "",
-        "revision_before": revision_before,
-        "revision_after": revision_after,
-        "owner_decision_required": normalized_report.get("owner_decision_required"),
-        "state_path": str(task_reports_path(root)),
-        "event_path": str(task_report_events_path(root)),
-    }
+    result = submission.to_dict()
 
     if args.json:
         print_json(result)
@@ -3332,12 +2893,12 @@ def cmd_task_report_submit(args):
 
     print(
         "OK: task.report.submit revision {} -> {}".format(
-            revision_before,
-            revision_after,
+            submission.revision_before,
+            submission.revision_after,
         )
     )
-    print("Report: {} for {}".format(report_id, task_display_label(task)))
-    if normalized_report.get("owner_decision_required"):
+    print("Report: {} for {}".format(submission.report_id, task_display_label(task)))
+    if submission.owner_decision_required:
         print("Owner decision required: yes")
     return 0
 

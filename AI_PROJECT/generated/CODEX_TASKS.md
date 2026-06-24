@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `1065`
-Current task: `none`
+Revision: `1087`
+Current task: `TASK-155`
 
 ## Epic `EPIC-001`
 
@@ -2669,7 +2669,7 @@ Acceptance criteria:
 
 ### PIPEF-72 (TASK-151) — PIPE-067 Add structured Codex report block to prompt package
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_66d6567e4211`, legacy `TASK-151`, aliases `TASK-151`, local `PIPEF` / `72`
@@ -2686,7 +2686,7 @@ Acceptance criteria:
 
 ### PIPEF-73 (TASK-152) — PIPE-068 Parse structured Codex report from stdout
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_5fa2f77182b7`, legacy `TASK-152`, aliases `TASK-152`, local `PIPEF` / `73`
@@ -2703,7 +2703,7 @@ Acceptance criteria:
 
 ### PIPEF-74 (TASK-153) — PIPE-069 Add task report submission service for pipeline use
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_27cdd9a118ba`, legacy `TASK-153`, aliases `TASK-153`, local `PIPEF` / `74`
@@ -2720,7 +2720,7 @@ Acceptance criteria:
 
 ### PIPEF-75 (TASK-154) — PIPE-070 Auto-submit parsed Codex report in local-command adapter
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_b8872924f7e8`, legacy `TASK-154`, aliases `TASK-154`, local `PIPEF` / `75`
@@ -2735,9 +2735,9 @@ Acceptance criteria:
 - Malformed structured report output produces a stable blocked or failed adapter result with evidence.
 - Tests cover auto-submit success and missing-report fallback.
 
-### PIPEF-76 (TASK-155) — PIPE-071 Add pipeline regression test for Run report auto-collection
+### PIPEF-76 (TASK-155) — PIPE-071 Add pipeline regression test for Run report auto-collection ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_d572bda0c446`, legacy `TASK-155`, aliases `TASK-155`, local `PIPEF` / `76`

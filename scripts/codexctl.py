@@ -695,6 +695,63 @@ def render_context(lines, context_pack):
     lines.append("")
 
 
+def report_contract_template(model):
+    return {
+        "schema_version": 1,
+        "task_id": str(model.get("source_id") or ""),
+        "task_ref": str(model.get("source_ref") or ""),
+        "implementation_summary": "Summarize the completed implementation.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [],
+        "warnings": [],
+        "blockers": [],
+        "notes": [],
+        "owner_decision_required": False,
+        "token_usage": {
+            "prompt_tokens": 0,
+            "context_tokens": 0,
+            "completion_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0,
+            "remaining_tokens": 0,
+            "model_context_limit": 0,
+            "max_context_tokens": 0,
+            "reserved_output_tokens": 0,
+            "min_remaining_tokens": 0,
+            "token_count_strategy": "codex_reported",
+            "token_count_estimated": False,
+            "token_count_unavailable": False,
+            "token_count_unavailable_reason": "",
+        },
+    }
+
+
+def render_final_report_contract(lines, model):
+    lines.append("## Final Report")
+    lines.append("")
+    lines.append("Finish your response with a machine-readable structured report block.")
+    lines.append("Use the exact marker shown below followed by one fenced JSON block.")
+    lines.append("No prose, Markdown bullets, or extra text may appear after the closing fence.")
+    lines.append("Keep the JSON keys exactly as shown; replace placeholder values with actual results.")
+    lines.append("Report paths relative to the repository root.")
+    lines.append(
+        "Each `checks` item, when present, must include `name` and `result`; optional fields "
+        "are `command`, `duration_sec`, `blocking`, and `details`."
+    )
+    lines.append(
+        "Include `token_usage` even when counts are estimated. If exact counts are unavailable, "
+        "provide the best estimate and set `token_count_estimated` to `true`."
+    )
+    lines.append("")
+    lines.append("CODEX_REPORT_JSON:")
+    lines.append("```json")
+    lines.extend(
+        json.dumps(report_contract_template(model), ensure_ascii=False, indent=2).splitlines()
+    )
+    lines.append("```")
+
+
 def render_prompt(model):
     generated = utc_now()
     lines = []
@@ -766,14 +823,7 @@ def render_prompt(model):
     lines.append("If still blocked, stop and report the blocker.")
     lines.append("If safe to continue, make the smallest assumption and disclose it.")
     lines.append("")
-    lines.append("## Final Report")
-    lines.append("")
-    lines.append("- Summary:")
-    lines.append("- Changed files:")
-    lines.append("- Commands run:")
-    lines.append("- Verification result:")
-    lines.append("- Blockers / risks:")
-    lines.append("- Owner action required:")
+    render_final_report_contract(lines, model)
     return "\n".join(lines).rstrip() + "\n"
 
 

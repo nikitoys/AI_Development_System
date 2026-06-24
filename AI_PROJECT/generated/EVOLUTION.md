@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `2235`
-Changes: `71`
+Revision: `2256`
+Changes: `72`
 
 ## Summary
 
 - `accepted`: 51
-- `approved`: 14
+- `approved`: 15
 - `in_review`: 1
 - `ready`: 5
 
@@ -4523,3 +4523,56 @@ Impact:
 Linked tasks:
 
 - TASK-158
+
+### CHG-072 — PIPE-067 Add structured Codex report block to prompt package
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-72 requires an explicit Evolution Change Proposal before implementation: Update Codex prompt generation so executors must finish with a machine-readable structured report block.
+
+Proposal:
+
+Implement the bounded task scope: Replace the plain bullet-only Final Report prompt section with a structured report contract.; Define a fenced JSON block marker that Codex must emit at the end of execution.; Include required report fields used by task report submission, including token_usage.; Add focused tests or assertions for generated prompt report instructions.
+
+Rationale:
+
+The prompt should still be readable by humans, but it must include a deterministic JSON report contract that the pipeline adapter can parse.
+
+Approved by: `human_owner` at `2026-06-24T15:04:42Z`  
+Approval notes: Approve  
+
+Affected files:
+
+- scripts/codexctl.py
+- tests/test_codex_prompt_report_contract.py
+
+Risks:
+
+- Boundary risk: Do not implement stdout parsing in this task.
+- Boundary risk: Do not submit reports automatically in this task.
+- Boundary risk: Do not change task report validation rules.
+- Verify that the prompt contract is deterministic enough for a parser and does not ask Codex to edit AI_PROJECT state directly.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-151.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Replace the plain bullet-only Final Report prompt section with a structured report contract.
+- Define a fenced JSON block marker that Codex must emit at the end of execution.
+- Include required report fields used by task report submission, including token_usage.
+- Add focused tests or assertions for generated prompt report instructions.
+- Generated CODEX_PROMPT.md contains a clearly delimited machine-readable report JSON instruction.
+- The required JSON fields include task identity, changed_files, generated_files, checks, warnings, blockers and token_usage.
+- The prompt still tells Codex not to self-approve.
+
+Linked tasks:
+
+- TASK-151

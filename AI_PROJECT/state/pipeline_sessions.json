@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 115,
+  "revision": 121,
   "created_at": "2026-06-19T21:27:58Z",
-  "updated_at": "2026-06-24T14:36:38Z",
-  "current_session_id": "PSESS-024",
+  "updated_at": "2026-06-24T15:12:54Z",
+  "current_session_id": "PSESS-026",
   "sessions": [
     {
       "id": "PSESS-001",
@@ -13109,6 +13109,487 @@
       "updated_at": "2026-06-24T14:33:50Z",
       "started_at": "2026-06-24T12:25:31Z",
       "finished_at": "2026-06-24T14:27:02Z"
+    },
+    {
+      "id": "PSESS-026",
+      "status": "blocked",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-72"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit_1h",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": false,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": false,
+          "owner_approval_note": ""
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 3600,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-151",
+      "current_task_ref": "",
+      "current_phase": "collect_report",
+      "current_phase_status": "blocked",
+      "blocked_by": "REPORT_MISSING",
+      "next_action": "Submit a structured execution report, then rerun collect-report: python scripts/aictl.py task report submit --task TASK-151 --file <REPORT.json> --confirm",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-026",
+            "next_task": {
+              "id": "TASK-151",
+              "ref": "PIPEF-72",
+              "uid": "tsk_66d6567e4211",
+              "legacy_id": "TASK-151",
+              "title": "PIPE-067 Add structured Codex report block to prompt package",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-72"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-151",
+                  "ref": "PIPEF-72",
+                  "uid": "tsk_66d6567e4211",
+                  "legacy_id": "TASK-151",
+                  "title": "PIPE-067 Add structured Codex report block to prompt package",
+                  "status": "planned",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-72"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-DFE6F8CEB7C4"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "blocked",
+          "reason": "Approved linked Evolution Changes are required before execution.",
+          "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+          "artifacts": {
+            "blocked_by": "BLOCKED",
+            "source": "session",
+            "session_id": "PSESS-026",
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-151",
+              "ref": "PIPEF-72",
+              "uid": "tsk_66d6567e4211",
+              "legacy_id": "TASK-151",
+              "title": "PIPE-067 Add structured Codex report block to prompt package",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 72,
+              "local_seq": 72,
+              "selected_ref": "PIPEF-72",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "stop_code": "BLOCKED",
+              "scope": "selected_task",
+              "inspected_task_ids": [
+                "TASK-151"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-151",
+                  "task_ref": "PIPEF-72",
+                  "change_ids": []
+                }
+              ],
+              "selected_task_id": "TASK-151",
+              "selected_task_ref": "PIPEF-72",
+              "created_change_ids": [],
+              "linked_change_ids": [],
+              "change_ids": [],
+              "tasks_requiring_approval": [
+                "TASK-151"
+              ],
+              "workflows": []
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-96B34AB29633"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "passed",
+          "reason": "Task preparation rebuilt artifacts; Codex execution has not been started.",
+          "next_action": "Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 1b51022c62b15c104d2645922a9fbbed5974658a583bbe07cd6322c71ed9f6d9).",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-026",
+            "task_id": "TASK-151",
+            "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+            "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+            "prompt_sha256": "1b51022c62b15c104d2645922a9fbbed5974658a583bbe07cd6322c71ed9f6d9",
+            "artifact_freshness": {
+              "status": "rebuilt",
+              "reason": "codex_status_not_ready",
+              "rebuild_required_before_prepare": true,
+              "fresh_before_prepare": false
+            },
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-151",
+              "ref": "PIPEF-72",
+              "uid": "tsk_66d6567e4211",
+              "legacy_id": "TASK-151",
+              "title": "PIPE-067 Add structured Codex report block to prompt package",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 72,
+              "local_seq": 72,
+              "selected_ref": "PIPEF-72",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "scope": "selected_task",
+              "inspected_task_ids": [
+                "TASK-151"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-151",
+                  "task_ref": "PIPEF-72",
+                  "change_ids": [
+                    "CHG-072"
+                  ]
+                }
+              ],
+              "selected_task_id": "TASK-151",
+              "selected_task_ref": "PIPEF-72",
+              "change_ids": [
+                "CHG-072"
+              ]
+            },
+            "workflow": {
+              "ok": true,
+              "message": "Workflow completed.",
+              "steps": [
+                {
+                  "id": "resolve",
+                  "status": "ok"
+                },
+                {
+                  "id": "current_set",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_validate",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_graph",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_in_progress",
+                  "status": "ok"
+                },
+                {
+                  "id": "context_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "codex_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "doctor",
+                  "status": "ok"
+                }
+              ],
+              "errors": []
+            },
+            "codex_adapter_called": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-143B752AC6AD"
+          ]
+        },
+        {
+          "phase": "execute",
+          "status": "passed",
+          "reason": "Codex execution adapter completed; structured report collection is pending. (status=blocked, code=CODEX_ADAPTER_REPORT_MISSING, returncode=0)",
+          "next_action": "Run pipeline phase collect-report.",
+          "artifacts": {
+            "session_id": "PSESS-026",
+            "task_id": "TASK-151",
+            "policy": "supervised_executable_local_commit_1h",
+            "prepare_artifacts": {
+              "task_id": "TASK-151",
+              "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+              "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "1b51022c62b15c104d2645922a9fbbed5974658a583bbe07cd6322c71ed9f6d9"
+            },
+            "token_budget": {
+              "status": "pass",
+              "code": "TOKEN_BUDGET_PASS",
+              "reason": "within_token_budget",
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "1b51022c62b15c104d2645922a9fbbed5974658a583bbe07cd6322c71ed9f6d9",
+              "prompt_bytes": 3072,
+              "prompt_tokens": 768,
+              "context_bytes": 0,
+              "context_tokens": 0,
+              "token_count_strategy": "local_byte_estimate",
+              "token_count_estimated": true,
+              "token_count_unavailable": false,
+              "token_count_unavailable_reason": "",
+              "model_context_limit": 32000,
+              "max_context_tokens": 24000,
+              "reserved_output_tokens": 0,
+              "min_remaining_tokens": 6000,
+              "remaining_tokens": 31232,
+              "context_requires_compact_or_split": false,
+              "context_requirement_reasons": [],
+              "context_pack": {}
+            },
+            "codex_adapter_called": true,
+            "execute_started_at": "2026-06-24T15:05:25Z",
+            "execute_finished_at": "2026-06-24T15:12:54Z",
+            "before_report_id": "",
+            "after_report_id": "",
+            "report_id": "",
+            "execute_evidence": {
+              "status": "blocked",
+              "code": "CODEX_ADAPTER_REPORT_MISSING",
+              "reason": "structured_execution_report_missing",
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 449.296831,
+              "stdout_ref": "captured:stdout:sha256:afdc36442ea9e34c4cdab1d2e7a20667b077996aa98e47ed348f00ac6625fbf2",
+              "stderr_ref": "captured:stderr:sha256:92d84025d08f936133c42a25741f6a8d0f7506d317ac23013d131323d277abfb",
+              "stdout_snippet": "Active Role: Codex Executor\nActive Stage: [CODEX] bounded task execution\nActive Document: TASK-151 / PIPEF-72\nExpected Result: Structured Codex final report contract implemented\n\nUpdated `scripts/codexctl.py` to replace the plain final-report bullet list with a `CODEX_REPORT_JSON:` marker plus a fenced `json` report contract. Added focused coverage in `tests/test_codex_prompt_report_contract.py` to parse the JSON block, check required fields, and confirm scope/allowed-files/acceptance/self-approval instructions remain intact.\n\nVerification passed:\n`python -B -m unittest tests.test_codex_prompt_report_contract`\n`python -B -m unittest tests.test_legacy_ctl_wrappers.LegacyCtlWrapperTests.test_legacy_commands_keep_outputs_and_audit_events`\n`git diff --check -- scripts/codexctl.py tests/test_codex_prompt_report_contract.py`\n\nNote: the worktree already had unrelated `AI_PROJECT/**` changes before my edits; I left them untouched.\n\nCODEX_REPORT_JSON:\n```json\n{\n  \"schema_version\": 1,\n  \"task_id\": \"TASK-151\",\n  \"task_ref\": \"PIPEF-72\",\n  \"implementation_summary\": \"Updated Codex prompt generation to require a machine-readable final report JSON block and added focused tests for the report contr\n[truncated: 2863 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019efa2a-4316-7582-85eb-7c86e463a2f9\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: [CODEX] bounded task execution\nActive Document: TASK-151 / PIPEF-72 Codex prompt package\nExpected Result: Update allowed files and verify structured final report contract\n\nUsing `documentation-navigation`, `project-control-gateway`, and `clarification-gate` for this repository-controlled Codex task. I’ll inspect the required system docs and the scoped files before editing.\nexec\n/usr/bin/zsh -lc \"sed -n '1,220p' /home/nikitoys/AI-Development-System/.agents/skills/documentation-navigation/SKILL.md\" in /home/nikitoys/AI-Development-System\n succeeded in 3ms:\n---\nname: documentation-navigation\ndescription: Use when working in AI_Development_System to choose the minimal correct documentation and project-control read set before planning, editing, reviewing, or executing repository work.\n---\n\n# Documentation Navigation Skill\n\n\n[truncated: 830824 bytes total]",
+              "stdout_bytes": 2863,
+              "stderr_bytes": 835421,
+              "report_ids": [],
+              "report_required": true,
+              "started_at": "2026-06-24T15:05:25Z",
+              "finished_at": "2026-06-24T15:12:54Z",
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": ""
+            },
+            "adapter": {
+              "status": "blocked",
+              "code": "CODEX_ADAPTER_REPORT_MISSING",
+              "reason": "structured_execution_report_missing",
+              "mode": "local_command",
+              "started_at": "2026-06-24T15:05:25Z",
+              "finished_at": "2026-06-24T15:12:54Z",
+              "duration_sec": 449.296831,
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "1b51022c62b15c104d2645922a9fbbed5974658a583bbe07cd6322c71ed9f6d9",
+              "prompt_transport": "stdin",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "timeout_sec": 3600,
+              "timed_out": false,
+              "returncode": 0,
+              "stdout_ref": "captured:stdout:sha256:afdc36442ea9e34c4cdab1d2e7a20667b077996aa98e47ed348f00ac6625fbf2",
+              "stderr_ref": "captured:stderr:sha256:92d84025d08f936133c42a25741f6a8d0f7506d317ac23013d131323d277abfb",
+              "stdout_snippet": "Active Role: Codex Executor\nActive Stage: [CODEX] bounded task execution\nActive Document: TASK-151 / PIPEF-72\nExpected Result: Structured Codex final report contract implemented\n\nUpdated `scripts/codexctl.py` to replace the plain final-report bullet list with a `CODEX_REPORT_JSON:` marker plus a fenced `json` report contract. Added focused coverage in `tests/test_codex_prompt_report_contract.py` to parse the JSON block, check required fields, and confirm scope/allowed-files/acceptance/self-approval instructions remain intact.\n\nVerification passed:\n`python -B -m unittest tests.test_codex_prompt_report_contract`\n`python -B -m unittest tests.test_legacy_ctl_wrappers.LegacyCtlWrapperTests.test_legacy_commands_keep_outputs_and_audit_events`\n`git diff --check -- scripts/codexctl.py tests/test_codex_prompt_report_contract.py`\n\nNote: the worktree already had unrelated `AI_PROJECT/**` changes before my edits; I left them untouched.\n\nCODEX_REPORT_JSON:\n```json\n{\n  \"schema_version\": 1,\n  \"task_id\": \"TASK-151\",\n  \"task_ref\": \"PIPEF-72\",\n  \"implementation_summary\": \"Updated Codex prompt generation to require a machine-readable final report JSON block and added focused tests for the report contr\n[truncated: 2863 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019efa2a-4316-7582-85eb-7c86e463a2f9\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: [CODEX] bounded task execution\nActive Document: TASK-151 / PIPEF-72 Codex prompt package\nExpected Result: Update allowed files and verify structured final report contract\n\nUsing `documentation-navigation`, `project-control-gateway`, and `clarification-gate` for this repository-controlled Codex task. I’ll inspect the required system docs and the scoped files before editing.\nexec\n/usr/bin/zsh -lc \"sed -n '1,220p' /home/nikitoys/AI-Development-System/.agents/skills/documentation-navigation/SKILL.md\" in /home/nikitoys/AI-Development-System\n succeeded in 3ms:\n---\nname: documentation-navigation\ndescription: Use when working in AI_Development_System to choose the minimal correct documentation and project-control read set before planning, editing, reviewing, or executing repository work.\n---\n\n# Documentation Navigation Skill\n\n\n[truncated: 830824 bytes total]",
+              "stdout_bytes": 2863,
+              "stderr_bytes": 835421,
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": "",
+              "report_instruction": "In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-151 --file <REPORT.json> --confirm"
+            },
+            "adapter_summary": {
+              "status": "blocked",
+              "code": "CODEX_ADAPTER_REPORT_MISSING",
+              "reason": "structured_execution_report_missing",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 449.296831,
+              "stdout_ref": "captured:stdout:sha256:afdc36442ea9e34c4cdab1d2e7a20667b077996aa98e47ed348f00ac6625fbf2",
+              "stderr_ref": "captured:stderr:sha256:92d84025d08f936133c42a25741f6a8d0f7506d317ac23013d131323d277abfb",
+              "stdout_snippet": "Active Role: Codex Executor\nActive Stage: [CODEX] bounded task execution\nActive Document: TASK-151 / PIPEF-72\nExpected Result: Structured Codex final report contract implemented\n\nUpdated `scripts/codexctl.py` to replace the plain final-report bullet list with a `CODEX_REPORT_JSON:` marker plus a fenced `json` report contract. Added focused coverage in `tests/test_codex_prompt_report_contract.py` to parse the JSON block, check required fields, and confirm scope/allowed-files/acceptance/self-approval instructions remain intact.\n\nVerification passed:\n`python -B -m unittest tests.test_codex_prompt_report_contract`\n`python -B -m unittest tests.test_legacy_ctl_wrappers.LegacyCtlWrapperTests.test_legacy_commands_keep_outputs_and_audit_events`\n`git diff --check -- scripts/codexctl.py tests/test_codex_prompt_report_contract.py`\n\nNote: the worktree already had unrelated `AI_PROJECT/**` changes before my edits; I left them untouched.\n\nCODEX_REPORT_JSON:\n```json\n{\n  \"schema_version\": 1,\n  \"task_id\": \"TASK-151\",\n  \"task_ref\": \"PIPEF-72\",\n  \"implementation_summary\": \"Updated Codex prompt generation to require a machine-readable final report JSON block and added focused tests for the report contr\n[truncated: 2863 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019efa2a-4316-7582-85eb-7c86e463a2f9\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: [CODEX] bounded task execution\nActive Document: TASK-151 / PIPEF-72 Codex prompt package\nExpected Result: Update allowed files and verify structured final report contract\n\nUsing `documentation-navigation`, `project-control-gateway`, and `clarification-gate` for this repository-controlled Codex task. I’ll inspect the required system docs and the scoped files before editing.\nexec\n/usr/bin/zsh -lc \"sed -n '1,220p' /home/nikitoys/AI-Development-System/.agents/skills/documentation-navigation/SKILL.md\" in /home/nikitoys/AI-Development-System\n succeeded in 3ms:\n---\nname: documentation-navigation\ndescription: Use when working in AI_Development_System to choose the minimal correct documentation and project-control read set before planning, editing, reviewing, or executing repository work.\n---\n\n# Documentation Navigation Skill\n\n\n[truncated: 830824 bytes total]",
+              "stdout_bytes": 2863,
+              "stderr_bytes": 835421,
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": "",
+              "report_ids": []
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-C27D55AAFB27"
+          ]
+        },
+        {
+          "phase": "collect_report",
+          "status": "blocked",
+          "reason": "No structured execution report exists for selected task.",
+          "next_action": "Submit a structured execution report, then rerun collect-report: python scripts/aictl.py task report submit --task TASK-151 --file <REPORT.json> --confirm",
+          "artifacts": {
+            "blocked_by": "REPORT_MISSING",
+            "session_id": "PSESS-026",
+            "task_id": "TASK-151",
+            "report_id": ""
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-6802911D1531"
+          ]
+        }
+      ],
+      "current_step": "",
+      "current_step_status": "planned",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-EF95D2500EEF",
+        "EVT-DFE6F8CEB7C4",
+        "EVT-96B34AB29633",
+        "EVT-143B752AC6AD",
+        "EVT-C27D55AAFB27",
+        "EVT-6802911D1531"
+      ],
+      "stop_reason": "No structured execution report exists for selected task.",
+      "created_at": "2026-06-24T14:52:29Z",
+      "updated_at": "2026-06-24T15:12:54Z",
+      "started_at": "2026-06-24T14:52:29Z",
+      "finished_at": ""
     }
   ]
 }

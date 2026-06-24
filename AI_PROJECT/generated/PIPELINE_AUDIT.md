@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `115`
-State revision: `115`
-Current session: `PSESS-024`
+Events: `121`
+State revision: `121`
+Current session: `PSESS-026`
 
 ## Timeline
 
@@ -126,6 +126,12 @@ Current session: `PSESS-024`
 | `2026-06-24T14:27:02Z` | `stop` | `pipeline.session.stop` | `PSESS-025` | `` | `` | stopped \| MAX_STEPS_REACHED: Batch runner reached max_steps 5. |
 | `2026-06-24T14:33:50Z` | `step.result` | `pipeline.phase.execute` | `PSESS-025` | `` | `` | PSESS-025 |
 | `2026-06-24T14:36:38Z` | `step.result` | `pipeline.phase.verify` | `PSESS-024` | `` | `` | reports=RPT-009 |
+| `2026-06-24T14:52:29Z` | `session.create` | `pipeline.session.create` | `PSESS-026` | `` | `` | PSESS-026 |
+| `2026-06-24T14:52:29Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-026` | `` | `` | PSESS-026 |
+| `2026-06-24T14:52:29Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-026` | `` | `` | PSESS-026 |
+| `2026-06-24T15:04:55Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-026` | `` | `` | changes=CHG-072 |
+| `2026-06-24T15:12:54Z` | `step.result` | `pipeline.phase.execute` | `PSESS-026` | `` | `` | PSESS-026 |
+| `2026-06-24T15:12:54Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-026` | `` | `` | PSESS-026 |
 
 ## Event Type Coverage
 

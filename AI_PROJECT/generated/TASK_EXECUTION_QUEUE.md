@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1065`
+Revision: `1087`
 
 ## Executable Now
 
@@ -25,11 +25,6 @@ Revision: `1065`
 - `PIPEF-64 (TASK-143)` [planned] `EPIC-009` priority `1` — PIPE-059 Keep runtime pipeline logs out of task diff gates
 - `PIPEF-65 (TASK-144)` [planned] `EPIC-009` priority `1` — PIPE-060 Document Web live status and Codex log behavior
 - `PIPEF-71 (TASK-150)` [planned] `EPIC-009` priority `1` — PIPE-066 Document Web Settings and internal bypass behavior
-- `PIPEF-72 (TASK-151)` [planned] `EPIC-009` priority `1` — PIPE-067 Add structured Codex report block to prompt package
-- `PIPEF-73 (TASK-152)` [planned] `EPIC-009` priority `1` — PIPE-068 Parse structured Codex report from stdout
-- `PIPEF-74 (TASK-153)` [planned] `EPIC-009` priority `1` — PIPE-069 Add task report submission service for pipeline use
-- `PIPEF-75 (TASK-154)` [planned] `EPIC-009` priority `1` — PIPE-070 Auto-submit parsed Codex report in local-command adapter
-- `PIPEF-76 (TASK-155)` [planned] `EPIC-009` priority `1` — PIPE-071 Add pipeline regression test for Run report auto-collection
 - `PIPEF-77 (TASK-156)` [planned] `EPIC-009` priority `1` — PIPE-072 Add Web recovery action for report missing sessions
 - `PIPEF-78 (TASK-157)` [planned] `EPIC-009` priority `1` — PIPE-073 Document Codex structured report auto-submit
 
@@ -303,5 +298,15 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-70 (TASK-149)` [done] `EPIC-009` priority `1` — PIPE-065 Apply internal Change gate bypass to UI runs
   - `status_not_executable`: status is done
+- `PIPEF-72 (TASK-151)` [done] `EPIC-009` priority `1` — PIPE-067 Add structured Codex report block to prompt package
+  - `status_not_executable`: status is done
+- `PIPEF-73 (TASK-152)` [done] `EPIC-009` priority `1` — PIPE-068 Parse structured Codex report from stdout
+  - `status_not_executable`: status is done
+- `PIPEF-74 (TASK-153)` [done] `EPIC-009` priority `1` — PIPE-069 Add task report submission service for pipeline use
+  - `status_not_executable`: status is done
+- `PIPEF-75 (TASK-154)` [done] `EPIC-009` priority `1` — PIPE-070 Auto-submit parsed Codex report in local-command adapter
+  - `status_not_executable`: status is done
+- `PIPEF-76 (TASK-155)` [in_progress] `EPIC-009` priority `1` — PIPE-071 Add pipeline regression test for Run report auto-collection
+  - `status_not_executable`: status is in_progress
 - `PIPEF-79 (TASK-158)` [done] `EPIC-009` priority `1` — PIPE-074 Allow internal bypass setting in Web settings action
   - `status_not_executable`: status is done

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 2235,
+  "revision": 2256,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-24T14:08:57Z",
+  "updated_at": "2026-06-24T15:04:42Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -4279,6 +4279,58 @@
       "order": 71,
       "created_at": "2026-06-24T14:08:31Z",
       "updated_at": "2026-06-24T14:08:57Z"
+    },
+    {
+      "id": "CHG-072",
+      "title": "PIPE-067 Add structured Codex report block to prompt package",
+      "status": "approved",
+      "change_type": "tooling",
+      "rationale": "The prompt should still be readable by humans, but it must include a deterministic JSON report contract that the pipeline adapter can parse.",
+      "problem": "Task PIPEF-72 requires an explicit Evolution Change Proposal before implementation: Update Codex prompt generation so executors must finish with a machine-readable structured report block.",
+      "proposal": "Implement the bounded task scope: Replace the plain bullet-only Final Report prompt section with a structured report contract.; Define a fenced JSON block marker that Codex must emit at the end of execution.; Include required report fields used by task report submission, including token_usage.; Add focused tests or assertions for generated prompt report instructions.",
+      "affected_areas": [],
+      "affected_files": [
+        "scripts/codexctl.py",
+        "tests/test_codex_prompt_report_contract.py"
+      ],
+      "risks": [
+        "Boundary risk: Do not implement stdout parsing in this task.",
+        "Boundary risk: Do not submit reports automatically in this task.",
+        "Boundary risk: Do not change task report validation rules.",
+        "Verify that the prompt contract is deterministic enough for a parser and does not ask Codex to edit AI_PROJECT state directly.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-151.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Replace the plain bullet-only Final Report prompt section with a structured report contract.",
+        "Define a fenced JSON block marker that Codex must emit at the end of execution.",
+        "Include required report fields used by task report submission, including token_usage.",
+        "Add focused tests or assertions for generated prompt report instructions.",
+        "Generated CODEX_PROMPT.md contains a clearly delimited machine-readable report JSON instruction.",
+        "The required JSON fields include task identity, changed_files, generated_files, checks, warnings, blockers and token_usage.",
+        "The prompt still tells Codex not to self-approve."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-151"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-24T15:04:42Z",
+      "approval_notes": "Approve",
+      "accepted_by": "",
+      "accepted_at": "",
+      "acceptance_notes": "",
+      "notes": [],
+      "priority": 1,
+      "order": 72,
+      "created_at": "2026-06-24T15:03:55Z",
+      "updated_at": "2026-06-24T15:04:42Z"
     }
   ]
 }
