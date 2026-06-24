@@ -1,15 +1,15 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/generated/CONTEXT_PACK.md -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-119 PIPE-040 Add tests for phase model and mutations Add tests for PhaseResult serialization, session phase fields, and governed phase mutation helpers. Protect the foundational phase state behavior before rewriting the runner. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Test PhaseResult construction and JSON conversion. Test session creation with phase field defaults. Test start_phase and record_phase_result mutations. Test validation behavior for legacy sessions without phase fields. Do not change behavior unrelated to this task. Do not refactor unrelated code. Do not edit protected project-control files manually. tests/test_pipeline_phase.py tests/test_pipeline_session_phase.py Tests pass for all PhaseResult statuses. Tests prove legacy pipeline sessions remain valid. Tests prove phase results append to phase_history. Tests prove terminal sessions reject new phase mutations. Check tests use temporary state and do not depend on local repository state. Verify tests do not require external Codex or network access.","schema_version":1,"task_id":"TASK-119"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-147 PIPE-063 Add internal change-gate bypass UI setting Add a disabled-by-default UI setting for explicitly bypassing approved Change requirements on internal project-control tasks. This introduces the setting data contract without yet changing pipeline execution behavior. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add a default false setting for internal project-control Change gate bypass. Parse boolean string values safely for the new setting. Expose the setting through effective UI settings output. Add tests for default, true, false and invalid values. Do not bypass the Change gate in this task. Do not change built-in pipeline policy presets. Do not enable the setting by default. ai_project_ctl/ui_settings.py tests/test_ui_settings.py Effective UI settings include the new bypass setting with default false. String values such as true, false, 1 and 0 are parsed predictably. Invalid boolean values produce a stable settings error or validation failure. Existing UI settings behavior remains compatible. Tests cover the new setting defaults and parsing. Verify that this task adds only configuration support and does not weaken execution gates.","schema_version":1,"task_id":"TASK-147"} -->
 
 # Context Status
 
 Context pack exists: `true`
 Mode: `task`
-Task ID: `TASK-119`
+Task ID: `TASK-147`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1024`
+Tasks revision: `1039`
 Indexed source documents: `10`
 Indexed chunks: `891`
 Selected chunks: `8`

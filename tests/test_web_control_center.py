@@ -106,8 +106,14 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("<code>codex exec</code>", body)
         self.assertIn("<code>default_policy</code>", body)
         self.assertIn("<code>supervised_executable_local_commit</code>", body)
-        self.assertNotIn("<form", body)
-        self.assertNotIn('value="ui.settings.set"', body)
+        self.assertIn("Update UI Setting", body)
+        self.assertIn('value="ui.settings.set"', body)
+        self.assertIn('<option value="command_line">command_line</option>', body)
+        self.assertIn('<option value="default_policy">default_policy</option>', body)
+        self.assertIn('name="confirm" value="yes" required', body)
+        self.assertNotIn('name="change_gate"', body)
+        self.assertNotIn('name="bypass"', body)
+        self.assertNotIn('value="ui.settings.init"', body)
 
     def test_settings_page_renders_project_file_ui_settings(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -137,9 +143,13 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("<code>1800</code>", body)
         self.assertIn("<code>preflight_timeout_sec</code>", body)
         self.assertIn("<code>45</code>", body)
-        self.assertNotIn("<form", body)
+        self.assertIn("Update UI Setting", body)
+        self.assertIn('value="ui.settings.set"', body)
+        self.assertIn('<option value="execution_timeout_sec">execution_timeout_sec</option>', body)
+        self.assertIn('<option value="preflight_timeout_sec">preflight_timeout_sec</option>', body)
         self.assertNotIn('value="ui.settings.init"', body)
-        self.assertNotIn('value="ui.settings.set"', body)
+        self.assertNotIn('name="change_gate"', body)
+        self.assertNotIn('name="bypass"', body)
 
     def test_tasks_page_filters_searches_groups_and_shows_readable_refs(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2585,6 +2595,76 @@ class WebControlCenterTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, "WEB_UNSAFE_TASK_TRANSITION")
         run.assert_not_called()
+
+    def test_ui_settings_web_action_updates_allowlisted_key(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = ui_settings_path(root)
+
+            result = WebActionExecutor(root, actor="tester").execute(
+                {
+                    "action": "ui.settings.set",
+                    "confirm": "yes",
+                    "key": "command_line",
+                    "value": "codex exec --json",
+                }
+            )
+
+            settings = json.loads(path.read_text(encoding="utf-8"))
+            payload = result.to_dict()
+            data = payload["result"]["data"]
+            body = render_action_result(result)
+
+        self.assertTrue(result.ok)
+        self.assertEqual(settings["command_line"], "codex exec --json")
+        self.assertEqual(settings["default_policy"], "supervised_executable_local_commit")
+        self.assertEqual(data["key"], "command_line")
+        self.assertEqual(data["value"], "codex exec --json")
+        self.assertEqual(data["path"], str(path))
+        self.assertIn(str(path), payload["result"]["changed_files"])
+        self.assertEqual(payload["registered_command"]["name"], "ui.settings.set")
+        self.assertIn("UI Setting", body)
+        self.assertIn("Updated key", body)
+        self.assertIn("command_line", body)
+        self.assertIn("New value", body)
+        self.assertIn("codex exec --json", body)
+        self.assertIn(str(path), body)
+
+    def test_ui_settings_web_action_requires_confirmation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor(root, actor="tester").execute(
+                    {
+                        "action": "ui.settings.set",
+                        "key": "command_line",
+                        "value": "codex exec --json",
+                    }
+                )
+
+            self.assertEqual(raised.exception.code, "WEB_ACTION_CONFIRMATION_REQUIRED")
+            self.assertFalse(ui_settings_path(root).exists())
+
+    def test_ui_settings_web_action_rejects_disallowed_key(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = write_ui_settings(root, {"command_line": "codex exec"})
+
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor(root, actor="tester").execute(
+                    {
+                        "action": "ui.settings.set",
+                        "confirm": "yes",
+                        "key": "some_random_key",
+                        "value": "value",
+                    }
+                )
+
+            self.assertEqual(raised.exception.code, "WEB_UI_SETTING_KEY_NOT_ALLOWED")
+            self.assertEqual(
+                json.loads(path.read_text(encoding="utf-8")),
+                {"command_line": "codex exec"},
+            )
 
     def test_successful_task_transition_writes_audit_event_through_cli(self):
         with tempfile.TemporaryDirectory() as tmp:

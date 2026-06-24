@@ -17,6 +17,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 from ai_project_ctl.core.result import CommandError
 from ai_project_ctl.core.workflows import BULK_IMPORT_MAX_BYTES
 from ai_project_ctl.web.actions import (
+    UI_SETTINGS_WEB_ALLOWED_KEYS,
     WebActionError,
     WebActionExecutor,
     WebActionResult,
@@ -2459,6 +2460,17 @@ def render_settings(model: ReadOnlyProjectModel) -> str:
         "<h2>Effective UI Settings</h2>",
         table(("Setting", "Value", "Source"), rows, "No UI settings available."),
         "</section>",
+        '<section class="panel action-panel">',
+        "<h2>Update UI Setting</h2>",
+        action_form(
+            "ui.settings.set",
+            [
+                select_field("key", "Setting", UI_SETTINGS_WEB_ALLOWED_KEYS),
+                input_field("value", "New Value"),
+            ],
+            button_label="Update Setting",
+        ),
+        "</section>",
     ]
     return render_page("Settings", "".join(body), active="/settings")
 
@@ -2846,6 +2858,7 @@ def action_result_panel(payload: Mapping[str, Any]) -> str:
     sections.extend(_step_panel(_result_steps(data, summary)))
     sections.extend(_file_list_panel("Changed Files", result.get("changed_files")))
     sections.extend(_file_list_panel("Generated Files", result.get("generated_files")))
+    sections.extend(_ui_settings_result_panel(data))
     sections.extend(_message_panel("Warnings", "warn", _messages(result.get("warnings"))))
     sections.extend(_message_panel("Errors", "fail", visible_errors))
     sections.extend(_pipeline_result_panel(data))
@@ -2882,6 +2895,7 @@ def _result_target(data: Mapping[str, Any]) -> str:
     change = _mapping(data.get("change"))
     epic = _mapping(data.get("epic"))
     for key, value in (
+        ("Setting", data.get("key")),
         ("Task", data.get("task_ref") or task.get("ref") or task.get("id")),
         ("Change", data.get("change_ref") or change.get("id")),
         ("Epic", data.get("epic_ref") or epic.get("id")),
@@ -2972,6 +2986,33 @@ def _file_list_panel(title: str, value: Any) -> list[str]:
         "<h3>{}</h3>".format(escape(title)),
         '<ul class="result-files">{}</ul>'.format(
             "".join("<li><code>{}</code></li>".format(escape(item)) for item in items)
+        ),
+        "</section>",
+    ]
+
+
+def _ui_settings_result_panel(data: Mapping[str, Any]) -> list[str]:
+    key = str(data.get("key") or "").strip()
+    path = str(data.get("path") or "").strip()
+    if not key or not path:
+        return []
+    value = str(data.get("value") or "")
+    facts = [
+        ("Updated key", key),
+        ("New value", value),
+        ("Settings path", path),
+    ]
+    return [
+        '<section class="result-section">',
+        "<h3>UI Setting</h3>",
+        '<ul class="result-actions">{}</ul>'.format(
+            "".join(
+                "<li><strong>{}</strong>: <code>{}</code></li>".format(
+                    escape(label),
+                    escape(item),
+                )
+                for label, item in facts
+            )
         ),
         "</section>",
     ]

@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 76,
+  "revision": 89,
   "created_at": "2026-06-19T21:27:58Z",
-  "updated_at": "2026-06-24T11:15:59Z",
-  "current_session_id": "PSESS-018",
+  "updated_at": "2026-06-24T11:42:50Z",
+  "current_session_id": "PSESS-021",
   "sessions": [
     {
       "id": "PSESS-001",
@@ -8823,6 +8823,1065 @@
       "created_at": "2026-06-24T11:03:18Z",
       "updated_at": "2026-06-24T11:15:59Z",
       "started_at": "2026-06-24T11:03:18Z",
+      "finished_at": ""
+    },
+    {
+      "id": "PSESS-019",
+      "status": "blocked",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-72"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit_1h",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": false,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": false,
+          "owner_approval_note": ""
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 3600,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-151",
+      "current_task_ref": "",
+      "current_phase": "prepare",
+      "current_phase_status": "blocked",
+      "blocked_by": "BLOCKED",
+      "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-019",
+            "next_task": {
+              "id": "TASK-151",
+              "ref": "PIPEF-72",
+              "uid": "tsk_66d6567e4211",
+              "legacy_id": "TASK-151",
+              "title": "PIPE-067 Add structured Codex report block to prompt package",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-72"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-151",
+                  "ref": "PIPEF-72",
+                  "uid": "tsk_66d6567e4211",
+                  "legacy_id": "TASK-151",
+                  "title": "PIPE-067 Add structured Codex report block to prompt package",
+                  "status": "planned",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-72"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-CEBAC9650C01"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "blocked",
+          "reason": "Approved linked Evolution Changes are required before execution.",
+          "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+          "artifacts": {
+            "blocked_by": "BLOCKED",
+            "source": "session",
+            "session_id": "PSESS-019",
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-151",
+              "ref": "PIPEF-72",
+              "uid": "tsk_66d6567e4211",
+              "legacy_id": "TASK-151",
+              "title": "PIPE-067 Add structured Codex report block to prompt package",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 72,
+              "local_seq": 72,
+              "selected_ref": "PIPEF-72",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "stop_code": "BLOCKED",
+              "scope": "selected_task",
+              "inspected_task_ids": [
+                "TASK-151"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-151",
+                  "task_ref": "PIPEF-72",
+                  "change_ids": []
+                }
+              ],
+              "selected_task_id": "TASK-151",
+              "selected_task_ref": "PIPEF-72",
+              "created_change_ids": [],
+              "linked_change_ids": [],
+              "change_ids": [],
+              "tasks_requiring_approval": [
+                "TASK-151"
+              ],
+              "workflows": []
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-CD8042F670F3"
+          ]
+        }
+      ],
+      "current_step": "",
+      "current_step_status": "planned",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-B6FB70595D70",
+        "EVT-CEBAC9650C01",
+        "EVT-CD8042F670F3"
+      ],
+      "stop_reason": "Approved linked Evolution Changes are required before execution.",
+      "created_at": "2026-06-24T11:26:30Z",
+      "updated_at": "2026-06-24T11:26:30Z",
+      "started_at": "2026-06-24T11:26:30Z",
+      "finished_at": ""
+    },
+    {
+      "id": "PSESS-020",
+      "status": "blocked",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-67"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit_1h",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": false,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": false,
+          "owner_approval_note": ""
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 3600,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-146",
+      "current_task_ref": "",
+      "current_phase": "collect_report",
+      "current_phase_status": "blocked",
+      "blocked_by": "REPORT_MISSING",
+      "next_action": "Submit a structured execution report, then rerun collect-report: python scripts/aictl.py task report submit --task TASK-146 --file <REPORT.json> --confirm",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-020",
+            "next_task": {
+              "id": "TASK-146",
+              "ref": "PIPEF-67",
+              "uid": "tsk_644b6c563035",
+              "legacy_id": "TASK-146",
+              "title": "PIPE-062 Add confirmed Web actions for UI settings updates",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-67"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-146",
+                  "ref": "PIPEF-67",
+                  "uid": "tsk_644b6c563035",
+                  "legacy_id": "TASK-146",
+                  "title": "PIPE-062 Add confirmed Web actions for UI settings updates",
+                  "status": "planned",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-67"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-6C9C9CB08560"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "passed",
+          "reason": "Task preparation rebuilt artifacts; Codex execution has not been started.",
+          "next_action": "Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 a4c0d03bd12993da7757137bfbd7643bcb4a44664785cc056459af08a91dc8cf).",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-020",
+            "task_id": "TASK-146",
+            "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+            "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+            "prompt_sha256": "a4c0d03bd12993da7757137bfbd7643bcb4a44664785cc056459af08a91dc8cf",
+            "artifact_freshness": {
+              "status": "rebuilt",
+              "reason": "selected_task_changed",
+              "rebuild_required_before_prepare": true,
+              "fresh_before_prepare": false
+            },
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-146",
+              "ref": "PIPEF-67",
+              "uid": "tsk_644b6c563035",
+              "legacy_id": "TASK-146",
+              "title": "PIPE-062 Add confirmed Web actions for UI settings updates",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 67,
+              "local_seq": 67,
+              "selected_ref": "PIPEF-67",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "scope": "selected_task",
+              "inspected_task_ids": [
+                "TASK-146"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-146",
+                  "task_ref": "PIPEF-67",
+                  "change_ids": [
+                    "CHG-067"
+                  ]
+                }
+              ],
+              "selected_task_id": "TASK-146",
+              "selected_task_ref": "PIPEF-67",
+              "change_ids": [
+                "CHG-067"
+              ]
+            },
+            "workflow": {
+              "ok": true,
+              "message": "Workflow completed.",
+              "steps": [
+                {
+                  "id": "resolve",
+                  "status": "ok"
+                },
+                {
+                  "id": "current_set",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_validate",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_graph",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_in_progress",
+                  "status": "ok"
+                },
+                {
+                  "id": "context_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "codex_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "doctor",
+                  "status": "ok"
+                }
+              ],
+              "errors": []
+            },
+            "codex_adapter_called": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-6DE63C6505C0"
+          ]
+        },
+        {
+          "phase": "execute",
+          "status": "passed",
+          "reason": "Codex execution adapter completed; structured report collection is pending. (status=blocked, code=CODEX_ADAPTER_REPORT_MISSING, returncode=0)",
+          "next_action": "Run pipeline phase collect-report.",
+          "artifacts": {
+            "session_id": "PSESS-020",
+            "task_id": "TASK-146",
+            "policy": "supervised_executable_local_commit_1h",
+            "prepare_artifacts": {
+              "task_id": "TASK-146",
+              "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+              "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "a4c0d03bd12993da7757137bfbd7643bcb4a44664785cc056459af08a91dc8cf"
+            },
+            "token_budget": {
+              "status": "pass",
+              "code": "TOKEN_BUDGET_PASS",
+              "reason": "within_token_budget",
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "a4c0d03bd12993da7757137bfbd7643bcb4a44664785cc056459af08a91dc8cf",
+              "prompt_bytes": 2952,
+              "prompt_tokens": 738,
+              "context_bytes": 0,
+              "context_tokens": 0,
+              "token_count_strategy": "local_byte_estimate",
+              "token_count_estimated": true,
+              "token_count_unavailable": false,
+              "token_count_unavailable_reason": "",
+              "model_context_limit": 32000,
+              "max_context_tokens": 24000,
+              "reserved_output_tokens": 0,
+              "min_remaining_tokens": 6000,
+              "remaining_tokens": 31262,
+              "context_requires_compact_or_split": false,
+              "context_requirement_reasons": [],
+              "context_pack": {}
+            },
+            "codex_adapter_called": true,
+            "execute_started_at": "2026-06-24T11:29:19Z",
+            "execute_finished_at": "2026-06-24T11:36:41Z",
+            "before_report_id": "",
+            "after_report_id": "",
+            "report_id": "",
+            "execute_evidence": {
+              "status": "blocked",
+              "code": "CODEX_ADAPTER_REPORT_MISSING",
+              "reason": "structured_execution_report_missing",
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 441.950869,
+              "stdout_ref": "captured:stdout:sha256:30370673bcacf804e8c0cfd5143a7b73b9b9cbc07af92a13132575a53b851eb0",
+              "stderr_ref": "captured:stderr:sha256:1b503c8d0ffcea0618b8377af235eca04fccd8873db43034bf9c679f1088b581",
+              "stdout_snippet": "Active Role: Codex Executor  \nActive Stage: [CODEX] bounded task execution  \nActive Document: TASK-146 / PIPEF-67  \nExpected Result: Implemented and verified\n\nSummary:\nAdded confirmed `ui.settings.set` Web action for allowlisted UI settings keys only. The Settings page now renders a confirmed update form, writes only `AI_PROJECT/config/ui_settings.json`, and action results show updated key, new value, and settings path.\n\nChanged files:\n- [actions.py](/home/nikitoys/AI-Development-System/ai_project_ctl/web/actions.py)\n- [server.py](/home/nikitoys/AI-Development-System/ai_project_ctl/web/server.py)\n- [test_web_control_center.py](/home/nikitoys/AI-Development-System/tests/test_web_control_center.py)\n\nCommands run:\n- `python -m pytest tests/test_web_control_center.py -q` failed: `pytest` is not installed\n- `python -m unittest tests.test_web_control_center -v` passed: 88 tests\n- `python scripts/taskctl.py validate` passed\n- `git diff --check -- ai_project_ctl/web/actions.py ai_project_ctl/web/server.py tests/test_web_control_center.py` passed\n\nVerification result:\nPASS. Focused Web Control Center tests cover successful update, missing confirmation, and disallowed key behavior.\n\nBlockers\n[truncated: 1427 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019ef964-59de-7520-b250-d10eeb33987b\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor  \nActive Stage: [CODEX] bounded task execution  \nActive Document: TASK-146 / PIPEF-67 prompt package  \nExpected Result: Implement confirmed Web actions for allowlisted UI settings and verify with focused tests.\n\nUsing `documentation-navigation`, `clarification-gate`, and `project-control-gateway` because this is controlled execution inside the AI Development System. I’ll read the required instructions and then inspect only the allowed files before editing.\nexec\n/usr/bin/zsh -lc \"sed -n '1,220p' /home/nikitoys/AI-Development-System/.agents/skills/documentation-navigation/SKILL.md\" in /home/nikitoys/AI-Development-System\n succeeded in 0ms:\n---\nname: documentation-navigation\ndescription: Use when working in AI_Development_System to choose the minimal correct documentation and project-control read set before planning, editing, reviewing\n[truncated: 853317 bytes total]",
+              "stdout_bytes": 1427,
+              "stderr_bytes": 859361,
+              "report_ids": [],
+              "report_required": true,
+              "started_at": "2026-06-24T11:29:19Z",
+              "finished_at": "2026-06-24T11:36:41Z",
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": ""
+            },
+            "adapter": {
+              "status": "blocked",
+              "code": "CODEX_ADAPTER_REPORT_MISSING",
+              "reason": "structured_execution_report_missing",
+              "mode": "local_command",
+              "started_at": "2026-06-24T11:29:19Z",
+              "finished_at": "2026-06-24T11:36:41Z",
+              "duration_sec": 441.950869,
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "a4c0d03bd12993da7757137bfbd7643bcb4a44664785cc056459af08a91dc8cf",
+              "prompt_transport": "stdin",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "timeout_sec": 3600,
+              "timed_out": false,
+              "returncode": 0,
+              "stdout_ref": "captured:stdout:sha256:30370673bcacf804e8c0cfd5143a7b73b9b9cbc07af92a13132575a53b851eb0",
+              "stderr_ref": "captured:stderr:sha256:1b503c8d0ffcea0618b8377af235eca04fccd8873db43034bf9c679f1088b581",
+              "stdout_snippet": "Active Role: Codex Executor  \nActive Stage: [CODEX] bounded task execution  \nActive Document: TASK-146 / PIPEF-67  \nExpected Result: Implemented and verified\n\nSummary:\nAdded confirmed `ui.settings.set` Web action for allowlisted UI settings keys only. The Settings page now renders a confirmed update form, writes only `AI_PROJECT/config/ui_settings.json`, and action results show updated key, new value, and settings path.\n\nChanged files:\n- [actions.py](/home/nikitoys/AI-Development-System/ai_project_ctl/web/actions.py)\n- [server.py](/home/nikitoys/AI-Development-System/ai_project_ctl/web/server.py)\n- [test_web_control_center.py](/home/nikitoys/AI-Development-System/tests/test_web_control_center.py)\n\nCommands run:\n- `python -m pytest tests/test_web_control_center.py -q` failed: `pytest` is not installed\n- `python -m unittest tests.test_web_control_center -v` passed: 88 tests\n- `python scripts/taskctl.py validate` passed\n- `git diff --check -- ai_project_ctl/web/actions.py ai_project_ctl/web/server.py tests/test_web_control_center.py` passed\n\nVerification result:\nPASS. Focused Web Control Center tests cover successful update, missing confirmation, and disallowed key behavior.\n\nBlockers\n[truncated: 1427 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019ef964-59de-7520-b250-d10eeb33987b\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor  \nActive Stage: [CODEX] bounded task execution  \nActive Document: TASK-146 / PIPEF-67 prompt package  \nExpected Result: Implement confirmed Web actions for allowlisted UI settings and verify with focused tests.\n\nUsing `documentation-navigation`, `clarification-gate`, and `project-control-gateway` because this is controlled execution inside the AI Development System. I’ll read the required instructions and then inspect only the allowed files before editing.\nexec\n/usr/bin/zsh -lc \"sed -n '1,220p' /home/nikitoys/AI-Development-System/.agents/skills/documentation-navigation/SKILL.md\" in /home/nikitoys/AI-Development-System\n succeeded in 0ms:\n---\nname: documentation-navigation\ndescription: Use when working in AI_Development_System to choose the minimal correct documentation and project-control read set before planning, editing, reviewing\n[truncated: 853317 bytes total]",
+              "stdout_bytes": 1427,
+              "stderr_bytes": 859361,
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": "",
+              "report_instruction": "In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-146 --file <REPORT.json> --confirm"
+            },
+            "adapter_summary": {
+              "status": "blocked",
+              "code": "CODEX_ADAPTER_REPORT_MISSING",
+              "reason": "structured_execution_report_missing",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 441.950869,
+              "stdout_ref": "captured:stdout:sha256:30370673bcacf804e8c0cfd5143a7b73b9b9cbc07af92a13132575a53b851eb0",
+              "stderr_ref": "captured:stderr:sha256:1b503c8d0ffcea0618b8377af235eca04fccd8873db43034bf9c679f1088b581",
+              "stdout_snippet": "Active Role: Codex Executor  \nActive Stage: [CODEX] bounded task execution  \nActive Document: TASK-146 / PIPEF-67  \nExpected Result: Implemented and verified\n\nSummary:\nAdded confirmed `ui.settings.set` Web action for allowlisted UI settings keys only. The Settings page now renders a confirmed update form, writes only `AI_PROJECT/config/ui_settings.json`, and action results show updated key, new value, and settings path.\n\nChanged files:\n- [actions.py](/home/nikitoys/AI-Development-System/ai_project_ctl/web/actions.py)\n- [server.py](/home/nikitoys/AI-Development-System/ai_project_ctl/web/server.py)\n- [test_web_control_center.py](/home/nikitoys/AI-Development-System/tests/test_web_control_center.py)\n\nCommands run:\n- `python -m pytest tests/test_web_control_center.py -q` failed: `pytest` is not installed\n- `python -m unittest tests.test_web_control_center -v` passed: 88 tests\n- `python scripts/taskctl.py validate` passed\n- `git diff --check -- ai_project_ctl/web/actions.py ai_project_ctl/web/server.py tests/test_web_control_center.py` passed\n\nVerification result:\nPASS. Focused Web Control Center tests cover successful update, missing confirmation, and disallowed key behavior.\n\nBlockers\n[truncated: 1427 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019ef964-59de-7520-b250-d10eeb33987b\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor  \nActive Stage: [CODEX] bounded task execution  \nActive Document: TASK-146 / PIPEF-67 prompt package  \nExpected Result: Implement confirmed Web actions for allowlisted UI settings and verify with focused tests.\n\nUsing `documentation-navigation`, `clarification-gate`, and `project-control-gateway` because this is controlled execution inside the AI Development System. I’ll read the required instructions and then inspect only the allowed files before editing.\nexec\n/usr/bin/zsh -lc \"sed -n '1,220p' /home/nikitoys/AI-Development-System/.agents/skills/documentation-navigation/SKILL.md\" in /home/nikitoys/AI-Development-System\n succeeded in 0ms:\n---\nname: documentation-navigation\ndescription: Use when working in AI_Development_System to choose the minimal correct documentation and project-control read set before planning, editing, reviewing\n[truncated: 853317 bytes total]",
+              "stdout_bytes": 1427,
+              "stderr_bytes": 859361,
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": "",
+              "report_ids": []
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-DEC09444504E"
+          ]
+        },
+        {
+          "phase": "collect_report",
+          "status": "blocked",
+          "reason": "No structured execution report exists for selected task.",
+          "next_action": "Submit a structured execution report, then rerun collect-report: python scripts/aictl.py task report submit --task TASK-146 --file <REPORT.json> --confirm",
+          "artifacts": {
+            "blocked_by": "REPORT_MISSING",
+            "session_id": "PSESS-020",
+            "task_id": "TASK-146",
+            "report_id": ""
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-F8589C190D91"
+          ]
+        }
+      ],
+      "current_step": "",
+      "current_step_status": "planned",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-AB83BE44ED85",
+        "EVT-6C9C9CB08560",
+        "EVT-6DE63C6505C0",
+        "EVT-DEC09444504E",
+        "EVT-F8589C190D91"
+      ],
+      "stop_reason": "No structured execution report exists for selected task.",
+      "created_at": "2026-06-24T11:29:12Z",
+      "updated_at": "2026-06-24T11:36:41Z",
+      "started_at": "2026-06-24T11:29:12Z",
+      "finished_at": ""
+    },
+    {
+      "id": "PSESS-021",
+      "status": "blocked",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-68"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit_1h",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": false,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": false,
+          "owner_approval_note": ""
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 3600,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-147",
+      "current_task_ref": "",
+      "current_phase": "collect_report",
+      "current_phase_status": "blocked",
+      "blocked_by": "REPORT_MISSING",
+      "next_action": "Submit a structured execution report, then rerun collect-report: python scripts/aictl.py task report submit --task TASK-147 --file <REPORT.json> --confirm",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-021",
+            "next_task": {
+              "id": "TASK-147",
+              "ref": "PIPEF-68",
+              "uid": "tsk_b678836b5b83",
+              "legacy_id": "TASK-147",
+              "title": "PIPE-063 Add internal change-gate bypass UI setting",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-68"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-147",
+                  "ref": "PIPEF-68",
+                  "uid": "tsk_b678836b5b83",
+                  "legacy_id": "TASK-147",
+                  "title": "PIPE-063 Add internal change-gate bypass UI setting",
+                  "status": "planned",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-68"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-4AB71E3EF01D"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "passed",
+          "reason": "Task preparation rebuilt artifacts; Codex execution has not been started.",
+          "next_action": "Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 db1c5a51e761e601f6e68a0cee8b8178b8576c469fa951b4966e3c293ba692a7).",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-021",
+            "task_id": "TASK-147",
+            "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+            "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+            "prompt_sha256": "db1c5a51e761e601f6e68a0cee8b8178b8576c469fa951b4966e3c293ba692a7",
+            "artifact_freshness": {
+              "status": "rebuilt",
+              "reason": "codex_status_not_ready",
+              "rebuild_required_before_prepare": true,
+              "fresh_before_prepare": false
+            },
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-147",
+              "ref": "PIPEF-68",
+              "uid": "tsk_b678836b5b83",
+              "legacy_id": "TASK-147",
+              "title": "PIPE-063 Add internal change-gate bypass UI setting",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 68,
+              "local_seq": 68,
+              "selected_ref": "PIPEF-68",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "scope": "selected_task",
+              "inspected_task_ids": [
+                "TASK-147"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-147",
+                  "task_ref": "PIPEF-68",
+                  "change_ids": [
+                    "CHG-068"
+                  ]
+                }
+              ],
+              "selected_task_id": "TASK-147",
+              "selected_task_ref": "PIPEF-68",
+              "change_ids": [
+                "CHG-068"
+              ]
+            },
+            "workflow": {
+              "ok": true,
+              "message": "Workflow completed.",
+              "steps": [
+                {
+                  "id": "resolve",
+                  "status": "ok"
+                },
+                {
+                  "id": "current_set",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_validate",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_graph",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_in_progress",
+                  "status": "ok"
+                },
+                {
+                  "id": "context_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "codex_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "doctor",
+                  "status": "ok"
+                }
+              ],
+              "errors": []
+            },
+            "codex_adapter_called": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-BBD4AA2E1788"
+          ]
+        },
+        {
+          "phase": "execute",
+          "status": "passed",
+          "reason": "Codex execution adapter completed; structured report collection is pending. (status=blocked, code=CODEX_ADAPTER_REPORT_MISSING, returncode=0)",
+          "next_action": "Run pipeline phase collect-report.",
+          "artifacts": {
+            "session_id": "PSESS-021",
+            "task_id": "TASK-147",
+            "policy": "supervised_executable_local_commit_1h",
+            "prepare_artifacts": {
+              "task_id": "TASK-147",
+              "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+              "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "db1c5a51e761e601f6e68a0cee8b8178b8576c469fa951b4966e3c293ba692a7"
+            },
+            "token_budget": {
+              "status": "pass",
+              "code": "TOKEN_BUDGET_PASS",
+              "reason": "within_token_budget",
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "db1c5a51e761e601f6e68a0cee8b8178b8576c469fa951b4966e3c293ba692a7",
+              "prompt_bytes": 2883,
+              "prompt_tokens": 721,
+              "context_bytes": 0,
+              "context_tokens": 0,
+              "token_count_strategy": "local_byte_estimate",
+              "token_count_estimated": true,
+              "token_count_unavailable": false,
+              "token_count_unavailable_reason": "",
+              "model_context_limit": 32000,
+              "max_context_tokens": 24000,
+              "reserved_output_tokens": 0,
+              "min_remaining_tokens": 6000,
+              "remaining_tokens": 31279,
+              "context_requires_compact_or_split": false,
+              "context_requirement_reasons": [],
+              "context_pack": {}
+            },
+            "codex_adapter_called": true,
+            "execute_started_at": "2026-06-24T11:37:49Z",
+            "execute_finished_at": "2026-06-24T11:42:49Z",
+            "before_report_id": "",
+            "after_report_id": "",
+            "report_id": "",
+            "execute_evidence": {
+              "status": "blocked",
+              "code": "CODEX_ADAPTER_REPORT_MISSING",
+              "reason": "structured_execution_report_missing",
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 299.920213,
+              "stdout_ref": "captured:stdout:sha256:9310f8a7f175f0e326a0086f51bfb453e52f88a3f32e3e7106b88dd05a395f5f",
+              "stderr_ref": "captured:stderr:sha256:ac90592516560edd610b55481140ec047e2e2dd7d687bf1c5e9690cb836a696f",
+              "stdout_snippet": "Active Role: Codex Executor  \nActive Stage: Task execution  \nActive Document: Codex Prompt Package TASK-147 / PIPEF-68  \nExpected Result: Bounded implementation complete, pending review\n\nSummary:\n- Added `allow_internal_change_gate_bypass` to effective UI settings with default `false`.\n- Added safe boolean parsing for `true`, `false`, `1`, and `0`, plus native JSON booleans.\n- Invalid values now raise stable `UI_SETTINGS_BOOLEAN_INVALID` before bad upsert values are written.\n- No Change gate behavior was bypassed or enabled.\n\nChanged files:\n- [ai_project_ctl/ui_settings.py](/home/nikitoys/AI-Development-System/ai_project_ctl/ui_settings.py)\n- [tests/test_ui_settings.py](/home/nikitoys/AI-Development-System/tests/test_ui_settings.py)\n\nCommands run:\n- `python -m unittest tests.test_ui_settings`\n- `python -m py_compile ai_project_ctl/ui_settings.py tests/test_ui_settings.py`\n- `python -m unittest tests.pipeline.test_ui_settings_policy tests.pipeline.test_codex_preflight tests.test_ui_run_command`\n- `python scripts/taskctl.py validate`\n- `python scripts/taskctl.py check-generated`\n- `git diff --check -- ai_project_ctl/ui_settings.py tests/test_ui_settings.py`\n\nVerification result:\nSele\n[truncated: 1596 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019ef96c-225f-7552-b871-511e93ced97a\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: Task execution\nActive Document: Codex Prompt Package TASK-147 / PIPEF-68\nExpected Result: Implement bounded UI settings change and report verification without self-approval\n\nUsing `documentation-navigation`, `project-control-gateway`, and the required Serena startup instruction path because this is controlled work inside `AI_Development_System` with a bounded Codex task.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\ncodex\nI’m reading the repository control documents and the relevant skills before touching code. The task is bounded to two files, but the repository’s own rules require the control-plane context first.\nexec\n/usr/bin/zsh -lc 'cat /home/nikitoys/AI-Development-System/.agents/skills/documentation-navigation/SKILL.md' in /home/nikitoys/AI-Development-System\n succeeded \n[truncated: 427652 bytes total]",
+              "stdout_bytes": 1596,
+              "stderr_bytes": 430613,
+              "report_ids": [],
+              "report_required": true,
+              "started_at": "2026-06-24T11:37:49Z",
+              "finished_at": "2026-06-24T11:42:49Z",
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": ""
+            },
+            "adapter": {
+              "status": "blocked",
+              "code": "CODEX_ADAPTER_REPORT_MISSING",
+              "reason": "structured_execution_report_missing",
+              "mode": "local_command",
+              "started_at": "2026-06-24T11:37:49Z",
+              "finished_at": "2026-06-24T11:42:49Z",
+              "duration_sec": 299.920213,
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "db1c5a51e761e601f6e68a0cee8b8178b8576c469fa951b4966e3c293ba692a7",
+              "prompt_transport": "stdin",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "timeout_sec": 3600,
+              "timed_out": false,
+              "returncode": 0,
+              "stdout_ref": "captured:stdout:sha256:9310f8a7f175f0e326a0086f51bfb453e52f88a3f32e3e7106b88dd05a395f5f",
+              "stderr_ref": "captured:stderr:sha256:ac90592516560edd610b55481140ec047e2e2dd7d687bf1c5e9690cb836a696f",
+              "stdout_snippet": "Active Role: Codex Executor  \nActive Stage: Task execution  \nActive Document: Codex Prompt Package TASK-147 / PIPEF-68  \nExpected Result: Bounded implementation complete, pending review\n\nSummary:\n- Added `allow_internal_change_gate_bypass` to effective UI settings with default `false`.\n- Added safe boolean parsing for `true`, `false`, `1`, and `0`, plus native JSON booleans.\n- Invalid values now raise stable `UI_SETTINGS_BOOLEAN_INVALID` before bad upsert values are written.\n- No Change gate behavior was bypassed or enabled.\n\nChanged files:\n- [ai_project_ctl/ui_settings.py](/home/nikitoys/AI-Development-System/ai_project_ctl/ui_settings.py)\n- [tests/test_ui_settings.py](/home/nikitoys/AI-Development-System/tests/test_ui_settings.py)\n\nCommands run:\n- `python -m unittest tests.test_ui_settings`\n- `python -m py_compile ai_project_ctl/ui_settings.py tests/test_ui_settings.py`\n- `python -m unittest tests.pipeline.test_ui_settings_policy tests.pipeline.test_codex_preflight tests.test_ui_run_command`\n- `python scripts/taskctl.py validate`\n- `python scripts/taskctl.py check-generated`\n- `git diff --check -- ai_project_ctl/ui_settings.py tests/test_ui_settings.py`\n\nVerification result:\nSele\n[truncated: 1596 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019ef96c-225f-7552-b871-511e93ced97a\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: Task execution\nActive Document: Codex Prompt Package TASK-147 / PIPEF-68\nExpected Result: Implement bounded UI settings change and report verification without self-approval\n\nUsing `documentation-navigation`, `project-control-gateway`, and the required Serena startup instruction path because this is controlled work inside `AI_Development_System` with a bounded Codex task.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\ncodex\nI’m reading the repository control documents and the relevant skills before touching code. The task is bounded to two files, but the repository’s own rules require the control-plane context first.\nexec\n/usr/bin/zsh -lc 'cat /home/nikitoys/AI-Development-System/.agents/skills/documentation-navigation/SKILL.md' in /home/nikitoys/AI-Development-System\n succeeded \n[truncated: 427652 bytes total]",
+              "stdout_bytes": 1596,
+              "stderr_bytes": 430613,
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": "",
+              "report_instruction": "In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-147 --file <REPORT.json> --confirm"
+            },
+            "adapter_summary": {
+              "status": "blocked",
+              "code": "CODEX_ADAPTER_REPORT_MISSING",
+              "reason": "structured_execution_report_missing",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 299.920213,
+              "stdout_ref": "captured:stdout:sha256:9310f8a7f175f0e326a0086f51bfb453e52f88a3f32e3e7106b88dd05a395f5f",
+              "stderr_ref": "captured:stderr:sha256:ac90592516560edd610b55481140ec047e2e2dd7d687bf1c5e9690cb836a696f",
+              "stdout_snippet": "Active Role: Codex Executor  \nActive Stage: Task execution  \nActive Document: Codex Prompt Package TASK-147 / PIPEF-68  \nExpected Result: Bounded implementation complete, pending review\n\nSummary:\n- Added `allow_internal_change_gate_bypass` to effective UI settings with default `false`.\n- Added safe boolean parsing for `true`, `false`, `1`, and `0`, plus native JSON booleans.\n- Invalid values now raise stable `UI_SETTINGS_BOOLEAN_INVALID` before bad upsert values are written.\n- No Change gate behavior was bypassed or enabled.\n\nChanged files:\n- [ai_project_ctl/ui_settings.py](/home/nikitoys/AI-Development-System/ai_project_ctl/ui_settings.py)\n- [tests/test_ui_settings.py](/home/nikitoys/AI-Development-System/tests/test_ui_settings.py)\n\nCommands run:\n- `python -m unittest tests.test_ui_settings`\n- `python -m py_compile ai_project_ctl/ui_settings.py tests/test_ui_settings.py`\n- `python -m unittest tests.pipeline.test_ui_settings_policy tests.pipeline.test_codex_preflight tests.test_ui_run_command`\n- `python scripts/taskctl.py validate`\n- `python scripts/taskctl.py check-generated`\n- `git diff --check -- ai_project_ctl/ui_settings.py tests/test_ui_settings.py`\n\nVerification result:\nSele\n[truncated: 1596 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019ef96c-225f-7552-b871-511e93ced97a\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: Task execution\nActive Document: Codex Prompt Package TASK-147 / PIPEF-68\nExpected Result: Implement bounded UI settings change and report verification without self-approval\n\nUsing `documentation-navigation`, `project-control-gateway`, and the required Serena startup instruction path because this is controlled work inside `AI_Development_System` with a bounded Codex task.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\ncodex\nI’m reading the repository control documents and the relevant skills before touching code. The task is bounded to two files, but the repository’s own rules require the control-plane context first.\nexec\n/usr/bin/zsh -lc 'cat /home/nikitoys/AI-Development-System/.agents/skills/documentation-navigation/SKILL.md' in /home/nikitoys/AI-Development-System\n succeeded \n[truncated: 427652 bytes total]",
+              "stdout_bytes": 1596,
+              "stderr_bytes": 430613,
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "",
+              "report_id": "",
+              "report_ids": []
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-AFB80E8E4159"
+          ]
+        },
+        {
+          "phase": "collect_report",
+          "status": "blocked",
+          "reason": "No structured execution report exists for selected task.",
+          "next_action": "Submit a structured execution report, then rerun collect-report: python scripts/aictl.py task report submit --task TASK-147 --file <REPORT.json> --confirm",
+          "artifacts": {
+            "blocked_by": "REPORT_MISSING",
+            "session_id": "PSESS-021",
+            "task_id": "TASK-147",
+            "report_id": ""
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-E712A014B9FB"
+          ]
+        }
+      ],
+      "current_step": "",
+      "current_step_status": "planned",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-CC49F0962734",
+        "EVT-4AB71E3EF01D",
+        "EVT-BBD4AA2E1788",
+        "EVT-AFB80E8E4159",
+        "EVT-E712A014B9FB"
+      ],
+      "stop_reason": "No structured execution report exists for selected task.",
+      "created_at": "2026-06-24T11:37:42Z",
+      "updated_at": "2026-06-24T11:42:50Z",
+      "started_at": "2026-06-24T11:37:42Z",
       "finished_at": ""
     }
   ]

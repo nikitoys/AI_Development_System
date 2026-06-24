@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1025`
+Revision: `1042`
 
 ## Executable Now
 
@@ -24,11 +24,16 @@ Revision: `1025`
 - `PIPEF-63 (TASK-142)` [planned] `EPIC-009` priority `1` — PIPE-058 Add live Codex log panel to Pipeline session page
 - `PIPEF-64 (TASK-143)` [planned] `EPIC-009` priority `1` — PIPE-059 Keep runtime pipeline logs out of task diff gates
 - `PIPEF-65 (TASK-144)` [planned] `EPIC-009` priority `1` — PIPE-060 Document Web live status and Codex log behavior
-- `PIPEF-67 (TASK-146)` [planned] `EPIC-009` priority `1` — PIPE-062 Add confirmed Web actions for UI settings updates
-- `PIPEF-68 (TASK-147)` [planned] `EPIC-009` priority `1` — PIPE-063 Add internal change-gate bypass UI setting
 - `PIPEF-69 (TASK-148)` [planned] `EPIC-009` priority `1` — PIPE-064 Render internal Change gate bypass checkbox
 - `PIPEF-70 (TASK-149)` [planned] `EPIC-009` priority `1` — PIPE-065 Apply internal Change gate bypass to UI runs
 - `PIPEF-71 (TASK-150)` [planned] `EPIC-009` priority `1` — PIPE-066 Document Web Settings and internal bypass behavior
+- `PIPEF-72 (TASK-151)` [planned] `EPIC-009` priority `1` — PIPE-067 Add structured Codex report block to prompt package
+- `PIPEF-73 (TASK-152)` [planned] `EPIC-009` priority `1` — PIPE-068 Parse structured Codex report from stdout
+- `PIPEF-74 (TASK-153)` [planned] `EPIC-009` priority `1` — PIPE-069 Add task report submission service for pipeline use
+- `PIPEF-75 (TASK-154)` [planned] `EPIC-009` priority `1` — PIPE-070 Auto-submit parsed Codex report in local-command adapter
+- `PIPEF-76 (TASK-155)` [planned] `EPIC-009` priority `1` — PIPE-071 Add pipeline regression test for Run report auto-collection
+- `PIPEF-77 (TASK-156)` [planned] `EPIC-009` priority `1` — PIPE-072 Add Web recovery action for report missing sessions
+- `PIPEF-78 (TASK-157)` [planned] `EPIC-009` priority `1` — PIPE-073 Document Codex structured report auto-submit
 
 ## Waiting For Dependencies
 
@@ -291,4 +296,8 @@ _No tasks waiting only on dependencies._
 - `PIPEF-60 (TASK-139)` [done] `EPIC-009` priority `1` — PIPE-055 Render Run and Resume controls beside task rows
   - `status_not_executable`: status is done
 - `PIPEF-66 (TASK-145)` [done] `EPIC-009` priority `1` — PIPE-061 Add Web Settings page route
+  - `status_not_executable`: status is done
+- `PIPEF-67 (TASK-146)` [done] `EPIC-009` priority `1` — PIPE-062 Add confirmed Web actions for UI settings updates
+  - `status_not_executable`: status is done
+- `PIPEF-68 (TASK-147)` [done] `EPIC-009` priority `1` — PIPE-063 Add internal change-gate bypass UI setting
   - `status_not_executable`: status is done

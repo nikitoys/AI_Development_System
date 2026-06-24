@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1025`
+Revision: `1042`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -2584,7 +2584,7 @@ Acceptance criteria:
 
 ### PIPEF-67 (TASK-146) — PIPE-062 Add confirmed Web actions for UI settings updates
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_644b6c563035`, legacy `TASK-146`, aliases `TASK-146`, local `PIPEF` / `67`
@@ -2601,7 +2601,7 @@ Acceptance criteria:
 
 ### PIPEF-68 (TASK-147) — PIPE-063 Add internal change-gate bypass UI setting
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_b678836b5b83`, legacy `TASK-147`, aliases `TASK-147`, local `PIPEF` / `68`
@@ -2665,4 +2665,123 @@ Acceptance criteria:
 - Documentation explains the internal Change gate bypass setting and its risks.
 - Documentation states that the bypass does not skip token, report, verify, review, close or commit gates.
 - Documentation explains that the setting is off by default.
+- Documentation validation and generated checks can be rerun after edits.
+
+### PIPEF-72 (TASK-151) — PIPE-067 Add structured Codex report block to prompt package
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_66d6567e4211`, legacy `TASK-151`, aliases `TASK-151`, local `PIPEF` / `72`
+
+Update Codex prompt generation so executors must finish with a machine-readable structured report block.
+
+Acceptance criteria:
+
+- Generated CODEX_PROMPT.md contains a clearly delimited machine-readable report JSON instruction.
+- The required JSON fields include task identity, changed_files, generated_files, checks, warnings, blockers and token_usage.
+- The prompt still tells Codex not to self-approve.
+- Existing prompt sections for scope, allowed files and acceptance criteria remain intact.
+- Focused tests verify the new final report contract appears in generated prompts.
+
+### PIPEF-73 (TASK-152) — PIPE-068 Parse structured Codex report from stdout
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_5fa2f77182b7`, legacy `TASK-152`, aliases `TASK-152`, local `PIPEF` / `73`
+
+Add a bounded parser that extracts a structured execution report JSON object from Codex stdout.
+
+Acceptance criteria:
+
+- A valid fenced report JSON block can be extracted from stdout.
+- Missing report blocks produce a stable missing-report parse result.
+- Duplicate report blocks are rejected rather than guessed.
+- Malformed JSON is rejected with a stable error code.
+- The parser does not read or write repository state.
+
+### PIPEF-74 (TASK-153) — PIPE-069 Add task report submission service for pipeline use
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_27cdd9a118ba`, legacy `TASK-153`, aliases `TASK-153`, local `PIPEF` / `74`
+
+Extract or add a reusable task report submission service that can be called without shelling out to taskctl.
+
+Acceptance criteria:
+
+- A structured report can be submitted through a reusable Python service.
+- The existing task report CLI path continues to work.
+- Invalid reports are rejected with stable validation errors.
+- Successful submission updates latest_by_task for the selected task.
+- Tests cover service submission and the CLI compatibility path.
+
+### PIPEF-75 (TASK-154) — PIPE-070 Auto-submit parsed Codex report in local-command adapter
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_b8872924f7e8`, legacy `TASK-154`, aliases `TASK-154`, local `PIPEF` / `75`
+
+Make the local-command Codex adapter submit a parsed structured report automatically after successful execution.
+
+Acceptance criteria:
+
+- A successful local-command run with a valid structured report auto-submits a task report.
+- The adapter result includes the new report_id and passes instead of blocking on report missing.
+- A successful local-command run without a structured report still blocks with CODEX_ADAPTER_REPORT_MISSING.
+- Malformed structured report output produces a stable blocked or failed adapter result with evidence.
+- Tests cover auto-submit success and missing-report fallback.
+
+### PIPEF-76 (TASK-155) — PIPE-071 Add pipeline regression test for Run report auto-collection
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_d572bda0c446`, legacy `TASK-155`, aliases `TASK-155`, local `PIPEF` / `76`
+
+Add an end-to-end regression test proving a UI Run session can proceed past collect-report when Codex emits a valid report.
+
+Acceptance criteria:
+
+- The regression test uses a fake local-command runner, not real Codex.
+- A valid emitted report allows collect-report to pass.
+- The test verifies the report id is stored and linked to the selected task.
+- A no-report runner still produces CODEX_ADAPTER_REPORT_MISSING.
+- Existing pipeline tests continue to pass.
+
+### PIPEF-77 (TASK-156) — PIPE-072 Add Web recovery action for report missing sessions
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_4c8053ef44b5`, legacy `TASK-156`, aliases `TASK-156`, local `PIPEF` / `77`
+
+Add a Web owner action that creates a draft structured report from captured Codex output for REPORT_MISSING sessions.
+
+Acceptance criteria:
+
+- REPORT_MISSING session pages show a report recovery action.
+- The recovery action requires explicit owner confirmation.
+- The generated draft report contains selected task id, task ref, changed_files, checks, warnings and token_usage.
+- The UI warns when values are inferred from captured Codex output.
+- After submission, the owner is guided to rerun collect-report.
+
+### PIPEF-78 (TASK-157) — PIPE-073 Document Codex structured report auto-submit
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_6ac4e09604aa`, legacy `TASK-157`, aliases `TASK-157`, local `PIPEF` / `78`
+
+Document how Codex structured reports are emitted, parsed, auto-submitted and recovered in Web UI.
+
+Acceptance criteria:
+
+- Documentation explains the final structured report block expected from Codex.
+- Documentation explains when the adapter auto-submits a report.
+- Documentation explains why free-text summaries are not enough for collect-report.
+- Documentation explains the manual or Web recovery path for REPORT_MISSING sessions.
 - Documentation validation and generated checks can be rerun after edits.
