@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1042`
+Revision: `1065`
 
 ## Executable Now
 
@@ -24,8 +24,6 @@ Revision: `1042`
 - `PIPEF-63 (TASK-142)` [planned] `EPIC-009` priority `1` — PIPE-058 Add live Codex log panel to Pipeline session page
 - `PIPEF-64 (TASK-143)` [planned] `EPIC-009` priority `1` — PIPE-059 Keep runtime pipeline logs out of task diff gates
 - `PIPEF-65 (TASK-144)` [planned] `EPIC-009` priority `1` — PIPE-060 Document Web live status and Codex log behavior
-- `PIPEF-69 (TASK-148)` [planned] `EPIC-009` priority `1` — PIPE-064 Render internal Change gate bypass checkbox
-- `PIPEF-70 (TASK-149)` [planned] `EPIC-009` priority `1` — PIPE-065 Apply internal Change gate bypass to UI runs
 - `PIPEF-71 (TASK-150)` [planned] `EPIC-009` priority `1` — PIPE-066 Document Web Settings and internal bypass behavior
 - `PIPEF-72 (TASK-151)` [planned] `EPIC-009` priority `1` — PIPE-067 Add structured Codex report block to prompt package
 - `PIPEF-73 (TASK-152)` [planned] `EPIC-009` priority `1` — PIPE-068 Parse structured Codex report from stdout
@@ -267,8 +265,8 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-39 (TASK-118)` [done] `EPIC-009` priority `1` — PIPE-039 Add CI exit-code mode for pipeline
   - `status_not_executable`: status is done
-- `PIPEF-40 (TASK-119)` [in_progress] `EPIC-009` priority `1` — PIPE-040 Add tests for phase model and mutations
-  - `status_not_executable`: status is in_progress
+- `PIPEF-40 (TASK-119)` [done] `EPIC-009` priority `1` — PIPE-040 Add tests for phase model and mutations
+  - `status_not_executable`: status is done
 - `PIPEF-46 (TASK-125)` [done] `EPIC-009` priority `1` — Add UI settings defaults and loader
   - `status_not_executable`: status is done
 - `PIPEF-47 (TASK-126)` [done] `EPIC-009` priority `1` — Add UI settings CLI commands
@@ -300,4 +298,10 @@ _No tasks waiting only on dependencies._
 - `PIPEF-67 (TASK-146)` [done] `EPIC-009` priority `1` — PIPE-062 Add confirmed Web actions for UI settings updates
   - `status_not_executable`: status is done
 - `PIPEF-68 (TASK-147)` [done] `EPIC-009` priority `1` — PIPE-063 Add internal change-gate bypass UI setting
+  - `status_not_executable`: status is done
+- `PIPEF-69 (TASK-148)` [done] `EPIC-009` priority `1` — PIPE-064 Render internal Change gate bypass checkbox
+  - `status_not_executable`: status is done
+- `PIPEF-70 (TASK-149)` [done] `EPIC-009` priority `1` — PIPE-065 Apply internal Change gate bypass to UI runs
+  - `status_not_executable`: status is done
+- `PIPEF-79 (TASK-158)` [done] `EPIC-009` priority `1` — PIPE-074 Allow internal bypass setting in Web settings action
   - `status_not_executable`: status is done

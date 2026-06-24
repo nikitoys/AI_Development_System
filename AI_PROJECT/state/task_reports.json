@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 8,
+  "revision": 9,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-24T11:15:49Z",
+  "updated_at": "2026-06-24T13:37:59Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -779,6 +779,46 @@
           "token_count_strategy": "manual_report_not_measured"
         }
       }
+    },
+    {
+      "id": "RPT-009",
+      "task_id": "TASK-149",
+      "task_ref": "PIPEF-70",
+      "submitted_at": "2026-06-24T13:37:59Z",
+      "submitted_by": "human_owner",
+      "source_file": "/tmp/TASK-149-report.json",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-149",
+        "task_ref": "PIPEF-70",
+        "reported_task_id": "TASK-149",
+        "reported_task_ref": "PIPEF-70",
+        "implementation_summary": "Implemented the internal Change gate bypass behavior for UI-created runs according to the task scope.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "Focused tests",
+            "command": "PASTE_ACTUAL_COMMAND_HERE",
+            "result": "passed",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "PASTE_ACTUAL_RESULT_HERE"
+          }
+        ],
+        "warnings": [],
+        "blockers": [],
+        "notes": [
+          "Codex execution completed but did not submit a structured report automatically."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "context_tokens": 0,
+          "prompt_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_strategy": "manual_report_not_measured"
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -787,6 +827,7 @@
     "TASK-049": "RPT-004",
     "TASK-058": "RPT-005",
     "TASK-135": "RPT-007",
-    "TASK-119": "RPT-008"
+    "TASK-119": "RPT-008",
+    "TASK-149": "RPT-009"
   }
 }

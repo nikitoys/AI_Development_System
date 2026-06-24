@@ -9,6 +9,7 @@ from typing import Any, Mapping
 
 from ai_project_ctl.core.result import CommandError
 from ai_project_ctl.ui_settings import (
+    INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     UISettingsError,
     load_ui_settings,
     optional_ui_timeout_sec,
@@ -26,6 +27,13 @@ def resolve_ui_pipeline_policy(*, root: str | Path = ".") -> PipelinePolicy:
     """Return the effective pipeline policy selected by UI settings."""
 
     return resolve_pipeline_policy_from_settings(load_ui_settings(root=root), root=root)
+
+
+def ui_internal_change_gate_bypass_enabled(*, root: str | Path = ".") -> bool:
+    """Return whether UI runs may bypass Change gates for internal tasks."""
+
+    settings = load_ui_settings(root=root)
+    return bool(settings.get(INTERNAL_CHANGE_GATE_BYPASS_SETTING) is True)
 
 
 def resolve_pipeline_policy_from_settings(

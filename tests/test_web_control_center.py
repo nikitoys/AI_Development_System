@@ -12,8 +12,15 @@ from unittest.mock import patch
 
 from ai_project_ctl.core.registry import command_describe
 from ai_project_ctl.core.result import CommandResult
-from ai_project_ctl.ui_settings import ui_settings_path
-from ai_project_ctl.web.actions import WebActionError, WebActionExecutor
+from ai_project_ctl.ui_settings import (
+    INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+    ui_settings_path,
+)
+from ai_project_ctl.web.actions import (
+    WebActionError,
+    WebActionExecutor,
+    available_actions,
+)
 from ai_project_ctl.web.read_model import (
     ReadOnlyProjectModel,
     WebControlError,
@@ -106,6 +113,26 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("<code>codex exec</code>", body)
         self.assertIn("<code>default_policy</code>", body)
         self.assertIn("<code>supervised_executable_local_commit</code>", body)
+        self.assertIn("<code>allow_internal_change_gate_bypass</code>", body)
+        self.assertIn("<code>false</code>", body)
+        self.assertIn("Internal Change Gate Bypass", body)
+        self.assertIn(
+            "Internal Change gate bypass is for internal project-control tasks only",
+            body,
+        )
+        self.assertIn(
+            'name="key" value="allow_internal_change_gate_bypass"',
+            body,
+        )
+        self.assertIn('name="value" value="false"', body)
+        self.assertIn(
+            'type="checkbox" name="value" value="true">Allow internal Change gate bypass',
+            body,
+        )
+        self.assertNotIn(
+            'type="checkbox" name="value" value="true" checked>Allow internal Change gate bypass',
+            body,
+        )
         self.assertIn("Update UI Setting", body)
         self.assertIn('value="ui.settings.set"', body)
         self.assertIn('<option value="command_line">command_line</option>', body)
@@ -124,6 +151,7 @@ class WebControlCenterTests(unittest.TestCase):
                 {
                     "command_line": "codex exec --json",
                     "default_policy": "supervised",
+                    INTERNAL_CHANGE_GATE_BYPASS_SETTING: "true",
                     "execution_timeout_sec": "1800",
                     "preflight_timeout_sec": 45,
                 },
@@ -139,6 +167,17 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("<code>codex exec --json</code>", body)
         self.assertIn("<code>default_policy</code>", body)
         self.assertIn("<code>supervised</code>", body)
+        self.assertIn("<code>allow_internal_change_gate_bypass</code>", body)
+        self.assertIn("<code>true</code>", body)
+        self.assertIn("Internal Change Gate Bypass", body)
+        self.assertIn(
+            "Internal Change gate bypass is for internal project-control tasks only",
+            body,
+        )
+        self.assertIn(
+            'type="checkbox" name="value" value="true" checked>Allow internal Change gate bypass',
+            body,
+        )
         self.assertIn("<code>execution_timeout_sec</code>", body)
         self.assertIn("<code>1800</code>", body)
         self.assertIn("<code>preflight_timeout_sec</code>", body)
@@ -2630,6 +2669,62 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("codex exec --json", body)
         self.assertIn(str(path), body)
 
+    def test_ui_settings_web_action_metadata_includes_internal_change_gate_bypass(self):
+        settings_action = next(
+            action
+            for action in available_actions()
+            if action["id"] == "ui.settings.set"
+        )
+        key_argument = next(
+            argument
+            for argument in settings_action["arguments"]
+            if argument["name"] == "key"
+        )
+
+        self.assertIn(
+            INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+            key_argument["choices"],
+        )
+
+    def test_ui_settings_web_action_updates_internal_change_gate_bypass_values(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = ui_settings_path(root)
+            executor = WebActionExecutor(root, actor="tester")
+
+            true_result = executor.execute(
+                {
+                    "action": "ui.settings.set",
+                    "confirm": "yes",
+                    "key": INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+                    "value": "true",
+                }
+            )
+            true_settings = json.loads(path.read_text(encoding="utf-8"))
+            true_data = true_result.to_dict()["result"]["data"]
+
+            false_result = executor.execute(
+                {
+                    "action": "ui.settings.set",
+                    "confirm": "yes",
+                    "key": INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+                    "value": "false",
+                }
+            )
+            false_settings = json.loads(path.read_text(encoding="utf-8"))
+            false_data = false_result.to_dict()["result"]["data"]
+
+        self.assertTrue(true_result.ok)
+        self.assertIs(true_settings[INTERNAL_CHANGE_GATE_BYPASS_SETTING], True)
+        self.assertIs(true_data["settings"][INTERNAL_CHANGE_GATE_BYPASS_SETTING], True)
+        self.assertEqual(true_data["key"], INTERNAL_CHANGE_GATE_BYPASS_SETTING)
+        self.assertEqual(true_data["value"], "true")
+        self.assertTrue(false_result.ok)
+        self.assertIs(false_settings[INTERNAL_CHANGE_GATE_BYPASS_SETTING], False)
+        self.assertIs(false_data["settings"][INTERNAL_CHANGE_GATE_BYPASS_SETTING], False)
+        self.assertEqual(false_data["key"], INTERNAL_CHANGE_GATE_BYPASS_SETTING)
+        self.assertEqual(false_data["value"], "false")
+
     def test_ui_settings_web_action_requires_confirmation(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -2661,6 +2756,10 @@ class WebControlCenterTests(unittest.TestCase):
                 )
 
             self.assertEqual(raised.exception.code, "WEB_UI_SETTING_KEY_NOT_ALLOWED")
+            self.assertIn(
+                INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+                raised.exception.details["allowed_keys"],
+            )
             self.assertEqual(
                 json.loads(path.read_text(encoding="utf-8")),
                 {"command_line": "codex exec"},

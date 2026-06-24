@@ -54,6 +54,11 @@ class UIRunCommandTests(unittest.TestCase):
             self.assertEqual(session["selected_queue"]["task_refs"], ["APP-01"])
             self.assertEqual(session["selected_queue"]["max_tasks"], 1)
             self.assertEqual(session["selected_queue"]["order_by"], "selected")
+            self.assertEqual(session["selected_queue"]["created_by_command"], "ui.run")
+            self.assertFalse(session["selected_queue"]["ui_run_confirmed"])
+            self.assertFalse(
+                session["selected_queue"]["allow_internal_change_gate_bypass"]
+            )
 
     def test_ui_run_confirm_uses_effective_executable_policy_settings(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -65,6 +70,7 @@ class UIRunCommandTests(unittest.TestCase):
                     "default_policy": "supervised_executable_local_commit",
                     "command_line": "codex exec --json",
                     "execution_timeout_sec": "1200",
+                    "allow_internal_change_gate_bypass": "true",
                 },
             )
             run_result = CommandResult.success(
@@ -123,6 +129,10 @@ class UIRunCommandTests(unittest.TestCase):
             self.assertEqual(session["policy_snapshot"]["codex"]["timeout_sec"], 1200)
             self.assertEqual(session["selected_queue"]["task_refs"], ["APP-01"])
             self.assertEqual(session["selected_queue"]["max_tasks"], 1)
+            self.assertTrue(session["selected_queue"]["ui_run_confirmed"])
+            self.assertTrue(
+                session["selected_queue"]["allow_internal_change_gate_bypass"]
+            )
 
     def test_ui_run_reports_blocked_and_failed_outcomes_clearly(self):
         blocked = CommandResult.success(

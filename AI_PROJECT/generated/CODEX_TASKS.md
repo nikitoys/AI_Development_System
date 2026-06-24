@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1042`
+Revision: `1065`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -2128,7 +2128,7 @@ Acceptance criteria:
 
 ### PIPEF-40 (TASK-119) — PIPE-040 Add tests for phase model and mutations
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_5bcaf7cb78cb`, legacy `TASK-119`, aliases `TASK-119`, local `PIPEF` / `40`
@@ -2618,7 +2618,7 @@ Acceptance criteria:
 
 ### PIPEF-69 (TASK-148) — PIPE-064 Render internal Change gate bypass checkbox
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_c3115928f476`, legacy `TASK-148`, aliases `TASK-148`, local `PIPEF` / `69`
@@ -2635,7 +2635,7 @@ Acceptance criteria:
 
 ### PIPEF-70 (TASK-149) — PIPE-065 Apply internal Change gate bypass to UI runs
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_e84bda130e82`, legacy `TASK-149`, aliases `TASK-149`, local `PIPEF` / `70`
@@ -2785,3 +2785,21 @@ Acceptance criteria:
 - Documentation explains why free-text summaries are not enough for collect-report.
 - Documentation explains the manual or Web recovery path for REPORT_MISSING sessions.
 - Documentation validation and generated checks can be rerun after edits.
+
+### PIPEF-79 (TASK-158) — PIPE-074 Allow internal bypass setting in Web settings action
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_183a81f45e29`, legacy `TASK-158`, aliases `TASK-158`, local `PIPEF` / `79`
+
+Allow the Web UI settings action to update the existing internal Change gate bypass setting.
+
+Acceptance criteria:
+
+- The Web settings action no longer rejects allow_internal_change_gate_bypass with WEB_UI_SETTING_KEY_NOT_ALLOWED.
+- The Web settings action can persist allow_internal_change_gate_bypass=true.
+- The Web settings action can persist allow_internal_change_gate_bypass=false.
+- Unknown setting keys are still rejected with WEB_UI_SETTING_KEY_NOT_ALLOWED.
+- The allowed keys metadata includes allow_internal_change_gate_bypass.
+- Focused Web Control Center tests pass.
