@@ -4,5 +4,5 @@
   "require_codex_review": false,
   "allow_internal_change_gate_bypass": true,
   "preflight_timeout_sec": "120",
-  "execution_timeout_sec": ""
+  "execution_timeout_sec": "3600"
 }

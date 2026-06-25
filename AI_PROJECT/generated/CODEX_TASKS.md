@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1108`
+Revision: `1125`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -2519,7 +2519,7 @@ Acceptance criteria:
 
 ### PIPEF-61 (TASK-140) — PIPE-056 Stream Codex adapter output to runtime log files
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_f1d62b78004f`, legacy `TASK-140`, aliases `TASK-140`, local `PIPEF` / `61`
@@ -2858,3 +2858,37 @@ Acceptance criteria:
 - Close phase accepts skipped Codex Review only when the effective policy disables Codex Review.
 - Local commit readiness does not block on missing Codex Review only when the effective policy disables Codex Review.
 - Tests prove that disabling Codex Review does not disable Report Gate or Machine Review.
+
+### PIPEF-81 (TASK-162) — Add shared UI run queue builder
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_0cae31448c4c`, legacy `TASK-162`, aliases `TASK-162`, local `PIPEF` / `81`
+
+Create one shared builder for UI single-task pipeline queue metadata so CLI and Web Run paths use the same session contract.
+
+Acceptance criteria:
+
+- An importable helper builds the UI single-task selected_queue payload with created_by_command=ui.run, ui_run_confirmed, task_refs, max_tasks=1, order_by=selected, include_blocked_tasks, and allow_internal_change_gate_bypass.
+- `scripts/aictl.py ui run` uses the shared helper instead of maintaining a separate local queue-builder implementation.
+- Existing CLI UI run behavior remains unchanged for confirmed and unconfirmed runs.
+- Tests verify that the helper returns the expected bypass metadata when allow_internal_change_gate_bypass is true and false.
+- Existing UI settings and UI run tests pass.
+
+### PIPEF-82 (TASK-163) — Propagate UI Run queue metadata in Web action
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_1f7e652fa9b0`, legacy `TASK-163`, aliases `TASK-163`, local `PIPEF` / `82`
+
+Make the Web Run button create pipeline sessions with the same UI single-task queue metadata as CLI `ui run`.
+
+Acceptance criteria:
+
+- Posting Web action `ui.run_selected_task` creates a session whose selected_queue includes created_by_command=ui.run and ui_run_confirmed=true.
+- When allow_internal_change_gate_bypass=true in UI settings, Web Run session selected_queue includes allow_internal_change_gate_bypass=true.
+- When allow_internal_change_gate_bypass=false in UI settings, Web Run session selected_queue includes allow_internal_change_gate_bypass=false.
+- Web Run still returns session_href and redirect_target for the created session.
+- Existing Web Control Center tests pass.

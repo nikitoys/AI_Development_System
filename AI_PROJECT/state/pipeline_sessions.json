@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 121,
+  "revision": 134,
   "created_at": "2026-06-19T21:27:58Z",
-  "updated_at": "2026-06-24T15:12:54Z",
-  "current_session_id": "PSESS-026",
+  "updated_at": "2026-06-25T06:48:19Z",
+  "current_session_id": "PSESS-029",
   "sessions": [
     {
       "id": "PSESS-001",
@@ -13589,6 +13589,1713 @@
       "created_at": "2026-06-24T14:52:29Z",
       "updated_at": "2026-06-24T15:12:54Z",
       "started_at": "2026-06-24T14:52:29Z",
+      "finished_at": ""
+    },
+    {
+      "id": "PSESS-027",
+      "status": "blocked",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-61"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit_1h",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": false,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": false,
+          "owner_approval_note": ""
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 3600,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": false,
+          "required_codex_decision": "none"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-140",
+      "current_task_ref": "",
+      "current_phase": "prepare",
+      "current_phase_status": "blocked",
+      "blocked_by": "BLOCKED",
+      "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-027",
+            "next_task": {
+              "id": "TASK-140",
+              "ref": "PIPEF-61",
+              "uid": "tsk_f1d62b78004f",
+              "legacy_id": "TASK-140",
+              "title": "PIPE-056 Stream Codex adapter output to runtime log files",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-61"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-140",
+                  "ref": "PIPEF-61",
+                  "uid": "tsk_f1d62b78004f",
+                  "legacy_id": "TASK-140",
+                  "title": "PIPE-056 Stream Codex adapter output to runtime log files",
+                  "status": "planned",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-61"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-8AAC16615D9A"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "blocked",
+          "reason": "Approved linked Evolution Changes are required before execution.",
+          "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+          "artifacts": {
+            "blocked_by": "BLOCKED",
+            "source": "session",
+            "session_id": "PSESS-027",
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-140",
+              "ref": "PIPEF-61",
+              "uid": "tsk_f1d62b78004f",
+              "legacy_id": "TASK-140",
+              "title": "PIPE-056 Stream Codex adapter output to runtime log files",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 61,
+              "local_seq": 61,
+              "selected_ref": "PIPEF-61",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "stop_code": "BLOCKED",
+              "scope": "selected_task",
+              "inspected_task_ids": [
+                "TASK-140"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-140",
+                  "task_ref": "PIPEF-61",
+                  "change_ids": []
+                }
+              ],
+              "selected_task_id": "TASK-140",
+              "selected_task_ref": "PIPEF-61",
+              "created_change_ids": [],
+              "linked_change_ids": [],
+              "change_ids": [],
+              "tasks_requiring_approval": [
+                "TASK-140"
+              ],
+              "workflows": []
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-C58F8053E505"
+          ]
+        }
+      ],
+      "current_step": "",
+      "current_step_status": "planned",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-2002206C082B",
+        "EVT-8AAC16615D9A",
+        "EVT-C58F8053E505"
+      ],
+      "stop_reason": "Approved linked Evolution Changes are required before execution.",
+      "created_at": "2026-06-24T21:38:57Z",
+      "updated_at": "2026-06-24T21:38:57Z",
+      "started_at": "2026-06-24T21:38:57Z",
+      "finished_at": ""
+    },
+    {
+      "id": "PSESS-028",
+      "status": "blocked",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-61"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false,
+        "created_by_command": "ui.run",
+        "ui_run_confirmed": true,
+        "allow_internal_change_gate_bypass": true
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit_1h",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": false,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": false,
+          "owner_approval_note": ""
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 3600,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": false,
+          "required_codex_decision": "none"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-140",
+      "current_task_ref": "",
+      "current_phase": "verify",
+      "current_phase_status": "blocked",
+      "blocked_by": "GIT_DIFF_GATE_DIFF_MISMATCH",
+      "next_action": "Update the structured report file lists or resolve unintended working-tree changes, then rerun verify.",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-028",
+            "next_task": {
+              "id": "TASK-140",
+              "ref": "PIPEF-61",
+              "uid": "tsk_f1d62b78004f",
+              "legacy_id": "TASK-140",
+              "title": "PIPE-056 Stream Codex adapter output to runtime log files",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-61"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-140",
+                  "ref": "PIPEF-61",
+                  "uid": "tsk_f1d62b78004f",
+                  "legacy_id": "TASK-140",
+                  "title": "PIPE-056 Stream Codex adapter output to runtime log files",
+                  "status": "planned",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-61"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-DFCE4E841893"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "passed",
+          "reason": "Task preparation rebuilt artifacts; Codex execution has not been started.",
+          "next_action": "Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 6451a813c0c634592ff158484fb521f7bd870c7a4ec80902dbfe492b7f345716).",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-028",
+            "task_id": "TASK-140",
+            "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+            "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+            "prompt_sha256": "6451a813c0c634592ff158484fb521f7bd870c7a4ec80902dbfe492b7f345716",
+            "artifact_freshness": {
+              "status": "rebuilt",
+              "reason": "codex_status_not_ready",
+              "rebuild_required_before_prepare": true,
+              "fresh_before_prepare": false
+            },
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-140",
+              "ref": "PIPEF-61",
+              "uid": "tsk_f1d62b78004f",
+              "legacy_id": "TASK-140",
+              "title": "PIPE-056 Stream Codex adapter output to runtime log files",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 61,
+              "local_seq": 61,
+              "selected_ref": "PIPEF-61",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "scope": "selected_task",
+              "selected_task_id": "TASK-140",
+              "selected_task_ref": "PIPEF-61",
+              "inspected_task_ids": [
+                "TASK-140"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-140",
+                  "task_ref": "PIPEF-61",
+                  "change_ids": []
+                }
+              ],
+              "linked_change_ids": [],
+              "change_ids": [],
+              "bypassed": true,
+              "bypass": {
+                "setting": "allow_internal_change_gate_bypass",
+                "enabled": true,
+                "reason": "confirmed_ui_internal_project_control_task",
+                "created_by_command": "ui.run",
+                "ui_run_confirmed": true,
+                "single_task_session": true,
+                "internal_project_control_task": true,
+                "session_id": "PSESS-028",
+                "allowed_files": [
+                  "ai_project_ctl/pipeline/codex_adapter.py",
+                  "ai_project_ctl/pipeline/execute_phase.py",
+                  "tests/pipeline/test_codex_adapter.py",
+                  "tests/pipeline/test_execute_phase.py"
+                ]
+              }
+            },
+            "workflow": {
+              "ok": true,
+              "message": "Workflow completed.",
+              "steps": [
+                {
+                  "id": "resolve",
+                  "status": "ok"
+                },
+                {
+                  "id": "current_set",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_validate",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_graph",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_in_progress",
+                  "status": "ok"
+                },
+                {
+                  "id": "context_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "codex_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "doctor",
+                  "status": "ok"
+                }
+              ],
+              "errors": []
+            },
+            "codex_adapter_called": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-B07CF9A1BB00"
+          ]
+        },
+        {
+          "phase": "execute",
+          "status": "passed",
+          "reason": "Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0)",
+          "next_action": "Run pipeline phase collect-report.",
+          "artifacts": {
+            "session_id": "PSESS-028",
+            "task_id": "TASK-140",
+            "policy": "supervised_executable_local_commit_1h",
+            "prepare_artifacts": {
+              "task_id": "TASK-140",
+              "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+              "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "6451a813c0c634592ff158484fb521f7bd870c7a4ec80902dbfe492b7f345716"
+            },
+            "token_budget": {
+              "status": "pass",
+              "code": "TOKEN_BUDGET_PASS",
+              "reason": "within_token_budget",
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "6451a813c0c634592ff158484fb521f7bd870c7a4ec80902dbfe492b7f345716",
+              "prompt_bytes": 4392,
+              "prompt_tokens": 1098,
+              "context_bytes": 0,
+              "context_tokens": 0,
+              "token_count_strategy": "local_byte_estimate",
+              "token_count_estimated": true,
+              "token_count_unavailable": false,
+              "token_count_unavailable_reason": "",
+              "model_context_limit": 32000,
+              "max_context_tokens": 24000,
+              "reserved_output_tokens": 0,
+              "min_remaining_tokens": 6000,
+              "remaining_tokens": 30902,
+              "context_requires_compact_or_split": false,
+              "context_requirement_reasons": [],
+              "context_pack": {}
+            },
+            "codex_adapter_called": true,
+            "execute_started_at": "2026-06-24T21:46:49Z",
+            "execute_finished_at": "2026-06-24T21:57:59Z",
+            "before_report_id": "",
+            "after_report_id": "RPT-010",
+            "report_id": "RPT-010",
+            "execute_evidence": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 670.312379,
+              "stdout_ref": "captured:stdout:sha256:8b6e46483912b7ee5a1a43481ca9dc7ea041c0810067a345f1ed44374c255d80",
+              "stderr_ref": "captured:stderr:sha256:d6a09fbd34fbb0ff3d9533c2e4d720d7637fce33c4e14967dc7be1255e7a4aff",
+              "stdout_snippet": "Implemented TASK-140 within the allowed files. The local-command adapter now tees stdout/stderr into per-session runtime `.log` files under `AI_PROJECT/logs/codex/<session>/`, keeps captured stdout/stderr refs and snippets, and records bounded path/offset metadata through execute artifacts.\n\nChecks passed: focused unittest modules and py_compile.\n\nCODEX_REPORT_JSON:\n```json\n{\n  \"schema_version\": 1,\n  \"task_id\": \"TASK-140\",\n  \"task_ref\": \"PIPEF-61\",\n  \"implementation_summary\": \"Added per-session runtime stdout/stderr log files for local-command Codex execution, preserved captured stdout/stderr refs and snippets, and exposed runtime log path/offset metadata in execute phase artifacts.\",\n  \"changed_files\": [\n    \"ai_project_ctl/pipeline/codex_adapter.py\",\n    \"ai_project_ctl/pipeline/execute_phase.py\",\n    \"tests/pipeline/test_codex_adapter.py\",\n    \"tests/pipeline/test_execute_phase.py\"\n  ],\n  \"generated_files\": [],\n  \"checks\": [\n    {\n      \"name\": \"focused pipeline unit tests\",\n      \"result\": \"passed\",\n      \"command\": \"python -m unittest tests.pipeline.test_codex_adapter tests.pipeline.test_execute_phase\",\n      \"duration_sec\": 3.124,\n      \"blocking\": true\n    },\n    {\n      \"na\n[truncated: 2502 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019efb99-b119-7c51-aa85-6e44371f7034\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: CODEX execution\nActive Document: TASK-140 / PIPEF-61 prompt package\nExpected Result: bounded implementation, tests, and structured report\n\nI’m using the AI Development System repo skills for documentation routing, project-control boundaries, and clarification gates before touching code. I’ll inspect the required system docs and the allowed implementation/test files first, then make only the scoped edits.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nThe project is activated for symbolic navigation. I’m now reading the repository bootstrap docs and the relevant skill instructions so the execution stays inside the system’s control rules.\nexec\n/usr/bin/zsh -lc \"sed -n '1,260p' /home/nikitoys/AI\n[truncated: 1238747 bytes total]",
+              "stdout_bytes": 2502,
+              "stderr_bytes": 1244488,
+              "report_ids": [
+                "RPT-010"
+              ],
+              "report_required": true,
+              "started_at": "2026-06-24T21:46:49Z",
+              "finished_at": "2026-06-24T21:57:59Z",
+              "before_report_id": "",
+              "after_report_id": "RPT-010",
+              "report_id": "RPT-010"
+            },
+            "adapter": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "mode": "local_command",
+              "started_at": "2026-06-24T21:46:49Z",
+              "finished_at": "2026-06-24T21:57:59Z",
+              "duration_sec": 670.312379,
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "6451a813c0c634592ff158484fb521f7bd870c7a4ec80902dbfe492b7f345716",
+              "prompt_transport": "stdin",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "timeout_sec": 3600,
+              "timed_out": false,
+              "returncode": 0,
+              "stdout_ref": "captured:stdout:sha256:8b6e46483912b7ee5a1a43481ca9dc7ea041c0810067a345f1ed44374c255d80",
+              "stderr_ref": "captured:stderr:sha256:d6a09fbd34fbb0ff3d9533c2e4d720d7637fce33c4e14967dc7be1255e7a4aff",
+              "stdout_snippet": "Implemented TASK-140 within the allowed files. The local-command adapter now tees stdout/stderr into per-session runtime `.log` files under `AI_PROJECT/logs/codex/<session>/`, keeps captured stdout/stderr refs and snippets, and records bounded path/offset metadata through execute artifacts.\n\nChecks passed: focused unittest modules and py_compile.\n\nCODEX_REPORT_JSON:\n```json\n{\n  \"schema_version\": 1,\n  \"task_id\": \"TASK-140\",\n  \"task_ref\": \"PIPEF-61\",\n  \"implementation_summary\": \"Added per-session runtime stdout/stderr log files for local-command Codex execution, preserved captured stdout/stderr refs and snippets, and exposed runtime log path/offset metadata in execute phase artifacts.\",\n  \"changed_files\": [\n    \"ai_project_ctl/pipeline/codex_adapter.py\",\n    \"ai_project_ctl/pipeline/execute_phase.py\",\n    \"tests/pipeline/test_codex_adapter.py\",\n    \"tests/pipeline/test_execute_phase.py\"\n  ],\n  \"generated_files\": [],\n  \"checks\": [\n    {\n      \"name\": \"focused pipeline unit tests\",\n      \"result\": \"passed\",\n      \"command\": \"python -m unittest tests.pipeline.test_codex_adapter tests.pipeline.test_execute_phase\",\n      \"duration_sec\": 3.124,\n      \"blocking\": true\n    },\n    {\n      \"na\n[truncated: 2502 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019efb99-b119-7c51-aa85-6e44371f7034\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: CODEX execution\nActive Document: TASK-140 / PIPEF-61 prompt package\nExpected Result: bounded implementation, tests, and structured report\n\nI’m using the AI Development System repo skills for documentation routing, project-control boundaries, and clarification gates before touching code. I’ll inspect the required system docs and the allowed implementation/test files first, then make only the scoped edits.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nThe project is activated for symbolic navigation. I’m now reading the repository bootstrap docs and the relevant skill instructions so the execution stays inside the system’s control rules.\nexec\n/usr/bin/zsh -lc \"sed -n '1,260p' /home/nikitoys/AI\n[truncated: 1238747 bytes total]",
+              "stdout_bytes": 2502,
+              "stderr_bytes": 1244488,
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "RPT-010",
+              "report_id": "RPT-010",
+              "report_parse_code": "CODEX_REPORT_PARSE_OK",
+              "report_parse_issue": {},
+              "report_submission_error": "",
+              "report_instruction": "In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-140 --file <REPORT.json> --confirm"
+            },
+            "adapter_summary": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 670.312379,
+              "stdout_ref": "captured:stdout:sha256:8b6e46483912b7ee5a1a43481ca9dc7ea041c0810067a345f1ed44374c255d80",
+              "stderr_ref": "captured:stderr:sha256:d6a09fbd34fbb0ff3d9533c2e4d720d7637fce33c4e14967dc7be1255e7a4aff",
+              "stdout_snippet": "Implemented TASK-140 within the allowed files. The local-command adapter now tees stdout/stderr into per-session runtime `.log` files under `AI_PROJECT/logs/codex/<session>/`, keeps captured stdout/stderr refs and snippets, and records bounded path/offset metadata through execute artifacts.\n\nChecks passed: focused unittest modules and py_compile.\n\nCODEX_REPORT_JSON:\n```json\n{\n  \"schema_version\": 1,\n  \"task_id\": \"TASK-140\",\n  \"task_ref\": \"PIPEF-61\",\n  \"implementation_summary\": \"Added per-session runtime stdout/stderr log files for local-command Codex execution, preserved captured stdout/stderr refs and snippets, and exposed runtime log path/offset metadata in execute phase artifacts.\",\n  \"changed_files\": [\n    \"ai_project_ctl/pipeline/codex_adapter.py\",\n    \"ai_project_ctl/pipeline/execute_phase.py\",\n    \"tests/pipeline/test_codex_adapter.py\",\n    \"tests/pipeline/test_execute_phase.py\"\n  ],\n  \"generated_files\": [],\n  \"checks\": [\n    {\n      \"name\": \"focused pipeline unit tests\",\n      \"result\": \"passed\",\n      \"command\": \"python -m unittest tests.pipeline.test_codex_adapter tests.pipeline.test_execute_phase\",\n      \"duration_sec\": 3.124,\n      \"blocking\": true\n    },\n    {\n      \"na\n[truncated: 2502 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019efb99-b119-7c51-aa85-6e44371f7034\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: CODEX execution\nActive Document: TASK-140 / PIPEF-61 prompt package\nExpected Result: bounded implementation, tests, and structured report\n\nI’m using the AI Development System repo skills for documentation routing, project-control boundaries, and clarification gates before touching code. I’ll inspect the required system docs and the allowed implementation/test files first, then make only the scoped edits.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nThe project is activated for symbolic navigation. I’m now reading the repository bootstrap docs and the relevant skill instructions so the execution stays inside the system’s control rules.\nexec\n/usr/bin/zsh -lc \"sed -n '1,260p' /home/nikitoys/AI\n[truncated: 1238747 bytes total]",
+              "stdout_bytes": 2502,
+              "stderr_bytes": 1244488,
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "RPT-010",
+              "report_id": "RPT-010",
+              "report_ids": [
+                "RPT-010"
+              ]
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-A760BA194CB2"
+          ]
+        },
+        {
+          "phase": "collect_report",
+          "status": "passed",
+          "reason": "Structured execution report collected for selected task (freshness_basis=report_id).",
+          "next_action": "Run pipeline phase verify.",
+          "artifacts": {
+            "session_id": "PSESS-028",
+            "task_id": "TASK-140",
+            "report_id": "RPT-010",
+            "report_task_id": "TASK-140",
+            "expected_task_id": "TASK-140",
+            "selected_task_ref": "",
+            "record_task_id": "TASK-140",
+            "record_task_ref": "PIPEF-61",
+            "observed_report_task_id": "TASK-140",
+            "structured_report_task_id": "TASK-140",
+            "structured_report_task_ref": "PIPEF-61",
+            "reported_task_id": "TASK-140",
+            "reported_task_ref": "PIPEF-61",
+            "submitted_at": "2026-06-24T21:57:59Z",
+            "submitted_by": "codex",
+            "source_file": "captured:stdout:sha256:8b6e46483912b7ee5a1a43481ca9dc7ea041c0810067a345f1ed44374c255d80",
+            "report_found": true,
+            "freshness": {
+              "fresh": true,
+              "basis": "report_id",
+              "reason": "Report id matches the report produced by execute.",
+              "allow_existing_report": false,
+              "report_id": "RPT-010",
+              "report_submitted_at": "2026-06-24T21:57:59Z",
+              "execute_started_at": "2026-06-24T21:46:49Z",
+              "execute_finished_at": "2026-06-24T21:57:59Z",
+              "execute_before_report_id": "",
+              "execute_after_report_id": "RPT-010",
+              "execute_report_id": "RPT-010",
+              "execute_phase_status": "passed"
+            },
+            "freshness_basis": "report_id",
+            "allow_existing_report": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-5312D24E6CBF"
+          ]
+        },
+        {
+          "phase": "verify",
+          "status": "blocked",
+          "reason": "Git diff gate blocked: missing_from_report: AI_PROJECT/config/ui_settings.json, AI_PROJECT/events/codex-events.jsonl, AI_PROJECT/events/context-events.jsonl, AI_PROJECT/events/pipeline-events.jsonl, AI_PROJECT/events/task-events.jsonl, AI_PROJECT/events/task-report-events.jsonl, AI_PROJECT/generated/CODEX_CURRENT.md, AI_PROJECT/generated/CODEX_PROMPT.md, AI_PROJECT/generated/CODEX_STATUS.md, AI_PROJECT/generated/CODEX_TASKS.md, AI_PROJECT/generated/CONTEXT_PACK.md, AI_PROJECT/generated/CONTEXT_STATUS.md, AI_PROJECT/generated/PIPELINE_AUDIT.md, AI_PROJECT/generated/PIPELINE_STATUS.md, AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md, AI_PROJECT/state/current_execution.json, AI_PROJECT/state/pipeline_sessions.json, AI_PROJECT/state/task_reports.json, AI_PROJECT/state/tasks.json.",
+          "next_action": "Update the structured report file lists or resolve unintended working-tree changes, then rerun verify.",
+          "artifacts": {
+            "blocked_by": "GIT_DIFF_GATE_DIFF_MISMATCH",
+            "mismatch_policy": "git_diff_mismatch_blocks_verify",
+            "session_id": "PSESS-028",
+            "task_id": "TASK-140",
+            "report_id": "RPT-010",
+            "collected_report_id": "RPT-010",
+            "policy": "supervised_executable_local_commit_1h",
+            "collect_report_phase": {
+              "phase": "collect_report",
+              "status": "passed",
+              "reason": "Structured execution report collected for selected task (freshness_basis=report_id).",
+              "report_id": "RPT-010",
+              "task_id": "TASK-140"
+            },
+            "report_gate_status": "warn",
+            "report_gate_code": "CODEX_REPORT_WARN",
+            "report_gate": {
+              "status": "warn",
+              "code": "CODEX_REPORT_WARN",
+              "reason": "Report contains warning(s): Full worktree status shows pre-existing AI_PROJECT state/generated changes outside the allowed task scope; these were left untouched.",
+              "report_id": "RPT-010",
+              "task_id": "TASK-140",
+              "issues": [],
+              "warnings": [
+                {
+                  "code": "CODEX_REPORT_WARN",
+                  "message": "Report contains warning(s): Full worktree status shows pre-existing AI_PROJECT state/generated changes outside the allowed task scope; these were left untouched.",
+                  "path": "warnings"
+                }
+              ],
+              "changed_files": [
+                "ai_project_ctl/pipeline/codex_adapter.py",
+                "ai_project_ctl/pipeline/execute_phase.py",
+                "tests/pipeline/test_codex_adapter.py",
+                "tests/pipeline/test_execute_phase.py"
+              ],
+              "generated_files": [],
+              "token_usage": {
+                "completion_tokens": 9000,
+                "context_tokens": 56000,
+                "max_context_tokens": 128000,
+                "min_remaining_tokens": 0,
+                "model_context_limit": 128000,
+                "output_tokens": 1200,
+                "prompt_tokens": 18000,
+                "remaining_tokens": 45000,
+                "reserved_output_tokens": 4096,
+                "total_tokens": 83000,
+                "token_count_estimated": true,
+                "token_count_unavailable": false,
+                "token_count_strategy": "estimated",
+                "token_count_unavailable_reason": ""
+              },
+              "checks": [
+                {
+                  "name": "focused pipeline unit tests",
+                  "command": "python -m unittest tests.pipeline.test_codex_adapter tests.pipeline.test_execute_phase",
+                  "result": "passed",
+                  "duration_sec": 3.124,
+                  "blocking": true,
+                  "details": ""
+                },
+                {
+                  "name": "py_compile changed files",
+                  "command": "python -m py_compile ai_project_ctl/pipeline/codex_adapter.py ai_project_ctl/pipeline/execute_phase.py tests/pipeline/test_codex_adapter.py tests/pipeline/test_execute_phase.py",
+                  "result": "passed",
+                  "duration_sec": 0.143,
+                  "blocking": true,
+                  "details": ""
+                }
+              ]
+            },
+            "git_diff_gate_status": "blocked",
+            "git_diff_gate_code": "GIT_DIFF_GATE_DIFF_MISMATCH",
+            "git_diff_gate": {
+              "status": "blocked",
+              "code": "GIT_DIFF_GATE_DIFF_MISMATCH",
+              "reason": "working_tree_diff_does_not_match_expected_files",
+              "repo_root": "/home/nikitoys/AI-Development-System",
+              "expected_files": [
+                "ai_project_ctl/pipeline/codex_adapter.py",
+                "ai_project_ctl/pipeline/execute_phase.py",
+                "tests/pipeline/test_codex_adapter.py",
+                "tests/pipeline/test_execute_phase.py"
+              ],
+              "changed_files": [
+                "AI_PROJECT/config/ui_settings.json",
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json",
+                "ai_project_ctl/pipeline/codex_adapter.py",
+                "ai_project_ctl/pipeline/execute_phase.py",
+                "tests/pipeline/test_codex_adapter.py",
+                "tests/pipeline/test_execute_phase.py"
+              ],
+              "tracked_files": [
+                "AI_PROJECT/config/ui_settings.json",
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json",
+                "ai_project_ctl/pipeline/codex_adapter.py",
+                "ai_project_ctl/pipeline/execute_phase.py",
+                "tests/pipeline/test_codex_adapter.py"
+              ],
+              "staged_files": [],
+              "unstaged_files": [
+                "AI_PROJECT/config/ui_settings.json",
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json",
+                "ai_project_ctl/pipeline/codex_adapter.py",
+                "ai_project_ctl/pipeline/execute_phase.py",
+                "tests/pipeline/test_codex_adapter.py"
+              ],
+              "untracked_files": [
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "tests/pipeline/test_execute_phase.py"
+              ],
+              "unexpected_files": [
+                "AI_PROJECT/config/ui_settings.json",
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json"
+              ],
+              "missing_files": [],
+              "status_entries": [
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/config/ui_settings.json"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/events/codex-events.jsonl"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/events/context-events.jsonl"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/events/pipeline-events.jsonl"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/events/task-events.jsonl"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/events/task-report-events.jsonl"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/CODEX_CURRENT.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/CODEX_STATUS.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/CODEX_TASKS.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/CONTEXT_PACK.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/CONTEXT_STATUS.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/PIPELINE_AUDIT.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/PIPELINE_STATUS.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/state/current_execution.json"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/state/pipeline_sessions.json"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/state/task_reports.json"
+                },
+                {
+                  "status": " M",
+                  "path": "AI_PROJECT/state/tasks.json"
+                },
+                {
+                  "status": " M",
+                  "path": "ai_project_ctl/pipeline/codex_adapter.py"
+                },
+                {
+                  "status": " M",
+                  "path": "ai_project_ctl/pipeline/execute_phase.py"
+                },
+                {
+                  "status": " M",
+                  "path": "tests/pipeline/test_codex_adapter.py"
+                },
+                {
+                  "status": "??",
+                  "path": "AI_PROJECT/generated/CODEX_PROMPT.md"
+                },
+                {
+                  "status": "??",
+                  "path": "tests/pipeline/test_execute_phase.py"
+                }
+              ],
+              "commands": [
+                {
+                  "ok": true,
+                  "code": "GIT_DIFF_GATE_PASS",
+                  "reason": "command_succeeded",
+                  "command": [
+                    "git",
+                    "rev-parse",
+                    "--show-toplevel"
+                  ],
+                  "returncode": 0,
+                  "stdout": "/home/nikitoys/AI-Development-System\n",
+                  "stderr": ""
+                },
+                {
+                  "ok": true,
+                  "code": "GIT_DIFF_GATE_PASS",
+                  "reason": "command_succeeded",
+                  "command": [
+                    "git",
+                    "status",
+                    "--porcelain=v1",
+                    "-z",
+                    "--untracked-files=all"
+                  ],
+                  "returncode": 0,
+                  "stdout": " M AI_PROJECT/config/ui_settings.json\u0000 M AI_PROJECT/events/codex-events.jsonl\u0000 M AI_PROJECT/events/context-events.jsonl\u0000 M AI_PROJECT/events/pipeline-events.jsonl\u0000 M AI_PROJECT/events/task-events.jsonl\u0000 M AI_PROJECT/events/task-report-events.jsonl\u0000 M AI_PROJECT/generated/CODEX_CURRENT.md\u0000 M AI_PROJECT/generated/CODEX_STATUS.md\u0000 M AI_PROJECT/generated/CODEX_TASKS.md\u0000 M AI_PROJECT/generated/CONTEXT_PACK.md\u0000 M AI_PROJECT/generated/CONTEXT_STATUS.md\u0000 M AI_PROJECT/generated/PIPELINE_AUDIT.md\u0000 M AI_PROJECT/generated/PIPELINE_STATUS.md\u0000 M AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md\u0000 M AI_PROJECT/state/current_execution.json\u0000 M AI_PROJECT/state/pipeline_sessions.json\u0000 M AI_PROJECT/state/task_reports.json\u0000 M AI_PROJECT/state/tasks.json\u0000 M ai_project_ctl/pipeline/codex_adapter.py\u0000 M ai_project_ctl/pipeline/execute_phase.py\u0000 M tests/pipeline/test_codex_adapter.py\u0000?? AI_PROJECT/generated/CODEX_PROMPT.md\u0000?? tests/pipeline/test_execute_phase.py\u0000",
+                  "stderr": ""
+                },
+                {
+                  "ok": true,
+                  "code": "GIT_DIFF_GATE_PASS",
+                  "reason": "command_succeeded",
+                  "command": [
+                    "git",
+                    "diff",
+                    "--cached",
+                    "--name-only",
+                    "-z",
+                    "--"
+                  ],
+                  "returncode": 0,
+                  "stdout": "",
+                  "stderr": ""
+                },
+                {
+                  "ok": true,
+                  "code": "GIT_DIFF_GATE_PASS",
+                  "reason": "command_succeeded",
+                  "command": [
+                    "git",
+                    "diff",
+                    "--name-only",
+                    "-z",
+                    "--"
+                  ],
+                  "returncode": 0,
+                  "stdout": "AI_PROJECT/config/ui_settings.json\u0000AI_PROJECT/events/codex-events.jsonl\u0000AI_PROJECT/events/context-events.jsonl\u0000AI_PROJECT/events/pipeline-events.jsonl\u0000AI_PROJECT/events/task-events.jsonl\u0000AI_PROJECT/events/task-report-events.jsonl\u0000AI_PROJECT/generated/CODEX_CURRENT.md\u0000AI_PROJECT/generated/CODEX_STATUS.md\u0000AI_PROJECT/generated/CODEX_TASKS.md\u0000AI_PROJECT/generated/CONTEXT_PACK.md\u0000AI_PROJECT/generated/CONTEXT_STATUS.md\u0000AI_PROJECT/generated/PIPELINE_AUDIT.md\u0000AI_PROJECT/generated/PIPELINE_STATUS.md\u0000AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md\u0000AI_PROJECT/state/current_execution.json\u0000AI_PROJECT/state/pipeline_sessions.json\u0000AI_PROJECT/state/task_reports.json\u0000AI_PROJECT/state/tasks.json\u0000ai_project_ctl/pipeline/codex_adapter.py\u0000ai_project_ctl/pipeline/execute_phase.py\u0000tests/pipeline/test_codex_adapter.py\u0000",
+                  "stderr": ""
+                }
+              ]
+            },
+            "report_git_diff_comparison": {
+              "status": "blocked",
+              "policy": "reported_files_must_match_actual_git_diff",
+              "report_changed_files": [
+                "ai_project_ctl/pipeline/codex_adapter.py",
+                "ai_project_ctl/pipeline/execute_phase.py",
+                "tests/pipeline/test_codex_adapter.py",
+                "tests/pipeline/test_execute_phase.py"
+              ],
+              "report_generated_files": [],
+              "reported_files": [
+                "ai_project_ctl/pipeline/codex_adapter.py",
+                "ai_project_ctl/pipeline/execute_phase.py",
+                "tests/pipeline/test_codex_adapter.py",
+                "tests/pipeline/test_execute_phase.py"
+              ],
+              "actual_changed_files": [
+                "AI_PROJECT/config/ui_settings.json",
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json",
+                "ai_project_ctl/pipeline/codex_adapter.py",
+                "ai_project_ctl/pipeline/execute_phase.py",
+                "tests/pipeline/test_codex_adapter.py",
+                "tests/pipeline/test_execute_phase.py"
+              ],
+              "missing_from_report": [
+                "AI_PROJECT/config/ui_settings.json",
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json"
+              ],
+              "extra_in_report": []
+            },
+            "protected_files_gate_status": "pass",
+            "protected_files_gate_code": "PROTECTED_FILES_GATE_PASS",
+            "protected_files_gate": {
+              "status": "pass",
+              "code": "PROTECTED_FILES_GATE_PASS",
+              "reason": "protected project-control file changes are governed or absent",
+              "actual_changed_files": [
+                "AI_PROJECT/config/ui_settings.json",
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json",
+                "ai_project_ctl/pipeline/codex_adapter.py",
+                "ai_project_ctl/pipeline/execute_phase.py",
+                "tests/pipeline/test_codex_adapter.py",
+                "tests/pipeline/test_execute_phase.py"
+              ],
+              "reported_files": [
+                "ai_project_ctl/pipeline/codex_adapter.py",
+                "ai_project_ctl/pipeline/execute_phase.py",
+                "tests/pipeline/test_codex_adapter.py",
+                "tests/pipeline/test_execute_phase.py"
+              ],
+              "governed_control_files": [
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/evolution-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/pipeline-policy-events.jsonl",
+                "AI_PROJECT/events/plan-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/evolution.json",
+                "AI_PROJECT/state/pipeline_policy_presets.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/plan.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json"
+              ],
+              "governed_generated_files": [
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_PLAN.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/DOCS_GAPS.md",
+                "AI_PROJECT/generated/DOCS_INDEX.md",
+                "AI_PROJECT/generated/EVOLUTION.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_POLICIES.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md"
+              ],
+              "allowed_protected_files": [
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_PROMPT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/state/tasks.json"
+              ],
+              "violations": []
+            },
+            "verify_evidence": {
+              "schema_version": 1,
+              "phase": "verify",
+              "status": "blocked",
+              "task_id": "TASK-140",
+              "report_id": "RPT-010",
+              "blocked_by": "GIT_DIFF_GATE_DIFF_MISMATCH",
+              "report_gate": {
+                "status": "warn",
+                "code": "CODEX_REPORT_WARN",
+                "reason": "Report contains warning(s): Full worktree status shows pre-existing AI_PROJECT state/generated changes outside the allowed task scope; these were left untouched.",
+                "report_id": "RPT-010",
+                "task_id": "TASK-140",
+                "changed_files": [
+                  "ai_project_ctl/pipeline/codex_adapter.py",
+                  "ai_project_ctl/pipeline/execute_phase.py",
+                  "tests/pipeline/test_codex_adapter.py",
+                  "tests/pipeline/test_execute_phase.py"
+                ],
+                "generated_files": [],
+                "issues": [],
+                "warnings": [
+                  {
+                    "code": "CODEX_REPORT_WARN",
+                    "message": "Report contains warning(s): Full worktree status shows pre-existing AI_PROJECT state/generated changes outside the allowed task scope; these were left untouched.",
+                    "path": "warnings"
+                  }
+                ],
+                "checks": [
+                  {
+                    "name": "focused pipeline unit tests",
+                    "result": "passed",
+                    "blocking": true,
+                    "command": "python -m unittest tests.pipeline.test_codex_adapter tests.pipeline.test_execute_phase",
+                    "duration_sec": 3.124
+                  },
+                  {
+                    "name": "py_compile changed files",
+                    "result": "passed",
+                    "blocking": true,
+                    "command": "python -m py_compile ai_project_ctl/pipeline/codex_adapter.py ai_project_ctl/pipeline/execute_phase.py tests/pipeline/test_codex_adapter.py tests/pipeline/test_execute_phase.py",
+                    "duration_sec": 0.143
+                  }
+                ]
+              },
+              "git_diff_gate": {
+                "status": "blocked",
+                "code": "GIT_DIFF_GATE_DIFF_MISMATCH",
+                "reason": "working_tree_diff_does_not_match_expected_files",
+                "expected_files": [
+                  "ai_project_ctl/pipeline/codex_adapter.py",
+                  "ai_project_ctl/pipeline/execute_phase.py",
+                  "tests/pipeline/test_codex_adapter.py",
+                  "tests/pipeline/test_execute_phase.py"
+                ],
+                "actual_changed_files": [
+                  "AI_PROJECT/config/ui_settings.json",
+                  "AI_PROJECT/events/codex-events.jsonl",
+                  "AI_PROJECT/events/context-events.jsonl",
+                  "AI_PROJECT/events/pipeline-events.jsonl",
+                  "AI_PROJECT/events/task-events.jsonl",
+                  "AI_PROJECT/events/task-report-events.jsonl",
+                  "AI_PROJECT/generated/CODEX_CURRENT.md",
+                  "AI_PROJECT/generated/CODEX_PROMPT.md",
+                  "AI_PROJECT/generated/CODEX_STATUS.md",
+                  "AI_PROJECT/generated/CODEX_TASKS.md",
+                  "AI_PROJECT/generated/CONTEXT_PACK.md",
+                  "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                  "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                  "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                  "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                  "AI_PROJECT/state/current_execution.json",
+                  "AI_PROJECT/state/pipeline_sessions.json",
+                  "AI_PROJECT/state/task_reports.json",
+                  "AI_PROJECT/state/tasks.json",
+                  "ai_project_ctl/pipeline/codex_adapter.py",
+                  "ai_project_ctl/pipeline/execute_phase.py",
+                  "tests/pipeline/test_codex_adapter.py",
+                  "tests/pipeline/test_execute_phase.py"
+                ],
+                "tracked_files": [
+                  "AI_PROJECT/config/ui_settings.json",
+                  "AI_PROJECT/events/codex-events.jsonl",
+                  "AI_PROJECT/events/context-events.jsonl",
+                  "AI_PROJECT/events/pipeline-events.jsonl",
+                  "AI_PROJECT/events/task-events.jsonl",
+                  "AI_PROJECT/events/task-report-events.jsonl",
+                  "AI_PROJECT/generated/CODEX_CURRENT.md",
+                  "AI_PROJECT/generated/CODEX_STATUS.md",
+                  "AI_PROJECT/generated/CODEX_TASKS.md",
+                  "AI_PROJECT/generated/CONTEXT_PACK.md",
+                  "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                  "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                  "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                  "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                  "AI_PROJECT/state/current_execution.json",
+                  "AI_PROJECT/state/pipeline_sessions.json",
+                  "AI_PROJECT/state/task_reports.json",
+                  "AI_PROJECT/state/tasks.json",
+                  "ai_project_ctl/pipeline/codex_adapter.py",
+                  "ai_project_ctl/pipeline/execute_phase.py",
+                  "tests/pipeline/test_codex_adapter.py"
+                ],
+                "staged_files": [],
+                "unstaged_files": [
+                  "AI_PROJECT/config/ui_settings.json",
+                  "AI_PROJECT/events/codex-events.jsonl",
+                  "AI_PROJECT/events/context-events.jsonl",
+                  "AI_PROJECT/events/pipeline-events.jsonl",
+                  "AI_PROJECT/events/task-events.jsonl",
+                  "AI_PROJECT/events/task-report-events.jsonl",
+                  "AI_PROJECT/generated/CODEX_CURRENT.md",
+                  "AI_PROJECT/generated/CODEX_STATUS.md",
+                  "AI_PROJECT/generated/CODEX_TASKS.md",
+                  "AI_PROJECT/generated/CONTEXT_PACK.md",
+                  "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                  "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                  "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                  "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                  "AI_PROJECT/state/current_execution.json",
+                  "AI_PROJECT/state/pipeline_sessions.json",
+                  "AI_PROJECT/state/task_reports.json",
+                  "AI_PROJECT/state/tasks.json",
+                  "ai_project_ctl/pipeline/codex_adapter.py",
+                  "ai_project_ctl/pipeline/execute_phase.py",
+                  "tests/pipeline/test_codex_adapter.py"
+                ],
+                "untracked_files": [
+                  "AI_PROJECT/generated/CODEX_PROMPT.md",
+                  "tests/pipeline/test_execute_phase.py"
+                ],
+                "missing_from_report": [
+                  "AI_PROJECT/config/ui_settings.json",
+                  "AI_PROJECT/events/codex-events.jsonl",
+                  "AI_PROJECT/events/context-events.jsonl",
+                  "AI_PROJECT/events/pipeline-events.jsonl",
+                  "AI_PROJECT/events/task-events.jsonl",
+                  "AI_PROJECT/events/task-report-events.jsonl",
+                  "AI_PROJECT/generated/CODEX_CURRENT.md",
+                  "AI_PROJECT/generated/CODEX_PROMPT.md",
+                  "AI_PROJECT/generated/CODEX_STATUS.md",
+                  "AI_PROJECT/generated/CODEX_TASKS.md",
+                  "AI_PROJECT/generated/CONTEXT_PACK.md",
+                  "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                  "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                  "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                  "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                  "AI_PROJECT/state/current_execution.json",
+                  "AI_PROJECT/state/pipeline_sessions.json",
+                  "AI_PROJECT/state/task_reports.json",
+                  "AI_PROJECT/state/tasks.json"
+                ],
+                "extra_in_report": [],
+                "command_count": 4
+              },
+              "protected_files_gate": {
+                "status": "pass",
+                "code": "PROTECTED_FILES_GATE_PASS",
+                "reason": "protected project-control file changes are governed or absent",
+                "actual_changed_files": [
+                  "AI_PROJECT/config/ui_settings.json",
+                  "AI_PROJECT/events/codex-events.jsonl",
+                  "AI_PROJECT/events/context-events.jsonl",
+                  "AI_PROJECT/events/pipeline-events.jsonl",
+                  "AI_PROJECT/events/task-events.jsonl",
+                  "AI_PROJECT/events/task-report-events.jsonl",
+                  "AI_PROJECT/generated/CODEX_CURRENT.md",
+                  "AI_PROJECT/generated/CODEX_PROMPT.md",
+                  "AI_PROJECT/generated/CODEX_STATUS.md",
+                  "AI_PROJECT/generated/CODEX_TASKS.md",
+                  "AI_PROJECT/generated/CONTEXT_PACK.md",
+                  "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                  "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                  "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                  "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                  "AI_PROJECT/state/current_execution.json",
+                  "AI_PROJECT/state/pipeline_sessions.json",
+                  "AI_PROJECT/state/task_reports.json",
+                  "AI_PROJECT/state/tasks.json",
+                  "ai_project_ctl/pipeline/codex_adapter.py",
+                  "ai_project_ctl/pipeline/execute_phase.py",
+                  "tests/pipeline/test_codex_adapter.py",
+                  "tests/pipeline/test_execute_phase.py"
+                ],
+                "reported_files": [
+                  "ai_project_ctl/pipeline/codex_adapter.py",
+                  "ai_project_ctl/pipeline/execute_phase.py",
+                  "tests/pipeline/test_codex_adapter.py",
+                  "tests/pipeline/test_execute_phase.py"
+                ],
+                "allowed_protected_files": [
+                  "AI_PROJECT/events/codex-events.jsonl",
+                  "AI_PROJECT/events/context-events.jsonl",
+                  "AI_PROJECT/events/pipeline-events.jsonl",
+                  "AI_PROJECT/events/task-events.jsonl",
+                  "AI_PROJECT/events/task-report-events.jsonl",
+                  "AI_PROJECT/generated/CODEX_CURRENT.md",
+                  "AI_PROJECT/generated/CODEX_PROMPT.md",
+                  "AI_PROJECT/generated/CODEX_STATUS.md",
+                  "AI_PROJECT/generated/CODEX_TASKS.md",
+                  "AI_PROJECT/generated/CONTEXT_PACK.md",
+                  "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                  "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+                  "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                  "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                  "AI_PROJECT/state/current_execution.json",
+                  "AI_PROJECT/state/pipeline_sessions.json",
+                  "AI_PROJECT/state/task_reports.json",
+                  "AI_PROJECT/state/tasks.json"
+                ],
+                "violations": []
+              }
+            }
+          },
+          "changed_files": [
+            "ai_project_ctl/pipeline/codex_adapter.py",
+            "ai_project_ctl/pipeline/execute_phase.py",
+            "tests/pipeline/test_codex_adapter.py",
+            "tests/pipeline/test_execute_phase.py"
+          ],
+          "generated_files": [],
+          "events": [
+            "EVT-E35EF58DEA74"
+          ]
+        }
+      ],
+      "current_step": "",
+      "current_step_status": "planned",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-877F9E591E3F",
+        "EVT-DFCE4E841893",
+        "EVT-B07CF9A1BB00",
+        "EVT-A760BA194CB2",
+        "EVT-5312D24E6CBF",
+        "EVT-E35EF58DEA74"
+      ],
+      "stop_reason": "Git diff gate blocked: missing_from_report: AI_PROJECT/config/ui_settings.json, AI_PROJECT/events/codex-events.jsonl, AI_PROJECT/events/context-events.jsonl, AI_PROJECT/events/pipeline-events.jsonl, AI_PROJECT/events/task-events.jsonl, AI_PROJECT/events/task-report-events.jsonl, AI_PROJECT/generated/CODEX_CURRENT.md, AI_PROJECT/generated/CODEX_PROMPT.md, AI_PROJECT/generated/CODEX_STATUS.md, AI_PROJECT/generated/CODEX_TASKS.md, AI_PROJECT/generated/CONTEXT_PACK.md, AI_PROJECT/generated/CONTEXT_STATUS.md, AI_PROJECT/generated/PIPELINE_AUDIT.md, AI_PROJECT/generated/PIPELINE_STATUS.md, AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md, AI_PROJECT/state/current_execution.json, AI_PROJECT/state/pipeline_sessions.json, AI_PROJECT/state/task_reports.json, AI_PROJECT/state/tasks.json.",
+      "created_at": "2026-06-24T21:46:41Z",
+      "updated_at": "2026-06-24T21:58:00Z",
+      "started_at": "2026-06-24T21:46:42Z",
+      "finished_at": ""
+    },
+    {
+      "id": "PSESS-029",
+      "status": "blocked",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-64"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false,
+        "created_by_command": "ui.run",
+        "ui_run_confirmed": true,
+        "allow_internal_change_gate_bypass": true
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit_1h",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": false,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": false,
+          "owner_approval_note": ""
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 3600,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": false,
+          "required_codex_decision": "none"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "current_task_id": "TASK-143",
+      "current_task_ref": "",
+      "current_phase": "prepare",
+      "current_phase_status": "blocked",
+      "blocked_by": "BLOCKED",
+      "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "blocked",
+          "reason": "No executable task is available in the selected queue.",
+          "next_action": "Create or unblock a ready task, then rerun queue preview.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-029",
+            "next_task": null,
+            "queue_counts": {
+              "executable": 0,
+              "waiting": 0,
+              "blocked": 1,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [],
+              "waiting": [],
+              "blocked": [
+                {
+                  "id": "TASK-143",
+                  "ref": "PIPEF-64",
+                  "uid": "tsk_3b9b49da1c41",
+                  "legacy_id": "TASK-143",
+                  "title": "PIPE-059 Keep runtime pipeline logs out of task diff gates",
+                  "status": "planned",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-64",
+                  "reason_codes": [
+                    "current_task_conflict"
+                  ],
+                  "reasons": [
+                    {
+                      "code": "current_task_conflict",
+                      "current_task_id": "TASK-163",
+                      "detail": "another current task is PIPEF-82 (TASK-163)"
+                    }
+                  ]
+                }
+              ],
+              "skipped": []
+            },
+            "reason_summary": [
+              {
+                "code": "current_task_conflict",
+                "count": 1,
+                "categories": [
+                  "blocked"
+                ]
+              }
+            ],
+            "blocked_by": "NO_EXECUTABLE_TASK"
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-35216F800491"
+          ]
+        },
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-029",
+            "next_task": {
+              "id": "TASK-143",
+              "ref": "PIPEF-64",
+              "uid": "tsk_3b9b49da1c41",
+              "legacy_id": "TASK-143",
+              "title": "PIPE-059 Keep runtime pipeline logs out of task diff gates",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-64"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-143",
+                  "ref": "PIPEF-64",
+                  "uid": "tsk_3b9b49da1c41",
+                  "legacy_id": "TASK-143",
+                  "title": "PIPE-059 Keep runtime pipeline logs out of task diff gates",
+                  "status": "planned",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-64"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-F824819B71B9"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "blocked",
+          "reason": "Approved linked Evolution Changes are required before execution.",
+          "next_action": "Satisfy the selected-task Change gate, then rerun prepare.",
+          "artifacts": {
+            "blocked_by": "BLOCKED",
+            "source": "session",
+            "session_id": "PSESS-029",
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-143",
+              "ref": "PIPEF-64",
+              "uid": "tsk_3b9b49da1c41",
+              "legacy_id": "TASK-143",
+              "title": "PIPE-059 Keep runtime pipeline logs out of task diff gates",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 64,
+              "local_seq": 64,
+              "selected_ref": "PIPEF-64",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "stop_code": "BLOCKED",
+              "scope": "selected_task",
+              "inspected_task_ids": [
+                "TASK-143"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-143",
+                  "task_ref": "PIPEF-64",
+                  "change_ids": []
+                }
+              ],
+              "selected_task_id": "TASK-143",
+              "selected_task_ref": "PIPEF-64",
+              "created_change_ids": [],
+              "linked_change_ids": [],
+              "change_ids": [],
+              "tasks_requiring_approval": [
+                "TASK-143"
+              ],
+              "workflows": []
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-722A77C59F26"
+          ]
+        }
+      ],
+      "current_step": "",
+      "current_step_status": "planned",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-724B5346F102",
+        "EVT-35216F800491",
+        "EVT-F824819B71B9",
+        "EVT-722A77C59F26"
+      ],
+      "stop_reason": "Approved linked Evolution Changes are required before execution.",
+      "created_at": "2026-06-25T06:46:29Z",
+      "updated_at": "2026-06-25T06:48:19Z",
+      "started_at": "2026-06-25T06:46:30Z",
       "finished_at": ""
     }
   ]

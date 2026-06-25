@@ -8,6 +8,7 @@ report collection, verification, review, close, or commit gates.
 from __future__ import annotations
 
 import hashlib
+import inspect
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
@@ -175,12 +176,14 @@ def execute_phase(
         )
 
     adapter = codex_adapter or run_codex_adapter
-    adapter_result = adapter(
+    adapter_result = _call_codex_adapter(
+        adapter,
         root=root_path,
         task_id=task_id,
         policy=policy,
         token_gate=token_gate,
         runner=execution_runner,
+        session_id=selected_session_id,
     )
     return _adapter_phase_result(
         adapter_result,
@@ -192,6 +195,34 @@ def execute_phase(
         root=root_path,
         actor=actor,
     )
+
+
+def _call_codex_adapter(adapter: CodexAdapter, **kwargs: Any) -> CodexAdapterResult:
+    if _callable_accepts_keyword(adapter, "session_id"):
+        return adapter(**kwargs)
+    legacy_kwargs = dict(kwargs)
+    legacy_kwargs.pop("session_id", None)
+    return adapter(**legacy_kwargs)
+
+
+def _callable_accepts_keyword(callback: Callable[..., Any], keyword: str) -> bool:
+    try:
+        signature = inspect.signature(callback)
+    except (TypeError, ValueError):
+        return True
+    for parameter in signature.parameters.values():
+        if parameter.kind == inspect.Parameter.VAR_KEYWORD:
+            return True
+        if (
+            parameter.kind
+            in {
+                inspect.Parameter.KEYWORD_ONLY,
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            }
+            and parameter.name == keyword
+        ):
+            return True
+    return False
 
 
 def _adapter_phase_result(
@@ -343,6 +374,7 @@ def _adapter_artifacts(
         "after_report_id": adapter_result.after_report_id,
         "report_id": adapter_result.report_id,
         "execute_evidence": _adapter_evidence(adapter_result),
+        "runtime_logs": dict(adapter_result.runtime_logs),
         "adapter": adapter_data,
         "adapter_summary": {
             "status": adapter_result.status,
@@ -358,6 +390,7 @@ def _adapter_artifacts(
             "stderr_snippet": adapter_result.stderr_snippet,
             "stdout_bytes": adapter_result.stdout_bytes,
             "stderr_bytes": adapter_result.stderr_bytes,
+            "runtime_logs": dict(adapter_result.runtime_logs),
             "report_required": adapter_result.report_required,
             "before_report_id": adapter_result.before_report_id,
             "after_report_id": adapter_result.after_report_id,
@@ -382,6 +415,7 @@ def _adapter_evidence(adapter_result: CodexAdapterResult) -> dict[str, Any]:
         "stderr_snippet": adapter_result.stderr_snippet,
         "stdout_bytes": adapter_result.stdout_bytes,
         "stderr_bytes": adapter_result.stderr_bytes,
+        "runtime_logs": dict(adapter_result.runtime_logs),
         "report_ids": _adapter_report_ids(adapter_result),
         "report_required": adapter_result.report_required,
         "started_at": adapter_result.started_at,

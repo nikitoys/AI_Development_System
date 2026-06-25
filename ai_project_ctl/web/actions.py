@@ -13,7 +13,11 @@ from ai_project_ctl.core.registry import command_describe
 from ai_project_ctl.core.result import CommandError, CommandResult
 from ai_project_ctl.pipeline.batch import run_until_blocker
 from ai_project_ctl.pipeline.session import create_session
-from ai_project_ctl.pipeline.ui_policy import resolve_ui_pipeline_policy
+from ai_project_ctl.pipeline.ui_policy import (
+    resolve_ui_pipeline_policy,
+    ui_internal_change_gate_bypass_enabled,
+)
+from ai_project_ctl.pipeline.ui_run import build_ui_run_selected_queue
 from ai_project_ctl.ui_settings import (
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
@@ -342,9 +346,14 @@ class WebActionExecutor:
                 actor=self.actor,
                 policy=selected_policy,
                 policy_name=selected_policy.name,
-                task_refs=(task_ref,),
-                max_tasks=1,
-                order_by="selected",
+                selected_queue=build_ui_run_selected_queue(
+                    selected_policy,
+                    task_ref,
+                    confirmed=True,
+                    allow_internal_change_gate_bypass=(
+                        ui_internal_change_gate_bypass_enabled(root=self.root)
+                    ),
+                ),
             )
         except CommandError as exc:
             raise WebActionError(

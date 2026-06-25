@@ -1,15 +1,15 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/generated/CONTEXT_PACK.md -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-161 Make Codex Review optional in pipeline Allow the pipeline to skip semantic Codex Review when `require_codex_review` is false while keeping Machine Review required. This task implements the behavior behind the Settings checkbox without weakening deterministic review gates. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Resolve `require_codex_review=false` into an effective pipeline policy that does not require Codex Review APPROVE. Record the review phase as skipped without building a Codex Review prompt when Codex Review is disabled by policy. Allow close phase to proceed without Codex Review only when policy explicitly disables it and Machine Review evidence passes. Allow local commit readiness to skip Codex Review approval only when policy explicitly disables it. Preserve current Codex Review requirements when `require_codex_review=true`. Add tests for skipped review, close preflight, and local commit readiness with Codex Review disabled. Do not disable Machine Review. Do not remove or weaken Report Gate checks. Do not change Codex Review behavior when `require_codex_review=true`. Do not change unrelated pipeline phases. ai_project_ctl/pipeline/ui_policy.py ai_project_ctl/pipeline/policy.py ai_project_ctl/pipeline/review_phase.py ai_project_ctl/pipeline/close_phase.py ai_project_ctl/pipeline/git_commit.py tests/test_pipeline_codex_review_toggle.py When `require_codex_review=true`, existing Codex Review APPROVE requirements remain unchanged. When `require_codex_review=false`, review phase records `status=skipped` and does not build or return a Codex Review prompt. Machine Review remains required before close and cannot be bypassed by disabling Codex Review. Close phase accepts skipped Codex Review only when the effective policy disables Codex Review. Local commit readiness does not block on missing Codex Review only when the effective policy disables Codex Review. Tests prove that disabling Codex Review does not disable Report Gate or Machine Review. Reject if Codex Review disabling also disables Machine Review. Reject if close can proceed without Machine Review PASS. Reject if Codex Review is skipped when `require_codex_review=true`. Reject if local commit ignores Codex Review when policy still requires it.","schema_version":1,"task_id":"TASK-161"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-163 Propagate UI Run queue metadata in Web action Make the Web Run button create pipeline sessions with the same UI single-task queue metadata as CLI `ui run`. Fixes the Web `ui.run_selected_task` path where internal Change gate bypass settings are not copied into the pipeline session. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Update Web `ui.run_selected_task` session creation to pass selected_queue from the shared UI run queue helper. Read allow_internal_change_gate_bypass from effective UI settings when building the Web Run selected queue. Keep Web Run result shape, redirect target, and session link behavior unchanged. Add Web action regression tests that prove the selected_queue contains UI run metadata and bypass flag. Do not change CLI `ui run` behavior in this task. Do not bypass approved Change gates for non-internal product tasks. Do not disable Machine Review or approved Change gates. Do not edit protected project-control files manually. ai_project_ctl/web/actions.py tests/test_web_control_center.py Posting Web action `ui.run_selected_task` creates a session whose selected_queue includes created_by_command=ui.run and ui_run_confirmed=true. When allow_internal_change_gate_bypass=true in UI settings, Web Run session selected_queue includes allow_internal_change_gate_bypass=true. When allow_internal_change_gate_bypass=false in UI settings, Web Run session selected_queue includes allow_internal_change_gate_bypass=false. Web Run still returns session_href and redirect_target for the created session. Existing Web Control Center tests pass. Reject if Web action creates sessions through task_refs/max_tasks/order_by instead of selected_queue. Reject if bypass behavior is applied globally rather than only through confirmed UI single-task session metadata.","schema_version":1,"task_id":"TASK-163"} -->
 
 # Context Status
 
 Context pack exists: `true`
 Mode: `task`
-Task ID: `TASK-161`
+Task ID: `TASK-163`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1105`
+Tasks revision: `1122`
 Indexed source documents: `10`
 Indexed chunks: `891`
 Selected chunks: `8`
@@ -17,6 +17,7 @@ Excluded registered sources: `135`
 
 ## Selected Source Paths
 
+- ai-system/project-control/03-state-model.md
 - ai-system/project-control/04-command-catalog.md
 - ai-system/project-control/06-prompt-package-spec.md
 - ai-system/skills/README.md

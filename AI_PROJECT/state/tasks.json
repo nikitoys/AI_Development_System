@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1108,
+  "revision": 1125,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-24T20:31:09Z",
+  "updated_at": "2026-06-25T06:47:46Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -9708,7 +9708,7 @@
       "id": "TASK-140",
       "epic_id": "EPIC-009",
       "title": "PIPE-056 Stream Codex adapter output to runtime log files",
-      "status": "planned",
+      "status": "done",
       "summary": "Write Codex local-command stdout and stderr to session runtime log files while execution is running.",
       "description": "This makes Codex execution observable before the process exits or times out.",
       "priority": 1,
@@ -9749,11 +9749,11 @@
         "Use a runtime or logs path that is intended to be ignored by Git."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-24T21:58:46Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-24T10:23:23Z",
-      "updated_at": "2026-06-24T10:23:23Z",
+      "updated_at": "2026-06-24T21:58:46Z",
       "uid": "tsk_f1d62b78004f",
       "ref": "PIPEF-61",
       "legacy_id": "TASK-140",
@@ -11018,6 +11018,127 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 80
+    },
+    {
+      "id": "TASK-162",
+      "epic_id": "EPIC-009",
+      "title": "Add shared UI run queue builder",
+      "status": "done",
+      "summary": "Create one shared builder for UI single-task pipeline queue metadata so CLI and Web Run paths use the same session contract.",
+      "description": "This prevents drift between `aictl ui run` and Web `ui.run_selected_task` session creation.",
+      "priority": 1,
+      "order": 81,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Move UI single-task selected_queue construction into an importable shared helper.",
+        "Update CLI `ui run` to use the shared helper without changing its current queue payload.",
+        "Preserve created_by_command, ui_run_confirmed, allow_internal_change_gate_bypass, max_tasks=1, and order_by=selected fields in the generated queue.",
+        "Add tests that verify the helper output for enabled and disabled internal Change gate bypass."
+      ],
+      "out_of_scope": [
+        "Do not change Web Run button behavior in this task.",
+        "Do not change prepare phase Change gate semantics.",
+        "Do not disable Machine Review or approved Change gates.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/ui_run.py",
+        "scripts/aictl.py",
+        "tests/pipeline/test_ui_run_queue.py"
+      ],
+      "acceptance_criteria": [
+        "An importable helper builds the UI single-task selected_queue payload with created_by_command=ui.run, ui_run_confirmed, task_refs, max_tasks=1, order_by=selected, include_blocked_tasks, and allow_internal_change_gate_bypass.",
+        "`scripts/aictl.py ui run` uses the shared helper instead of maintaining a separate local queue-builder implementation.",
+        "Existing CLI UI run behavior remains unchanged for confirmed and unconfirmed runs.",
+        "Tests verify that the helper returns the expected bypass metadata when allow_internal_change_gate_bypass is true and false.",
+        "Existing UI settings and UI run tests pass."
+      ],
+      "review_instructions": [
+        "Reject if the helper omits any metadata required by prepare_phase for confirmed UI single-task bypass detection.",
+        "Reject if CLI `ui run` behavior changes beyond using the shared helper."
+      ],
+      "notes": [
+        "Use EPIC-009 because this is phase-based pipeline execution behavior.",
+        "Do not add dependencies inside this bulk import; add dependencies after import if desired."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T06:37:18Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-24T21:48:05Z",
+      "updated_at": "2026-06-25T06:37:18Z",
+      "uid": "tsk_0cae31448c4c",
+      "ref": "PIPEF-81",
+      "legacy_id": "TASK-162",
+      "aliases": [
+        "TASK-162"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 81
+    },
+    {
+      "id": "TASK-163",
+      "epic_id": "EPIC-009",
+      "title": "Propagate UI Run queue metadata in Web action",
+      "status": "done",
+      "summary": "Make the Web Run button create pipeline sessions with the same UI single-task queue metadata as CLI `ui run`.",
+      "description": "Fixes the Web `ui.run_selected_task` path where internal Change gate bypass settings are not copied into the pipeline session.",
+      "priority": 1,
+      "order": 82,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Update Web `ui.run_selected_task` session creation to pass selected_queue from the shared UI run queue helper.",
+        "Read allow_internal_change_gate_bypass from effective UI settings when building the Web Run selected queue.",
+        "Keep Web Run result shape, redirect target, and session link behavior unchanged.",
+        "Add Web action regression tests that prove the selected_queue contains UI run metadata and bypass flag."
+      ],
+      "out_of_scope": [
+        "Do not change CLI `ui run` behavior in this task.",
+        "Do not bypass approved Change gates for non-internal product tasks.",
+        "Do not disable Machine Review or approved Change gates.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/actions.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "Posting Web action `ui.run_selected_task` creates a session whose selected_queue includes created_by_command=ui.run and ui_run_confirmed=true.",
+        "When allow_internal_change_gate_bypass=true in UI settings, Web Run session selected_queue includes allow_internal_change_gate_bypass=true.",
+        "When allow_internal_change_gate_bypass=false in UI settings, Web Run session selected_queue includes allow_internal_change_gate_bypass=false.",
+        "Web Run still returns session_href and redirect_target for the created session.",
+        "Existing Web Control Center tests pass."
+      ],
+      "review_instructions": [
+        "Reject if Web action creates sessions through task_refs/max_tasks/order_by instead of selected_queue.",
+        "Reject if bypass behavior is applied globally rather than only through confirmed UI single-task session metadata."
+      ],
+      "notes": [
+        "Current failure symptom: Web Run creates a session but prepare blocks with approved linked Evolution Changes required even when the UI bypass setting is true.",
+        "The bypass remains limited by prepare_phase internal-project-control allowed_files checks."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T06:47:45Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-24T21:48:06Z",
+      "updated_at": "2026-06-25T06:47:46Z",
+      "uid": "tsk_1f7e652fa9b0",
+      "ref": "PIPEF-82",
+      "legacy_id": "TASK-163",
+      "aliases": [
+        "TASK-163"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 82
     }
   ]
 }

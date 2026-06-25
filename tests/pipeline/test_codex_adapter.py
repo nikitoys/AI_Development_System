@@ -1,5 +1,7 @@
 import json
+import shlex
 import subprocess
+import sys
 import tempfile
 import unittest
 from dataclasses import replace
@@ -112,8 +114,13 @@ def stdout_for_report(payload):
     )
 
 
-def run_codex_policy():
+def run_codex_policy(
+    *,
+    local_command: tuple[str, ...] = ("codex", "exec"),
+    timeout_sec: int = 30,
+):
     supervised = policy_preset("supervised")
+    command_ref = shlex.join(local_command)
     return replace(
         supervised,
         name="codex_adapter_auto_submit_test",
@@ -121,9 +128,9 @@ def run_codex_policy():
             supervised.codex,
             mode=CodexExecutionMode.RUN_CODEX,
             adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
-            local_command=("codex", "exec"),
-            command_allowlist=("codex exec",),
-            timeout_sec=30,
+            local_command=local_command,
+            command_allowlist=(command_ref,),
+            timeout_sec=timeout_sec,
             require_report=True,
         ),
     )
@@ -176,6 +183,73 @@ class CodexAdapterAutoSubmitTests(unittest.TestCase):
                 )
             )
             self.assertEqual(events[0]["command"], "codex_adapter.report.auto_submit")
+
+    def test_local_command_writes_runtime_stdout_and_stderr_logs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_prompt(root)
+            write_task_state(root)
+            session_id = "PSESS-001"
+            stdout_prefix = b"previous stdout\n"
+            stderr_prefix = b"previous stderr\n"
+            stdout_log = (
+                root
+                / "AI_PROJECT"
+                / "logs"
+                / "codex"
+                / session_id
+                / "TASK-001-stdout.log"
+            )
+            stderr_log = stdout_log.with_name("TASK-001-stderr.log")
+            stdout_log.parent.mkdir(parents=True, exist_ok=True)
+            stdout_log.write_bytes(stdout_prefix)
+            stderr_log.write_bytes(stderr_prefix)
+
+            script = "\n".join(
+                [
+                    "import json, sys",
+                    "payload = json.loads({!r})".format(json.dumps(report_payload())),
+                    "sys.stderr.write('runtime stderr\\n')",
+                    "sys.stderr.flush()",
+                    "sys.stdout.write('runtime stdout\\n')",
+                    "sys.stdout.write('CODEX_REPORT_JSON:\\n```json\\n')",
+                    "sys.stdout.write(json.dumps(payload, indent=2, sort_keys=True))",
+                    "sys.stdout.write('\\n```\\n')",
+                    "sys.stdout.flush()",
+                ]
+            )
+            command = (sys.executable, "-c", script)
+            policy = run_codex_policy(local_command=command)
+            token_gate = evaluate_token_budget(root=root, policy=policy.token_budget)
+
+            result = run_codex_adapter(
+                root=root,
+                task_id="TASK-001",
+                policy=policy,
+                token_gate=token_gate,
+                session_id=session_id,
+            )
+
+            runtime_logs = result.runtime_logs
+            stdout_meta = runtime_logs["stdout"]
+            stderr_meta = runtime_logs["stderr"]
+            stdout_path = root / stdout_meta["path"]
+            stderr_path = root / stderr_meta["path"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.code, CODE_LOCAL_COMMAND_PASSED)
+            self.assertEqual(stdout_path, stdout_log)
+            self.assertEqual(stderr_path, stderr_log)
+            self.assertEqual(stdout_meta["start_offset"], len(stdout_prefix))
+            self.assertEqual(stderr_meta["start_offset"], len(stderr_prefix))
+            self.assertEqual(stdout_meta["bytes"], result.stdout_bytes)
+            self.assertEqual(stderr_meta["bytes"], result.stderr_bytes)
+            self.assertEqual(stdout_meta["end_offset"], stdout_path.stat().st_size)
+            self.assertEqual(stderr_meta["end_offset"], stderr_path.stat().st_size)
+            self.assertTrue(result.stdout_ref.startswith("captured:stdout:sha256:"))
+            self.assertTrue(result.stderr_ref.startswith("captured:stderr:sha256:"))
+            self.assertIn("runtime stdout\n", stdout_path.read_text(encoding="utf-8"))
+            self.assertIn("runtime stderr\n", stderr_path.read_text(encoding="utf-8"))
 
     def test_successful_local_command_without_structured_report_still_blocks(self):
         with tempfile.TemporaryDirectory() as tmp:

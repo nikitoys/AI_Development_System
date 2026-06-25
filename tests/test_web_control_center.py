@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 from ai_project_ctl.core.registry import command_describe
 from ai_project_ctl.core.result import CommandResult
+from ai_project_ctl.pipeline.policy import policy_preset
 from ai_project_ctl.ui_settings import (
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
@@ -3271,9 +3272,7 @@ class WebControlCenterTests(unittest.TestCase):
                 self.assertEqual(argv[-len(expected_tail) :], expected_tail)
 
     def test_ui_run_selected_task_web_action_creates_single_task_session(self):
-        class Policy:
-            name = "supervised_executable_local_commit"
-
+        selected_policy = policy_preset("supervised_executable_local_commit")
         session_result = CommandResult.success(
             command="pipeline.session.create",
             domain="pipeline",
@@ -3293,7 +3292,7 @@ class WebControlCenterTests(unittest.TestCase):
 
         with patch(
             "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
-            return_value=Policy(),
+            return_value=selected_policy,
         ) as resolve_policy:
             with patch(
                 "ai_project_ctl.web.actions.create_session",
@@ -3316,10 +3315,25 @@ class WebControlCenterTests(unittest.TestCase):
         create.assert_called_once()
         create_kwargs = create.call_args.kwargs
         self.assertEqual(create_kwargs["actor"], "tester")
-        self.assertEqual(create_kwargs["policy_name"], Policy.name)
-        self.assertEqual(create_kwargs["task_refs"], ("TASK-001",))
-        self.assertEqual(create_kwargs["max_tasks"], 1)
-        self.assertEqual(create_kwargs["order_by"], "selected")
+        self.assertEqual(create_kwargs["policy_name"], selected_policy.name)
+        self.assertNotIn("task_refs", create_kwargs)
+        self.assertNotIn("max_tasks", create_kwargs)
+        self.assertNotIn("order_by", create_kwargs)
+        self.assertEqual(
+            create_kwargs["selected_queue"],
+            {
+                "selection": "ready_queue",
+                "task_refs": ["TASK-001"],
+                "epic_ids": [],
+                "statuses": [],
+                "max_tasks": 1,
+                "order_by": "selected",
+                "include_blocked_tasks": selected_policy.queue.include_blocked_tasks,
+                "created_by_command": "ui.run",
+                "ui_run_confirmed": True,
+                "allow_internal_change_gate_bypass": False,
+            },
+        )
         run_until.assert_called_once_with(
             "PSESS-009",
             root=Path("/tmp/project"),
@@ -3341,6 +3355,54 @@ class WebControlCenterTests(unittest.TestCase):
             payload["result"]["data"]["redirect_target"],
             "/pipeline/sessions/PSESS-009",
         )
+
+    def test_ui_run_selected_task_web_action_reads_internal_bypass_setting(self):
+        selected_policy = policy_preset("supervised_executable_local_commit")
+        session_result = CommandResult.success(
+            command="pipeline.session.create",
+            domain="pipeline",
+            message="Created pipeline session.",
+            data={"session_id": "PSESS-010", "session": {"id": "PSESS-010"}},
+        )
+        run_result = CommandResult.success(
+            command="pipeline.run_until_blocker",
+            domain="pipeline",
+            message="Blocked for owner action.",
+            data={"session_id": "PSESS-010"},
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            settings_path = ui_settings_path(root)
+            settings_path.parent.mkdir(parents=True, exist_ok=True)
+            settings_path.write_text(
+                json.dumps({INTERNAL_CHANGE_GATE_BYPASS_SETTING: True}),
+                encoding="utf-8",
+            )
+            with patch(
+                "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
+                return_value=selected_policy,
+            ):
+                with patch(
+                    "ai_project_ctl.web.actions.create_session",
+                    return_value=session_result,
+                ) as create:
+                    with patch(
+                        "ai_project_ctl.web.actions.run_until_blocker",
+                        return_value=run_result,
+                    ):
+                        WebActionExecutor(root, actor="tester").execute(
+                            {
+                                "action": "ui.run_selected_task",
+                                "confirm": "yes",
+                                "task": "TASK-001",
+                            }
+                        )
+
+        selected_queue = create.call_args.kwargs["selected_queue"]
+        self.assertTrue(selected_queue["allow_internal_change_gate_bypass"])
+        self.assertEqual(selected_queue["created_by_command"], "ui.run")
+        self.assertTrue(selected_queue["ui_run_confirmed"])
 
     def test_ui_run_selected_task_action_requires_confirmation(self):
         with patch("ai_project_ctl.web.actions.create_session") as create:

@@ -85,6 +85,7 @@ from ai_project_ctl.pipeline.ui_policy import (  # noqa: E402
     resolve_ui_pipeline_policy,
     ui_internal_change_gate_bypass_enabled,
 )
+from ai_project_ctl.pipeline.ui_run import build_ui_run_selected_queue  # noqa: E402
 from ai_project_ctl.pipeline.verify_phase import verify_phase  # noqa: E402
 from ai_project_ctl.ui_settings import (  # noqa: E402
     init_ui_settings,
@@ -2079,7 +2080,7 @@ def cmd_ui_run(args: argparse.Namespace) -> int:
         actor=args.actor,
         policy=selected_policy,
         policy_name=selected_policy.name,
-        selected_queue=_ui_run_selected_queue(
+        selected_queue=build_ui_run_selected_queue(
             selected_policy,
             args.task_ref,
             confirmed=args.confirm,
@@ -2111,28 +2112,6 @@ def cmd_ui_run(args: argparse.Namespace) -> int:
         run_result,
     )
     return _emit_command_result(result, args)
-
-
-def _ui_run_selected_queue(
-    policy: PipelinePolicy,
-    task_ref: str,
-    *,
-    confirmed: bool,
-    allow_internal_change_gate_bypass: bool,
-) -> dict[str, Any]:
-    selection = getattr(policy.queue.selection, "value", policy.queue.selection)
-    return {
-        "selection": str(selection),
-        "task_refs": [task_ref],
-        "epic_ids": [],
-        "statuses": [],
-        "max_tasks": 1,
-        "order_by": "selected",
-        "include_blocked_tasks": policy.queue.include_blocked_tasks,
-        "created_by_command": "ui.run",
-        "ui_run_confirmed": bool(confirmed),
-        "allow_internal_change_gate_bypass": bool(allow_internal_change_gate_bypass),
-    }
 
 
 def _ui_preflight_timeout_sec(

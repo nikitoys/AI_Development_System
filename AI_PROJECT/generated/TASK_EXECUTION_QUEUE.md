@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1108`
+Revision: `1125`
 
 ## Executable Now
 
@@ -19,7 +19,6 @@ Revision: `1108`
 - `PIPEF-45 (TASK-124)` [planned] `EPIC-009` priority `1` — PIPE-045 Update phase pipeline usage guide
 - `PIPEF-57 (TASK-136)` [planned] `EPIC-009` priority `1` — PIPE-052 Add pipeline session status JSON endpoint
 - `PIPEF-58 (TASK-137)` [planned] `EPIC-009` priority `1` — PIPE-053 Add partial polling refresh to Pipeline session page
-- `PIPEF-61 (TASK-140)` [planned] `EPIC-009` priority `1` — PIPE-056 Stream Codex adapter output to runtime log files
 - `PIPEF-62 (TASK-141)` [planned] `EPIC-009` priority `1` — PIPE-057 Add pipeline session live log tail endpoint
 - `PIPEF-63 (TASK-142)` [planned] `EPIC-009` priority `1` — PIPE-058 Add live Codex log panel to Pipeline session page
 - `PIPEF-64 (TASK-143)` [planned] `EPIC-009` priority `1` — PIPE-059 Keep runtime pipeline logs out of task diff gates
@@ -292,6 +291,8 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-60 (TASK-139)` [done] `EPIC-009` priority `1` — PIPE-055 Render Run and Resume controls beside task rows
   - `status_not_executable`: status is done
+- `PIPEF-61 (TASK-140)` [done] `EPIC-009` priority `1` — PIPE-056 Stream Codex adapter output to runtime log files
+  - `status_not_executable`: status is done
 - `PIPEF-66 (TASK-145)` [done] `EPIC-009` priority `1` — PIPE-061 Add Web Settings page route
   - `status_not_executable`: status is done
 - `PIPEF-67 (TASK-146)` [done] `EPIC-009` priority `1` — PIPE-062 Add confirmed Web actions for UI settings updates
@@ -315,4 +316,8 @@ _No tasks waiting only on dependencies._
 - `PIPEF-79 (TASK-158)` [done] `EPIC-009` priority `1` — PIPE-074 Allow internal bypass setting in Web settings action
   - `status_not_executable`: status is done
 - `PIPEF-80 (TASK-161)` [done] `EPIC-009` priority `1` — Make Codex Review optional in pipeline
+  - `status_not_executable`: status is done
+- `PIPEF-81 (TASK-162)` [done] `EPIC-009` priority `1` — Add shared UI run queue builder
+  - `status_not_executable`: status is done
+- `PIPEF-82 (TASK-163)` [done] `EPIC-009` priority `1` — Propagate UI Run queue metadata in Web action
   - `status_not_executable`: status is done

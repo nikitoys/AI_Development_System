@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `121`
-State revision: `121`
-Current session: `PSESS-026`
+Events: `134`
+State revision: `134`
+Current session: `PSESS-029`
 
 ## Timeline
 
@@ -132,6 +132,19 @@ Current session: `PSESS-026`
 | `2026-06-24T15:04:55Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-026` | `` | `` | changes=CHG-072 |
 | `2026-06-24T15:12:54Z` | `step.result` | `pipeline.phase.execute` | `PSESS-026` | `` | `` | PSESS-026 |
 | `2026-06-24T15:12:54Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-026` | `` | `` | PSESS-026 |
+| `2026-06-24T21:38:57Z` | `session.create` | `pipeline.session.create` | `PSESS-027` | `` | `` | PSESS-027 |
+| `2026-06-24T21:38:57Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-027` | `` | `` | PSESS-027 |
+| `2026-06-24T21:38:57Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-027` | `` | `` | PSESS-027 |
+| `2026-06-24T21:46:41Z` | `session.create` | `pipeline.session.create` | `PSESS-028` | `` | `` | PSESS-028 |
+| `2026-06-24T21:46:42Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-028` | `` | `` | PSESS-028 |
+| `2026-06-24T21:46:49Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-028` | `` | `` | PSESS-028 |
+| `2026-06-24T21:57:59Z` | `step.result` | `pipeline.phase.execute` | `PSESS-028` | `` | `` | reports=RPT-010 |
+| `2026-06-24T21:58:00Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-028` | `` | `` | reports=RPT-010 |
+| `2026-06-24T21:58:00Z` | `step.result` | `pipeline.phase.verify` | `PSESS-028` | `` | `` | reports=RPT-010 |
+| `2026-06-25T06:46:29Z` | `session.create` | `pipeline.session.create` | `PSESS-029` | `` | `` | PSESS-029 |
+| `2026-06-25T06:46:30Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-029` | `` | `` | PSESS-029 |
+| `2026-06-25T06:48:00Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-029` | `` | `` | PSESS-029 |
+| `2026-06-25T06:48:19Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-029` | `` | `` | PSESS-029 |
 
 ## Event Type Coverage
 

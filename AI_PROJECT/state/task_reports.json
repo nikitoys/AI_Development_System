@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 9,
+  "revision": 10,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-24T13:37:59Z",
+  "updated_at": "2026-06-24T21:57:59Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -819,6 +819,72 @@
           "token_count_strategy": "manual_report_not_measured"
         }
       }
+    },
+    {
+      "id": "RPT-010",
+      "task_id": "TASK-140",
+      "task_ref": "PIPEF-61",
+      "submitted_at": "2026-06-24T21:57:59Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:8b6e46483912b7ee5a1a43481ca9dc7ea041c0810067a345f1ed44374c255d80",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-140",
+        "task_ref": "PIPEF-61",
+        "reported_task_id": "TASK-140",
+        "reported_task_ref": "PIPEF-61",
+        "implementation_summary": "Added per-session runtime stdout/stderr log files for local-command Codex execution, preserved captured stdout/stderr refs and snippets, and exposed runtime log path/offset metadata in execute phase artifacts.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/codex_adapter.py",
+          "ai_project_ctl/pipeline/execute_phase.py",
+          "tests/pipeline/test_codex_adapter.py",
+          "tests/pipeline/test_execute_phase.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "focused pipeline unit tests",
+            "command": "python -m unittest tests.pipeline.test_codex_adapter tests.pipeline.test_execute_phase",
+            "result": "passed",
+            "duration_sec": 3.124,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "py_compile changed files",
+            "command": "python -m py_compile ai_project_ctl/pipeline/codex_adapter.py ai_project_ctl/pipeline/execute_phase.py tests/pipeline/test_codex_adapter.py tests/pipeline/test_execute_phase.py",
+            "result": "passed",
+            "duration_sec": 0.143,
+            "blocking": true,
+            "details": ""
+          }
+        ],
+        "warnings": [
+          "Full worktree status shows pre-existing AI_PROJECT state/generated changes outside the allowed task scope; these were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "Runtime logs use .log files, which are covered by the repository .gitignore.",
+          "Injected test runners also write completed output to runtime log files for metadata consistency; real local-command execution streams subprocess output while running."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 9000,
+          "context_tokens": 56000,
+          "max_context_tokens": 128000,
+          "min_remaining_tokens": 0,
+          "model_context_limit": 128000,
+          "output_tokens": 1200,
+          "prompt_tokens": 18000,
+          "remaining_tokens": 45000,
+          "reserved_output_tokens": 4096,
+          "total_tokens": 83000,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "estimated",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -828,6 +894,7 @@
     "TASK-058": "RPT-005",
     "TASK-135": "RPT-007",
     "TASK-119": "RPT-008",
-    "TASK-149": "RPT-009"
+    "TASK-149": "RPT-009",
+    "TASK-140": "RPT-010"
   }
 }
