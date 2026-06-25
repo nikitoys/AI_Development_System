@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from unittest import mock
 
 from ai_project_ctl.pipeline.git_diff_gate import (
     BLOCKED,
@@ -17,11 +18,14 @@ from ai_project_ctl.pipeline.git_diff_gate import (
 )
 from ai_project_ctl.pipeline.phase import PhaseResult
 from ai_project_ctl.pipeline.policy import PipelinePolicy
+from ai_project_ctl.pipeline.report_gate import CODE_BLOCKERS_PRESENT
+from ai_project_ctl.pipeline.report_gate import CODE_WARN as CODEX_REPORT_WARN
 from ai_project_ctl.pipeline.session import create_session, record_phase_result
 from ai_project_ctl.pipeline.state import pipeline_state_path
 from ai_project_ctl.pipeline.verify_phase import (
     GIT_DIFF_BASED_GATE_NAMES,
     GIT_DIFF_GATES_POLICY_KEY,
+    REPORT_WARNING_POLICY_KEY,
     SKIPPED_GATES_KEY,
     _exclude_runtime_logs_from_git_diff,
     _report_git_diff_comparison,
@@ -150,13 +154,33 @@ class VerifyPhaseGitDiffPolicyTests(unittest.TestCase):
         )
 
         self.assertTrue(strict.verify.run_git_diff_gates)
+        self.assertTrue(strict.verify.block_report_warnings)
         self.assertNotIn("verify", strict.to_dict())
         self.assertTrue(PipelinePolicy.from_dict(strict.to_dict()).verify.run_git_diff_gates)
+        self.assertTrue(
+            PipelinePolicy.from_dict(strict.to_dict()).verify.block_report_warnings
+        )
         self.assertEqual(
             relaxed.to_dict()["verify"],
             {"run_git_diff_gates": False},
         )
         self.assertFalse(PipelinePolicy.from_dict(relaxed.to_dict()).verify.run_git_diff_gates)
+        self.assertTrue(PipelinePolicy.from_dict(relaxed.to_dict()).verify.block_report_warnings)
+
+        relaxed_warnings = replace(
+            strict,
+            name="relaxed_report_warnings",
+            verify=replace(strict.verify, block_report_warnings=False),
+        )
+        self.assertEqual(
+            relaxed_warnings.to_dict()["verify"],
+            {"block_report_warnings": False},
+        )
+        self.assertFalse(
+            PipelinePolicy.from_dict(
+                relaxed_warnings.to_dict()
+            ).verify.block_report_warnings
+        )
 
     def test_strict_policy_blocks_when_actual_diff_is_missing_from_report(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -223,6 +247,118 @@ class VerifyPhaseGitDiffPolicyTests(unittest.TestCase):
                 artifacts[SKIPPED_GATES_KEY],
             )
 
+    def test_default_policy_blocks_when_report_gate_warns(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            session_id = _prepare_verify_session(root, PipelinePolicy.default())
+            _write_report_state(root, warnings=["advisory warning"])
+            _commit_current_fixture(root)
+
+            result = verify_phase(session_id, root=root, actor="tester")
+            phase = result.data["phase_result"]
+            artifacts = phase["artifacts"]
+
+        self.assertTrue(result.ok)
+        self.assertEqual(phase["status"], "blocked")
+        self.assertEqual(artifacts["blocked_by"], CODEX_REPORT_WARN)
+        self.assertEqual(artifacts["report_gate_status"], "warn")
+        self.assertEqual(
+            artifacts[REPORT_WARNING_POLICY_KEY],
+            {
+                "block_report_warnings": True,
+                "decision": "blocked",
+                "reason": "",
+                "report_gate_status": "warn",
+                "report_gate_code": CODEX_REPORT_WARN,
+            },
+        )
+
+    def test_relaxed_report_warning_policy_allows_advisory_warning(self):
+        strict = PipelinePolicy.default()
+        relaxed = replace(
+            strict,
+            name="relaxed_report_warnings",
+            verify=replace(strict.verify, block_report_warnings=False),
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            session_id = _prepare_verify_session(root, relaxed)
+            _write_report_state(root, warnings=["advisory warning"])
+            _commit_current_fixture(root)
+
+            result = verify_phase(session_id, root=root, actor="tester")
+            phase = result.data["phase_result"]
+            artifacts = phase["artifacts"]
+            warning_policy = artifacts[REPORT_WARNING_POLICY_KEY]
+
+        self.assertTrue(result.ok)
+        self.assertEqual(phase["status"], "passed")
+        self.assertEqual(artifacts["report_gate_status"], "warn")
+        self.assertEqual(warning_policy["block_report_warnings"], False)
+        self.assertEqual(warning_policy["decision"], "advisory")
+        self.assertEqual(
+            warning_policy["reason"],
+            "policy.verify.block_report_warnings is false",
+        )
+        self.assertEqual(
+            artifacts["verify_evidence"][REPORT_WARNING_POLICY_KEY],
+            warning_policy,
+        )
+        self.assertEqual(
+            result.data[REPORT_WARNING_POLICY_KEY],
+            warning_policy,
+        )
+
+    def test_report_failures_remain_blocking_with_report_warnings_relaxed(self):
+        strict = PipelinePolicy.default()
+        relaxed = replace(
+            strict,
+            name="relaxed_report_warnings",
+            verify=replace(strict.verify, block_report_warnings=False),
+        )
+        for policy in (strict, relaxed):
+            with self.subTest(policy=policy.name):
+                with tempfile.TemporaryDirectory() as tmp:
+                    root = Path(tmp)
+                    session_id = _prepare_verify_session(root, policy)
+                    _write_report_state(root, blockers=["must fix"])
+
+                    result = verify_phase(session_id, root=root, actor="tester")
+                    phase = result.data["phase_result"]
+                    artifacts = phase["artifacts"]
+
+                self.assertTrue(result.ok)
+                self.assertEqual(phase["status"], "blocked")
+                self.assertEqual(artifacts["blocked_by"], CODE_BLOCKERS_PRESENT)
+                self.assertEqual(artifacts["report_gate_status"], "fail")
+                self.assertNotIn(REPORT_WARNING_POLICY_KEY, artifacts)
+
+    def test_invalid_report_gate_status_blocks_when_report_warnings_relaxed(self):
+        strict = PipelinePolicy.default()
+        relaxed = replace(
+            strict,
+            name="relaxed_report_warnings",
+            verify=replace(strict.verify, block_report_warnings=False),
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            session_id = _prepare_verify_session(root, relaxed)
+            _write_report_state(root)
+            report_gate = _FakeReportGate(status="invalid")
+
+            with mock.patch(
+                "ai_project_ctl.pipeline.verify_phase.evaluate_report_gate",
+                return_value=report_gate,
+            ):
+                result = verify_phase(session_id, root=root, actor="tester")
+            phase = result.data["phase_result"]
+            artifacts = phase["artifacts"]
+
+        self.assertTrue(result.ok)
+        self.assertEqual(phase["status"], "blocked")
+        self.assertEqual(artifacts["blocked_by"], "REPORT_GATE_UNKNOWN_STATUS")
+        self.assertEqual(artifacts["report_gate_status"], "invalid")
+
     def test_allowed_files_gate_still_blocks_out_of_scope_actual_diff(self):
         gate = evaluate_allowed_files_gate(
             root="/repo",
@@ -239,6 +375,33 @@ class VerifyPhaseGitDiffPolicyTests(unittest.TestCase):
 class _Report:
     changed_files = ()
     generated_files = ()
+
+
+class _FakeReportGate:
+    def __init__(self, *, status: str) -> None:
+        self.status = status
+        self.code = "CODEX_REPORT_UNKNOWN"
+        self.reason = "Unknown report status."
+        self.report_id = "RPT-001"
+        self.task_id = "TASK-001"
+        self.changed_files = ()
+        self.generated_files = ()
+        self.checks = ()
+
+    def to_dict(self) -> dict:
+        return {
+            "status": self.status,
+            "code": self.code,
+            "reason": self.reason,
+            "report_id": self.report_id,
+            "task_id": self.task_id,
+            "issues": [],
+            "warnings": [],
+            "changed_files": [],
+            "generated_files": [],
+            "token_usage": {},
+            "checks": [],
+        }
 
 
 def _prepare_verify_session(root: Path, policy: PipelinePolicy) -> str:
@@ -306,17 +469,18 @@ def _write_task_state(root: Path) -> None:
     )
 
 
-def _write_report_state(root: Path) -> None:
+def _write_report_state(
+    root: Path,
+    *,
+    warnings: list[str] | None = None,
+    blockers: list[str] | None = None,
+    checks: list[dict] | None = None,
+) -> None:
     state_dir = root / "AI_PROJECT" / "state"
     state_dir.mkdir(parents=True, exist_ok=True)
-    report = {
-        "schema_version": 1,
-        "task_id": "TASK-001",
-        "task_ref": "APP-01",
-        "implementation_summary": "Verified task output.",
-        "changed_files": [],
-        "generated_files": [],
-        "checks": [
+    report_checks = checks
+    if report_checks is None:
+        report_checks = [
             {
                 "name": "unit",
                 "command": "python -m unittest tests.pipeline.test_verify_phase",
@@ -324,9 +488,17 @@ def _write_report_state(root: Path) -> None:
                 "duration_sec": 0.1,
                 "blocking": True,
             }
-        ],
-        "warnings": [],
-        "blockers": [],
+        ]
+    report = {
+        "schema_version": 1,
+        "task_id": "TASK-001",
+        "task_ref": "APP-01",
+        "implementation_summary": "Verified task output.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": report_checks,
+        "warnings": list(warnings or []),
+        "blockers": list(blockers or []),
         "notes": [],
         "owner_decision_required": False,
     }

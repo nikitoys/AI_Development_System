@@ -212,11 +212,15 @@ class ProjectTestsPolicy:
 @dataclass(frozen=True)
 class VerifyPolicy:
     run_git_diff_gates: bool = True
+    block_report_warnings: bool = True
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "run_git_diff_gates": self.run_git_diff_gates,
-        }
+        data: dict[str, Any] = {}
+        if self.run_git_diff_gates is not True:
+            data["run_git_diff_gates"] = self.run_git_diff_gates
+        if self.block_report_warnings is not True:
+            data["block_report_warnings"] = self.block_report_warnings
+        return data
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any] | None) -> "VerifyPolicy":
@@ -228,6 +232,11 @@ class VerifyPolicy:
             run_git_diff_gates=_bool_value(
                 data,
                 "run_git_diff_gates",
+                default=True,
+            ),
+            block_report_warnings=_bool_value(
+                data,
+                "block_report_warnings",
                 default=True,
             ),
         )
@@ -885,6 +894,12 @@ def _validate_verify_policy(policy: PipelinePolicy, result: ValidationResult) ->
             "Verify git diff gates policy must be a boolean.",
             path="verify.run_git_diff_gates",
         )
+    if not isinstance(policy.verify.block_report_warnings, bool):
+        result.add_error(
+            "POLICY_VERIFY_REPORT_WARNINGS_INVALID",
+            "Verify report warning blocking policy must be a boolean.",
+            path="verify.block_report_warnings",
+        )
 
 
 def _validate_codex_adapter_policy(policy: PipelinePolicy, result: ValidationResult) -> None:
@@ -1051,6 +1066,8 @@ def policy_behavior_label(policy: PipelinePolicy) -> str:
             labels.append("local-commit")
     if not policy.verify.run_git_diff_gates:
         labels.append("relaxed-verify")
+    if not policy.verify.block_report_warnings:
+        labels.append("report-warnings-advisory")
     return " / ".join(labels)
 
 

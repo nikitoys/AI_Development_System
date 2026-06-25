@@ -45,6 +45,8 @@ RUNTIME_LOG_PATH_PREFIX = "AI_PROJECT/logs/"
 GIT_DIFF_GATES_POLICY_KEY = "git_diff_gates_policy"
 SKIPPED_GATES_KEY = "skipped_gates"
 GIT_DIFF_GATES_DISABLED_REASON = "policy.verify.run_git_diff_gates is false"
+REPORT_WARNING_POLICY_KEY = "report_warning_policy"
+REPORT_WARNINGS_ADVISORY_REASON = "policy.verify.block_report_warnings is false"
 GIT_DIFF_BASED_GATE_NAMES = (
     "git_diff_gate",
     "protected_files_gate",
@@ -201,6 +203,9 @@ def verify_phase(
         "report_gate_code": report_gate.code,
         "report_gate": report_gate.to_dict(),
     }
+    report_warning_policy = _report_warning_policy_artifact(policy, report_gate)
+    if report_warning_policy:
+        report_artifacts[REPORT_WARNING_POLICY_KEY] = report_warning_policy
     project_tests = _project_tests_evidence(policy, report_gate)
     if project_tests:
         report_artifacts["project_tests"] = project_tests
@@ -226,6 +231,7 @@ def verify_phase(
                 root_path=root_path,
                 session=session,
                 task=task,
+                policy=policy,
                 report_gate=report_gate,
                 report_artifacts=report_artifacts,
             )
@@ -245,13 +251,16 @@ def verify_phase(
             generated_files=report_gate.generated_files,
         )
     else:
-        phase = PhaseResult.failed(
+        phase = PhaseResult.blocked(
             PHASE_NAME,
             reason="Report gate returned unknown status: {}".format(
                 report_gate.status
             ),
             next_action="Fix report gate status handling, then rerun verify.",
-            artifacts={"error_code": "REPORT_GATE_UNKNOWN_STATUS", **report_artifacts},
+            artifacts={
+                "blocked_by": "REPORT_GATE_UNKNOWN_STATUS",
+                **report_artifacts,
+            },
         )
 
     return _phase_command(
@@ -347,6 +356,9 @@ def _phase_command(
         git_diff_policy = artifacts.get(GIT_DIFF_GATES_POLICY_KEY)
         if isinstance(git_diff_policy, Mapping):
             result.data[GIT_DIFF_GATES_POLICY_KEY] = dict(git_diff_policy)
+        report_warning_policy = artifacts.get(REPORT_WARNING_POLICY_KEY)
+        if isinstance(report_warning_policy, Mapping):
+            result.data[REPORT_WARNING_POLICY_KEY] = dict(report_warning_policy)
         skipped_gates = artifacts.get(SKIPPED_GATES_KEY)
         if isinstance(skipped_gates, list):
             result.data[SKIPPED_GATES_KEY] = [
@@ -471,6 +483,7 @@ def _phase_with_git_diff_gates(
     root_path: Path,
     session: Mapping[str, Any],
     task: Mapping[str, Any],
+    policy: PipelinePolicy,
     report_gate: Any,
     report_artifacts: Mapping[str, Any],
 ) -> PhaseResult:
@@ -560,6 +573,18 @@ def _phase_with_git_diff_gates(
                 changed_files=report_gate.changed_files,
                 generated_files=report_gate.generated_files,
             )
+        if not policy.verify.block_report_warnings:
+            return PhaseResult.passed(
+                PHASE_NAME,
+                reason=(
+                    "Report gate warning(s) are advisory by policy; git diff gate, "
+                    "protected-files gate, and allowed-files gate passed."
+                ),
+                next_action="Run pipeline phase review.",
+                artifacts=gated_artifacts,
+                changed_files=report_gate.changed_files,
+                generated_files=report_gate.generated_files,
+            )
         return PhaseResult.blocked(
             PHASE_NAME,
             reason="Report gate returned warning(s): {}".format(report_gate.reason),
@@ -625,6 +650,18 @@ def _phase_with_git_diff_gates_skipped(
             changed_files=report_gate.changed_files,
             generated_files=report_gate.generated_files,
         )
+    if not policy.verify.block_report_warnings:
+        return PhaseResult.passed(
+            PHASE_NAME,
+            reason=(
+                "Report gate warning(s) are advisory by policy; git diff, "
+                "protected-files, and allowed-files gates were skipped by policy."
+            ),
+            next_action="Run pipeline phase review.",
+            artifacts=relaxed_artifacts,
+            changed_files=report_gate.changed_files,
+            generated_files=report_gate.generated_files,
+        )
     return PhaseResult.blocked(
         PHASE_NAME,
         reason="Report gate returned warning(s): {}".format(report_gate.reason),
@@ -647,6 +684,22 @@ def _git_diff_gates_policy_artifact(policy: PipelinePolicy) -> dict[str, Any]:
         "run_git_diff_gates": bool(policy.verify.run_git_diff_gates),
         "mode": "strict" if policy.verify.run_git_diff_gates else "relaxed",
         "reason": "" if policy.verify.run_git_diff_gates else GIT_DIFF_GATES_DISABLED_REASON,
+    }
+
+
+def _report_warning_policy_artifact(
+    policy: PipelinePolicy,
+    report_gate: Any,
+) -> dict[str, Any]:
+    if report_gate.status != REPORT_WARN:
+        return {}
+    blocks = bool(policy.verify.block_report_warnings)
+    return {
+        "block_report_warnings": blocks,
+        "decision": "blocked" if blocks else "advisory",
+        "reason": "" if blocks else REPORT_WARNINGS_ADVISORY_REASON,
+        "report_gate_status": report_gate.status,
+        "report_gate_code": report_gate.code,
     }
 
 
@@ -872,6 +925,9 @@ def _verify_evidence(
     git_diff_policy = artifacts.get(GIT_DIFF_GATES_POLICY_KEY)
     if isinstance(git_diff_policy, Mapping):
         evidence[GIT_DIFF_GATES_POLICY_KEY] = dict(git_diff_policy)
+    report_warning_policy = artifacts.get(REPORT_WARNING_POLICY_KEY)
+    if isinstance(report_warning_policy, Mapping):
+        evidence[REPORT_WARNING_POLICY_KEY] = dict(report_warning_policy)
     skipped_gates = artifacts.get(SKIPPED_GATES_KEY)
     if isinstance(skipped_gates, list):
         evidence[SKIPPED_GATES_KEY] = [
@@ -1059,4 +1115,4 @@ def _sorted_unique(values: Any) -> tuple[str, ...]:
     return tuple(sorted({str(value) for value in values if str(value).strip()}))
 
 
-__all__ = ["verify_phase"]
+__all__ = ["REPORT_WARNING_POLICY_KEY", "verify_phase"]

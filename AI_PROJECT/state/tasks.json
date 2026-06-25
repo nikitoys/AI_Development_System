@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1206,
-  "current_task_id": "TASK-136",
+  "revision": 1242,
+  "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-25T13:13:46Z",
+  "updated_at": "2026-06-25T17:41:43Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -8550,7 +8550,7 @@
       "id": "TASK-120",
       "epic_id": "EPIC-009",
       "title": "PIPE-041 Add tests for queue prepare execute report phases",
-      "status": "planned",
+      "status": "done",
       "summary": "Add tests for the queue, prepare, execute, and collect-report phase boundaries using fake state and adapters.",
       "description": "Verify early phase behavior without relying on real Codex execution.",
       "priority": 1,
@@ -8589,11 +8589,11 @@
         "Draft ref: PIPE-041."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T14:30:57Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-20T17:05:00Z",
-      "updated_at": "2026-06-20T17:05:00Z",
+      "updated_at": "2026-06-25T14:30:58Z",
       "uid": "tsk_5c3a3cffb80a",
       "ref": "PIPEF-41",
       "legacy_id": "TASK-120",
@@ -8607,7 +8607,7 @@
       "id": "TASK-121",
       "epic_id": "EPIC-009",
       "title": "PIPE-042 Add tests for git diff gate",
-      "status": "planned",
+      "status": "done",
       "summary": "Add focused tests for actual git diff gate and file-scope comparison behavior.",
       "description": "Protect verify from accepting incomplete or dishonest structured reports.",
       "priority": 1,
@@ -8645,11 +8645,11 @@
         "Draft ref: PIPE-042."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T17:41:42Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-20T17:05:01Z",
-      "updated_at": "2026-06-20T17:05:01Z",
+      "updated_at": "2026-06-25T17:41:43Z",
       "uid": "tsk_5517275e5470",
       "ref": "PIPEF-42",
       "legacy_id": "TASK-121",
@@ -9478,7 +9478,7 @@
       "id": "TASK-136",
       "epic_id": "EPIC-009",
       "title": "PIPE-052 Add pipeline session status JSON endpoint",
-      "status": "in_progress",
+      "status": "done",
       "summary": "Add a read-only JSON endpoint that returns compact live status for one pipeline session.",
       "description": "This enables the Web Control Center to refresh session status without reloading the full HTML page.",
       "priority": 1,
@@ -9518,11 +9518,11 @@
         "This task supports lightweight status polling every few seconds."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T13:36:19Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-24T10:23:20Z",
-      "updated_at": "2026-06-25T13:13:46Z",
+      "updated_at": "2026-06-25T13:36:20Z",
       "uid": "tsk_3b24331932c4",
       "ref": "PIPEF-57",
       "legacy_id": "TASK-136",
@@ -9536,7 +9536,7 @@
       "id": "TASK-137",
       "epic_id": "EPIC-009",
       "title": "PIPE-053 Add partial polling refresh to Pipeline session page",
-      "status": "planned",
+      "status": "done",
       "summary": "Update the Pipeline session page to poll compact session status and refresh only status-related UI blocks.",
       "description": "The page should update live session status without full-page reloads.",
       "priority": 1,
@@ -9575,11 +9575,11 @@
         "Keep the implementation small and compatible with the current standard-library web server."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T14:07:21Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-24T10:23:21Z",
-      "updated_at": "2026-06-24T10:23:21Z",
+      "updated_at": "2026-06-25T14:07:22Z",
       "uid": "tsk_f9cb256de173",
       "ref": "PIPEF-58",
       "legacy_id": "TASK-137",
@@ -11618,6 +11618,182 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 90
+    },
+    {
+      "id": "TASK-172",
+      "epic_id": "EPIC-009",
+      "title": "Add report warning verify policy",
+      "status": "done",
+      "summary": "Add a pipeline verify policy flag that controls whether structured report warnings block verification.",
+      "description": "Introduce strict-by-default report warning handling so relaxed policies can treat report warnings as advisory evidence instead of blockers.",
+      "priority": 1,
+      "order": 91,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a verify policy field for report warning blocking with strict default behavior.",
+        "Update verify phase handling so REPORT_WARN blocks only when the policy requires blocking report warnings.",
+        "Record relaxed report warning evidence in verify artifacts when warnings are advisory.",
+        "Keep REPORT_FAIL and invalid report states blocking regardless of the relaxed warning setting."
+      ],
+      "out_of_scope": [
+        "Do not change git diff gate behavior in this task.",
+        "Do not change Codex execution or report collection behavior.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/policy.py",
+        "ai_project_ctl/pipeline/verify_phase.py",
+        "tests/pipeline/test_verify_phase.py"
+      ],
+      "acceptance_criteria": [
+        "Strict/default policy still blocks verify when the report gate returns CODEX_REPORT_WARN.",
+        "Relaxed policy allows verify to continue when the only report gate issue is a warning.",
+        "Verify artifacts record the report warning status and relaxed warning policy decision.",
+        "Report gate failures remain blocking in both strict and relaxed modes.",
+        "Focused verify phase tests cover strict and relaxed report warning behavior."
+      ],
+      "review_instructions": [
+        "Confirm the default remains strict for existing policies unless explicitly relaxed.",
+        "Confirm no report failure path is weakened."
+      ],
+      "notes": [
+        "This task is the core verify behavior change for allowing pytest-missing warnings to be advisory in fast UI runs."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T14:49:55Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T14:30:16Z",
+      "updated_at": "2026-06-25T14:49:55Z",
+      "uid": "tsk_09e4331fcf23",
+      "ref": "PIPEF-91",
+      "legacy_id": "TASK-172",
+      "aliases": [
+        "TASK-172"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 91
+    },
+    {
+      "id": "TASK-173",
+      "epic_id": "EPIC-009",
+      "title": "Wire relaxed report warnings into UI policy",
+      "status": "done",
+      "summary": "Add a project-local UI setting that maps relaxed report warning behavior into the effective UI pipeline policy.",
+      "description": "Make fast UI runs able to opt into advisory report warnings without changing strict or release policies.",
+      "priority": 1,
+      "order": 92,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add allow_relaxed_report_warnings to the project-local UI settings model with a safe default.",
+        "Allow the UI settings write action to update the new setting.",
+        "Update UI policy resolution so the new setting relaxes report warning blocking in the effective policy.",
+        "Add focused tests for CLI/UI setting persistence and effective UI policy mapping."
+      ],
+      "out_of_scope": [
+        "Do not modify the Web Settings page rendering in this task.",
+        "Do not change report builder output shape.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/ui_settings.py",
+        "ai_project_ctl/pipeline/ui_policy.py",
+        "ai_project_ctl/web/actions.py",
+        "tests/pipeline/test_ui_policy.py"
+      ],
+      "acceptance_criteria": [
+        "Default UI settings keep report warning blocking enabled unless explicitly relaxed.",
+        "Setting allow_relaxed_report_warnings to true makes the effective UI policy treat report warnings as advisory.",
+        "The new setting is allowlisted for Web write actions.",
+        "Existing allow_relaxed_git_diff_verification behavior is unchanged.",
+        "Focused UI policy tests pass."
+      ],
+      "review_instructions": [
+        "Confirm the new setting does not affect non-UI policy presets directly.",
+        "Confirm strict behavior remains the default when the setting is absent."
+      ],
+      "notes": [
+        "This task wires the setting into policy; a separate task exposes it on the Settings page."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T15:00:12Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T14:30:16Z",
+      "updated_at": "2026-06-25T15:00:12Z",
+      "uid": "tsk_0becf52f7359",
+      "ref": "PIPEF-92",
+      "legacy_id": "TASK-173",
+      "aliases": [
+        "TASK-173"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 92
+    },
+    {
+      "id": "TASK-174",
+      "epic_id": "EPIC-009",
+      "title": "Expose relaxed report warnings setting",
+      "status": "done",
+      "summary": "Expose the relaxed report warning setting on the Web Settings page and cover it with Web Control Center tests.",
+      "description": "Add owner-facing Web UI control for the report warning relaxation flag used by fast UI pipeline runs.",
+      "priority": 1,
+      "order": 93,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Render allow_relaxed_report_warnings on the Web Settings page near related pipeline relaxation settings.",
+        "Ensure Settings form submission preserves and applies the new setting value.",
+        "Add Web Control Center tests for unchecked and checked rendering states.",
+        "Add Web action test coverage for updating the new setting through the Settings page."
+      ],
+      "out_of_scope": [
+        "Do not change pipeline verify logic in this task.",
+        "Do not change task execution or Codex adapter behavior.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "Settings page shows allow_relaxed_report_warnings with explanatory copy.",
+        "Unchecked rendering is shown when the setting is false or absent.",
+        "Checked rendering is shown when the setting is true.",
+        "Submitting Settings can update allow_relaxed_report_warnings.",
+        "Focused Web Control Center tests pass."
+      ],
+      "review_instructions": [
+        "Confirm the setting label clearly communicates that this is for fast UI runs and report warnings only."
+      ],
+      "notes": [
+        "This task is UI-only and depends on the setting name and behavior introduced by the policy wiring task."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T15:10:19Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T14:30:17Z",
+      "updated_at": "2026-06-25T15:10:20Z",
+      "uid": "tsk_167499a73167",
+      "ref": "PIPEF-93",
+      "legacy_id": "TASK-174",
+      "aliases": [
+        "TASK-174"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 93
     }
   ]
 }

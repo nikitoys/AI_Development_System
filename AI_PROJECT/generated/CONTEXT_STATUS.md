@@ -1,15 +1,15 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/generated/CONTEXT_PACK.md -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-136 PIPE-052 Add pipeline session status JSON endpoint Add a read-only JSON endpoint that returns compact live status for one pipeline session. This enables the Web Control Center to refresh session status without reloading the full HTML page. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Add a read-only route for compact pipeline session status JSON. Return session id, status, current task, current phase, phase status, stop reason, next action and phase history summary. Return stable errors for missing or invalid session ids. Add focused tests for successful and missing-session responses. Do not mutate pipeline session state. Do not change pipeline execution behavior. Do not add frontend polling in this task. ai_project_ctl/web/server.py ai_project_ctl/web/read_model.py tests/test_web_control_center.py The new endpoint returns JSON for an existing pipeline session. The JSON payload contains status, current_phase, current_phase_status, stop_reason, next_action and phase_history summary. The endpoint does not render full HTML. Missing sessions return a stable non-success response. Existing Web Control Center pages continue to render. Verify that the endpoint is read-only and does not invalidate or mutate caches unnecessarily.","schema_version":1,"task_id":"TASK-136"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-121 PIPE-042 Add tests for git diff gate Add focused tests for actual git diff gate and file-scope comparison behavior. Protect verify from accepting incomplete or dishonest structured reports. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Test clean working tree behavior. Test reported changed file matching actual diff. Test actual changed file missing from report. Test out-of-scope and protected file detection. Do not change behavior unrelated to this task. Do not refactor unrelated code. Do not edit protected project-control files manually. tests/test_pipeline_git_diff_gate.py The git diff gate detects changed tracked files. The git diff gate detects untracked files. Verify comparison blocks when actual files are missing from the report. Protected file changes are blocked with stable reason codes. Check tests create isolated temporary git repositories. Verify tests do not modify the real project working tree.","schema_version":1,"task_id":"TASK-121"} -->
 
 # Context Status
 
 Context pack exists: `true`
 Mode: `task`
-Task ID: `TASK-136`
+Task ID: `TASK-121`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1206`
+Tasks revision: `1239`
 Indexed source documents: `10`
 Indexed chunks: `891`
 Selected chunks: `8`
@@ -20,6 +20,7 @@ Excluded registered sources: `135`
 - ai-system/project-control/03-state-model.md
 - ai-system/project-control/04-command-catalog.md
 - ai-system/project-control/06-prompt-package-spec.md
+- ai-system/project-control/07-validation-and-tests.md
 - ai-system/skills/README.md
 
 ## Exclusion Reasons

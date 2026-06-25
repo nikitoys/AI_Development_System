@@ -15,6 +15,7 @@ from ai_project_ctl.core.result import CommandResult
 from ai_project_ctl.pipeline.policy import policy_preset
 from ai_project_ctl.ui_settings import (
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
+    ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
     ui_settings_path,
@@ -157,6 +158,25 @@ class WebControlCenterTests(unittest.TestCase):
             "Allow relaxed git diff verification for UI runs",
             body,
         )
+        self.assertIn("<code>allow_relaxed_report_warnings</code>", body)
+        self.assertIn(
+            "Fast UI runs only. Report warnings become advisory",
+            body,
+        )
+        self.assertIn(
+            'type="hidden" name="allow_relaxed_report_warnings" value="false"',
+            body,
+        )
+        self.assertIn(
+            'type="checkbox" name="allow_relaxed_report_warnings" value="true">'
+            "Allow relaxed report warnings for fast UI runs",
+            body,
+        )
+        self.assertNotIn(
+            'type="checkbox" name="allow_relaxed_report_warnings" value="true" checked>'
+            "Allow relaxed report warnings for fast UI runs",
+            body,
+        )
         self.assertIn("<code>allow_internal_change_gate_bypass</code>", body)
         self.assertIn(
             "Internal project-control tasks only. Does not approve Changes",
@@ -198,6 +218,7 @@ class WebControlCenterTests(unittest.TestCase):
                     "command_line": "codex exec --json",
                     "default_policy": "supervised",
                     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING: "true",
+                    ALLOW_RELAXED_REPORT_WARNINGS_SETTING: "true",
                     INTERNAL_CHANGE_GATE_BYPASS_SETTING: "true",
                     "execution_timeout_sec": "1800",
                     "preflight_timeout_sec": 45,
@@ -231,6 +252,16 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn(
             'type="checkbox" name="allow_relaxed_git_diff_verification" value="true" checked>'
             "Allow relaxed git diff verification for UI runs",
+            body,
+        )
+        self.assertIn("<code>allow_relaxed_report_warnings</code>", body)
+        self.assertIn(
+            "Report warnings become advisory",
+            body,
+        )
+        self.assertIn(
+            'type="checkbox" name="allow_relaxed_report_warnings" value="true" checked>'
+            "Allow relaxed report warnings for fast UI runs",
             body,
         )
         self.assertIn("<code>allow_internal_change_gate_bypass</code>", body)
@@ -853,6 +884,27 @@ class WebControlCenterTests(unittest.TestCase):
 
         self.assertEqual(status.value, 200)
         self.assertIn('data-auto-refresh="2"', body)
+        self.assertIn('data-pipeline-session-poll', body)
+        self.assertIn('data-session-id="PSESS-020"', body)
+        self.assertIn(
+            'data-status-url="/pipeline/sessions/PSESS-020/status.json"',
+            body,
+        )
+        self.assertIn('data-poll-ms="2000"', body)
+        self.assertIn('data-stop-statuses="blocked failed completed stopped"', body)
+        self.assertIn('data-poll-enabled="1"', body)
+        self.assertIn('data-pipeline-status-field="status"', body)
+        self.assertIn('data-pipeline-status-field="current_phase"', body)
+        self.assertIn('data-pipeline-status-field="current_phase_status"', body)
+        self.assertIn('data-pipeline-status-field="stop_reason"', body)
+        self.assertIn('data-pipeline-status-field="next_action"', body)
+        self.assertIn('data-pipeline-status-field="polling"', body)
+        self.assertIn('data-pipeline-status-overview-content', body)
+        self.assertIn('data-pipeline-owner-next-action', body)
+        self.assertIn("fetch(statusUrl", body)
+        self.assertIn("window.setTimeout(tick, pollMs)", body)
+        self.assertIn("shouldStop(payload.status)", body)
+        self.assertNotIn("window.location.reload", body)
         self.assertIn("Status Overview", body)
         self.assertIn("Current Live Step", body)
         self.assertIn("Steps", body)
@@ -1672,6 +1724,9 @@ class WebControlCenterTests(unittest.TestCase):
 
         self.assertEqual(status.value, 200)
         self.assertNotIn('data-auto-refresh="2"', body)
+        self.assertIn('data-pipeline-session-poll', body)
+        self.assertIn('data-poll-enabled="0"', body)
+        self.assertIn('data-session-status="blocked"', body)
         self.assertIn("Auto-refresh stopped", body)
         self.assertIn("Resume Session", body)
         self.assertIn('value="pipeline.run_next"', body)
@@ -3326,6 +3381,10 @@ class WebControlCenterTests(unittest.TestCase):
             ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
             key_argument["choices"],
         )
+        self.assertIn(
+            ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
+            key_argument["choices"],
+        )
 
     def test_ui_settings_web_action_updates_internal_change_gate_bypass_values(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -3470,6 +3529,7 @@ class WebControlCenterTests(unittest.TestCase):
                     REQUIRE_CODEX_REVIEW_SETTING: "false",
                     INTERNAL_CHANGE_GATE_BYPASS_SETTING: "false",
                     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING: "true",
+                    ALLOW_RELAXED_REPORT_WARNINGS_SETTING: "true",
                     "execution_timeout_sec": "1800",
                     "preflight_timeout_sec": "45",
                 }
@@ -3485,6 +3545,7 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIs(settings[REQUIRE_CODEX_REVIEW_SETTING], False)
         self.assertIs(settings[INTERNAL_CHANGE_GATE_BYPASS_SETTING], False)
         self.assertIs(settings[ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING], True)
+        self.assertIs(settings[ALLOW_RELAXED_REPORT_WARNINGS_SETTING], True)
         self.assertEqual(settings["execution_timeout_sec"], "1800")
         self.assertEqual(settings["preflight_timeout_sec"], "45")
         self.assertEqual(data["settings"], settings)
@@ -3499,6 +3560,7 @@ class WebControlCenterTests(unittest.TestCase):
                 REQUIRE_CODEX_REVIEW_SETTING,
                 INTERNAL_CHANGE_GATE_BYPASS_SETTING,
                 ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
+                ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
                 "execution_timeout_sec",
                 "preflight_timeout_sec",
             ],

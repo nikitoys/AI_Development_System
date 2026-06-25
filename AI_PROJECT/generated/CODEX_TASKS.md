@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `1206`
-Current task: `TASK-136`
+Revision: `1242`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -2181,7 +2181,7 @@ Acceptance criteria:
 
 ### PIPEF-41 (TASK-120) — PIPE-041 Add tests for queue prepare execute report phases
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_5c3a3cffb80a`, legacy `TASK-120`, aliases `TASK-120`, local `PIPEF` / `41`
@@ -2197,7 +2197,7 @@ Acceptance criteria:
 
 ### PIPEF-42 (TASK-121) — PIPE-042 Add tests for git diff gate
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_5517275e5470`, legacy `TASK-121`, aliases `TASK-121`, local `PIPEF` / `42`
@@ -2449,9 +2449,9 @@ Acceptance criteria:
 - Documentation includes a troubleshooting note for CODEX_ADAPTER_TIMEOUT.
 - Generated documentation checks can be rerun without manual edits to generated files.
 
-### PIPEF-57 (TASK-136) — PIPE-052 Add pipeline session status JSON endpoint ⭐
+### PIPEF-57 (TASK-136) — PIPE-052 Add pipeline session status JSON endpoint
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_3b24331932c4`, legacy `TASK-136`, aliases `TASK-136`, local `PIPEF` / `57`
@@ -2468,7 +2468,7 @@ Acceptance criteria:
 
 ### PIPEF-58 (TASK-137) — PIPE-053 Add partial polling refresh to Pipeline session page
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_f9cb256de173`, legacy `TASK-137`, aliases `TASK-137`, local `PIPEF` / `58`
@@ -3028,3 +3028,54 @@ Acceptance criteria:
 - Legacy prompt contract test no longer expects the old full CODEX_REPORT_JSON report block.
 - Prompt tests verify the minimal CODEX_EXECUTION_SUMMARY_JSON contract.
 - Focused Codex prompt tests pass.
+
+### PIPEF-91 (TASK-172) — Add report warning verify policy
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_09e4331fcf23`, legacy `TASK-172`, aliases `TASK-172`, local `PIPEF` / `91`
+
+Add a pipeline verify policy flag that controls whether structured report warnings block verification.
+
+Acceptance criteria:
+
+- Strict/default policy still blocks verify when the report gate returns CODEX_REPORT_WARN.
+- Relaxed policy allows verify to continue when the only report gate issue is a warning.
+- Verify artifacts record the report warning status and relaxed warning policy decision.
+- Report gate failures remain blocking in both strict and relaxed modes.
+- Focused verify phase tests cover strict and relaxed report warning behavior.
+
+### PIPEF-92 (TASK-173) — Wire relaxed report warnings into UI policy
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_0becf52f7359`, legacy `TASK-173`, aliases `TASK-173`, local `PIPEF` / `92`
+
+Add a project-local UI setting that maps relaxed report warning behavior into the effective UI pipeline policy.
+
+Acceptance criteria:
+
+- Default UI settings keep report warning blocking enabled unless explicitly relaxed.
+- Setting allow_relaxed_report_warnings to true makes the effective UI policy treat report warnings as advisory.
+- The new setting is allowlisted for Web write actions.
+- Existing allow_relaxed_git_diff_verification behavior is unchanged.
+- Focused UI policy tests pass.
+
+### PIPEF-93 (TASK-174) — Expose relaxed report warnings setting
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_167499a73167`, legacy `TASK-174`, aliases `TASK-174`, local `PIPEF` / `93`
+
+Expose the relaxed report warning setting on the Web Settings page and cover it with Web Control Center tests.
+
+Acceptance criteria:
+
+- Settings page shows allow_relaxed_report_warnings with explanatory copy.
+- Unchecked rendering is shown when the setting is false or absent.
+- Checked rendering is shown when the setting is true.
+- Submitting Settings can update allow_relaxed_report_warnings.
+- Focused Web Control Center tests pass.
