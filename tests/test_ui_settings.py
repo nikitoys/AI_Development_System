@@ -4,10 +4,14 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
+from ai_project_ctl.core.store import write_json_file
 from ai_project_ctl.ui_settings import (
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+    REQUIRE_CODEX_REVIEW_SETTING,
     UISettingsError,
+    apply_ui_settings,
     default_ui_settings,
     init_ui_settings,
     load_ui_settings,
@@ -37,6 +41,7 @@ class UISettingsTests(unittest.TestCase):
 
         self.assertEqual(settings["command_line"], "codex exec")
         self.assertEqual(settings["default_policy"], "supervised_executable_local_commit")
+        self.assertIs(settings[REQUIRE_CODEX_REVIEW_SETTING], True)
         self.assertIs(settings[INTERNAL_CHANGE_GATE_BYPASS_SETTING], False)
 
     def test_missing_project_or_settings_file_returns_defaults(self):
@@ -95,6 +100,28 @@ class UISettingsTests(unittest.TestCase):
 
                 self.assertIs(settings[INTERNAL_CHANGE_GATE_BYPASS_SETTING], expected)
 
+    def test_require_codex_review_parses_boolean_strings(self):
+        cases = {
+            "true": True,
+            "false": False,
+            "1": True,
+            "0": False,
+        }
+
+        for value, expected in cases.items():
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                path = ui_settings_path(root)
+                path.parent.mkdir(parents=True)
+                path.write_text(
+                    json.dumps({REQUIRE_CODEX_REVIEW_SETTING: value}),
+                    encoding="utf-8",
+                )
+
+                settings = load_ui_settings(root=root)
+
+                self.assertIs(settings[REQUIRE_CODEX_REVIEW_SETTING], expected)
+
     def test_internal_change_gate_bypass_accepts_native_booleans(self):
         for value in (True, False):
             with self.subTest(value=value), tempfile.TemporaryDirectory() as tmp:
@@ -127,6 +154,23 @@ class UISettingsTests(unittest.TestCase):
             self.assertEqual(raised.exception.path, INTERNAL_CHANGE_GATE_BYPASS_SETTING)
             self.assertIn("true, false, 1, 0", raised.exception.message)
 
+    def test_invalid_require_codex_review_fails_with_clear_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = ui_settings_path(root)
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                json.dumps({REQUIRE_CODEX_REVIEW_SETTING: "maybe"}),
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(UISettingsError) as raised:
+                load_ui_settings(root=root)
+
+            self.assertEqual(raised.exception.code, "UI_SETTINGS_BOOLEAN_INVALID")
+            self.assertEqual(raised.exception.path, REQUIRE_CODEX_REVIEW_SETTING)
+            self.assertIn("true, false, 1, 0", raised.exception.message)
+
     def test_upsert_normalizes_internal_change_gate_bypass(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -139,6 +183,18 @@ class UISettingsTests(unittest.TestCase):
             settings = json.loads(ui_settings_path(root).read_text(encoding="utf-8"))
             self.assertIs(settings[INTERNAL_CHANGE_GATE_BYPASS_SETTING], False)
 
+    def test_upsert_normalizes_require_codex_review(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+
+            upsert_ui_setting(REQUIRE_CODEX_REVIEW_SETTING, "false", root=root)
+            settings = json.loads(ui_settings_path(root).read_text(encoding="utf-8"))
+            self.assertIs(settings[REQUIRE_CODEX_REVIEW_SETTING], False)
+
+            upsert_ui_setting(REQUIRE_CODEX_REVIEW_SETTING, "1", root=root)
+            settings = json.loads(ui_settings_path(root).read_text(encoding="utf-8"))
+            self.assertIs(settings[REQUIRE_CODEX_REVIEW_SETTING], True)
+
     def test_upsert_rejects_invalid_internal_change_gate_bypass_without_writing(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -147,6 +203,62 @@ class UISettingsTests(unittest.TestCase):
                 upsert_ui_setting(INTERNAL_CHANGE_GATE_BYPASS_SETTING, "maybe", root=root)
 
             self.assertEqual(raised.exception.code, "UI_SETTINGS_BOOLEAN_INVALID")
+            self.assertFalse(ui_settings_path(root).exists())
+
+    def test_apply_ui_settings_saves_allowlisted_values_in_one_write(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = ui_settings_path(root)
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 3,
+                        "custom_label": "pilot",
+                        "command_line": "old",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with patch(
+                "ai_project_ctl.ui_settings.write_json_file",
+                wraps=write_json_file,
+            ) as write:
+                apply_ui_settings(
+                    {
+                        "command_line": "codex exec --json",
+                        REQUIRE_CODEX_REVIEW_SETTING: "false",
+                        INTERNAL_CHANGE_GATE_BYPASS_SETTING: "0",
+                    },
+                    allowed_keys=(
+                        "command_line",
+                        REQUIRE_CODEX_REVIEW_SETTING,
+                        INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+                    ),
+                    root=root,
+                )
+
+            settings = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(write.call_count, 1)
+            self.assertEqual(settings["schema_version"], 3)
+            self.assertEqual(settings["custom_label"], "pilot")
+            self.assertEqual(settings["command_line"], "codex exec --json")
+            self.assertIs(settings[REQUIRE_CODEX_REVIEW_SETTING], False)
+            self.assertIs(settings[INTERNAL_CHANGE_GATE_BYPASS_SETTING], False)
+
+    def test_apply_ui_settings_rejects_disallowed_keys_without_writing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+
+            with self.assertRaises(UISettingsError) as raised:
+                apply_ui_settings(
+                    {"some_random_key": "value"},
+                    allowed_keys=("command_line",),
+                    root=root,
+                )
+
+            self.assertEqual(raised.exception.code, "UI_SETTINGS_KEY_NOT_ALLOWED")
             self.assertFalse(ui_settings_path(root).exists())
 
     def test_optional_timeout_settings_accept_integer_strings(self):

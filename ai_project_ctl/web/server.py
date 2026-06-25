@@ -17,7 +17,6 @@ from urllib.parse import parse_qs, unquote, urlparse
 from ai_project_ctl.core.result import CommandError
 from ai_project_ctl.core.workflows import BULK_IMPORT_MAX_BYTES
 from ai_project_ctl.web.actions import (
-    UI_SETTINGS_WEB_ALLOWED_KEYS,
     WebActionError,
     WebActionExecutor,
     WebActionResult,
@@ -26,6 +25,7 @@ from ai_project_ctl.web.actions import (
 from ai_project_ctl.web.read_model import ReadOnlyProjectModel
 from ai_project_ctl.ui_settings import (
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+    REQUIRE_CODEX_REVIEW_SETTING,
     load_ui_settings,
     ui_settings_path,
     ui_settings_source,
@@ -111,15 +111,6 @@ TASK_ROW_WORKFLOWS = (
 TASK_ROW_RUN_STATUSES = {"planned", "ready", "changes_requested"}
 TASK_ROW_INACTIVE_STATUSES = {"done", "archived", "deferred"}
 TASK_ROW_APPROVED_CHANGE_STATUSES = {"approved", "in_review", "accepted"}
-SETTINGS_DISPLAY_KEYS = (
-    "command_line",
-    "default_policy",
-    INTERNAL_CHANGE_GATE_BYPASS_SETTING,
-    "execution_timeout_sec",
-    "preflight_timeout_sec",
-)
-
-
 class WebServerError(CommandError):
     """Stable web server error."""
 
@@ -2442,58 +2433,92 @@ def render_settings(model: ReadOnlyProjectModel) -> str:
     settings = load_ui_settings(root=model.root)
     source = ui_settings_source(root=model.root)
     path = ui_settings_path(model.root)
-    bypass_checked = bool(settings.get(INTERNAL_CHANGE_GATE_BYPASS_SETTING))
-    bypass_checked_attr = " checked" if bypass_checked else ""
-    rows = []
-    for key in settings_display_keys(settings):
-        rows.append(
-            "<tr><td><code>{}</code></td><td>{}</td><td>{}</td></tr>".format(
-                escape(key),
-                settings_value(settings.get(key)),
-                escape(source),
-            )
-        )
-
     body = [
-        '<section class="summary-grid">',
-        metric("Source", source),
-        metric("Path", str(path)),
-        metric("Values", str(len(settings))),
-        "</section>",
-        '<section class="panel">',
-        "<h2>Effective UI Settings</h2>",
-        table(("Setting", "Value", "Source"), rows, "No UI settings available."),
-        "</section>",
-        '<section class="panel action-panel">',
-        "<h2>Internal Change Gate Bypass</h2>",
-        (
-            '<p class="warn">Warning: Internal Change gate bypass is for internal '
-            "project-control tasks only. It does not approve Changes and must not "
-            "be used for product or normal project work.</p>"
+        '<section class="panel settings-panel">',
+        '<form method="post" action="/actions">',
+        hidden_field("action", "ui.settings.apply"),
+        '<div class="settings-panel-header">',
+        "<div>",
+        "<h2>Settings</h2>",
+        '<p class="muted">Source: <strong>{}</strong> | Path: <code>{}</code></p>'.format(
+            escape(source),
+            escape(str(path)),
         ),
-        action_form(
-            "ui.settings.set",
+        "</div>",
+        '<span class="pill">single apply</span>',
+        "</div>",
+        settings_group(
+            "Pipeline",
             [
-                hidden_field("key", INTERNAL_CHANGE_GATE_BYPASS_SETTING),
-                hidden_field("value", "false"),
-                (
-                    '<label class="checkline"><input type="checkbox" name="value" '
-                    'value="true"{}>Allow internal Change gate bypass</label>'
-                ).format(bypass_checked_attr),
+                settings_text_row(
+                    "command_line",
+                    "Command Line",
+                    settings,
+                    helper="Shell-style local Codex command used by UI runs.",
+                ),
+                settings_text_row(
+                    "default_policy",
+                    "Default Policy",
+                    settings,
+                    helper="Pipeline policy preset used when the UI starts a run.",
+                ),
             ],
-            button_label="Save Bypass Setting",
         ),
-        "</section>",
-        '<section class="panel action-panel">',
-        "<h2>Update UI Setting</h2>",
-        action_form(
-            "ui.settings.set",
+        settings_group(
+            "Review Gates",
             [
-                select_field("key", "Setting", UI_SETTINGS_WEB_ALLOWED_KEYS),
-                input_field("value", "New Value"),
+                settings_locked_row(
+                    "Machine Review",
+                    "machine_review",
+                    helper="Locked ON. Machine Review remains required before close.",
+                ),
+                settings_checkbox_row(
+                    REQUIRE_CODEX_REVIEW_SETTING,
+                    "Require Codex Review before close",
+                    settings,
+                    helper="Disable to skip semantic LLM review and save tokens.",
+                ),
             ],
-            button_label="Update Setting",
         ),
+        settings_group(
+            "Timeouts",
+            [
+                settings_text_row(
+                    "execution_timeout_sec",
+                    "Execution Timeout",
+                    settings,
+                    helper="Optional local Codex execution timeout in seconds.",
+                    input_type="number",
+                ),
+                settings_text_row(
+                    "preflight_timeout_sec",
+                    "Preflight Timeout",
+                    settings,
+                    helper="Optional readiness-check timeout in seconds.",
+                    input_type="number",
+                ),
+            ],
+        ),
+        settings_group(
+            "Advanced",
+            [
+                settings_checkbox_row(
+                    INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+                    "Allow internal Change gate bypass",
+                    settings,
+                    helper=(
+                        "Internal project-control tasks only. Does not approve Changes "
+                        "or bypass review, report, close, or commit gates."
+                    ),
+                ),
+            ],
+        ),
+        '<footer class="settings-footer">',
+        '<a class="button-link secondary" href="/settings">Reset</a>',
+        '<label class="checkline"><input type="checkbox" name="confirm" value="yes" required>Confirm</label>',
+        '<button type="submit">Apply Settings</button>',
+        "</footer>",
+        "</form>",
         "</section>",
     ]
     return render_page("Settings", "".join(body), active="/settings")
@@ -3539,22 +3564,99 @@ def text_list(
     )
 
 
-def settings_display_keys(settings: Mapping[str, Any]) -> list[str]:
-    primary = [key for key in SETTINGS_DISPLAY_KEYS if key in settings]
-    extra = sorted(str(key) for key in settings if str(key) not in SETTINGS_DISPLAY_KEYS)
-    return primary + extra
+def settings_group(title: str, rows: Sequence[str]) -> str:
+    return (
+        '<div class="settings-group">'
+        "<h3>{}</h3>"
+        '<div class="settings-rows">{}</div>'
+        "</div>"
+    ).format(
+        escape(title),
+        "".join(rows),
+    )
 
 
-def settings_value(value: Any) -> str:
+def settings_text_row(
+    key: str,
+    label: str,
+    settings: Mapping[str, Any],
+    *,
+    helper: str,
+    input_type: str = "text",
+) -> str:
+    return (
+        '<label class="setting-row setting-row-text">'
+        "{}"
+        '<span class="setting-control"><input type="{}" name="{}" value="{}"></span>'
+        "</label>"
+    ).format(
+        settings_row_copy(label, key, helper),
+        escape(input_type),
+        escape(key),
+        escape(settings_form_value(settings.get(key))),
+    )
+
+
+def settings_checkbox_row(
+    key: str,
+    label: str,
+    settings: Mapping[str, Any],
+    *,
+    helper: str,
+) -> str:
+    checked_attr = " checked" if bool(settings.get(key)) else ""
+    return (
+        '<div class="setting-row setting-row-checkbox">'
+        "{}"
+        '<span class="setting-control">'
+        '<input type="hidden" name="{}" value="false">'
+        '<label class="checkline"><input type="checkbox" name="{}" value="true"{}>{}</label>'
+        "</span>"
+        "</div>"
+    ).format(
+        settings_row_copy(label, key, helper),
+        escape(key),
+        escape(key),
+        checked_attr,
+        escape(label),
+    )
+
+
+def settings_locked_row(label: str, key: str, *, helper: str) -> str:
+    return (
+        '<div class="setting-row setting-row-locked">'
+        "{}"
+        '<span class="setting-control">'
+        '<label class="checkline locked-control">'
+        '<input type="checkbox" checked disabled>Locked ON'
+        "</label>"
+        "</span>"
+        "</div>"
+    ).format(settings_row_copy(label, key, helper))
+
+
+def settings_row_copy(label: str, key: str, helper: str) -> str:
+    return (
+        '<span class="setting-copy">'
+        "<strong>{}</strong>"
+        "<code>{}</code>"
+        '<span class="setting-helper">{}</span>'
+        "</span>"
+    ).format(
+        escape(label),
+        escape(key),
+        escape(helper),
+    )
+
+
+def settings_form_value(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "true" if value else "false"
     if isinstance(value, (dict, list)):
-        text = json.dumps(value, ensure_ascii=False, sort_keys=True)
-    elif isinstance(value, bool):
-        text = "true" if value else "false"
-    elif value is None:
-        text = "null"
-    else:
-        text = str(value)
-    return "<code>{}</code>".format(escape(text))
+        return json.dumps(value, ensure_ascii=False, sort_keys=True)
+    return str(value)
 
 
 def _mapping(value: Any) -> Mapping[str, Any]:
@@ -3860,6 +3962,81 @@ def render_page(title: str, body: str, *, active: str) -> str:
     .action-panel form:first-of-type {{
       border-top: 0;
       padding-top: 0;
+    }}
+    .settings-panel form {{
+      display: grid;
+      gap: 18px;
+    }}
+    .settings-panel-header {{
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }}
+    .settings-panel-header h2 {{
+      margin-bottom: 4px;
+    }}
+    .settings-group {{
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }}
+    .settings-group h3 {{
+      margin: 0 0 8px;
+      font-size: 15px;
+    }}
+    .settings-rows {{
+      display: grid;
+    }}
+    .setting-row {{
+      display: grid;
+      grid-template-columns: minmax(190px, 1fr) minmax(220px, 1fr);
+      gap: 14px;
+      align-items: center;
+      padding: 12px 0;
+      border-top: 1px solid #edf1f6;
+      color: var(--text);
+      text-transform: none;
+      letter-spacing: 0;
+    }}
+    .setting-row:first-child {{
+      border-top: 0;
+    }}
+    .setting-copy {{
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }}
+    .setting-copy strong {{
+      font-size: 14px;
+    }}
+    .setting-copy code {{
+      width: max-content;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }}
+    .setting-helper {{
+      color: var(--muted);
+      font-size: 12px;
+    }}
+    .setting-control {{
+      min-width: 0;
+    }}
+    .setting-control .checkline {{
+      justify-content: flex-start;
+    }}
+    .locked-control {{
+      color: #0d5f59;
+      font-weight: 700;
+    }}
+    .settings-footer {{
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+      align-items: center;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
     }}
     .pipeline-progress {{
       height: 12px;
@@ -4182,6 +4359,9 @@ def render_page(title: str, body: str, *, active: str) -> str:
       nav a {{ flex: 1 1 auto; text-align: center; }}
       .metric strong {{ font-size: 18px; }}
       .result-step {{ grid-template-columns: 1fr; }}
+      .setting-row {{ grid-template-columns: 1fr; }}
+      .settings-footer {{ justify-content: stretch; }}
+      .settings-footer .button-link, .settings-footer button {{ flex: 1 1 160px; }}
     }}
   </style>
 </head>

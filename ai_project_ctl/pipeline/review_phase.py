@@ -30,7 +30,7 @@ from .machine_review import PASS as MACHINE_REVIEW_PASS
 from .machine_review import WARN as MACHINE_REVIEW_WARN
 from .machine_review import MachineCheckEvidence, MachineReviewResult
 from .phase import PhaseResult
-from .policy import PipelinePolicy
+from .policy import PipelinePolicy, disables_codex_review_by_policy
 from .report_gate import PASS as REPORT_GATE_PASS
 from .report_gate import evaluate_report_gate
 from .session import record_phase_result
@@ -75,22 +75,6 @@ def review_phase(
             ),
             details={"next_action": "Choose one review phase mode and rerun."},
         )
-    if selected_modes == 0:
-        return _failure(
-            "PIPELINE_REVIEW_INPUT_REQUIRED",
-            (
-                "Review phase requires --build-prompt-only, --manual-review-file, "
-                "or --reviewer-command."
-            ),
-            details={
-                "next_action": (
-                    "Rerun with --build-prompt-only to create a prompt, or "
-                    "--manual-review-file/--reviewer-command to evaluate a JSON "
-                    "review verdict."
-                )
-            },
-        )
-
     root_path = Path(root).resolve()
     session_result = _resolve_session(root_path, session_id)
     if not session_result.ok:
@@ -280,6 +264,40 @@ def review_phase(
         report_id=verified_report_id,
     )
 
+    if disables_codex_review_by_policy(policy):
+        phase = _skipped_codex_review_phase(
+            session_id=selected_session_id,
+            task_id=task_id,
+            report_id=verified_report_id,
+            verify_phase=verify_phase,
+            report_gate=report_gate,
+            machine_review=machine_review,
+            policy=policy,
+        )
+        return _phase_command(
+            phase,
+            session_id=selected_session_id,
+            task_id=task_id,
+            root=root_path,
+            actor=actor,
+        )
+
+    if selected_modes == 0:
+        return _failure(
+            "PIPELINE_REVIEW_INPUT_REQUIRED",
+            (
+                "Review phase requires --build-prompt-only, --manual-review-file, "
+                "or --reviewer-command."
+            ),
+            details={
+                "next_action": (
+                    "Rerun with --build-prompt-only to create a prompt, or "
+                    "--manual-review-file/--reviewer-command to evaluate a JSON "
+                    "review verdict."
+                )
+            },
+        )
+
     prompt = build_codex_review_prompt(
         root=root_path,
         task=task,
@@ -446,6 +464,46 @@ def review_phase(
         result.data["review_prompt_bytes"] = prompt_bytes
         result.data["review_prompt_json_field"] = "data.review_prompt"
     return result
+
+
+def _skipped_codex_review_phase(
+    *,
+    session_id: str,
+    task_id: str,
+    report_id: str,
+    verify_phase: Mapping[str, Any],
+    report_gate,
+    machine_review: MachineReviewResult,
+    policy: PipelinePolicy,
+) -> PhaseResult:
+    artifacts = {
+        "session_id": session_id,
+        "task_id": task_id,
+        "report_id": report_id,
+        "codex_review_required": False,
+        "policy_require_codex_review": policy.review.require_codex_review,
+        "skip_reason": "disabled_by_policy",
+        "review_status": "skipped",
+        "review_code": "CODEX_REVIEW_SKIPPED_BY_POLICY",
+        "review_reason": "Semantic Codex Review is disabled by pipeline policy.",
+        "verdict": "SKIPPED",
+        "review_prompt_built": False,
+        "review_prompt_returned": False,
+        "report_gate_status": report_gate.status,
+        "report_gate_code": report_gate.code,
+        "machine_review_status": machine_review.status,
+        "machine_review_code": machine_review.code,
+        "source_verify_phase": _phase_summary(verify_phase),
+    }
+    return PhaseResult.skipped(
+        PHASE_NAME,
+        reason="Semantic Codex Review skipped by pipeline policy.",
+        next_action=(
+            "Continue only through governed close or commit readiness; "
+            "Machine Review evidence remains required."
+        ),
+        artifacts=artifacts,
+    )
 
 
 def _read_manual_review_file(

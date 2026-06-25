@@ -5,7 +5,16 @@ import unittest
 from dataclasses import replace
 from pathlib import Path
 
-from ai_project_ctl.pipeline import CodexAdapterMode, CodexExecutionMode, policy_preset
+from ai_project_ctl.pipeline import (
+    BatchPolicy,
+    CodexAdapterMode,
+    CodexExecutionMode,
+    policy_preset,
+)
+from ai_project_ctl.pipeline.batch import run_until_blocker
+from ai_project_ctl.pipeline.codex_adapter import (
+    CODE_REPORT_MISSING as CODEX_ADAPTER_REPORT_MISSING,
+)
 from ai_project_ctl.pipeline.runner import run_next
 from ai_project_ctl.pipeline.session import create_session
 from ai_project_ctl.pipeline.state import pipeline_state_path
@@ -183,6 +192,89 @@ def successful_workflow_runner(
             prompt = root / "AI_PROJECT" / "generated" / "CODEX_PROMPT.md"
             prompt.parent.mkdir(parents=True, exist_ok=True)
             prompt.write_text(prompt_text, encoding="utf-8")
+        return completed('{"ok": true}\n')
+
+    return fake_run
+
+
+def codex_stdout_for_report(report: dict) -> str:
+    return "Codex finished.\nCODEX_REPORT_JSON:\n```json\n{}\n```\n".format(
+        json.dumps(report, indent=2, sort_keys=True)
+    )
+
+
+def emitted_codex_report(
+    task_id: str = "TASK-001",
+    task_ref: str = "APP-01",
+) -> dict:
+    return {
+        "schema_version": 1,
+        "task_id": task_id,
+        "task_ref": task_ref,
+        "implementation_summary": "Implemented the selected task.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+            {
+                "name": "unit",
+                "command": "python -m unittest tests.test_pipeline_runner",
+                "result": "pass",
+                "duration_sec": 0.1,
+                "blocking": True,
+                "details": "",
+            }
+        ],
+        "warnings": [],
+        "blockers": [],
+        "notes": [],
+        "owner_decision_required": False,
+        "token_usage": {
+            "prompt_tokens": 100,
+            "context_tokens": 20,
+            "completion_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 135,
+            "remaining_tokens": 1000,
+            "model_context_limit": 2000,
+            "max_context_tokens": 1500,
+            "reserved_output_tokens": 200,
+            "min_remaining_tokens": 100,
+            "token_count_strategy": "test_fixture",
+            "token_count_estimated": True,
+            "token_count_unavailable": False,
+            "token_count_unavailable_reason": "",
+        },
+    }
+
+
+def structured_report_workflow_runner(
+    calls,
+    *,
+    root: Path,
+    codex_stdout: str,
+    prompt_text: str = "Source ID: TASK-001\n\nSmall prompt.",
+):
+    def fake_run(argv):
+        args = list(argv)
+        calls.append(args)
+        script = Path(args[1]).name if len(args) > 1 else ""
+        if script == "taskctl.py" and "resolve" in args:
+            return completed(
+                json.dumps(
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "status": "ready",
+                    }
+                )
+                + "\n"
+            )
+        if "codex" in args and "build" in args:
+            prompt = root / "AI_PROJECT" / "generated" / "CODEX_PROMPT.md"
+            prompt.parent.mkdir(parents=True, exist_ok=True)
+            prompt.write_text(prompt_text, encoding="utf-8")
+        if args == ["codex", "exec"]:
+            return completed(stdout=codex_stdout)
         return completed('{"ok": true}\n')
 
     return fake_run
@@ -777,6 +869,133 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertTrue(any("context" in call for call in calls))
             self.assertEqual(step["status"], "passed")
             self.assertEqual(step["gate_outcomes"][0]["status"], "skipped")
+
+    def test_run_until_blocker_collects_auto_submitted_stdout_report(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="phase_auto_collect_report_test",
+                batch=BatchPolicy(max_steps=4, max_failures=1),
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                    require_report=True,
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+
+            result = run_until_blocker(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                confirmed=True,
+                runner=structured_report_workflow_runner(
+                    calls,
+                    root=root,
+                    codex_stdout=codex_stdout_for_report(emitted_codex_report()),
+                ),
+            )
+            latest = load_pipeline(root)["sessions"][0]
+            phases = {entry["phase"]: entry for entry in latest["phase_history"]}
+            execute = phases["execute"]
+            collect_report = phases["collect_report"]
+            report_state = json.loads(
+                (root / "AI_PROJECT" / "state" / "task_reports.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "MAX_STEPS_REACHED")
+            self.assertEqual(
+                [entry["phase"] for entry in latest["phase_history"]],
+                ["queue_preview", "prepare", "execute", "collect_report"],
+            )
+            self.assertEqual(execute["status"], "passed")
+            self.assertEqual(
+                execute["artifacts"]["adapter"]["code"],
+                "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+            )
+            self.assertEqual(execute["artifacts"]["report_id"], "RPT-001")
+            self.assertEqual(execute["artifacts"]["after_report_id"], "RPT-001")
+            self.assertEqual(
+                execute["artifacts"]["adapter_summary"]["report_ids"],
+                ["RPT-001"],
+            )
+            self.assertEqual(collect_report["status"], "passed")
+            self.assertEqual(collect_report["artifacts"]["report_id"], "RPT-001")
+            self.assertTrue(collect_report["artifacts"]["report_found"])
+            self.assertEqual(collect_report["artifacts"]["freshness_basis"], "report_id")
+            self.assertEqual(report_state["latest_by_task"], {"TASK-001": "RPT-001"})
+            self.assertEqual(
+                report_state["reports"][0]["report"]["reported_task_id"],
+                "TASK-001",
+            )
+            self.assertTrue(
+                report_state["reports"][0]["source_file"].startswith(
+                    "captured:stdout:sha256:"
+                )
+            )
+            self.assertIn(["codex", "exec"], calls)
+
+    def test_run_until_blocker_no_report_stdout_keeps_adapter_missing_code(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="phase_auto_collect_missing_report_test",
+                batch=BatchPolicy(max_steps=4, max_failures=1),
+                codex=replace(
+                    supervised.codex,
+                    mode=CodexExecutionMode.RUN_CODEX,
+                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
+                    local_command=("codex", "exec"),
+                    command_allowlist=("codex exec",),
+                    require_report=True,
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            calls = []
+
+            result = run_until_blocker(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                confirmed=True,
+                runner=structured_report_workflow_runner(
+                    calls,
+                    root=root,
+                    codex_stdout="Codex finished without structured report.\n",
+                ),
+            )
+            latest = load_pipeline(root)["sessions"][0]
+            phases = {entry["phase"]: entry for entry in latest["phase_history"]}
+            execute = phases["execute"]
+            collect_report = phases["collect_report"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "REPORT_MISSING")
+            self.assertEqual(execute["status"], "passed")
+            self.assertEqual(
+                execute["artifacts"]["adapter"]["code"],
+                CODEX_ADAPTER_REPORT_MISSING,
+            )
+            self.assertEqual(execute["artifacts"]["adapter"]["report_id"], "")
+            self.assertEqual(collect_report["status"], "blocked")
+            self.assertEqual(collect_report["artifacts"]["blocked_by"], "REPORT_MISSING")
+            self.assertFalse(
+                (root / "AI_PROJECT" / "state" / "task_reports.json").exists()
+            )
+            self.assertIn(["codex", "exec"], calls)
 
     def test_run_codex_records_token_gate_pass_before_manual_adapter_blocker(self):
         with tempfile.TemporaryDirectory() as tmp:

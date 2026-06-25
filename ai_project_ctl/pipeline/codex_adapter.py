@@ -7,6 +7,7 @@ import inspect
 import re
 import shlex
 import subprocess
+import threading
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -75,6 +76,7 @@ class CodexAdapterResult:
     stderr_snippet: str = ""
     stdout_bytes: int = 0
     stderr_bytes: int = 0
+    runtime_logs: Mapping[str, Any] = field(default_factory=dict)
     report_required: bool = True
     before_report_id: str = ""
     after_report_id: str = ""
@@ -111,6 +113,7 @@ class CodexAdapterResult:
             "stderr_snippet": self.stderr_snippet,
             "stdout_bytes": self.stdout_bytes,
             "stderr_bytes": self.stderr_bytes,
+            "runtime_logs": dict(self.runtime_logs),
             "report_required": self.report_required,
             "before_report_id": self.before_report_id,
             "after_report_id": self.after_report_id,
@@ -129,6 +132,7 @@ def run_codex_adapter(
     policy: PipelinePolicy,
     token_gate: TokenBudgetGateResult,
     runner: OutputRunner | None = None,
+    session_id: str = "",
 ) -> CodexAdapterResult:
     """Run or prepare Codex execution after policy and token gates pass."""
 
@@ -151,6 +155,7 @@ def run_codex_adapter(
         returncode: int | None = None,
         stdout: str = "",
         stderr: str = "",
+        runtime_logs: Mapping[str, Any] | None = None,
         before_report_id: str = "",
         after_report_id: str = "",
         report_id: str = "",
@@ -188,6 +193,7 @@ def run_codex_adapter(
             stderr_snippet=stderr_snippet,
             stdout_bytes=stdout_bytes,
             stderr_bytes=stderr_bytes,
+            runtime_logs=dict(runtime_logs or {}),
             report_required=policy.codex.require_report,
             before_report_id=before_report_id,
             after_report_id=after_report_id,
@@ -260,13 +266,15 @@ def run_codex_adapter(
 
     before_report = _latest_report_id(root_path, task_id)
     try:
-        completed = _run_local_command(
+        command_run = _run_local_command(
             command,
             root=root_path,
             timeout_sec=policy.codex.timeout_sec,
             prompt_text=prompt_text,
             prompt_transport=policy.codex.prompt_transport,
             runner=runner,
+            session_id=session_id,
+            task_id=task_id,
         )
     except subprocess.TimeoutExpired as exc:
         after_report = _latest_report_id(root_path, task_id)
@@ -278,11 +286,14 @@ def run_codex_adapter(
             timed_out=True,
             stdout=_decode_output(exc.stdout),
             stderr=_decode_output(exc.stderr),
+            runtime_logs=getattr(exc, "runtime_logs", {}),
             before_report_id=before_report,
             after_report_id=after_report,
             report_instruction=instruction,
         )
 
+    completed = command_run.completed
+    runtime_logs = command_run.runtime_logs
     stdout = _decode_output(completed.stdout)
     stderr = _decode_output(completed.stderr)
     if completed.returncode != 0:
@@ -296,6 +307,7 @@ def run_codex_adapter(
                 returncode=completed.returncode,
                 stdout=stdout,
                 stderr=stderr,
+                runtime_logs=runtime_logs,
                 before_report_id=before_report,
                 after_report_id=after_report,
                 report_instruction=instruction,
@@ -308,6 +320,7 @@ def run_codex_adapter(
             returncode=completed.returncode,
             stdout=stdout,
             stderr=stderr,
+            runtime_logs=runtime_logs,
             before_report_id=before_report,
             after_report_id=after_report,
             report_instruction=instruction,
@@ -332,6 +345,7 @@ def run_codex_adapter(
                 returncode=completed.returncode,
                 stdout=stdout,
                 stderr=stderr,
+                runtime_logs=runtime_logs,
                 before_report_id=before_report,
                 after_report_id=after_report,
                 report_parse_code=report_parse.code,
@@ -348,6 +362,7 @@ def run_codex_adapter(
             returncode=completed.returncode,
             stdout=stdout,
             stderr=stderr,
+            runtime_logs=runtime_logs,
             before_report_id=before_report,
             after_report_id=after_report,
             report_parse_code=report_parse.code,
@@ -366,6 +381,7 @@ def run_codex_adapter(
             returncode=completed.returncode,
             stdout=stdout,
             stderr=stderr,
+            runtime_logs=runtime_logs,
             before_report_id=before_report,
             after_report_id=after_report,
             report_instruction=instruction,
@@ -385,12 +401,33 @@ def run_codex_adapter(
         returncode=completed.returncode,
         stdout=stdout,
         stderr=stderr,
+        runtime_logs=runtime_logs,
         before_report_id=before_report,
         after_report_id=after_report,
         report_id=report_id,
         report_parse_code=report_parse.code if report_parse.ok else "",
         report_instruction=instruction,
     )
+
+
+@dataclass(frozen=True)
+class _LocalCommandRun:
+    completed: subprocess.CompletedProcess[str]
+    runtime_logs: Mapping[str, Any]
+
+
+class _LocalCommandTimeout(subprocess.TimeoutExpired):
+    def __init__(
+        self,
+        *,
+        cmd: Sequence[str],
+        timeout: int,
+        output: bytes,
+        stderr: bytes,
+        runtime_logs: Mapping[str, Any],
+    ) -> None:
+        super().__init__(cmd=cmd, timeout=timeout, output=output, stderr=stderr)
+        self.runtime_logs = runtime_logs
 
 
 def _validate_prompt(
@@ -452,21 +489,203 @@ def _run_local_command(
     prompt_text: str,
     prompt_transport: PromptTransport,
     runner: OutputRunner | None,
-) -> subprocess.CompletedProcess[str]:
+    session_id: str,
+    task_id: str,
+) -> _LocalCommandRun:
     if prompt_transport != PromptTransport.STDIN:
         raise ValueError(
             "unsupported prompt transport: {}".format(prompt_transport.value)
         )
     if runner is not None:
-        return _call_runner(runner, tuple(command), prompt_text)
-    return subprocess.run(
-        list(command),
-        cwd=str(root),
-        text=True,
-        input=prompt_text,
-        capture_output=True,
-        timeout=timeout_sec,
-        check=False,
+        completed = _call_runner(runner, tuple(command), prompt_text)
+        return _completed_runner_with_runtime_logs(
+            completed,
+            root=root,
+            session_id=session_id,
+            task_id=task_id,
+        )
+    return _run_process_with_runtime_logs(
+        command,
+        root=root,
+        timeout_sec=timeout_sec,
+        prompt_text=prompt_text,
+        session_id=session_id,
+        task_id=task_id,
+    )
+
+
+def _completed_runner_with_runtime_logs(
+    completed: subprocess.CompletedProcess[str],
+    *,
+    root: Path,
+    session_id: str,
+    task_id: str,
+) -> _LocalCommandRun:
+    stdout_text = _decode_output(completed.stdout)
+    stderr_text = _decode_output(completed.stderr)
+    logs = _write_completed_runtime_logs(
+        root,
+        session_id=session_id,
+        task_id=task_id,
+        stdout=stdout_text.encode("utf-8"),
+        stderr=stderr_text.encode("utf-8"),
+    )
+    normalized = subprocess.CompletedProcess(
+        args=completed.args,
+        returncode=completed.returncode,
+        stdout=stdout_text,
+        stderr=stderr_text,
+    )
+    return _LocalCommandRun(completed=normalized, runtime_logs=logs)
+
+
+def _run_process_with_runtime_logs(
+    command: Sequence[str],
+    *,
+    root: Path,
+    timeout_sec: int,
+    prompt_text: str,
+    session_id: str,
+    task_id: str,
+) -> _LocalCommandRun:
+    stdout_path, stderr_path = _runtime_log_paths(root, session_id, task_id)
+    stdout_path.parent.mkdir(parents=True, exist_ok=True)
+    stderr_path.parent.mkdir(parents=True, exist_ok=True)
+    stdout_start = _file_size(stdout_path)
+    stderr_start = _file_size(stderr_path)
+    stdout_buffer = bytearray()
+    stderr_buffer = bytearray()
+    prompt_bytes = prompt_text.encode("utf-8")
+
+    with stdout_path.open("ab", buffering=0) as stdout_log, stderr_path.open(
+        "ab", buffering=0
+    ) as stderr_log:
+        process = subprocess.Popen(
+            list(command),
+            cwd=str(root),
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        stdout_thread = threading.Thread(
+            target=_pump_stream,
+            args=(process.stdout, stdout_log, stdout_buffer),
+            daemon=True,
+        )
+        stderr_thread = threading.Thread(
+            target=_pump_stream,
+            args=(process.stderr, stderr_log, stderr_buffer),
+            daemon=True,
+        )
+        stdin_thread = threading.Thread(
+            target=_write_stdin,
+            args=(process.stdin, prompt_bytes),
+            daemon=True,
+        )
+        stdout_thread.start()
+        stderr_thread.start()
+        stdin_thread.start()
+        try:
+            returncode = process.wait(timeout=timeout_sec)
+        except subprocess.TimeoutExpired as exc:
+            process.kill()
+            process.wait()
+            stdin_thread.join(timeout=1)
+            stdout_thread.join()
+            stderr_thread.join()
+            logs = _runtime_log_metadata(
+                root,
+                stdout_path=stdout_path,
+                stdout_start=stdout_start,
+                stdout_bytes=len(stdout_buffer),
+                stderr_path=stderr_path,
+                stderr_start=stderr_start,
+                stderr_bytes=len(stderr_buffer),
+            )
+            raise _LocalCommandTimeout(
+                cmd=list(command),
+                timeout=timeout_sec,
+                output=bytes(stdout_buffer),
+                stderr=bytes(stderr_buffer),
+                runtime_logs=logs,
+            ) from exc
+
+        stdin_thread.join(timeout=1)
+        stdout_thread.join()
+        stderr_thread.join()
+
+    logs = _runtime_log_metadata(
+        root,
+        stdout_path=stdout_path,
+        stdout_start=stdout_start,
+        stdout_bytes=len(stdout_buffer),
+        stderr_path=stderr_path,
+        stderr_start=stderr_start,
+        stderr_bytes=len(stderr_buffer),
+    )
+    completed = subprocess.CompletedProcess(
+        args=list(command),
+        returncode=returncode,
+        stdout=bytes(stdout_buffer).decode("utf-8", errors="replace"),
+        stderr=bytes(stderr_buffer).decode("utf-8", errors="replace"),
+    )
+    return _LocalCommandRun(completed=completed, runtime_logs=logs)
+
+
+def _pump_stream(stream: Any, log_file: Any, captured: bytearray) -> None:
+    if stream is None:
+        return
+    try:
+        while True:
+            chunk = stream.read(8192)
+            if not chunk:
+                return
+            captured.extend(chunk)
+            log_file.write(chunk)
+    finally:
+        try:
+            stream.close()
+        except OSError:
+            return
+
+
+def _write_stdin(stdin: Any, payload: bytes) -> None:
+    if stdin is None:
+        return
+    try:
+        stdin.write(payload)
+        stdin.close()
+    except (BrokenPipeError, OSError):
+        return
+
+
+def _write_completed_runtime_logs(
+    root: Path,
+    *,
+    session_id: str,
+    task_id: str,
+    stdout: bytes,
+    stderr: bytes,
+) -> Mapping[str, Any]:
+    stdout_path, stderr_path = _runtime_log_paths(root, session_id, task_id)
+    stdout_path.parent.mkdir(parents=True, exist_ok=True)
+    stderr_path.parent.mkdir(parents=True, exist_ok=True)
+    stdout_start = _file_size(stdout_path)
+    stderr_start = _file_size(stderr_path)
+    with stdout_path.open("ab") as handle:
+        if stdout:
+            handle.write(stdout)
+    with stderr_path.open("ab") as handle:
+        if stderr:
+            handle.write(stderr)
+    return _runtime_log_metadata(
+        root,
+        stdout_path=stdout_path,
+        stdout_start=stdout_start,
+        stdout_bytes=len(stdout),
+        stderr_path=stderr_path,
+        stderr_start=stderr_start,
+        stderr_bytes=len(stderr),
     )
 
 
@@ -608,6 +827,78 @@ def _output_ref(stream_name: str, text: str) -> tuple[int, str]:
         return 0, ""
     digest = hashlib.sha256(encoded).hexdigest()
     return len(encoded), "captured:{}:sha256:{}".format(stream_name, digest)
+
+
+def _runtime_log_paths(root: Path, session_id: str, task_id: str) -> tuple[Path, Path]:
+    session_segment = _safe_log_segment(session_id) if session_id else "no-session"
+    task_segment = _safe_log_segment(task_id) if task_id else "unknown-task"
+    directory = root / "AI_PROJECT" / "logs" / "codex" / session_segment
+    return (
+        directory / "{}-stdout.log".format(task_segment),
+        directory / "{}-stderr.log".format(task_segment),
+    )
+
+
+def _runtime_log_metadata(
+    root: Path,
+    *,
+    stdout_path: Path,
+    stdout_start: int,
+    stdout_bytes: int,
+    stderr_path: Path,
+    stderr_start: int,
+    stderr_bytes: int,
+) -> dict[str, Any]:
+    return {
+        "stdout": _runtime_log_stream_metadata(
+            root,
+            path=stdout_path,
+            start_offset=stdout_start,
+            byte_count=stdout_bytes,
+        ),
+        "stderr": _runtime_log_stream_metadata(
+            root,
+            path=stderr_path,
+            start_offset=stderr_start,
+            byte_count=stderr_bytes,
+        ),
+    }
+
+
+def _runtime_log_stream_metadata(
+    root: Path,
+    *,
+    path: Path,
+    start_offset: int,
+    byte_count: int,
+) -> dict[str, Any]:
+    end_offset = start_offset + byte_count
+    return {
+        "path": _repo_path(root, path),
+        "start_offset": start_offset,
+        "end_offset": end_offset,
+        "bytes": byte_count,
+    }
+
+
+def _file_size(path: Path) -> int:
+    try:
+        return path.stat().st_size
+    except FileNotFoundError:
+        return 0
+
+
+def _safe_log_segment(value: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9_.-]+", "-", value.strip())
+    cleaned = cleaned.strip(".-")
+    return cleaned or "unknown"
+
+
+def _repo_path(root: Path, path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(root.resolve()))
+    except ValueError:
+        return str(path)
 
 
 def _output_snippet(text: str, prompt_text: str) -> str:

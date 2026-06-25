@@ -3,23 +3,23 @@
 
 # Pipeline Status
 
-Revision: `121`
-Current session: `PSESS-026`
-Sessions: `26`
+Revision: `134`
+Current session: `PSESS-029`
+Sessions: `29`
 
 ## Current Session
 
-- ID: `PSESS-026`
+- ID: `PSESS-029`
 - Status: `blocked`
 - Policy: `supervised_executable_local_commit_1h`
-- Current task: `TASK-151`
-- Current phase: `collect_report`
+- Current task: `TASK-143`
+- Current phase: `prepare`
 - Phase status: `blocked`
-- Blocked by: `REPORT_MISSING`
-- Next action: `Submit a structured execution report, then rerun collect-report: python scripts/aictl.py task report submit --task TASK-151 --file <REPORT.json> --confirm`
+- Blocked by: `BLOCKED`
+- Next action: `Satisfy the selected-task Change gate, then rerun prepare.`
 - Current step: `none`
 - Step status: `planned`
-- Stop reason: `No structured execution report exists for selected task.`
+- Stop reason: `Approved linked Evolution Changes are required before execution.`
 
 ## Sessions
 
@@ -51,6 +51,9 @@ Sessions: `26`
 | `PSESS-024` | `blocked` | `supervised_executable_local_commit_1h` | `TASK-149` | `verify` | `blocked` | GIT_DIFF_GATE_DIFF_MISMATCH | Update the structured report file lists or resolve unintended working-tree changes, then rerun verify. | `` | Git diff gate blocked: missing_from_report: AI_PROJECT/config/ui_settings.json, AI_PROJECT/events/codex-events.jsonl, AI_PROJECT/events/context-events.jsonl, AI_PROJECT/events/evolution-events.jsonl, AI_PROJECT/events/pipeline-events.jsonl, AI_PROJECT/events/task-events.jsonl, AI_PROJECT/events/task-report-events.jsonl, AI_PROJECT/generated/CODEX_CURRENT.md, AI_PROJECT/generated/CODEX_PROMPT.md, AI_PROJECT/generated/CODEX_STATUS.md, AI_PROJECT/generated/CODEX_TASKS.md, AI_PROJECT/generated/CONTEXT_PACK.md, AI_PROJECT/generated/CONTEXT_STATUS.md, AI_PROJECT/generated/EVOLUTION.md, AI_PROJECT/generated/PIPELINE_AUDIT.md, AI_PROJECT/generated/PIPELINE_STATUS.md, AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md, AI_PROJECT/state/current_execution.json, AI_PROJECT/state/evolution.json, AI_PROJECT/state/pipeline_sessions.json, AI_PROJECT/state/task_reports.json, AI_PROJECT/state/tasks.json, ai_project_ctl/pipeline/prepare_phase.py, ai_project_ctl/pipeline/ui_policy.py, ai_project_ctl/web/actions.py, ai_project_ctl/web/server.py, scripts/aictl.py, tests/pipeline/test_prepare_phase.py, tests/test_ui_run_command.py, tests/test_web_control_center.py. |
 | `PSESS-025` | `running` | `supervised_executable_local_commit_1h` | `TASK-158` | `execute` | `passed` | none | Run pipeline phase collect-report. | `` |  |
 | `PSESS-026` | `blocked` | `supervised_executable_local_commit_1h` | `TASK-151` | `collect_report` | `blocked` | REPORT_MISSING | Submit a structured execution report, then rerun collect-report: python scripts/aictl.py task report submit --task TASK-151 --file <REPORT.json> --confirm | `` | No structured execution report exists for selected task. |
+| `PSESS-027` | `blocked` | `supervised_executable_local_commit_1h` | `TASK-140` | `prepare` | `blocked` | BLOCKED | Satisfy the selected-task Change gate, then rerun prepare. | `` | Approved linked Evolution Changes are required before execution. |
+| `PSESS-028` | `blocked` | `supervised_executable_local_commit_1h` | `TASK-140` | `verify` | `blocked` | GIT_DIFF_GATE_DIFF_MISMATCH | Update the structured report file lists or resolve unintended working-tree changes, then rerun verify. | `` | Git diff gate blocked: missing_from_report: AI_PROJECT/config/ui_settings.json, AI_PROJECT/events/codex-events.jsonl, AI_PROJECT/events/context-events.jsonl, AI_PROJECT/events/pipeline-events.jsonl, AI_PROJECT/events/task-events.jsonl, AI_PROJECT/events/task-report-events.jsonl, AI_PROJECT/generated/CODEX_CURRENT.md, AI_PROJECT/generated/CODEX_PROMPT.md, AI_PROJECT/generated/CODEX_STATUS.md, AI_PROJECT/generated/CODEX_TASKS.md, AI_PROJECT/generated/CONTEXT_PACK.md, AI_PROJECT/generated/CONTEXT_STATUS.md, AI_PROJECT/generated/PIPELINE_AUDIT.md, AI_PROJECT/generated/PIPELINE_STATUS.md, AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md, AI_PROJECT/state/current_execution.json, AI_PROJECT/state/pipeline_sessions.json, AI_PROJECT/state/task_reports.json, AI_PROJECT/state/tasks.json. |
+| `PSESS-029` | `blocked` | `supervised_executable_local_commit_1h` | `TASK-143` | `prepare` | `blocked` | BLOCKED | Satisfy the selected-task Change gate, then rerun prepare. | `` | Approved linked Evolution Changes are required before execution. |
 
 ## Phase History
 
@@ -119,3 +122,13 @@ Sessions: `26`
 | `PSESS-026` | 3 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 1b51022c62b15c104d2645922a9fbbed5974658a583bbe07cd6322c71ed9f6d9). | 0 | 0 | 1 |
 | `PSESS-026` | 4 | `execute` | `passed` | Codex execution adapter completed; structured report collection is pending. (status=blocked, code=CODEX_ADAPTER_REPORT_MISSING, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 1 |
 | `PSESS-026` | 5 | `collect_report` | `blocked` | No structured execution report exists for selected task. | Submit a structured execution report, then rerun collect-report: python scripts/aictl.py task report submit --task TASK-151 --file <REPORT.json> --confirm | 0 | 0 | 1 |
+| `PSESS-027` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-027` | 2 | `prepare` | `blocked` | Approved linked Evolution Changes are required before execution. | Satisfy the selected-task Change gate, then rerun prepare. | 0 | 0 | 1 |
+| `PSESS-028` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-028` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 6451a813c0c634592ff158484fb521f7bd870c7a4ec80902dbfe492b7f345716). | 0 | 0 | 1 |
+| `PSESS-028` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 1 |
+| `PSESS-028` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-028` | 5 | `verify` | `blocked` | Git diff gate blocked: missing_from_report: AI_PROJECT/config/ui_settings.json, AI_PROJECT/events/codex-events.jsonl, AI_PROJECT/events/context-events.jsonl, AI_PROJECT/events/pipeline-events.jsonl, AI_PROJECT/events/task-events.jsonl, AI_PROJECT/events/task-report-events.jsonl, AI_PROJECT/generated/CODEX_CURRENT.md, AI_PROJECT/generated/CODEX_PROMPT.md, AI_PROJECT/generated/CODEX_STATUS.md, AI_PROJECT/generated/CODEX_TASKS.md, AI_PROJECT/generated/CONTEXT_PACK.md, AI_PROJECT/generated/CONTEXT_STATUS.md, AI_PROJECT/generated/PIPELINE_AUDIT.md, AI_PROJECT/generated/PIPELINE_STATUS.md, AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md, AI_PROJECT/state/current_execution.json, AI_PROJECT/state/pipeline_sessions.json, AI_PROJECT/state/task_reports.json, AI_PROJECT/state/tasks.json. | Update the structured report file lists or resolve unintended working-tree changes, then rerun verify. | 4 | 0 | 1 |
+| `PSESS-029` | 1 | `queue_preview` | `blocked` | No executable task is available in the selected queue. | Create or unblock a ready task, then rerun queue preview. | 0 | 0 | 1 |
+| `PSESS-029` | 2 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-029` | 3 | `prepare` | `blocked` | Approved linked Evolution Changes are required before execution. | Satisfy the selected-task Change gate, then rerun prepare. | 0 | 0 | 1 |
