@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 import subprocess
 import sys
 import threading
@@ -54,6 +55,9 @@ GENERATED_VIEW_FILES = (
 PIPELINE_DEFAULT_POLICY = "dry_run"
 PIPELINE_ORDER_OPTIONS = {"execution", "owner", "selected"}
 PIPELINE_DETAIL_AUDIT_LAST = 25
+PIPELINE_RUNTIME_LOG_TAIL_MAX_BYTES = 16_384
+PIPELINE_RUNTIME_LOG_STREAMS = {"stdout", "stderr"}
+PIPELINE_RUNTIME_LOG_RUNNING_STATUSES = {"active", "in_progress", "running"}
 PIPELINE_PHASE_LABELS = {
     "queue_preview": "Queue Preview",
     "prepare": "Prepare",
@@ -796,6 +800,63 @@ class ReadOnlyProjectModel:
             ],
         }
 
+    def pipeline_session_live_status(self, session_id: str) -> dict[str, Any]:
+        """Return compact read-only status for one pipeline session."""
+
+        requested_id = str(session_id or "").strip()
+        if not _valid_pipeline_session_id(requested_id):
+            raise WebControlError(
+                "WEB_INVALID_PIPELINE_SESSION_ID",
+                "Pipeline session id is invalid.",
+                details={"session_id": requested_id},
+            )
+
+        state = load_pipeline_state(self.root)
+        raw_sessions = [
+            session
+            for session in state.get("sessions", [])
+            if isinstance(session, Mapping)
+        ]
+        raw_session = next(
+            (
+                session
+                for session in raw_sessions
+                if str(session.get("id") or "") == requested_id
+            ),
+            {},
+        )
+        if not raw_session:
+            raise WebControlError(
+                "WEB_PIPELINE_SESSION_NOT_FOUND",
+                "Pipeline session was not found.",
+                details={"session_id": requested_id},
+            )
+
+        session = _pipeline_session_summary(raw_session)
+        phase_rows = list(session.get("phase_rows") or [])
+        latest_phase = phase_rows[-1] if phase_rows else {}
+        current_phase = str(
+            session.get("current_phase") or latest_phase.get("phase") or ""
+        )
+        current_phase_status = str(
+            session.get("current_phase_status") or latest_phase.get("status") or ""
+        )
+
+        return {
+            "ok": True,
+            "session_id": session.get("id") or requested_id,
+            "status": session.get("status") or "unknown",
+            "current_task": {
+                "id": session.get("current_task_id") or "",
+                "ref": session.get("current_task_ref") or "",
+            },
+            "current_phase": current_phase,
+            "current_phase_status": current_phase_status,
+            "stop_reason": session.get("stop_reason") or "",
+            "next_action": session.get("next_action") or "",
+            "phase_history": _pipeline_phase_history_summary(phase_rows),
+        }
+
     def pipeline_audit_events(self, *, last: int = 6) -> list[dict[str, Any]]:
         """Read latest pipeline audit entries without mutating event state."""
 
@@ -850,6 +911,114 @@ class ReadOnlyProjectModel:
             if _pipeline_event_matches_session(payload, session_id, event_ids):
                 events.append(_pipeline_event_summary(payload))
         return events[-max(1, last) :]
+
+    def pipeline_runtime_log_tail(
+        self,
+        session_id: str,
+        phase: str,
+        stream: str,
+        *,
+        offset: int | str = 0,
+    ) -> dict[str, Any]:
+        """Return a bounded byte chunk from a recorded session runtime log."""
+
+        requested_id = str(session_id or "").strip()
+        phase_name = str(phase or "").strip()
+        stream_name = str(stream or "").removesuffix(".json").strip().lower()
+        if stream_name not in PIPELINE_RUNTIME_LOG_STREAMS:
+            raise WebControlError(
+                "WEB_INVALID_PIPELINE_LOG_STREAM",
+                "Pipeline runtime log stream is not supported.",
+                details={
+                    "stream": stream,
+                    "allowed_streams": sorted(PIPELINE_RUNTIME_LOG_STREAMS),
+                },
+            )
+        byte_offset = _pipeline_runtime_log_offset(offset)
+
+        state = load_pipeline_state(self.root)
+        sessions = [
+            session
+            for session in state.get("sessions", [])
+            if isinstance(session, Mapping)
+        ]
+        session = next(
+            (item for item in sessions if str(item.get("id") or "") == requested_id),
+            {},
+        )
+        if not session:
+            raise WebControlError(
+                "WEB_PIPELINE_RUNTIME_LOG_MISSING",
+                "Pipeline runtime log is not available.",
+                details={
+                    "session_id": requested_id,
+                    "phase": phase_name,
+                    "stream": stream_name,
+                },
+            )
+
+        phase_entry = _latest_pipeline_phase(session, phase_name)
+        stream_metadata = _pipeline_runtime_log_metadata(phase_entry, stream_name)
+        if not phase_entry or not stream_metadata:
+            raise WebControlError(
+                "WEB_PIPELINE_RUNTIME_LOG_MISSING",
+                "Pipeline runtime log is not available.",
+                details={
+                    "session_id": requested_id,
+                    "phase": phase_name,
+                    "stream": stream_name,
+                },
+            )
+
+        log_path = _pipeline_runtime_log_path(
+            self.root,
+            stream_metadata.get("path"),
+            session_id=requested_id,
+            stream=stream_name,
+        )
+        try:
+            file_size = log_path.stat().st_size
+        except FileNotFoundError as exc:
+            raise WebControlError(
+                "WEB_PIPELINE_RUNTIME_LOG_MISSING",
+                "Pipeline runtime log is not available.",
+                details={
+                    "session_id": requested_id,
+                    "phase": phase_name,
+                    "stream": stream_name,
+                },
+            ) from exc
+
+        if byte_offset > file_size:
+            raise WebControlError(
+                "WEB_INVALID_PIPELINE_LOG_OFFSET",
+                "Pipeline runtime log offset is beyond the current log size.",
+                details={
+                    "offset": byte_offset,
+                    "file_size": file_size,
+                    "max_offset": file_size,
+                },
+            )
+
+        with log_path.open("rb") as handle:
+            handle.seek(byte_offset)
+            chunk = handle.read(PIPELINE_RUNTIME_LOG_TAIL_MAX_BYTES)
+
+        next_offset = byte_offset + len(chunk)
+        return {
+            "ok": True,
+            "session_id": requested_id,
+            "phase": phase_name,
+            "stream": stream_name,
+            "offset": byte_offset,
+            "next_offset": next_offset,
+            "bytes": len(chunk),
+            "max_bytes": PIPELINE_RUNTIME_LOG_TAIL_MAX_BYTES,
+            "file_size": file_size,
+            "eof": next_offset >= file_size,
+            "running": _pipeline_runtime_log_running(session, phase_name, phase_entry),
+            "chunk": chunk.decode("utf-8", errors="replace"),
+        }
 
 
     def git_status(self) -> dict[str, Any]:
@@ -1058,6 +1227,34 @@ def _pipeline_phase_rows(session: Mapping[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
+def _pipeline_phase_history_summary(
+    phase_rows: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    statuses = Counter(str(row.get("status") or "unknown") for row in phase_rows)
+    compact_rows = [_compact_pipeline_phase_row(row) for row in phase_rows]
+    return {
+        "total": len(compact_rows),
+        "counts_by_status": dict(sorted(statuses.items())),
+        "latest": compact_rows[-1] if compact_rows else {},
+        "recent": compact_rows[-5:],
+    }
+
+
+def _compact_pipeline_phase_row(row: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "index": row.get("index"),
+        "phase": row.get("phase") or "",
+        "label": row.get("label") or "",
+        "status": row.get("status") or "unknown",
+        "reason": row.get("reason") or "",
+        "next_action": row.get("next_action") or "",
+        "changed_files_count": row.get("changed_files_count") or 0,
+        "generated_files_count": row.get("generated_files_count") or 0,
+        "event_count": row.get("event_count") or 0,
+        "blocked_by": row.get("blocked_by") or "",
+    }
+
+
 def _pipeline_phase_label(phase: str) -> str:
     normalized = phase.strip().lower().replace("-", "_")
     if normalized in PIPELINE_PHASE_LABELS:
@@ -1155,6 +1352,137 @@ def _pipeline_event_matches_session(
         return True
     refs = _mapping(payload.get("refs"))
     return str(refs.get("session_id") or "") == session_id
+
+
+def _valid_pipeline_session_id(value: str) -> bool:
+    return bool(value) and bool(re.fullmatch(r"[A-Za-z0-9_.-]+", value))
+
+
+def _latest_pipeline_phase(
+    session: Mapping[str, Any],
+    phase_name: str,
+) -> Mapping[str, Any]:
+    history = session.get("phase_history")
+    if not isinstance(history, Sequence) or isinstance(history, (str, bytes)):
+        return {}
+    for entry in reversed(history):
+        if (
+            isinstance(entry, Mapping)
+            and str(entry.get("phase") or "").strip() == phase_name
+        ):
+            return entry
+    return {}
+
+
+def _pipeline_runtime_log_metadata(
+    phase: Mapping[str, Any],
+    stream: str,
+) -> Mapping[str, Any]:
+    artifacts = _mapping(phase.get("artifacts"))
+    candidates = (
+        artifacts.get("runtime_logs"),
+        _mapping(artifacts.get("execute_evidence")).get("runtime_logs"),
+        _mapping(artifacts.get("adapter")).get("runtime_logs"),
+        _mapping(artifacts.get("adapter_summary")).get("runtime_logs"),
+    )
+    for candidate in candidates:
+        metadata = _mapping(_mapping(candidate).get(stream))
+        if metadata:
+            return metadata
+    return {}
+
+
+def _pipeline_runtime_log_offset(value: int | str) -> int:
+    if isinstance(value, int) and not isinstance(value, bool):
+        offset = value
+    else:
+        text = str(value or "0").strip()
+        if not text:
+            text = "0"
+        if not text.isdigit():
+            raise WebControlError(
+                "WEB_INVALID_PIPELINE_LOG_OFFSET",
+                "Pipeline runtime log offset must be a non-negative integer.",
+                details={"offset": value},
+            )
+        offset = int(text)
+    if offset < 0:
+        raise WebControlError(
+            "WEB_INVALID_PIPELINE_LOG_OFFSET",
+            "Pipeline runtime log offset must be a non-negative integer.",
+            details={"offset": value},
+        )
+    return offset
+
+
+def _pipeline_runtime_log_path(
+    root: Path,
+    value: Any,
+    *,
+    session_id: str,
+    stream: str,
+) -> Path:
+    text = str(value or "").strip()
+    if not text:
+        raise WebControlError(
+            "WEB_PIPELINE_RUNTIME_LOG_MISSING",
+            "Pipeline runtime log is not available.",
+            details={"session_id": session_id, "stream": stream},
+        )
+
+    path = Path(text)
+    candidate = path.resolve() if path.is_absolute() else (root / path).resolve()
+    logs_root = (root / "AI_PROJECT" / "logs" / "codex").resolve()
+    try:
+        relative = candidate.relative_to(logs_root)
+    except ValueError as exc:
+        raise WebControlError(
+            "WEB_PIPELINE_RUNTIME_LOG_PATH_REJECTED",
+            "Pipeline runtime log path is outside the session runtime log area.",
+            details={"session_id": session_id, "stream": stream},
+        ) from exc
+
+    parts = relative.parts
+    expected_session_dir = _safe_runtime_log_segment(session_id)
+    if len(parts) != 2 or parts[0] != expected_session_dir:
+        raise WebControlError(
+            "WEB_PIPELINE_RUNTIME_LOG_PATH_REJECTED",
+            "Pipeline runtime log path is outside the requested session log area.",
+            details={"session_id": session_id, "stream": stream},
+        )
+    if candidate.suffix != ".log" or not candidate.name.endswith(
+        "-{}.log".format(stream)
+    ):
+        raise WebControlError(
+            "WEB_PIPELINE_RUNTIME_LOG_PATH_REJECTED",
+            "Pipeline runtime log path does not match the requested stream.",
+            details={"session_id": session_id, "stream": stream},
+        )
+    return candidate
+
+
+def _pipeline_runtime_log_running(
+    session: Mapping[str, Any],
+    phase_name: str,
+    phase: Mapping[str, Any],
+) -> bool:
+    if str(session.get("status") or "") != "running":
+        return False
+    current_phase = str(
+        session.get("current_phase") or phase.get("phase") or ""
+    ).strip()
+    if current_phase != phase_name:
+        return False
+    current_status = str(session.get("current_phase_status") or "").strip()
+    if current_status:
+        return current_status in PIPELINE_RUNTIME_LOG_RUNNING_STATUSES
+    return str(phase.get("status") or "").strip() in PIPELINE_RUNTIME_LOG_RUNNING_STATUSES
+
+
+def _safe_runtime_log_segment(value: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9_.-]+", "-", value.strip())
+    cleaned = cleaned.strip(".-")
+    return cleaned or "unknown"
 
 
 def task_hints(

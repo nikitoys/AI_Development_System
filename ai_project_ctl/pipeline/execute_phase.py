@@ -9,9 +9,12 @@ from __future__ import annotations
 
 import hashlib
 import inspect
+import re
+import shlex
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
+from ai_project_ctl.core.events import utc_now
 from ai_project_ctl.core.result import CommandMessage, CommandResult
 
 from .codex_adapter import (
@@ -32,6 +35,7 @@ from .token_budget import TokenBudgetGateResult, evaluate_token_budget
 COMMAND_NAME = "pipeline.phase.execute"
 PHASE_NAME = "execute"
 PREPARE_PHASE_NAME = "prepare"
+LIVE_EXECUTE_STEP_NAME = "execute"
 
 CodexAdapter = Callable[..., CodexAdapterResult]
 
@@ -175,6 +179,18 @@ def execute_phase(
             next_action="Rerun pipeline phase prepare, then execute again.",
         )
 
+    running_record = _record_execute_running(
+        session_id=selected_session_id,
+        task_id=task_id,
+        policy=policy,
+        prepare_artifacts=prepare_artifacts,
+        token_gate=token_gate,
+        root=root_path,
+        actor=actor,
+    )
+    if not running_record.ok:
+        return running_record
+
     adapter = codex_adapter or run_codex_adapter
     adapter_result = _call_codex_adapter(
         adapter,
@@ -194,6 +210,85 @@ def execute_phase(
         token_gate=token_gate,
         root=root_path,
         actor=actor,
+    )
+
+
+def _record_execute_running(
+    *,
+    session_id: str,
+    task_id: str,
+    policy: PipelinePolicy,
+    prepare_artifacts: Mapping[str, Any],
+    token_gate: TokenBudgetGateResult,
+    root: Path,
+    actor: str,
+) -> CommandResult:
+    started_at = utc_now()
+    runtime_logs = _expected_runtime_logs(root, session_id, task_id)
+    command_ref = _policy_command_ref(policy)
+    adapter_mode = policy.codex.adapter_mode.value
+    artifacts = {
+        "session_id": session_id,
+        "task_id": task_id,
+        "policy": policy.name,
+        "prepare_artifacts": _bounded_prepare_artifacts(prepare_artifacts),
+        "token_budget": token_gate.to_dict(),
+        "codex_adapter_called": True,
+        "codex_adapter_active": True,
+        "execute_started_at": started_at,
+        "execute_finished_at": "",
+        "runtime_logs": runtime_logs,
+        "execute_evidence": {
+            "status": "running",
+            "code": "CODEX_ADAPTER_RUNNING",
+            "reason": "codex_adapter_running",
+            "adapter_mode": adapter_mode,
+            "command_ref": command_ref,
+            "returncode": None,
+            "runtime_logs": runtime_logs,
+            "started_at": started_at,
+            "finished_at": "",
+            "task_id": task_id,
+            "session_id": session_id,
+        },
+        "adapter": {
+            "status": "running",
+            "mode": adapter_mode,
+            "command": list(policy.codex.local_command),
+            "command_ref": command_ref,
+            "timeout_sec": policy.codex.timeout_sec,
+            "runtime_logs": runtime_logs,
+            "started_at": started_at,
+            "finished_at": "",
+        },
+        "adapter_summary": {
+            "status": "running",
+            "code": "CODEX_ADAPTER_RUNNING",
+            "reason": "codex_adapter_running",
+            "command": list(policy.codex.local_command),
+            "command_ref": command_ref,
+            "returncode": None,
+            "duration_sec": 0.0,
+            "runtime_logs": runtime_logs,
+        },
+    }
+    return record_phase_result(
+        session_id,
+        {
+            "phase": PHASE_NAME,
+            "status": "running",
+            "reason": "Codex execution adapter is running.",
+            "next_action": "Wait for Codex execution adapter completion.",
+            "artifacts": artifacts,
+            "changed_files": [],
+            "generated_files": [],
+            "events": [],
+        },
+        root=root,
+        actor=actor,
+        task_id=task_id,
+        current_step_name=LIVE_EXECUTE_STEP_NAME,
+        command=COMMAND_NAME,
     )
 
 
@@ -726,6 +821,52 @@ def _failure(
 def _bounded_prepare_artifacts(artifacts: Mapping[str, Any]) -> dict[str, Any]:
     allowed = ("task_id", "context_pack_path", "prompt_path", "prompt_sha256")
     return {key: artifacts[key] for key in allowed if key in artifacts}
+
+
+def _expected_runtime_logs(root: Path, session_id: str, task_id: str) -> dict[str, Any]:
+    stdout_path, stderr_path = _runtime_log_paths(root, session_id, task_id)
+    return {
+        "stdout": _runtime_log_stream_metadata(root, stdout_path),
+        "stderr": _runtime_log_stream_metadata(root, stderr_path),
+    }
+
+
+def _runtime_log_stream_metadata(root: Path, path: Path) -> dict[str, Any]:
+    start_offset = _file_size(path)
+    return {
+        "path": _repo_path(root, path),
+        "start_offset": start_offset,
+        "end_offset": start_offset,
+        "bytes": 0,
+    }
+
+
+def _runtime_log_paths(root: Path, session_id: str, task_id: str) -> tuple[Path, Path]:
+    session_segment = _safe_log_segment(session_id) if session_id else "no-session"
+    task_segment = _safe_log_segment(task_id) if task_id else "unknown-task"
+    directory = root / "AI_PROJECT" / "logs" / "codex" / session_segment
+    return (
+        directory / "{}-stdout.log".format(task_segment),
+        directory / "{}-stderr.log".format(task_segment),
+    )
+
+
+def _safe_log_segment(value: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9_.-]+", "-", value.strip())
+    cleaned = cleaned.strip(".-")
+    return cleaned or "unknown"
+
+
+def _file_size(path: Path) -> int:
+    try:
+        return path.stat().st_size
+    except FileNotFoundError:
+        return 0
+
+
+def _policy_command_ref(policy: PipelinePolicy) -> str:
+    command = tuple(str(part) for part in policy.codex.local_command)
+    return shlex.join(command) if command else policy.codex.adapter_mode.value
 
 
 def _required_mapping(value: Any, name: str) -> Mapping[str, Any]:

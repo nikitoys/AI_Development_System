@@ -9,4 +9,6 @@ outputs/
 .verification-history.jsonl
 AI_PROJECT/verification-history.local.jsonl
 AI_PROJECT/**/verification-history.local.jsonl
+# Local UI and pipeline runtime logs; existing owner logs remain untouched.
+AI_PROJECT/logs/
 *.log

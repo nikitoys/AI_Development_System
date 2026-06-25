@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `1125`
-Current task: `none`
+Revision: `1206`
+Current task: `TASK-136`
 
 ## Epic `EPIC-001`
 
@@ -2449,9 +2449,9 @@ Acceptance criteria:
 - Documentation includes a troubleshooting note for CODEX_ADAPTER_TIMEOUT.
 - Generated documentation checks can be rerun without manual edits to generated files.
 
-### PIPEF-57 (TASK-136) — PIPE-052 Add pipeline session status JSON endpoint
+### PIPEF-57 (TASK-136) — PIPE-052 Add pipeline session status JSON endpoint ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_3b24331932c4`, legacy `TASK-136`, aliases `TASK-136`, local `PIPEF` / `57`
@@ -2536,7 +2536,7 @@ Acceptance criteria:
 
 ### PIPEF-62 (TASK-141) — PIPE-057 Add pipeline session live log tail endpoint
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_ed7c7c10d9eb`, legacy `TASK-141`, aliases `TASK-141`, local `PIPEF` / `62`
@@ -2553,7 +2553,7 @@ Acceptance criteria:
 
 ### PIPEF-63 (TASK-142) — PIPE-058 Add live Codex log panel to Pipeline session page
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_163fe8b208a9`, legacy `TASK-142`, aliases `TASK-142`, local `PIPEF` / `63`
@@ -2570,7 +2570,7 @@ Acceptance criteria:
 
 ### PIPEF-64 (TASK-143) — PIPE-059 Keep runtime pipeline logs out of task diff gates
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_3b9b49da1c41`, legacy `TASK-143`, aliases `TASK-143`, local `PIPEF` / `64`
@@ -2791,7 +2791,7 @@ Acceptance criteria:
 
 ### PIPEF-77 (TASK-156) — PIPE-072 Add Web recovery action for report missing sessions
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_4c8053ef44b5`, legacy `TASK-156`, aliases `TASK-156`, local `PIPEF` / `77`
@@ -2892,3 +2892,139 @@ Acceptance criteria:
 - When allow_internal_change_gate_bypass=false in UI settings, Web Run session selected_queue includes allow_internal_change_gate_bypass=false.
 - Web Run still returns session_href and redirect_target for the created session.
 - Existing Web Control Center tests pass.
+
+### PIPEF-83 (TASK-164) — Fix pipeline report template normalized fields
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_e663c259db22`, legacy `TASK-164`, aliases `TASK-164`, local `PIPEF` / `83`
+
+Fix the pipeline report template so generated task report JSON can be submitted without schema errors.
+
+Acceptance criteria:
+
+- pipeline report template output no longer contains reported_task_id or reported_task_ref.
+- The generated template still contains schema_version, task_id, task_ref, implementation_summary, changed_files, generated_files, checks, warnings, blockers, notes, owner_decision_required, and token_usage when required by submission/parsing rules.
+- Submitting a minimally completed generated template through task report validation no longer fails with unknown reported_task_id or reported_task_ref fields.
+- Existing task report normalization continues to persist reported_task_id and reported_task_ref internally after successful submission where applicable.
+- Focused tests cover the template output and schema compatibility.
+- Relevant project-control validation or focused pytest commands pass.
+
+### PIPEF-84 (TASK-165) — Record running execute state before Codex starts
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_562c6ea22585`, legacy `TASK-165`, aliases `TASK-165`, local `PIPEF` / `84`
+
+Record live execute phase and step state before launching the long-running Codex adapter so Web can display Codex Execute as running.
+
+Acceptance criteria:
+
+- During an active execute phase, the pipeline session records current_phase as execute and current_phase_status as running before Codex adapter completion.
+- During an active execute phase, the session records a running current_step or equivalent live-step evidence for the selected task.
+- The running execute evidence includes task id, command reference or adapter mode, and expected runtime log path metadata sufficient for Web display.
+- After Codex completes, the final execute phase outcome is still recorded as passed, blocked, or failed with existing adapter artifacts preserved.
+- Existing prepare, collect-report, verify, and run-until-blocker behavior remains compatible.
+- Focused tests cover running-state recording before adapter completion and final-state cleanup after adapter completion.
+
+### PIPEF-85 (TASK-166) — Add Codex execution summary block contract
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_d67b3fc03dcc`, legacy `TASK-166`, aliases `TASK-166`, local `PIPEF` / `85`
+
+Introduce a minimal Codex execution summary block so Codex reports only implementation summary, notes, warnings, and blockers instead of full task reports.
+
+Acceptance criteria:
+
+- Codex prompt output asks for a minimal execution summary block rather than a full structured TaskReport.
+- The parser accepts only implementation_summary, notes, warnings, and blockers.
+- Malformed or unknown-field summary blocks produce stable parser errors.
+- Existing Codex prompt build tests continue to pass.
+- Focused parser tests cover the new summary block contract.
+
+### PIPEF-86 (TASK-167) — Add evidence-based task report builder
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_8af8c1dfb7bc`, legacy `TASK-167`, aliases `TASK-167`, local `PIPEF` / `86`
+
+Add a pipeline report builder that creates valid TaskReport payloads from session, task, adapter, summary, and policy evidence.
+
+Acceptance criteria:
+
+- The builder produces a valid TaskReport payload for a successful Codex adapter result.
+- The builder uses task state for task_id and task_ref even if AI summary omits them.
+- The builder never emits invalid check result values such as not_run.
+- The builder defaults token_usage to an allowed object when precise token evidence is unavailable.
+- Focused tests validate the generated payload with the existing task report validation service.
+
+### PIPEF-87 (TASK-168) — Wire Codex auto-submit through report builder
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_d47e0c8dbb5a`, legacy `TASK-168`, aliases `TASK-168`, local `PIPEF` / `87`
+
+Change the Codex local-command adapter to auto-submit reports built by code from evidence and the AI summary block.
+
+Acceptance criteria:
+
+- Codex auto-submit succeeds when the AI summary block is valid and adapter evidence is successful.
+- Invalid Codex check enums cannot break auto-submit because checks are code-generated.
+- Missing or malformed summary blocks produce a clear adapter blocker with a stable code.
+- Auto-submit artifacts record the built report id and relevant builder evidence.
+- Existing local-command adapter behavior for stdout, stderr, and runtime logs remains intact.
+
+### PIPEF-88 (TASK-169) — Add optional git diff verification gates
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_e4f8444c37a1`, legacy `TASK-169`, aliases `TASK-169`, local `PIPEF` / `88`
+
+Add a pipeline policy switch that can disable git diff, protected-files, and allowed-files verification gates for relaxed runs.
+
+Acceptance criteria:
+
+- Existing policies default to strict git diff verification behavior.
+- A policy with git diff gates disabled can pass verify after a valid report without checking the full dirty working tree.
+- Strict policies still block on missing_from_report and out-of-scope git diff mismatches.
+- Verify artifacts clearly show when git diff based gates were skipped by policy.
+- Focused verify tests cover both strict and relaxed policy behavior.
+
+### PIPEF-89 (TASK-170) — Expose relaxed git diff mode for UI runs
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_ff58e46626af`, legacy `TASK-170`, aliases `TASK-170`, local `PIPEF` / `89`
+
+Expose a UI-run setting that can apply relaxed git diff verification to fast-lane Web and UI task runs.
+
+Acceptance criteria:
+
+- The new UI setting is accepted by CLI and Web settings update actions.
+- The Web Settings page shows the setting and explains that strict verification remains available.
+- Effective UI policy snapshots reflect relaxed git diff verification only when the setting is enabled.
+- Non-UI policy resolution keeps strict git diff verification by default.
+- Focused Web and UI policy tests cover the setting.
+
+### PIPEF-90 (TASK-171) — Update legacy Codex prompt report contract test
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_88c093931c3e`, legacy `TASK-171`, aliases `TASK-171`, local `PIPEF` / `90`
+
+Update the legacy prompt contract test to match the new minimal Codex execution summary contract.
+
+Acceptance criteria:
+
+- Legacy prompt contract test no longer expects the old full CODEX_REPORT_JSON report block.
+- Prompt tests verify the minimal CODEX_EXECUTION_SUMMARY_JSON contract.
+- Focused Codex prompt tests pass.

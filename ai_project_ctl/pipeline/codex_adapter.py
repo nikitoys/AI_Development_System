@@ -17,11 +17,12 @@ from typing import Any, Callable, Mapping, Sequence
 from ai_project_ctl import task_reports as task_report_service
 from ai_project_ctl.core.store import StoreError, read_json_file
 
-from .codex_report_parser import (
-    CODEX_REPORT_BLOCK_MISSING,
-    parse_codex_report_stdout,
+from .codex_summary_parser import (
+    CODEX_SUMMARY_BLOCK_MISSING,
+    parse_codex_summary_stdout,
 )
 from .policy import CodexAdapterMode, CodexExecutionMode, PipelinePolicy, PromptTransport
+from .report_builder import ReportBuilderError, build_task_report_payload
 from .state import task_reports_state_path, tasks_state_path
 from .token_budget import PASS as TOKEN_BUDGET_PASS
 from .token_budget import TokenBudgetGateResult
@@ -37,6 +38,8 @@ CODE_SANDBOX_UNAVAILABLE = "CODEX_ADAPTER_SANDBOX_UNAVAILABLE"
 CODE_LOCAL_COMMAND_TIMEOUT = "CODEX_ADAPTER_TIMEOUT"
 CODE_REPORT_MISSING = "CODEX_ADAPTER_REPORT_MISSING"
 CODE_REPORT_INVALID = "CODEX_ADAPTER_REPORT_INVALID"
+CODE_SUMMARY_MISSING = "CODEX_ADAPTER_SUMMARY_MISSING"
+CODE_SUMMARY_INVALID = "CODEX_ADAPTER_SUMMARY_INVALID"
 CODE_LOCAL_COMMAND_PASSED = "CODEX_ADAPTER_LOCAL_COMMAND_PASSED"
 OUTPUT_SNIPPET_BYTES = 1200
 
@@ -84,6 +87,7 @@ class CodexAdapterResult:
     report_parse_code: str = ""
     report_parse_issue: Mapping[str, Any] = field(default_factory=dict)
     report_submission_error: str = ""
+    report_builder_evidence: Mapping[str, Any] = field(default_factory=dict)
     report_instruction: str = ""
 
     @property
@@ -121,6 +125,7 @@ class CodexAdapterResult:
             "report_parse_code": self.report_parse_code,
             "report_parse_issue": dict(self.report_parse_issue),
             "report_submission_error": self.report_submission_error,
+            "report_builder_evidence": dict(self.report_builder_evidence),
             "report_instruction": self.report_instruction,
         }
 
@@ -162,6 +167,7 @@ def run_codex_adapter(
         report_parse_code: str = "",
         report_parse_issue: Mapping[str, Any] | None = None,
         report_submission_error: str = "",
+        report_builder_evidence: Mapping[str, Any] | None = None,
         report_instruction: str = "",
     ) -> CodexAdapterResult:
         finished_at = _utc_now()
@@ -201,6 +207,7 @@ def run_codex_adapter(
             report_parse_code=report_parse_code,
             report_parse_issue=dict(report_parse_issue or {}),
             report_submission_error=report_submission_error,
+            report_builder_evidence=dict(report_builder_evidence or {}),
             report_instruction=report_instruction,
         )
 
@@ -326,38 +333,13 @@ def run_codex_adapter(
             report_instruction=instruction,
         )
 
-    report_parse = parse_codex_report_stdout(stdout)
     after_report = _latest_report_id(root_path, task_id)
-    if report_parse.ok and (not after_report or after_report == before_report):
-        try:
-            submission = _submit_parsed_stdout_report(
-                root_path,
-                task_id=task_id,
-                report_payload=report_parse.report or {},
-                stdout=stdout,
-            )
-        except task_report_service.TaskReportError as exc:
-            return finish(
-                status="blocked",
-                code=CODE_REPORT_INVALID,
-                reason="structured_execution_report_rejected",
-                command=command,
-                returncode=completed.returncode,
-                stdout=stdout,
-                stderr=stderr,
-                runtime_logs=runtime_logs,
-                before_report_id=before_report,
-                after_report_id=after_report,
-                report_parse_code=report_parse.code,
-                report_submission_error=str(exc),
-                report_instruction=instruction,
-            )
-        after_report = submission.report_id
-    elif not report_parse.ok and report_parse.code != CODEX_REPORT_BLOCK_MISSING:
+    if after_report and after_report != before_report:
+        report_id = after_report
         return finish(
-            status="blocked",
-            code=CODE_REPORT_INVALID,
-            reason="structured_execution_report_invalid",
+            status="passed",
+            code=CODE_LOCAL_COMMAND_PASSED,
+            reason="local_command_completed_with_report",
             command=command,
             returncode=completed.returncode,
             stdout=stdout,
@@ -365,9 +347,92 @@ def run_codex_adapter(
             runtime_logs=runtime_logs,
             before_report_id=before_report,
             after_report_id=after_report,
-            report_parse_code=report_parse.code,
+            report_id=report_id,
+            report_instruction=instruction,
+        )
+
+    summary_parse = parse_codex_summary_stdout(stdout)
+    if summary_parse.ok:
+        try:
+            submission, builder_evidence = _submit_built_summary_report(
+                root_path,
+                task_id=task_id,
+                summary=summary_parse.summary or {},
+                token_gate=token_gate,
+                command=command,
+                started_monotonic=started_monotonic,
+                returncode=completed.returncode,
+                stdout=stdout,
+                stderr=stderr,
+                runtime_logs=runtime_logs,
+                session_id=session_id,
+            )
+        except ReportBuilderError as exc:
+            return finish(
+                status="blocked",
+                code=CODE_REPORT_INVALID,
+                reason="built_execution_report_invalid",
+                command=command,
+                returncode=completed.returncode,
+                stdout=stdout,
+                stderr=stderr,
+                runtime_logs=runtime_logs,
+                before_report_id=before_report,
+                after_report_id=after_report,
+                report_parse_code=summary_parse.code,
+                report_submission_error=str(exc),
+                report_instruction=instruction,
+            )
+        except task_report_service.TaskReportError as exc:
+            return finish(
+                status="blocked",
+                code=CODE_REPORT_INVALID,
+                reason="built_execution_report_rejected",
+                command=command,
+                returncode=completed.returncode,
+                stdout=stdout,
+                stderr=stderr,
+                runtime_logs=runtime_logs,
+                before_report_id=before_report,
+                after_report_id=after_report,
+                report_parse_code=summary_parse.code,
+                report_submission_error=str(exc),
+                report_instruction=instruction,
+            )
+        after_report = submission.report_id
+    elif summary_parse.code == CODEX_SUMMARY_BLOCK_MISSING:
+        return finish(
+            status="blocked",
+            code=CODE_SUMMARY_MISSING,
+            reason="codex_execution_summary_missing",
+            command=command,
+            returncode=completed.returncode,
+            stdout=stdout,
+            stderr=stderr,
+            runtime_logs=runtime_logs,
+            before_report_id=before_report,
+            after_report_id=after_report,
+            report_parse_code=summary_parse.code,
             report_parse_issue=(
-                report_parse.issue.to_dict() if report_parse.issue is not None else {}
+                summary_parse.issue.to_dict() if summary_parse.issue is not None else {}
+            ),
+            report_instruction=instruction,
+        )
+    else:
+        return finish(
+            status="blocked",
+            code=CODE_SUMMARY_INVALID,
+            reason="codex_execution_summary_invalid",
+            command=command,
+            returncode=completed.returncode,
+            stdout=stdout,
+            stderr=stderr,
+            runtime_logs=runtime_logs,
+            before_report_id=before_report,
+            after_report_id=after_report,
+            report_parse_code=summary_parse.code,
+            report_parse_issue=(
+                summary_parse.issue.to_dict() if summary_parse.issue is not None else {}
             ),
             report_instruction=instruction,
         )
@@ -405,7 +470,8 @@ def run_codex_adapter(
         before_report_id=before_report,
         after_report_id=after_report,
         report_id=report_id,
-        report_parse_code=report_parse.code if report_parse.ok else "",
+        report_parse_code=summary_parse.code if summary_parse.ok else "",
+        report_builder_evidence=builder_evidence if summary_parse.ok else {},
         report_instruction=instruction,
     )
 
@@ -742,16 +808,40 @@ def _latest_report_id(root: Path, task_id: str) -> str:
     return str(matches[-1].get("id") or "")
 
 
-def _submit_parsed_stdout_report(
+def _submit_built_summary_report(
     root: Path,
     *,
     task_id: str,
-    report_payload: Mapping[str, Any],
+    summary: Mapping[str, Any],
+    token_gate: TokenBudgetGateResult,
+    command: Sequence[str],
+    started_monotonic: float,
+    returncode: int | None,
     stdout: str,
-) -> task_report_service.TaskReportSubmission:
+    stderr: str,
+    runtime_logs: Mapping[str, Any],
+    session_id: str,
+) -> tuple[task_report_service.TaskReportSubmission, dict[str, Any]]:
     tasks_state = _load_tasks_state(root)
     task = _resolve_task(tasks_state, task_id)
-    return task_report_service.submit_task_report(
+    policy_evidence = _report_builder_policy_evidence(
+        token_gate=token_gate,
+        command=command,
+        started_monotonic=started_monotonic,
+        returncode=returncode,
+        stdout=stdout,
+        stderr=stderr,
+        runtime_logs=runtime_logs,
+    )
+    adapter_evidence = policy_evidence["codex_adapter_gate"]
+    report_payload = build_task_report_payload(
+        session={"id": session_id},
+        task=task,
+        adapter_result=adapter_evidence,
+        summary=summary,
+        policy_evidence=policy_evidence,
+    )
+    submission = task_report_service.submit_task_report(
         root=root,
         tasks_state=tasks_state,
         task=task,
@@ -760,6 +850,73 @@ def _submit_parsed_stdout_report(
         actor="codex",
         command="codex_adapter.report.auto_submit",
     )
+    builder_evidence = _report_builder_evidence(
+        task=task,
+        report_payload=report_payload,
+        policy_evidence=policy_evidence,
+        stdout=stdout,
+    )
+    builder_evidence["built_report_id"] = submission.report_id
+    return submission, builder_evidence
+
+
+def _report_builder_policy_evidence(
+    *,
+    token_gate: TokenBudgetGateResult,
+    command: Sequence[str],
+    started_monotonic: float,
+    returncode: int | None,
+    stdout: str,
+    stderr: str,
+    runtime_logs: Mapping[str, Any],
+) -> dict[str, Any]:
+    stdout_bytes, stdout_ref = _output_ref("stdout", stdout)
+    stderr_bytes, stderr_ref = _output_ref("stderr", stderr)
+    adapter_evidence = {
+        "status": "passed",
+        "code": CODE_LOCAL_COMMAND_PASSED,
+        "reason": "local_command_completed",
+        "command": list(command),
+        "command_ref": shlex.join(tuple(str(part) for part in command)),
+        "returncode": returncode,
+        "duration_sec": round(max(0.0, time.monotonic() - started_monotonic), 6),
+        "stdout_ref": stdout_ref,
+        "stderr_ref": stderr_ref,
+        "stdout_bytes": stdout_bytes,
+        "stderr_bytes": stderr_bytes,
+        "runtime_logs": dict(runtime_logs),
+    }
+    return {
+        "token_budget_gate": token_gate.to_dict(),
+        "codex_adapter_gate": adapter_evidence,
+    }
+
+
+def _report_builder_evidence(
+    *,
+    task: Mapping[str, Any],
+    report_payload: Mapping[str, Any],
+    policy_evidence: Mapping[str, Any],
+    stdout: str,
+) -> dict[str, Any]:
+    checks = [
+        check
+        for check in report_payload.get("checks", [])
+        if isinstance(check, Mapping)
+    ]
+    return {
+        "builder": "build_task_report_payload",
+        "source_file": _stdout_report_source(stdout),
+        "task_id": str(task.get("id") or ""),
+        "task_ref": str(task.get("ref") or ""),
+        "policy_evidence_keys": sorted(str(key) for key in policy_evidence.keys()),
+        "check_names": [str(check.get("name") or "") for check in checks],
+        "check_results": [str(check.get("result") or "") for check in checks],
+        "changed_files_count": len(report_payload.get("changed_files") or []),
+        "generated_files_count": len(report_payload.get("generated_files") or []),
+        "warning_count": len(report_payload.get("warnings") or []),
+        "blocker_count": len(report_payload.get("blockers") or []),
+    }
 
 
 def _load_tasks_state(root: Path) -> Mapping[str, Any]:

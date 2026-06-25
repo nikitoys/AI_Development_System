@@ -9,7 +9,7 @@ CODEXCTL_PATH = ROOT / "scripts" / "codexctl.py"
 
 
 def load_codexctl():
-    spec = importlib.util.spec_from_file_location("codexctl_report_contract", CODEXCTL_PATH)
+    spec = importlib.util.spec_from_file_location("codexctl_summary_contract", CODEXCTL_PATH)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     spec.loader.exec_module(module)
@@ -21,20 +21,21 @@ codexctl = load_codexctl()
 
 def rendered_task_prompt():
     task = {
-        "id": "TASK-151",
-        "ref": "PIPEF-72",
+        "id": "TASK-166",
+        "ref": "PIPEF-85",
         "status": "in_progress",
-        "title": "Structured report contract",
-        "summary": "Update Codex prompt generation with a structured report contract.",
-        "scope": ["Replace the plain bullet-only Final Report section."],
-        "out_of_scope": ["Do not implement stdout parsing."],
+        "title": "Add Codex execution summary block contract",
+        "summary": "Introduce a minimal Codex execution summary block.",
+        "scope": ["Define a compact AI execution summary JSON block contract."],
+        "out_of_scope": ["Do not build or submit TaskReport payloads."],
         "allowed_files": [
             "scripts/codexctl.py",
-            "tests/test_codex_prompt_report_contract.py",
+            "ai_project_ctl/pipeline/codex_summary_parser.py",
+            "tests/pipeline/test_codex_summary_parser.py",
+            "tests/test_codexctl.py",
         ],
         "acceptance_criteria": [
-            "Generated CODEX_PROMPT.md contains a clearly delimited machine-readable report JSON instruction.",
-            "The prompt still tells Codex not to self-approve.",
+            "Codex prompt output asks for a minimal execution summary block rather than a full structured TaskReport.",
         ],
         "verification_mode": "strict",
     }
@@ -50,8 +51,8 @@ def extract_summary_contract(prompt):
     return json.loads(block[len("```json\n") : -len("```")].strip())
 
 
-class CodexPromptReportContractTests(unittest.TestCase):
-    def test_execution_summary_contract_is_minimal_json(self):
+class CodexPromptSummaryContractTests(unittest.TestCase):
+    def test_final_contract_is_minimal_execution_summary_json(self):
         prompt = rendered_task_prompt()
 
         self.assertIn("## Execution Summary", prompt)
@@ -60,7 +61,6 @@ class CodexPromptReportContractTests(unittest.TestCase):
         self.assertIn("Do not emit a full TaskReport payload.", prompt)
         self.assertRegex(prompt, r"CODEX_EXECUTION_SUMMARY_JSON:\n```json\n\{")
         self.assertTrue(prompt.rstrip().endswith("```"))
-        self.assertNotIn("- Summary:\n- Changed files:", prompt)
 
         summary = extract_summary_contract(prompt)
         self.assertEqual(
@@ -74,9 +74,7 @@ class CodexPromptReportContractTests(unittest.TestCase):
         )
         self.assertNotIn("task_id", summary)
         self.assertNotIn("changed_files", summary)
-        self.assertNotIn("generated_files", summary)
         self.assertNotIn("checks", summary)
-        self.assertNotIn("owner_decision_required", summary)
         self.assertNotIn("token_usage", summary)
         for field in ["notes", "warnings", "blockers"]:
             self.assertIsInstance(summary[field], list)
@@ -85,15 +83,14 @@ class CodexPromptReportContractTests(unittest.TestCase):
         prompt = rendered_task_prompt()
 
         self.assertIn("You are Codex Executor. Execute one bounded task. Do not self-approve.", prompt)
-        self.assertIn("## Scope\n\n- Replace the plain bullet-only Final Report section.", prompt)
-        self.assertIn("## Allowed Files\n\nEditable:", prompt)
-        self.assertIn("- scripts/codexctl.py", prompt)
-        self.assertIn("- tests/test_codex_prompt_report_contract.py", prompt)
-        self.assertIn("## Acceptance Criteria", prompt)
         self.assertIn(
-            "- Generated CODEX_PROMPT.md contains a clearly delimited machine-readable report JSON instruction.",
+            "## Scope\n\n- Define a compact AI execution summary JSON block contract.",
             prompt,
         )
+        self.assertIn("## Allowed Files\n\nEditable:", prompt)
+        self.assertIn("- scripts/codexctl.py", prompt)
+        self.assertIn("- tests/test_codexctl.py", prompt)
+        self.assertIn("## Acceptance Criteria", prompt)
 
 
 if __name__ == "__main__":

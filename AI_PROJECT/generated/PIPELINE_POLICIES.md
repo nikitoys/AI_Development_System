@@ -3,8 +3,8 @@
 
 # Pipeline Policy Presets
 
-Revision: `1`
-Custom presets: `1`
+Revision: `2`
+Custom presets: `2`
 
 ## Built-In Presets
 
@@ -23,3 +23,4 @@ Custom presets: `1`
 | Name | Updated | Behavior | Codex Mode | Project Tests | Token Gate | Reviews | Auto Close | Local Commit |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `supervised_executable_local_commit_1h` | `2026-06-23T14:50:27Z` | `executable / auto-close needs note / local-commit` | `run_codex` | `none` | `yes` | `machine / codex` | `yes` | `yes` |
+| `supervised_executable_local_commit_1h_auto_change` | `2026-06-25T07:18:57Z` | `executable / auto-close needs note / local-commit` | `run_codex` | `none` | `yes` | `machine / codex` | `yes` | `yes` |

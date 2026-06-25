@@ -11,13 +11,14 @@ from ai_project_ctl.pipeline import CodexAdapterMode, CodexExecutionMode, policy
 from ai_project_ctl.pipeline.codex_adapter import (
     CODE_LOCAL_COMMAND_FAILED,
     CODE_LOCAL_COMMAND_PASSED,
-    CODE_REPORT_INVALID,
-    CODE_REPORT_MISSING,
+    CODE_SUMMARY_INVALID,
+    CODE_SUMMARY_MISSING,
     run_codex_adapter,
 )
-from ai_project_ctl.pipeline.codex_report_parser import (
-    CODEX_REPORT_JSON_MALFORMED,
-    CODEX_REPORT_PARSE_OK,
+from ai_project_ctl.pipeline.codex_summary_parser import (
+    CODEX_SUMMARY_BLOCK_MISSING,
+    CODEX_SUMMARY_JSON_MALFORMED,
+    CODEX_SUMMARY_PARSE_OK,
 )
 from ai_project_ctl.pipeline.token_budget import evaluate_token_budget
 
@@ -108,8 +109,25 @@ def report_payload(**overrides):
     return payload
 
 
+def summary_payload(**overrides):
+    payload = {
+        "implementation_summary": "Implemented adapter auto-submit.",
+        "notes": ["Builder used trusted adapter evidence."],
+        "warnings": [],
+        "blockers": [],
+    }
+    payload.update(overrides)
+    return payload
+
+
 def stdout_for_report(payload):
     return "Codex finished.\nCODEX_REPORT_JSON:\n```json\n{}\n```\n".format(
+        json.dumps(payload, indent=2, sort_keys=True)
+    )
+
+
+def stdout_for_summary(payload):
+    return "Codex finished.\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{}\n```\n".format(
         json.dumps(payload, indent=2, sort_keys=True)
     )
 
@@ -137,7 +155,7 @@ def run_codex_policy(
 
 
 class CodexAdapterAutoSubmitTests(unittest.TestCase):
-    def test_successful_local_command_auto_submits_structured_stdout_report(self):
+    def test_successful_local_command_auto_submits_built_report_from_summary(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write_prompt(root)
@@ -151,7 +169,19 @@ class CodexAdapterAutoSubmitTests(unittest.TestCase):
                 policy=policy,
                 token_gate=token_gate,
                 runner=lambda argv, stdin_text: completed(
-                    stdout=stdout_for_report(report_payload())
+                    stdout=stdout_for_report(
+                        report_payload(
+                            checks=[
+                                {
+                                    "name": "ai_generated_invalid_enum",
+                                    "command": "codex said so",
+                                    "result": "not_run",
+                                }
+                            ],
+                            changed_files=["untrusted-ai-file.py"],
+                        )
+                    )
+                    + stdout_for_summary(summary_payload())
                 ),
             )
 
@@ -174,9 +204,26 @@ class CodexAdapterAutoSubmitTests(unittest.TestCase):
             self.assertEqual(result.code, CODE_LOCAL_COMMAND_PASSED)
             self.assertEqual(result.report_id, "RPT-001")
             self.assertEqual(result.after_report_id, "RPT-001")
-            self.assertEqual(result.report_parse_code, CODEX_REPORT_PARSE_OK)
+            self.assertEqual(result.report_parse_code, CODEX_SUMMARY_PARSE_OK)
+            self.assertEqual(
+                result.report_builder_evidence["built_report_id"],
+                "RPT-001",
+            )
+            self.assertIn(
+                "codex_adapter_gate",
+                result.report_builder_evidence["policy_evidence_keys"],
+            )
             self.assertEqual(state["latest_by_task"], {"TASK-001": "RPT-001"})
-            self.assertEqual(state["reports"][0]["report"]["reported_task_id"], "TASK-001")
+            report = state["reports"][0]["report"]
+            self.assertEqual(report["reported_task_id"], "TASK-001")
+            self.assertEqual(
+                report["implementation_summary"],
+                "Implemented adapter auto-submit.",
+            )
+            self.assertEqual(report["changed_files"], [])
+            self.assertNotIn("untrusted-ai-file.py", json.dumps(report))
+            for check in report["checks"]:
+                self.assertNotEqual(check["result"], "not_run")
             self.assertTrue(
                 state["reports"][0]["source_file"].startswith(
                     "captured:stdout:sha256:"
@@ -208,11 +255,11 @@ class CodexAdapterAutoSubmitTests(unittest.TestCase):
             script = "\n".join(
                 [
                     "import json, sys",
-                    "payload = json.loads({!r})".format(json.dumps(report_payload())),
+                    "payload = json.loads({!r})".format(json.dumps(summary_payload())),
                     "sys.stderr.write('runtime stderr\\n')",
                     "sys.stderr.flush()",
                     "sys.stdout.write('runtime stdout\\n')",
-                    "sys.stdout.write('CODEX_REPORT_JSON:\\n```json\\n')",
+                    "sys.stdout.write('CODEX_EXECUTION_SUMMARY_JSON:\\n```json\\n')",
                     "sys.stdout.write(json.dumps(payload, indent=2, sort_keys=True))",
                     "sys.stdout.write('\\n```\\n')",
                     "sys.stdout.flush()",
@@ -264,19 +311,20 @@ class CodexAdapterAutoSubmitTests(unittest.TestCase):
                 policy=policy,
                 token_gate=token_gate,
                 runner=lambda argv, stdin_text: completed(
-                    stdout="Codex finished without structured report.\n"
+                    stdout="Codex finished without structured summary.\n"
                 ),
             )
 
             self.assertFalse(result.ok)
             self.assertEqual(result.status, "blocked")
-            self.assertEqual(result.code, CODE_REPORT_MISSING)
-            self.assertEqual(result.reason, "structured_execution_report_missing")
+            self.assertEqual(result.code, CODE_SUMMARY_MISSING)
+            self.assertEqual(result.reason, "codex_execution_summary_missing")
+            self.assertEqual(result.report_parse_code, CODEX_SUMMARY_BLOCK_MISSING)
             self.assertFalse(
                 (root / "AI_PROJECT" / "state" / "task_reports.json").exists()
             )
 
-    def test_malformed_structured_report_blocks_with_parse_evidence(self):
+    def test_malformed_summary_blocks_with_parse_evidence(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write_prompt(root)
@@ -290,18 +338,18 @@ class CodexAdapterAutoSubmitTests(unittest.TestCase):
                 policy=policy,
                 token_gate=token_gate,
                 runner=lambda argv, stdin_text: completed(
-                    stdout="CODEX_REPORT_JSON:\n```json\n{\"task_id\": \n```\n"
+                    stdout="CODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\"notes\": \n```\n"
                 ),
             )
 
             self.assertFalse(result.ok)
             self.assertEqual(result.status, "blocked")
-            self.assertEqual(result.code, CODE_REPORT_INVALID)
-            self.assertEqual(result.reason, "structured_execution_report_invalid")
-            self.assertEqual(result.report_parse_code, CODEX_REPORT_JSON_MALFORMED)
+            self.assertEqual(result.code, CODE_SUMMARY_INVALID)
+            self.assertEqual(result.reason, "codex_execution_summary_invalid")
+            self.assertEqual(result.report_parse_code, CODEX_SUMMARY_JSON_MALFORMED)
             self.assertEqual(
                 result.report_parse_issue["code"],
-                CODEX_REPORT_JSON_MALFORMED,
+                CODEX_SUMMARY_JSON_MALFORMED,
             )
             self.assertFalse(
                 (root / "AI_PROJECT" / "state" / "task_reports.json").exists()
@@ -322,7 +370,7 @@ class CodexAdapterAutoSubmitTests(unittest.TestCase):
                 token_gate=token_gate,
                 runner=lambda argv, stdin_text: completed(
                     returncode=7,
-                    stdout=stdout_for_report(report_payload()),
+                    stdout=stdout_for_summary(summary_payload()),
                     stderr="command failed\n",
                 ),
             )

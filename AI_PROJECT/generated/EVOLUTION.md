@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `2256`
-Changes: `72`
+Revision: `2279`
+Changes: `73`
 
 ## Summary
 
 - `accepted`: 51
-- `approved`: 15
+- `approved`: 16
 - `in_review`: 1
 - `ready`: 5
 
@@ -4576,3 +4576,58 @@ Impact:
 Linked tasks:
 
 - TASK-151
+
+### CHG-073 — PIPE-059 Keep runtime pipeline logs out of task diff gates
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-64 requires an explicit Evolution Change Proposal before implementation: Ensure runtime UI and pipeline log files do not cause task verification diff gates to fail.
+
+Proposal:
+
+Implement the bounded task scope: Review where UI run logs and pipeline runtime logs are written.; Ensure runtime log paths are ignored by Git or excluded from diff gate comparison.; Add tests for diff gate behavior with runtime log files present.; Document the chosen runtime log path in a code comment or focused note.
+
+Rationale:
+
+Runtime logs and local UI run artifacts should not be counted as implementation changes for a task.
+
+Approved by: `human_owner` at `2026-06-25T08:38:45Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-032)  
+
+Affected files:
+
+- .gitignore
+- ai_project_ctl/pipeline/verify_phase.py
+- ai_project_ctl/pipeline/diff_gate.py
+- tests/pipeline/test_verify_phase.py
+
+Risks:
+
+- Boundary risk: Do not ignore source files, tests or project-control state files.
+- Boundary risk: Do not weaken diff gate checks for real task implementation files.
+- Boundary risk: Do not delete existing owner logs.
+- Verify that this does not hide AI_PROJECT/state changes unintentionally.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-143.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Review where UI run logs and pipeline runtime logs are written.
+- Ensure runtime log paths are ignored by Git or excluded from diff gate comparison.
+- Add tests for diff gate behavior with runtime log files present.
+- Document the chosen runtime log path in a code comment or focused note.
+- Runtime log files under the chosen logs path do not appear as missing_from_report.
+- Real source, test and documentation changes still require report coverage.
+- Git ignore rules cover generated runtime log artifacts where appropriate.
+
+Linked tasks:
+
+- TASK-143

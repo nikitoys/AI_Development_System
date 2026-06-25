@@ -41,6 +41,7 @@ from .state import (
 
 
 SESSION_ID_PREFIX = "PSESS-"
+LIVE_PHASE_STATUS = "running"
 
 
 class PipelineSessionError(CommandError):
@@ -289,6 +290,7 @@ def record_phase_result(
     root: str | Path = ".",
     actor: str = "human_owner",
     task_id: str = "",
+    current_step_name: str = "",
     command: str = "pipeline.phase.prepare",
 ) -> CommandResult:
     """Append one phase result to a governed pipeline session."""
@@ -306,7 +308,10 @@ def record_phase_result(
         entry.setdefault("events", [])
         entry["events"] = _unique_strings([*entry.get("events", []), event_id])
 
-        session.setdefault("phase_history", []).append(entry)
+        history = session.setdefault("phase_history", [])
+        replaced_running_phase = _replace_latest_running_phase(history, entry)
+        if not replaced_running_phase:
+            history.append(entry)
         session["current_phase"] = str(entry.get("phase") or "")
         session["current_phase_status"] = str(entry.get("status") or "")
         artifacts = (
@@ -321,7 +326,14 @@ def record_phase_result(
             session["current_task_id"] = task_id
 
         status = str(entry.get("status") or "")
-        if status == "blocked":
+        if status == LIVE_PHASE_STATUS:
+            session["status"] = "running"
+            session["blocked_by"] = ""
+            session["stop_reason"] = ""
+            step_name = current_step_name or session.get("current_step") or entry.get("phase")
+            session["current_step"] = str(step_name or "")
+            session["current_step_status"] = LIVE_PHASE_STATUS
+        elif status == "blocked":
             session["status"] = "blocked"
             session["stop_reason"] = str(entry.get("reason") or "")
         elif status == "failed":
@@ -332,6 +344,8 @@ def record_phase_result(
                 session["status"] = "running"
             session["blocked_by"] = ""
             session["stop_reason"] = ""
+        if replaced_running_phase and session.get("current_step_status") == LIVE_PHASE_STATUS:
+            session["current_step_status"] = status
         session["started_at"] = session.get("started_at") or now
         _touch_session(session, now, event_id)
         state["current_session_id"] = session_id
@@ -420,7 +434,7 @@ def complete_session(
 def validate_sessions(*, root: str | Path = ".") -> ValidationResult:
     state = load_pipeline_state(root)
     refs = load_reference_state(root)
-    result = validate_pipeline_state(
+    result = _validate_pipeline_state_for_session_service(
         state,
         tasks_state=refs["tasks"],
         evolution_state=refs["evolution"],
@@ -518,7 +532,7 @@ def _mutate_pipeline_state(
     with lock:
         state = load_pipeline_state(root_path)
         refs = load_reference_state(root_path)
-        before = validate_pipeline_state(
+        before = _validate_pipeline_state_for_session_service(
             state,
             tasks_state=refs["tasks"],
             evolution_state=refs["evolution"],
@@ -537,7 +551,7 @@ def _mutate_pipeline_state(
         next_state["revision"] = revision_before + 1
         next_state["updated_at"] = now
 
-        after = validate_pipeline_state(
+        after = _validate_pipeline_state_for_session_service(
             next_state,
             tasks_state=refs["tasks"],
             evolution_state=refs["evolution"],
@@ -760,7 +774,82 @@ def _gate_outcome(
 def _phase_result_dict(value: PhaseResult | Mapping[str, Any]) -> dict[str, Any]:
     if isinstance(value, PhaseResult):
         return value.to_dict()
+    if isinstance(value, Mapping) and str(value.get("status") or "") == LIVE_PHASE_STATUS:
+        return _live_phase_result_dict(value)
     return PhaseResult.from_dict(value).to_dict()
+
+
+def _live_phase_result_dict(value: Mapping[str, Any]) -> dict[str, Any]:
+    validation_payload = dict(value)
+    validation_payload["status"] = "skipped"
+    result = PhaseResult.from_dict(validation_payload).to_dict()
+    result["status"] = LIVE_PHASE_STATUS
+    return result
+
+
+def _replace_latest_running_phase(
+    history: list[Any],
+    entry: dict[str, Any],
+) -> bool:
+    status = str(entry.get("status") or "")
+    if status == LIVE_PHASE_STATUS:
+        return False
+    phase_name = str(entry.get("phase") or "")
+    if not phase_name:
+        return False
+    for index in range(len(history) - 1, -1, -1):
+        existing = history[index]
+        if not isinstance(existing, Mapping):
+            continue
+        if str(existing.get("phase") or "") != phase_name:
+            return False
+        if str(existing.get("status") or "") != LIVE_PHASE_STATUS:
+            return False
+        entry["events"] = _unique_strings(
+            [
+                *existing.get("events", []),
+                *entry.get("events", []),
+            ]
+        )
+        history[index] = entry
+        return True
+    return False
+
+
+def _validate_pipeline_state_for_session_service(
+    state: Mapping[str, Any],
+    *,
+    tasks_state: Mapping[str, Any] | None = None,
+    evolution_state: Mapping[str, Any] | None = None,
+    task_reports_state: Mapping[str, Any] | None = None,
+) -> ValidationResult:
+    return validate_pipeline_state(
+        _state_with_live_phase_statuses_normalized(state),
+        tasks_state=tasks_state,
+        evolution_state=evolution_state,
+        task_reports_state=task_reports_state,
+    )
+
+
+def _state_with_live_phase_statuses_normalized(
+    state: Mapping[str, Any],
+) -> Mapping[str, Any]:
+    sessions = state.get("sessions")
+    if not isinstance(sessions, list):
+        return state
+    normalized = copy.deepcopy(state)
+    for session in normalized.get("sessions", []):
+        if not isinstance(session, dict):
+            continue
+        if session.get("current_phase_status") == LIVE_PHASE_STATUS:
+            session["current_phase_status"] = "skipped"
+        history = session.get("phase_history")
+        if not isinstance(history, list):
+            continue
+        for entry in history:
+            if isinstance(entry, dict) and entry.get("status") == LIVE_PHASE_STATUS:
+                entry["status"] = "skipped"
+    return normalized
 
 
 def _unique_strings(values: Sequence[Any]) -> list[str]:

@@ -12,7 +12,11 @@ from ai_project_ctl.pipeline.codex_adapter import (
 )
 from ai_project_ctl.pipeline.execute_phase import execute_phase
 from ai_project_ctl.pipeline.phase import PhaseResult
-from ai_project_ctl.pipeline.session import create_session, record_phase_result
+from ai_project_ctl.pipeline.session import (
+    create_session,
+    record_phase_result,
+    validate_sessions,
+)
 from ai_project_ctl.pipeline.state import pipeline_state_path
 
 
@@ -128,9 +132,12 @@ class ExecutePhaseRuntimeLogTests(unittest.TestCase):
                 },
             }
             seen = {}
+            live_state = {}
 
             def fake_adapter(**kwargs):
                 seen.update(kwargs)
+                live_state.update(load_pipeline(root)["sessions"][0])
+                self.assertTrue(validate_sessions(root=root).ok)
                 policy = kwargs["policy"]
                 token_gate = kwargs["token_gate"]
                 return CodexAdapterResult(
@@ -167,11 +174,46 @@ class ExecutePhaseRuntimeLogTests(unittest.TestCase):
                 codex_adapter=fake_adapter,
             )
             latest_phase = load_pipeline(root)["sessions"][0]["phase_history"][-1]
+            session_state = load_pipeline(root)["sessions"][0]
             artifacts = latest_phase["artifacts"]
 
             self.assertTrue(result.ok)
             self.assertEqual(seen["session_id"], session_id)
+            self.assertEqual(live_state["current_phase"], "execute")
+            self.assertEqual(live_state["current_phase_status"], "running")
+            self.assertEqual(live_state["current_step"], "execute")
+            self.assertEqual(live_state["current_step_status"], "running")
+            live_phase = live_state["phase_history"][-1]
+            self.assertEqual(live_phase["phase"], "execute")
+            self.assertEqual(live_phase["status"], "running")
+            live_artifacts = live_phase["artifacts"]
+            self.assertEqual(live_artifacts["session_id"], session_id)
+            self.assertEqual(live_artifacts["task_id"], "TASK-001")
+            self.assertEqual(live_artifacts["adapter"]["mode"], "local_command")
+            self.assertEqual(live_artifacts["adapter"]["command_ref"], "codex exec")
+            self.assertEqual(live_artifacts["adapter"]["timeout_sec"], 30)
+            self.assertEqual(
+                live_artifacts["runtime_logs"]["stdout"]["path"],
+                "AI_PROJECT/logs/codex/PSESS-001/TASK-001-stdout.log",
+            )
+            self.assertEqual(
+                live_artifacts["runtime_logs"]["stderr"]["path"],
+                "AI_PROJECT/logs/codex/PSESS-001/TASK-001-stderr.log",
+            )
+            self.assertEqual(
+                live_artifacts["execute_evidence"]["command_ref"],
+                "codex exec",
+            )
             self.assertEqual(latest_phase["status"], "passed")
+            self.assertEqual(session_state["current_phase"], "execute")
+            self.assertEqual(session_state["current_phase_status"], "passed")
+            self.assertEqual(session_state["current_step_status"], "passed")
+            execute_phases = [
+                phase
+                for phase in session_state["phase_history"]
+                if phase["phase"] == "execute"
+            ]
+            self.assertEqual(len(execute_phases), 1)
             self.assertEqual(artifacts["runtime_logs"], runtime_logs)
             self.assertEqual(artifacts["adapter"]["runtime_logs"], runtime_logs)
             self.assertEqual(

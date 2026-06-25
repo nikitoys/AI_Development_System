@@ -12,6 +12,10 @@ from typing import Any, Callable, Mapping, Sequence
 from ai_project_ctl.core.registry import command_describe
 from ai_project_ctl.core.result import CommandError, CommandResult
 from ai_project_ctl.pipeline.batch import run_until_blocker
+from ai_project_ctl.pipeline.report_recovery import (
+    ReportRecoveryError,
+    submit_recovered_report,
+)
 from ai_project_ctl.pipeline.session import create_session
 from ai_project_ctl.pipeline.ui_policy import (
     resolve_ui_pipeline_policy,
@@ -19,6 +23,7 @@ from ai_project_ctl.pipeline.ui_policy import (
 )
 from ai_project_ctl.pipeline.ui_run import build_ui_run_selected_queue
 from ai_project_ctl.ui_settings import (
+    ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
     apply_ui_settings,
@@ -59,6 +64,7 @@ UI_SETTINGS_WEB_ALLOWED_KEYS = (
     "default_policy",
     REQUIRE_CODEX_REVIEW_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+    ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
     "execution_timeout_sec",
     "preflight_timeout_sec",
 )
@@ -116,6 +122,45 @@ LOCAL_ACTION_DESCRIPTORS: dict[str, dict[str, Any]] = {
             "validates": False,
         },
         "legacy_command": ["python scripts/aictl.py ui settings apply --setting <key=value>"],
+        "availability": "implemented",
+    },
+    "pipeline.report_recovery.submit": {
+        "name": "pipeline.report_recovery.submit",
+        "domain": "pipeline",
+        "description": "Submit an owner-confirmed recovered draft report for a REPORT_MISSING session.",
+        "kind": "write",
+        "arguments": [
+            {
+                "name": "session_id",
+                "description": "Pipeline session ID blocked by REPORT_MISSING.",
+                "type": "string",
+                "required": True,
+                "repeatable": False,
+            },
+            {
+                "name": "task_id",
+                "description": "Selected task ID shown in the recovery draft.",
+                "type": "string",
+                "required": False,
+                "repeatable": False,
+            },
+            {
+                "name": "task_ref",
+                "description": "Selected task ref shown in the recovery draft.",
+                "type": "string",
+                "required": False,
+                "repeatable": False,
+            },
+        ],
+        "read_write": {
+            "mutates_state": True,
+            "writes_events": True,
+            "renders_generated": False,
+            "validates": True,
+        },
+        "legacy_command": [
+            "Web-only recovery action; submits through ai_project_ctl.task_reports."
+        ],
         "availability": "implemented",
     }
 }
@@ -299,6 +344,8 @@ class WebActionExecutor:
             process = self._update_ui_setting(fields)
         elif action.action_id == "ui.settings.apply":
             process = self._apply_ui_settings(fields)
+        elif action.action_id == "pipeline.report_recovery.submit":
+            process = self._submit_recovered_report(fields)
         else:
             command = [
                 self.python_executable,
@@ -450,6 +497,35 @@ class WebActionExecutor:
             key,
             value,
         ]
+        return ActionProcessResult(
+            command=command,
+            returncode=0,
+            stdout=json.dumps(result.to_dict(), ensure_ascii=False, sort_keys=True)
+            + "\n",
+            stderr="",
+        )
+
+    def _submit_recovered_report(self, fields: Mapping[str, str]) -> ActionProcessResult:
+        session_id = _require_field(fields, "session_id")
+        try:
+            result = submit_recovered_report(
+                session_id,
+                root=self.root,
+                actor=self.actor,
+                expected_task_id=_field(fields, "task_id"),
+                expected_task_ref=_field(fields, "task_ref"),
+            )
+        except ReportRecoveryError as exc:
+            raise WebActionError(
+                "WEB_REPORT_RECOVERY_FAILED",
+                str(exc),
+                details={
+                    "action": "pipeline.report_recovery.submit",
+                    "session_id": session_id,
+                },
+            ) from exc
+
+        command = ["pipeline.report_recovery.submit", session_id]
         return ActionProcessResult(
             command=command,
             returncode=0,
@@ -1052,6 +1128,17 @@ ACTIONS: dict[str, WebAction] = {
         command_name="pipeline.render",
         label="Refresh pipeline status",
         builder=_build_pipeline_render,
+    ),
+    "pipeline.report_recovery.submit": WebAction(
+        action_id="pipeline.report_recovery.submit",
+        command_name="pipeline.report_recovery.submit",
+        label="Submit recovered report",
+        builder=lambda fields: [
+            "pipeline",
+            "report-recovery",
+            "submit",
+            _require_field(fields, "session_id"),
+        ],
     ),
     "task.prepare_for_codex": WebAction(
         action_id="task.prepare_for_codex",
