@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1125,
-  "current_task_id": null,
+  "revision": 1206,
+  "current_task_id": "TASK-136",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-25T06:47:46Z",
+  "updated_at": "2026-06-25T13:13:46Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -9478,7 +9478,7 @@
       "id": "TASK-136",
       "epic_id": "EPIC-009",
       "title": "PIPE-052 Add pipeline session status JSON endpoint",
-      "status": "planned",
+      "status": "in_progress",
       "summary": "Add a read-only JSON endpoint that returns compact live status for one pipeline session.",
       "description": "This enables the Web Control Center to refresh session status without reloading the full HTML page.",
       "priority": 1,
@@ -9522,7 +9522,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-24T10:23:20Z",
-      "updated_at": "2026-06-24T10:23:20Z",
+      "updated_at": "2026-06-25T13:13:46Z",
       "uid": "tsk_3b24331932c4",
       "ref": "PIPEF-57",
       "legacy_id": "TASK-136",
@@ -9767,7 +9767,7 @@
       "id": "TASK-141",
       "epic_id": "EPIC-009",
       "title": "PIPE-057 Add pipeline session live log tail endpoint",
-      "status": "planned",
+      "status": "done",
       "summary": "Add a read-only endpoint that returns appended chunks from a pipeline session runtime log.",
       "description": "The Web UI needs a safe tail API to display live Codex execution output.",
       "priority": 1,
@@ -9807,11 +9807,11 @@
         "This endpoint should be safe for local loopback use only."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T08:15:14Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-24T10:23:24Z",
-      "updated_at": "2026-06-24T10:23:24Z",
+      "updated_at": "2026-06-25T08:15:14Z",
       "uid": "tsk_ed7c7c10d9eb",
       "ref": "PIPEF-62",
       "legacy_id": "TASK-141",
@@ -9825,7 +9825,7 @@
       "id": "TASK-142",
       "epic_id": "EPIC-009",
       "title": "PIPE-058 Add live Codex log panel to Pipeline session page",
-      "status": "planned",
+      "status": "done",
       "summary": "Display live stdout and stderr output for the current Codex execute phase in the Web Pipeline session page.",
       "description": "The owner should be able to expand a live log panel and see what Codex is doing while execute is running.",
       "priority": 1,
@@ -9864,11 +9864,11 @@
         "This task depends logically on backend log files and tail endpoint, but do not reference same-import tasks in depends_on."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T08:34:17Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-24T10:23:25Z",
-      "updated_at": "2026-06-24T10:23:25Z",
+      "updated_at": "2026-06-25T08:34:18Z",
       "uid": "tsk_163fe8b208a9",
       "ref": "PIPEF-63",
       "legacy_id": "TASK-142",
@@ -9882,7 +9882,7 @@
       "id": "TASK-143",
       "epic_id": "EPIC-009",
       "title": "PIPE-059 Keep runtime pipeline logs out of task diff gates",
-      "status": "planned",
+      "status": "done",
       "summary": "Ensure runtime UI and pipeline log files do not cause task verification diff gates to fail.",
       "description": "Runtime logs and local UI run artifacts should not be counted as implementation changes for a task.",
       "priority": 1,
@@ -9923,11 +9923,11 @@
         "This addresses noisy verification failures caused by UI run JSON and live execution logs."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T09:34:56Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-24T10:23:26Z",
-      "updated_at": "2026-06-24T10:23:26Z",
+      "updated_at": "2026-06-25T09:34:57Z",
       "uid": "tsk_3b9b49da1c41",
       "ref": "PIPEF-64",
       "legacy_id": "TASK-143",
@@ -10636,7 +10636,7 @@
       "id": "TASK-156",
       "epic_id": "EPIC-009",
       "title": "PIPE-072 Add Web recovery action for report missing sessions",
-      "status": "planned",
+      "status": "done",
       "summary": "Add a Web owner action that creates a draft structured report from captured Codex output for REPORT_MISSING sessions.",
       "description": "This provides a recovery path when Codex completed before auto-report support or emitted only a text summary.",
       "priority": 1,
@@ -10677,11 +10677,11 @@
         "This task is useful for sessions created before automatic structured report support is fully deployed."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T09:49:41Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-24T11:23:00Z",
-      "updated_at": "2026-06-24T11:23:00Z",
+      "updated_at": "2026-06-25T09:49:41Z",
       "uid": "tsk_4c8053ef44b5",
       "ref": "PIPEF-77",
       "legacy_id": "TASK-156",
@@ -11139,6 +11139,485 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 82
+    },
+    {
+      "id": "TASK-164",
+      "epic_id": "EPIC-009",
+      "title": "Fix pipeline report template normalized fields",
+      "status": "done",
+      "summary": "Fix the pipeline report template so generated task report JSON can be submitted without schema errors.",
+      "description": "The current report template includes normalized-only reported_task_id and reported_task_ref fields, but task report submission rejects those fields as unknown input.",
+      "priority": 1,
+      "order": 83,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Remove normalized-only reported_task_id and reported_task_ref from the report template input payload.",
+        "Keep task_id and task_ref in the generated template so identity validation still works.",
+        "Add focused tests proving a generated report template is accepted by task report schema validation.",
+        "Verify the pipeline report template command still produces importable JSON for a selected task."
+      ],
+      "out_of_scope": [
+        "Do not change task report state normalization semantics.",
+        "Do not relax task report schema validation.",
+        "Do not change behavior unrelated to pipeline report templates.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/report_template.py",
+        "tests/pipeline/test_report_template.py"
+      ],
+      "acceptance_criteria": [
+        "pipeline report template output no longer contains reported_task_id or reported_task_ref.",
+        "The generated template still contains schema_version, task_id, task_ref, implementation_summary, changed_files, generated_files, checks, warnings, blockers, notes, owner_decision_required, and token_usage when required by submission/parsing rules.",
+        "Submitting a minimally completed generated template through task report validation no longer fails with unknown reported_task_id or reported_task_ref fields.",
+        "Existing task report normalization continues to persist reported_task_id and reported_task_ref internally after successful submission where applicable.",
+        "Focused tests cover the template output and schema compatibility.",
+        "Relevant project-control validation or focused pytest commands pass."
+      ],
+      "review_instructions": [
+        "Confirm this removes only input-template fields and does not weaken report validation.",
+        "Check that the generated template remains compatible with task report submit and Codex report parsing expectations."
+      ],
+      "notes": [
+        "Observed failure: task report submit rejects template output with INVALID_REPORT_SCHEMA unknown fields reported_task_id and reported_task_ref.",
+        "This is a pipeline/project-control bugfix task under EPIC-009."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T08:23:06Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T08:14:35Z",
+      "updated_at": "2026-06-25T08:23:07Z",
+      "uid": "tsk_e663c259db22",
+      "ref": "PIPEF-83",
+      "legacy_id": "TASK-164",
+      "aliases": [
+        "TASK-164"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 83
+    },
+    {
+      "id": "TASK-165",
+      "epic_id": "EPIC-009",
+      "title": "Record running execute state before Codex starts",
+      "status": "done",
+      "summary": "Record live execute phase and step state before launching the long-running Codex adapter so Web can display Codex Execute as running.",
+      "description": "The current session page can show session.status=running while current_phase remains prepare/passed and steps is empty during codex exec.",
+      "priority": 1,
+      "order": 84,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add governed running-state recording at the start of execute phase before the Codex adapter is called.",
+        "Populate current_phase/current_phase_status and current_step/current_step_status with execute/running while Codex is active.",
+        "Record enough execute runtime metadata for Web live status and log panels to identify the running task and expected runtime log paths.",
+        "Ensure final execute passed/blocked/failed recording still replaces the running state cleanly after Codex returns.",
+        "Add focused regression coverage for a long-running or controlled Codex adapter call."
+      ],
+      "out_of_scope": [
+        "Do not implement the polling JSON endpoint in this task.",
+        "Do not implement partial page refresh in this task.",
+        "Do not change Codex prompt contents or structured report schema.",
+        "Do not weaken execution, report, protected-file, or allowed-file gates."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/execute_phase.py",
+        "ai_project_ctl/pipeline/session.py",
+        "tests/pipeline/test_execute_phase.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "During an active execute phase, the pipeline session records current_phase as execute and current_phase_status as running before Codex adapter completion.",
+        "During an active execute phase, the session records a running current_step or equivalent live-step evidence for the selected task.",
+        "The running execute evidence includes task id, command reference or adapter mode, and expected runtime log path metadata sufficient for Web display.",
+        "After Codex completes, the final execute phase outcome is still recorded as passed, blocked, or failed with existing adapter artifacts preserved.",
+        "Existing prepare, collect-report, verify, and run-until-blocker behavior remains compatible.",
+        "Focused tests cover running-state recording before adapter completion and final-state cleanup after adapter completion."
+      ],
+      "review_instructions": [
+        "Verify that Web can distinguish execute/running from prepare/passed using session state.",
+        "Check that no duplicate final execute outcomes are recorded."
+      ],
+      "notes": [
+        "This bugfix should unblock the expected Web behavior from PIPEF-63 where a running execute phase shows Codex Execute running with live logs.",
+        "PIPEF-57 and PIPEF-58 can consume this state later through JSON polling and partial refresh.",
+        "Not done"
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T10:12:48Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T09:54:09Z",
+      "updated_at": "2026-06-25T10:12:49Z",
+      "uid": "tsk_562c6ea22585",
+      "ref": "PIPEF-84",
+      "legacy_id": "TASK-165",
+      "aliases": [
+        "TASK-165"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 84
+    },
+    {
+      "id": "TASK-166",
+      "epic_id": "EPIC-009",
+      "title": "Add Codex execution summary block contract",
+      "status": "done",
+      "summary": "Introduce a minimal Codex execution summary block so Codex reports only implementation summary, notes, warnings, and blockers instead of full task reports.",
+      "description": "This creates the narrow AI-owned output contract that later report-building code can consume safely.",
+      "priority": 1,
+      "order": 85,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Define a compact AI execution summary JSON block contract for Codex output.",
+        "Add parser support for the summary block with strict top-level fields.",
+        "Update Codex prompt generation to request the summary block instead of a full TaskReport.",
+        "Add focused tests for valid, missing, malformed, and unknown-field summary blocks."
+      ],
+      "out_of_scope": [
+        "Do not build or submit TaskReport payloads in this task.",
+        "Do not change git diff or verification gate behavior.",
+        "Do not refactor unrelated Codex prompt generation code."
+      ],
+      "allowed_files": [
+        "scripts/codexctl.py",
+        "ai_project_ctl/pipeline/codex_summary_parser.py",
+        "tests/pipeline/test_codex_summary_parser.py",
+        "tests/test_codexctl.py"
+      ],
+      "acceptance_criteria": [
+        "Codex prompt output asks for a minimal execution summary block rather than a full structured TaskReport.",
+        "The parser accepts only implementation_summary, notes, warnings, and blockers.",
+        "Malformed or unknown-field summary blocks produce stable parser errors.",
+        "Existing Codex prompt build tests continue to pass.",
+        "Focused parser tests cover the new summary block contract."
+      ],
+      "review_instructions": [
+        "Check that the AI-owned contract cannot define task_id, changed_files, checks, or token_usage.",
+        "Check that prompt wording clearly tells Codex not to emit a full TaskReport."
+      ],
+      "notes": [
+        "This task intentionally narrows Codex responsibility to human-readable execution meaning."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T10:51:50Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T10:28:28Z",
+      "updated_at": "2026-06-25T10:51:51Z",
+      "uid": "tsk_d67b3fc03dcc",
+      "ref": "PIPEF-85",
+      "legacy_id": "TASK-166",
+      "aliases": [
+        "TASK-166"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 85
+    },
+    {
+      "id": "TASK-167",
+      "epic_id": "EPIC-009",
+      "title": "Add evidence-based task report builder",
+      "status": "done",
+      "summary": "Add a pipeline report builder that creates valid TaskReport payloads from session, task, adapter, summary, and policy evidence.",
+      "description": "The builder is responsible for report schema and enums so Codex no longer controls the final TaskReport shape.",
+      "priority": 1,
+      "order": 86,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a report builder module that assembles TaskReport-compatible payloads from trusted pipeline evidence.",
+        "Fill task_id and task_ref from task state rather than AI output.",
+        "Fill checks from adapter and pipeline evidence using only valid check result values.",
+        "Use the parsed AI summary only for implementation_summary, notes, warnings, and blockers."
+      ],
+      "out_of_scope": [
+        "Do not wire the builder into Codex auto-submit in this task.",
+        "Do not change verify-phase git diff policy in this task.",
+        "Do not trust Codex output for schema-owned fields."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/report_builder.py",
+        "ai_project_ctl/pipeline/codex_summary_parser.py",
+        "ai_project_ctl/task_reports.py",
+        "tests/pipeline/test_report_builder.py"
+      ],
+      "acceptance_criteria": [
+        "The builder produces a valid TaskReport payload for a successful Codex adapter result.",
+        "The builder uses task state for task_id and task_ref even if AI summary omits them.",
+        "The builder never emits invalid check result values such as not_run.",
+        "The builder defaults token_usage to an allowed object when precise token evidence is unavailable.",
+        "Focused tests validate the generated payload with the existing task report validation service."
+      ],
+      "review_instructions": [
+        "Check that the builder output matches the existing task report schema.",
+        "Check that AI-provided content is limited to summary-style fields."
+      ],
+      "notes": [
+        "This task establishes the trusted code-owned report construction path.",
+        "Approve"
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T11:05:31Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T10:28:29Z",
+      "updated_at": "2026-06-25T11:05:32Z",
+      "uid": "tsk_8af8c1dfb7bc",
+      "ref": "PIPEF-86",
+      "legacy_id": "TASK-167",
+      "aliases": [
+        "TASK-167"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 86
+    },
+    {
+      "id": "TASK-168",
+      "epic_id": "EPIC-009",
+      "title": "Wire Codex auto-submit through report builder",
+      "status": "done",
+      "summary": "Change the Codex local-command adapter to auto-submit reports built by code from evidence and the AI summary block.",
+      "description": "This replaces direct trust in Codex-generated TaskReport JSON with builder-based auto-submit.",
+      "priority": 1,
+      "order": 87,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Parse the Codex execution summary block after local-command completion.",
+        "Build the TaskReport payload through the evidence-based report builder.",
+        "Submit the built report through the existing task report submission service.",
+        "Preserve stable blocked output when the summary block is missing or malformed."
+      ],
+      "out_of_scope": [
+        "Do not add new Web UI behavior in this task.",
+        "Do not change report validation rules to accept invalid enums.",
+        "Do not remove existing captured stdout and stderr evidence."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/codex_adapter.py",
+        "ai_project_ctl/pipeline/report_builder.py",
+        "ai_project_ctl/pipeline/codex_summary_parser.py",
+        "tests/pipeline/test_codex_adapter.py"
+      ],
+      "acceptance_criteria": [
+        "Codex auto-submit succeeds when the AI summary block is valid and adapter evidence is successful.",
+        "Invalid Codex check enums cannot break auto-submit because checks are code-generated.",
+        "Missing or malformed summary blocks produce a clear adapter blocker with a stable code.",
+        "Auto-submit artifacts record the built report id and relevant builder evidence.",
+        "Existing local-command adapter behavior for stdout, stderr, and runtime logs remains intact."
+      ],
+      "review_instructions": [
+        "Check that the adapter no longer directly submits AI-generated full TaskReport objects.",
+        "Check that failure messages remain actionable for the owner."
+      ],
+      "notes": [
+        "This task is the main reliability improvement for Codex report auto-submit."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T11:16:39Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T10:28:30Z",
+      "updated_at": "2026-06-25T11:16:40Z",
+      "uid": "tsk_d47e0c8dbb5a",
+      "ref": "PIPEF-87",
+      "legacy_id": "TASK-168",
+      "aliases": [
+        "TASK-168"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 87
+    },
+    {
+      "id": "TASK-169",
+      "epic_id": "EPIC-009",
+      "title": "Add optional git diff verification gates",
+      "status": "done",
+      "summary": "Add a pipeline policy switch that can disable git diff, protected-files, and allowed-files verification gates for relaxed runs.",
+      "description": "Strict mode remains the default; relaxed mode allows report flow in dirty working trees without treating all existing changes as task output.",
+      "priority": 1,
+      "order": 88,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a policy field controlling whether verify runs git diff based gates.",
+        "Keep the default policy behavior strict and backward compatible.",
+        "When the switch is disabled, skip git diff, protected-files, and allowed-files gates after the report gate passes.",
+        "Record skipped-gate evidence in verify artifacts so relaxed verification is auditable."
+      ],
+      "out_of_scope": [
+        "Do not implement per-session git baselines.",
+        "Do not change report schema validation.",
+        "Do not hide relaxed verification mode from artifacts."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/policy.py",
+        "ai_project_ctl/pipeline/verify_phase.py",
+        "ai_project_ctl/pipeline/git_diff_gate.py",
+        "tests/pipeline/test_verify_phase.py",
+        "tests/test_pipeline_runner.py"
+      ],
+      "acceptance_criteria": [
+        "Existing policies default to strict git diff verification behavior.",
+        "A policy with git diff gates disabled can pass verify after a valid report without checking the full dirty working tree.",
+        "Strict policies still block on missing_from_report and out-of-scope git diff mismatches.",
+        "Verify artifacts clearly show when git diff based gates were skipped by policy.",
+        "Focused verify tests cover both strict and relaxed policy behavior."
+      ],
+      "review_instructions": [
+        "Check that relaxed mode is explicit in policy snapshots and artifacts.",
+        "Check that strict mode remains unchanged for existing presets."
+      ],
+      "notes": [
+        "This task intentionally avoids the more complex session git baseline approach."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T11:32:35Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T10:28:31Z",
+      "updated_at": "2026-06-25T11:32:35Z",
+      "uid": "tsk_e4f8444c37a1",
+      "ref": "PIPEF-88",
+      "legacy_id": "TASK-169",
+      "aliases": [
+        "TASK-169"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 88
+    },
+    {
+      "id": "TASK-170",
+      "epic_id": "EPIC-009",
+      "title": "Expose relaxed git diff mode for UI runs",
+      "status": "done",
+      "summary": "Expose a UI-run setting that can apply relaxed git diff verification to fast-lane Web and UI task runs.",
+      "description": "This lets owner-selected UI runs avoid dirty-worktree report blockers while preserving strict mode as the default for normal policies.",
+      "priority": 1,
+      "order": 89,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add an allowlisted UI setting for relaxed git diff verification.",
+        "Apply the setting when resolving the effective pipeline policy for UI runs.",
+        "Render the setting in the Web Settings page with clear owner-facing wording.",
+        "Add tests for CLI settings, Web settings, and effective policy resolution."
+      ],
+      "out_of_scope": [
+        "Do not disable git diff gates globally.",
+        "Do not change non-UI policy presets unless explicitly configured.",
+        "Do not add branch, worktree, or baseline isolation."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/ui_settings.py",
+        "ai_project_ctl/pipeline/ui_policy.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/read_model.py",
+        "tests/test_web_control_center.py",
+        "tests/pipeline/test_ui_policy.py",
+        "ai_project_ctl/web/server.py"
+      ],
+      "acceptance_criteria": [
+        "The new UI setting is accepted by CLI and Web settings update actions.",
+        "The Web Settings page shows the setting and explains that strict verification remains available.",
+        "Effective UI policy snapshots reflect relaxed git diff verification only when the setting is enabled.",
+        "Non-UI policy resolution keeps strict git diff verification by default.",
+        "Focused Web and UI policy tests cover the setting."
+      ],
+      "review_instructions": [
+        "Check that the setting cannot silently weaken non-UI runs.",
+        "Check that owner-facing text makes the relaxed verification tradeoff clear."
+      ],
+      "notes": [
+        "This task makes relaxed mode practical for fast owner-confirmed UI runs."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T12:26:27Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T10:28:31Z",
+      "updated_at": "2026-06-25T12:26:27Z",
+      "uid": "tsk_ff58e46626af",
+      "ref": "PIPEF-89",
+      "legacy_id": "TASK-170",
+      "aliases": [
+        "TASK-170"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 89
+    },
+    {
+      "id": "TASK-171",
+      "epic_id": "EPIC-009",
+      "title": "Update legacy Codex prompt report contract test",
+      "status": "done",
+      "summary": "Update the legacy prompt contract test to match the new minimal Codex execution summary contract.",
+      "description": "",
+      "priority": 1,
+      "order": 90,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Update tests/test_codex_prompt_report_contract.py to expect CODEX_EXECUTION_SUMMARY_JSON instead of the old full CODEX_REPORT_JSON TaskReport contract.",
+        "Ensure the new summary-only contract remains covered by tests."
+      ],
+      "out_of_scope": [
+        "Do not change unrelated Codex prompt behavior.",
+        "Do not reintroduce full TaskReport generation in Codex prompts."
+      ],
+      "allowed_files": [
+        "tests/test_codex_prompt_report_contract.py",
+        "tests/test_codexctl.py"
+      ],
+      "acceptance_criteria": [
+        "Legacy prompt contract test no longer expects the old full CODEX_REPORT_JSON report block.",
+        "Prompt tests verify the minimal CODEX_EXECUTION_SUMMARY_JSON contract.",
+        "Focused Codex prompt tests pass."
+      ],
+      "review_instructions": [],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T13:13:27Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T12:35:27Z",
+      "updated_at": "2026-06-25T13:13:27Z",
+      "uid": "tsk_88c093931c3e",
+      "ref": "PIPEF-90",
+      "legacy_id": "TASK-171",
+      "aliases": [
+        "TASK-171"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 90
     }
   ]
 }

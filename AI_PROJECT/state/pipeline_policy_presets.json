@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 1,
+  "revision": 2,
   "created_at": "2026-06-23T14:50:27Z",
-  "updated_at": "2026-06-23T14:50:27Z",
+  "updated_at": "2026-06-25T07:18:57Z",
   "presets": [
     {
       "name": "supervised_executable_local_commit_1h",
@@ -72,6 +72,75 @@
       },
       "created_at": "2026-06-23T14:50:27Z",
       "updated_at": "2026-06-23T14:50:27Z"
+    },
+    {
+      "name": "supervised_executable_local_commit_1h_auto_change",
+      "policy": {
+        "name": "supervised_executable_local_commit_1h_auto_change",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": true,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": true,
+          "owner_approval_note": "Auto-approved by Human Owner for selected UI run"
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec"
+          ],
+          "command_allowlist": [
+            "codex exec"
+          ],
+          "timeout_sec": 3600,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": true,
+          "required_codex_decision": "approve"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        }
+      },
+      "created_at": "2026-06-25T07:18:57Z",
+      "updated_at": "2026-06-25T07:18:57Z"
     }
   ]
 }

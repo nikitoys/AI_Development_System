@@ -29,7 +29,7 @@ def build_report_template(
     template: dict[str, Any] = {
         "schema_version": REPORT_SCHEMA_VERSION,
         "task_id": task_id,
-        "reported_task_id": task_id,
+        "task_ref": task_ref_value,
         "implementation_summary": (
             "TODO: summarize implementation before submitting this report."
         ),
@@ -40,10 +40,23 @@ def build_report_template(
         "blockers": [],
         "notes": [],
         "owner_decision_required": False,
+        "token_usage": {
+            "prompt_tokens": 0,
+            "context_tokens": 0,
+            "completion_tokens": 0,
+            "output_tokens": 0,
+            "total_tokens": 0,
+            "remaining_tokens": 0,
+            "model_context_limit": 0,
+            "max_context_tokens": 0,
+            "reserved_output_tokens": 0,
+            "min_remaining_tokens": 0,
+            "token_count_strategy": "template_placeholder",
+            "token_count_estimated": True,
+            "token_count_unavailable": False,
+            "token_count_unavailable_reason": "",
+        },
     }
-    if task_ref_value:
-        template["task_ref"] = task_ref_value
-        template["reported_task_ref"] = task_ref_value
     return template
 
 

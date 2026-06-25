@@ -7,12 +7,15 @@ evidence for later pipeline phases.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from ai_project_ctl.core.result import CommandMessage, CommandResult
 
 from .git_diff_gate import BLOCKED as GIT_DIFF_BLOCKED
+from .git_diff_gate import CODE_DIFF_MISMATCH as GIT_DIFF_CODE_DIFF_MISMATCH
+from .git_diff_gate import CODE_PASS as GIT_DIFF_CODE_PASS
 from .git_diff_gate import FAIL as GIT_DIFF_FAIL
 from .git_diff_gate import PASS as GIT_DIFF_PASS
 from .git_diff_gate import AllowedFilesGateResult
@@ -38,6 +41,15 @@ VERIFY_EVIDENCE_SCHEMA_VERSION = 1
 MAX_EVIDENCE_ITEMS = 50
 MAX_EVIDENCE_CHECKS = 20
 MAX_EVIDENCE_TEXT = 240
+RUNTIME_LOG_PATH_PREFIX = "AI_PROJECT/logs/"
+GIT_DIFF_GATES_POLICY_KEY = "git_diff_gates_policy"
+SKIPPED_GATES_KEY = "skipped_gates"
+GIT_DIFF_GATES_DISABLED_REASON = "policy.verify.run_git_diff_gates is false"
+GIT_DIFF_BASED_GATE_NAMES = (
+    "git_diff_gate",
+    "protected_files_gate",
+    "allowed_files_gate",
+)
 
 
 def verify_phase(
@@ -209,136 +221,19 @@ def verify_phase(
         )
 
     if report_gate.status in {REPORT_PASS, REPORT_WARN}:
-        git_diff_gate = evaluate_git_diff_gate(
-            root=root_path,
-            expected_files=_reported_diff_files(report_gate),
-        )
-        comparison = _report_git_diff_comparison(report_gate, git_diff_gate)
-        git_diff_artifacts = {
-            **report_artifacts,
-            "git_diff_gate_status": git_diff_gate.status,
-            "git_diff_gate_code": git_diff_gate.code,
-            "git_diff_gate": git_diff_gate.to_dict(),
-            "report_git_diff_comparison": comparison,
-        }
-        protected_files_gate = evaluate_protected_files_gate(
-            root=git_diff_gate.repo_root or root_path,
-            changed_files=git_diff_gate.changed_files,
-            reported_changed_files=report_gate.changed_files,
-            reported_generated_files=report_gate.generated_files,
-            governed_control_files=_governed_phase_changed_files(session),
-            governed_generated_files=_governed_phase_generated_files(session),
-        )
-        protected_artifacts = {
-            **git_diff_artifacts,
-            "protected_files_gate_status": protected_files_gate.status,
-            "protected_files_gate_code": protected_files_gate.code,
-            "protected_files_gate": protected_files_gate.to_dict(),
-        }
-        if not protected_files_gate.ok:
-            phase = PhaseResult.blocked(
-                PHASE_NAME,
-                reason=_protected_files_blocked_reason(protected_files_gate),
-                next_action=(
-                    "Move protected project-control changes out of executor scope "
-                    "or regenerate them through governed control commands, then rerun verify."
-                ),
-                artifacts={
-                    "blocked_by": protected_files_gate.code,
-                    "protected_files_policy": (
-                        "actual_git_diff_must_not_include_protected_executor_edits"
-                    ),
-                    **protected_artifacts,
-                },
-                changed_files=report_gate.changed_files,
-                generated_files=report_gate.generated_files,
-            )
-        elif git_diff_gate.status == GIT_DIFF_PASS:
-            allowed_files_gate = evaluate_allowed_files_gate(
-                root=git_diff_gate.repo_root or root_path,
-                changed_files=git_diff_gate.changed_files,
-                allowed_files=_string_list(task.get("allowed_files")),
-                generated_files=report_gate.generated_files,
-            )
-            gated_artifacts = {
-                **protected_artifacts,
-                "allowed_files_gate_status": allowed_files_gate.status,
-                "allowed_files_gate_code": allowed_files_gate.code,
-                "allowed_files_gate": allowed_files_gate.to_dict(),
-            }
-            if not allowed_files_gate.ok:
-                phase = PhaseResult.blocked(
-                    PHASE_NAME,
-                    reason=_allowed_files_blocked_reason(allowed_files_gate),
-                    next_action=(
-                        "Move out-of-scope working-tree changes out of this task "
-                        "or update task allowed_files through project control, then rerun verify."
-                    ),
-                    artifacts={
-                        "blocked_by": allowed_files_gate.code,
-                        "scope_policy": "actual_git_diff_must_match_task_allowed_files",
-                        **gated_artifacts,
-                    },
-                    changed_files=report_gate.changed_files,
-                    generated_files=report_gate.generated_files,
-                )
-            elif report_gate.status == REPORT_PASS:
-                phase = PhaseResult.passed(
-                    PHASE_NAME,
-                    reason=(
-                        "Report gate, git diff gate, protected-files gate, and "
-                        "allowed-files gate passed."
-                    ),
-                    next_action="Run pipeline phase review.",
-                    artifacts=gated_artifacts,
-                    changed_files=report_gate.changed_files,
-                    generated_files=report_gate.generated_files,
-                )
-            else:
-                phase = PhaseResult.blocked(
-                    PHASE_NAME,
-                    reason="Report gate returned warning(s): {}".format(
-                        report_gate.reason
-                    ),
-                    next_action=(
-                        "Resolve report gate warnings or define an explicit follow-up "
-                        "policy, then rerun verify."
-                    ),
-                    artifacts={
-                        "blocked_by": report_gate.code,
-                        "warn_policy": "report_gate_warn_blocks_verify",
-                        **gated_artifacts,
-                    },
-                    changed_files=report_gate.changed_files,
-                    generated_files=report_gate.generated_files,
-                )
-        elif git_diff_gate.status in {GIT_DIFF_BLOCKED, GIT_DIFF_FAIL}:
-            phase = PhaseResult.blocked(
-                PHASE_NAME,
-                reason=_git_diff_blocked_reason(comparison),
-                next_action=(
-                    "Update the structured report file lists or resolve unintended "
-                    "working-tree changes, then rerun verify."
-                ),
-                artifacts={
-                    "blocked_by": git_diff_gate.code,
-                    "mismatch_policy": "git_diff_mismatch_blocks_verify",
-                    **protected_artifacts,
-                },
-                changed_files=report_gate.changed_files,
-                generated_files=report_gate.generated_files,
+        if policy.verify.run_git_diff_gates:
+            phase = _phase_with_git_diff_gates(
+                root_path=root_path,
+                session=session,
+                task=task,
+                report_gate=report_gate,
+                report_artifacts=report_artifacts,
             )
         else:
-            phase = PhaseResult.failed(
-                PHASE_NAME,
-                reason="Git diff gate returned unknown status: {}".format(
-                    git_diff_gate.status
-                ),
-                next_action="Fix git diff gate status handling, then rerun verify.",
-                artifacts={
-                    "error_code": "GIT_DIFF_GATE_UNKNOWN_STATUS",
-                    **protected_artifacts,
-                },
+            phase = _phase_with_git_diff_gates_skipped(
+                policy=policy,
+                report_gate=report_gate,
+                report_artifacts=report_artifacts,
             )
     elif report_gate.status == REPORT_FAIL:
         phase = PhaseResult.blocked(
@@ -449,6 +344,14 @@ def _phase_command(
         result.data["protected_files_gate_code"] = str(
             artifacts.get("protected_files_gate_code") or ""
         )
+        git_diff_policy = artifacts.get(GIT_DIFF_GATES_POLICY_KEY)
+        if isinstance(git_diff_policy, Mapping):
+            result.data[GIT_DIFF_GATES_POLICY_KEY] = dict(git_diff_policy)
+        skipped_gates = artifacts.get(SKIPPED_GATES_KEY)
+        if isinstance(skipped_gates, list):
+            result.data[SKIPPED_GATES_KEY] = [
+                dict(item) for item in skipped_gates if isinstance(item, Mapping)
+            ]
         verification = artifacts.get("verify_evidence")
         if isinstance(verification, Mapping):
             result.data["verification"] = dict(verification)
@@ -558,7 +461,293 @@ def _phase_summary(phase: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _reported_diff_files(report_gate: Any) -> tuple[str, ...]:
-    return _sorted_unique((*report_gate.changed_files, *report_gate.generated_files))
+    return _exclude_runtime_log_paths(
+        _sorted_unique((*report_gate.changed_files, *report_gate.generated_files))
+    )
+
+
+def _phase_with_git_diff_gates(
+    *,
+    root_path: Path,
+    session: Mapping[str, Any],
+    task: Mapping[str, Any],
+    report_gate: Any,
+    report_artifacts: Mapping[str, Any],
+) -> PhaseResult:
+    git_diff_gate = evaluate_git_diff_gate(
+        root=root_path,
+        expected_files=_reported_diff_files(report_gate),
+    )
+    git_diff_gate = _exclude_runtime_logs_from_git_diff(git_diff_gate)
+    comparison = _report_git_diff_comparison(report_gate, git_diff_gate)
+    git_diff_artifacts = {
+        **dict(report_artifacts),
+        "git_diff_gate_status": git_diff_gate.status,
+        "git_diff_gate_code": git_diff_gate.code,
+        "git_diff_gate": git_diff_gate.to_dict(),
+        "report_git_diff_comparison": comparison,
+    }
+    protected_files_gate = evaluate_protected_files_gate(
+        root=git_diff_gate.repo_root or root_path,
+        changed_files=git_diff_gate.changed_files,
+        reported_changed_files=report_gate.changed_files,
+        reported_generated_files=report_gate.generated_files,
+        governed_control_files=_governed_phase_changed_files(session),
+        governed_generated_files=_governed_phase_generated_files(session),
+    )
+    protected_artifacts = {
+        **git_diff_artifacts,
+        "protected_files_gate_status": protected_files_gate.status,
+        "protected_files_gate_code": protected_files_gate.code,
+        "protected_files_gate": protected_files_gate.to_dict(),
+    }
+    if not protected_files_gate.ok:
+        return PhaseResult.blocked(
+            PHASE_NAME,
+            reason=_protected_files_blocked_reason(protected_files_gate),
+            next_action=(
+                "Move protected project-control changes out of executor scope "
+                "or regenerate them through governed control commands, then rerun verify."
+            ),
+            artifacts={
+                "blocked_by": protected_files_gate.code,
+                "protected_files_policy": (
+                    "actual_git_diff_must_not_include_protected_executor_edits"
+                ),
+                **protected_artifacts,
+            },
+            changed_files=report_gate.changed_files,
+            generated_files=report_gate.generated_files,
+        )
+    if git_diff_gate.status == GIT_DIFF_PASS:
+        allowed_files_gate = evaluate_allowed_files_gate(
+            root=git_diff_gate.repo_root or root_path,
+            changed_files=git_diff_gate.changed_files,
+            allowed_files=_string_list(task.get("allowed_files")),
+            generated_files=report_gate.generated_files,
+        )
+        gated_artifacts = {
+            **protected_artifacts,
+            "allowed_files_gate_status": allowed_files_gate.status,
+            "allowed_files_gate_code": allowed_files_gate.code,
+            "allowed_files_gate": allowed_files_gate.to_dict(),
+        }
+        if not allowed_files_gate.ok:
+            return PhaseResult.blocked(
+                PHASE_NAME,
+                reason=_allowed_files_blocked_reason(allowed_files_gate),
+                next_action=(
+                    "Move out-of-scope working-tree changes out of this task "
+                    "or update task allowed_files through project control, then rerun verify."
+                ),
+                artifacts={
+                    "blocked_by": allowed_files_gate.code,
+                    "scope_policy": "actual_git_diff_must_match_task_allowed_files",
+                    **gated_artifacts,
+                },
+                changed_files=report_gate.changed_files,
+                generated_files=report_gate.generated_files,
+            )
+        if report_gate.status == REPORT_PASS:
+            return PhaseResult.passed(
+                PHASE_NAME,
+                reason=(
+                    "Report gate, git diff gate, protected-files gate, and "
+                    "allowed-files gate passed."
+                ),
+                next_action="Run pipeline phase review.",
+                artifacts=gated_artifacts,
+                changed_files=report_gate.changed_files,
+                generated_files=report_gate.generated_files,
+            )
+        return PhaseResult.blocked(
+            PHASE_NAME,
+            reason="Report gate returned warning(s): {}".format(report_gate.reason),
+            next_action=(
+                "Resolve report gate warnings or define an explicit follow-up "
+                "policy, then rerun verify."
+            ),
+            artifacts={
+                "blocked_by": report_gate.code,
+                "warn_policy": "report_gate_warn_blocks_verify",
+                **gated_artifacts,
+            },
+            changed_files=report_gate.changed_files,
+            generated_files=report_gate.generated_files,
+        )
+    if git_diff_gate.status in {GIT_DIFF_BLOCKED, GIT_DIFF_FAIL}:
+        return PhaseResult.blocked(
+            PHASE_NAME,
+            reason=_git_diff_blocked_reason(comparison),
+            next_action=(
+                "Update the structured report file lists or resolve unintended "
+                "working-tree changes, then rerun verify."
+            ),
+            artifacts={
+                "blocked_by": git_diff_gate.code,
+                "mismatch_policy": "git_diff_mismatch_blocks_verify",
+                **protected_artifacts,
+            },
+            changed_files=report_gate.changed_files,
+            generated_files=report_gate.generated_files,
+        )
+    return PhaseResult.failed(
+        PHASE_NAME,
+        reason="Git diff gate returned unknown status: {}".format(git_diff_gate.status),
+        next_action="Fix git diff gate status handling, then rerun verify.",
+        artifacts={
+            "error_code": "GIT_DIFF_GATE_UNKNOWN_STATUS",
+            **protected_artifacts,
+        },
+    )
+
+
+def _phase_with_git_diff_gates_skipped(
+    *,
+    policy: PipelinePolicy,
+    report_gate: Any,
+    report_artifacts: Mapping[str, Any],
+) -> PhaseResult:
+    relaxed_artifacts = {
+        **dict(report_artifacts),
+        GIT_DIFF_GATES_POLICY_KEY: _git_diff_gates_policy_artifact(policy),
+        SKIPPED_GATES_KEY: _skipped_git_diff_gate_artifacts(),
+    }
+    if report_gate.status == REPORT_PASS:
+        return PhaseResult.passed(
+            PHASE_NAME,
+            reason=(
+                "Report gate passed; git diff, protected-files, and "
+                "allowed-files gates were skipped by policy."
+            ),
+            next_action="Run pipeline phase review.",
+            artifacts=relaxed_artifacts,
+            changed_files=report_gate.changed_files,
+            generated_files=report_gate.generated_files,
+        )
+    return PhaseResult.blocked(
+        PHASE_NAME,
+        reason="Report gate returned warning(s): {}".format(report_gate.reason),
+        next_action=(
+            "Resolve report gate warnings or define an explicit follow-up "
+            "policy, then rerun verify."
+        ),
+        artifacts={
+            "blocked_by": report_gate.code,
+            "warn_policy": "report_gate_warn_blocks_verify",
+            **relaxed_artifacts,
+        },
+        changed_files=report_gate.changed_files,
+        generated_files=report_gate.generated_files,
+    )
+
+
+def _git_diff_gates_policy_artifact(policy: PipelinePolicy) -> dict[str, Any]:
+    return {
+        "run_git_diff_gates": bool(policy.verify.run_git_diff_gates),
+        "mode": "strict" if policy.verify.run_git_diff_gates else "relaxed",
+        "reason": "" if policy.verify.run_git_diff_gates else GIT_DIFF_GATES_DISABLED_REASON,
+    }
+
+
+def _skipped_git_diff_gate_artifacts() -> list[dict[str, str]]:
+    return [
+        {
+            "name": name,
+            "status": "skipped",
+            "code": "{}_SKIPPED_BY_POLICY".format(name.upper()),
+            "reason": GIT_DIFF_GATES_DISABLED_REASON,
+        }
+        for name in GIT_DIFF_BASED_GATE_NAMES
+    ]
+
+
+def _exclude_runtime_logs_from_git_diff(
+    git_diff_gate: GitDiffGateResult,
+) -> GitDiffGateResult:
+    # UI-triggered runs and Codex pipeline execution logs are runtime artifacts
+    # under AI_PROJECT/logs/**; they are excluded from task diff coverage without
+    # relaxing gates for source, tests, docs or protected project-control state.
+    if not _git_diff_gate_has_runtime_logs(git_diff_gate):
+        return git_diff_gate
+
+    expected_files = _exclude_runtime_log_paths(git_diff_gate.expected_files)
+    changed_files = _exclude_runtime_log_paths(git_diff_gate.changed_files)
+    tracked_files = _exclude_runtime_log_paths(git_diff_gate.tracked_files)
+    staged_files = _exclude_runtime_log_paths(git_diff_gate.staged_files)
+    unstaged_files = _exclude_runtime_log_paths(git_diff_gate.unstaged_files)
+    untracked_files = _exclude_runtime_log_paths(git_diff_gate.untracked_files)
+    status_entries = tuple(
+        entry
+        for entry in git_diff_gate.status_entries
+        if not _is_runtime_log_path(entry.path)
+    )
+    unexpected_files = _sorted_unique(set(changed_files) - set(expected_files))
+    missing_files = _sorted_unique(set(expected_files) - set(changed_files))
+
+    status = git_diff_gate.status
+    code = git_diff_gate.code
+    reason = git_diff_gate.reason
+    if code == GIT_DIFF_CODE_DIFF_MISMATCH:
+        if unexpected_files or missing_files:
+            reason = "working_tree_diff_does_not_match_expected_files"
+        else:
+            status = GIT_DIFF_PASS
+            code = GIT_DIFF_CODE_PASS
+            reason = (
+                "working_tree_clean"
+                if not changed_files
+                else "working_tree_matches_expected_files"
+            )
+
+    return replace(
+        git_diff_gate,
+        status=status,
+        code=code,
+        reason=reason,
+        expected_files=expected_files,
+        changed_files=changed_files,
+        tracked_files=tracked_files,
+        staged_files=staged_files,
+        unstaged_files=unstaged_files,
+        untracked_files=untracked_files,
+        unexpected_files=unexpected_files,
+        missing_files=missing_files,
+        status_entries=status_entries,
+    )
+
+
+def _git_diff_gate_has_runtime_logs(git_diff_gate: GitDiffGateResult) -> bool:
+    path_groups = (
+        git_diff_gate.expected_files,
+        git_diff_gate.changed_files,
+        git_diff_gate.tracked_files,
+        git_diff_gate.staged_files,
+        git_diff_gate.unstaged_files,
+        git_diff_gate.untracked_files,
+        git_diff_gate.unexpected_files,
+        git_diff_gate.missing_files,
+    )
+    return any(
+        _is_runtime_log_path(path)
+        for paths in path_groups
+        for path in paths
+    ) or any(
+        _is_runtime_log_path(entry.path) for entry in git_diff_gate.status_entries
+    )
+
+
+def _exclude_runtime_log_paths(paths: Sequence[str | Path]) -> tuple[str, ...]:
+    return _sorted_unique(path for path in paths if not _is_runtime_log_path(path))
+
+
+def _is_runtime_log_path(path: str | Path) -> bool:
+    text = str(path).strip().replace("\\", "/")
+    while text.startswith("./"):
+        text = text[2:]
+    return text == RUNTIME_LOG_PATH_PREFIX.rstrip("/") or text.startswith(
+        RUNTIME_LOG_PATH_PREFIX
+    )
 
 
 def _report_git_diff_comparison(
@@ -680,6 +869,14 @@ def _verify_evidence(
     project_tests = artifacts.get("project_tests")
     if isinstance(project_tests, Mapping):
         evidence["project_tests"] = dict(project_tests)
+    git_diff_policy = artifacts.get(GIT_DIFF_GATES_POLICY_KEY)
+    if isinstance(git_diff_policy, Mapping):
+        evidence[GIT_DIFF_GATES_POLICY_KEY] = dict(git_diff_policy)
+    skipped_gates = artifacts.get(SKIPPED_GATES_KEY)
+    if isinstance(skipped_gates, list):
+        evidence[SKIPPED_GATES_KEY] = [
+            dict(item) for item in skipped_gates if isinstance(item, Mapping)
+        ]
     return evidence
 
 

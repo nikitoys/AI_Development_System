@@ -12,18 +12,24 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
-from urllib.parse import parse_qs, unquote, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlparse
 
 from ai_project_ctl.core.result import CommandError
 from ai_project_ctl.core.workflows import BULK_IMPORT_MAX_BYTES
+from ai_project_ctl.pipeline.report_recovery import (
+    draft_json,
+    draft_report_from_session,
+    session_supports_report_recovery,
+)
 from ai_project_ctl.web.actions import (
     WebActionError,
     WebActionExecutor,
     WebActionResult,
     available_actions,
 )
-from ai_project_ctl.web.read_model import ReadOnlyProjectModel
+from ai_project_ctl.web.read_model import ReadOnlyProjectModel, WebControlError
 from ai_project_ctl.ui_settings import (
+    ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
     load_ui_settings,
@@ -76,6 +82,7 @@ PIPELINE_FLOW_GATES = (
 )
 PIPELINE_RAW_DEBUG_LIMIT = 12_000
 PIPELINE_LOG_SNIPPET_LIMIT = 2_000
+PIPELINE_LIVE_LOG_BROWSER_LIMIT = 65_536
 TASK_ROW_WORKFLOWS = (
     {
         "action": "task.prepare_for_codex",
@@ -310,6 +317,28 @@ def route(
             indent=2,
             sort_keys=True,
         )
+    log_tail = _pipeline_log_tail_parts(path)
+    if log_tail is not None:
+        session_id, phase, stream = log_tail
+        try:
+            payload = model.pipeline_runtime_log_tail(
+                session_id,
+                phase,
+                stream,
+                offset=_query_value(query, "offset"),
+            )
+            return _json_response(HTTPStatus.OK, payload)
+        except WebControlError as exc:
+            return _json_error_response(exc)
+    status_session_id = _pipeline_session_status_id(path)
+    if status_session_id is not None:
+        try:
+            return _json_response(
+                HTTPStatus.OK,
+                model.pipeline_session_live_status(status_session_id),
+            )
+        except WebControlError as exc:
+            return _json_error_response(exc)
     if path.startswith("/pipeline/sessions/"):
         session_id = unquote(path.removeprefix("/pipeline/sessions/")).strip("/")
         detail = model.pipeline_session_detail(session_id)
@@ -550,6 +579,14 @@ def render_pipeline_session_detail(data: Mapping[str, Any]) -> str:
 def pipeline_session_auto_refresh(session: Mapping[str, Any]) -> str:
     status = str(session.get("status") or "unknown")
     if status == "running":
+        if pipeline_session_has_live_execute_logs(session):
+            return (
+                '<section class="panel auto-refresh" data-session-status="running" '
+                'data-live-log-refresh="active">'
+                '<div class="status-row">{}<strong>Live log polling active</strong>'
+                "<span>Session reload is paused while Codex Execute logs are streaming.</span></div>"
+                "</section>"
+            ).format(status_badge(status))
         return (
             '<section class="panel auto-refresh" data-auto-refresh="2" '
             'data-session-status="running">'
@@ -743,6 +780,10 @@ def pipeline_owner_approval_actions(data: Mapping[str, Any]) -> str:
     else:
         parts.append('<p class="empty">Approve Auto-close is not applicable to this policy.</p>')
 
+    report_recovery = pipeline_report_recovery_action(data)
+    if report_recovery:
+        parts.append(report_recovery)
+
     if task_ref and task_status == "in_review":
         parts.append(
             action_form(
@@ -765,10 +806,60 @@ def pipeline_owner_approval_actions(data: Mapping[str, Any]) -> str:
     return "".join(parts)
 
 
+def pipeline_report_recovery_action(data: Mapping[str, Any]) -> str:
+    session = _mapping(data.get("session"))
+    raw_session = _mapping(session.get("raw")) or session
+    if not raw_session or not session_supports_report_recovery(raw_session):
+        return ""
+    task = _mapping(data.get("task"))
+    if not task:
+        return (
+            '<section class="report-recovery">'
+            "<h4>Report Recovery</h4>"
+            '<p class="empty">Report recovery is unavailable because the selected task was not found.</p>'
+            "</section>"
+        )
+
+    draft = draft_report_from_session(raw_session, task)
+    warning_items = "".join(
+        "<li>{}</li>".format(escape(warning)) for warning in draft.warnings
+    )
+    inferred = ", ".join(draft.inferred_fields) or "none"
+    return (
+        '<section class="report-recovery">'
+        "<h4>Report Recovery</h4>"
+        '<p class="callout">REPORT_MISSING recovery draft. Review before confirming; '
+        "the draft uses inferred fields and estimated token_usage.</p>"
+        '<div class="review-grid">{}{}{}</div>'
+        '<ul class="hint-list">{}</ul>'
+        '<details class="result-technical" open>'
+        "<summary>Draft structured report JSON</summary>"
+        "<pre>{}</pre>"
+        "</details>"
+        "{}"
+        "</section>"
+    ).format(
+        review_field("Selected Task ID", escape(draft.task_id)),
+        review_field("Selected Task Ref", escape(draft.task_ref)),
+        review_field("Inferred Fields", escape(inferred)),
+        warning_items,
+        escape(draft_json(draft)),
+        action_form(
+            "pipeline.report_recovery.submit",
+            [
+                hidden_field("session_id", draft.session_id),
+                hidden_field("task_id", draft.task_id),
+                hidden_field("task_ref", draft.task_ref),
+            ],
+            button_label="Submit recovered report",
+        ),
+    )
+
+
 def pipeline_step_details(session: Mapping[str, Any]) -> str:
     phase_rows = pipeline_session_phase_rows(session)
     if phase_rows:
-        return pipeline_phase_details(phase_rows)
+        return pipeline_phase_details(phase_rows, session)
 
     steps = [
         step
@@ -806,7 +897,10 @@ def pipeline_step_details(session: Mapping[str, Any]) -> str:
     return "".join(html_steps)
 
 
-def pipeline_phase_details(phase_rows: Sequence[Mapping[str, Any]]) -> str:
+def pipeline_phase_details(
+    phase_rows: Sequence[Mapping[str, Any]],
+    session: Mapping[str, Any],
+) -> str:
     html_phases = []
     latest = phase_rows[-1] if phase_rows else {}
     for phase in phase_rows:
@@ -820,15 +914,18 @@ def pipeline_phase_details(phase_rows: Sequence[Mapping[str, Any]]) -> str:
                 escape("{}.".format(phase.get("index") or "")),
                 status_badge(str(phase.get("status") or "unknown")),
                 escape(str(phase.get("label") or phase.get("phase") or "Unknown Phase")),
-                pipeline_expanded_phase(phase),
+                pipeline_expanded_phase(phase, session),
             )
         )
     return "".join(html_phases)
 
 
-def pipeline_expanded_phase(phase: Mapping[str, Any]) -> str:
+def pipeline_expanded_phase(
+    phase: Mapping[str, Any],
+    session: Mapping[str, Any],
+) -> str:
     evidence = pipeline_phase_evidence_panel(phase)
-    logs = pipeline_phase_log_panel(phase)
+    logs = pipeline_phase_log_panel(phase, session)
     return (
         '<div class="pipeline-step-body">'
         '<div class="review-grid">'
@@ -911,19 +1008,336 @@ def pipeline_phase_evidence_panel(phase: Mapping[str, Any]) -> str:
     )
 
 
-def pipeline_phase_log_panel(phase: Mapping[str, Any]) -> str:
+def pipeline_phase_log_panel(
+    phase: Mapping[str, Any],
+    session: Mapping[str, Any],
+) -> str:
     artifacts = pipeline_phase_artifacts(phase)
+    live_panel = pipeline_live_execute_log_panel(phase, session, artifacts)
     snippets = pipeline_collect_log_snippets(
         artifacts,
         source=str(phase.get("label") or phase.get("phase") or "phase"),
     )
-    if not snippets:
+    captured_panel = pipeline_log_snippets_html(snippets)
+    if not live_panel and not captured_panel:
         return ""
-    return "<h3>Logs</h3>{}".format(pipeline_log_snippets_html(snippets))
+    return "<h3>Logs</h3>{}{}".format(live_panel, captured_panel)
 
 
 def pipeline_phase_artifacts(phase: Mapping[str, Any]) -> Mapping[str, Any]:
     return _mapping(phase.get("artifacts"))
+
+
+def pipeline_session_has_live_execute_logs(session: Mapping[str, Any]) -> bool:
+    for phase in pipeline_session_phase_rows(session):
+        artifacts = pipeline_phase_artifacts(phase)
+        if (
+            pipeline_is_execute_phase(phase)
+            and pipeline_runtime_log_streams(artifacts)
+            and pipeline_execute_phase_running(phase, session)
+        ):
+            return True
+    return False
+
+
+def pipeline_live_execute_log_panel(
+    phase: Mapping[str, Any],
+    session: Mapping[str, Any],
+    artifacts: Mapping[str, Any],
+) -> str:
+    if not pipeline_is_execute_phase(phase):
+        return ""
+    streams = pipeline_runtime_log_streams(artifacts)
+    if not streams:
+        return ""
+
+    running = pipeline_execute_phase_running(phase, session)
+    status_label = "Codex Execute running" if running else "Codex Execute log tail"
+    state_label = "running" if running else "catching up"
+    session_id = str(session.get("id") or "")
+    phase_name = str(phase.get("phase") or "execute")
+    fields = [
+        ("Command", pipeline_execute_command_ref(artifacts)),
+        ("Elapsed", pipeline_execute_elapsed_text(artifacts)),
+        ("Timeout", pipeline_execute_timeout_text(artifacts, session)),
+        ("Running", "yes" if running else "no"),
+    ]
+    stream_panels = [
+        pipeline_live_log_stream_panel(
+            session_id=session_id,
+            phase=phase_name,
+            stream=stream,
+            metadata=metadata,
+        )
+        for stream, metadata in streams.items()
+    ]
+    return (
+        '<section class="pipeline-live-log" data-live-log-panel '
+        'data-session-id="{session_id}" data-phase="{phase}" data-poll-ms="1500" '
+        'data-max-bytes="{max_bytes}">'
+        '<div class="status-row">{badge}<strong>{status_label}</strong>'
+        '<span>status: <strong data-live-log-state>{state_label}</strong></span></div>'
+        '<div class="review-grid">{fields}</div>'
+        '<div class="pipeline-live-log-streams">{streams}</div>'
+        "{script}"
+        "</section>"
+    ).format(
+        session_id=escape(session_id),
+        phase=escape(phase_name),
+        max_bytes=PIPELINE_LIVE_LOG_BROWSER_LIMIT,
+        badge=status_badge("running" if running else str(phase.get("status") or "complete")),
+        status_label=escape(status_label),
+        state_label=escape(state_label),
+        fields="".join(
+            review_field(label, escape(value or "not recorded")) for label, value in fields
+        ),
+        streams="".join(stream_panels),
+        script=pipeline_live_log_script(),
+    )
+
+
+def pipeline_live_log_stream_panel(
+    *,
+    session_id: str,
+    phase: str,
+    stream: str,
+    metadata: Mapping[str, Any],
+) -> str:
+    start_offset = pipeline_log_offset(metadata.get("start_offset"))
+    log_url = "/pipeline/sessions/{}/logs/{}/{}".format(
+        quote(session_id, safe=""),
+        quote(phase, safe=""),
+        quote(stream, safe=""),
+    )
+    return (
+        '<section class="pipeline-live-log-stream" data-live-log-stream="{stream}" '
+        'data-log-url="{url}" data-offset="{offset}" data-received="0" '
+        'data-max-bytes="{max_bytes}">'
+        '<div class="status-row"><strong>{label}</strong>'
+        '<span data-live-log-offset>{offset} bytes</span></div>'
+        '<pre class="pipeline-live-log-output" data-live-log-output="{stream}"></pre>'
+        "</section>"
+    ).format(
+        stream=escape(stream),
+        url=escape(log_url),
+        offset=escape(start_offset),
+        max_bytes=PIPELINE_LIVE_LOG_BROWSER_LIMIT,
+        label=escape(stream.upper()),
+    )
+
+
+def pipeline_live_log_script() -> str:
+    return """
+<script>
+(function() {
+  function startPipelineLiveLogs() {
+    var panels = document.querySelectorAll("[data-live-log-panel]");
+    panels.forEach(function(panel) {
+      if (panel.dataset.liveLogStarted === "1") {
+        return;
+      }
+      panel.dataset.liveLogStarted = "1";
+      var pollMs = Number(panel.dataset.pollMs || "1500");
+      var state = panel.querySelector("[data-live-log-state]");
+      var streams = Array.prototype.slice.call(
+        panel.querySelectorAll("[data-live-log-stream]")
+      );
+      function setState(value) {
+        if (state) {
+          state.textContent = value;
+        }
+      }
+      function pollStream(streamEl) {
+        var output = streamEl.querySelector("[data-live-log-output]");
+        var offsetLabel = streamEl.querySelector("[data-live-log-offset]");
+        var received = Number(streamEl.dataset.received || "0");
+        var maxBytes = Number(streamEl.dataset.maxBytes || panel.dataset.maxBytes || "65536");
+        if (received >= maxBytes) {
+          return Promise.resolve({running: false, eof: true, limited: true});
+        }
+        var url = streamEl.dataset.logUrl + "?offset=" + encodeURIComponent(
+          streamEl.dataset.offset || "0"
+        );
+        return fetch(url, {cache: "no-store"})
+          .then(function(response) { return response.json(); })
+          .then(function(payload) {
+            if (!payload.ok) {
+              throw new Error(
+                payload.error && payload.error.message
+                  ? payload.error.message
+                  : "log tail failed"
+              );
+            }
+            var chunk = payload.chunk || "";
+            var remaining = Math.max(0, maxBytes - received);
+            if (chunk && output && remaining > 0) {
+              output.textContent += chunk.slice(0, remaining);
+              received += chunk.slice(0, remaining).length;
+              streamEl.dataset.received = String(received);
+            }
+            streamEl.dataset.offset = String(payload.next_offset);
+            if (offsetLabel) {
+              offsetLabel.textContent = String(payload.next_offset) + " bytes";
+            }
+            return {
+              running: Boolean(payload.running),
+              eof: Boolean(payload.eof) || received >= maxBytes,
+              limited: received >= maxBytes
+            };
+          });
+      }
+      function tick() {
+        Promise.all(streams.map(pollStream))
+          .then(function(results) {
+            var running = results.some(function(item) { return item.running; });
+            var open = results.some(function(item) { return !item.eof; });
+            var limited = results.some(function(item) { return item.limited; });
+            if (running) {
+              setState("running");
+            } else if (open) {
+              setState("catching up");
+            } else if (limited) {
+              setState("browser limit reached");
+            } else {
+              setState("complete");
+            }
+            if (running || open) {
+              window.setTimeout(tick, pollMs);
+            }
+          })
+          .catch(function(error) {
+            setState("paused: " + error.message);
+            window.setTimeout(tick, 5000);
+          });
+      }
+      tick();
+    });
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", startPipelineLiveLogs);
+  } else {
+    startPipelineLiveLogs();
+  }
+})();
+</script>"""
+
+
+def pipeline_is_execute_phase(phase: Mapping[str, Any]) -> bool:
+    return str(phase.get("phase") or "").strip() == "execute"
+
+
+def pipeline_runtime_log_streams(
+    artifacts: Mapping[str, Any],
+) -> dict[str, Mapping[str, Any]]:
+    streams: dict[str, Mapping[str, Any]] = {}
+    candidates = (
+        artifacts.get("runtime_logs"),
+        _mapping(artifacts.get("execute_evidence")).get("runtime_logs"),
+        _mapping(artifacts.get("adapter")).get("runtime_logs"),
+        _mapping(artifacts.get("adapter_summary")).get("runtime_logs"),
+    )
+    for candidate in candidates:
+        logs = _mapping(candidate)
+        for stream in ("stdout", "stderr"):
+            metadata = _mapping(logs.get(stream))
+            if metadata and stream not in streams:
+                streams[stream] = metadata
+    return streams
+
+
+def pipeline_execute_command_ref(artifacts: Mapping[str, Any]) -> str:
+    execute_evidence = _mapping(artifacts.get("execute_evidence"))
+    adapter = _mapping(artifacts.get("adapter"))
+    adapter_summary = _mapping(artifacts.get("adapter_summary"))
+    return first_nonempty_text(
+        artifacts.get("command_ref"),
+        execute_evidence.get("command_ref"),
+        adapter_summary.get("command_ref"),
+        adapter.get("command_ref"),
+    )
+
+
+def pipeline_execute_timeout_text(
+    artifacts: Mapping[str, Any],
+    session: Mapping[str, Any],
+) -> str:
+    execute_evidence = _mapping(artifacts.get("execute_evidence"))
+    adapter = _mapping(artifacts.get("adapter"))
+    adapter_summary = _mapping(artifacts.get("adapter_summary"))
+    policy_codex = _mapping(_mapping(session.get("policy_snapshot")).get("codex"))
+    return first_nonempty_text(
+        artifacts.get("timeout_sec"),
+        execute_evidence.get("timeout_sec"),
+        adapter_summary.get("timeout_sec"),
+        adapter.get("timeout_sec"),
+        policy_codex.get("timeout_sec"),
+    )
+
+
+def pipeline_execute_elapsed_text(artifacts: Mapping[str, Any]) -> str:
+    execute_evidence = _mapping(artifacts.get("execute_evidence"))
+    adapter = _mapping(artifacts.get("adapter"))
+    adapter_summary = _mapping(artifacts.get("adapter_summary"))
+    duration = first_nonempty_text(
+        artifacts.get("duration_sec"),
+        execute_evidence.get("duration_sec"),
+        adapter_summary.get("duration_sec"),
+        adapter.get("duration_sec"),
+    )
+    if duration:
+        return "{}s".format(duration)
+    started = first_nonempty_text(
+        artifacts.get("execute_started_at"),
+        execute_evidence.get("started_at"),
+        adapter_summary.get("started_at"),
+        adapter.get("started_at"),
+    )
+    finished = first_nonempty_text(
+        artifacts.get("execute_finished_at"),
+        execute_evidence.get("finished_at"),
+        adapter_summary.get("finished_at"),
+        adapter.get("finished_at"),
+    )
+    return pipeline_elapsed_between(started, finished)
+
+
+def pipeline_execute_phase_running(
+    phase: Mapping[str, Any],
+    session: Mapping[str, Any],
+) -> bool:
+    if str(session.get("status") or "") != "running":
+        return False
+    current_phase = str(session.get("current_phase") or phase.get("phase") or "").strip()
+    if current_phase != str(phase.get("phase") or "").strip():
+        return False
+    current_status = str(session.get("current_phase_status") or phase.get("status") or "").strip()
+    return current_status in {"active", "in_progress", "running"}
+
+
+def pipeline_elapsed_between(started: str, finished: str) -> str:
+    start_dt = parse_timestamp(started)
+    if not start_dt:
+        return ""
+    finish_dt = parse_timestamp(finished) or datetime.now(timezone.utc)
+    seconds = max(0, int((finish_dt - start_dt).total_seconds()))
+    return duration_seconds_label(seconds)
+
+
+def duration_seconds_label(seconds: int) -> str:
+    minutes, rem = divmod(max(0, int(seconds)), 60)
+    hours, minutes = divmod(minutes, 60)
+    if hours:
+        return "{}h {}m {}s".format(hours, minutes, rem)
+    if minutes:
+        return "{}m {}s".format(minutes, rem)
+    return "{}s".format(rem)
+
+
+def pipeline_log_offset(value: Any) -> int:
+    if isinstance(value, int) and not isinstance(value, bool):
+        return max(0, value)
+    text = str(value or "").strip()
+    return int(text) if text.isdigit() else 0
 
 
 def pipeline_expanded_step(step: Mapping[str, Any], session: Mapping[str, Any]) -> str:
@@ -2503,6 +2917,15 @@ def render_settings(model: ReadOnlyProjectModel) -> str:
             "Advanced",
             [
                 settings_checkbox_row(
+                    ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
+                    "Allow relaxed git diff verification for UI runs",
+                    settings,
+                    helper=(
+                        "UI runs only. Strict git diff verification remains the "
+                        "default and is available by turning this off."
+                    ),
+                ),
+                settings_checkbox_row(
                     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
                     "Allow internal Change gate bypass",
                     settings,
@@ -2835,6 +3258,46 @@ def render_error(error: CommandError) -> str:
         escape(json.dumps(error.details, indent=2, sort_keys=True)),
     )
     return render_page("Read Error", body, active="")
+
+
+def _json_response(
+    status: HTTPStatus,
+    payload: Mapping[str, Any],
+) -> tuple[HTTPStatus, str, str]:
+    return (
+        status,
+        "application/json; charset=utf-8",
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True),
+    )
+
+
+def _json_error_response(error: CommandError) -> tuple[HTTPStatus, str, str]:
+    if error.code in {
+        "WEB_PIPELINE_RUNTIME_LOG_MISSING",
+        "WEB_PIPELINE_SESSION_NOT_FOUND",
+    }:
+        status = HTTPStatus.NOT_FOUND
+    elif error.code == "WEB_PIPELINE_RUNTIME_LOG_PATH_REJECTED":
+        status = HTTPStatus.FORBIDDEN
+    elif error.code in {
+        "WEB_INVALID_PIPELINE_SESSION_ID",
+        "WEB_INVALID_PIPELINE_LOG_STREAM",
+        "WEB_INVALID_PIPELINE_LOG_OFFSET",
+    }:
+        status = HTTPStatus.BAD_REQUEST
+    else:
+        status = HTTPStatus.INTERNAL_SERVER_ERROR
+    payload = {
+        "ok": False,
+        "error": {
+            "code": error.code,
+            "message": error.message,
+            "details": error.details,
+        },
+    }
+    if error.path:
+        payload["error"]["path"] = error.path
+    return _json_response(status, payload)
 
 
 def render_action_result(result: WebActionResult) -> str:
@@ -3823,7 +4286,7 @@ def render_page(title: str, body: str, *, active: str) -> str:
       color: #334155;
       white-space: nowrap;
     }}
-    .badge.pass, .badge.ready, .badge.in_progress, .badge.approved, .badge.accepted, .badge.implemented, .badge.read, .badge.validation {{
+    .badge.pass, .badge.ready, .badge.in_progress, .badge.running, .badge.active, .badge.approved, .badge.accepted, .badge.implemented, .badge.read, .badge.validation {{
       background: var(--accent-soft);
       color: var(--accent);
     }}
@@ -4093,6 +4556,36 @@ def render_page(title: str, body: str, *, active: str) -> str:
     .pipeline-step h3 {{
       margin: 14px 0 8px;
       font-size: 14px;
+    }}
+    .pipeline-live-log {{
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fbfcfe;
+      padding: 12px;
+      margin: 8px 0 14px;
+    }}
+    .pipeline-live-log .review-grid {{
+      margin-top: 10px;
+    }}
+    .pipeline-live-log-streams {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }}
+    .pipeline-live-log-stream {{
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }}
+    .pipeline-live-log-output {{
+      min-height: 160px;
+      max-height: 360px;
+      overflow: auto;
+      margin: 0;
+      background: #111827;
+      color: #f8fafc;
+      border-color: #111827;
     }}
     .task-controls {{
       display: grid;
@@ -5759,6 +6252,29 @@ def pipeline_query_options(query: Mapping[str, Sequence[str]]) -> dict[str, Any]
         "approval_note": _query_value(query, "approval_note") or "",
         "auto_close_note": _query_value(query, "auto_close_note") or "",
     }
+
+
+def _pipeline_log_tail_parts(path: str) -> tuple[str, str, str] | None:
+    prefix = "/pipeline/sessions/"
+    if not path.startswith(prefix):
+        return None
+    tail = path.removeprefix(prefix).strip("/")
+    parts = tail.split("/")
+    if len(parts) != 4 or parts[1] != "logs":
+        return None
+    stream = parts[3]
+    if stream.endswith(".json"):
+        stream = stream.removesuffix(".json")
+    return unquote(parts[0]), unquote(parts[2]), unquote(stream)
+
+
+def _pipeline_session_status_id(path: str) -> str | None:
+    prefix = "/pipeline/sessions/"
+    suffix = "/status.json"
+    if not path.startswith(prefix) or not path.endswith(suffix):
+        return None
+    session_id = path[len(prefix) : -len(suffix)]
+    return unquote(session_id.strip("/"))
 
 
 def _query_items(query: Mapping[str, Sequence[str]], name: str) -> tuple[str, ...]:

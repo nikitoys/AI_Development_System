@@ -14,6 +14,7 @@ from ai_project_ctl.core.registry import command_describe
 from ai_project_ctl.core.result import CommandResult
 from ai_project_ctl.pipeline.policy import policy_preset
 from ai_project_ctl.ui_settings import (
+    ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
     ui_settings_path,
@@ -24,6 +25,7 @@ from ai_project_ctl.web.actions import (
     available_actions,
 )
 from ai_project_ctl.web.read_model import (
+    PIPELINE_RUNTIME_LOG_TAIL_MAX_BYTES,
     ReadOnlyProjectModel,
     WebControlError,
     require_read_only_command,
@@ -136,6 +138,25 @@ class WebControlCenterTests(unittest.TestCase):
             "Require Codex Review before close",
             body,
         )
+        self.assertIn("<code>allow_relaxed_git_diff_verification</code>", body)
+        self.assertIn(
+            "Strict git diff verification remains the default",
+            body,
+        )
+        self.assertIn(
+            'type="hidden" name="allow_relaxed_git_diff_verification" value="false"',
+            body,
+        )
+        self.assertIn(
+            'type="checkbox" name="allow_relaxed_git_diff_verification" value="true">'
+            "Allow relaxed git diff verification for UI runs",
+            body,
+        )
+        self.assertNotIn(
+            'type="checkbox" name="allow_relaxed_git_diff_verification" value="true" checked>'
+            "Allow relaxed git diff verification for UI runs",
+            body,
+        )
         self.assertIn("<code>allow_internal_change_gate_bypass</code>", body)
         self.assertIn(
             "Internal project-control tasks only. Does not approve Changes",
@@ -176,6 +197,7 @@ class WebControlCenterTests(unittest.TestCase):
                 {
                     "command_line": "codex exec --json",
                     "default_policy": "supervised",
+                    ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING: "true",
                     INTERNAL_CHANGE_GATE_BYPASS_SETTING: "true",
                     "execution_timeout_sec": "1800",
                     "preflight_timeout_sec": 45,
@@ -203,6 +225,12 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn(
             'type="checkbox" name="require_codex_review" value="true" checked>'
             "Require Codex Review before close",
+            body,
+        )
+        self.assertIn("<code>allow_relaxed_git_diff_verification</code>", body)
+        self.assertIn(
+            'type="checkbox" name="allow_relaxed_git_diff_verification" value="true" checked>'
+            "Allow relaxed git diff verification for UI runs",
             body,
         )
         self.assertIn("<code>allow_internal_change_gate_bypass</code>", body)
@@ -849,6 +877,101 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("AI_PROJECT/generated/CODEX_PROMPT.md", body)
         self.assertNotIn("FULL CODEX PROMPT BODY", body)
 
+    def test_pipeline_session_status_json_returns_compact_live_status(self):
+        phase_history = [
+            {
+                "phase": "queue_preview",
+                "status": "passed",
+                "reason": "Queue selected PIPE-27.",
+                "next_action": "Prepare Codex prompt.",
+                "changed_files": [],
+                "generated_files": [],
+                "events": ["EVT-200"],
+            },
+            {
+                "phase": "execute",
+                "status": "running",
+                "reason": "Codex Execute is running.",
+                "next_action": "Watch Codex output.",
+                "changed_files": ["ai_project_ctl/web/server.py"],
+                "generated_files": [],
+                "events": ["EVT-201", "EVT-202"],
+            },
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                pipeline=pipeline_detail_state(
+                    status="running",
+                    step_status="running",
+                    finished_at="",
+                    current_step_status="running",
+                    phase_history=phase_history,
+                ),
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, content_type, body = route(
+                "/pipeline/sessions/PSESS-020/status.json",
+                model,
+            )
+
+        payload = json.loads(body)
+
+        self.assertEqual(status.value, 200)
+        self.assertEqual(content_type, "application/json; charset=utf-8")
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["session_id"], "PSESS-020")
+        self.assertEqual(payload["status"], "running")
+        self.assertEqual(payload["current_task"], {"id": "TASK-078", "ref": "PIPE-27"})
+        self.assertEqual(payload["current_phase"], "execute")
+        self.assertEqual(payload["current_phase_status"], "running")
+        self.assertEqual(payload["stop_reason"], "")
+        self.assertEqual(payload["next_action"], "Watch Codex output.")
+        self.assertEqual(payload["phase_history"]["total"], 2)
+        self.assertEqual(payload["phase_history"]["counts_by_status"]["passed"], 1)
+        self.assertEqual(payload["phase_history"]["counts_by_status"]["running"], 1)
+        self.assertEqual(payload["phase_history"]["latest"]["phase"], "execute")
+        self.assertEqual(
+            payload["phase_history"]["latest"]["changed_files_count"],
+            1,
+        )
+        self.assertEqual(payload["phase_history"]["latest"]["event_count"], 2)
+        self.assertNotIn("<section", body)
+        self.assertNotIn("Status Overview", body)
+
+    def test_pipeline_session_status_json_returns_stable_missing_session_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                pipeline=pipeline_detail_state(
+                    status="running",
+                    step_status="running",
+                    finished_at="",
+                    current_step_status="running",
+                ),
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, content_type, body = route(
+                "/pipeline/sessions/PSESS-MISSING/status.json",
+                model,
+            )
+
+        payload = json.loads(body)
+
+        self.assertEqual(status.value, 404)
+        self.assertEqual(content_type, "application/json; charset=utf-8")
+        self.assertFalse(payload["ok"])
+        self.assertEqual(
+            payload["error"]["code"],
+            "WEB_PIPELINE_SESSION_NOT_FOUND",
+        )
+        self.assertEqual(payload["error"]["details"]["session_id"], "PSESS-MISSING")
+        self.assertNotIn("<section", body)
+
     def test_pipeline_session_detail_renders_phase_history_without_fake_step(self):
         phase_history = [
             {
@@ -1016,6 +1139,472 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("captured:stderr:sha256:timeout", body)
         self.assertIn("[truncated:", body)
         self.assertNotIn("stderr-tail", body)
+
+    def test_pipeline_session_detail_renders_report_recovery_action(self):
+        stdout = (
+            "Implementation summary:\n"
+            "- Added a Web recovery action.\n"
+            "Changed files:\n"
+            "- ai_project_ctl/web/actions.py\n"
+            "- ai_project_ctl/pipeline/report_recovery.py\n"
+            "Checks:\n"
+            "- python -m unittest tests.test_web_control_center passed\n"
+        )
+        phase_history = [
+            {
+                "phase": "execute",
+                "status": "passed",
+                "reason": "Codex completed without structured report.",
+                "next_action": "Run pipeline phase collect-report.",
+                "artifacts": {
+                    "execute_evidence": {
+                        "code": "CODEX_ADAPTER_REPORT_MISSING",
+                        "reason": "structured_execution_report_missing",
+                        "stdout_ref": "captured:stdout:sha256:abc",
+                        "stdout_snippet": stdout,
+                    },
+                    "adapter_summary": {
+                        "code": "CODEX_ADAPTER_REPORT_MISSING",
+                        "stdout_ref": "captured:stdout:sha256:abc",
+                        "stdout_snippet": stdout,
+                    },
+                },
+                "changed_files": [],
+                "generated_files": [],
+                "events": ["EVT-202"],
+            },
+            {
+                "phase": "collect_report",
+                "status": "blocked",
+                "reason": "No task report state exists for selected task.",
+                "next_action": "Submit a report for TASK-078, then rerun collect-report.",
+                "artifacts": {
+                    "blocked_by": "REPORT_MISSING",
+                    "session_id": "PSESS-020",
+                    "task_id": "TASK-078",
+                },
+                "changed_files": [],
+                "generated_files": [],
+                "events": ["EVT-203"],
+            },
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "in_progress",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=pipeline_detail_state(
+                    status="blocked",
+                    step_status="planned",
+                    finished_at="",
+                    current_step_status="blocked",
+                    stop_reason="No task report state exists for selected task.",
+                    next_action="Submit a report for TASK-078, then rerun collect-report.",
+                    steps=[],
+                    gate_outcomes=[],
+                    phase_history=phase_history,
+                ),
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/pipeline/sessions/PSESS-020", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Report Recovery", body)
+        self.assertIn('value="pipeline.report_recovery.submit"', body)
+        self.assertIn('name="session_id" value="PSESS-020"', body)
+        self.assertIn('name="task_id" value="TASK-078"', body)
+        self.assertIn('name="task_ref" value="PIPE-27"', body)
+        self.assertIn("Draft structured report JSON", body)
+        self.assertIn("&quot;task_id&quot;: &quot;TASK-078&quot;", body)
+        self.assertIn("&quot;task_ref&quot;: &quot;PIPE-27&quot;", body)
+        self.assertIn("ai_project_ctl/web/actions.py", body)
+        self.assertIn("token_count_estimated", body)
+        self.assertIn("inferred fields and estimated token_usage", body)
+        self.assertIn("Submit recovered report", body)
+        self.assertIn('name="confirm" value="yes" required', body)
+
+    def test_report_recovery_action_requires_confirmation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "in_progress",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=report_missing_pipeline_state(),
+            )
+
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor(root, actor="tester").execute(
+                    {
+                        "action": "pipeline.report_recovery.submit",
+                        "session_id": "PSESS-020",
+                        "task_id": "TASK-078",
+                        "task_ref": "PIPE-27",
+                    }
+                )
+
+            report_state_exists = (root / "AI_PROJECT/state/task_reports.json").exists()
+
+        self.assertEqual(raised.exception.code, "WEB_ACTION_CONFIRMATION_REQUIRED")
+        self.assertFalse(report_state_exists)
+
+    def test_report_recovery_action_submits_draft_and_guides_collect_report(self):
+        stdout = (
+            "Summary:\n"
+            "- Implemented recovered report submission.\n"
+            "Changed files:\n"
+            "- ai_project_ctl/web/actions.py\n"
+            "- ai_project_ctl/web/server.py\n"
+            "Checks:\n"
+            "- focused web tests passed\n"
+            "Total tokens: 12,345\n"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            log_path = root / "AI_PROJECT/logs/codex/PSESS-020/TASK-078-stdout.log"
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            log_path.write_text(stdout, encoding="utf-8")
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "in_progress",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=report_missing_pipeline_state(
+                    stdout=stdout,
+                    stdout_log="AI_PROJECT/logs/codex/PSESS-020/TASK-078-stdout.log",
+                ),
+            )
+
+            result = WebActionExecutor(root, actor="tester").execute(
+                {
+                    "action": "pipeline.report_recovery.submit",
+                    "confirm": "yes",
+                    "session_id": "PSESS-020",
+                    "task_id": "TASK-078",
+                    "task_ref": "PIPE-27",
+                }
+            )
+            report_state = json.loads(
+                (root / "AI_PROJECT/state/task_reports.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            body = render_action_result(result)
+
+        self.assertTrue(result.ok)
+        self.assertIn("Rerun collect-report", body)
+        self.assertIn("Do not skip verify", body)
+        self.assertEqual(report_state["latest_by_task"]["TASK-078"], "RPT-001")
+        record = report_state["reports"][0]
+        report = record["report"]
+        self.assertEqual(record["task_id"], "TASK-078")
+        self.assertEqual(report["reported_task_id"], "TASK-078")
+        self.assertEqual(report["reported_task_ref"], "PIPE-27")
+        self.assertEqual(
+            report["changed_files"],
+            ["ai_project_ctl/web/actions.py", "ai_project_ctl/web/server.py"],
+        )
+        self.assertEqual(report["checks"][0]["result"], "pass")
+        self.assertEqual(report["token_usage"]["total_tokens"], 12345)
+        self.assertTrue(report["token_usage"]["token_count_estimated"])
+        self.assertIn("token_usage is estimated", " ".join(report["warnings"]))
+        self.assertIn("captured:stdout:sha256:", record["source_file"])
+
+    def test_pipeline_session_detail_renders_live_execute_log_panel(self):
+        phase_history = [
+            {
+                "phase": "execute",
+                "status": "running",
+                "reason": "Codex Execute is running.",
+                "next_action": "Watch Codex output.",
+                "artifacts": {
+                    "execute_started_at": "2026-06-20T13:20:00Z",
+                    "runtime_logs": {
+                        "stdout": {
+                            "path": (
+                                "AI_PROJECT/logs/codex/"
+                                "PSESS-020/TASK-078-stdout.log"
+                            ),
+                            "start_offset": 7,
+                            "end_offset": 7,
+                            "bytes": 0,
+                        },
+                        "stderr": {
+                            "path": (
+                                "AI_PROJECT/logs/codex/"
+                                "PSESS-020/TASK-078-stderr.log"
+                            ),
+                            "start_offset": 11,
+                            "end_offset": 11,
+                            "bytes": 0,
+                        },
+                    },
+                    "execute_evidence": {
+                        "command_ref": "codex exec --json",
+                        "duration_sec": 12.5,
+                        "stdout_snippet": "captured stdout after completion",
+                    },
+                    "adapter": {
+                        "timeout_sec": 300,
+                    },
+                },
+                "changed_files": [],
+                "generated_files": [],
+                "events": ["EVT-202"],
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "in_progress",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=pipeline_detail_state(
+                    status="running",
+                    step_status="running",
+                    finished_at="",
+                    current_step_status="running",
+                    next_action="Watch Codex output.",
+                    phase_history=phase_history,
+                ),
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/pipeline/sessions/PSESS-020", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Codex Execute running", body)
+        self.assertIn('data-live-log-panel', body)
+        self.assertIn('data-live-log-refresh="active"', body)
+        self.assertIn('data-log-url="/pipeline/sessions/PSESS-020/logs/execute/stdout"', body)
+        self.assertIn('data-log-url="/pipeline/sessions/PSESS-020/logs/execute/stderr"', body)
+        self.assertIn('data-offset="7"', body)
+        self.assertIn('data-offset="11"', body)
+        self.assertIn("<span>Command</span><div>codex exec --json</div>", body)
+        self.assertIn("<span>Elapsed</span><div>12.5s</div>", body)
+        self.assertIn("<span>Timeout</span><div>300</div>", body)
+        self.assertIn("<span>Running</span><div>yes</div>", body)
+        self.assertIn("output.textContent += chunk.slice", body)
+        self.assertIn("captured stdout after completion", body)
+
+    def test_pipeline_session_log_tail_route_returns_next_bounded_chunk(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            log_path = (
+                root
+                / "AI_PROJECT"
+                / "logs"
+                / "codex"
+                / "PSESS-020"
+                / "TASK-078-stdout.log"
+            )
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            log_path.write_bytes(
+                b"prefix:" + (b"x" * (PIPELINE_RUNTIME_LOG_TAIL_MAX_BYTES + 5))
+            )
+            phase_history = [
+                {
+                    "phase": "execute",
+                    "status": "passed",
+                    "reason": "Codex execute is running.",
+                    "next_action": "",
+                    "artifacts": {
+                        "runtime_logs": {
+                            "stdout": {
+                                "path": (
+                                    "AI_PROJECT/logs/codex/"
+                                    "PSESS-020/TASK-078-stdout.log"
+                                ),
+                                "start_offset": 0,
+                                "end_offset": 0,
+                                "bytes": 0,
+                            }
+                        }
+                    },
+                    "changed_files": [],
+                    "generated_files": [],
+                    "events": [],
+                }
+            ]
+            pipeline = pipeline_detail_state(
+                status="running",
+                step_status="running",
+                finished_at="",
+                current_step_status="running",
+                phase_history=phase_history,
+            )
+            pipeline["sessions"][0]["current_phase_status"] = "running"
+            write_web_state(root, pipeline=pipeline)
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, content_type, body = route(
+                "/pipeline/sessions/PSESS-020/logs/execute/stdout?offset=7",
+                model,
+            )
+
+        payload = json.loads(body)
+
+        self.assertEqual(status.value, 200)
+        self.assertEqual(content_type, "application/json; charset=utf-8")
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["session_id"], "PSESS-020")
+        self.assertEqual(payload["phase"], "execute")
+        self.assertEqual(payload["stream"], "stdout")
+        self.assertEqual(payload["offset"], 7)
+        self.assertEqual(payload["bytes"], PIPELINE_RUNTIME_LOG_TAIL_MAX_BYTES)
+        self.assertEqual(
+            payload["next_offset"],
+            7 + PIPELINE_RUNTIME_LOG_TAIL_MAX_BYTES,
+        )
+        self.assertEqual(payload["chunk"], "x" * PIPELINE_RUNTIME_LOG_TAIL_MAX_BYTES)
+        self.assertFalse(payload["eof"])
+        self.assertTrue(payload["running"])
+        self.assertNotIn("path", payload)
+
+    def test_pipeline_session_log_tail_rejects_invalid_stream(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            model = ReadOnlyProjectModel(Path(tmp), actor="tester")
+
+            status, content_type, body = route(
+                "/pipeline/sessions/PSESS-020/logs/execute/stdin?offset=0",
+                model,
+            )
+
+        payload = json.loads(body)
+
+        self.assertEqual(status.value, 400)
+        self.assertEqual(content_type, "application/json; charset=utf-8")
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"]["code"], "WEB_INVALID_PIPELINE_LOG_STREAM")
+
+    def test_pipeline_session_log_tail_rejects_invalid_offset(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            model = ReadOnlyProjectModel(Path(tmp), actor="tester")
+
+            status, _, body = route(
+                "/pipeline/sessions/PSESS-020/logs/execute/stdout?offset=-1",
+                model,
+            )
+
+        payload = json.loads(body)
+
+        self.assertEqual(status.value, 400)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"]["code"], "WEB_INVALID_PIPELINE_LOG_OFFSET")
+
+    def test_pipeline_session_log_tail_returns_stable_missing_log_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                pipeline=pipeline_detail_state(
+                    status="running",
+                    step_status="running",
+                    finished_at="",
+                    current_step_status="running",
+                    phase_history=[],
+                ),
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route(
+                "/pipeline/sessions/PSESS-020/logs/execute/stdout?offset=0",
+                model,
+            )
+
+        payload = json.loads(body)
+
+        self.assertEqual(status.value, 404)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"]["code"], "WEB_PIPELINE_RUNTIME_LOG_MISSING")
+
+    def test_pipeline_session_log_tail_rejects_paths_outside_runtime_log_area(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            phase_history = [
+                {
+                    "phase": "execute",
+                    "status": "failed",
+                    "reason": "Codex failed.",
+                    "next_action": "",
+                    "artifacts": {
+                        "runtime_logs": {
+                            "stdout": {
+                                "path": "AI_PROJECT/state/tasks.json",
+                                "start_offset": 0,
+                                "end_offset": 0,
+                                "bytes": 0,
+                            }
+                        }
+                    },
+                    "changed_files": [],
+                    "generated_files": [],
+                    "events": [],
+                }
+            ]
+            write_web_state(
+                root,
+                pipeline=pipeline_detail_state(
+                    status="failed",
+                    step_status="failed",
+                    finished_at="2026-06-20T13:25:00Z",
+                    current_step_status="failed",
+                    phase_history=phase_history,
+                ),
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route(
+                "/pipeline/sessions/PSESS-020/logs/execute/stdout?offset=0",
+                model,
+            )
+
+        payload = json.loads(body)
+
+        self.assertEqual(status.value, 403)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(
+            payload["error"]["code"],
+            "WEB_PIPELINE_RUNTIME_LOG_PATH_REJECTED",
+        )
+        self.assertNotIn("tasks.json", body)
 
     def test_pipeline_session_detail_keeps_legacy_steps_without_phase_history(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2733,6 +3322,10 @@ class WebControlCenterTests(unittest.TestCase):
             REQUIRE_CODEX_REVIEW_SETTING,
             key_argument["choices"],
         )
+        self.assertIn(
+            ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
+            key_argument["choices"],
+        )
 
     def test_ui_settings_web_action_updates_internal_change_gate_bypass_values(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2812,6 +3405,57 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(true_data["key"], REQUIRE_CODEX_REVIEW_SETTING)
         self.assertEqual(true_data["value"], "1")
 
+    def test_ui_settings_web_action_updates_relaxed_git_diff_verification_values(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = ui_settings_path(root)
+            executor = WebActionExecutor(root, actor="tester")
+
+            true_result = executor.execute(
+                {
+                    "action": "ui.settings.set",
+                    "confirm": "yes",
+                    "key": ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
+                    "value": "true",
+                }
+            )
+            true_settings = json.loads(path.read_text(encoding="utf-8"))
+            true_data = true_result.to_dict()["result"]["data"]
+
+            false_result = executor.execute(
+                {
+                    "action": "ui.settings.set",
+                    "confirm": "yes",
+                    "key": ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
+                    "value": "false",
+                }
+            )
+            false_settings = json.loads(path.read_text(encoding="utf-8"))
+            false_data = false_result.to_dict()["result"]["data"]
+
+        self.assertTrue(true_result.ok)
+        self.assertIs(true_settings[ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING], True)
+        self.assertIs(
+            true_data["settings"][ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING],
+            True,
+        )
+        self.assertEqual(
+            true_data["key"],
+            ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
+        )
+        self.assertEqual(true_data["value"], "true")
+        self.assertTrue(false_result.ok)
+        self.assertIs(false_settings[ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING], False)
+        self.assertIs(
+            false_data["settings"][ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING],
+            False,
+        )
+        self.assertEqual(
+            false_data["key"],
+            ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
+        )
+        self.assertEqual(false_data["value"], "false")
+
     def test_ui_settings_apply_web_action_saves_allowlisted_settings(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -2825,6 +3469,7 @@ class WebControlCenterTests(unittest.TestCase):
                     "default_policy": "supervised",
                     REQUIRE_CODEX_REVIEW_SETTING: "false",
                     INTERNAL_CHANGE_GATE_BYPASS_SETTING: "false",
+                    ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING: "true",
                     "execution_timeout_sec": "1800",
                     "preflight_timeout_sec": "45",
                 }
@@ -2839,6 +3484,7 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(settings["default_policy"], "supervised")
         self.assertIs(settings[REQUIRE_CODEX_REVIEW_SETTING], False)
         self.assertIs(settings[INTERNAL_CHANGE_GATE_BYPASS_SETTING], False)
+        self.assertIs(settings[ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING], True)
         self.assertEqual(settings["execution_timeout_sec"], "1800")
         self.assertEqual(settings["preflight_timeout_sec"], "45")
         self.assertEqual(data["settings"], settings)
@@ -2852,6 +3498,7 @@ class WebControlCenterTests(unittest.TestCase):
                 "default_policy",
                 REQUIRE_CODEX_REVIEW_SETTING,
                 INTERNAL_CHANGE_GATE_BYPASS_SETTING,
+                ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
                 "execution_timeout_sec",
                 "preflight_timeout_sec",
             ],
@@ -4187,6 +4834,78 @@ def pipeline_detail_state(
             if not session.get("next_action"):
                 session["next_action"] = current_phase.get("next_action") or ""
     return state
+
+
+def report_missing_pipeline_state(stdout="", stdout_log=""):
+    stdout = stdout or (
+        "Summary:\n"
+        "- Recovered report can be submitted.\n"
+        "Changed files:\n"
+        "- ai_project_ctl/web/actions.py\n"
+        "Checks:\n"
+        "- focused web tests passed\n"
+    )
+    runtime_logs = {}
+    if stdout_log:
+        runtime_logs = {
+            "stdout": {
+                "path": stdout_log,
+                "start_offset": 0,
+                "end_offset": len(stdout.encode("utf-8")),
+                "bytes": len(stdout.encode("utf-8")),
+            }
+        }
+    return pipeline_detail_state(
+        status="blocked",
+        step_status="planned",
+        finished_at="",
+        current_step_status="blocked",
+        stop_reason="No task report state exists for selected task.",
+        next_action="Submit a report for TASK-078, then rerun collect-report.",
+        steps=[],
+        gate_outcomes=[],
+        phase_history=[
+            {
+                "phase": "execute",
+                "status": "passed",
+                "reason": "Codex completed without structured report.",
+                "next_action": "Run pipeline phase collect-report.",
+                "artifacts": {
+                    "runtime_logs": runtime_logs,
+                    "execute_evidence": {
+                        "code": "CODEX_ADAPTER_REPORT_MISSING",
+                        "reason": "structured_execution_report_missing",
+                        "stdout_ref": "captured:stdout:sha256:abc",
+                        "stdout_snippet": stdout,
+                        "runtime_logs": runtime_logs,
+                    },
+                    "adapter_summary": {
+                        "code": "CODEX_ADAPTER_REPORT_MISSING",
+                        "stdout_ref": "captured:stdout:sha256:abc",
+                        "stdout_snippet": stdout,
+                        "runtime_logs": runtime_logs,
+                    },
+                },
+                "changed_files": [],
+                "generated_files": [],
+                "events": ["EVT-202"],
+            },
+            {
+                "phase": "collect_report",
+                "status": "blocked",
+                "reason": "No task report state exists for selected task.",
+                "next_action": "Submit a report for TASK-078, then rerun collect-report.",
+                "artifacts": {
+                    "blocked_by": "REPORT_MISSING",
+                    "session_id": "PSESS-020",
+                    "task_id": "TASK-078",
+                },
+                "changed_files": [],
+                "generated_files": [],
+                "events": ["EVT-203"],
+            },
+        ],
+    )
 
 
 def pipeline_detail_gate(name, status):

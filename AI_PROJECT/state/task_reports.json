@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 10,
+  "revision": 16,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-24T21:57:59Z",
+  "updated_at": "2026-06-25T13:21:41Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -885,6 +885,450 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-011",
+      "task_id": "TASK-141",
+      "task_ref": "PIPEF-62",
+      "submitted_at": "2026-06-25T07:44:53Z",
+      "submitted_by": "human_owner",
+      "source_file": "/tmp/TASK-141-report.json",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-141",
+        "task_ref": "PIPEF-62",
+        "reported_task_id": "TASK-141",
+        "reported_task_ref": "PIPEF-62",
+        "implementation_summary": "TODO: summarize implementation before submitting this report.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [],
+        "warnings": [],
+        "blockers": [],
+        "notes": [],
+        "owner_decision_required": false,
+        "token_usage": {}
+      }
+    },
+    {
+      "id": "RPT-012",
+      "task_id": "TASK-142",
+      "task_ref": "PIPEF-63",
+      "submitted_at": "2026-06-25T08:33:26Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:932a60a2b6b6a6b7d8c581608dd66bc7364d55ba052076ef98323b0be90297ee",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-142",
+        "task_ref": "PIPEF-63",
+        "reported_task_id": "TASK-142",
+        "reported_task_ref": "PIPEF-63",
+        "implementation_summary": "Added a bounded live Codex Execute log panel to the Pipeline session page, with stdout/stderr polling, command/timing/status metadata, escaped captured snippets preserved, and focused rendering coverage.",
+        "changed_files": [
+          "ai_project_ctl/web/server.py",
+          "tests/test_web_control_center.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "py_compile",
+            "command": "python -m py_compile ai_project_ctl/web/server.py tests/test_web_control_center.py",
+            "result": "pass",
+            "duration_sec": 0.18,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "web_control_center_unittest",
+            "command": "python -m unittest tests.test_web_control_center",
+            "result": "pass",
+            "duration_sec": 12.85,
+            "blocking": true,
+            "details": "Ran 100 tests."
+          },
+          {
+            "name": "diff_check",
+            "command": "git diff --check -- ai_project_ctl/web/server.py tests/test_web_control_center.py",
+            "result": "pass",
+            "duration_sec": 0.01,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "pytest_targeted",
+            "command": "python -m pytest tests/test_web_control_center.py -k 'pipeline_session_detail_renders_live_execute_log_panel or pipeline_session_detail_renders_execute_phase_evidence or pipeline_session_log_tail'",
+            "result": "skipped",
+            "duration_sec": 0.0,
+            "blocking": false,
+            "details": "pytest is unavailable: No module named pytest."
+          }
+        ],
+        "warnings": [
+          "Repository had pre-existing uncommitted changes, including allowed files and protected generated/state/event files; they were not reverted or manually edited."
+        ],
+        "blockers": [],
+        "notes": [
+          "Live log text is appended with textContent, and captured snippets continue to be escaped through existing snippet rendering.",
+          "Browser-side live log accumulation is capped at 65536 characters per stream to avoid unbounded display."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 9000,
+          "context_tokens": 36000,
+          "max_context_tokens": 141000,
+          "min_remaining_tokens": 0,
+          "model_context_limit": 141000,
+          "output_tokens": 900,
+          "prompt_tokens": 12000,
+          "remaining_tokens": 83100,
+          "reserved_output_tokens": 0,
+          "total_tokens": 57900,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "estimated",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-013",
+      "task_id": "TASK-143",
+      "task_ref": "PIPEF-64",
+      "submitted_at": "2026-06-25T09:32:56Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:4b28dcd0b7aa7f4d6eac2c61d1a715fc14ec6e1a515ff75febe2a86529ba7736",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-143",
+        "task_ref": "PIPEF-64",
+        "reported_task_id": "TASK-143",
+        "reported_task_ref": "PIPEF-64",
+        "implementation_summary": "Added a verify-phase runtime log exclusion for AI_PROJECT/logs/**, added a matching .gitignore rule, and added tests proving runtime logs do not appear as missing_from_report while source, test, and documentation diffs still block when unreported.",
+        "changed_files": [
+          ".gitignore",
+          "ai_project_ctl/pipeline/verify_phase.py",
+          "tests/pipeline/test_verify_phase.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "verify/report/execute unit tests",
+            "command": "python -m unittest tests.pipeline.test_verify_phase tests.test_pipeline_report_gate tests.pipeline.test_execute_phase",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": false,
+            "details": ""
+          },
+          {
+            "name": "codex adapter runtime log test",
+            "command": "python -m unittest -k local_command_writes_runtime_stdout_and_stderr_logs tests.pipeline.test_codex_adapter",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": false,
+            "details": ""
+          },
+          {
+            "name": "compile changed python files",
+            "command": "python -m compileall -q ai_project_ctl/pipeline/verify_phase.py tests/pipeline/test_verify_phase.py",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": false,
+            "details": ""
+          },
+          {
+            "name": "diff whitespace check",
+            "command": "git diff --check -- .gitignore ai_project_ctl/pipeline/verify_phase.py tests/pipeline/test_verify_phase.py",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": false,
+            "details": ""
+          }
+        ],
+        "warnings": [
+          "The worktree had many pre-existing unrelated modified AI_PROJECT protected files and unrelated source/test files; they were left untouched.",
+          "An initial combined unittest command was malformed because of -k argument placement; corrected focused commands passed."
+        ],
+        "blockers": [],
+        "notes": [
+          "Chosen runtime log path is AI_PROJECT/logs/**. Current Codex execution logs live under AI_PROJECT/logs/codex/**, and existing tracked UI run logs are under AI_PROJECT/logs/ui_run/**.",
+          "ai_project_ctl/pipeline/diff_gate.py did not exist in the repository, so the implementation stayed in the allowed verify_phase.py path."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 18000,
+          "context_tokens": 62000,
+          "max_context_tokens": 200000,
+          "min_remaining_tokens": 100000,
+          "model_context_limit": 200000,
+          "output_tokens": 900,
+          "prompt_tokens": 12500,
+          "remaining_tokens": 106600,
+          "reserved_output_tokens": 4096,
+          "total_tokens": 93400,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "estimated_from_context_and_tool_usage",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-014",
+      "task_id": "TASK-156",
+      "task_ref": "PIPEF-77",
+      "submitted_at": "2026-06-25T09:48:52Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:d71a59ab9538e8b291552236e0c73448615fa10ad4ace490fd5e9d175e14ae83",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-156",
+        "task_ref": "PIPEF-77",
+        "reported_task_id": "TASK-156",
+        "reported_task_ref": "PIPEF-77",
+        "implementation_summary": "Added a Web-only REPORT_MISSING recovery action that drafts a structured report from captured Codex stdout/session evidence, requires owner confirmation before submission, stores the recovered report through the existing task report service, and renders clear inferred-field and estimated-token warnings on the session page.",
+        "changed_files": [
+          "ai_project_ctl/web/actions.py",
+          "ai_project_ctl/web/server.py",
+          "ai_project_ctl/pipeline/report_recovery.py",
+          "tests/test_web_control_center.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "py_compile",
+            "command": "python -m py_compile ai_project_ctl/web/actions.py ai_project_ctl/web/server.py ai_project_ctl/pipeline/report_recovery.py tests/test_web_control_center.py",
+            "result": "pass",
+            "duration_sec": 0.064,
+            "blocking": true,
+            "details": "Edited Python files compile cleanly."
+          },
+          {
+            "name": "focused web recovery tests",
+            "command": "python -m unittest tests.test_web_control_center.WebControlCenterTests.test_pipeline_session_detail_renders_report_recovery_action tests.test_web_control_center.WebControlCenterTests.test_report_recovery_action_requires_confirmation tests.test_web_control_center.WebControlCenterTests.test_report_recovery_action_submits_draft_and_guides_collect_report",
+            "result": "pass",
+            "duration_sec": 0.033,
+            "blocking": true,
+            "details": "Ran 3 focused tests; all passed."
+          },
+          {
+            "name": "web control center regression tests",
+            "command": "python -m unittest tests.test_web_control_center",
+            "result": "pass",
+            "duration_sec": 12.236,
+            "blocking": true,
+            "details": "Ran 103 tests; all passed."
+          },
+          {
+            "name": "diff whitespace check",
+            "command": "git diff --check -- ai_project_ctl/web/actions.py ai_project_ctl/web/server.py ai_project_ctl/pipeline/report_recovery.py tests/test_web_control_center.py",
+            "result": "pass",
+            "duration_sec": 0.015,
+            "blocking": true,
+            "details": "No whitespace errors reported for scoped diff."
+          }
+        ],
+        "warnings": [
+          "Exact token usage for this Codex session was unavailable; token_usage is estimated.",
+          "Repository had pre-existing unrelated dirty files, including protected AI_PROJECT state/events/generated files and other source files; they were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "The recovery action is intentionally Web-local and does not introduce a new aictl facade command.",
+          "Recovered report submission does not run collect-report or verify; the action result instructs the owner to rerun collect-report and then verify."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 18000,
+          "context_tokens": 54000,
+          "max_context_tokens": 0,
+          "min_remaining_tokens": 0,
+          "model_context_limit": 0,
+          "output_tokens": 3500,
+          "prompt_tokens": 72000,
+          "remaining_tokens": 0,
+          "reserved_output_tokens": 0,
+          "total_tokens": 93500,
+          "token_count_estimated": true,
+          "token_count_unavailable": true,
+          "token_count_strategy": "estimated_by_codex_executor",
+          "token_count_unavailable_reason": "Exact Codex token counters were not available in this environment."
+        }
+      }
+    },
+    {
+      "id": "RPT-015",
+      "task_id": "TASK-165",
+      "task_ref": "PIPEF-84",
+      "submitted_at": "2026-06-25T10:10:48Z",
+      "submitted_by": "human_owner",
+      "source_file": "/tmp/TASK-165-report-fixed.json",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-165",
+        "task_ref": "PIPEF-84",
+        "reported_task_id": "TASK-165",
+        "reported_task_ref": "PIPEF-84",
+        "implementation_summary": "Added governed live execute-phase recording before Codex adapter invocation, including running phase/step state, adapter metadata, command reference, and expected runtime log paths. Final execute results replace the temporary running entry so passed/blocked/failed outcomes remain clean.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/execute_phase.py",
+          "ai_project_ctl/pipeline/session.py",
+          "tests/pipeline/test_execute_phase.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "pytest focused execute test",
+            "command": "pytest tests/pipeline/test_execute_phase.py",
+            "result": "skipped",
+            "duration_sec": 0.0,
+            "blocking": false,
+            "details": "pytest command not found"
+          },
+          {
+            "name": "python pytest focused execute test",
+            "command": "python -m pytest tests/pipeline/test_execute_phase.py",
+            "result": "skipped",
+            "duration_sec": 0.0,
+            "blocking": false,
+            "details": "No module named pytest"
+          },
+          {
+            "name": "execute phase unittest",
+            "command": "python -m unittest tests.pipeline.test_execute_phase",
+            "result": "pass",
+            "duration_sec": 0.248,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "web live execute log panel unittests",
+            "command": "python -m unittest tests.test_web_control_center.WebControlCenterTests.test_pipeline_session_detail_renders_live_execute_log_panel tests.test_web_control_center.WebControlCenterTests.test_pipeline_session_log_tail_route_returns_next_bounded_chunk",
+            "result": "pass",
+            "duration_sec": 0.022,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "pipeline validation",
+            "command": "python scripts/aictl.py pipeline validate",
+            "result": "pass",
+            "duration_sec": 0.203,
+            "blocking": true,
+            "details": "OK: pipeline sessions are valid"
+          },
+          {
+            "name": "pipeline generated status drift check",
+            "command": "python scripts/aictl.py pipeline check-generated",
+            "result": "pass",
+            "duration_sec": 0.242,
+            "blocking": true,
+            "details": "OK: generated pipeline status is up to date"
+          },
+          {
+            "name": "compile changed Python files",
+            "command": "python -m compileall ai_project_ctl/pipeline/execute_phase.py ai_project_ctl/pipeline/session.py tests/pipeline/test_execute_phase.py",
+            "result": "pass",
+            "duration_sec": 0.0,
+            "blocking": true,
+            "details": ""
+          }
+        ],
+        "warnings": [
+          "pytest is not installed in this environment; focused unittest checks were run instead.",
+          "The worktree had pre-existing unrelated modifications, including protected AI_PROJECT files and tests/test_web_control_center.py; these were not edited for this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Running execute state is recorded only after prepare, policy, token budget, and prompt checksum gates pass.",
+          "The focused test validates live running state from inside the fake adapter before adapter completion and validates final-state cleanup after completion."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 7000,
+          "context_tokens": 74000,
+          "max_context_tokens": 400000,
+          "min_remaining_tokens": 0,
+          "model_context_limit": 400000,
+          "output_tokens": 2100,
+          "prompt_tokens": 36000,
+          "remaining_tokens": 283000,
+          "reserved_output_tokens": 0,
+          "total_tokens": 117000,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "estimated_from_session_context",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-016",
+      "task_id": "TASK-136",
+      "task_ref": "PIPEF-57",
+      "submitted_at": "2026-06-25T13:21:41Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:f91a3b5d4259353790babb2d6059eca57923b44acce282a848f464572f732462",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-136",
+        "task_ref": "PIPEF-57",
+        "reported_task_id": "TASK-136",
+        "reported_task_ref": "PIPEF-57",
+        "implementation_summary": "Added a read-only compact pipeline session status JSON endpoint, stable JSON error handling for missing or invalid session ids, and focused Web Control Center tests for success and missing-session responses.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 469.156638,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 469.156638,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree already contained unrelated pending changes, including protected AI_PROJECT files; this task only edited the allowed files."
+        ],
+        "blockers": [],
+        "notes": [
+          "Endpoint path: /pipeline/sessions/<session_id>/status.json.",
+          "Full Web Control Center test module passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 873,
+          "remaining_tokens": 31127,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -895,6 +1339,12 @@
     "TASK-135": "RPT-007",
     "TASK-119": "RPT-008",
     "TASK-149": "RPT-009",
-    "TASK-140": "RPT-010"
+    "TASK-140": "RPT-010",
+    "TASK-141": "RPT-011",
+    "TASK-142": "RPT-012",
+    "TASK-143": "RPT-013",
+    "TASK-156": "RPT-014",
+    "TASK-165": "RPT-015",
+    "TASK-136": "RPT-016"
   }
 }

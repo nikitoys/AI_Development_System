@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1125`
+Revision: `1206`
 
 ## Executable Now
 
@@ -17,14 +17,9 @@ Revision: `1125`
 - `PIPEF-43 (TASK-122)` [planned] `EPIC-009` priority `1` — PIPE-043 Add fake Codex happy path integration test
 - `PIPEF-44 (TASK-123)` [planned] `EPIC-009` priority `1` — PIPE-044 Add fake reviewer close integration test
 - `PIPEF-45 (TASK-124)` [planned] `EPIC-009` priority `1` — PIPE-045 Update phase pipeline usage guide
-- `PIPEF-57 (TASK-136)` [planned] `EPIC-009` priority `1` — PIPE-052 Add pipeline session status JSON endpoint
 - `PIPEF-58 (TASK-137)` [planned] `EPIC-009` priority `1` — PIPE-053 Add partial polling refresh to Pipeline session page
-- `PIPEF-62 (TASK-141)` [planned] `EPIC-009` priority `1` — PIPE-057 Add pipeline session live log tail endpoint
-- `PIPEF-63 (TASK-142)` [planned] `EPIC-009` priority `1` — PIPE-058 Add live Codex log panel to Pipeline session page
-- `PIPEF-64 (TASK-143)` [planned] `EPIC-009` priority `1` — PIPE-059 Keep runtime pipeline logs out of task diff gates
 - `PIPEF-65 (TASK-144)` [planned] `EPIC-009` priority `1` — PIPE-060 Document Web live status and Codex log behavior
 - `PIPEF-71 (TASK-150)` [planned] `EPIC-009` priority `1` — PIPE-066 Document Web Settings and internal bypass behavior
-- `PIPEF-77 (TASK-156)` [planned] `EPIC-009` priority `1` — PIPE-072 Add Web recovery action for report missing sessions
 - `PIPEF-78 (TASK-157)` [planned] `EPIC-009` priority `1` — PIPE-073 Document Codex structured report auto-submit
 
 ## Waiting For Dependencies
@@ -287,11 +282,19 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-56 (TASK-135)` [done] `EPIC-009` priority `1` — PIPE-051 Document phase-based Web Pipeline display behavior
   - `status_not_executable`: status is done
+- `PIPEF-57 (TASK-136)` [in_progress] `EPIC-009` priority `1` — PIPE-052 Add pipeline session status JSON endpoint
+  - `status_not_executable`: status is in_progress
 - `PIPEF-59 (TASK-138)` [done] `EPIC-009` priority `1` — PIPE-054 Add Web action for single-task UI run
   - `status_not_executable`: status is done
 - `PIPEF-60 (TASK-139)` [done] `EPIC-009` priority `1` — PIPE-055 Render Run and Resume controls beside task rows
   - `status_not_executable`: status is done
 - `PIPEF-61 (TASK-140)` [done] `EPIC-009` priority `1` — PIPE-056 Stream Codex adapter output to runtime log files
+  - `status_not_executable`: status is done
+- `PIPEF-62 (TASK-141)` [done] `EPIC-009` priority `1` — PIPE-057 Add pipeline session live log tail endpoint
+  - `status_not_executable`: status is done
+- `PIPEF-63 (TASK-142)` [done] `EPIC-009` priority `1` — PIPE-058 Add live Codex log panel to Pipeline session page
+  - `status_not_executable`: status is done
+- `PIPEF-64 (TASK-143)` [done] `EPIC-009` priority `1` — PIPE-059 Keep runtime pipeline logs out of task diff gates
   - `status_not_executable`: status is done
 - `PIPEF-66 (TASK-145)` [done] `EPIC-009` priority `1` — PIPE-061 Add Web Settings page route
   - `status_not_executable`: status is done
@@ -313,6 +316,8 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-76 (TASK-155)` [done] `EPIC-009` priority `1` — PIPE-071 Add pipeline regression test for Run report auto-collection
   - `status_not_executable`: status is done
+- `PIPEF-77 (TASK-156)` [done] `EPIC-009` priority `1` — PIPE-072 Add Web recovery action for report missing sessions
+  - `status_not_executable`: status is done
 - `PIPEF-79 (TASK-158)` [done] `EPIC-009` priority `1` — PIPE-074 Allow internal bypass setting in Web settings action
   - `status_not_executable`: status is done
 - `PIPEF-80 (TASK-161)` [done] `EPIC-009` priority `1` — Make Codex Review optional in pipeline
@@ -320,4 +325,20 @@ _No tasks waiting only on dependencies._
 - `PIPEF-81 (TASK-162)` [done] `EPIC-009` priority `1` — Add shared UI run queue builder
   - `status_not_executable`: status is done
 - `PIPEF-82 (TASK-163)` [done] `EPIC-009` priority `1` — Propagate UI Run queue metadata in Web action
+  - `status_not_executable`: status is done
+- `PIPEF-83 (TASK-164)` [done] `EPIC-009` priority `1` — Fix pipeline report template normalized fields
+  - `status_not_executable`: status is done
+- `PIPEF-84 (TASK-165)` [done] `EPIC-009` priority `1` — Record running execute state before Codex starts
+  - `status_not_executable`: status is done
+- `PIPEF-85 (TASK-166)` [done] `EPIC-009` priority `1` — Add Codex execution summary block contract
+  - `status_not_executable`: status is done
+- `PIPEF-86 (TASK-167)` [done] `EPIC-009` priority `1` — Add evidence-based task report builder
+  - `status_not_executable`: status is done
+- `PIPEF-87 (TASK-168)` [done] `EPIC-009` priority `1` — Wire Codex auto-submit through report builder
+  - `status_not_executable`: status is done
+- `PIPEF-88 (TASK-169)` [done] `EPIC-009` priority `1` — Add optional git diff verification gates
+  - `status_not_executable`: status is done
+- `PIPEF-89 (TASK-170)` [done] `EPIC-009` priority `1` — Expose relaxed git diff mode for UI runs
+  - `status_not_executable`: status is done
+- `PIPEF-90 (TASK-171)` [done] `EPIC-009` priority `1` — Update legacy Codex prompt report contract test
   - `status_not_executable`: status is done

@@ -210,6 +210,30 @@ class ProjectTestsPolicy:
 
 
 @dataclass(frozen=True)
+class VerifyPolicy:
+    run_git_diff_gates: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "run_git_diff_gates": self.run_git_diff_gates,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any] | None) -> "VerifyPolicy":
+        if data is None:
+            return cls()
+        if not isinstance(data, Mapping):
+            raise TypeError("Expected mapping for policy field: verify")
+        return cls(
+            run_git_diff_gates=_bool_value(
+                data,
+                "run_git_diff_gates",
+                default=True,
+            ),
+        )
+
+
+@dataclass(frozen=True)
 class ReviewPolicy:
     require_machine_review: bool = False
     required_machine_outcome: MachineReviewOutcome = MachineReviewOutcome.NONE
@@ -337,6 +361,7 @@ class PipelinePolicy:
     token_budget: TokenBudgetPolicy = TokenBudgetPolicy()
     codex: CodexExecutionPolicy = CodexExecutionPolicy()
     project_tests: ProjectTestsPolicy = ProjectTestsPolicy()
+    verify: VerifyPolicy = VerifyPolicy()
     review: ReviewPolicy = ReviewPolicy()
     rework: ReworkPolicy = ReworkPolicy()
     batch: BatchPolicy = BatchPolicy()
@@ -365,6 +390,8 @@ class PipelinePolicy:
         }
         if self.project_tests != ProjectTestsPolicy():
             data["project_tests"] = self.project_tests.to_dict()
+        if self.verify != VerifyPolicy():
+            data["verify"] = self.verify.to_dict()
         return data
 
     @classmethod
@@ -377,6 +404,9 @@ class PipelinePolicy:
             codex=CodexExecutionPolicy.from_dict(_mapping(data, "codex")),
             project_tests=ProjectTestsPolicy.from_dict(
                 data.get("project_tests") if isinstance(data, Mapping) else None
+            ),
+            verify=VerifyPolicy.from_dict(
+                data.get("verify") if isinstance(data, Mapping) else None
             ),
             review=ReviewPolicy.from_dict(_mapping(data, "review")),
             rework=ReworkPolicy.from_dict(_mapping(data, "rework")),
@@ -437,6 +467,7 @@ def validate_policy(policy: PipelinePolicy) -> ValidationResult:
 
     _validate_token_thresholds(policy, result)
     _validate_project_tests_policy(policy, result)
+    _validate_verify_policy(policy, result)
 
     if (
         policy.codex.mode == CodexExecutionMode.RUN_CODEX
@@ -847,6 +878,15 @@ def _validate_project_tests_policy(policy: PipelinePolicy, result: ValidationRes
             )
 
 
+def _validate_verify_policy(policy: PipelinePolicy, result: ValidationResult) -> None:
+    if not isinstance(policy.verify.run_git_diff_gates, bool):
+        result.add_error(
+            "POLICY_VERIFY_GIT_DIFF_GATES_INVALID",
+            "Verify git diff gates policy must be a boolean.",
+            path="verify.run_git_diff_gates",
+        )
+
+
 def _validate_codex_adapter_policy(policy: PipelinePolicy, result: ValidationResult) -> None:
     if policy.codex.timeout_sec < 1:
         result.add_error(
@@ -924,6 +964,20 @@ def _enum_value(
     return enum_type(data[key])
 
 
+def _bool_value(
+    data: Mapping[str, Any],
+    key: str,
+    *,
+    default: bool,
+) -> bool:
+    if key not in data:
+        return default
+    value = data[key]
+    if not isinstance(value, bool):
+        raise TypeError(f"Expected boolean for policy field: {key}")
+    return value
+
+
 def _string_tuple(value: Any) -> tuple[str, ...]:
     if isinstance(value, str):
         return (value,) if value.strip() else ()
@@ -995,6 +1049,8 @@ def policy_behavior_label(policy: PipelinePolicy) -> str:
             labels.append("local-commit blocked")
         else:
             labels.append("local-commit")
+    if not policy.verify.run_git_diff_gates:
+        labels.append("relaxed-verify")
     return " / ".join(labels)
 
 
