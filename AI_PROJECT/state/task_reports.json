@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 43,
+  "revision": 45,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-26T13:57:42Z",
+  "updated_at": "2026-06-26T14:19:52Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -3178,6 +3178,144 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-044",
+      "task_id": "TASK-193",
+      "task_ref": "PIPEF-112",
+      "submitted_at": "2026-06-26T14:13:34Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:06615905666364436b01e203e473dac041477eb30d3c25a8aaafab1e2d408b6e",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-193",
+        "task_ref": "PIPEF-112",
+        "reported_task_id": "TASK-193",
+        "reported_task_ref": "PIPEF-112",
+        "implementation_summary": "Local commit readiness now reuses the existing policy-aware report gate acceptance helper, allowing report WARN only when advisory report warnings are enabled while preserving blocking for WARN without policy allowance and for FAIL/BLOCKED. Focused regression tests were added for allowed WARN, blocked WARN, and FAIL/BLOCKED commit readiness behavior.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 427.344004,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 427.344004,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "A broader existing local commit workflow test stopped at queue_preview before exercising commit readiness, so it was not counted as verification for this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Touched only ai_project_ctl/pipeline/git_commit.py and tests/test_pipeline_runner.py.",
+          "Focused unittest, py_compile, and git diff --check verification passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1003,
+          "remaining_tokens": 30997,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-045",
+      "task_id": "TASK-194",
+      "task_ref": "PIPEF-113",
+      "submitted_at": "2026-06-26T14:19:52Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:cc97f834a039f7b67c5a82f3142a9d1700b6362624899445c02e1af42b18219f",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-194",
+        "task_ref": "PIPEF-113",
+        "reported_task_id": "TASK-194",
+        "reported_task_ref": "PIPEF-113",
+        "implementation_summary": "Documented that local commit uses the same report gate advisory warning policy as verify, review, and close, and added COMMIT_REPORT_GATE_NOT_PASS troubleshooting guidance.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 298.315414,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 298.315414,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "docctl.py validate passed but reported documentation registry/status/hash warnings, including expected recorded content hash mismatches for the edited docs."
+        ],
+        "blockers": [],
+        "notes": [
+          "Edits were limited to the two allowed documentation files.",
+          "No runtime pipeline behavior was changed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 896,
+          "remaining_tokens": 31104,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -3221,6 +3359,8 @@
     "TASK-189": "RPT-040",
     "TASK-190": "RPT-041",
     "TASK-191": "RPT-042",
-    "TASK-192": "RPT-043"
+    "TASK-192": "RPT-043",
+    "TASK-193": "RPT-044",
+    "TASK-194": "RPT-045"
   }
 }

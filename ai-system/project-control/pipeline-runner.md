@@ -420,7 +420,7 @@ The report gate blocks:
 - governed generated output reported incorrectly;
 - blocking failed checks.
 
-Warnings do not equal approval. They remain evidence for Machine Review and Human Owner review.
+Warnings do not equal approval. They remain evidence for Machine Review and Human Owner review. A report gate `PASS` may continue to downstream phases. A report gate `WARN` may continue only when policy explicitly allows advisory report warnings through `policy.verify.allow_report_warnings`; otherwise it blocks verify, review, close and local commit. Strict verification mode still blocks report `WARN` when advisory report warnings are disabled. Relaxing or skipping git diff gates does not turn report `WARN` into `PASS`.
 
 ## Machine Review Gate
 
@@ -552,13 +552,15 @@ Push and merge are forbidden.
 Commit readiness requires:
 
 - safe commit policy;
-- Codex Report Gate PASS;
+- Codex Report Gate accepted by the same policy used by verify, review and close: `PASS`, or advisory `WARN` only when `policy.verify.allow_report_warnings` explicitly allows report warnings;
 - Machine Review PASS;
 - Codex Review APPROVE;
 - required Machine Review checks present and PASS;
 - selected Task is `done`;
 - linked Evolution Change is accepted when one exists;
 - dirty files are exactly the approved files from report or session evidence.
+
+Report gate `FAIL`, report gate `BLOCKED` and advisory-disabled report `WARN` still block local commit with `COMMIT_REPORT_GATE_NOT_PASS`. Advisory warning acceptance only permits the report gate status to proceed; it does not bypass Machine Review, Codex Review, Human Owner approval or acceptance, close requirements, linked Change acceptance, required Machine Review checks or dirty-file gates.
 
 Allowed git commands are narrowly constrained:
 
@@ -697,6 +699,7 @@ Prefer `run-next` and `run-until-blocker` for normal operation.
 | `CODEX_REVIEW_REQUEST_CHANGES` | Semantic review found required changes. | Prepare bounded rework through governed task workflow. |
 | `CODEX_REVIEW_BLOCKED` | Semantic review lacks enough evidence or found a blocking condition. | Add missing evidence or resolve the blocker. |
 | `REWORK_LIMIT_REACHED` | Policy rework attempt limit is exhausted. | Human Owner decides whether to create a follow-up task or stop. |
+| `COMMIT_REPORT_GATE_NOT_PASS` | The local commit gate rejected the report gate status. This can appear after close succeeds if the latest report gate is `WARN` without advisory warning allowance, or if the report gate is `FAIL` or `BLOCKED`. | For report `WARN`, enable advisory report warnings only when policy intentionally allows them, then rerun the governed gates. For `FAIL` or `BLOCKED`, fix and resubmit the structured report. |
 | `COMMIT_READINESS_FAILED` | Local commit prerequisites are not green. | Close/accept required state, clear unrelated dirty files, or leave commit disabled. |
 
 ## Audit Trail Interpretation

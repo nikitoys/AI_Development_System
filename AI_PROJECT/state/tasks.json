@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1370,
+  "revision": 1382,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-26T14:01:02Z",
+  "updated_at": "2026-06-26T14:20:17Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -12897,6 +12897,119 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 111
+    },
+    {
+      "id": "TASK-193",
+      "epic_id": "EPIC-009",
+      "title": "Allow advisory report warnings in local commit",
+      "status": "done",
+      "summary": "Make local commit readiness accept report gate WARN only when the session policy explicitly allows advisory report warnings.",
+      "description": "Fix the final commit gate that still blocks after verify, review, and close accept advisory report warnings.",
+      "priority": 1,
+      "order": 112,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add or reuse a single policy-aware report gate acceptance check for local commit readiness.",
+        "Replace the strict report_gate.status == PASS requirement in local commit readiness with the policy-aware check.",
+        "Preserve blocking for report gate FAIL/BLOCKED and for report gate WARN when advisory warnings are not enabled.",
+        "Add focused regression coverage for commit readiness report WARN acceptance and rejection."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to local commit readiness.",
+        "Do not refactor unrelated pipeline code.",
+        "Do not edit protected project-control files manually.",
+        "Do not weaken machine review, Codex review, task status, linked change, or dirty-file commit checks."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/git_commit.py",
+        "ai_project_ctl/pipeline/report_gate.py",
+        "tests/test_pipeline_runner.py",
+        "tests/test_pipeline_e2e.py"
+      ],
+      "acceptance_criteria": [
+        "Local commit readiness passes report gate WARN when policy.verify.allow_report_warnings is enabled and all other readiness gates pass.",
+        "Local commit readiness blocks report gate WARN when policy does not allow report warnings.",
+        "Local commit readiness blocks report gate FAIL/BLOCKED regardless of advisory warning policy.",
+        "Machine review, Codex review, task done, linked change acceptance, and dirty-file commit checks remain enforced.",
+        "Focused tests covering allowed WARN and blocked WARN local commit readiness behavior pass."
+      ],
+      "review_instructions": [
+        "Review that only report WARN policy handling changed and commit safety gates remain strict."
+      ],
+      "notes": [
+        "This fixes the COMMIT_REPORT_GATE_NOT_PASS blocker after verify, review, and close already accept advisory report warnings."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T14:14:24Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-26T14:06:05Z",
+      "updated_at": "2026-06-26T14:14:24Z",
+      "uid": "tsk_39229ef813d5",
+      "ref": "PIPEF-112",
+      "legacy_id": "TASK-193",
+      "aliases": [
+        "TASK-193"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 112
+    },
+    {
+      "id": "TASK-194",
+      "epic_id": "EPIC-009",
+      "title": "Document advisory warning commit behavior",
+      "status": "done",
+      "summary": "Document that local commit uses the same advisory report warning policy as verify, review, and close.",
+      "description": "Clarify the owner-facing troubleshooting path for COMMIT_REPORT_GATE_NOT_PASS after close succeeds.",
+      "priority": 1,
+      "order": 113,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Update the pipeline runner SOP to describe report PASS versus policy-accepted advisory WARN behavior through local commit.",
+        "Clarify that strict mode still blocks report WARN when advisory report warnings are disabled.",
+        "Add a troubleshooting note for COMMIT_REPORT_GATE_NOT_PASS after close succeeds."
+      ],
+      "out_of_scope": [
+        "Do not change runtime pipeline behavior.",
+        "Do not refactor unrelated documentation.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/pipeline-runner.md",
+        "ai-system/project-control/10-owner-quickstart.md"
+      ],
+      "acceptance_criteria": [
+        "Documentation states that advisory report WARN can proceed to local commit only when policy explicitly allows it.",
+        "Documentation states that report FAIL/BLOCKED and advisory-disabled WARN still block local commit.",
+        "Documentation explains that COMMIT_REPORT_GATE_NOT_PASS means the commit gate rejected the report gate status.",
+        "Documentation does not imply that Human Owner approval, machine review, Codex review, or dirty-file gates are bypassed."
+      ],
+      "review_instructions": [
+        "Review the wording for safety: advisory warnings must not be described as unconditional commit permission."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T14:20:17Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-26T14:06:06Z",
+      "updated_at": "2026-06-26T14:20:17Z",
+      "uid": "tsk_a353ea7dcda0",
+      "ref": "PIPEF-113",
+      "legacy_id": "TASK-194",
+      "aliases": [
+        "TASK-194"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 113
     }
   ]
 }

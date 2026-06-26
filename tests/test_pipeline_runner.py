@@ -23,8 +23,20 @@ from ai_project_ctl.pipeline.codex_adapter import (
     CODE_REPORT_MISSING as CODEX_ADAPTER_REPORT_MISSING,
     CodexAdapterResult,
 )
+from ai_project_ctl.pipeline.codex_review import CodexReviewResult, VERDICT_APPROVE
+from ai_project_ctl.pipeline.git_commit import (
+    CODE_READY as COMMIT_READINESS_PASS,
+    CODE_REPORT_NOT_PASS as COMMIT_REPORT_NOT_PASS,
+    REQUIRED_MACHINE_CHECKS,
+    evaluate_commit_readiness,
+)
+from ai_project_ctl.pipeline.machine_review import (
+    MachineCheckEvidence,
+    MachineReviewResult,
+)
 from ai_project_ctl.pipeline.phase import PhaseResult
 from ai_project_ctl.pipeline.report_gate import CODE_WARN as CODEX_REPORT_WARN
+from ai_project_ctl.pipeline.report_gate import ReportGateResult
 from ai_project_ctl.pipeline.runner import run_next
 from ai_project_ctl.pipeline.session import create_session, record_phase_result
 from ai_project_ctl.pipeline.state import pipeline_state_path
@@ -567,6 +579,61 @@ def valid_review_output(verdict="APPROVE", findings=None) -> str:
             "findings": list(findings or []),
             "risks": [],
         }
+    )
+
+
+def warning_report_gate() -> ReportGateResult:
+    return ReportGateResult(
+        status="warn",
+        code=CODEX_REPORT_WARN,
+        reason="Report contains advisory warning(s).",
+        report_id="RPT-001",
+        task_id="TASK-001",
+        changed_files=("ai_project_ctl/pipeline/report_gate.py",),
+    )
+
+
+def blocking_report_gate(status: str) -> ReportGateResult:
+    return ReportGateResult(
+        status=status,
+        code="CODEX_REPORT_{}".format(status.upper()),
+        reason="Report gate {} should block local commit.".format(status),
+        report_id="RPT-001",
+        task_id="TASK-001",
+        changed_files=("ai_project_ctl/pipeline/report_gate.py",),
+    )
+
+
+def passing_machine_review() -> MachineReviewResult:
+    return MachineReviewResult(
+        status="pass",
+        code="MACHINE_REVIEW_PASS",
+        reason="Machine Review passed.",
+        task_id="TASK-001",
+        report_id="RPT-001",
+        checks=tuple(
+            MachineCheckEvidence(
+                name=name,
+                status="pass",
+                code="MACHINE_REVIEW_PASS",
+                reason="{} passed.".format(name),
+            )
+            for name in sorted(REQUIRED_MACHINE_CHECKS)
+        ),
+    )
+
+
+def approved_codex_review() -> CodexReviewResult:
+    return CodexReviewResult(
+        status="pass",
+        code="CODEX_REVIEW_APPROVE",
+        reason="Codex Review approved the task.",
+        verdict=VERDICT_APPROVE,
+        task_id="TASK-001",
+        report_id="RPT-001",
+        review_id="REV-001",
+        prompt_sha256="sha256",
+        prompt_bytes=1,
     )
 
 
@@ -2322,6 +2389,104 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(git_calls[3], ["git", "rev-parse", "--verify", "HEAD"])
             self.assertFalse(any("push" in call for call in git_calls))
             self.assertFalse(any("reset" in call for call in git_calls))
+
+    def test_commit_readiness_allows_warn_report_gate_when_policy_allows_advisory_warnings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            _write_task_status(root, "done")
+            supervised = policy_preset("supervised_local_commit")
+            policy = replace(
+                supervised,
+                verify=replace(
+                    supervised.verify,
+                    allow_report_warnings=True,
+                    block_report_warnings=False,
+                ),
+            )
+            git_calls = []
+
+            def git_status_runner(argv):
+                git_calls.append(list(argv))
+                return completed(stdout=" M ai_project_ctl/pipeline/report_gate.py\n")
+
+            result = evaluate_commit_readiness(
+                root=root,
+                task_id="TASK-001",
+                policy=policy,
+                report_gate=warning_report_gate(),
+                machine_review=passing_machine_review(),
+                codex_review=approved_codex_review(),
+                runner=git_status_runner,
+            )
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.code, COMMIT_READINESS_PASS)
+            self.assertEqual(
+                git_calls,
+                [["git", "status", "--short", "--untracked-files=all"]],
+            )
+            self.assertEqual(
+                result.approved_files,
+                ("ai_project_ctl/pipeline/report_gate.py",),
+            )
+
+    def test_commit_readiness_blocks_warn_report_gate_when_policy_disallows_advisory_warnings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            _write_task_status(root, "done")
+
+            def git_status_runner(argv):
+                raise AssertionError("git status should not run after report gate blocker")
+
+            result = evaluate_commit_readiness(
+                root=root,
+                task_id="TASK-001",
+                policy=policy_preset("supervised_local_commit"),
+                report_gate=warning_report_gate(),
+                machine_review=passing_machine_review(),
+                codex_review=approved_codex_review(),
+                runner=git_status_runner,
+            )
+
+            self.assertFalse(result.ok)
+            self.assertEqual(result.code, COMMIT_REPORT_NOT_PASS)
+            self.assertIn("policy.verify.allow_report_warnings is false", result.reason)
+
+    def test_commit_readiness_blocks_report_failure_even_when_warning_policy_allows(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            _write_task_status(root, "done")
+            supervised = policy_preset("supervised_local_commit")
+            policy = replace(
+                supervised,
+                verify=replace(
+                    supervised.verify,
+                    allow_report_warnings=True,
+                    block_report_warnings=False,
+                ),
+            )
+
+            def git_status_runner(argv):
+                raise AssertionError("git status should not run after report gate blocker")
+
+            for status in ("fail", "blocked"):
+                with self.subTest(status=status):
+                    result = evaluate_commit_readiness(
+                        root=root,
+                        task_id="TASK-001",
+                        policy=policy,
+                        report_gate=blocking_report_gate(status),
+                        machine_review=passing_machine_review(),
+                        codex_review=approved_codex_review(),
+                        runner=git_status_runner,
+                    )
+
+                    self.assertFalse(result.ok)
+                    self.assertEqual(result.code, COMMIT_REPORT_NOT_PASS)
+                    self.assertIn("Report gate {} should block".format(status), result.reason)
 
     def test_local_commit_blocks_until_linked_change_is_accepted(self):
         with tempfile.TemporaryDirectory() as tmp:

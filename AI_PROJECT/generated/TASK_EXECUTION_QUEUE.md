@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1370`
+Revision: `1382`
 
 ## Executable Now
 
@@ -389,4 +389,8 @@ _No tasks waiting only on dependencies._
 - `PIPEF-110 (TASK-191)` [done] `EPIC-009` priority `1` — Block execute on stale protected outputs
   - `status_not_executable`: status is done
 - `PIPEF-111 (TASK-192)` [done] `EPIC-009` priority `1` — Add close artifact regression coverage
+  - `status_not_executable`: status is done
+- `PIPEF-112 (TASK-193)` [done] `EPIC-009` priority `1` — Allow advisory report warnings in local commit
+  - `status_not_executable`: status is done
+- `PIPEF-113 (TASK-194)` [done] `EPIC-009` priority `1` — Document advisory warning commit behavior
   - `status_not_executable`: status is done

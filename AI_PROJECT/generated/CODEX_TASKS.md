@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1370`
+Revision: `1382`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -3391,3 +3391,36 @@ Acceptance criteria:
 - Tests cover pre-execute stale generated output blocking with Codex adapter not called.
 - Focused test commands complete successfully without running unrelated long test suites.
 - No production source files are modified by this task.
+
+### PIPEF-112 (TASK-193) — Allow advisory report warnings in local commit
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_39229ef813d5`, legacy `TASK-193`, aliases `TASK-193`, local `PIPEF` / `112`
+
+Make local commit readiness accept report gate WARN only when the session policy explicitly allows advisory report warnings.
+
+Acceptance criteria:
+
+- Local commit readiness passes report gate WARN when policy.verify.allow_report_warnings is enabled and all other readiness gates pass.
+- Local commit readiness blocks report gate WARN when policy does not allow report warnings.
+- Local commit readiness blocks report gate FAIL/BLOCKED regardless of advisory warning policy.
+- Machine review, Codex review, task done, linked change acceptance, and dirty-file commit checks remain enforced.
+- Focused tests covering allowed WARN and blocked WARN local commit readiness behavior pass.
+
+### PIPEF-113 (TASK-194) — Document advisory warning commit behavior
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_a353ea7dcda0`, legacy `TASK-194`, aliases `TASK-194`, local `PIPEF` / `113`
+
+Document that local commit uses the same advisory report warning policy as verify, review, and close.
+
+Acceptance criteria:
+
+- Documentation states that advisory report WARN can proceed to local commit only when policy explicitly allows it.
+- Documentation states that report FAIL/BLOCKED and advisory-disabled WARN still block local commit.
+- Documentation explains that COMMIT_REPORT_GATE_NOT_PASS means the commit gate rejected the report gate status.
+- Documentation does not imply that Human Owner approval, machine review, Codex review, or dirty-file gates are bypassed.

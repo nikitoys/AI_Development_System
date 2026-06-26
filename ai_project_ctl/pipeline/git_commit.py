@@ -20,8 +20,8 @@ from .policy import (
     disables_codex_review_by_policy,
     requires_codex_review_approve,
 )
-from .report_gate import PASS as REPORT_GATE_PASS
 from .report_gate import ReportGateResult
+from .report_gate import evaluate_report_gate_acceptance
 from .state import load_reference_state
 
 
@@ -516,8 +516,14 @@ def _gate_blocker(
     machine_review: MachineReviewResult,
     codex_review: CodexReviewResult,
 ) -> tuple[str, str] | None:
-    if report_gate.status != REPORT_GATE_PASS:
-        return CODE_REPORT_NOT_PASS, "Codex Report Gate must be PASS before local commit."
+    report_gate_acceptance = evaluate_report_gate_acceptance(report_gate, policy)
+    if not report_gate_acceptance.allow:
+        return (
+            CODE_REPORT_NOT_PASS,
+            "Codex Report Gate is not accepted for local commit: {}".format(
+                report_gate_acceptance.reason
+            ),
+        )
     if machine_review.status != MACHINE_REVIEW_PASS:
         return CODE_MACHINE_REVIEW_NOT_PASS, "Machine Review must be PASS before local commit."
     if disables_codex_review_by_policy(policy):

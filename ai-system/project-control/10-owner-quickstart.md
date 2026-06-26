@@ -202,7 +202,7 @@ Policy presets decide what is allowed, but they do not remove owner gates:
 - `supervised_autoclose` is a prompt-only legacy preset; it blocks before close because Codex execution evidence is missing.
 - `supervised_executable_autoclose` runs the allowlisted local Codex adapter, then may close only after Codex Report Gate PASS, Machine Review PASS, Codex Review APPROVE and an explicit owner auto-close note on the session.
 - `supervised_local_commit` is a prompt-only legacy preset; local commit is blocked before commit because close evidence is missing.
-- `supervised_executable_local_commit` adds local-only commit policy after executable run, approved review gates, auto-close and commit-readiness gates pass. Push and merge remain forbidden.
+- `supervised_executable_local_commit` adds local-only commit policy after executable run, approved review gates, auto-close and commit-readiness gates pass. A report `WARN` may reach commit readiness only when policy explicitly allows advisory report warnings; report `FAIL`, report `BLOCKED` and advisory-disabled `WARN` still block. Push and merge remain forbidden.
 
 Auto-close owner notes are explicit Human Owner approval inputs. Supply them only when the Human Owner has approved auto-close for the selected task or queue. Codex must not draft, fabricate, reuse, or paste approval notes on the owner's behalf.
 
@@ -221,6 +221,8 @@ python scripts/aictl.py ui preflight
 `command_line` is the shell-style UI setting. For executable policies, it is parsed into the resolved policy `codex.local_command` and exact `codex.command_allowlist`; those policy fields are what the local adapter enforces. `preflight_timeout_sec` applies to the UI readiness check before session creation. `execution_timeout_sec` applies to the actual local Codex adapter run. Do not use one timeout as evidence for the other.
 
 If a session blocks with `CODEX_ADAPTER_TIMEOUT`, inspect the session detail `execute` phase for timeout, duration, command and bounded stdout/stderr evidence. If a close or commit gate says report evidence is missing, submit a structured report with `python scripts/aictl.py task report submit --task TASK-001 --file REPORT.json --confirm`; stdout or chat text is not report evidence until submitted through that command.
+
+If close succeeds but local commit blocks with `COMMIT_REPORT_GATE_NOT_PASS`, the commit gate rejected the report gate status. For report `WARN`, confirm whether the selected policy intentionally enables advisory report warnings and rerun the governed gates; strict mode still blocks `WARN` when advisory report warnings are disabled. For report `FAIL` or `BLOCKED`, fix and resubmit the structured report before trying commit again.
 
 Manual local Codex preflight examples:
 
