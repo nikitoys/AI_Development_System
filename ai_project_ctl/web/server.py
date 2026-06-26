@@ -29,12 +29,11 @@ from ai_project_ctl.web.actions import (
 )
 from ai_project_ctl.web.read_model import ReadOnlyProjectModel, WebControlError
 from ai_project_ctl.ui_settings import (
+    ALLOW_REPORT_WARNINGS_SETTING,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
+    ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
-    load_ui_settings,
-    ui_settings_path,
-    ui_settings_source,
 )
 
 
@@ -68,6 +67,7 @@ TASK_REPAIR_STATUSES = {"ready", "in_progress", "in_review", "changes_requested"
 PIPELINE_RUNNABLE_STATUSES = {"planned", "running"}
 PIPELINE_STOPPABLE_STATUSES = {"planned", "running"}
 PIPELINE_RESUMABLE_STATUSES = {"stopped", "blocked"}
+PIPELINE_STATUS_POLL_STOP_STATUSES = ("blocked", "failed", "completed", "stopped")
 PIPELINE_FLOW_GATES = (
     ("queue_planner", "Queue"),
     ("evolution_change_gate", "Change"),
@@ -510,27 +510,30 @@ def render_pipeline_session_detail(data: Mapping[str, Any]) -> str:
     status = str(session.get("status") or "unknown")
     current_task = pipeline_session_task_label(data)
     auto_refresh = "active / 2 seconds" if status == "running" else "stopped"
+    session_id = str(session.get("id") or "")
     body = [
-        '<section class="summary-grid">',
-        metric("Session", str(session.get("id") or "")),
-        metric("Status", status),
+        '<section class="summary-grid" data-pipeline-session-summary>',
+        metric("Session", session_id),
+        metric("Status", status, data_field="status"),
         metric("Policy", str(session.get("policy") or "unknown")),
         metric("Current Task", current_task or "none"),
         metric("Current Step", str(session.get("current_step") or "none")),
-        metric("Current Phase", pipeline_session_current_phase(session) or "none"),
-        metric("Phase Status", pipeline_session_current_phase_status(session) or "none"),
-        metric("Stop Reason", pipeline_session_stop_reason(session) or "none"),
-        metric("Next Action", pipeline_session_next_action(session) or "none"),
+        metric("Current Phase", pipeline_session_current_phase(session) or "none", data_field="current_phase"),
+        metric("Phase Status", pipeline_session_current_phase_status(session) or "none", data_field="current_phase_status"),
+        metric("Stop Reason", pipeline_session_stop_reason(session) or "none", data_field="stop_reason"),
+        metric("Next Action", pipeline_session_next_action(session) or "none", data_field="next_action"),
         metric("Started", str(session.get("started_at") or "not started")),
-        metric("Updated", str(session.get("updated_at") or "")),
+        metric("Updated", str(session.get("updated_at") or ""), data_field="updated_at"),
         metric("Finished", str(session.get("finished_at") or "not finished")),
         metric("Elapsed", pipeline_elapsed_label(session)),
-        metric("Auto-refresh", auto_refresh),
+        metric("Auto-refresh", auto_refresh, data_field="polling"),
         "</section>",
         pipeline_session_auto_refresh(session),
         '<section class="panel">',
         "<h2>Status Overview</h2>",
+        '<div data-pipeline-status-overview-content>',
         pipeline_status_overview(session),
+        "</div>",
         "</section>",
         '<section class="panel">',
         "<h2>Current Live Step</h2>",
@@ -578,29 +581,279 @@ def render_pipeline_session_detail(data: Mapping[str, Any]) -> str:
 
 def pipeline_session_auto_refresh(session: Mapping[str, Any]) -> str:
     status = str(session.get("status") or "unknown")
+    attrs = pipeline_session_poll_attrs(session)
     if status == "running":
         if pipeline_session_has_live_execute_logs(session):
             return (
-                '<section class="panel auto-refresh" data-session-status="running" '
-                'data-live-log-refresh="active">'
-                '<div class="status-row">{}<strong>Live log polling active</strong>'
-                "<span>Session reload is paused while Codex Execute logs are streaming.</span></div>"
+                '<section class="panel auto-refresh" {} data-live-log-refresh="active">'
+                '<div class="status-row">{}<strong data-pipeline-poll-state-label>Status polling active</strong>'
+                '<span data-pipeline-poll-state-detail>Polling status every 2 seconds while Codex Execute logs are streaming.</span></div>'
+                "{}"
                 "</section>"
-            ).format(status_badge(status))
+            ).format(attrs, status_badge(status), pipeline_session_status_script())
         return (
-            '<section class="panel auto-refresh" data-auto-refresh="2" '
-            'data-session-status="running">'
-            '<div class="status-row">{}<strong>Auto-refresh active</strong>'
-            "<span>Polling this session every 2 seconds.</span></div>"
-            "<script>setTimeout(function(){{window.location.reload();}}, 2000);</script>"
+            '<section class="panel auto-refresh" {}>'
+            '<div class="status-row">{}<strong data-pipeline-poll-state-label>Status polling active</strong>'
+            '<span data-pipeline-poll-state-detail>Polling this session every 2 seconds.</span></div>'
+            "{}"
             "</section>"
-        ).format(status_badge(status))
+        ).format(attrs, status_badge(status), pipeline_session_status_script())
     return (
-        '<section class="panel auto-refresh stopped" data-session-status="{}">'
-        '<div class="status-row">{}<strong>Auto-refresh stopped</strong>'
-        "<span>Session state is terminal or waiting for owner action.</span></div>"
+        '<section class="panel auto-refresh stopped" {}>'
+        '<div class="status-row">{}<strong data-pipeline-poll-state-label>Auto-refresh stopped</strong>'
+        '<span data-pipeline-poll-state-detail>Session state is terminal or waiting for owner action.</span></div>'
         "</section>"
-    ).format(escape(status), status_badge(status))
+    ).format(attrs, status_badge(status))
+
+
+def pipeline_session_poll_attrs(session: Mapping[str, Any]) -> str:
+    session_id = str(session.get("id") or "")
+    status = str(session.get("status") or "unknown")
+    status_url = "/pipeline/sessions/{}/status.json".format(quote(session_id, safe=""))
+    poll_enabled = "1" if status == "running" else "0"
+    stop_statuses = " ".join(PIPELINE_STATUS_POLL_STOP_STATUSES)
+    auto_refresh_attr = ' data-auto-refresh="2"' if poll_enabled == "1" else ""
+    return (
+        'data-pipeline-session-poll{auto_refresh_attr} data-session-id="{session_id}" '
+        'data-status-url="{status_url}" data-poll-ms="2000" '
+        'data-stop-statuses="{stop_statuses}" data-poll-enabled="{poll_enabled}" '
+        'data-session-status="{status}"'
+    ).format(
+        auto_refresh_attr=auto_refresh_attr,
+        session_id=escape(session_id),
+        status_url=escape(status_url),
+        stop_statuses=escape(stop_statuses),
+        poll_enabled=escape(poll_enabled),
+        status=escape(status),
+    )
+
+
+def pipeline_session_status_script() -> str:
+    return """
+<script>
+(function() {
+  function startPipelineSessionStatusPolling() {
+    var panels = document.querySelectorAll("[data-pipeline-session-poll]");
+    panels.forEach(function(panel) {
+      if (panel.dataset.pollStarted === "1") {
+        return;
+      }
+      panel.dataset.pollStarted = "1";
+      var pollMs = Number(panel.dataset.pollMs || "2000");
+      var statusUrl = panel.dataset.statusUrl || "";
+      var stopStatuses = {};
+      String(panel.dataset.stopStatuses || "").split(/\\s+/).forEach(function(status) {
+        if (status) {
+          stopStatuses[status] = true;
+        }
+      });
+      function normalized(value) {
+        return String(value || "unknown").trim().toLowerCase();
+      }
+      function shouldStop(status) {
+        return Boolean(stopStatuses[normalized(status)]);
+      }
+      function cssToken(value) {
+        return normalized(value).replace(/\\s+/g, "_");
+      }
+      function clear(element) {
+        while (element && element.firstChild) {
+          element.removeChild(element.firstChild);
+        }
+      }
+      function updateMetric(name, value) {
+        var target = document.querySelector(
+          '[data-pipeline-status-field="' + name + '"] strong'
+        );
+        if (target) {
+          target.textContent = value || "none";
+        }
+      }
+      function updatePollBadge(status) {
+        var badge = panel.querySelector(".status-row .badge");
+        if (badge) {
+          badge.className = "badge " + cssToken(status);
+          badge.textContent = status || "unknown";
+        }
+      }
+      function setPollState(label, detail) {
+        var labelTarget = panel.querySelector("[data-pipeline-poll-state-label]");
+        var detailTarget = panel.querySelector("[data-pipeline-poll-state-detail]");
+        if (labelTarget) {
+          labelTarget.textContent = label;
+        }
+        if (detailTarget) {
+          detailTarget.textContent = detail;
+        }
+      }
+      function statusBadge(status) {
+        var element = document.createElement("span");
+        element.className = "badge " + cssToken(status);
+        element.textContent = status || "unknown";
+        return element;
+      }
+      function appendCell(row, value) {
+        var cell = document.createElement("td");
+        cell.textContent = value || "";
+        row.appendChild(cell);
+        return cell;
+      }
+      function updatePhaseOverview(payload) {
+        var target = document.querySelector("[data-pipeline-status-overview-content]");
+        if (!target) {
+          return;
+        }
+        var phaseHistory = payload.phase_history || {};
+        var total = Number(phaseHistory.total || "0");
+        var denominator = 7;
+        var percent = denominator ? Math.min(100, Math.floor((total / denominator) * 100)) : 0;
+        var recent = Array.isArray(phaseHistory.recent) ? phaseHistory.recent : [];
+        if (!total && !recent.length) {
+          return;
+        }
+        clear(target);
+
+        var progress = document.createElement("div");
+        progress.className = "pipeline-progress";
+        progress.setAttribute("aria-label", "Pipeline phase progress");
+        var fill = document.createElement("span");
+        fill.style.width = String(percent) + "%";
+        progress.appendChild(fill);
+        target.appendChild(progress);
+
+        var summary = document.createElement("p");
+        summary.className = "muted";
+        summary.textContent = String(total) + " of " + String(denominator)
+          + " pipeline phases have recorded outcomes.";
+        target.appendChild(summary);
+
+        if (!recent.length) {
+          var empty = document.createElement("p");
+          empty.className = "empty";
+          empty.textContent = "No phases recorded.";
+          target.appendChild(empty);
+          return;
+        }
+
+        var table = document.createElement("table");
+        var thead = document.createElement("thead");
+        var headRow = document.createElement("tr");
+        ["Phase", "Status", "Reason", "Next Action"].forEach(function(label) {
+          var head = document.createElement("th");
+          head.textContent = label;
+          headRow.appendChild(head);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+
+        var tbody = document.createElement("tbody");
+        recent.forEach(function(phase) {
+          var row = document.createElement("tr");
+          appendCell(row, phase.label || phase.phase || "Unknown Phase");
+          var statusCell = document.createElement("td");
+          statusCell.appendChild(statusBadge(phase.status || "unknown"));
+          row.appendChild(statusCell);
+          appendCell(row, phase.reason || phase.blocked_by || "");
+          appendCell(row, phase.next_action || "");
+          tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+        target.appendChild(table);
+      }
+      function ownerMessage(payload) {
+        var status = normalized(payload.status);
+        if (payload.next_action) {
+          return {prefix: "Owner guidance:", text: payload.next_action};
+        }
+        if (status === "failed") {
+          return {
+            text: "Session failed and is not running. Inspect the failure evidence before starting a new session."
+          };
+        }
+        if (status === "blocked") {
+          return {text: "Session is blocked and waiting for owner action."};
+        }
+        if (status === "stopped") {
+          return {text: "Session is stopped and can be resumed."};
+        }
+        if (status === "completed" || status === "archived") {
+          return {text: "Session is terminal."};
+        }
+        return null;
+      }
+      function updateOwnerNextAction(payload) {
+        var target = document.querySelector("[data-pipeline-owner-next-action]");
+        if (!target) {
+          return;
+        }
+        var message = ownerMessage(payload);
+        clear(target);
+        if (!message) {
+          target.hidden = true;
+          return;
+        }
+        target.hidden = false;
+        var paragraph = document.createElement("p");
+        paragraph.className = "muted";
+        if (message.prefix) {
+          var strong = document.createElement("strong");
+          strong.textContent = message.prefix;
+          paragraph.appendChild(strong);
+          paragraph.appendChild(document.createTextNode(" " + message.text));
+        } else {
+          paragraph.textContent = message.text;
+        }
+        target.appendChild(paragraph);
+      }
+      function applyStatus(payload) {
+        if (!payload || !payload.ok) {
+          throw new Error("status payload failed");
+        }
+        var status = payload.status || "unknown";
+        panel.dataset.sessionStatus = status;
+        updatePollBadge(status);
+        updateMetric("status", status);
+        updateMetric("current_phase", payload.current_phase || "none");
+        updateMetric("current_phase_status", payload.current_phase_status || "none");
+        updateMetric("stop_reason", payload.stop_reason || "none");
+        updateMetric("next_action", payload.next_action || "none");
+        updatePhaseOverview(payload);
+        updateOwnerNextAction(payload);
+        if (shouldStop(status)) {
+          updateMetric("polling", "stopped");
+          setPollState(
+            "Auto-refresh stopped",
+            "Session state is terminal or waiting for owner action."
+          );
+        }
+      }
+      function tick() {
+        fetch(statusUrl, {cache: "no-store", headers: {"Accept": "application/json"}})
+          .then(function(response) { return response.json(); })
+          .then(function(payload) {
+            applyStatus(payload);
+            if (!shouldStop(payload.status)) {
+              window.setTimeout(tick, pollMs);
+            }
+          })
+          .catch(function(error) {
+            setPollState("Status polling paused", error.message);
+            window.setTimeout(tick, 5000);
+          });
+      }
+      if (!statusUrl || panel.dataset.pollEnabled !== "1" || shouldStop(panel.dataset.sessionStatus)) {
+        return;
+      }
+      window.setTimeout(tick, pollMs);
+    });
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", startPipelineSessionStatusPolling);
+  } else {
+    startPipelineSessionStatusPolling();
+  }
+})();
+</script>"""
 
 
 def pipeline_status_overview(session: Mapping[str, Any]) -> str:
@@ -682,10 +935,8 @@ def pipeline_session_action_controls(data: Mapping[str, Any]) -> str:
     session_id = str(session.get("id") or "")
     safe_forms = [
         action_form("pipeline.render", [], button_label="Refresh Session"),
+        pipeline_session_owner_next_action(session),
     ]
-    guidance = pipeline_session_action_guidance(session)
-    if guidance:
-        safe_forms.append(guidance)
     safe_forms.extend(pipeline_session_run_action_forms(session_id, status))
 
     restricted = [
@@ -1664,6 +1915,13 @@ def pipeline_session_action_guidance(session: Mapping[str, Any]) -> str:
     if not message:
         return ""
     return '<p class="muted">{}</p>'.format(escape(message))
+
+
+def pipeline_session_owner_next_action(session: Mapping[str, Any]) -> str:
+    guidance = pipeline_session_action_guidance(session)
+    if guidance:
+        return '<div data-pipeline-owner-next-action>{}</div>'.format(guidance)
+    return '<div data-pipeline-owner-next-action hidden></div>'
 
 
 def pipeline_session_run_action_forms(session_id: str, status: str) -> list[str]:
@@ -2844,9 +3102,10 @@ def render_generated(data: Mapping[str, Any]) -> str:
 
 
 def render_settings(model: ReadOnlyProjectModel) -> str:
-    settings = load_ui_settings(root=model.root)
-    source = ui_settings_source(root=model.root)
-    path = ui_settings_path(model.root)
+    read_model = model.ui_settings()
+    settings = _mapping(read_model.get("settings"))
+    source = str(read_model.get("source") or "")
+    path = str(read_model.get("path") or "")
     body = [
         '<section class="panel settings-panel">',
         '<form method="post" action="/actions">',
@@ -2923,6 +3182,24 @@ def render_settings(model: ReadOnlyProjectModel) -> str:
                     helper=(
                         "UI runs only. Strict git diff verification remains the "
                         "default and is available by turning this off."
+                    ),
+                ),
+                settings_checkbox_row(
+                    ALLOW_REPORT_WARNINGS_SETTING,
+                    "Allow report-warning pass behavior for UI runs",
+                    settings,
+                    helper=(
+                        "UI runs only. Report warnings may pass verification; "
+                        "report errors and other gates still block."
+                    ),
+                ),
+                settings_checkbox_row(
+                    ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
+                    "Allow relaxed report warnings for fast UI runs",
+                    settings,
+                    helper=(
+                        "Fast UI runs only. Report warnings become advisory; "
+                        "report errors and other gates still block."
                     ),
                 ),
                 settings_checkbox_row(
@@ -4883,8 +5160,14 @@ def render_nav(active: str) -> str:
     return "<nav>{}</nav>".format("".join(links))
 
 
-def metric(label: str, value: str) -> str:
-    return '<div class="metric"><span>{}</span><strong>{}</strong></div>'.format(
+def metric(label: str, value: str, *, data_field: str = "") -> str:
+    data_attr = (
+        ' data-pipeline-status-field="{}"'.format(escape(data_field))
+        if data_field
+        else ""
+    )
+    return '<div class="metric"{}><span>{}</span><strong>{}</strong></div>'.format(
+        data_attr,
         escape(label),
         escape(value),
     )

@@ -9,7 +9,9 @@ from typing import Any, Mapping
 
 from ai_project_ctl.core.result import CommandError
 from ai_project_ctl.ui_settings import (
+    ALLOW_REPORT_WARNINGS_SETTING,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
+    ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
     UISettingsError,
@@ -64,6 +66,16 @@ def resolve_pipeline_policy_from_settings(
             policy,
             verify=replace(policy.verify, run_git_diff_gates=False),
         )
+    if _allow_report_warnings(settings):
+        policy = replace(
+            policy,
+            verify=replace(policy.verify, allow_report_warnings=True),
+        )
+    if _allow_relaxed_report_warnings(settings):
+        policy = replace(
+            policy,
+            verify=replace(policy.verify, block_report_warnings=False),
+        )
     execution_timeout_sec = _execution_timeout_sec(settings)
     if execution_timeout_sec is not None:
         policy = replace(
@@ -96,6 +108,24 @@ def _require_codex_review(settings: Mapping[str, Any]) -> bool:
 
 def _allow_relaxed_git_diff_verification(settings: Mapping[str, Any]) -> bool:
     value = settings.get(ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING, False)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true"}
+    return bool(value)
+
+
+def _allow_report_warnings(settings: Mapping[str, Any]) -> bool:
+    value = settings.get(ALLOW_REPORT_WARNINGS_SETTING, False)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true"}
+    return bool(value)
+
+
+def _allow_relaxed_report_warnings(settings: Mapping[str, Any]) -> bool:
+    value = settings.get(ALLOW_RELAXED_REPORT_WARNINGS_SETTING, False)
     if isinstance(value, bool):
         return value
     if isinstance(value, str):

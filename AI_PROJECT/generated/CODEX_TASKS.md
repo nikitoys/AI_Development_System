@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `1206`
-Current task: `TASK-136`
+Revision: `1306`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -2181,7 +2181,7 @@ Acceptance criteria:
 
 ### PIPEF-41 (TASK-120) — PIPE-041 Add tests for queue prepare execute report phases
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_5c3a3cffb80a`, legacy `TASK-120`, aliases `TASK-120`, local `PIPEF` / `41`
@@ -2197,7 +2197,7 @@ Acceptance criteria:
 
 ### PIPEF-42 (TASK-121) — PIPE-042 Add tests for git diff gate
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_5517275e5470`, legacy `TASK-121`, aliases `TASK-121`, local `PIPEF` / `42`
@@ -2213,7 +2213,7 @@ Acceptance criteria:
 
 ### PIPEF-43 (TASK-122) — PIPE-043 Add fake Codex happy path integration test
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_6d574d8b0795`, legacy `TASK-122`, aliases `TASK-122`, local `PIPEF` / `43`
@@ -2449,9 +2449,9 @@ Acceptance criteria:
 - Documentation includes a troubleshooting note for CODEX_ADAPTER_TIMEOUT.
 - Generated documentation checks can be rerun without manual edits to generated files.
 
-### PIPEF-57 (TASK-136) — PIPE-052 Add pipeline session status JSON endpoint ⭐
+### PIPEF-57 (TASK-136) — PIPE-052 Add pipeline session status JSON endpoint
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_3b24331932c4`, legacy `TASK-136`, aliases `TASK-136`, local `PIPEF` / `57`
@@ -2468,7 +2468,7 @@ Acceptance criteria:
 
 ### PIPEF-58 (TASK-137) — PIPE-053 Add partial polling refresh to Pipeline session page
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_f9cb256de173`, legacy `TASK-137`, aliases `TASK-137`, local `PIPEF` / `58`
@@ -3028,3 +3028,212 @@ Acceptance criteria:
 - Legacy prompt contract test no longer expects the old full CODEX_REPORT_JSON report block.
 - Prompt tests verify the minimal CODEX_EXECUTION_SUMMARY_JSON contract.
 - Focused Codex prompt tests pass.
+
+### PIPEF-91 (TASK-172) — Add report warning verify policy
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_09e4331fcf23`, legacy `TASK-172`, aliases `TASK-172`, local `PIPEF` / `91`
+
+Add a pipeline verify policy flag that controls whether structured report warnings block verification.
+
+Acceptance criteria:
+
+- Strict/default policy still blocks verify when the report gate returns CODEX_REPORT_WARN.
+- Relaxed policy allows verify to continue when the only report gate issue is a warning.
+- Verify artifacts record the report warning status and relaxed warning policy decision.
+- Report gate failures remain blocking in both strict and relaxed modes.
+- Focused verify phase tests cover strict and relaxed report warning behavior.
+
+### PIPEF-92 (TASK-173) — Wire relaxed report warnings into UI policy
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_0becf52f7359`, legacy `TASK-173`, aliases `TASK-173`, local `PIPEF` / `92`
+
+Add a project-local UI setting that maps relaxed report warning behavior into the effective UI pipeline policy.
+
+Acceptance criteria:
+
+- Default UI settings keep report warning blocking enabled unless explicitly relaxed.
+- Setting allow_relaxed_report_warnings to true makes the effective UI policy treat report warnings as advisory.
+- The new setting is allowlisted for Web write actions.
+- Existing allow_relaxed_git_diff_verification behavior is unchanged.
+- Focused UI policy tests pass.
+
+### PIPEF-93 (TASK-174) — Expose relaxed report warnings setting
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_167499a73167`, legacy `TASK-174`, aliases `TASK-174`, local `PIPEF` / `93`
+
+Expose the relaxed report warning setting on the Web Settings page and cover it with Web Control Center tests.
+
+Acceptance criteria:
+
+- Settings page shows allow_relaxed_report_warnings with explanatory copy.
+- Unchecked rendering is shown when the setting is false or absent.
+- Checked rendering is shown when the setting is true.
+- Submitting Settings can update allow_relaxed_report_warnings.
+- Focused Web Control Center tests pass.
+
+### PIPEF-94 (TASK-175) — PIPE-094 Add report warning verify policy flag
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_4b64732575a7`, legacy `TASK-175`, aliases `TASK-175`, local `PIPEF` / `94`
+
+Add an explicit verify policy flag that controls whether structured Codex report warnings may pass verify.
+
+Acceptance criteria:
+
+- PipelinePolicy.default().verify.allow_report_warnings is false.
+- PipelinePolicy.to_dict() omits verify.allow_report_warnings when it is false by default.
+- PipelinePolicy.to_dict() includes verify.allow_report_warnings when it is explicitly true.
+- PipelinePolicy.from_dict() restores allow_report_warnings correctly from a policy snapshot.
+- Non-boolean verify.allow_report_warnings is rejected by policy validation or parsing.
+- Existing run_git_diff_gates tests continue to pass without semantic changes.
+
+### PIPEF-95 (TASK-176) — PIPE-095 Allow report warnings in verify when policy permits
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_a82be276b7a5`, legacy `TASK-176`, aliases `TASK-176`, local `PIPEF` / `95`
+
+Update verify so CODEX_REPORT_WARN can pass only when verify.allow_report_warnings is explicitly enabled.
+
+Acceptance criteria:
+
+- A report with warnings still blocks verify when allow_report_warnings is false.
+- A report with warnings passes verify when allow_report_warnings is true and git diff, protected-files, and allowed-files gates pass.
+- A report with warnings passes verify when allow_report_warnings is true and git diff gates are skipped by policy.
+- A report with warnings still blocks if another enabled gate fails.
+- Verify artifacts distinguish report_gate_warn_blocks_verify from report_gate_warnings_allowed_by_policy.
+- Focused verify phase tests cover both strict and allowed report-warning paths.
+
+### PIPEF-96 (TASK-177) — PIPE-096 Wire report warning policy into UI settings
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_4ea27c95cccf`, legacy `TASK-177`, aliases `TASK-177`, local `PIPEF` / `96`
+
+Add a UI setting that maps directly to verify.allow_report_warnings without affecting relaxed git-diff verification.
+
+Acceptance criteria:
+
+- Default UI settings include allow_report_warnings=false.
+- String and boolean values for allow_report_warnings are normalized consistently with other boolean settings.
+- Invalid allow_report_warnings values are rejected with the existing UI boolean error path.
+- resolve_pipeline_policy_from_settings sets verify.allow_report_warnings only from allow_report_warnings.
+- allow_relaxed_git_diff_verification continues to control only verify.run_git_diff_gates.
+- Focused UI policy tests cover true, false, and independence from relaxed git-diff verification.
+
+### PIPEF-97 (TASK-178) — PIPE-097 Expose report warnings toggle in Control Center
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_67327ed51512`, legacy `TASK-178`, aliases `TASK-178`, local `PIPEF` / `97`
+
+Expose allow_report_warnings in the web control surface so UI-created pipeline sessions can opt into report-warning pass behavior.
+
+Acceptance criteria:
+
+- Control Center exposes allow_report_warnings as a separate setting from relaxed git-diff verification.
+- Submitting the setting writes allow_report_warnings to the project UI settings file through existing guarded actions.
+- The web read model returns the effective allow_report_warnings value.
+- Existing allow_relaxed_git_diff_verification behavior is unchanged.
+- Web tests cover display and update of allow_report_warnings.
+- Focused web control tests pass.
+
+### PIPEF-98 (TASK-179) — PIPE-098 Add report warning pipeline regression coverage
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_0ed311b8994a`, legacy `TASK-179`, aliases `TASK-179`, local `PIPEF` / `98`
+
+Add an end-to-end regression test proving a UI-resolved policy can carry allow_report_warnings into verify and pass a warning report.
+
+Acceptance criteria:
+
+- Regression tests fail against the old behavior where CODEX_REPORT_WARN always blocks verify.
+- Regression tests pass when allow_report_warnings=true is carried into the policy snapshot.
+- Regression tests confirm allow_relaxed_git_diff_verification alone does not allow report warnings.
+- Regression tests confirm allow_report_warnings=false preserves strict blocking behavior.
+- The tests are bounded and do not invoke real Codex.
+- Focused pipeline tests pass.
+
+### PIPEF-99 (TASK-180) — Add report gate downstream policy helper
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_ff42792e6d6e`, legacy `TASK-180`, aliases `TASK-180`, local `PIPEF` / `99`
+
+Add a shared policy-aware helper that decides whether a report gate result may continue to downstream pipeline phases.
+
+Acceptance criteria:
+
+- A shared helper returns allow=true for CODEX_REPORT_PASS.
+- The helper returns allow=true for CODEX_REPORT_WARN only when the policy allows advisory report warnings.
+- The helper returns allow=false for CODEX_REPORT_WARN when advisory report warnings are disabled.
+- The helper returns allow=false for report gate FAIL results.
+- Focused unit tests cover all acceptance branches.
+
+### PIPEF-100 (TASK-181) — Use shared report gate helper in verify phase
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_ae9a87d05290`, legacy `TASK-181`, aliases `TASK-181`, local `PIPEF` / `100`
+
+Refactor verify phase to use the shared report gate acceptance helper without changing existing verify outcomes.
+
+Acceptance criteria:
+
+- Verify still passes a report warning when the policy allows advisory report warnings.
+- Verify still blocks a report warning when the policy does not allow advisory report warnings.
+- Verify still blocks report gate FAIL results.
+- Existing git diff gate skip artifacts remain unchanged.
+- Focused verify tests pass.
+
+### PIPEF-101 (TASK-182) — Allow advisory report warnings in review phase
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_b44abaa8f7b7`, legacy `TASK-182`, aliases `TASK-182`, local `PIPEF` / `101`
+
+Update review phase revalidation so a verified advisory report warning does not block review when policy allows it.
+
+Acceptance criteria:
+
+- Review no longer blocks with REPORT_GATE_NOT_PASSED_AFTER_VERIFY for the same verified report when advisory report warnings are allowed.
+- Review still blocks with REPORT_GATE_NOT_PASSED_AFTER_VERIFY when advisory report warnings are disabled.
+- Review still blocks with REPORT_CHANGED_AFTER_VERIFY when the latest report id differs from the verified report id.
+- Review still blocks report gate FAIL results.
+- Focused review tests pass.
+
+### PIPEF-102 (TASK-183) — Add verify-to-review advisory warning pipeline regression
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_ae36b784755b`, legacy `TASK-183`, aliases `TASK-183`, local `PIPEF` / `102`
+
+Add an end-to-end pipeline regression proving advisory report warnings pass verify and do not block review.
+
+Acceptance criteria:
+
+- The regression fails on the old strict review behavior.
+- The regression passes after review uses the shared report warning policy.
+- The test does not run external Codex.
+- The test asserts both verify and review phase outcomes.
+- Focused pipeline/review tests pass.

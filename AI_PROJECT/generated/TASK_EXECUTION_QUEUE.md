@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1206`
+Revision: `1306`
 
 ## Executable Now
 
@@ -12,12 +12,8 @@ Revision: `1206`
 - `PIPE-20 (TASK-071)` [planned] `EPIC-007` priority `1` — PIPE-20 Document Dynamic Pipeline Policy Presets
 - `PIPE-21 (TASK-072)` [planned] `EPIC-007` priority `1` — PIPE-21 Fix Pipeline Queue Epic Filter Behavior
 - `PIPE-22 (TASK-073)` [planned] `EPIC-007` priority `1` — PIPE-22 Add Pipeline Session Resume After Blocker
-- `PIPEF-41 (TASK-120)` [planned] `EPIC-009` priority `1` — PIPE-041 Add tests for queue prepare execute report phases
-- `PIPEF-42 (TASK-121)` [planned] `EPIC-009` priority `1` — PIPE-042 Add tests for git diff gate
-- `PIPEF-43 (TASK-122)` [planned] `EPIC-009` priority `1` — PIPE-043 Add fake Codex happy path integration test
 - `PIPEF-44 (TASK-123)` [planned] `EPIC-009` priority `1` — PIPE-044 Add fake reviewer close integration test
 - `PIPEF-45 (TASK-124)` [planned] `EPIC-009` priority `1` — PIPE-045 Update phase pipeline usage guide
-- `PIPEF-58 (TASK-137)` [planned] `EPIC-009` priority `1` — PIPE-053 Add partial polling refresh to Pipeline session page
 - `PIPEF-65 (TASK-144)` [planned] `EPIC-009` priority `1` — PIPE-060 Document Web live status and Codex log behavior
 - `PIPEF-71 (TASK-150)` [planned] `EPIC-009` priority `1` — PIPE-066 Document Web Settings and internal bypass behavior
 - `PIPEF-78 (TASK-157)` [planned] `EPIC-009` priority `1` — PIPE-073 Document Codex structured report auto-submit
@@ -260,6 +256,12 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-40 (TASK-119)` [done] `EPIC-009` priority `1` — PIPE-040 Add tests for phase model and mutations
   - `status_not_executable`: status is done
+- `PIPEF-41 (TASK-120)` [done] `EPIC-009` priority `1` — PIPE-041 Add tests for queue prepare execute report phases
+  - `status_not_executable`: status is done
+- `PIPEF-42 (TASK-121)` [done] `EPIC-009` priority `1` — PIPE-042 Add tests for git diff gate
+  - `status_not_executable`: status is done
+- `PIPEF-43 (TASK-122)` [done] `EPIC-009` priority `1` — PIPE-043 Add fake Codex happy path integration test
+  - `status_not_executable`: status is done
 - `PIPEF-46 (TASK-125)` [done] `EPIC-009` priority `1` — Add UI settings defaults and loader
   - `status_not_executable`: status is done
 - `PIPEF-47 (TASK-126)` [done] `EPIC-009` priority `1` — Add UI settings CLI commands
@@ -282,8 +284,10 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-56 (TASK-135)` [done] `EPIC-009` priority `1` — PIPE-051 Document phase-based Web Pipeline display behavior
   - `status_not_executable`: status is done
-- `PIPEF-57 (TASK-136)` [in_progress] `EPIC-009` priority `1` — PIPE-052 Add pipeline session status JSON endpoint
-  - `status_not_executable`: status is in_progress
+- `PIPEF-57 (TASK-136)` [done] `EPIC-009` priority `1` — PIPE-052 Add pipeline session status JSON endpoint
+  - `status_not_executable`: status is done
+- `PIPEF-58 (TASK-137)` [done] `EPIC-009` priority `1` — PIPE-053 Add partial polling refresh to Pipeline session page
+  - `status_not_executable`: status is done
 - `PIPEF-59 (TASK-138)` [done] `EPIC-009` priority `1` — PIPE-054 Add Web action for single-task UI run
   - `status_not_executable`: status is done
 - `PIPEF-60 (TASK-139)` [done] `EPIC-009` priority `1` — PIPE-055 Render Run and Resume controls beside task rows
@@ -341,4 +345,28 @@ _No tasks waiting only on dependencies._
 - `PIPEF-89 (TASK-170)` [done] `EPIC-009` priority `1` — Expose relaxed git diff mode for UI runs
   - `status_not_executable`: status is done
 - `PIPEF-90 (TASK-171)` [done] `EPIC-009` priority `1` — Update legacy Codex prompt report contract test
+  - `status_not_executable`: status is done
+- `PIPEF-91 (TASK-172)` [done] `EPIC-009` priority `1` — Add report warning verify policy
+  - `status_not_executable`: status is done
+- `PIPEF-92 (TASK-173)` [done] `EPIC-009` priority `1` — Wire relaxed report warnings into UI policy
+  - `status_not_executable`: status is done
+- `PIPEF-93 (TASK-174)` [done] `EPIC-009` priority `1` — Expose relaxed report warnings setting
+  - `status_not_executable`: status is done
+- `PIPEF-94 (TASK-175)` [done] `EPIC-009` priority `1` — PIPE-094 Add report warning verify policy flag
+  - `status_not_executable`: status is done
+- `PIPEF-95 (TASK-176)` [done] `EPIC-009` priority `1` — PIPE-095 Allow report warnings in verify when policy permits
+  - `status_not_executable`: status is done
+- `PIPEF-96 (TASK-177)` [done] `EPIC-009` priority `1` — PIPE-096 Wire report warning policy into UI settings
+  - `status_not_executable`: status is done
+- `PIPEF-97 (TASK-178)` [done] `EPIC-009` priority `1` — PIPE-097 Expose report warnings toggle in Control Center
+  - `status_not_executable`: status is done
+- `PIPEF-98 (TASK-179)` [done] `EPIC-009` priority `1` — PIPE-098 Add report warning pipeline regression coverage
+  - `status_not_executable`: status is done
+- `PIPEF-99 (TASK-180)` [done] `EPIC-009` priority `1` — Add report gate downstream policy helper
+  - `status_not_executable`: status is done
+- `PIPEF-100 (TASK-181)` [done] `EPIC-009` priority `1` — Use shared report gate helper in verify phase
+  - `status_not_executable`: status is done
+- `PIPEF-101 (TASK-182)` [done] `EPIC-009` priority `1` — Allow advisory report warnings in review phase
+  - `status_not_executable`: status is done
+- `PIPEF-102 (TASK-183)` [done] `EPIC-009` priority `1` — Add verify-to-review advisory warning pipeline regression
   - `status_not_executable`: status is done

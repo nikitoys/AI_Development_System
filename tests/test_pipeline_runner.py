@@ -15,9 +15,16 @@ from ai_project_ctl.pipeline.batch import run_until_blocker
 from ai_project_ctl.pipeline.codex_adapter import (
     CODE_REPORT_MISSING as CODEX_ADAPTER_REPORT_MISSING,
 )
+from ai_project_ctl.pipeline.phase import PhaseResult
+from ai_project_ctl.pipeline.report_gate import CODE_WARN as CODEX_REPORT_WARN
 from ai_project_ctl.pipeline.runner import run_next
-from ai_project_ctl.pipeline.session import create_session
+from ai_project_ctl.pipeline.session import create_session, record_phase_result
 from ai_project_ctl.pipeline.state import pipeline_state_path
+from ai_project_ctl.pipeline.verify_phase import (
+    GIT_DIFF_GATES_POLICY_KEY,
+    REPORT_WARNING_POLICY_KEY,
+    SKIPPED_GATES_KEY,
+)
 
 
 def completed(stdout="OK\n", returncode=0, stderr=""):
@@ -556,6 +563,30 @@ def write_report_state(root: Path, task_id: str, report_id: str, report: dict | 
     )
 
 
+def record_collected_report(root: Path, session_id: str, report_id: str = "RPT-001") -> None:
+    result = record_phase_result(
+        session_id,
+        PhaseResult.passed(
+            "collect_report",
+            reason="Structured execution report collected for selected task.",
+            next_action="Run pipeline phase verify.",
+            artifacts={
+                "session_id": session_id,
+                "task_id": "TASK-001",
+                "report_id": report_id,
+                "report_found": True,
+                "freshness_basis": "report_id",
+            },
+        ),
+        root=root,
+        actor="tester",
+        task_id="TASK-001",
+        command="pipeline.phase.collect_report",
+    )
+    if not result.ok:
+        raise AssertionError(result.errors)
+
+
 def load_pipeline(root: Path):
     return json.loads(pipeline_state_path(root).read_text(encoding="utf-8"))
 
@@ -996,6 +1027,114 @@ class PipelineRunnerTests(unittest.TestCase):
                 (root / "AI_PROJECT" / "state" / "task_reports.json").exists()
             )
             self.assertIn(["codex", "exec"], calls)
+
+    def test_run_next_verify_review_allows_advisory_report_warning(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_next_advisory_report_warning_test",
+                verify=replace(
+                    supervised.verify,
+                    allow_report_warnings=True,
+                    block_report_warnings=False,
+                    run_git_diff_gates=False,
+                ),
+            )
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                current_task_id="TASK-001",
+                current_task_ref="APP-01",
+            )
+            report = valid_report("TASK-001")
+            report["warnings"] = ["advisory report warning"]
+            report["blockers"] = []
+            write_report_state(root, "TASK-001", "RPT-001", report=report)
+            record_collected_report(root, session.data["session_id"])
+            external_calls = []
+
+            def external_runner(argv):
+                external_calls.append(list(argv))
+                raise AssertionError("external command should not run")
+
+            verify_result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=external_runner,
+            )
+            review_result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=external_runner,
+            )
+            latest = load_pipeline(root)["sessions"][0]
+            phases = {entry["phase"]: entry for entry in latest["phase_history"]}
+            verify_phase = phases["verify"]
+            review_phase = phases["review"]
+            verify_artifacts = verify_phase["artifacts"]
+            review_artifacts = review_phase["artifacts"]
+
+        self.assertTrue(verify_result.ok)
+        self.assertEqual(verify_result.data["dispatched_phase"], "verify")
+        self.assertEqual(verify_result.data["phase_status"], "passed")
+        self.assertEqual(verify_phase["status"], "passed")
+        self.assertEqual(verify_artifacts["report_gate_status"], "warn")
+        self.assertEqual(verify_artifacts["report_gate_code"], CODEX_REPORT_WARN)
+        self.assertEqual(
+            verify_artifacts["warn_policy"],
+            "report_gate_warnings_allowed_by_policy",
+        )
+        self.assertEqual(
+            verify_artifacts[REPORT_WARNING_POLICY_KEY],
+            {
+                "allow_report_warnings": True,
+                "block_report_warnings": False,
+                "decision": "allowed",
+                "policy": "report_gate_warnings_allowed_by_policy",
+                "reason": "policy.verify.allow_report_warnings is true",
+                "report_gate_status": "warn",
+                "report_gate_code": CODEX_REPORT_WARN,
+            },
+        )
+        self.assertEqual(
+            verify_artifacts[GIT_DIFF_GATES_POLICY_KEY]["mode"],
+            "relaxed",
+        )
+        self.assertEqual(
+            [gate["status"] for gate in verify_artifacts[SKIPPED_GATES_KEY]],
+            ["skipped", "skipped", "skipped"],
+        )
+        self.assertEqual(
+            verify_artifacts["verify_evidence"][REPORT_WARNING_POLICY_KEY],
+            verify_artifacts[REPORT_WARNING_POLICY_KEY],
+        )
+        self.assertEqual(
+            verify_artifacts["verify_evidence"]["report_gate"]["warnings"][0]["message"],
+            "Report contains warning(s): advisory report warning",
+        )
+        self.assertTrue(review_result.ok)
+        self.assertEqual(review_result.data["dispatched_phase"], "review")
+        self.assertEqual(review_result.data["phase_status"], "passed")
+        self.assertEqual(review_phase["status"], "passed")
+        self.assertEqual(review_artifacts.get("blocked_by", ""), "")
+        self.assertNotEqual(
+            review_result.data.get("stop_code"),
+            "REPORT_GATE_NOT_PASSED_AFTER_VERIFY",
+        )
+        self.assertEqual(review_artifacts["report_gate_status"], "warn")
+        self.assertTrue(review_artifacts["report_gate_acceptance"]["allow"])
+        self.assertEqual(
+            review_artifacts["report_gate_acceptance"]["policy"],
+            "report_gate_warn_allowed_by_policy",
+        )
+        self.assertTrue(review_artifacts["build_prompt_only"])
+        self.assertEqual(external_calls, [])
 
     def test_run_codex_records_token_gate_pass_before_manual_adapter_blocker(self):
         with tempfile.TemporaryDirectory() as tmp:

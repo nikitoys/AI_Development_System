@@ -30,6 +30,7 @@ from .report_gate import FAIL as REPORT_FAIL
 from .report_gate import PASS as REPORT_PASS
 from .report_gate import WARN as REPORT_WARN
 from .report_gate import evaluate_report_gate
+from .report_gate import evaluate_report_gate_acceptance
 from .session import record_phase_result
 from .state import load_pipeline_state, load_reference_state, pipeline_state_path
 
@@ -45,6 +46,11 @@ RUNTIME_LOG_PATH_PREFIX = "AI_PROJECT/logs/"
 GIT_DIFF_GATES_POLICY_KEY = "git_diff_gates_policy"
 SKIPPED_GATES_KEY = "skipped_gates"
 GIT_DIFF_GATES_DISABLED_REASON = "policy.verify.run_git_diff_gates is false"
+REPORT_WARNING_POLICY_KEY = "report_warning_policy"
+REPORT_WARNINGS_BLOCKED_POLICY = "report_gate_warn_blocks_verify"
+REPORT_WARNINGS_ALLOWED_POLICY = "report_gate_warnings_allowed_by_policy"
+REPORT_WARNINGS_BLOCKED_REASON = "policy.verify.allow_report_warnings is false"
+REPORT_WARNINGS_ALLOWED_REASON = "policy.verify.allow_report_warnings is true"
 GIT_DIFF_BASED_GATE_NAMES = (
     "git_diff_gate",
     "protected_files_gate",
@@ -201,6 +207,15 @@ def verify_phase(
         "report_gate_code": report_gate.code,
         "report_gate": report_gate.to_dict(),
     }
+    report_gate_acceptance = evaluate_report_gate_acceptance(report_gate, policy)
+    report_warning_policy = _report_warning_policy_artifact(
+        policy,
+        report_gate,
+        report_gate_acceptance,
+    )
+    if report_warning_policy:
+        report_artifacts[REPORT_WARNING_POLICY_KEY] = report_warning_policy
+        report_artifacts["warn_policy"] = str(report_warning_policy.get("policy") or "")
     project_tests = _project_tests_evidence(policy, report_gate)
     if project_tests:
         report_artifacts["project_tests"] = project_tests
@@ -220,19 +235,21 @@ def verify_phase(
             next_action="Rerun collect-report, then rerun verify.",
         )
 
-    if report_gate.status in {REPORT_PASS, REPORT_WARN}:
+    if _should_evaluate_verify_file_gates(report_gate, report_gate_acceptance):
         if policy.verify.run_git_diff_gates:
             phase = _phase_with_git_diff_gates(
                 root_path=root_path,
                 session=session,
                 task=task,
                 report_gate=report_gate,
+                report_gate_acceptance=report_gate_acceptance,
                 report_artifacts=report_artifacts,
             )
         else:
             phase = _phase_with_git_diff_gates_skipped(
                 policy=policy,
                 report_gate=report_gate,
+                report_gate_acceptance=report_gate_acceptance,
                 report_artifacts=report_artifacts,
             )
     elif report_gate.status == REPORT_FAIL:
@@ -245,13 +262,16 @@ def verify_phase(
             generated_files=report_gate.generated_files,
         )
     else:
-        phase = PhaseResult.failed(
+        phase = PhaseResult.blocked(
             PHASE_NAME,
             reason="Report gate returned unknown status: {}".format(
                 report_gate.status
             ),
             next_action="Fix report gate status handling, then rerun verify.",
-            artifacts={"error_code": "REPORT_GATE_UNKNOWN_STATUS", **report_artifacts},
+            artifacts={
+                "blocked_by": "REPORT_GATE_UNKNOWN_STATUS",
+                **report_artifacts,
+            },
         )
 
     return _phase_command(
@@ -347,6 +367,9 @@ def _phase_command(
         git_diff_policy = artifacts.get(GIT_DIFF_GATES_POLICY_KEY)
         if isinstance(git_diff_policy, Mapping):
             result.data[GIT_DIFF_GATES_POLICY_KEY] = dict(git_diff_policy)
+        report_warning_policy = artifacts.get(REPORT_WARNING_POLICY_KEY)
+        if isinstance(report_warning_policy, Mapping):
+            result.data[REPORT_WARNING_POLICY_KEY] = dict(report_warning_policy)
         skipped_gates = artifacts.get(SKIPPED_GATES_KEY)
         if isinstance(skipped_gates, list):
             result.data[SKIPPED_GATES_KEY] = [
@@ -472,6 +495,7 @@ def _phase_with_git_diff_gates(
     session: Mapping[str, Any],
     task: Mapping[str, Any],
     report_gate: Any,
+    report_gate_acceptance: Any,
     report_artifacts: Mapping[str, Any],
 ) -> PhaseResult:
     git_diff_gate = evaluate_git_diff_gate(
@@ -548,7 +572,22 @@ def _phase_with_git_diff_gates(
                 changed_files=report_gate.changed_files,
                 generated_files=report_gate.generated_files,
             )
-        if report_gate.status == REPORT_PASS:
+        if report_gate_acceptance.allow:
+            if report_gate.status == REPORT_WARN:
+                return PhaseResult.passed(
+                    PHASE_NAME,
+                    reason=(
+                        "Report gate warning(s) are allowed by policy; git diff gate, "
+                        "protected-files gate, and allowed-files gate passed."
+                    ),
+                    next_action="Run pipeline phase review.",
+                    artifacts={
+                        **gated_artifacts,
+                        "warn_policy": REPORT_WARNINGS_ALLOWED_POLICY,
+                    },
+                    changed_files=report_gate.changed_files,
+                    generated_files=report_gate.generated_files,
+                )
             return PhaseResult.passed(
                 PHASE_NAME,
                 reason=(
@@ -562,15 +601,20 @@ def _phase_with_git_diff_gates(
             )
         return PhaseResult.blocked(
             PHASE_NAME,
-            reason="Report gate returned warning(s): {}".format(report_gate.reason),
+            reason=_report_gate_acceptance_blocked_reason(
+                report_gate,
+                report_gate_acceptance,
+            ),
             next_action=(
-                "Resolve report gate warnings or define an explicit follow-up "
-                "policy, then rerun verify."
+                "Resolve report gate warnings or explicitly enable "
+                "policy.verify.allow_report_warnings, then rerun verify."
+                if report_gate.status == REPORT_WARN
+                else "Fix the structured report or task output, then rerun verify."
             ),
             artifacts={
-                "blocked_by": report_gate.code,
-                "warn_policy": "report_gate_warn_blocks_verify",
                 **gated_artifacts,
+                "blocked_by": report_gate.code,
+                "warn_policy": REPORT_WARNINGS_BLOCKED_POLICY,
             },
             changed_files=report_gate.changed_files,
             generated_files=report_gate.generated_files,
@@ -606,6 +650,7 @@ def _phase_with_git_diff_gates_skipped(
     *,
     policy: PipelinePolicy,
     report_gate: Any,
+    report_gate_acceptance: Any,
     report_artifacts: Mapping[str, Any],
 ) -> PhaseResult:
     relaxed_artifacts = {
@@ -613,7 +658,22 @@ def _phase_with_git_diff_gates_skipped(
         GIT_DIFF_GATES_POLICY_KEY: _git_diff_gates_policy_artifact(policy),
         SKIPPED_GATES_KEY: _skipped_git_diff_gate_artifacts(),
     }
-    if report_gate.status == REPORT_PASS:
+    if report_gate_acceptance.allow:
+        if report_gate.status == REPORT_WARN:
+            return PhaseResult.passed(
+                PHASE_NAME,
+                reason=(
+                    "Report gate warning(s) are allowed by policy; git diff, "
+                    "protected-files, and allowed-files gates were skipped by policy."
+                ),
+                next_action="Run pipeline phase review.",
+                artifacts={
+                    **relaxed_artifacts,
+                    "warn_policy": REPORT_WARNINGS_ALLOWED_POLICY,
+                },
+                changed_files=report_gate.changed_files,
+                generated_files=report_gate.generated_files,
+            )
         return PhaseResult.passed(
             PHASE_NAME,
             reason=(
@@ -627,15 +687,20 @@ def _phase_with_git_diff_gates_skipped(
         )
     return PhaseResult.blocked(
         PHASE_NAME,
-        reason="Report gate returned warning(s): {}".format(report_gate.reason),
+        reason=_report_gate_acceptance_blocked_reason(
+            report_gate,
+            report_gate_acceptance,
+        ),
         next_action=(
-            "Resolve report gate warnings or define an explicit follow-up "
-            "policy, then rerun verify."
+            "Resolve report gate warnings or explicitly enable "
+            "policy.verify.allow_report_warnings, then rerun verify."
+            if report_gate.status == REPORT_WARN
+            else "Fix the structured report or task output, then rerun verify."
         ),
         artifacts={
-            "blocked_by": report_gate.code,
-            "warn_policy": "report_gate_warn_blocks_verify",
             **relaxed_artifacts,
+            "blocked_by": report_gate.code,
+            "warn_policy": REPORT_WARNINGS_BLOCKED_POLICY,
         },
         changed_files=report_gate.changed_files,
         generated_files=report_gate.generated_files,
@@ -648,6 +713,52 @@ def _git_diff_gates_policy_artifact(policy: PipelinePolicy) -> dict[str, Any]:
         "mode": "strict" if policy.verify.run_git_diff_gates else "relaxed",
         "reason": "" if policy.verify.run_git_diff_gates else GIT_DIFF_GATES_DISABLED_REASON,
     }
+
+
+def _report_warning_policy_artifact(
+    policy: PipelinePolicy,
+    report_gate: Any,
+    report_gate_acceptance: Any,
+) -> dict[str, Any]:
+    if report_gate.status != REPORT_WARN:
+        return {}
+    allowed = bool(report_gate_acceptance.allow)
+    return {
+        "allow_report_warnings": allowed,
+        "block_report_warnings": bool(policy.verify.block_report_warnings),
+        "decision": "allowed" if allowed else "blocked",
+        "policy": (
+            REPORT_WARNINGS_ALLOWED_POLICY
+            if allowed
+            else REPORT_WARNINGS_BLOCKED_POLICY
+        ),
+        "reason": (
+            str(report_gate_acceptance.reason)
+            or (
+                REPORT_WARNINGS_ALLOWED_REASON
+                if allowed
+                else REPORT_WARNINGS_BLOCKED_REASON
+            )
+        ),
+        "report_gate_status": report_gate.status,
+        "report_gate_code": report_gate.code,
+    }
+
+
+def _report_gate_acceptance_blocked_reason(
+    report_gate: Any,
+    report_gate_acceptance: Any,
+) -> str:
+    if report_gate.status == REPORT_WARN:
+        return "Report gate returned warning(s): {}".format(report_gate.reason)
+    return "Report gate blocked: {}".format(report_gate_acceptance.reason)
+
+
+def _should_evaluate_verify_file_gates(
+    report_gate: Any,
+    report_gate_acceptance: Any,
+) -> bool:
+    return bool(report_gate_acceptance.allow) or report_gate.status == REPORT_WARN
 
 
 def _skipped_git_diff_gate_artifacts() -> list[dict[str, str]]:
@@ -872,6 +983,9 @@ def _verify_evidence(
     git_diff_policy = artifacts.get(GIT_DIFF_GATES_POLICY_KEY)
     if isinstance(git_diff_policy, Mapping):
         evidence[GIT_DIFF_GATES_POLICY_KEY] = dict(git_diff_policy)
+    report_warning_policy = artifacts.get(REPORT_WARNING_POLICY_KEY)
+    if isinstance(report_warning_policy, Mapping):
+        evidence[REPORT_WARNING_POLICY_KEY] = dict(report_warning_policy)
     skipped_gates = artifacts.get(SKIPPED_GATES_KEY)
     if isinstance(skipped_gates, list):
         evidence[SKIPPED_GATES_KEY] = [
@@ -1059,4 +1173,4 @@ def _sorted_unique(values: Any) -> tuple[str, ...]:
     return tuple(sorted({str(value) for value in values if str(value).strip()}))
 
 
-__all__ = ["verify_phase"]
+__all__ = ["REPORT_WARNING_POLICY_KEY", "verify_phase"]

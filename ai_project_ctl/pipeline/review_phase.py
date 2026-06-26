@@ -31,8 +31,8 @@ from .machine_review import WARN as MACHINE_REVIEW_WARN
 from .machine_review import MachineCheckEvidence, MachineReviewResult
 from .phase import PhaseResult
 from .policy import PipelinePolicy, disables_codex_review_by_policy
-from .report_gate import PASS as REPORT_GATE_PASS
 from .report_gate import evaluate_report_gate
+from .report_gate import evaluate_report_gate_acceptance
 from .session import record_phase_result
 from .state import load_pipeline_state, load_reference_state, pipeline_state_path
 
@@ -223,6 +223,11 @@ def review_phase(
         )
 
     report_gate = evaluate_report_gate(root=root_path, task=task, policy=policy)
+    report_gate_acceptance = evaluate_report_gate_acceptance(report_gate, policy)
+    report_gate_artifacts = _report_gate_artifacts(
+        report_gate,
+        report_gate_acceptance,
+    )
     if report_gate.report_id != verified_report_id:
         return _blocked(
             "REPORT_CHANGED_AFTER_VERIFY",
@@ -236,14 +241,14 @@ def review_phase(
                 "task_id": task_id,
                 "verified_report_id": verified_report_id,
                 "latest_report_id": report_gate.report_id,
-                "report_gate": report_gate.to_dict(),
+                **report_gate_artifacts,
             },
             next_action="Rerun collect-report and verify, then rebuild the review prompt.",
         )
-    if report_gate.status != REPORT_GATE_PASS:
+    if not report_gate_acceptance.allow:
         return _blocked(
             "REPORT_GATE_NOT_PASSED_AFTER_VERIFY",
-            "Latest report gate no longer passes.",
+            "Latest report gate is not accepted after verify.",
             session_id=selected_session_id,
             task_id=task_id,
             root=root_path,
@@ -252,7 +257,7 @@ def review_phase(
                 "session_id": selected_session_id,
                 "task_id": task_id,
                 "verified_report_id": verified_report_id,
-                "report_gate": report_gate.to_dict(),
+                **report_gate_artifacts,
             },
             next_action="Resolve report gate issues and rerun verify before review.",
         )
@@ -271,6 +276,7 @@ def review_phase(
             report_id=verified_report_id,
             verify_phase=verify_phase,
             report_gate=report_gate,
+            report_gate_acceptance=report_gate_acceptance,
             machine_review=machine_review,
             policy=policy,
         )
@@ -341,6 +347,7 @@ def review_phase(
             review_input_artifacts=_mapping(manual.get("artifacts")),
             verify_phase=verify_phase,
             report_gate=report_gate,
+            report_gate_acceptance=report_gate_acceptance,
             machine_review=machine_review,
             session_id=selected_session_id,
         )
@@ -403,6 +410,7 @@ def review_phase(
             review_input_artifacts=_mapping(command_result.get("artifacts")),
             verify_phase=verify_phase,
             report_gate=report_gate,
+            report_gate_acceptance=report_gate_acceptance,
             machine_review=machine_review,
             session_id=selected_session_id,
         )
@@ -436,8 +444,7 @@ def review_phase(
         "review_prompt_sha256": prompt_sha,
         "review_prompt_bytes": prompt_bytes,
         "review_prompt_schema": "codex_review_json_verdict_v1",
-        "report_gate_status": report_gate.status,
-        "report_gate_code": report_gate.code,
+        **report_gate_artifacts,
         "machine_review_status": machine_review.status,
         "machine_review_code": machine_review.code,
         "source_verify_phase": _phase_summary(verify_phase),
@@ -473,6 +480,7 @@ def _skipped_codex_review_phase(
     report_id: str,
     verify_phase: Mapping[str, Any],
     report_gate,
+    report_gate_acceptance,
     machine_review: MachineReviewResult,
     policy: PipelinePolicy,
 ) -> PhaseResult:
@@ -489,8 +497,7 @@ def _skipped_codex_review_phase(
         "verdict": "SKIPPED",
         "review_prompt_built": False,
         "review_prompt_returned": False,
-        "report_gate_status": report_gate.status,
-        "report_gate_code": report_gate.code,
+        **_report_gate_artifacts(report_gate, report_gate_acceptance),
         "machine_review_status": machine_review.status,
         "machine_review_code": machine_review.code,
         "source_verify_phase": _phase_summary(verify_phase),
@@ -728,6 +735,7 @@ def _phase_from_codex_review(
     review_input_artifacts: Mapping[str, Any],
     verify_phase: Mapping[str, Any],
     report_gate,
+    report_gate_acceptance,
     machine_review: MachineReviewResult,
     session_id: str,
 ) -> PhaseResult:
@@ -746,8 +754,7 @@ def _phase_from_codex_review(
         "reviewer_evidence": _bounded_json(dict(codex_review.evidence or {})),
         "prompt_sha256": codex_review.prompt_sha256,
         "prompt_bytes": codex_review.prompt_bytes,
-        "report_gate_status": report_gate.status,
-        "report_gate_code": report_gate.code,
+        **_report_gate_artifacts(report_gate, report_gate_acceptance),
         "machine_review_status": machine_review.status,
         "machine_review_code": machine_review.code,
         "source_verify_phase": _phase_summary(verify_phase),
@@ -985,6 +992,15 @@ def _blocked(
         root=root,
         actor=actor,
     )
+
+
+def _report_gate_artifacts(report_gate, report_gate_acceptance) -> dict[str, Any]:
+    return {
+        "report_gate_status": report_gate.status,
+        "report_gate_code": report_gate.code,
+        "report_gate": report_gate.to_dict(),
+        "report_gate_acceptance": report_gate_acceptance.to_dict(),
+    }
 
 
 def _failure(
