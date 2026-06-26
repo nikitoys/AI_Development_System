@@ -12,7 +12,10 @@ from ai_project_ctl.core.result import CommandResult
 from .codex_review import PASS as CODEX_REVIEW_PASS
 from .codex_review import VERDICT_APPROVE
 from .codex_review import CodexReviewResult
+from .machine_review import FAIL as MACHINE_REVIEW_FAIL
 from .machine_review import PASS as MACHINE_REVIEW_PASS
+from .machine_review import WARN as MACHINE_REVIEW_WARN
+from .machine_review import MachineCheckEvidence
 from .machine_review import MachineReviewResult
 from .policy import (
     CommitMode,
@@ -21,6 +24,7 @@ from .policy import (
     requires_codex_review_approve,
 )
 from .report_gate import ReportGateResult
+from .report_gate import WARN as REPORT_GATE_WARN
 from .report_gate import evaluate_report_gate_acceptance
 from .state import load_reference_state
 
@@ -243,6 +247,18 @@ def evaluate_commit_readiness(
             accepted_change_ids=accepted_change_ids,
         )
 
+    machine_warning_blocker = _machine_warning_blocker(policy, report_gate, machine_review)
+    if machine_warning_blocker:
+        code, reason = machine_warning_blocker
+        return _readiness(
+            BLOCKED,
+            code,
+            reason,
+            task_id=task_id,
+            change_ids=change_ids,
+            accepted_change_ids=accepted_change_ids,
+        )
+
     if str(task.get("status") or "") != "done":
         return _readiness(
             BLOCKED,
@@ -310,10 +326,17 @@ def evaluate_commit_readiness(
             git_status=git_status,
         )
 
+    reason = "Local commit readiness is green."
+    if machine_review.status == MACHINE_REVIEW_WARN:
+        reason = (
+            "Local commit readiness is green; Machine Review WARN contains only "
+            "advisory or policy-approved warning evidence."
+        )
+
     return _readiness(
         PASS,
         CODE_READY,
-        "Local commit readiness is green.",
+        reason,
         task_id=task_id,
         change_ids=change_ids,
         accepted_change_ids=accepted_change_ids,
@@ -524,8 +547,15 @@ def _gate_blocker(
                 report_gate_acceptance.reason
             ),
         )
-    if machine_review.status != MACHINE_REVIEW_PASS:
-        return CODE_MACHINE_REVIEW_NOT_PASS, "Machine Review must be PASS before local commit."
+    if machine_review.status == MACHINE_REVIEW_FAIL:
+        return CODE_MACHINE_REVIEW_NOT_PASS, "Machine Review FAIL blocks local commit."
+    if machine_review.status not in {MACHINE_REVIEW_PASS, MACHINE_REVIEW_WARN}:
+        return (
+            CODE_MACHINE_REVIEW_NOT_PASS,
+            "Machine Review status is not accepted for local commit: {}".format(
+                machine_review.status or "missing"
+            ),
+        )
     if disables_codex_review_by_policy(policy):
         return None
     if not requires_codex_review_approve(policy):
@@ -539,6 +569,64 @@ def _gate_blocker(
             "Codex Review must APPROVE before local commit.",
         )
     return None
+
+
+def _machine_warning_blocker(
+    policy: PipelinePolicy,
+    report_gate: ReportGateResult,
+    machine_review: MachineReviewResult,
+) -> tuple[str, str] | None:
+    if machine_review.status != MACHINE_REVIEW_WARN:
+        return None
+
+    warning_checks = [
+        check for check in machine_review.checks if check.status == MACHINE_REVIEW_WARN
+    ]
+    if not warning_checks:
+        return (
+            CODE_MACHINE_REVIEW_NOT_PASS,
+            "Machine Review WARN is not accepted for local commit; no warning evidence "
+            "explains the WARN outcome.",
+        )
+
+    unsafe = [
+        _machine_warning_summary(check)
+        for check in warning_checks
+        if not _machine_warning_is_allowed(policy, report_gate, check)
+    ]
+    if unsafe:
+        return (
+            CODE_MACHINE_REVIEW_NOT_PASS,
+            (
+                "Machine Review WARN is not accepted for local commit; "
+                "unsafe/blocking warning evidence: {}. Allowed advisory warning "
+                "evidence must be non-blocking or explicitly policy-approved."
+            ).format(", ".join(unsafe)),
+        )
+    return None
+
+
+def _machine_warning_is_allowed(
+    policy: PipelinePolicy,
+    report_gate: ReportGateResult,
+    check: MachineCheckEvidence,
+) -> bool:
+    if check.status != MACHINE_REVIEW_WARN:
+        return True
+    if not check.blocking:
+        return True
+    if check.name == "codex_report_gate" and report_gate.status == REPORT_GATE_WARN:
+        return evaluate_report_gate_acceptance(report_gate, policy).allow
+    return False
+
+
+def _machine_warning_summary(check: MachineCheckEvidence) -> str:
+    return "{}={} code={} blocking={}".format(
+        check.name,
+        check.status,
+        check.code,
+        check.blocking,
+    )
 
 
 def _machine_check_blocker(

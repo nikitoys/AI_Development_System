@@ -28,8 +28,11 @@ from ai_project_ctl.core.workflows import (
     workflow_list,
 )
 from ai_project_ctl.pipeline.policy import policy_behavior_label, policy_preset, preset_names
+from ai_project_ctl.pipeline.policy_store import policy_catalog_payload
 from ai_project_ctl.pipeline.queue import QueuePlannerRequest, preview_queue
+from ai_project_ctl.pipeline.runner import RUN_NEXT_PHASE_SEQUENCE
 from ai_project_ctl.pipeline.state import load_pipeline_state
+from ai_project_ctl.pipeline.ui_policy import resolve_pipeline_policy_from_settings
 from ai_project_ctl.ui_settings import load_ui_settings, ui_settings_path, ui_settings_source
 
 
@@ -234,10 +237,20 @@ class ReadOnlyProjectModel:
     def ui_settings(self) -> dict[str, Any]:
         """Return effective project-local UI settings for web rendering."""
 
+        settings = load_ui_settings(root=self.root)
+        effective_policy = resolve_pipeline_policy_from_settings(
+            settings,
+            root=self.root,
+        )
         return {
-            "settings": load_ui_settings(root=self.root),
+            "settings": settings,
             "source": ui_settings_source(root=self.root),
             "path": str(ui_settings_path(self.root)),
+            "policy_catalog": _selected_policy_catalog(
+                policy_catalog_payload(root=self.root),
+                selected_name=str(settings.get("default_policy") or ""),
+                effective_policy=effective_policy,
+            ),
         }
 
     def dashboard(
@@ -304,6 +317,7 @@ class ReadOnlyProjectModel:
             "execution": execution,
             "execution_context": execution_context,
             "pipeline": self.pipeline_dashboard(**dict(pipeline_options or {})),
+            "ui_settings": self.ui_settings(),
             "generated": generated,
             "events": events,
             "events_loaded": include_events,
@@ -1150,6 +1164,105 @@ def _pipeline_policy_summary(
         "review": data.get("review", {}),
         "closure": data.get("closure", {}),
         "commit": data.get("commit", {}),
+    }
+
+
+def _selected_policy_catalog(
+    catalog: Mapping[str, Any],
+    *,
+    selected_name: str,
+    effective_policy=None,
+) -> dict[str, Any]:
+    policies: list[dict[str, Any]] = []
+    selected_known = False
+    effective_summary = _effective_policy_summary(effective_policy) if effective_policy else {}
+    for item in catalog.get("policies") or []:
+        if not isinstance(item, Mapping):
+            continue
+        policy = dict(item)
+        selected = str(policy.get("name") or "") == selected_name
+        policy["selected"] = selected
+        if selected and effective_summary:
+            policy["effective_summary"] = effective_summary
+            policy["effective_behavior_label"] = effective_summary.get(
+                "behavior_label",
+                policy.get("behavior_label", ""),
+            )
+        selected_known = selected_known or selected
+        policies.append(policy)
+    return {
+        "revision": catalog.get("revision", 0),
+        "state_path": str(catalog.get("state_path") or ""),
+        "selected_policy": selected_name,
+        "selected_known": selected_known,
+        "effective_policy": effective_summary,
+        "counts": dict(_mapping(catalog.get("counts"))),
+        "policies": policies,
+    }
+
+
+def _effective_policy_summary(policy) -> dict[str, Any]:
+    validation = policy.validate()
+    incomplete_run_warning = _incomplete_run_warning(policy)
+    return {
+        "name": policy.name,
+        "valid": validation.ok,
+        "behavior_label": policy_behavior_label(policy),
+        "errors": [_validation_issue(issue) for issue in validation.errors],
+        "warnings": [_validation_issue(issue) for issue in validation.warnings],
+        "review": {
+            "machine_review_required": policy.review.require_machine_review,
+            "machine_review_outcome": policy.review.required_machine_outcome.value,
+            "codex_review_required": policy.review.require_codex_review,
+            "codex_review_decision": policy.review.required_codex_decision.value,
+        },
+        "close": {
+            "auto_close_task": policy.closure.auto_close_task,
+            "owner_approval_note_present": bool(
+                policy.closure.owner_approval_note.strip()
+            ),
+        },
+        "commit": {
+            "create_local_commit": policy.commit.create_local_commit,
+            "mode": policy.commit.mode.value,
+            "require_commit_readiness": policy.commit.require_commit_readiness,
+            "allow_push": policy.commit.allow_push,
+            "allow_merge": policy.commit.allow_merge,
+        },
+        "batch": {
+            "max_steps": policy.batch.max_steps,
+            "max_failures": policy.batch.max_failures,
+        },
+        "verify": {
+            "run_git_diff_gates": policy.verify.run_git_diff_gates,
+            "block_report_warnings": policy.verify.block_report_warnings,
+            "allow_report_warnings": policy.verify.allow_report_warnings,
+        },
+        "incomplete_run_warning": incomplete_run_warning,
+    }
+
+
+def _incomplete_run_warning(policy) -> dict[str, Any]:
+    max_steps = int(policy.batch.max_steps)
+    phase_count = len(RUN_NEXT_PHASE_SEQUENCE)
+    if max_steps >= phase_count:
+        return {}
+
+    missing_phases = list(RUN_NEXT_PHASE_SEQUENCE[max(0, max_steps) :])
+    missing_labels = [_pipeline_phase_label(phase) for phase in missing_phases]
+    return {
+        "enabled": True,
+        "max_steps": max_steps,
+        "phase_count": phase_count,
+        "phase_sequence": list(RUN_NEXT_PHASE_SEQUENCE),
+        "missing_phases": missing_phases,
+        "missing_phase_labels": missing_labels,
+        "message": (
+            "Incomplete Web run warning: effective policy batch.max_steps is "
+            "{max_steps}, but a full pipeline run has {phase_count} phases. "
+            "Risk: review and close may not run in one batch. Resume Session "
+            "can continue the next phase."
+        ).format(max_steps=max_steps, phase_count=phase_count),
     }
 
 

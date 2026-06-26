@@ -32,6 +32,12 @@ from ai_project_ctl.ui_settings import (
     ALLOW_REPORT_WARNINGS_SETTING,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
     ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
+    BATCH_MAX_FAILURES_MAX,
+    BATCH_MAX_FAILURES_MIN,
+    BATCH_MAX_FAILURES_SETTING,
+    BATCH_MAX_STEPS_MAX,
+    BATCH_MAX_STEPS_MIN,
+    BATCH_MAX_STEPS_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
 )
@@ -68,6 +74,7 @@ PIPELINE_RUNNABLE_STATUSES = {"planned", "running"}
 PIPELINE_STOPPABLE_STATUSES = {"planned", "running"}
 PIPELINE_RESUMABLE_STATUSES = {"stopped", "blocked"}
 PIPELINE_STATUS_POLL_STOP_STATUSES = ("blocked", "failed", "completed", "stopped")
+INCOMPLETE_RUN_CONFIRM_FIELD = "incomplete_run_confirm"
 PIPELINE_FLOW_GATES = (
     ("queue_planner", "Queue"),
     ("evolution_change_gate", "Change"),
@@ -2760,6 +2767,163 @@ def _pipeline_review_summary(review: Mapping[str, Any]) -> str:
     return ", ".join(required) or "not required"
 
 
+def dashboard_effective_policy_summary(data: Mapping[str, Any]) -> Mapping[str, Any]:
+    ui_settings = _mapping(data.get("ui_settings"))
+    policy_catalog = _mapping(ui_settings.get("policy_catalog"))
+    return _mapping(policy_catalog.get("effective_policy"))
+
+
+def effective_policy_summary_panel(
+    summary: Mapping[str, Any],
+    *,
+    title: str,
+    compact: bool = False,
+) -> str:
+    summary = _mapping(summary)
+    if not summary:
+        return ""
+    rows = effective_policy_summary_rows(summary)
+    row_html = "".join(
+        "<div><dt>{}</dt><dd>{}</dd></div>".format(
+            escape(label),
+            escape(value),
+        )
+        for label, value in rows
+    )
+    heading = "h4" if compact else "h2"
+    classes = "effective-policy-summary"
+    if compact:
+        classes += " effective-policy-summary-compact"
+    content = (
+        '<div class="effective-policy-summary-header">'
+        "<{heading}>{title}</{heading}>"
+        '<span class="pill">read-only</span>'
+        "</div>"
+        '<dl class="effective-policy-summary-grid">{rows}</dl>'
+    ).format(
+        heading=heading,
+        title=escape(title),
+        rows=row_html,
+    )
+    if compact:
+        return '<div class="{}" data-effective-policy-summary>{}</div>'.format(
+            classes,
+            content,
+        )
+    return '<section class="panel {}" data-effective-policy-summary>{}</section>'.format(
+        classes,
+        content,
+    )
+
+
+def incomplete_run_warning_panel(
+    summary: Mapping[str, Any],
+    *,
+    compact: bool = False,
+    include_confirmation: bool = False,
+) -> str:
+    warning = _mapping(_mapping(summary).get("incomplete_run_warning"))
+    if not warning.get("enabled"):
+        return ""
+
+    classes = "incomplete-run-warning"
+    if compact:
+        classes += " incomplete-run-warning-compact"
+    missing = ", ".join(str(label) for label in warning.get("missing_phase_labels") or [])
+    missing_html = ""
+    if missing:
+        missing_html = '<p class="muted">Not reached in one batch: {}</p>'.format(
+            escape(missing)
+        )
+    confirmation_html = ""
+    if include_confirmation:
+        confirmation_html = (
+            '<label class="checkline incomplete-run-confirm">'
+            '<input type="checkbox" name="{}" value="yes" required>'
+            "Confirm this partial Web run"
+            "</label>"
+        ).format(escape(INCOMPLETE_RUN_CONFIRM_FIELD))
+    return (
+        '<div class="{}" role="alert" data-incomplete-run-warning>'
+        "<strong>Incomplete Web Run</strong>"
+        "<p>{}</p>"
+        "{}{}"
+        "</div>"
+    ).format(
+        classes,
+        escape(str(warning.get("message") or "")),
+        missing_html,
+        confirmation_html,
+    )
+
+
+def effective_policy_summary_rows(summary: Mapping[str, Any]) -> list[tuple[str, str]]:
+    batch = _mapping(summary.get("batch"))
+    review = _mapping(summary.get("review"))
+    close = _mapping(summary.get("close"))
+    commit = _mapping(summary.get("commit"))
+    verify = _mapping(summary.get("verify"))
+    return [
+        ("Policy", str(summary.get("name") or "unknown")),
+        ("batch.max_steps", _policy_number(batch.get("max_steps"))),
+        ("batch.max_failures", _policy_number(batch.get("max_failures"))),
+        ("Machine Review", _policy_machine_review_label(review)),
+        ("Codex Review", _policy_codex_review_label(review)),
+        ("Auto-close", _policy_auto_close_label(close)),
+        ("Local Commit", _policy_commit_label(commit)),
+        ("Report Warnings", _policy_report_warning_label(verify)),
+        ("Git Diff Gates", _policy_git_diff_label(verify)),
+    ]
+
+
+def _policy_number(value: Any) -> str:
+    return "" if value is None else str(value)
+
+
+def _policy_machine_review_label(review: Mapping[str, Any]) -> str:
+    if review.get("machine_review_required"):
+        return "required ({})".format(review.get("machine_review_outcome") or "pass")
+    return "not required"
+
+
+def _policy_codex_review_label(review: Mapping[str, Any]) -> str:
+    if review.get("codex_review_required"):
+        return "required ({})".format(review.get("codex_review_decision") or "approve")
+    return "skipped"
+
+
+def _policy_auto_close_label(close: Mapping[str, Any]) -> str:
+    if not close.get("auto_close_task"):
+        return "disabled"
+    if close.get("owner_approval_note_present"):
+        return "enabled (note present)"
+    return "enabled (note required)"
+
+
+def _policy_commit_label(commit: Mapping[str, Any]) -> str:
+    if not commit.get("create_local_commit"):
+        return "disabled"
+    return "enabled ({})".format(commit.get("mode") or "local_only")
+
+
+def _policy_report_warning_label(verify: Mapping[str, Any]) -> str:
+    allow = bool(verify.get("allow_report_warnings"))
+    block = bool(verify.get("block_report_warnings", True))
+    if allow and not block:
+        return "relaxed (allowed / advisory)"
+    if allow:
+        return "relaxed (allowed)"
+    if not block:
+        return "relaxed (advisory)"
+    return "strict (blocking)"
+
+
+def _policy_git_diff_label(verify: Mapping[str, Any]) -> str:
+    if verify.get("run_git_diff_gates", True):
+        return "strict (required)"
+    return "relaxed (not run)"
+
+
 def render_tasks(
     data: Mapping[str, Any],
     *,
@@ -3104,9 +3268,15 @@ def render_generated(data: Mapping[str, Any]) -> str:
 def render_settings(model: ReadOnlyProjectModel) -> str:
     read_model = model.ui_settings()
     settings = _mapping(read_model.get("settings"))
+    policy_catalog = _mapping(read_model.get("policy_catalog"))
     source = str(read_model.get("source") or "")
     path = str(read_model.get("path") or "")
     body = [
+        effective_policy_summary_panel(
+            _mapping(policy_catalog.get("effective_policy")),
+            title="Effective Policy Summary",
+        ),
+        incomplete_run_warning_panel(_mapping(policy_catalog.get("effective_policy"))),
         '<section class="panel settings-panel">',
         '<form method="post" action="/actions">',
         hidden_field("action", "ui.settings.apply"),
@@ -3129,11 +3299,37 @@ def render_settings(model: ReadOnlyProjectModel) -> str:
                     settings,
                     helper="Shell-style local Codex command used by UI runs.",
                 ),
-                settings_text_row(
+                settings_policy_select_row(
                     "default_policy",
                     "Default Policy",
                     settings,
+                    policy_catalog,
                     helper="Pipeline policy preset used when the UI starts a run.",
+                ),
+            ],
+        ),
+        settings_group(
+            "Batch Run",
+            [
+                settings_text_row(
+                    BATCH_MAX_STEPS_SETTING,
+                    "Max Steps Override",
+                    settings,
+                    helper=(
+                        "Optional Web-run override for policy batch.max_steps. "
+                        "Allowed {}-{}; leave blank to use the selected policy."
+                    ).format(BATCH_MAX_STEPS_MIN, BATCH_MAX_STEPS_MAX),
+                    input_type="number",
+                ),
+                settings_text_row(
+                    BATCH_MAX_FAILURES_SETTING,
+                    "Max Failures Override",
+                    settings,
+                    helper=(
+                        "Optional Web-run override for policy batch.max_failures. "
+                        "Allowed {}-{}; leave blank to use the selected policy."
+                    ).format(BATCH_MAX_FAILURES_MIN, BATCH_MAX_FAILURES_MAX),
+                    input_type="number",
                 ),
             ],
         ),
@@ -4345,6 +4541,43 @@ def settings_text_row(
     )
 
 
+def settings_policy_select_row(
+    key: str,
+    label: str,
+    settings: Mapping[str, Any],
+    policy_catalog: Mapping[str, Any],
+    *,
+    helper: str,
+) -> str:
+    selected_value = settings_form_value(settings.get(key))
+    options = []
+    for raw_policy in policy_catalog.get("policies") or []:
+        policy = _mapping(raw_policy)
+        name = str(policy.get("name") or "")
+        if not name:
+            continue
+        behavior = str(policy.get("behavior_label") or "")
+        option_label = name if not behavior else "{} - {}".format(name, behavior)
+        selected = bool(policy.get("selected")) or name == selected_value
+        options.append(
+            '<option value="{}"{}>{}</option>'.format(
+                escape(name),
+                " selected" if selected else "",
+                escape(option_label),
+            )
+        )
+    return (
+        '<label class="setting-row setting-row-select">'
+        "{}"
+        '<span class="setting-control"><select name="{}">{}</select></span>'
+        "</label>"
+    ).format(
+        settings_row_copy(label, key, helper),
+        escape(key),
+        "".join(options),
+    )
+
+
 def settings_checkbox_row(
     key: str,
     label: str,
@@ -4785,6 +5018,80 @@ def render_page(title: str, body: str, *, active: str) -> str:
       align-items: center;
       border-top: 1px solid var(--line);
       padding-top: 16px;
+    }}
+    .effective-policy-summary-header {{
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }}
+    .effective-policy-summary-header h2,
+    .effective-policy-summary-header h4 {{
+      margin: 0;
+    }}
+    .effective-policy-summary-header h4 {{
+      font-size: 13px;
+    }}
+    .effective-policy-summary-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin: 0;
+    }}
+    .effective-policy-summary-grid div {{
+      min-width: 0;
+    }}
+    .effective-policy-summary-grid dt {{
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }}
+    .effective-policy-summary-grid dd {{
+      margin: 4px 0 0;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }}
+    .effective-policy-summary-compact {{
+      display: grid;
+      gap: 8px;
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+      padding-top: 8px;
+    }}
+    .effective-policy-summary-compact .effective-policy-summary-grid {{
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+    }}
+    .incomplete-run-warning {{
+      border: 1px solid #f0c36d;
+      border-radius: 6px;
+      background: var(--warn-soft);
+      color: var(--warn);
+      padding: 12px;
+      margin: 0 0 16px;
+      display: grid;
+      gap: 6px;
+    }}
+    .incomplete-run-warning strong {{
+      color: var(--warn);
+    }}
+    .incomplete-run-warning p {{
+      margin: 0;
+    }}
+    .incomplete-run-warning .muted {{
+      color: var(--warn);
+      opacity: .86;
+    }}
+    .incomplete-run-warning-compact {{
+      margin: 8px 0;
+    }}
+    .incomplete-run-confirm {{
+      justify-content: flex-start;
+      color: var(--warn);
+      font-weight: 700;
     }}
     .pipeline-progress {{
       height: 12px;
@@ -6194,27 +6501,38 @@ def task_row_run_control(task: Mapping[str, Any], data: Mapping[str, Any]) -> st
     if status in TASK_ROW_INACTIVE_STATUSES:
         return ""
     if status in TASK_ROW_RUN_STATUSES:
-        return task_row_start_control(task)
+        return task_row_start_control(task, data)
     if status == "in_progress":
         return task_row_continue_control(task, data)
     return ""
 
 
-def task_row_start_control(task: Mapping[str, Any]) -> str:
+def task_row_start_control(task: Mapping[str, Any], data: Mapping[str, Any]) -> str:
     task_ref = str(task.get("ref") or task.get("id") or "")
     if not task_ref:
         return ""
+    policy_summary = dashboard_effective_policy_summary(data)
     return (
         '<details class="row-action row-action-run">'
         "<summary>Run</summary>"
-        "{}{}"
+        "{}{}{}"
         "</details>"
     ).format(
         task_row_change_guidance(task),
+        effective_policy_summary_panel(
+            policy_summary,
+            title="Effective Run Policy",
+            compact=True,
+        ),
         action_form(
             "ui.run_selected_task",
             [
                 hidden_field("task", task_ref),
+                incomplete_run_warning_panel(
+                    policy_summary,
+                    compact=True,
+                    include_confirmation=True,
+                ),
                 textarea_field(
                     "auto_close_note",
                     "Auto-close Owner Note",

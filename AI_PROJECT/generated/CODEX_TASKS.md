@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1382`
+Revision: `1447`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -2587,7 +2587,7 @@ Acceptance criteria:
 
 ### PIPEF-65 (TASK-144) — PIPE-060 Document Web live status and Codex log behavior
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_065318711223`, legacy `TASK-144`, aliases `TASK-144`, local `PIPEF` / `65`
@@ -3424,3 +3424,173 @@ Acceptance criteria:
 - Documentation states that report FAIL/BLOCKED and advisory-disabled WARN still block local commit.
 - Documentation explains that COMMIT_REPORT_GATE_NOT_PASS means the commit gate rejected the report gate status.
 - Documentation does not imply that Human Owner approval, machine review, Codex review, or dirty-file gates are bypassed.
+
+### PIPEF-114 (TASK-195) — Allow advisory report warnings before local commit
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_1670c8cf4970`, legacy `TASK-195`, aliases `TASK-195`, local `PIPEF` / `114`
+
+Make local commit readiness accept policy-approved advisory report warnings instead of requiring an unconditional Codex Report Gate PASS.
+
+Acceptance criteria:
+
+- Local commit readiness passes the report gate portion when the report gate is PASS.
+- Local commit readiness accepts report gate WARN only when the active policy marks that warning advisory.
+- Local commit readiness still blocks report gate FAIL and unapproved report gate WARN.
+- Tests cover the new report gate acceptance helper or equivalent behavior.
+- Existing local commit readiness behavior outside report warning handling remains unchanged.
+
+### PIPEF-115 (TASK-196) — Allow safe Machine Review warnings before local commit
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_e094aa01c94b`, legacy `TASK-196`, aliases `TASK-196`, local `PIPEF` / `115`
+
+Make local commit readiness accept Machine Review WARN only when all commit-critical checks are PASS and the remaining warnings are non-blocking or policy-approved.
+
+Acceptance criteria:
+
+- Machine Review PASS still allows local commit readiness to continue.
+- Machine Review WARN can continue only when required commit checks are present and PASS.
+- Machine Review WARN from unknown or blocking warning evidence still blocks local commit.
+- Machine Review FAIL still blocks local commit.
+- The local commit blocker reason distinguishes unsafe warnings from allowed advisory warnings.
+
+### PIPEF-116 (TASK-197) — Cover close local commit with advisory warnings
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_7069b3a32755`, legacy `TASK-197`, aliases `TASK-197`, local `PIPEF` / `116`
+
+Add regression coverage proving close can create a local commit when advisory warnings are policy-approved and all commit-critical checks pass.
+
+Acceptance criteria:
+
+- A close phase regression covers safe Machine Review WARN followed by local commit success.
+- A close phase regression covers unsafe Machine Review WARN followed by local commit block.
+- The regression does not require running the real Codex adapter.
+- The test asserts the absence of COMMIT_MACHINE_REVIEW_NOT_PASS for safe advisory warning cases.
+- Existing close phase tests still pass.
+
+### PIPEF-117 (TASK-198) — Document local commit warning policy
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_60f7776130b7`, legacy `TASK-198`, aliases `TASK-198`, local `PIPEF` / `117`
+
+Document when local commit accepts advisory warnings and when it must still block.
+
+Acceptance criteria:
+
+- Documentation states that local commit requires commit-critical checks to pass.
+- Documentation explains that only explicit advisory warnings may be accepted before local commit.
+- Documentation tells the owner to inspect local_commit.readiness when commit blocks.
+- Documentation does not claim that Machine Review FAIL can be committed.
+- Documentation generated-output checks pass after the update.
+
+### PIPEF-118 (TASK-199) — Expose Web policy catalog
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_37f751883a93`, legacy `TASK-199`, aliases `TASK-199`, local `PIPEF` / `118`
+
+Expose the registered built-in and custom pipeline policy presets to the Web read model for safe UI selection.
+
+Acceptance criteria:
+
+- The Web read model exposes a deterministic list of selectable pipeline policies.
+- The catalog includes built-in presets and any valid custom presets from the policy store.
+- Each catalog item includes enough summary data to explain review, close, commit, and batch behavior.
+- Invalid custom policy store state still fails through existing validation paths.
+- Existing Web Control Center tests continue to pass.
+
+### PIPEF-119 (TASK-200) — Render policy dropdown in Settings
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_9fa89eb78438`, legacy `TASK-200`, aliases `TASK-200`, local `PIPEF` / `119`
+
+Replace the Web Settings free-text default_policy field with a dropdown populated from registered pipeline policies.
+
+Acceptance criteria:
+
+- The Settings page no longer renders default_policy as a free-text input.
+- The Settings page renders every registered policy preset as a selectable option.
+- Submitting a known policy updates ui_settings.json through the existing settings action.
+- Submitting an unknown policy through the Web action returns a controlled error.
+- Existing settings such as command_line and review toggles continue to apply normally.
+
+### PIPEF-120 (TASK-201) — Show effective policy summary
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_a4c612206665`, legacy `TASK-201`, aliases `TASK-201`, local `PIPEF` / `120`
+
+Show an owner-facing effective pipeline policy summary in Web Settings and selected-run views.
+
+Acceptance criteria:
+
+- Owners can see the effective batch max_steps before starting a Web run.
+- Owners can see whether Codex Review is required or skipped by the effective policy.
+- Owners can see whether auto-close and local commit are enabled by the effective policy.
+- Owners can see whether report warnings and git diff gates are strict or relaxed.
+- The summary updates when the effective selected policy changes.
+
+### PIPEF-121 (TASK-202) — Add Web run batch overrides
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_0ef9ca47e1d6`, legacy `TASK-202`, aliases `TASK-202`, local `PIPEF` / `121`
+
+Add validated Web-run batch limit settings so selected task runs can reach review and close without hidden max_steps stops.
+
+Acceptance criteria:
+
+- A Web run can be configured with max_steps high enough to cover all seven pipeline phases.
+- Invalid batch override values are rejected with controlled UI settings errors.
+- If no override is set, existing policy defaults remain effective.
+- The Settings page displays the configured batch overrides.
+- Policy resolution tests cover default behavior and override behavior.
+
+### PIPEF-122 (TASK-203) — Warn on incomplete Web run policy
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_6b1308ecd462`, legacy `TASK-203`, aliases `TASK-203`, local `PIPEF` / `122`
+
+Warn owners before starting a Web run when the effective policy cannot reach review and close in one batch.
+
+Acceptance criteria:
+
+- A policy with max_steps below the full phase count shows a warning before Web Run starts.
+- The warning names the expected stopping point risk: review and close may not run.
+- The run action can still proceed only after explicit owner confirmation.
+- A policy with sufficient max_steps does not show the incomplete-run warning.
+- Tests cover both warning and no-warning cases.
+
+### PIPEF-123 (TASK-204) — Document Web policy settings
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_e59dd0c01cbd`, legacy `TASK-204`, aliases `TASK-204`, local `PIPEF` / `123`
+
+Document the improved Web Settings policy selector, effective policy summary, and batch run limit behavior.
+
+Acceptance criteria:
+
+- The usage guide explains that default_policy is selected from registered policy presets.
+- The owner quickstart explains how to spot insufficient max_steps before starting a run.
+- The docs explain the difference between Run selected task and Resume Session.
+- The docs do not claim full autonomous completion when policy limits intentionally stop the session.
+- Documentation validation and generated documentation checks pass.

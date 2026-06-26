@@ -417,6 +417,7 @@ The `Focus Tasks` section keeps the current Task plus ready, in-progress, review
 Task rows expose status-aware workflow controls. They show only actions that the Task status and pipeline hints allow:
 
 ```text
+Run                selected ready or planned Tasks through the effective UI pipeline policy
 Prepare for Codex  planned, ready or changes_requested Tasks
 Refresh Context    current or in_progress Tasks when available
 Submit for Review  in_progress Tasks
@@ -426,6 +427,10 @@ No row workflows   done or otherwise unavailable actions
 ```
 
 Row workflow buttons are convenience wrappers around registered workflows. They do not create a new lifecycle path. They still route through `aictl.py`, the owning `*ctl.py` script, validation, audit events and generated-output rendering.
+
+Use task-row `Run` when the owner wants to start a new selected-task pipeline run for a ready or planned Task through the current UI pipeline policy. `Run` creates or uses the selected-task run path; it is not the right control for continuing an already blocked session.
+
+Use `Resume` or `Resume Session` only after an existing pipeline session is `blocked` or `stopped` and the owner has resolved the blocker or intentionally wants to continue that same session. Resume submits `pipeline.run_next` for the existing session, preserving its session history, selected queue, policy snapshot and artifacts. For a running session, use the session page controls such as `Run Next`, `Run Until Blocker` or `Stop Session` as shown by the current status.
 
 Codex may use `Submit for Review` after satisfying a Task contract when the Task scope permits it. Codex must not use `Approve & Done` or provide Human Owner approval notes unless the Human Owner explicitly gave the approval decision.
 
@@ -474,18 +479,95 @@ Current phase-based sessions store phase progress in `phase_history`. The Web Pi
 
 Older sessions may not have `phase_history`. For those sessions, the detail page falls back to the legacy `steps` records and their `gate_outcomes`, showing the Gate Flow, Gate Outcomes, linked artifacts and logs. If an older session has no step records at all, the page may show a planned `run_next` placeholder so the detail page remains readable.
 
+### Live Status Refresh
+
+A Pipeline session detail page performs partial status refresh while the session status is `running`. The page polls:
+
+```text
+/pipeline/sessions/<SESSION_ID>/status.json
+```
+
+every two seconds and updates the status badge, current phase, current phase status, stop reason, next action, phase overview and owner guidance without reloading the whole page. This is a live status indicator, not a full historical rerender.
+
+When the session changes to `blocked`, `failed`, `completed` or `stopped`, polling stops and the page shows `Auto-refresh stopped`. At that point Codex is not actively running from that session page. Read the stop reason, next action and phase evidence before pressing any run control.
+
+The quickest way to tell whether Codex is actually running is to check the live status fields:
+
+```text
+session status is running
+current phase is execute
+current phase status is running
+the page says Status polling active
+```
+
+When runtime logs are available, the `Codex Execute running` panel gives additional evidence: stdout or stderr offsets may increase as output arrives.
+
+If the session is `blocked`, `failed`, `completed` or `stopped`, Codex execution is not currently active for that session even if old stdout or stderr snippets remain visible.
+
+### Live Codex Log Panels
+
+During a running `execute` phase, the session detail page can show a `Codex Execute running` panel with separate `STDOUT` and `STDERR` streams. These panels tail bounded chunks from runtime log files under `AI_PROJECT/logs/codex/...` through the Web route:
+
+```text
+/pipeline/sessions/<SESSION_ID>/logs/execute/stdout
+/pipeline/sessions/<SESSION_ID>/logs/execute/stderr
+```
+
+`stdout` is the local Codex command's normal output. It may include assistant progress, final execution summaries or structured report text emitted by the command. `stderr` is the command's diagnostic/error stream. It may include sandbox, timeout, warning or traceback information depending on the local command.
+
+The live panels and runtime log files are execution evidence only. Do not list `AI_PROJECT/logs/codex/**` or `AI_PROJECT/logs/ui_run/**` as implementation files in a structured Codex report. Only report source files intentionally changed by the Task and generated files that the governed CLIs produced as part of the Task.
+
 Pipeline UI settings are project-local settings in `AI_PROJECT/config/ui_settings.json`. Manage them through `aictl.py`, not by editing protected project-control state:
 
 ```bash
 python scripts/aictl.py ui settings show
 python scripts/aictl.py ui settings init --confirm
 python scripts/aictl.py ui settings set command_line "codex exec --json"
+python scripts/aictl.py ui settings set default_policy supervised_executable_local_commit
+python scripts/aictl.py ui settings set batch_max_steps 7
+python scripts/aictl.py ui settings set batch_max_failures 1
 python scripts/aictl.py ui settings set preflight_timeout_sec 45
 python scripts/aictl.py ui settings set execution_timeout_sec 1800
 python scripts/aictl.py ui preflight
 ```
 
 `command_line` is the owner-facing, shell-style command string for local Codex execution. For executable policy presets, the UI policy resolver parses `command_line` into the effective policy `codex.local_command` tuple and sets `codex.command_allowlist` to that exact command string. `codex.local_command` is the lower-level policy field enforced by the adapter. Non-executable/prompt-only policies do not require `command_line`.
+
+The Settings page shows `Default Policy` as a dropdown. The dropdown is populated from registered pipeline policy presets: built-in presets plus any governed custom presets in the policy preset store. Saving `default_policy` stores the selected preset name; it does not store an arbitrary policy object. When the UI starts a selected-task run, it resolves that preset and then applies supported UI settings such as Codex Review, report-warning, git-diff, batch-limit and timeout overrides.
+
+The Settings page also shows a read-only `Effective Policy Summary` for the policy that would be used by Web runs. It includes:
+
+```text
+Policy
+batch.max_steps
+batch.max_failures
+Machine Review
+Codex Review
+Auto-close
+Local Commit
+Report Warnings
+Git Diff Gates
+```
+
+Use this summary before starting a Web run. It reflects the selected preset after UI overrides, so `batch.max_steps` and `batch.max_failures` may differ from the base preset when `Max Steps Override` or `Max Failures Override` is set.
+
+`Max Steps Override` maps to the effective policy `batch.max_steps`. It is optional; leave it blank to use the selected policy preset. Accepted values are `1` through `50`. `Max Failures Override` maps to `batch.max_failures`, is also optional, and accepts `1` through `10`.
+
+The current phase-based selected-task run has seven `run-next` phases:
+
+```text
+queue_preview
+prepare
+execute
+collect_report
+verify
+review
+close
+```
+
+For a full single-task Web run in one confirmed batch, set the effective `batch.max_steps` to at least `7`. If it is lower, the Web UI shows an `Incomplete Web Run` warning and selected-task `Run` requires `Confirm this partial Web run`. That warning means the session may stop before review or close by policy; it is not a claim that the Task has autonomously completed.
+
+When a low `max_steps` is intentional, let the selected-task run stop, inspect the session detail page, then use `Resume Session` for that same `blocked` or `stopped` session after the blocker is resolved or after deciding to continue the partial run. Do not press task-row `Run` to continue a stopped partial session, because `Run` starts a new selected-task run path with a new policy snapshot instead of continuing the existing session artifacts.
 
 `preflight_timeout_sec` controls only the UI Codex readiness check used by `aictl.py ui preflight` and by `aictl.py ui run --preflight` before a confirmed executable run creates a pipeline session. `execution_timeout_sec` controls the actual local Codex adapter execution timeout by replacing the resolved policy `codex.timeout_sec`. Both values are optional integer seconds from `1` through `3600`; preflight timeout does not change execution timeout, and execution timeout does not change preflight.
 
@@ -521,6 +603,12 @@ evolution.approve_change
 evolution.move_to_review
 evolution.accept_change
 epic.close_if_complete
+ui.run_selected_task
+pipeline.session.create
+pipeline.run_next
+pipeline.run_until_blocker
+pipeline.session.stop
+pipeline.render
 ```
 
 Web task transitions are limited to non-acceptance statuses:
@@ -977,6 +1065,12 @@ Executable pipeline policies require a structured Codex execution report after t
 No Codex execution report submitted for this task.
 ```
 
+Pipeline sessions may also show this blocker as:
+
+```text
+REPORT_MISSING
+```
+
 Submit the report through the governed command:
 
 ```bash
@@ -984,6 +1078,24 @@ python scripts/aictl.py task report submit --task TASK-001 --file REPORT.json --
 ```
 
 Do not treat stdout, chat text or generated prompt content as report evidence unless it has been submitted through the report command.
+
+If the report was only shown in the Codex live log panel or pasted in chat, create a structured report file from the actual task result and submit it through `task report submit`. Then rerun the blocked report or close gate through the governed Pipeline or Task workflow. Runtime log files are evidence sources for diagnosis; they are not implementation files and should not be added to the report's changed file lists.
+
+## Git Diff Gate `missing_from_report`
+
+If a verify or close gate reports `missing_from_report`, the current git diff contains paths that are not declared in the structured execution report. This usually means either the report omitted a real Task change or the working tree contains unrelated/generated/runtime changes.
+
+Respond by comparing the gate's missing paths with the Task contract:
+
+```text
+real Task source change        add it to the structured report and resubmit
+governed generated output      include it only when it was intentionally regenerated by the Task
+runtime logs or UI run logs    do not report as implementation files
+unrelated dirty file           resolve or separate it before rerunning the gate
+protected state/event output   do not edit manually; regenerate or mutate only through the owning CLI
+```
+
+After correcting the report or working tree, rerun the governed verify, close or pipeline step that produced the diff gate result.
 
 ## Unsupported Operation
 

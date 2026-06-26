@@ -3,6 +3,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest import mock
 
@@ -13,7 +14,19 @@ from ai_project_ctl.pipeline.codex_adapter import (
     CODE_LOCAL_COMMAND_PASSED,
     CodexAdapterResult,
 )
+from ai_project_ctl.pipeline.git_commit import (
+    CODE_COMMIT_CREATED,
+    CODE_MACHINE_REVIEW_NOT_PASS,
+    CODE_READY as COMMIT_READINESS_PASS,
+    GitCommandResult,
+    REQUIRED_MACHINE_CHECKS,
+)
+from ai_project_ctl.pipeline.machine_review import (
+    MachineCheckEvidence,
+    MachineReviewResult,
+)
 from ai_project_ctl.pipeline.phase import PhaseResult
+from ai_project_ctl.pipeline.report_gate import ReportGateResult
 from ai_project_ctl.pipeline.review_phase import review_phase
 from ai_project_ctl.pipeline.runner import run_next
 from ai_project_ctl.pipeline.session import (
@@ -302,6 +315,142 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
             )
             self.assertEqual(artifacts["close_workflow"]["data"]["workflows"], [])
 
+    def test_close_local_commit_allows_policy_approved_machine_review_warn(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_temp_project(root)
+            _prepare_auto_close_workflow(root)
+            session_id = _create_close_session(
+                root,
+                policy=_local_commit_warning_policy(),
+            )
+            _record_close_preflight_history(root, session_id)
+            report_gate = _warning_report_gate()
+            machine_review = _machine_review_with_warning(
+                MachineCheckEvidence(
+                    name="codex_report_gate",
+                    status="warn",
+                    code="CODEX_REPORT_WARN",
+                    reason="Report warning is policy-approved for commit readiness.",
+                    blocking=True,
+                )
+            )
+            git_commands: list[list[str]] = []
+
+            with (
+                mock.patch.object(
+                    workflow_module.WorkflowExecutor,
+                    "_run_subprocess",
+                    _workflow_subprocess_with_oversized_doctor_output,
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.close_phase.evaluate_report_gate",
+                    return_value=report_gate,
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.close_phase.evaluate_machine_review",
+                    return_value=machine_review,
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.git_commit.run_git_command",
+                    side_effect=_fake_git_command_runner(git_commands),
+                ),
+            ):
+                close = close_phase(
+                    session_id,
+                    root=root,
+                    actor="tester",
+                    confirmed=True,
+                )
+
+            self.assertTrue(close.ok, close.errors)
+            phase_result = close.data["phase_result"]
+            self.assertEqual(phase_result["status"], "passed")
+            artifacts = phase_result["artifacts"]
+            local_commit = artifacts["local_commit"]
+            self.assertEqual(local_commit["status"], "pass")
+            self.assertEqual(local_commit["code"], CODE_COMMIT_CREATED)
+            self.assertEqual(local_commit["readiness"]["status"], "pass")
+            self.assertEqual(
+                local_commit["readiness"]["code"],
+                COMMIT_READINESS_PASS,
+            )
+            self.assertEqual(local_commit["commit_hash"], "abc1234deadbeef")
+            self.assertNotIn(
+                CODE_MACHINE_REVIEW_NOT_PASS,
+                json.dumps(artifacts, sort_keys=True),
+            )
+            self.assertEqual(
+                git_commands,
+                [
+                    ["git", "status", "--short", "--untracked-files=all"],
+                    ["git", "add", "--", CHANGED_FILE],
+                    ["git", "commit", "-m", local_commit["message"]],
+                    ["git", "rev-parse", "--verify", "HEAD"],
+                ],
+            )
+
+    def test_close_local_commit_blocks_unsafe_machine_review_warn(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_temp_project(root)
+            _prepare_auto_close_workflow(root)
+            session_id = _create_close_session(
+                root,
+                policy=_local_commit_warning_policy(),
+            )
+            _record_close_preflight_history(root, session_id)
+            report_gate = _warning_report_gate()
+            machine_review = _machine_review_with_warning(
+                MachineCheckEvidence(
+                    name="unapproved_commit_warning",
+                    status="warn",
+                    code="UNAPPROVED_COMMIT_WARNING",
+                    reason="Blocking Machine Review warning is not policy-approved.",
+                    blocking=True,
+                )
+            )
+            git_commands: list[list[str]] = []
+
+            with (
+                mock.patch.object(
+                    workflow_module.WorkflowExecutor,
+                    "_run_subprocess",
+                    _workflow_subprocess_with_oversized_doctor_output,
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.close_phase.evaluate_report_gate",
+                    return_value=report_gate,
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.close_phase.evaluate_machine_review",
+                    return_value=machine_review,
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.git_commit.run_git_command",
+                    side_effect=_fake_git_command_runner(git_commands),
+                ),
+            ):
+                close = close_phase(
+                    session_id,
+                    root=root,
+                    actor="tester",
+                    confirmed=True,
+                )
+
+            self.assertTrue(close.ok, close.errors)
+            phase_result = close.data["phase_result"]
+            self.assertEqual(phase_result["status"], "blocked")
+            artifacts = phase_result["artifacts"]
+            local_commit = artifacts["local_commit"]
+            self.assertEqual(local_commit["status"], "blocked")
+            self.assertEqual(local_commit["code"], "COMMIT_READINESS_FAILED")
+            self.assertEqual(
+                local_commit["readiness"]["code"],
+                CODE_MACHINE_REVIEW_NOT_PASS,
+            )
+            self.assertEqual(git_commands, [])
+
 
 def _write_temp_project(root: Path) -> None:
     _run_script(root, "planctl.py", "init", "--project-name", "Pipeline Review Close")
@@ -401,8 +550,9 @@ def _write_temp_project(root: Path) -> None:
     )
 
 
-def _create_close_session(root: Path) -> str:
-    policy = policy_preset("supervised_executable_autoclose")
+def _create_close_session(root: Path, *, policy=None) -> str:
+    if policy is None:
+        policy = policy_preset("supervised_executable_autoclose")
     session = create_session(
         root=root,
         actor="tester",
@@ -441,6 +591,8 @@ def _record_close_preflight_history(root: Path, session_id: str) -> None:
                 "task_id": TASK_ID,
                 "report_id": report_id,
                 "review_id": "CREV-001",
+                "review_status": "pass",
+                "review_code": "CODEX_REVIEW_APPROVE",
                 "verdict": "APPROVE",
             },
         ),
@@ -458,6 +610,122 @@ def _record_phase(root: Path, session_id: str, phase: PhaseResult) -> None:
     )
     if not result.ok:
         raise AssertionError(result.errors)
+
+
+def _prepare_auto_close_workflow(root: Path) -> None:
+    _run_script(
+        root,
+        "taskctl.py",
+        "task",
+        "transition",
+        TASK_ID,
+        "--to",
+        "in_progress",
+    )
+    _run_script(
+        root,
+        "contextctl.py",
+        "pack",
+        "build",
+        "--task",
+        TASK_ID,
+        "--write",
+    )
+
+
+def _local_commit_warning_policy():
+    policy = policy_preset("supervised_local_commit")
+    return replace(
+        policy,
+        verify=replace(
+            policy.verify,
+            allow_report_warnings=True,
+            block_report_warnings=False,
+        ),
+    )
+
+
+def _warning_report_gate() -> ReportGateResult:
+    return ReportGateResult(
+        status="warn",
+        code="CODEX_REPORT_WARN",
+        reason="Report contains advisory warning evidence accepted by policy.",
+        report_id="RPT-001",
+        task_id=TASK_ID,
+        changed_files=(CHANGED_FILE,),
+    )
+
+
+def _machine_review_with_warning(
+    warning: MachineCheckEvidence,
+) -> MachineReviewResult:
+    checks = [
+        MachineCheckEvidence(
+            name=name,
+            status="pass",
+            code="MACHINE_REVIEW_PASS",
+            reason="{} passed.".format(name),
+        )
+        for name in sorted(REQUIRED_MACHINE_CHECKS)
+    ]
+    checks.append(warning)
+    return MachineReviewResult(
+        status="warn",
+        code="MACHINE_REVIEW_WARN",
+        reason="Machine Review returned warning evidence.",
+        task_id=TASK_ID,
+        report_id="RPT-001",
+        checks=tuple(checks),
+    )
+
+
+def _fake_git_command_runner(calls: list[list[str]]):
+    def runner(command, **_kwargs) -> GitCommandResult:
+        argv = tuple(str(part) for part in command)
+        calls.append(list(argv))
+        if argv == ("git", "status", "--short", "--untracked-files=all"):
+            return GitCommandResult(
+                ok=True,
+                code="GIT_STATUS_PASS",
+                reason="Fake git status found approved file changes.",
+                command=argv,
+                returncode=0,
+                stdout=" M {}\n".format(CHANGED_FILE),
+            )
+        if argv == ("git", "add", "--", CHANGED_FILE):
+            return GitCommandResult(
+                ok=True,
+                code="GIT_ADD_PASS",
+                reason="Fake git add staged approved files.",
+                command=argv,
+                returncode=0,
+            )
+        if len(argv) >= 4 and argv[:3] == ("git", "commit", "-m"):
+            return GitCommandResult(
+                ok=True,
+                code="GIT_COMMIT_PASS",
+                reason="Fake git commit succeeded.",
+                command=argv,
+                returncode=0,
+            )
+        if argv == ("git", "rev-parse", "--verify", "HEAD"):
+            return GitCommandResult(
+                ok=True,
+                code="GIT_REV_PARSE_PASS",
+                reason="Fake git rev-parse returned a local commit hash.",
+                command=argv,
+                returncode=0,
+                stdout="abc1234deadbeef\n",
+            )
+        return GitCommandResult(
+            ok=False,
+            code="UNEXPECTED_GIT_COMMAND",
+            reason="Unexpected fake git command: {}".format(" ".join(argv)),
+            command=argv,
+            returncode=1,
+        )
+
+    return runner
 
 
 def _mark_task_done(root: Path, *, notes: str) -> None:

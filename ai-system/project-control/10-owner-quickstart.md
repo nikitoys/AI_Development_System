@@ -63,6 +63,10 @@ No row workflows   done or otherwise unavailable actions
 
 When a selected-task `Run` form shows `Auto-close Owner Note`, fill it only with an explicit Human Owner approval note for that run. Leave it blank for non-auto-close policies. Codex may point out that the field is required by an auto-close policy, but Codex must not invent or provide the note.
 
+Use task-row `Run` to start a new selected-task pipeline run for a ready or planned Task. Use `Resume` or `Resume Session` only for an existing `blocked` or `stopped` session after resolving the blocker or deciding to continue that same session. Resume continues the existing session with its current policy snapshot and artifacts; it does not start fresh work.
+
+Before pressing `Run`, open `Settings` and check `Effective Policy Summary`. If `batch.max_steps` is below `7`, the selected-task run cannot traverse all seven current phases in one batch: queue preview, prepare, execute, collect report, verify, review and close. The UI will show `Incomplete Web Run` and require `Confirm this partial Web run`. Use `Max Steps Override` to set `batch.max_steps` to at least `7` when the owner wants a full single-task run in one batch; leave the lower value only when a deliberate partial run is acceptable.
+
 Each workflow posts to `/actions`, delegates through registered `aictl.py` workflows and owning `*ctl.py` scripts, and then opens an Action Result panel. Read that panel before continuing. It shows PASS/FAIL, registered command, workflow, target, return code, step results, changed and generated files, warnings, errors, next actions, any Codex instruction to copy into a session, and technical details.
 
 5. Use Evolution and Actions when needed.
@@ -72,6 +76,10 @@ Each workflow posts to `/actions`, delegates through registered `aictl.py` workf
 `Pipeline` shows the supervised batch pipeline cockpit for queue preview, policy selection, current session state, gate outcomes, run-next, run-until-blocker and recent pipeline audit entries. It is supervised automation only; it does not approve Evolution Changes, accept final work, push, merge, or bypass review gates.
 
 Pipeline session IDs link to persistent detail pages such as `http://127.0.0.1:8765/pipeline/sessions/PSESS-012`. Use a session detail page to watch a running session, inspect expandable phase or step records, bounded Codex stdout/stderr snippets, artifacts, queue snapshot, related audit events, changed files and blockers, or reopen completed, blocked, failed, stopped and archived sessions later. Current phase-based sessions render from `phase_history`; older sessions without `phase_history` fall back to legacy `steps` and `gate_outcomes`. The page uses simple polling while a session is `running` and stops polling in terminal or owner-action states. It does not render full `CODEX_PROMPT.md` content and does not expose destructive git actions.
+
+Codex is actually running only when the session status is `running`, the current phase is `execute`, the current phase status is `running`, and the page shows active status polling or a `Codex Execute running` log panel. If the page says `Auto-refresh stopped`, the session is terminal or waiting for owner action.
+
+Live Codex logs appear on the Pipeline session detail page during the `execute` phase as separate `STDOUT` and `STDERR` panels. `stdout` is normal command output; `stderr` is diagnostics or error output. These runtime logs are execution evidence and troubleshooting context, not implementation files to list in a structured report.
 
 `Actions` contains direct forms for Task creation, Bulk Task Import, health and repair checks, Task workflows, Task transitions, current Task changes, generated-output refreshes, and Codex/context builds. Bulk Task Import supports pasted JSON and `.json` or `.txt` file upload; leave Confirm unchecked for preview and check Confirm only when the preview is ready to create Tasks.
 
@@ -202,7 +210,7 @@ Policy presets decide what is allowed, but they do not remove owner gates:
 - `supervised_autoclose` is a prompt-only legacy preset; it blocks before close because Codex execution evidence is missing.
 - `supervised_executable_autoclose` runs the allowlisted local Codex adapter, then may close only after Codex Report Gate PASS, Machine Review PASS, Codex Review APPROVE and an explicit owner auto-close note on the session.
 - `supervised_local_commit` is a prompt-only legacy preset; local commit is blocked before commit because close evidence is missing.
-- `supervised_executable_local_commit` adds local-only commit policy after executable run, approved review gates, auto-close and commit-readiness gates pass. A report `WARN` may reach commit readiness only when policy explicitly allows advisory report warnings; report `FAIL`, report `BLOCKED` and advisory-disabled `WARN` still block. Push and merge remain forbidden.
+- `supervised_executable_local_commit` adds local-only commit policy after executable run, approved review gates, auto-close and commit-readiness gates pass. A report `WARN` may reach commit readiness only when policy explicitly allows advisory report warnings; Machine Review `WARN` may reach local commit only when every warning is non-blocking advisory evidence or explicitly policy-approved report-warning evidence. Report `FAIL`, report `BLOCKED`, advisory-disabled report `WARN`, unsafe Machine Review `WARN` and Machine Review `FAIL` still block. Push and merge remain forbidden.
 
 Auto-close owner notes are explicit Human Owner approval inputs. Supply them only when the Human Owner has approved auto-close for the selected task or queue. Codex must not draft, fabricate, reuse, or paste approval notes on the owner's behalf.
 
@@ -213,16 +221,27 @@ UI settings provide the owner-facing command and timeout values:
 ```bash
 python scripts/aictl.py ui settings show
 python scripts/aictl.py ui settings set command_line "codex exec --json"
+python scripts/aictl.py ui settings set default_policy supervised_executable_local_commit
+python scripts/aictl.py ui settings set batch_max_steps 7
+python scripts/aictl.py ui settings set batch_max_failures 1
 python scripts/aictl.py ui settings set preflight_timeout_sec 45
 python scripts/aictl.py ui settings set execution_timeout_sec 1800
 python scripts/aictl.py ui preflight
 ```
 
-`command_line` is the shell-style UI setting. For executable policies, it is parsed into the resolved policy `codex.local_command` and exact `codex.command_allowlist`; those policy fields are what the local adapter enforces. `preflight_timeout_sec` applies to the UI readiness check before session creation. `execution_timeout_sec` applies to the actual local Codex adapter run. Do not use one timeout as evidence for the other.
+`Default Policy` is selected from registered policy presets shown in the Settings dropdown. Built-in and governed custom presets may appear there. The `Effective Policy Summary` shows the selected preset after UI overrides, including `batch.max_steps`, `batch.max_failures`, Machine Review, Codex Review, Auto-close, Local Commit, Report Warnings and Git Diff Gates.
+
+`command_line` is the shell-style UI setting. For executable policies, it is parsed into the resolved policy `codex.local_command` and exact `codex.command_allowlist`; those policy fields are what the local adapter enforces. `batch_max_steps` and `batch_max_failures` are optional Web-run overrides; blank values use the selected policy preset, while explicit values must stay within the Settings bounds. `preflight_timeout_sec` applies to the UI readiness check before session creation. `execution_timeout_sec` applies to the actual local Codex adapter run. Do not use one timeout as evidence for the other.
 
 If a session blocks with `CODEX_ADAPTER_TIMEOUT`, inspect the session detail `execute` phase for timeout, duration, command and bounded stdout/stderr evidence. If a close or commit gate says report evidence is missing, submit a structured report with `python scripts/aictl.py task report submit --task TASK-001 --file REPORT.json --confirm`; stdout or chat text is not report evidence until submitted through that command.
 
+If the blocker is `REPORT_MISSING`, submit the structured execution report through `task report submit`, then rerun the blocked collect-report, close or pipeline step. Do not treat live stdout, stderr, chat text or runtime log files as a submitted report.
+
+If a diff gate reports `missing_from_report`, compare the missing paths with the Task contract. Add omitted real Task source changes to the structured report, include governed generated output only when the Task intentionally regenerated it, and leave runtime logs such as `AI_PROJECT/logs/codex/**` or `AI_PROJECT/logs/ui_run/**` out of implementation file lists. Resolve unrelated dirty files before rerunning the gate.
+
 If close succeeds but local commit blocks with `COMMIT_REPORT_GATE_NOT_PASS`, the commit gate rejected the report gate status. For report `WARN`, confirm whether the selected policy intentionally enables advisory report warnings and rerun the governed gates; strict mode still blocks `WARN` when advisory report warnings are disabled. For report `FAIL` or `BLOCKED`, fix and resubmit the structured report before trying commit again.
+
+If local commit blocks with `COMMIT_READINESS_FAILED`, inspect `local_commit.readiness` in the Action Result panel or session artifacts. For Machine Review `WARN`, only explicit advisory warnings are acceptable before local commit: non-blocking Machine Review warnings, or a policy-approved `codex_report_gate` warning. Blocking or unapproved warnings, missing required commit-readiness checks, required checks that are not `PASS`, and Machine Review `FAIL` must be fixed and rerun before commit.
 
 Manual local Codex preflight examples:
 
@@ -431,6 +450,7 @@ evolution.approve_change
 evolution.move_to_review
 evolution.accept_change
 epic.close_if_complete
+ui.run_selected_task
 pipeline.session.create
 pipeline.run_next
 pipeline.run_until_blocker

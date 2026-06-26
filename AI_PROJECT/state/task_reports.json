@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 45,
+  "revision": 56,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-26T14:19:52Z",
+  "updated_at": "2026-06-26T22:36:44Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -3316,6 +3316,771 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-046",
+      "task_id": "TASK-195",
+      "task_ref": "PIPEF-114",
+      "submitted_at": "2026-06-26T19:42:02Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:d5de684f972b82a065ce0231aef16906dd073e1f0b321a57e73478936254f766",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-195",
+        "task_ref": "PIPEF-114",
+        "reported_task_id": "TASK-195",
+        "reported_task_ref": "PIPEF-114",
+        "implementation_summary": "Added focused local commit readiness tests covering report gate PASS, policy-allowed WARN, policy-blocked WARN, unknown WARN, and FAIL while preserving the existing policy-aware report gate acceptance path.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 406.140471,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 406.140471,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest is not installed, so verification used unittest instead."
+        ],
+        "blockers": [],
+        "notes": [
+          "Pre-existing dirty AI_PROJECT protected files were present in the worktree and were left untouched."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 940,
+          "remaining_tokens": 31060,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-047",
+      "task_id": "TASK-196",
+      "task_ref": "PIPEF-115",
+      "submitted_at": "2026-06-26T19:55:53Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:84219000307b93910f85db17b6629cab165a7d0b763ff55161527f4b104c77b7",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-196",
+        "task_ref": "PIPEF-115",
+        "reported_task_id": "TASK-196",
+        "reported_task_ref": "PIPEF-115",
+        "implementation_summary": "Updated local commit readiness to allow Machine Review WARN only when required commit-critical checks are present and PASS and warning evidence is non-blocking or policy-approved; added focused PASS, safe WARN, unsafe WARN, required-check WARN, and FAIL tests.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 675.480314,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 675.480314,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Broader one-shot PipelineRunner local-commit tests failed before commit readiness because run_next stopped at queue_preview with no steps recorded."
+        ],
+        "blockers": [],
+        "notes": [
+          "Edited only ai_project_ctl/pipeline/git_commit.py and tests/test_pipeline_git_commit.py.",
+          "Targeted py_compile, focused git commit tests, and nearby report-warning commit readiness tests passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 933,
+          "remaining_tokens": 31067,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-048",
+      "task_id": "TASK-197",
+      "task_ref": "PIPEF-116",
+      "submitted_at": "2026-06-26T20:12:01Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:a4452558994ddc46dc7370eefd805366f1bc418ad97dc369b2a3eee4db27fce2",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-197",
+        "task_ref": "PIPEF-116",
+        "reported_task_id": "TASK-197",
+        "reported_task_ref": "PIPEF-116",
+        "implementation_summary": "Added close-phase regression coverage for policy-approved Machine Review WARN creating a local commit, plus unsafe Machine Review WARN blocking local commit readiness. No production behavior changes were required.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 674.441088,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 674.441088,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest is not installed in this environment; targeted unittest checks were used instead."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only tests/test_pipeline_phase_review_close.py.",
+          "Used injected report gate, machine review, and fake git command fixtures; no real Codex adapter is required."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 931,
+          "remaining_tokens": 31069,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-049",
+      "task_id": "TASK-198",
+      "task_ref": "PIPEF-117",
+      "submitted_at": "2026-06-26T20:18:25Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:b983143f1debd4e2f764615fa3b822952e7d4847f1a989c0d6e71ed34201d214",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-198",
+        "task_ref": "PIPEF-117",
+        "reported_task_id": "TASK-198",
+        "reported_task_ref": "PIPEF-117",
+        "implementation_summary": "Updated pipeline runner and owner quickstart documentation to explain local commit advisory-warning behavior, including Machine Review PASS, safe WARN, unsafe WARN, FAIL, commit-critical checks, and local_commit.readiness owner inspection.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 285.85284,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 285.85284,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "docctl validate exited 0 but reported registry/status/content-hash warnings, including stale recorded hashes for the two edited docs; protected project-control state was left untouched because it was outside the allowed files."
+        ],
+        "blockers": [],
+        "notes": [
+          "No runtime behavior was changed.",
+          "Documentation generated-output check passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 893,
+          "remaining_tokens": 31107,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-050",
+      "task_id": "TASK-144",
+      "task_ref": "PIPEF-65",
+      "submitted_at": "2026-06-26T20:27:23Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:eddd5d83272c2e9228b06df6698a3148569a44b8fb1386932cb6265d829a5585",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-144",
+        "task_ref": "PIPEF-65",
+        "reported_task_id": "TASK-144",
+        "reported_task_ref": "PIPEF-65",
+        "implementation_summary": "Updated the owner quickstart and usage guide to document Pipeline live status refresh, task-row Run versus Resume Session behavior, live Codex stdout/stderr panels, REPORT_MISSING recovery, and missing_from_report handling with runtime logs excluded from implementation file lists.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 433.807471,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 433.807471,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The workspace already had unrelated modified AI_PROJECT state/event/generated files plus other source/test files; they were left untouched.",
+          "docctl validate reported existing documentation warnings, including content hash mismatches for the edited docs after source changes, but exited OK."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only ai-system/project-control/08-usage-guide.md and ai-system/project-control/10-owner-quickstart.md.",
+          "Verification passed: python scripts/docctl.py validate, python scripts/docctl.py check-generated, python scripts/validate-system.py, and git diff --check for the edited docs."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 876,
+          "remaining_tokens": 31124,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-051",
+      "task_id": "TASK-199",
+      "task_ref": "PIPEF-118",
+      "submitted_at": "2026-06-26T21:29:30Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:a9f1e47fbfbff5ae4bc5028833dd6b89e481f1b9dd8b977557a4528c1f4e6772",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-199",
+        "task_ref": "PIPEF-118",
+        "reported_task_id": "TASK-199",
+        "reported_task_ref": "PIPEF-118",
+        "implementation_summary": "Added a read-only Web policy catalog payload for built-in and governed custom pipeline policy presets, exposed it through the UI settings read model with selected-policy metadata, and added regression coverage for built-in, custom, and invalid policy-store cases.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 524.739788,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 524.739788,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest is not installed in this environment; equivalent stdlib unittest checks were run instead."
+        ],
+        "blockers": [],
+        "notes": [
+          "Existing unrelated dirty protected/generated project-control files were present before this task and were left untouched.",
+          "Focused unittest checks and the full Web Control Center unittest module passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 932,
+          "remaining_tokens": 31068,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-052",
+      "task_id": "TASK-200",
+      "task_ref": "PIPEF-119",
+      "submitted_at": "2026-06-26T21:39:18Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:05a36b67545e39ae12887d9031a517f373a17b1ae25b6a510a3c7fcbd531079f",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-200",
+        "task_ref": "PIPEF-119",
+        "reported_task_id": "TASK-200",
+        "reported_task_ref": "PIPEF-119",
+        "implementation_summary": "Replaced the Web Settings default_policy free-text input with a catalog-backed select control and added Web action validation that rejects unknown default_policy submissions before writing ui_settings.json.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 491.250507,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 491.250507,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "python -m pytest could not run because pytest is not installed; focused unittest coverage was run instead.",
+          "The worktree had pre-existing modifications outside this task, including protected AI_PROJECT paths; they were not edited for this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused py_compile and unittest verification passed; 27 unittest cases ran successfully.",
+          "Existing command_line and review-toggle Web settings paths were included in the focused unittest coverage."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 921,
+          "remaining_tokens": 31079,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-053",
+      "task_id": "TASK-201",
+      "task_ref": "PIPEF-120",
+      "submitted_at": "2026-06-26T21:50:28Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:99d1704b51be0ec8a3cf0f859338dbc5c4249072366b3293b0307e03f95b0ec8",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-201",
+        "task_ref": "PIPEF-120",
+        "reported_task_id": "TASK-201",
+        "reported_task_ref": "PIPEF-120",
+        "implementation_summary": "Added an owner-facing read-only effective pipeline policy summary to Web Settings and task row Run controls, backed by the resolved UI policy including Settings overrides.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 574.500771,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 574.500771,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "python -m pytest tests/test_web_control_center.py -q could not run because pytest is not installed; unittest checks were used instead.",
+          "The worktree already contained pre-existing changes outside this task, including protected project-control files; they were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "Verified with python -m unittest tests.test_web_control_center.",
+          "Verified related UI policy behavior with python -m unittest tests.pipeline.test_ui_settings_policy tests.pipeline.test_ui_policy tests.test_pipeline_codex_review_toggle.",
+          "Whitespace check passed with git diff --check for the edited files."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 903,
+          "remaining_tokens": 31097,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-054",
+      "task_id": "TASK-202",
+      "task_ref": "PIPEF-121",
+      "submitted_at": "2026-06-26T22:13:29Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:9de65435384cf97ba30a26d73844454b738b5beb1b2ea57e70e6f280d1ba5b6e",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-202",
+        "task_ref": "PIPEF-121",
+        "reported_task_id": "TASK-202",
+        "reported_task_ref": "PIPEF-121",
+        "implementation_summary": "Added bounded UI settings for Web-run batch max_steps and max_failures, applied them during effective UI pipeline policy resolution, exposed them through Web Settings actions and controls, and added focused policy and Web Control Center coverage.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 634.007844,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 634.007844,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest is not installed in this environment, so the focused checks were run with python -m unittest.",
+          "The repository had pre-existing uncommitted changes, including protected project-control files and prior edits in some allowed files; protected files were not edited manually."
+        ],
+        "blockers": [],
+        "notes": [
+          "Blank batch override fields are treated as unset, preserving selected policy defaults.",
+          "Safe bounds reuse the existing policy validation limits: max_steps 1-50 and max_failures 1-10.",
+          "Verification passed with unittest: 155 tests; allowed-file whitespace check also passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 923,
+          "remaining_tokens": 31077,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-055",
+      "task_id": "TASK-203",
+      "task_ref": "PIPEF-122",
+      "submitted_at": "2026-06-26T22:23:27Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:e8699143feb59da8038ee72c783f537133474c5e1407d85fc2f992a44b883c0c",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-203",
+        "task_ref": "PIPEF-122",
+        "reported_task_id": "TASK-203",
+        "reported_task_ref": "PIPEF-122",
+        "implementation_summary": "Added incomplete Web run warning metadata, rendered it in Settings and selected task run controls, and required an extra owner acknowledgement before starting selected Web runs whose effective max_steps cannot reach review and close in one batch.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 485.166774,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 485.166774,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest is not installed in this environment; verification used unittest instead.",
+          "Protected AI_PROJECT files were already dirty before execution and were not manually edited."
+        ],
+        "blockers": [],
+        "notes": [
+          "Resume Session guidance is included in the warning copy.",
+          "Sufficient max_steps policies do not render the incomplete-run warning."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 910,
+          "remaining_tokens": 31090,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-056",
+      "task_id": "TASK-204",
+      "task_ref": "PIPEF-123",
+      "submitted_at": "2026-06-26T22:36:44Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:5b6ebc565e894fcf314a7fb27ffc444be6d00dd77a2b576f1704837dff4609da",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-204",
+        "task_ref": "PIPEF-123",
+        "reported_task_id": "TASK-204",
+        "reported_task_ref": "PIPEF-123",
+        "implementation_summary": "Updated the owner-facing project-control docs to explain registered policy preset selection, Effective Policy Summary fields, Web batch max_steps limits, full single-task run guidance, and Resume Session behavior for intentional partial runs.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 331.860205,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 331.860205,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "docctl validate reported existing registry/status/content-hash warnings, including expected hash drift for the edited docs because documentation registry scan was not in this task scope."
+        ],
+        "blockers": [],
+        "notes": [
+          "Documentation validation, render, generated documentation freshness, and diff whitespace checks completed successfully.",
+          "docctl render produced no DOCS_INDEX or DOCS_GAPS diff."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 900,
+          "remaining_tokens": 31100,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -3361,6 +4126,17 @@
     "TASK-191": "RPT-042",
     "TASK-192": "RPT-043",
     "TASK-193": "RPT-044",
-    "TASK-194": "RPT-045"
+    "TASK-194": "RPT-045",
+    "TASK-195": "RPT-046",
+    "TASK-196": "RPT-047",
+    "TASK-197": "RPT-048",
+    "TASK-198": "RPT-049",
+    "TASK-144": "RPT-050",
+    "TASK-199": "RPT-051",
+    "TASK-200": "RPT-052",
+    "TASK-201": "RPT-053",
+    "TASK-202": "RPT-054",
+    "TASK-203": "RPT-055",
+    "TASK-204": "RPT-056"
   }
 }

@@ -13,7 +13,11 @@ from ai_project_ctl.pipeline.ui_policy import (
     resolve_pipeline_policy_from_settings,
     resolve_ui_pipeline_policy,
 )
-from ai_project_ctl.ui_settings import ui_settings_path
+from ai_project_ctl.ui_settings import (
+    BATCH_MAX_FAILURES_SETTING,
+    BATCH_MAX_STEPS_SETTING,
+    ui_settings_path,
+)
 
 
 def write_settings(root: Path, payload: dict) -> None:
@@ -32,6 +36,8 @@ class UIPipelinePolicyTests(unittest.TestCase):
         self.assertEqual(policy.codex.adapter_mode, CodexAdapterMode.LOCAL_COMMAND)
         self.assertEqual(policy.codex.local_command, ("codex", "exec"))
         self.assertEqual(policy.codex.command_allowlist, ("codex exec",))
+        self.assertEqual(policy.batch.max_steps, 5)
+        self.assertEqual(policy.batch.max_failures, 1)
         self.assertTrue(policy.validate().ok)
 
     def test_command_line_replaces_executable_local_command_and_allowlist(self):
@@ -67,6 +73,40 @@ class UIPipelinePolicyTests(unittest.TestCase):
 
         self.assertEqual(policy.codex.timeout_sec, 1800)
         self.assertEqual(policy.codex.local_command, ("codex", "exec", "--json"))
+        self.assertTrue(policy.validate().ok)
+
+    def test_batch_limit_settings_replace_selected_policy_batch_limits(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_settings(
+                root,
+                {
+                    "default_policy": "supervised_executable_local_commit",
+                    "command_line": "codex exec --json",
+                    BATCH_MAX_STEPS_SETTING: "9",
+                    BATCH_MAX_FAILURES_SETTING: 2,
+                },
+            )
+
+            policy = resolve_ui_pipeline_policy(root=root)
+
+        self.assertEqual(policy.batch.max_steps, 9)
+        self.assertEqual(policy.batch.max_failures, 2)
+        self.assertEqual(policy.codex.local_command, ("codex", "exec", "--json"))
+        self.assertTrue(policy.validate().ok)
+
+    def test_blank_batch_limit_settings_keep_policy_defaults(self):
+        policy = resolve_pipeline_policy_from_settings(
+            {
+                "default_policy": "supervised",
+                BATCH_MAX_STEPS_SETTING: "",
+                BATCH_MAX_FAILURES_SETTING: None,
+            },
+        )
+
+        self.assertEqual(policy.name, "supervised")
+        self.assertEqual(policy.batch.max_steps, 5)
+        self.assertEqual(policy.batch.max_failures, 1)
         self.assertTrue(policy.validate().ok)
 
     def test_non_executable_policy_does_not_require_command_line(self):
@@ -143,6 +183,22 @@ class UIPipelinePolicyTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, "UI_POLICY_EXECUTION_TIMEOUT_INVALID")
         self.assertEqual(raised.exception.path, "execution_timeout_sec")
+
+    def test_invalid_batch_limit_fails_with_clear_policy_error(self):
+        with self.assertRaises(UIPipelinePolicyError) as raised:
+            resolve_pipeline_policy_from_settings(
+                {
+                    "default_policy": "supervised",
+                    BATCH_MAX_STEPS_SETTING: "51",
+                },
+            )
+
+        self.assertEqual(raised.exception.code, "UI_POLICY_BATCH_LIMIT_INVALID")
+        self.assertEqual(raised.exception.path, BATCH_MAX_STEPS_SETTING)
+        self.assertEqual(
+            raised.exception.details["source_code"],
+            "UI_SETTINGS_BATCH_LIMIT_INVALID",
+        )
 
     def test_resolver_does_not_mutate_builtin_policy_presets(self):
         with tempfile.TemporaryDirectory() as tmp:

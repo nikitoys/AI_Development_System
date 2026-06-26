@@ -6,17 +6,25 @@ import threading
 import unittest
 import urllib.error
 import urllib.request
+from dataclasses import replace
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
 
 from ai_project_ctl.core.registry import command_describe
 from ai_project_ctl.core.result import CommandResult
+from ai_project_ctl.core.validation import ValidationError
 from ai_project_ctl.pipeline.policy import policy_preset
+from ai_project_ctl.pipeline.policy_store import (
+    pipeline_policy_store_path,
+    save_policy_preset,
+)
 from ai_project_ctl.ui_settings import (
     ALLOW_REPORT_WARNINGS_SETTING,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
     ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
+    BATCH_MAX_FAILURES_SETTING,
+    BATCH_MAX_STEPS_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
     ui_settings_path,
@@ -119,13 +127,53 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(body.count('method="post" action="/actions"'), 1)
         self.assertEqual(body.count('<button type="submit">Apply Settings</button>'), 1)
         self.assertIn("Pipeline", body)
+        self.assertIn("Batch Run", body)
         self.assertIn("Review Gates", body)
         self.assertIn("Timeouts", body)
         self.assertIn("Advanced", body)
+        self.assertIn("Effective Policy Summary", body)
+        self.assertIn("<dt>Policy</dt><dd>supervised_executable_local_commit</dd>", body)
+        self.assertIn("<dt>batch.max_steps</dt><dd>5</dd>", body)
+        self.assertIn("<dt>batch.max_failures</dt><dd>1</dd>", body)
+        self.assertIn("<dt>Codex Review</dt><dd>required (approve)</dd>", body)
+        self.assertIn("<dt>Auto-close</dt><dd>enabled (note required)</dd>", body)
+        self.assertIn("<dt>Local Commit</dt><dd>enabled (local_only)</dd>", body)
+        self.assertIn("<dt>Report Warnings</dt><dd>strict (blocking)</dd>", body)
+        self.assertIn("<dt>Git Diff Gates</dt><dd>strict (required)</dd>", body)
+        self.assertIn("Incomplete Web Run", body)
+        self.assertIn("review and close may not run in one batch", body)
+        self.assertIn("Resume Session can continue the next phase", body)
         self.assertIn("<code>command_line</code>", body)
         self.assertIn('name="command_line" value="codex exec"', body)
         self.assertIn("<code>default_policy</code>", body)
-        self.assertIn('name="default_policy" value="supervised_executable_local_commit"', body)
+        self.assertIn('<select name="default_policy">', body)
+        for policy_name in (
+            "dry_run",
+            "supervised",
+            "supervised_executable",
+            "supervised_autoclose",
+            "supervised_executable_autoclose",
+            "supervised_local_commit",
+            "supervised_executable_local_commit",
+        ):
+            self.assertIn('<option value="{}"'.format(policy_name), body)
+        self.assertIn(
+            '<option value="supervised_executable_local_commit" selected>',
+            body,
+        )
+        self.assertNotIn('<input type="text" name="default_policy"', body)
+        self.assertIn("<code>batch_max_steps</code>", body)
+        self.assertIn(
+            "Optional Web-run override for policy batch.max_steps.",
+            body,
+        )
+        self.assertIn('name="batch_max_steps" value=""', body)
+        self.assertIn("<code>batch_max_failures</code>", body)
+        self.assertIn(
+            "Optional Web-run override for policy batch.max_failures.",
+            body,
+        )
+        self.assertIn('name="batch_max_failures" value=""', body)
         self.assertIn("Machine Review", body)
         self.assertIn("<code>machine_review</code>", body)
         self.assertIn('<input type="checkbox" checked disabled>Locked ON', body)
@@ -241,6 +289,8 @@ class WebControlCenterTests(unittest.TestCase):
                     ALLOW_REPORT_WARNINGS_SETTING: "true",
                     ALLOW_RELAXED_REPORT_WARNINGS_SETTING: "true",
                     INTERNAL_CHANGE_GATE_BYPASS_SETTING: "true",
+                    BATCH_MAX_STEPS_SETTING: "9",
+                    BATCH_MAX_FAILURES_SETTING: 2,
                     "execution_timeout_sec": "1800",
                     "preflight_timeout_sec": 45,
                 },
@@ -255,13 +305,22 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(body.count('class="panel settings-panel"'), 1)
         self.assertEqual(body.count('<button type="submit">Apply Settings</button>'), 1)
         self.assertIn("Pipeline", body)
+        self.assertIn("Batch Run", body)
         self.assertIn("Review Gates", body)
         self.assertIn("Timeouts", body)
         self.assertIn("Advanced", body)
         self.assertIn("<code>command_line</code>", body)
         self.assertIn('name="command_line" value="codex exec --json"', body)
         self.assertIn("<code>default_policy</code>", body)
-        self.assertIn('name="default_policy" value="supervised"', body)
+        self.assertIn('<select name="default_policy">', body)
+        self.assertIn('<option value="supervised" selected>', body)
+        self.assertNotIn('<input type="text" name="default_policy"', body)
+        self.assertIn("<dt>batch.max_steps</dt><dd>9</dd>", body)
+        self.assertIn("<dt>batch.max_failures</dt><dd>2</dd>", body)
+        self.assertIn("<code>batch_max_steps</code>", body)
+        self.assertIn('name="batch_max_steps" value="9"', body)
+        self.assertIn("<code>batch_max_failures</code>", body)
+        self.assertIn('name="batch_max_failures" value="2"', body)
         self.assertIn("Machine Review", body)
         self.assertIn('<input type="checkbox" checked disabled>Locked ON', body)
         self.assertIn(
@@ -320,6 +379,36 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertNotIn('name="change_gate"', body)
         self.assertNotIn('name="bypass"', body)
 
+    def test_settings_page_policy_dropdown_includes_custom_presets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            write_ui_settings(root, {"default_policy": "owner_supervised"})
+            base = policy_preset("supervised")
+            custom = replace(
+                base,
+                name="owner_supervised",
+                batch=replace(base.batch, max_steps=9, max_failures=2),
+            )
+            result = save_policy_preset(
+                "owner_supervised",
+                custom,
+                root=root,
+                actor="tester",
+            )
+            self.assertTrue(result.ok)
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/settings", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn('<select name="default_policy">', body)
+        self.assertIn('<option value="owner_supervised" selected>', body)
+        self.assertIn("<dt>Policy</dt><dd>owner_supervised</dd>", body)
+        self.assertIn("<dt>batch.max_steps</dt><dd>9</dd>", body)
+        self.assertIn("<dt>batch.max_failures</dt><dd>2</dd>", body)
+        self.assertNotIn('<input type="text" name="default_policy"', body)
+
     def test_settings_read_model_returns_effective_allow_report_warnings(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -334,6 +423,217 @@ class WebControlCenterTests(unittest.TestCase):
             False,
         )
         self.assertEqual(data["source"], "project_file")
+
+    def test_settings_effective_policy_summary_applies_ui_overrides(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            write_ui_settings(
+                root,
+                {
+                    "default_policy": "supervised",
+                    REQUIRE_CODEX_REVIEW_SETTING: "false",
+                    ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING: "true",
+                    ALLOW_REPORT_WARNINGS_SETTING: "true",
+                    ALLOW_RELAXED_REPORT_WARNINGS_SETTING: "true",
+                    BATCH_MAX_STEPS_SETTING: "8",
+                    BATCH_MAX_FAILURES_SETTING: "3",
+                },
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            data = model.ui_settings()
+            status, _, body = route("/settings", model)
+
+        self.assertEqual(status.value, 200)
+        summary = data["policy_catalog"]["effective_policy"]
+        self.assertEqual(summary["name"], "supervised")
+        self.assertEqual(summary["batch"], {"max_steps": 8, "max_failures": 3})
+        self.assertEqual(
+            summary["review"],
+            {
+                "machine_review_required": True,
+                "machine_review_outcome": "pass",
+                "codex_review_required": False,
+                "codex_review_decision": "none",
+            },
+        )
+        self.assertEqual(
+            summary["verify"],
+            {
+                "run_git_diff_gates": False,
+                "block_report_warnings": False,
+                "allow_report_warnings": True,
+            },
+        )
+        selected = next(
+            policy
+            for policy in data["policy_catalog"]["policies"]
+            if policy["selected"]
+        )
+        self.assertEqual(selected["effective_summary"], summary)
+        self.assertIn("<dt>Policy</dt><dd>supervised</dd>", body)
+        self.assertIn("<dt>batch.max_steps</dt><dd>8</dd>", body)
+        self.assertIn("<dt>batch.max_failures</dt><dd>3</dd>", body)
+        self.assertIn("<dt>Codex Review</dt><dd>skipped</dd>", body)
+        self.assertIn(
+            "<dt>Report Warnings</dt><dd>relaxed (allowed / advisory)</dd>",
+            body,
+        )
+        self.assertIn("<dt>Git Diff Gates</dt><dd>relaxed (not run)</dd>", body)
+        self.assertNotIn("Incomplete Web Run", body)
+
+    def test_settings_read_model_exposes_builtin_policy_catalog(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+
+            data = ReadOnlyProjectModel(root, actor="tester").ui_settings()
+
+        catalog = data["policy_catalog"]
+        policies = catalog["policies"]
+        names = [policy["name"] for policy in policies]
+        self.assertEqual(
+            names,
+            [
+                "dry_run",
+                "supervised",
+                "supervised_executable",
+                "supervised_autoclose",
+                "supervised_executable_autoclose",
+                "supervised_local_commit",
+                "supervised_executable_local_commit",
+            ],
+        )
+        self.assertEqual(
+            catalog["counts"],
+            {"built_in": 7, "custom": 0, "total": 7},
+        )
+        self.assertEqual(
+            catalog["selected_policy"],
+            "supervised_executable_local_commit",
+        )
+        self.assertTrue(catalog["selected_known"])
+
+        selected = next(policy for policy in policies if policy["selected"])
+        self.assertEqual(selected["kind"], "built_in")
+        self.assertEqual(
+            selected["behavior_label"],
+            "executable / auto-close needs note / local-commit",
+        )
+        summary = selected["effective_summary"]
+        self.assertEqual(
+            summary["review"],
+            {
+                "machine_review_required": True,
+                "machine_review_outcome": "pass",
+                "codex_review_required": True,
+                "codex_review_decision": "approve",
+            },
+        )
+        self.assertEqual(
+            summary["close"],
+            {
+                "auto_close_task": True,
+                "owner_approval_note_present": False,
+            },
+        )
+        self.assertEqual(
+            summary["commit"],
+            {
+                "create_local_commit": True,
+                "mode": "local_only",
+                "require_commit_readiness": True,
+                "allow_push": False,
+                "allow_merge": False,
+            },
+        )
+        self.assertEqual(summary["batch"], {"max_steps": 5, "max_failures": 1})
+        self.assertEqual(
+            summary["verify"],
+            {
+                "run_git_diff_gates": True,
+                "block_report_warnings": True,
+                "allow_report_warnings": False,
+            },
+        )
+        self.assertEqual(catalog["effective_policy"], summary)
+
+    def test_settings_read_model_policy_catalog_includes_custom_presets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            write_ui_settings(root, {"default_policy": "owner_supervised"})
+            base = policy_preset("supervised")
+            custom = replace(
+                base,
+                name="owner_supervised",
+                batch=replace(base.batch, max_steps=9, max_failures=2),
+            )
+            result = save_policy_preset(
+                "owner_supervised",
+                custom,
+                root=root,
+                actor="tester",
+            )
+            self.assertTrue(result.ok)
+
+            data = ReadOnlyProjectModel(root, actor="tester").ui_settings()
+
+        catalog = data["policy_catalog"]
+        self.assertEqual(catalog["counts"], {"built_in": 7, "custom": 1, "total": 8})
+        self.assertEqual(catalog["policies"][-1]["name"], "owner_supervised")
+        custom_item = catalog["policies"][-1]
+        self.assertEqual(custom_item["kind"], "custom")
+        self.assertEqual(custom_item["behavior_label"], "prompt-only")
+        self.assertTrue(custom_item["selected"])
+        self.assertEqual(
+            custom_item["effective_summary"]["batch"],
+            {"max_steps": 9, "max_failures": 2},
+        )
+        self.assertEqual(
+            custom_item["effective_summary"]["review"],
+            {
+                "machine_review_required": True,
+                "machine_review_outcome": "pass",
+                "codex_review_required": True,
+                "codex_review_decision": "approve",
+            },
+        )
+
+    def test_settings_read_model_policy_catalog_uses_store_validation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            path = pipeline_policy_store_path(root)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "revision": 1,
+                        "created_at": "2026-06-20T00:00:00Z",
+                        "updated_at": "2026-06-20T00:00:00Z",
+                        "presets": [
+                            {
+                                "name": "dry_run",
+                                "policy": policy_preset("dry_run").to_dict(),
+                                "created_at": "2026-06-20T00:00:00Z",
+                                "updated_at": "2026-06-20T00:00:00Z",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(ValidationError) as raised:
+                ReadOnlyProjectModel(root, actor="tester").ui_settings()
+
+        self.assertEqual(
+            raised.exception.result.errors[0].code,
+            "POLICY_PRESET_BUILTIN_IMMUTABLE",
+        )
 
     def test_tasks_page_filters_searches_groups_and_shows_readable_refs(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -501,6 +801,17 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('value="ui.run_selected_task"', body)
         self.assertIn('name="task" value="PLAN-01"', body)
         self.assertIn('name="task" value="READY-01"', body)
+        self.assertIn("Effective Run Policy", body)
+        self.assertIn("<dt>batch.max_steps</dt><dd>5</dd>", body)
+        self.assertIn("<dt>Codex Review</dt><dd>required (approve)</dd>", body)
+        self.assertIn("<dt>Auto-close</dt><dd>enabled (note required)</dd>", body)
+        self.assertIn("<dt>Local Commit</dt><dd>enabled (local_only)</dd>", body)
+        self.assertIn("<dt>Report Warnings</dt><dd>strict (blocking)</dd>", body)
+        self.assertIn("<dt>Git Diff Gates</dt><dd>strict (required)</dd>", body)
+        self.assertIn("Incomplete Web Run", body)
+        self.assertIn("review and close may not run in one batch", body)
+        self.assertIn("Resume Session can continue the next phase", body)
+        self.assertIn('name="incomplete_run_confirm" value="yes" required', body)
         self.assertIn(
             "Requires approved linked Evolution Change before execution.",
             body,
@@ -3401,6 +3712,26 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("codex exec --json", body)
         self.assertIn(str(path), body)
 
+    def test_ui_settings_web_action_rejects_unknown_default_policy(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = ui_settings_path(root)
+
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor(root, actor="tester").execute(
+                    {
+                        "action": "ui.settings.set",
+                        "confirm": "yes",
+                        "key": "default_policy",
+                        "value": "reckless",
+                    }
+                )
+            self.assertFalse(path.exists())
+
+        self.assertEqual(raised.exception.code, "WEB_UI_DEFAULT_POLICY_UNKNOWN")
+        self.assertEqual(raised.exception.path, "default_policy")
+        self.assertEqual(raised.exception.details["default_policy"], "reckless")
+
     def test_ui_settings_web_action_metadata_includes_boolean_settings(self):
         settings_action = next(
             action
@@ -3627,6 +3958,8 @@ class WebControlCenterTests(unittest.TestCase):
                     "confirm": "yes",
                     "command_line": "codex exec --json",
                     "default_policy": "supervised",
+                    BATCH_MAX_STEPS_SETTING: "9",
+                    BATCH_MAX_FAILURES_SETTING: "2",
                     REQUIRE_CODEX_REVIEW_SETTING: "false",
                     INTERNAL_CHANGE_GATE_BYPASS_SETTING: "false",
                     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING: "true",
@@ -3644,6 +3977,8 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertTrue(result.ok)
         self.assertEqual(settings["command_line"], "codex exec --json")
         self.assertEqual(settings["default_policy"], "supervised")
+        self.assertEqual(settings[BATCH_MAX_STEPS_SETTING], 9)
+        self.assertEqual(settings[BATCH_MAX_FAILURES_SETTING], 2)
         self.assertIs(settings[REQUIRE_CODEX_REVIEW_SETTING], False)
         self.assertIs(settings[INTERNAL_CHANGE_GATE_BYPASS_SETTING], False)
         self.assertIs(settings[ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING], True)
@@ -3660,6 +3995,8 @@ class WebControlCenterTests(unittest.TestCase):
             [
                 "command_line",
                 "default_policy",
+                BATCH_MAX_STEPS_SETTING,
+                BATCH_MAX_FAILURES_SETTING,
                 REQUIRE_CODEX_REVIEW_SETTING,
                 INTERNAL_CHANGE_GATE_BYPASS_SETTING,
                 ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
@@ -3669,6 +4006,47 @@ class WebControlCenterTests(unittest.TestCase):
                 "preflight_timeout_sec",
             ],
         )
+
+    def test_ui_settings_apply_web_action_rejects_unknown_default_policy(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = ui_settings_path(root)
+
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor(root, actor="tester").execute(
+                    {
+                        "action": "ui.settings.apply",
+                        "confirm": "yes",
+                        "command_line": "codex exec --json",
+                        "default_policy": "reckless",
+                    }
+                )
+            self.assertFalse(path.exists())
+
+        self.assertEqual(raised.exception.code, "WEB_UI_DEFAULT_POLICY_UNKNOWN")
+        self.assertEqual(raised.exception.path, "default_policy")
+        self.assertEqual(raised.exception.details["default_policy"], "reckless")
+
+    def test_ui_settings_apply_web_action_rejects_invalid_batch_limit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = ui_settings_path(root)
+
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor(root, actor="tester").execute(
+                    {
+                        "action": "ui.settings.apply",
+                        "confirm": "yes",
+                        "command_line": "codex exec --json",
+                        "default_policy": "supervised",
+                        BATCH_MAX_STEPS_SETTING: "0",
+                    }
+                )
+            self.assertFalse(path.exists())
+
+        self.assertEqual(raised.exception.code, "UI_SETTINGS_BATCH_LIMIT_INVALID")
+        self.assertEqual(raised.exception.path, BATCH_MAX_STEPS_SETTING)
+        self.assertEqual(raised.exception.details["setting"], BATCH_MAX_STEPS_SETTING)
 
     def test_ui_settings_apply_web_action_rejects_disallowed_key(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -4120,6 +4498,7 @@ class WebControlCenterTests(unittest.TestCase):
                             {
                                 "action": "ui.run_selected_task",
                                 "confirm": "yes",
+                                "incomplete_run_confirm": "yes",
                                 "task": "TASK-001",
                             }
                         )
@@ -4209,6 +4588,7 @@ class WebControlCenterTests(unittest.TestCase):
                             {
                                 "action": "ui.run_selected_task",
                                 "confirm": "yes",
+                                "incomplete_run_confirm": "yes",
                                 "task": "TASK-001",
                             }
                         )
@@ -4233,6 +4613,7 @@ class WebControlCenterTests(unittest.TestCase):
                     {
                         "action": "ui.run_selected_task",
                         "confirm": "yes",
+                        "incomplete_run_confirm": "yes",
                         "task": "TASK-001",
                     }
                 )
@@ -4314,6 +4695,7 @@ class WebControlCenterTests(unittest.TestCase):
                     {
                         "action": "ui.run_selected_task",
                         "confirm": "yes",
+                        "incomplete_run_confirm": "yes",
                         "task": "APP-01",
                         "auto_close_note": note,
                     }
@@ -4339,6 +4721,36 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertTrue(closure["auto_close_task"])
         self.assertEqual(closure["owner_approval_note"], note)
         self.assertNotIn("owner_approval_note", state["sessions"][0]["selected_queue"])
+
+    def test_ui_run_selected_task_action_requires_incomplete_run_confirmation(self):
+        selected_policy = policy_preset("supervised_executable_local_commit")
+
+        with patch(
+            "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
+            return_value=selected_policy,
+        ), patch("ai_project_ctl.web.actions.create_session") as create, patch(
+            "ai_project_ctl.web.actions.run_until_blocker"
+        ) as run_until:
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor("/tmp/project", actor="tester").execute(
+                    {
+                        "action": "ui.run_selected_task",
+                        "confirm": "yes",
+                        "task": "TASK-001",
+                    }
+                )
+
+        self.assertEqual(
+            raised.exception.code,
+            "WEB_INCOMPLETE_RUN_CONFIRMATION_REQUIRED",
+        )
+        self.assertEqual(raised.exception.path, "incomplete_run_confirm")
+        self.assertEqual(raised.exception.details["max_steps"], 5)
+        self.assertEqual(raised.exception.details["phase_count"], 7)
+        self.assertIn("review and close may not run", raised.exception.message)
+        self.assertIn("Resume Session can continue", raised.exception.message)
+        create.assert_not_called()
+        run_until.assert_not_called()
 
     def test_ui_run_selected_task_action_requires_confirmation(self):
         with patch("ai_project_ctl.web.actions.create_session") as create:

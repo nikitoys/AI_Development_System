@@ -123,6 +123,41 @@ def status_payload(*, root: str | Path = ".") -> dict[str, Any]:
     }
 
 
+def policy_catalog_payload(*, root: str | Path = ".") -> dict[str, Any]:
+    """Return compact built-in and custom policy metadata for Web selection."""
+
+    state = load_policy_store_state(root)
+    validation = validate_policy_store_state(state)
+    validation.require_ok()
+
+    builtins = [
+        _policy_catalog_item(name=name, policy=policy_preset(name), kind="built_in")
+        for name in preset_names()
+    ]
+    custom = []
+    for entry in state.get("presets", []):
+        if isinstance(entry, Mapping):
+            custom.append(
+                _policy_catalog_item(
+                    name=str(entry.get("name") or ""),
+                    policy=PipelinePolicy.from_dict(_policy_mapping(entry, "policy")),
+                    kind="custom",
+                )
+            )
+    custom.sort(key=lambda item: item["name"])
+    policies = [*builtins, *custom]
+    return {
+        "revision": state.get("revision", 0),
+        "state_path": str(pipeline_policy_store_path(root)),
+        "policies": policies,
+        "counts": {
+            "built_in": len(builtins),
+            "custom": len(custom),
+            "total": len(policies),
+        },
+    }
+
+
 def save_policy_preset(
     name: str,
     policy: PipelinePolicy | Mapping[str, Any],
@@ -642,6 +677,57 @@ def _policy_summary(
         "created_at": str((entry or {}).get("created_at") or ""),
         "updated_at": str((entry or {}).get("updated_at") or ""),
         "policy": policy.to_dict(),
+    }
+
+
+def _policy_catalog_item(
+    *,
+    name: str,
+    policy: PipelinePolicy,
+    kind: str,
+) -> dict[str, Any]:
+    validation = policy.validate()
+    return {
+        "name": name,
+        "kind": kind,
+        "behavior_label": policy_behavior_label(policy),
+        "valid": validation.ok,
+        "selectable": validation.ok,
+        "error_codes": [issue.code for issue in validation.errors],
+        "warning_codes": [issue.code for issue in validation.warnings],
+        "effective_summary": {
+            "queue": {
+                "selection": policy.queue.selection.value,
+                "max_tasks": policy.queue.max_tasks,
+            },
+            "codex": {
+                "mode": policy.codex.mode.value,
+                "adapter_mode": policy.codex.adapter_mode.value,
+            },
+            "review": {
+                "machine_review_required": policy.review.require_machine_review,
+                "machine_review_outcome": policy.review.required_machine_outcome.value,
+                "codex_review_required": policy.review.require_codex_review,
+                "codex_review_decision": policy.review.required_codex_decision.value,
+            },
+            "close": {
+                "auto_close_task": policy.closure.auto_close_task,
+                "owner_approval_note_present": bool(
+                    policy.closure.owner_approval_note.strip()
+                ),
+            },
+            "commit": {
+                "create_local_commit": policy.commit.create_local_commit,
+                "mode": policy.commit.mode.value,
+                "require_commit_readiness": policy.commit.require_commit_readiness,
+                "allow_push": policy.commit.allow_push,
+                "allow_merge": policy.commit.allow_merge,
+            },
+            "batch": {
+                "max_steps": policy.batch.max_steps,
+                "max_failures": policy.batch.max_failures,
+            },
+        },
     }
 
 

@@ -447,7 +447,14 @@ python scripts/aictl.py project doctor
 python scripts/aictl.py project protected-check
 ```
 
-Machine Review PASS requires all blocking checks to pass. Blocking failures stop the pipeline before semantic review can approve anything.
+Machine Review outcomes have different effects:
+
+- `PASS` means all blocking checks passed.
+- Safe `WARN` means Machine Review returned warning evidence, but every warning is advisory for commit readiness: either a non-blocking Machine Review check, or the `codex_report_gate` warning explicitly accepted by the active policy.
+- Unsafe `WARN` means at least one warning is blocking, unapproved, lacks enough warning evidence, or causes a required commit-readiness Machine Review check to be missing or not `PASS`.
+- `FAIL` means deterministic Machine Review failed and blocks all downstream acceptance and local commit gates.
+
+Blocking failures stop the pipeline before semantic review can approve anything. Codex Review cannot turn Machine Review `FAIL` or unsafe `WARN` evidence into approved commit evidence.
 
 ## Codex Review Gate
 
@@ -553,14 +560,16 @@ Commit readiness requires:
 
 - safe commit policy;
 - Codex Report Gate accepted by the same policy used by verify, review and close: `PASS`, or advisory `WARN` only when `policy.verify.allow_report_warnings` explicitly allows report warnings;
-- Machine Review PASS;
+- Machine Review `PASS`, or safe Machine Review `WARN` containing only advisory or policy-approved warning evidence;
 - Codex Review APPROVE;
-- required Machine Review checks present and PASS;
+- required commit-readiness Machine Review checks present and `PASS`;
 - selected Task is `done`;
 - linked Evolution Change is accepted when one exists;
 - dirty files are exactly the approved files from report or session evidence.
 
 Report gate `FAIL`, report gate `BLOCKED` and advisory-disabled report `WARN` still block local commit with `COMMIT_REPORT_GATE_NOT_PASS`. Advisory warning acceptance only permits the report gate status to proceed; it does not bypass Machine Review, Codex Review, Human Owner approval or acceptance, close requirements, linked Change acceptance, required Machine Review checks or dirty-file gates.
+
+Machine Review `FAIL` is never committable. Machine Review `WARN` is committable only when commit readiness classifies every warning as safe. Unsafe Machine Review `WARN` blocks local commit with `COMMIT_READINESS_FAILED`; inspect the `local_commit.readiness` evidence in the session artifacts or action result to see which warning or required check blocked the commit. The owner action is to fix the underlying warning evidence, adjust only an explicitly supported advisory-warning policy when appropriate, rerun the governed gates, and leave commit disabled until readiness is green.
 
 Allowed git commands are narrowly constrained:
 

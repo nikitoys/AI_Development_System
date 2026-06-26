@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1382`
+Revision: `1447`
 
 ## Executable Now
 
@@ -12,7 +12,6 @@ Revision: `1382`
 - `PIPE-20 (TASK-071)` [planned] `EPIC-007` priority `1` — PIPE-20 Document Dynamic Pipeline Policy Presets
 - `PIPE-21 (TASK-072)` [planned] `EPIC-007` priority `1` — PIPE-21 Fix Pipeline Queue Epic Filter Behavior
 - `PIPE-22 (TASK-073)` [planned] `EPIC-007` priority `1` — PIPE-22 Add Pipeline Session Resume After Blocker
-- `PIPEF-65 (TASK-144)` [planned] `EPIC-009` priority `1` — PIPE-060 Document Web live status and Codex log behavior
 - `PIPEF-71 (TASK-150)` [planned] `EPIC-009` priority `1` — PIPE-066 Document Web Settings and internal bypass behavior
 - `PIPEF-78 (TASK-157)` [planned] `EPIC-009` priority `1` — PIPE-073 Document Codex structured report auto-submit
 
@@ -302,6 +301,8 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-64 (TASK-143)` [done] `EPIC-009` priority `1` — PIPE-059 Keep runtime pipeline logs out of task diff gates
   - `status_not_executable`: status is done
+- `PIPEF-65 (TASK-144)` [done] `EPIC-009` priority `1` — PIPE-060 Document Web live status and Codex log behavior
+  - `status_not_executable`: status is done
 - `PIPEF-66 (TASK-145)` [done] `EPIC-009` priority `1` — PIPE-061 Add Web Settings page route
   - `status_not_executable`: status is done
 - `PIPEF-67 (TASK-146)` [done] `EPIC-009` priority `1` — PIPE-062 Add confirmed Web actions for UI settings updates
@@ -393,4 +394,24 @@ _No tasks waiting only on dependencies._
 - `PIPEF-112 (TASK-193)` [done] `EPIC-009` priority `1` — Allow advisory report warnings in local commit
   - `status_not_executable`: status is done
 - `PIPEF-113 (TASK-194)` [done] `EPIC-009` priority `1` — Document advisory warning commit behavior
+  - `status_not_executable`: status is done
+- `PIPEF-114 (TASK-195)` [done] `EPIC-009` priority `1` — Allow advisory report warnings before local commit
+  - `status_not_executable`: status is done
+- `PIPEF-115 (TASK-196)` [done] `EPIC-009` priority `1` — Allow safe Machine Review warnings before local commit
+  - `status_not_executable`: status is done
+- `PIPEF-116 (TASK-197)` [done] `EPIC-009` priority `1` — Cover close local commit with advisory warnings
+  - `status_not_executable`: status is done
+- `PIPEF-117 (TASK-198)` [done] `EPIC-009` priority `1` — Document local commit warning policy
+  - `status_not_executable`: status is done
+- `PIPEF-118 (TASK-199)` [done] `EPIC-009` priority `1` — Expose Web policy catalog
+  - `status_not_executable`: status is done
+- `PIPEF-119 (TASK-200)` [done] `EPIC-009` priority `1` — Render policy dropdown in Settings
+  - `status_not_executable`: status is done
+- `PIPEF-120 (TASK-201)` [done] `EPIC-009` priority `1` — Show effective policy summary
+  - `status_not_executable`: status is done
+- `PIPEF-121 (TASK-202)` [done] `EPIC-009` priority `1` — Add Web run batch overrides
+  - `status_not_executable`: status is done
+- `PIPEF-122 (TASK-203)` [done] `EPIC-009` priority `1` — Warn on incomplete Web run policy
+  - `status_not_executable`: status is done
+- `PIPEF-123 (TASK-204)` [done] `EPIC-009` priority `1` — Document Web policy settings
   - `status_not_executable`: status is done
