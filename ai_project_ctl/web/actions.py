@@ -390,6 +390,7 @@ class WebActionExecutor:
         fields: Mapping[str, str],
     ) -> ActionProcessResult:
         task_ref = _task_ref(fields)
+        auto_close_note = _field(fields, "auto_close_note")
         try:
             selected_policy = resolve_ui_pipeline_policy(root=self.root)
             session_result = create_session(
@@ -397,6 +398,7 @@ class WebActionExecutor:
                 actor=self.actor,
                 policy=selected_policy,
                 policy_name=selected_policy.name,
+                auto_close_note=auto_close_note,
                 selected_queue=build_ui_run_selected_queue(
                     selected_policy,
                     task_ref,
@@ -447,8 +449,10 @@ class WebActionExecutor:
             "ui",
             "run",
             task_ref,
-            "--confirm",
         ]
+        if auto_close_note:
+            command.extend(["--auto-close-note", auto_close_note])
+        command.append("--confirm")
         return ActionProcessResult(
             command=command,
             returncode=0 if result.ok else 1,
@@ -773,7 +777,12 @@ def _build_pipeline_session_create(fields: Mapping[str, str]) -> list[str]:
 
 
 def _build_ui_run_selected_task(fields: Mapping[str, str]) -> list[str]:
-    return ["ui", "run", _task_ref(fields), "--confirm"]
+    args = ["ui", "run", _task_ref(fields)]
+    auto_close_note = _field(fields, "auto_close_note")
+    if auto_close_note:
+        args.extend(["--auto-close-note", auto_close_note])
+    args.append("--confirm")
+    return args
 
 
 def _build_ui_settings_set(fields: Mapping[str, str]) -> list[str]:

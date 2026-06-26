@@ -3063,6 +3063,8 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("Run Selected Task", body)
         self.assertIn('value="ui.run_selected_task"', body)
         self.assertIn('name="task" value="CTL-01"', body)
+        self.assertIn("Auto-close Owner Note", body)
+        self.assertIn('name="auto_close_note"', body)
 
     def test_task_import_web_action_previews_without_confirmation(self):
         calls = []
@@ -4127,6 +4129,7 @@ class WebControlCenterTests(unittest.TestCase):
         create_kwargs = create.call_args.kwargs
         self.assertEqual(create_kwargs["actor"], "tester")
         self.assertEqual(create_kwargs["policy_name"], selected_policy.name)
+        self.assertEqual(create_kwargs["auto_close_note"], "")
         self.assertNotIn("task_refs", create_kwargs)
         self.assertNotIn("max_tasks", create_kwargs)
         self.assertNotIn("order_by", create_kwargs)
@@ -4214,6 +4217,128 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertTrue(selected_queue["allow_internal_change_gate_bypass"])
         self.assertEqual(selected_queue["created_by_command"], "ui.run")
         self.assertTrue(selected_queue["ui_run_confirmed"])
+
+    def test_ui_run_selected_task_autoclose_requires_owner_note_before_execution(self):
+        selected_policy = policy_preset("supervised_executable_autoclose")
+
+        with patch(
+            "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
+            return_value=selected_policy,
+        ), patch(
+            "ai_project_ctl.web.actions.run_until_blocker",
+            side_effect=AssertionError("ui run must not start Codex execution"),
+        ) as run_until:
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor("/tmp/project", actor="tester").execute(
+                    {
+                        "action": "ui.run_selected_task",
+                        "confirm": "yes",
+                        "task": "TASK-001",
+                    }
+                )
+
+        self.assertEqual(raised.exception.code, "WEB_ACTION_COMMAND_FAILED")
+        result = raised.exception.details["result"]
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["message"], "PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED")
+        self.assertEqual(
+            result["owner_action_required"],
+            "Provide Human Owner auto-close approval note.",
+        )
+        self.assertEqual(
+            result["errors"][0]["code"],
+            "PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED",
+        )
+        self.assertEqual(
+            result["errors"][0]["details"]["required_argument"],
+            "auto_close_note",
+        )
+        run_until.assert_not_called()
+
+    def test_ui_run_selected_task_autoclose_stores_owner_note_in_session(self):
+        note = "Owner approved auto-close for selected UI task."
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "legacy_id": "TASK-001",
+                        "aliases": ["TASK-001"],
+                        "uid": "uid_task_001",
+                        "status": "ready",
+                        "title": "Runnable task",
+                        "epic_id": "EPIC-001",
+                        "allowed_files": ["tests/**"],
+                    }
+                ],
+                initiatives=[{"id": "INIT-001", "status": "active"}],
+                epics=[
+                    {
+                        "id": "EPIC-001",
+                        "initiative_id": "INIT-001",
+                        "status": "planned",
+                        "key": "APP",
+                    }
+                ],
+                changes=[
+                    {
+                        "id": "CHG-001",
+                        "status": "approved",
+                        "linked_tasks": ["TASK-001"],
+                    }
+                ],
+            )
+            write_ui_settings(
+                root,
+                {
+                    "default_policy": "supervised_executable_autoclose",
+                    "command_line": "codex exec",
+                },
+            )
+            run_result = CommandResult.success(
+                command="pipeline.run_until_blocker",
+                domain="pipeline",
+                message="Stopped at first blocker.",
+                data={"session_id": "PSESS-001"},
+            )
+
+            with patch(
+                "ai_project_ctl.web.actions.run_until_blocker",
+                return_value=run_result,
+            ) as run_until:
+                result = WebActionExecutor(root, actor="tester").execute(
+                    {
+                        "action": "ui.run_selected_task",
+                        "confirm": "yes",
+                        "task": "APP-01",
+                        "auto_close_note": note,
+                    }
+                )
+
+            state = json.loads(
+                (root / "AI_PROJECT" / "state" / "pipeline_sessions.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+
+        self.assertTrue(result.ok)
+        payload = result.to_dict()
+        self.assertIn("--auto-close-note", payload["delegate"])
+        self.assertIn(note, payload["delegate"])
+        run_until.assert_called_once_with(
+            "PSESS-001",
+            root=root.resolve(),
+            actor="tester",
+            confirmed=True,
+        )
+        closure = state["sessions"][0]["policy_snapshot"]["closure"]
+        self.assertTrue(closure["auto_close_task"])
+        self.assertEqual(closure["owner_approval_note"], note)
+        self.assertNotIn("owner_approval_note", state["sessions"][0]["selected_queue"])
 
     def test_ui_run_selected_task_action_requires_confirmation(self):
         with patch("ai_project_ctl.web.actions.create_session") as create:

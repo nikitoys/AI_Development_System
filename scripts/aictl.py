@@ -2055,6 +2055,35 @@ def cmd_ui_settings_set(args: argparse.Namespace) -> int:
 
 def cmd_ui_run(args: argparse.Namespace) -> int:
     selected_policy = resolve_ui_pipeline_policy(root=args.root)
+    selected_queue = build_ui_run_selected_queue(
+        selected_policy,
+        args.task_ref,
+        confirmed=args.confirm,
+        allow_internal_change_gate_bypass=ui_internal_change_gate_bypass_enabled(
+            root=args.root
+        ),
+    )
+    if (
+        selected_policy.closure.auto_close_task
+        and not (args.auto_close_note or selected_policy.closure.owner_approval_note).strip()
+    ):
+        session_result = create_session(
+            root=args.root,
+            actor=args.actor,
+            policy=selected_policy,
+            policy_name=selected_policy.name,
+            auto_close_note=args.auto_close_note or "",
+            selected_queue=selected_queue,
+        )
+        if not session_result.ok:
+            result = _ui_run_result(
+                args.task_ref,
+                selected_policy.name,
+                session_result,
+                session_result,
+            )
+            return _emit_command_result(result, args)
+
     if (
         args.preflight
         and args.confirm
@@ -2080,14 +2109,8 @@ def cmd_ui_run(args: argparse.Namespace) -> int:
         actor=args.actor,
         policy=selected_policy,
         policy_name=selected_policy.name,
-        selected_queue=build_ui_run_selected_queue(
-            selected_policy,
-            args.task_ref,
-            confirmed=args.confirm,
-            allow_internal_change_gate_bypass=ui_internal_change_gate_bypass_enabled(
-                root=args.root
-            ),
-        ),
+        auto_close_note=args.auto_close_note or "",
+        selected_queue=selected_queue,
     )
     if not session_result.ok:
         result = _ui_run_result(
@@ -2825,6 +2848,11 @@ def build_parser() -> argparse.ArgumentParser:
     p = ui_sub.add_parser("run", help="Run one selected task using effective UI settings")
     p.add_argument("task_ref")
     p.add_argument("--confirm", action="store_true")
+    p.add_argument(
+        "--auto-close-note",
+        default="",
+        help="Explicit Human Owner note required by auto-close pipeline policies",
+    )
     p.add_argument(
         "--preflight",
         action="store_true",

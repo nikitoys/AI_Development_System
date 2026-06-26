@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 300,
+  "revision": 340,
   "created_at": "2026-06-19T21:27:58Z",
-  "updated_at": "2026-06-26T06:59:30Z",
-  "current_session_id": "PSESS-054",
+  "updated_at": "2026-06-26T08:20:16Z",
+  "current_session_id": "PSESS-059",
   "sessions": [
     {
       "id": "PSESS-001",
@@ -35303,6 +35303,3808 @@
       "updated_at": "2026-06-26T06:59:30Z",
       "started_at": "2026-06-26T06:49:35Z",
       "finished_at": "2026-06-26T06:56:49Z"
+    },
+    {
+      "id": "PSESS-055",
+      "status": "stopped",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-103"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false,
+        "created_by_command": "ui.run",
+        "ui_run_confirmed": true,
+        "allow_internal_change_gate_bypass": true
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit_1h_auto_change",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": true,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": true,
+          "owner_approval_note": "Auto-approved by Human Owner for selected UI run"
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 3600,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": false,
+          "required_codex_decision": "none"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        },
+        "verify": {
+          "run_git_diff_gates": false,
+          "block_report_warnings": false,
+          "allow_report_warnings": true
+        }
+      },
+      "current_task_id": "TASK-184",
+      "current_task_ref": "",
+      "current_phase": "verify",
+      "current_phase_status": "passed",
+      "blocked_by": "",
+      "next_action": "Run pipeline phase review.",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-055",
+            "next_task": {
+              "id": "TASK-184",
+              "ref": "PIPEF-103",
+              "uid": "tsk_ce339d5882a1",
+              "legacy_id": "TASK-184",
+              "title": "Require auto-close owner note at session creation",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-103"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-184",
+                  "ref": "PIPEF-103",
+                  "uid": "tsk_ce339d5882a1",
+                  "legacy_id": "TASK-184",
+                  "title": "Require auto-close owner note at session creation",
+                  "status": "planned",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-103"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-1B436D32B382"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "passed",
+          "reason": "Task preparation rebuilt artifacts; Codex execution has not been started.",
+          "next_action": "Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 51a435b92ce8383fc5cdf888bdf04c6ddbf8583bd4c869efd831bcd42a77cc31).",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-055",
+            "task_id": "TASK-184",
+            "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+            "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+            "prompt_sha256": "51a435b92ce8383fc5cdf888bdf04c6ddbf8583bd4c869efd831bcd42a77cc31",
+            "artifact_freshness": {
+              "status": "rebuilt",
+              "reason": "codex_status_not_ready",
+              "rebuild_required_before_prepare": true,
+              "fresh_before_prepare": false
+            },
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-184",
+              "ref": "PIPEF-103",
+              "uid": "tsk_ce339d5882a1",
+              "legacy_id": "TASK-184",
+              "title": "Require auto-close owner note at session creation",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 103,
+              "local_seq": 103,
+              "selected_ref": "PIPEF-103",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "scope": "selected_task",
+              "selected_task_id": "TASK-184",
+              "selected_task_ref": "PIPEF-103",
+              "inspected_task_ids": [
+                "TASK-184"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-184",
+                  "task_ref": "PIPEF-103",
+                  "change_ids": []
+                }
+              ],
+              "linked_change_ids": [],
+              "change_ids": [],
+              "bypassed": true,
+              "bypass": {
+                "setting": "allow_internal_change_gate_bypass",
+                "enabled": true,
+                "reason": "confirmed_ui_internal_project_control_task",
+                "created_by_command": "ui.run",
+                "ui_run_confirmed": true,
+                "single_task_session": true,
+                "internal_project_control_task": true,
+                "session_id": "PSESS-055",
+                "allowed_files": [
+                  "ai_project_ctl/pipeline/session.py",
+                  "tests/test_pipeline_runner.py"
+                ]
+              }
+            },
+            "workflow": {
+              "ok": true,
+              "message": "Workflow completed.",
+              "steps": [
+                {
+                  "id": "resolve",
+                  "status": "ok"
+                },
+                {
+                  "id": "current_set",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_validate",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_graph",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_in_progress",
+                  "status": "ok"
+                },
+                {
+                  "id": "context_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "codex_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "doctor",
+                  "status": "ok"
+                }
+              ],
+              "errors": []
+            },
+            "codex_adapter_called": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-9D7FE47ACDF0"
+          ]
+        },
+        {
+          "phase": "execute",
+          "status": "passed",
+          "reason": "Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0)",
+          "next_action": "Run pipeline phase collect-report.",
+          "artifacts": {
+            "session_id": "PSESS-055",
+            "task_id": "TASK-184",
+            "policy": "supervised_executable_local_commit_1h_auto_change",
+            "prepare_artifacts": {
+              "task_id": "TASK-184",
+              "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+              "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "51a435b92ce8383fc5cdf888bdf04c6ddbf8583bd4c869efd831bcd42a77cc31"
+            },
+            "token_budget": {
+              "status": "pass",
+              "code": "TOKEN_BUDGET_PASS",
+              "reason": "within_token_budget",
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "51a435b92ce8383fc5cdf888bdf04c6ddbf8583bd4c869efd831bcd42a77cc31",
+              "prompt_bytes": 3782,
+              "prompt_tokens": 946,
+              "context_bytes": 0,
+              "context_tokens": 0,
+              "token_count_strategy": "local_byte_estimate",
+              "token_count_estimated": true,
+              "token_count_unavailable": false,
+              "token_count_unavailable_reason": "",
+              "model_context_limit": 32000,
+              "max_context_tokens": 24000,
+              "reserved_output_tokens": 0,
+              "min_remaining_tokens": 6000,
+              "remaining_tokens": 31054,
+              "context_requires_compact_or_split": false,
+              "context_requirement_reasons": [],
+              "context_pack": {}
+            },
+            "codex_adapter_called": true,
+            "execute_started_at": "2026-06-26T07:32:08Z",
+            "execute_finished_at": "2026-06-26T07:39:53Z",
+            "before_report_id": "",
+            "after_report_id": "RPT-033",
+            "report_id": "RPT-033",
+            "execute_evidence": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 465.125667,
+              "stdout_ref": "captured:stdout:sha256:0e789ca424abe18cd45acc53b10d8a8c4272ac4565eab797211d705f57c10f59",
+              "stderr_ref": "captured:stderr:sha256:8366470e44e3982cec4b7235f8e7a1b8fed3fcf55eb54c15597509ab2a872d7e",
+              "stdout_snippet": "Active Role: Codex Executor\nActive Stage: Execution Complete\nActive Document: TASK-184 / PIPEF-103\nExpected Result: Auto-close session creation rejects missing Human Owner note before execution\n\nImplemented the session-creation preflight in `ai_project_ctl/pipeline/session.py`. Auto-close policies now fail before session state is created when `closure.auto_close_task` is enabled and no owner note is present, returning `PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED` with next-action details.\n\nAdded focused regression coverage in `tests/test_pipeline_runner.py` for missing-note failure, present-note persistence in `policy_snapshot.closure.owner_approval_note`, and non-auto-close session creation without a note.\n\nVerification:\n`python -m py_compile ai_project_ctl/pipeline/session.py tests/test_pipeline_runner.py` passed.\nFocused `python -m unittest ...` for the three updated regression tests passed.\n`python -m pytest ...` could not run because `pytest` is not installed.\nFull `python -m unittest tests.test_pipeline_runner` was attempted but fails broadly in existing `run_next`/queue-preview expectations outside this guard.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \n[truncated: 1833 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02d7-ee20-7300-a91c-86f2c6bb568d\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: Execution\nActive Document: TASK-184 / PIPEF-103 prompt package\nExpected Result: Implement bounded validation and focused tests within the allowed files.\n\nI’m using the repository’s project-control and documentation-navigation skills because this is a controlled AI Development System task, and I’ll load the required instructions before touching code.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\ncodex\nI’ve loaded Serena’s coding instructions and am now reading the repository’s required AI system docs plus the relevant control-gateway skills. After that I’ll inspect only the two allowed source/test files and patch the validation path.\nexec\n/usr/bin/zsh -lc \"sed -n '1,220p' /home/nikitoys/AI-Development-System/.agents/skills/documentation-navigation/SKILL.md\" in /home/ni\n[truncated: 391225 bytes total]",
+              "stdout_bytes": 1833,
+              "stderr_bytes": 395732,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-055/TASK-184-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1833,
+                  "bytes": 1833
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-055/TASK-184-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 395732,
+                  "bytes": 395732
+                }
+              },
+              "report_ids": [
+                "RPT-033"
+              ],
+              "report_required": true,
+              "started_at": "2026-06-26T07:32:08Z",
+              "finished_at": "2026-06-26T07:39:53Z",
+              "before_report_id": "",
+              "after_report_id": "RPT-033",
+              "report_id": "RPT-033"
+            },
+            "runtime_logs": {
+              "stdout": {
+                "path": "AI_PROJECT/logs/codex/PSESS-055/TASK-184-stdout.log",
+                "start_offset": 0,
+                "end_offset": 1833,
+                "bytes": 1833
+              },
+              "stderr": {
+                "path": "AI_PROJECT/logs/codex/PSESS-055/TASK-184-stderr.log",
+                "start_offset": 0,
+                "end_offset": 395732,
+                "bytes": 395732
+              }
+            },
+            "adapter": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "mode": "local_command",
+              "started_at": "2026-06-26T07:32:08Z",
+              "finished_at": "2026-06-26T07:39:53Z",
+              "duration_sec": 465.125667,
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "51a435b92ce8383fc5cdf888bdf04c6ddbf8583bd4c869efd831bcd42a77cc31",
+              "prompt_transport": "stdin",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "timeout_sec": 3600,
+              "timed_out": false,
+              "returncode": 0,
+              "stdout_ref": "captured:stdout:sha256:0e789ca424abe18cd45acc53b10d8a8c4272ac4565eab797211d705f57c10f59",
+              "stderr_ref": "captured:stderr:sha256:8366470e44e3982cec4b7235f8e7a1b8fed3fcf55eb54c15597509ab2a872d7e",
+              "stdout_snippet": "Active Role: Codex Executor\nActive Stage: Execution Complete\nActive Document: TASK-184 / PIPEF-103\nExpected Result: Auto-close session creation rejects missing Human Owner note before execution\n\nImplemented the session-creation preflight in `ai_project_ctl/pipeline/session.py`. Auto-close policies now fail before session state is created when `closure.auto_close_task` is enabled and no owner note is present, returning `PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED` with next-action details.\n\nAdded focused regression coverage in `tests/test_pipeline_runner.py` for missing-note failure, present-note persistence in `policy_snapshot.closure.owner_approval_note`, and non-auto-close session creation without a note.\n\nVerification:\n`python -m py_compile ai_project_ctl/pipeline/session.py tests/test_pipeline_runner.py` passed.\nFocused `python -m unittest ...` for the three updated regression tests passed.\n`python -m pytest ...` could not run because `pytest` is not installed.\nFull `python -m unittest tests.test_pipeline_runner` was attempted but fails broadly in existing `run_next`/queue-preview expectations outside this guard.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \n[truncated: 1833 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02d7-ee20-7300-a91c-86f2c6bb568d\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: Execution\nActive Document: TASK-184 / PIPEF-103 prompt package\nExpected Result: Implement bounded validation and focused tests within the allowed files.\n\nI’m using the repository’s project-control and documentation-navigation skills because this is a controlled AI Development System task, and I’ll load the required instructions before touching code.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\ncodex\nI’ve loaded Serena’s coding instructions and am now reading the repository’s required AI system docs plus the relevant control-gateway skills. After that I’ll inspect only the two allowed source/test files and patch the validation path.\nexec\n/usr/bin/zsh -lc \"sed -n '1,220p' /home/nikitoys/AI-Development-System/.agents/skills/documentation-navigation/SKILL.md\" in /home/ni\n[truncated: 391225 bytes total]",
+              "stdout_bytes": 1833,
+              "stderr_bytes": 395732,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-055/TASK-184-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1833,
+                  "bytes": 1833
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-055/TASK-184-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 395732,
+                  "bytes": 395732
+                }
+              },
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "RPT-033",
+              "report_id": "RPT-033",
+              "report_parse_code": "CODEX_SUMMARY_PARSE_OK",
+              "report_parse_issue": {},
+              "report_submission_error": "",
+              "report_builder_evidence": {
+                "builder": "build_task_report_payload",
+                "source_file": "captured:stdout:sha256:0e789ca424abe18cd45acc53b10d8a8c4272ac4565eab797211d705f57c10f59",
+                "task_id": "TASK-184",
+                "task_ref": "PIPEF-103",
+                "policy_evidence_keys": [
+                  "codex_adapter_gate",
+                  "token_budget_gate"
+                ],
+                "check_names": [
+                  "codex_adapter",
+                  "token_budget_gate",
+                  "codex_adapter_gate"
+                ],
+                "check_results": [
+                  "pass",
+                  "pass",
+                  "pass"
+                ],
+                "changed_files_count": 0,
+                "generated_files_count": 0,
+                "warning_count": 3,
+                "blocker_count": 0,
+                "built_report_id": "RPT-033"
+              },
+              "report_instruction": "In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-184 --file <REPORT.json> --confirm"
+            },
+            "adapter_summary": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 465.125667,
+              "stdout_ref": "captured:stdout:sha256:0e789ca424abe18cd45acc53b10d8a8c4272ac4565eab797211d705f57c10f59",
+              "stderr_ref": "captured:stderr:sha256:8366470e44e3982cec4b7235f8e7a1b8fed3fcf55eb54c15597509ab2a872d7e",
+              "stdout_snippet": "Active Role: Codex Executor\nActive Stage: Execution Complete\nActive Document: TASK-184 / PIPEF-103\nExpected Result: Auto-close session creation rejects missing Human Owner note before execution\n\nImplemented the session-creation preflight in `ai_project_ctl/pipeline/session.py`. Auto-close policies now fail before session state is created when `closure.auto_close_task` is enabled and no owner note is present, returning `PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED` with next-action details.\n\nAdded focused regression coverage in `tests/test_pipeline_runner.py` for missing-note failure, present-note persistence in `policy_snapshot.closure.owner_approval_note`, and non-auto-close session creation without a note.\n\nVerification:\n`python -m py_compile ai_project_ctl/pipeline/session.py tests/test_pipeline_runner.py` passed.\nFocused `python -m unittest ...` for the three updated regression tests passed.\n`python -m pytest ...` could not run because `pytest` is not installed.\nFull `python -m unittest tests.test_pipeline_runner` was attempted but fails broadly in existing `run_next`/queue-preview expectations outside this guard.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \n[truncated: 1833 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02d7-ee20-7300-a91c-86f2c6bb568d\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: Execution\nActive Document: TASK-184 / PIPEF-103 prompt package\nExpected Result: Implement bounded validation and focused tests within the allowed files.\n\nI’m using the repository’s project-control and documentation-navigation skills because this is a controlled AI Development System task, and I’ll load the required instructions before touching code.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\ncodex\nI’ve loaded Serena’s coding instructions and am now reading the repository’s required AI system docs plus the relevant control-gateway skills. After that I’ll inspect only the two allowed source/test files and patch the validation path.\nexec\n/usr/bin/zsh -lc \"sed -n '1,220p' /home/nikitoys/AI-Development-System/.agents/skills/documentation-navigation/SKILL.md\" in /home/ni\n[truncated: 391225 bytes total]",
+              "stdout_bytes": 1833,
+              "stderr_bytes": 395732,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-055/TASK-184-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1833,
+                  "bytes": 1833
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-055/TASK-184-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 395732,
+                  "bytes": 395732
+                }
+              },
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "RPT-033",
+              "report_id": "RPT-033",
+              "report_ids": [
+                "RPT-033"
+              ]
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-60F5DC2283D8",
+            "EVT-8D7CA382E6D5"
+          ]
+        },
+        {
+          "phase": "collect_report",
+          "status": "passed",
+          "reason": "Structured execution report collected for selected task (freshness_basis=report_id).",
+          "next_action": "Run pipeline phase verify.",
+          "artifacts": {
+            "session_id": "PSESS-055",
+            "task_id": "TASK-184",
+            "report_id": "RPT-033",
+            "report_task_id": "TASK-184",
+            "expected_task_id": "TASK-184",
+            "selected_task_ref": "",
+            "record_task_id": "TASK-184",
+            "record_task_ref": "PIPEF-103",
+            "observed_report_task_id": "TASK-184",
+            "structured_report_task_id": "TASK-184",
+            "structured_report_task_ref": "PIPEF-103",
+            "reported_task_id": "TASK-184",
+            "reported_task_ref": "PIPEF-103",
+            "submitted_at": "2026-06-26T07:39:53Z",
+            "submitted_by": "codex",
+            "source_file": "captured:stdout:sha256:0e789ca424abe18cd45acc53b10d8a8c4272ac4565eab797211d705f57c10f59",
+            "report_found": true,
+            "freshness": {
+              "fresh": true,
+              "basis": "report_id",
+              "reason": "Report id matches the report produced by execute.",
+              "allow_existing_report": false,
+              "report_id": "RPT-033",
+              "report_submitted_at": "2026-06-26T07:39:53Z",
+              "execute_started_at": "2026-06-26T07:32:08Z",
+              "execute_finished_at": "2026-06-26T07:39:53Z",
+              "execute_before_report_id": "",
+              "execute_after_report_id": "RPT-033",
+              "execute_report_id": "RPT-033",
+              "execute_phase_status": "passed"
+            },
+            "freshness_basis": "report_id",
+            "allow_existing_report": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-1F72DC6CC3B0"
+          ]
+        },
+        {
+          "phase": "verify",
+          "status": "passed",
+          "reason": "Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy.",
+          "next_action": "Run pipeline phase review.",
+          "artifacts": {
+            "session_id": "PSESS-055",
+            "task_id": "TASK-184",
+            "report_id": "RPT-033",
+            "collected_report_id": "RPT-033",
+            "policy": "supervised_executable_local_commit_1h_auto_change",
+            "collect_report_phase": {
+              "phase": "collect_report",
+              "status": "passed",
+              "reason": "Structured execution report collected for selected task (freshness_basis=report_id).",
+              "report_id": "RPT-033",
+              "task_id": "TASK-184"
+            },
+            "report_gate_status": "warn",
+            "report_gate_code": "CODEX_REPORT_WARN",
+            "report_gate": {
+              "status": "warn",
+              "code": "CODEX_REPORT_WARN",
+              "reason": "Report contains warning(s): pytest is not installed in this environment.; Full tests.test_pipeline_runner unittest module currently fails in broad run_next/queue-preview expectations unrelated to the new session-creation guard.; Protected AI_PROJECT files were already modified in the working tree and were left untouched.",
+              "report_id": "RPT-033",
+              "task_id": "TASK-184",
+              "issues": [],
+              "warnings": [
+                {
+                  "code": "CODEX_REPORT_WARN",
+                  "message": "Report contains warning(s): pytest is not installed in this environment.; Full tests.test_pipeline_runner unittest module currently fails in broad run_next/queue-preview expectations unrelated to the new session-creation guard.; Protected AI_PROJECT files were already modified in the working tree and were left untouched.",
+                  "path": "warnings"
+                }
+              ],
+              "changed_files": [],
+              "generated_files": [],
+              "token_usage": {
+                "completion_tokens": 0,
+                "context_tokens": 0,
+                "max_context_tokens": 24000,
+                "min_remaining_tokens": 6000,
+                "model_context_limit": 32000,
+                "output_tokens": 0,
+                "prompt_tokens": 946,
+                "remaining_tokens": 31054,
+                "reserved_output_tokens": 0,
+                "total_tokens": 0,
+                "token_count_estimated": true,
+                "token_count_unavailable": false,
+                "token_count_strategy": "local_byte_estimate",
+                "token_count_unavailable_reason": ""
+              },
+              "checks": [
+                {
+                  "name": "codex_adapter",
+                  "command": "codex exec --sandbox danger-full-access",
+                  "result": "pass",
+                  "duration_sec": 465.088587,
+                  "blocking": true,
+                  "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+                },
+                {
+                  "name": "token_budget_gate",
+                  "command": "",
+                  "result": "pass",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "TOKEN_BUDGET_PASS within_token_budget"
+                },
+                {
+                  "name": "codex_adapter_gate",
+                  "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+                  "result": "pass",
+                  "duration_sec": 465.088587,
+                  "blocking": true,
+                  "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+                }
+              ]
+            },
+            "report_warning_policy": {
+              "allow_report_warnings": true,
+              "block_report_warnings": false,
+              "decision": "allowed",
+              "policy": "report_gate_warnings_allowed_by_policy",
+              "reason": "policy.verify.allow_report_warnings is true",
+              "report_gate_status": "warn",
+              "report_gate_code": "CODEX_REPORT_WARN"
+            },
+            "warn_policy": "report_gate_warnings_allowed_by_policy",
+            "git_diff_gates_policy": {
+              "run_git_diff_gates": false,
+              "mode": "relaxed",
+              "reason": "policy.verify.run_git_diff_gates is false"
+            },
+            "skipped_gates": [
+              {
+                "name": "git_diff_gate",
+                "status": "skipped",
+                "code": "GIT_DIFF_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              {
+                "name": "protected_files_gate",
+                "status": "skipped",
+                "code": "PROTECTED_FILES_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              {
+                "name": "allowed_files_gate",
+                "status": "skipped",
+                "code": "ALLOWED_FILES_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              }
+            ],
+            "verify_evidence": {
+              "schema_version": 1,
+              "phase": "verify",
+              "status": "passed",
+              "task_id": "TASK-184",
+              "report_id": "RPT-033",
+              "blocked_by": "",
+              "report_gate": {
+                "status": "warn",
+                "code": "CODEX_REPORT_WARN",
+                "reason": "Report contains warning(s): pytest is not installed in this environment.; Full tests.test_pipeline_runner unittest module currently fails in broad run_next/queue-preview expectations unrelated to the new session-creation guard.; Protecte...",
+                "report_id": "RPT-033",
+                "task_id": "TASK-184",
+                "changed_files": [],
+                "generated_files": [],
+                "issues": [],
+                "warnings": [
+                  {
+                    "code": "CODEX_REPORT_WARN",
+                    "message": "Report contains warning(s): pytest is not installed in this environment.; Full tests.test_pipeline_runner unittest module currently fails in broad run_next/queue-preview expectations unrelated to the new session-creation guard.; Protecte...",
+                    "path": "warnings"
+                  }
+                ],
+                "checks": [
+                  {
+                    "name": "codex_adapter",
+                    "result": "pass",
+                    "blocking": true,
+                    "command": "codex exec --sandbox danger-full-access",
+                    "duration_sec": 465.088587
+                  },
+                  {
+                    "name": "token_budget_gate",
+                    "result": "pass",
+                    "blocking": true
+                  },
+                  {
+                    "name": "codex_adapter_gate",
+                    "result": "pass",
+                    "blocking": true,
+                    "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+                    "duration_sec": 465.088587
+                  }
+                ]
+              },
+              "git_diff_gates_policy": {
+                "run_git_diff_gates": false,
+                "mode": "relaxed",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              "report_warning_policy": {
+                "allow_report_warnings": true,
+                "block_report_warnings": false,
+                "decision": "allowed",
+                "policy": "report_gate_warnings_allowed_by_policy",
+                "reason": "policy.verify.allow_report_warnings is true",
+                "report_gate_status": "warn",
+                "report_gate_code": "CODEX_REPORT_WARN"
+              },
+              "skipped_gates": [
+                {
+                  "name": "git_diff_gate",
+                  "status": "skipped",
+                  "code": "GIT_DIFF_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                },
+                {
+                  "name": "protected_files_gate",
+                  "status": "skipped",
+                  "code": "PROTECTED_FILES_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                },
+                {
+                  "name": "allowed_files_gate",
+                  "status": "skipped",
+                  "code": "ALLOWED_FILES_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                }
+              ]
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-D628AC1BE9C1"
+          ]
+        }
+      ],
+      "current_step": "execute",
+      "current_step_status": "stopped",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-91490D1E8920",
+        "EVT-1B436D32B382",
+        "EVT-9D7FE47ACDF0",
+        "EVT-60F5DC2283D8",
+        "EVT-8D7CA382E6D5",
+        "EVT-1F72DC6CC3B0",
+        "EVT-D628AC1BE9C1",
+        "EVT-0FDBA1672158"
+      ],
+      "stop_reason": "MAX_STEPS_REACHED: Batch runner reached max_steps 5.",
+      "created_at": "2026-06-26T07:32:01Z",
+      "updated_at": "2026-06-26T07:39:54Z",
+      "started_at": "2026-06-26T07:32:01Z",
+      "finished_at": "2026-06-26T07:39:54Z"
+    },
+    {
+      "id": "PSESS-056",
+      "status": "stopped",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-104"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false,
+        "created_by_command": "ui.run",
+        "ui_run_confirmed": true,
+        "allow_internal_change_gate_bypass": true
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit_1h_auto_change",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": true,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": true,
+          "owner_approval_note": "Auto-approved by Human Owner for selected UI run"
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 3600,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": false,
+          "required_codex_decision": "none"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        },
+        "verify": {
+          "run_git_diff_gates": false,
+          "block_report_warnings": false,
+          "allow_report_warnings": true
+        }
+      },
+      "current_task_id": "TASK-185",
+      "current_task_ref": "",
+      "current_phase": "verify",
+      "current_phase_status": "passed",
+      "blocked_by": "",
+      "next_action": "Run pipeline phase review.",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-056",
+            "next_task": {
+              "id": "TASK-185",
+              "ref": "PIPEF-104",
+              "uid": "tsk_42b9b31f1758",
+              "legacy_id": "TASK-185",
+              "title": "Add auto-close note to CLI UI run",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-104"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-185",
+                  "ref": "PIPEF-104",
+                  "uid": "tsk_42b9b31f1758",
+                  "legacy_id": "TASK-185",
+                  "title": "Add auto-close note to CLI UI run",
+                  "status": "planned",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-104"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-438BEDAD6430"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "passed",
+          "reason": "Task preparation rebuilt artifacts; Codex execution has not been started.",
+          "next_action": "Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 c0eb6d14643a4096e6ea08c8f503737c2485ffffa1e3428c90cfd3fb85e8e48d).",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-056",
+            "task_id": "TASK-185",
+            "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+            "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+            "prompt_sha256": "c0eb6d14643a4096e6ea08c8f503737c2485ffffa1e3428c90cfd3fb85e8e48d",
+            "artifact_freshness": {
+              "status": "rebuilt",
+              "reason": "codex_status_not_ready",
+              "rebuild_required_before_prepare": true,
+              "fresh_before_prepare": false
+            },
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-185",
+              "ref": "PIPEF-104",
+              "uid": "tsk_42b9b31f1758",
+              "legacy_id": "TASK-185",
+              "title": "Add auto-close note to CLI UI run",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 104,
+              "local_seq": 104,
+              "selected_ref": "PIPEF-104",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "scope": "selected_task",
+              "selected_task_id": "TASK-185",
+              "selected_task_ref": "PIPEF-104",
+              "inspected_task_ids": [
+                "TASK-185"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-185",
+                  "task_ref": "PIPEF-104",
+                  "change_ids": []
+                }
+              ],
+              "linked_change_ids": [],
+              "change_ids": [],
+              "bypassed": true,
+              "bypass": {
+                "setting": "allow_internal_change_gate_bypass",
+                "enabled": true,
+                "reason": "confirmed_ui_internal_project_control_task",
+                "created_by_command": "ui.run",
+                "ui_run_confirmed": true,
+                "single_task_session": true,
+                "internal_project_control_task": true,
+                "session_id": "PSESS-056",
+                "allowed_files": [
+                  "scripts/aictl.py",
+                  "tests/test_pipeline_runner.py",
+                  "tests/test_pipeline_batch.py"
+                ]
+              }
+            },
+            "workflow": {
+              "ok": true,
+              "message": "Workflow completed.",
+              "steps": [
+                {
+                  "id": "resolve",
+                  "status": "ok"
+                },
+                {
+                  "id": "current_set",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_validate",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_graph",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_in_progress",
+                  "status": "ok"
+                },
+                {
+                  "id": "context_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "codex_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "doctor",
+                  "status": "ok"
+                }
+              ],
+              "errors": []
+            },
+            "codex_adapter_called": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-0E0CEBC5E72B"
+          ]
+        },
+        {
+          "phase": "execute",
+          "status": "passed",
+          "reason": "Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0)",
+          "next_action": "Run pipeline phase collect-report.",
+          "artifacts": {
+            "session_id": "PSESS-056",
+            "task_id": "TASK-185",
+            "policy": "supervised_executable_local_commit_1h_auto_change",
+            "prepare_artifacts": {
+              "task_id": "TASK-185",
+              "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+              "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "c0eb6d14643a4096e6ea08c8f503737c2485ffffa1e3428c90cfd3fb85e8e48d"
+            },
+            "token_budget": {
+              "status": "pass",
+              "code": "TOKEN_BUDGET_PASS",
+              "reason": "within_token_budget",
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "c0eb6d14643a4096e6ea08c8f503737c2485ffffa1e3428c90cfd3fb85e8e48d",
+              "prompt_bytes": 3673,
+              "prompt_tokens": 919,
+              "context_bytes": 0,
+              "context_tokens": 0,
+              "token_count_strategy": "local_byte_estimate",
+              "token_count_estimated": true,
+              "token_count_unavailable": false,
+              "token_count_unavailable_reason": "",
+              "model_context_limit": 32000,
+              "max_context_tokens": 24000,
+              "reserved_output_tokens": 0,
+              "min_remaining_tokens": 6000,
+              "remaining_tokens": 31081,
+              "context_requires_compact_or_split": false,
+              "context_requirement_reasons": [],
+              "context_pack": {}
+            },
+            "codex_adapter_called": true,
+            "execute_started_at": "2026-06-26T07:47:33Z",
+            "execute_finished_at": "2026-06-26T07:55:07Z",
+            "before_report_id": "",
+            "after_report_id": "RPT-034",
+            "report_id": "RPT-034",
+            "execute_evidence": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 454.102188,
+              "stdout_ref": "captured:stdout:sha256:f67977f50c947c996cd21b095b9d8f38bbf963bee2f089fe0baa8bf82bb914f4",
+              "stderr_ref": "captured:stderr:sha256:c20106601db0ed1de8a6e341c510a261a4e16e5c24a986f283456d2254fd625e",
+              "stdout_snippet": "Active Role: Codex Executor  \nActive Stage: [CODEX] task execution  \nActive Document: TASK-185 / PIPEF-104  \nExpected Result: `ui run --auto-close-note` implemented and verified.\n\nImplemented `--auto-close-note` for `python scripts/aictl.py ui run`, wired it into `create_session(auto_close_note=...)`, and added focused UI-run tests for missing, present, and non-auto-close behavior. Missing auto-close notes now stop through the session-creation guard before preflight or pipeline execution.\n\nVerified with focused unittest cases, `ui run --help`, delegated session guard tests, and `git diff --check` for touched files. I did not edit `tests/test_pipeline_batch.py`. The worktree already had unrelated dirty protected `AI_PROJECT/**` files and `ai_project_ctl/pipeline/session.py`; I left them unchanged.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \"Added owner-supplied --auto-close-note support to aictl ui run, passed it into pipeline session creation, and covered missing, present, and non-auto-close UI-run behavior with focused tests.\",\n  \"notes\": [\n    \"Focused UI-run and session guard tests passed.\",\n    \"ui run --help now shows --auto-close-note.\"\n  ],\n  \"warni\n[truncated: 1388 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02e6-0e69-7d12-8d1b-587f89b99d7a\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor  \nActive Stage: [CODEX] task execution  \nActive Document: TASK-185 / PIPEF-104 prompt package  \nExpected Result: Implement bounded `ui run --auto-close-note` handling, verify focused tests, and report without self-approval.\n\nUsing `documentation-navigation`, `clarification-gate`, and `project-control-gateway` because this is an AI Development System bounded execution task that touches project-control tooling. I’m also loading the required coding-task instructions before inspecting the implementation.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nI’m reading the repo’s mandatory AI-system docs and the three applicable skill instructions now. After that I’ll inspect only the allowed implementation and test \n[truncated: 775136 bytes total]",
+              "stdout_bytes": 1388,
+              "stderr_bytes": 779557,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-056/TASK-185-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1388,
+                  "bytes": 1388
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-056/TASK-185-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 779557,
+                  "bytes": 779557
+                }
+              },
+              "report_ids": [
+                "RPT-034"
+              ],
+              "report_required": true,
+              "started_at": "2026-06-26T07:47:33Z",
+              "finished_at": "2026-06-26T07:55:07Z",
+              "before_report_id": "",
+              "after_report_id": "RPT-034",
+              "report_id": "RPT-034"
+            },
+            "runtime_logs": {
+              "stdout": {
+                "path": "AI_PROJECT/logs/codex/PSESS-056/TASK-185-stdout.log",
+                "start_offset": 0,
+                "end_offset": 1388,
+                "bytes": 1388
+              },
+              "stderr": {
+                "path": "AI_PROJECT/logs/codex/PSESS-056/TASK-185-stderr.log",
+                "start_offset": 0,
+                "end_offset": 779557,
+                "bytes": 779557
+              }
+            },
+            "adapter": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "mode": "local_command",
+              "started_at": "2026-06-26T07:47:33Z",
+              "finished_at": "2026-06-26T07:55:07Z",
+              "duration_sec": 454.102188,
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "c0eb6d14643a4096e6ea08c8f503737c2485ffffa1e3428c90cfd3fb85e8e48d",
+              "prompt_transport": "stdin",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "timeout_sec": 3600,
+              "timed_out": false,
+              "returncode": 0,
+              "stdout_ref": "captured:stdout:sha256:f67977f50c947c996cd21b095b9d8f38bbf963bee2f089fe0baa8bf82bb914f4",
+              "stderr_ref": "captured:stderr:sha256:c20106601db0ed1de8a6e341c510a261a4e16e5c24a986f283456d2254fd625e",
+              "stdout_snippet": "Active Role: Codex Executor  \nActive Stage: [CODEX] task execution  \nActive Document: TASK-185 / PIPEF-104  \nExpected Result: `ui run --auto-close-note` implemented and verified.\n\nImplemented `--auto-close-note` for `python scripts/aictl.py ui run`, wired it into `create_session(auto_close_note=...)`, and added focused UI-run tests for missing, present, and non-auto-close behavior. Missing auto-close notes now stop through the session-creation guard before preflight or pipeline execution.\n\nVerified with focused unittest cases, `ui run --help`, delegated session guard tests, and `git diff --check` for touched files. I did not edit `tests/test_pipeline_batch.py`. The worktree already had unrelated dirty protected `AI_PROJECT/**` files and `ai_project_ctl/pipeline/session.py`; I left them unchanged.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \"Added owner-supplied --auto-close-note support to aictl ui run, passed it into pipeline session creation, and covered missing, present, and non-auto-close UI-run behavior with focused tests.\",\n  \"notes\": [\n    \"Focused UI-run and session guard tests passed.\",\n    \"ui run --help now shows --auto-close-note.\"\n  ],\n  \"warni\n[truncated: 1388 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02e6-0e69-7d12-8d1b-587f89b99d7a\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor  \nActive Stage: [CODEX] task execution  \nActive Document: TASK-185 / PIPEF-104 prompt package  \nExpected Result: Implement bounded `ui run --auto-close-note` handling, verify focused tests, and report without self-approval.\n\nUsing `documentation-navigation`, `clarification-gate`, and `project-control-gateway` because this is an AI Development System bounded execution task that touches project-control tooling. I’m also loading the required coding-task instructions before inspecting the implementation.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nI’m reading the repo’s mandatory AI-system docs and the three applicable skill instructions now. After that I’ll inspect only the allowed implementation and test \n[truncated: 775136 bytes total]",
+              "stdout_bytes": 1388,
+              "stderr_bytes": 779557,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-056/TASK-185-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1388,
+                  "bytes": 1388
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-056/TASK-185-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 779557,
+                  "bytes": 779557
+                }
+              },
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "RPT-034",
+              "report_id": "RPT-034",
+              "report_parse_code": "CODEX_SUMMARY_PARSE_OK",
+              "report_parse_issue": {},
+              "report_submission_error": "",
+              "report_builder_evidence": {
+                "builder": "build_task_report_payload",
+                "source_file": "captured:stdout:sha256:f67977f50c947c996cd21b095b9d8f38bbf963bee2f089fe0baa8bf82bb914f4",
+                "task_id": "TASK-185",
+                "task_ref": "PIPEF-104",
+                "policy_evidence_keys": [
+                  "codex_adapter_gate",
+                  "token_budget_gate"
+                ],
+                "check_names": [
+                  "codex_adapter",
+                  "token_budget_gate",
+                  "codex_adapter_gate"
+                ],
+                "check_results": [
+                  "pass",
+                  "pass",
+                  "pass"
+                ],
+                "changed_files_count": 0,
+                "generated_files_count": 0,
+                "warning_count": 1,
+                "blocker_count": 0,
+                "built_report_id": "RPT-034"
+              },
+              "report_instruction": "In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-185 --file <REPORT.json> --confirm"
+            },
+            "adapter_summary": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 454.102188,
+              "stdout_ref": "captured:stdout:sha256:f67977f50c947c996cd21b095b9d8f38bbf963bee2f089fe0baa8bf82bb914f4",
+              "stderr_ref": "captured:stderr:sha256:c20106601db0ed1de8a6e341c510a261a4e16e5c24a986f283456d2254fd625e",
+              "stdout_snippet": "Active Role: Codex Executor  \nActive Stage: [CODEX] task execution  \nActive Document: TASK-185 / PIPEF-104  \nExpected Result: `ui run --auto-close-note` implemented and verified.\n\nImplemented `--auto-close-note` for `python scripts/aictl.py ui run`, wired it into `create_session(auto_close_note=...)`, and added focused UI-run tests for missing, present, and non-auto-close behavior. Missing auto-close notes now stop through the session-creation guard before preflight or pipeline execution.\n\nVerified with focused unittest cases, `ui run --help`, delegated session guard tests, and `git diff --check` for touched files. I did not edit `tests/test_pipeline_batch.py`. The worktree already had unrelated dirty protected `AI_PROJECT/**` files and `ai_project_ctl/pipeline/session.py`; I left them unchanged.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \"Added owner-supplied --auto-close-note support to aictl ui run, passed it into pipeline session creation, and covered missing, present, and non-auto-close UI-run behavior with focused tests.\",\n  \"notes\": [\n    \"Focused UI-run and session guard tests passed.\",\n    \"ui run --help now shows --auto-close-note.\"\n  ],\n  \"warni\n[truncated: 1388 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02e6-0e69-7d12-8d1b-587f89b99d7a\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor  \nActive Stage: [CODEX] task execution  \nActive Document: TASK-185 / PIPEF-104 prompt package  \nExpected Result: Implement bounded `ui run --auto-close-note` handling, verify focused tests, and report without self-approval.\n\nUsing `documentation-navigation`, `clarification-gate`, and `project-control-gateway` because this is an AI Development System bounded execution task that touches project-control tooling. I’m also loading the required coding-task instructions before inspecting the implementation.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nI’m reading the repo’s mandatory AI-system docs and the three applicable skill instructions now. After that I’ll inspect only the allowed implementation and test \n[truncated: 775136 bytes total]",
+              "stdout_bytes": 1388,
+              "stderr_bytes": 779557,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-056/TASK-185-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1388,
+                  "bytes": 1388
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-056/TASK-185-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 779557,
+                  "bytes": 779557
+                }
+              },
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "RPT-034",
+              "report_id": "RPT-034",
+              "report_ids": [
+                "RPT-034"
+              ]
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-1B2FAF63C4A9",
+            "EVT-4531CC6C854A"
+          ]
+        },
+        {
+          "phase": "collect_report",
+          "status": "passed",
+          "reason": "Structured execution report collected for selected task (freshness_basis=report_id).",
+          "next_action": "Run pipeline phase verify.",
+          "artifacts": {
+            "session_id": "PSESS-056",
+            "task_id": "TASK-185",
+            "report_id": "RPT-034",
+            "report_task_id": "TASK-185",
+            "expected_task_id": "TASK-185",
+            "selected_task_ref": "",
+            "record_task_id": "TASK-185",
+            "record_task_ref": "PIPEF-104",
+            "observed_report_task_id": "TASK-185",
+            "structured_report_task_id": "TASK-185",
+            "structured_report_task_ref": "PIPEF-104",
+            "reported_task_id": "TASK-185",
+            "reported_task_ref": "PIPEF-104",
+            "submitted_at": "2026-06-26T07:55:07Z",
+            "submitted_by": "codex",
+            "source_file": "captured:stdout:sha256:f67977f50c947c996cd21b095b9d8f38bbf963bee2f089fe0baa8bf82bb914f4",
+            "report_found": true,
+            "freshness": {
+              "fresh": true,
+              "basis": "report_id",
+              "reason": "Report id matches the report produced by execute.",
+              "allow_existing_report": false,
+              "report_id": "RPT-034",
+              "report_submitted_at": "2026-06-26T07:55:07Z",
+              "execute_started_at": "2026-06-26T07:47:33Z",
+              "execute_finished_at": "2026-06-26T07:55:07Z",
+              "execute_before_report_id": "",
+              "execute_after_report_id": "RPT-034",
+              "execute_report_id": "RPT-034",
+              "execute_phase_status": "passed"
+            },
+            "freshness_basis": "report_id",
+            "allow_existing_report": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-844979DC397F"
+          ]
+        },
+        {
+          "phase": "verify",
+          "status": "passed",
+          "reason": "Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy.",
+          "next_action": "Run pipeline phase review.",
+          "artifacts": {
+            "session_id": "PSESS-056",
+            "task_id": "TASK-185",
+            "report_id": "RPT-034",
+            "collected_report_id": "RPT-034",
+            "policy": "supervised_executable_local_commit_1h_auto_change",
+            "collect_report_phase": {
+              "phase": "collect_report",
+              "status": "passed",
+              "reason": "Structured execution report collected for selected task (freshness_basis=report_id).",
+              "report_id": "RPT-034",
+              "task_id": "TASK-185"
+            },
+            "report_gate_status": "warn",
+            "report_gate_code": "CODEX_REPORT_WARN",
+            "report_gate": {
+              "status": "warn",
+              "code": "CODEX_REPORT_WARN",
+              "reason": "Report contains warning(s): Pre-existing dirty project-control files and ai_project_ctl/pipeline/session.py were present before this task and were not modified by this task.",
+              "report_id": "RPT-034",
+              "task_id": "TASK-185",
+              "issues": [],
+              "warnings": [
+                {
+                  "code": "CODEX_REPORT_WARN",
+                  "message": "Report contains warning(s): Pre-existing dirty project-control files and ai_project_ctl/pipeline/session.py were present before this task and were not modified by this task.",
+                  "path": "warnings"
+                }
+              ],
+              "changed_files": [],
+              "generated_files": [],
+              "token_usage": {
+                "completion_tokens": 0,
+                "context_tokens": 0,
+                "max_context_tokens": 24000,
+                "min_remaining_tokens": 6000,
+                "model_context_limit": 32000,
+                "output_tokens": 0,
+                "prompt_tokens": 919,
+                "remaining_tokens": 31081,
+                "reserved_output_tokens": 0,
+                "total_tokens": 0,
+                "token_count_estimated": true,
+                "token_count_unavailable": false,
+                "token_count_strategy": "local_byte_estimate",
+                "token_count_unavailable_reason": ""
+              },
+              "checks": [
+                {
+                  "name": "codex_adapter",
+                  "command": "codex exec --sandbox danger-full-access",
+                  "result": "pass",
+                  "duration_sec": 454.069916,
+                  "blocking": true,
+                  "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+                },
+                {
+                  "name": "token_budget_gate",
+                  "command": "",
+                  "result": "pass",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "TOKEN_BUDGET_PASS within_token_budget"
+                },
+                {
+                  "name": "codex_adapter_gate",
+                  "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+                  "result": "pass",
+                  "duration_sec": 454.069916,
+                  "blocking": true,
+                  "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+                }
+              ]
+            },
+            "report_warning_policy": {
+              "allow_report_warnings": true,
+              "block_report_warnings": false,
+              "decision": "allowed",
+              "policy": "report_gate_warnings_allowed_by_policy",
+              "reason": "policy.verify.allow_report_warnings is true",
+              "report_gate_status": "warn",
+              "report_gate_code": "CODEX_REPORT_WARN"
+            },
+            "warn_policy": "report_gate_warnings_allowed_by_policy",
+            "git_diff_gates_policy": {
+              "run_git_diff_gates": false,
+              "mode": "relaxed",
+              "reason": "policy.verify.run_git_diff_gates is false"
+            },
+            "skipped_gates": [
+              {
+                "name": "git_diff_gate",
+                "status": "skipped",
+                "code": "GIT_DIFF_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              {
+                "name": "protected_files_gate",
+                "status": "skipped",
+                "code": "PROTECTED_FILES_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              {
+                "name": "allowed_files_gate",
+                "status": "skipped",
+                "code": "ALLOWED_FILES_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              }
+            ],
+            "verify_evidence": {
+              "schema_version": 1,
+              "phase": "verify",
+              "status": "passed",
+              "task_id": "TASK-185",
+              "report_id": "RPT-034",
+              "blocked_by": "",
+              "report_gate": {
+                "status": "warn",
+                "code": "CODEX_REPORT_WARN",
+                "reason": "Report contains warning(s): Pre-existing dirty project-control files and ai_project_ctl/pipeline/session.py were present before this task and were not modified by this task.",
+                "report_id": "RPT-034",
+                "task_id": "TASK-185",
+                "changed_files": [],
+                "generated_files": [],
+                "issues": [],
+                "warnings": [
+                  {
+                    "code": "CODEX_REPORT_WARN",
+                    "message": "Report contains warning(s): Pre-existing dirty project-control files and ai_project_ctl/pipeline/session.py were present before this task and were not modified by this task.",
+                    "path": "warnings"
+                  }
+                ],
+                "checks": [
+                  {
+                    "name": "codex_adapter",
+                    "result": "pass",
+                    "blocking": true,
+                    "command": "codex exec --sandbox danger-full-access",
+                    "duration_sec": 454.069916
+                  },
+                  {
+                    "name": "token_budget_gate",
+                    "result": "pass",
+                    "blocking": true
+                  },
+                  {
+                    "name": "codex_adapter_gate",
+                    "result": "pass",
+                    "blocking": true,
+                    "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+                    "duration_sec": 454.069916
+                  }
+                ]
+              },
+              "git_diff_gates_policy": {
+                "run_git_diff_gates": false,
+                "mode": "relaxed",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              "report_warning_policy": {
+                "allow_report_warnings": true,
+                "block_report_warnings": false,
+                "decision": "allowed",
+                "policy": "report_gate_warnings_allowed_by_policy",
+                "reason": "policy.verify.allow_report_warnings is true",
+                "report_gate_status": "warn",
+                "report_gate_code": "CODEX_REPORT_WARN"
+              },
+              "skipped_gates": [
+                {
+                  "name": "git_diff_gate",
+                  "status": "skipped",
+                  "code": "GIT_DIFF_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                },
+                {
+                  "name": "protected_files_gate",
+                  "status": "skipped",
+                  "code": "PROTECTED_FILES_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                },
+                {
+                  "name": "allowed_files_gate",
+                  "status": "skipped",
+                  "code": "ALLOWED_FILES_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                }
+              ]
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-CF8681017346"
+          ]
+        }
+      ],
+      "current_step": "execute",
+      "current_step_status": "stopped",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-A363519FDEF6",
+        "EVT-438BEDAD6430",
+        "EVT-0E0CEBC5E72B",
+        "EVT-1B2FAF63C4A9",
+        "EVT-4531CC6C854A",
+        "EVT-844979DC397F",
+        "EVT-CF8681017346",
+        "EVT-F78C59C1A80D"
+      ],
+      "stop_reason": "MAX_STEPS_REACHED: Batch runner reached max_steps 5.",
+      "created_at": "2026-06-26T07:47:25Z",
+      "updated_at": "2026-06-26T07:55:09Z",
+      "started_at": "2026-06-26T07:47:26Z",
+      "finished_at": "2026-06-26T07:55:09Z"
+    },
+    {
+      "id": "PSESS-057",
+      "status": "stopped",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-105"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false,
+        "created_by_command": "ui.run",
+        "ui_run_confirmed": true,
+        "allow_internal_change_gate_bypass": true
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit_1h_auto_change",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": true,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": true,
+          "owner_approval_note": "Auto-approved by Human Owner for selected UI run"
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 3600,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": false,
+          "required_codex_decision": "none"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        },
+        "verify": {
+          "run_git_diff_gates": false,
+          "block_report_warnings": false,
+          "allow_report_warnings": true
+        }
+      },
+      "current_task_id": "TASK-186",
+      "current_task_ref": "",
+      "current_phase": "verify",
+      "current_phase_status": "passed",
+      "blocked_by": "",
+      "next_action": "Run pipeline phase review.",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-057",
+            "next_task": {
+              "id": "TASK-186",
+              "ref": "PIPEF-105",
+              "uid": "tsk_870cdc06115c",
+              "legacy_id": "TASK-186",
+              "title": "Expose auto-close note in Web UI run",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-105"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-186",
+                  "ref": "PIPEF-105",
+                  "uid": "tsk_870cdc06115c",
+                  "legacy_id": "TASK-186",
+                  "title": "Expose auto-close note in Web UI run",
+                  "status": "planned",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-105"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-57B97AD62310"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "passed",
+          "reason": "Task preparation rebuilt artifacts; Codex execution has not been started.",
+          "next_action": "Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 a3cc6dd497169647fc639c131285fa26297a02d81d2ea06225d032a8f6f8511d).",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-057",
+            "task_id": "TASK-186",
+            "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+            "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+            "prompt_sha256": "a3cc6dd497169647fc639c131285fa26297a02d81d2ea06225d032a8f6f8511d",
+            "artifact_freshness": {
+              "status": "rebuilt",
+              "reason": "codex_status_not_ready",
+              "rebuild_required_before_prepare": true,
+              "fresh_before_prepare": false
+            },
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-186",
+              "ref": "PIPEF-105",
+              "uid": "tsk_870cdc06115c",
+              "legacy_id": "TASK-186",
+              "title": "Expose auto-close note in Web UI run",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 105,
+              "local_seq": 105,
+              "selected_ref": "PIPEF-105",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "scope": "selected_task",
+              "selected_task_id": "TASK-186",
+              "selected_task_ref": "PIPEF-105",
+              "inspected_task_ids": [
+                "TASK-186"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-186",
+                  "task_ref": "PIPEF-105",
+                  "change_ids": []
+                }
+              ],
+              "linked_change_ids": [],
+              "change_ids": [],
+              "bypassed": true,
+              "bypass": {
+                "setting": "allow_internal_change_gate_bypass",
+                "enabled": true,
+                "reason": "confirmed_ui_internal_project_control_task",
+                "created_by_command": "ui.run",
+                "ui_run_confirmed": true,
+                "single_task_session": true,
+                "internal_project_control_task": true,
+                "session_id": "PSESS-057",
+                "allowed_files": [
+                  "ai_project_ctl/web/server.py",
+                  "ai_project_ctl/web/actions.py",
+                  "tests/test_web_control_center.py"
+                ]
+              }
+            },
+            "workflow": {
+              "ok": true,
+              "message": "Workflow completed.",
+              "steps": [
+                {
+                  "id": "resolve",
+                  "status": "ok"
+                },
+                {
+                  "id": "current_set",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_validate",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_graph",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_in_progress",
+                  "status": "ok"
+                },
+                {
+                  "id": "context_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "codex_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "doctor",
+                  "status": "ok"
+                }
+              ],
+              "errors": []
+            },
+            "codex_adapter_called": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-A8EFFAEEB4DD"
+          ]
+        },
+        {
+          "phase": "execute",
+          "status": "passed",
+          "reason": "Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0)",
+          "next_action": "Run pipeline phase collect-report.",
+          "artifacts": {
+            "session_id": "PSESS-057",
+            "task_id": "TASK-186",
+            "policy": "supervised_executable_local_commit_1h_auto_change",
+            "prepare_artifacts": {
+              "task_id": "TASK-186",
+              "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+              "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "a3cc6dd497169647fc639c131285fa26297a02d81d2ea06225d032a8f6f8511d"
+            },
+            "token_budget": {
+              "status": "pass",
+              "code": "TOKEN_BUDGET_PASS",
+              "reason": "within_token_budget",
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "a3cc6dd497169647fc639c131285fa26297a02d81d2ea06225d032a8f6f8511d",
+              "prompt_bytes": 3798,
+              "prompt_tokens": 950,
+              "context_bytes": 0,
+              "context_tokens": 0,
+              "token_count_strategy": "local_byte_estimate",
+              "token_count_estimated": true,
+              "token_count_unavailable": false,
+              "token_count_unavailable_reason": "",
+              "model_context_limit": 32000,
+              "max_context_tokens": 24000,
+              "reserved_output_tokens": 0,
+              "min_remaining_tokens": 6000,
+              "remaining_tokens": 31050,
+              "context_requires_compact_or_split": false,
+              "context_requirement_reasons": [],
+              "context_pack": {}
+            },
+            "codex_adapter_called": true,
+            "execute_started_at": "2026-06-26T07:56:09Z",
+            "execute_finished_at": "2026-06-26T08:03:59Z",
+            "before_report_id": "",
+            "after_report_id": "RPT-035",
+            "report_id": "RPT-035",
+            "execute_evidence": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 469.87475,
+              "stdout_ref": "captured:stdout:sha256:e760083b820d0f0475f40edfde6abaa8e8f2a93b155ae041e5bce32c89c02c57",
+              "stderr_ref": "captured:stderr:sha256:10e6db00204f1e4ec51243da372ac3fcd7ab78dfd5099832dfd9992cb2695afd",
+              "stdout_snippet": "Active Role: Codex Executor\nActive Stage: TASK-186 execution\nActive Document: Codex Prompt Package / TASK-186\nExpected Result: Bounded implementation completed, not self-approved.\n\nImplemented within the allowed files. The selected-task Web action now forwards `auto_close_note` into session creation and shows it in delegated command metadata when supplied. The Actions page and row-level Run control now expose an `Auto-close Owner Note` input. Regression coverage now verifies missing-note failure before execution and present-note storage in the session policy snapshot.\n\nVerification passed:\n`python -m unittest tests.test_web_control_center` — 110 tests\n`git diff --check -- ai_project_ctl/web/actions.py ai_project_ctl/web/server.py tests/test_web_control_center.py`\n\nExisting dirty files outside this task’s allowed files were present in the worktree and left untouched.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \"Added selected-task Web Control Center auto-close owner note input, forwarded auto_close_note into UI-selected session creation, and covered missing-note and present-note selected-task run behavior.\",\n  \"notes\": [\n    \"The owner note is stored in \n[truncated: 1494 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02ed-f84d-7c32-8555-d9f9c0c46d26\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: TASK-186 execution\nActive Document: Codex Prompt Package / TASK-186\nExpected Result: Implement the bounded Web Control Center change within allowed files, run focused checks, and report without self-approval.\n\nI’ll load the required AI Development System docs and the coding-task instructions first, then inspect only the allowed implementation and test files before editing.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\ncodex\nI’m using `documentation-navigation` and `project-control-gateway` because this is bounded execution inside AI_Development_System and touches project-control tooling. I’ll keep `clarification-gate` in reserve unless inspection reveals an actual blocker.\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nI’ve activated the\n[truncated: 790005 bytes total]",
+              "stdout_bytes": 1494,
+              "stderr_bytes": 793779,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-057/TASK-186-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1494,
+                  "bytes": 1494
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-057/TASK-186-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 793779,
+                  "bytes": 793779
+                }
+              },
+              "report_ids": [
+                "RPT-035"
+              ],
+              "report_required": true,
+              "started_at": "2026-06-26T07:56:09Z",
+              "finished_at": "2026-06-26T08:03:59Z",
+              "before_report_id": "",
+              "after_report_id": "RPT-035",
+              "report_id": "RPT-035"
+            },
+            "runtime_logs": {
+              "stdout": {
+                "path": "AI_PROJECT/logs/codex/PSESS-057/TASK-186-stdout.log",
+                "start_offset": 0,
+                "end_offset": 1494,
+                "bytes": 1494
+              },
+              "stderr": {
+                "path": "AI_PROJECT/logs/codex/PSESS-057/TASK-186-stderr.log",
+                "start_offset": 0,
+                "end_offset": 793779,
+                "bytes": 793779
+              }
+            },
+            "adapter": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "mode": "local_command",
+              "started_at": "2026-06-26T07:56:09Z",
+              "finished_at": "2026-06-26T08:03:59Z",
+              "duration_sec": 469.87475,
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "a3cc6dd497169647fc639c131285fa26297a02d81d2ea06225d032a8f6f8511d",
+              "prompt_transport": "stdin",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "timeout_sec": 3600,
+              "timed_out": false,
+              "returncode": 0,
+              "stdout_ref": "captured:stdout:sha256:e760083b820d0f0475f40edfde6abaa8e8f2a93b155ae041e5bce32c89c02c57",
+              "stderr_ref": "captured:stderr:sha256:10e6db00204f1e4ec51243da372ac3fcd7ab78dfd5099832dfd9992cb2695afd",
+              "stdout_snippet": "Active Role: Codex Executor\nActive Stage: TASK-186 execution\nActive Document: Codex Prompt Package / TASK-186\nExpected Result: Bounded implementation completed, not self-approved.\n\nImplemented within the allowed files. The selected-task Web action now forwards `auto_close_note` into session creation and shows it in delegated command metadata when supplied. The Actions page and row-level Run control now expose an `Auto-close Owner Note` input. Regression coverage now verifies missing-note failure before execution and present-note storage in the session policy snapshot.\n\nVerification passed:\n`python -m unittest tests.test_web_control_center` — 110 tests\n`git diff --check -- ai_project_ctl/web/actions.py ai_project_ctl/web/server.py tests/test_web_control_center.py`\n\nExisting dirty files outside this task’s allowed files were present in the worktree and left untouched.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \"Added selected-task Web Control Center auto-close owner note input, forwarded auto_close_note into UI-selected session creation, and covered missing-note and present-note selected-task run behavior.\",\n  \"notes\": [\n    \"The owner note is stored in \n[truncated: 1494 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02ed-f84d-7c32-8555-d9f9c0c46d26\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: TASK-186 execution\nActive Document: Codex Prompt Package / TASK-186\nExpected Result: Implement the bounded Web Control Center change within allowed files, run focused checks, and report without self-approval.\n\nI’ll load the required AI Development System docs and the coding-task instructions first, then inspect only the allowed implementation and test files before editing.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\ncodex\nI’m using `documentation-navigation` and `project-control-gateway` because this is bounded execution inside AI_Development_System and touches project-control tooling. I’ll keep `clarification-gate` in reserve unless inspection reveals an actual blocker.\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nI’ve activated the\n[truncated: 790005 bytes total]",
+              "stdout_bytes": 1494,
+              "stderr_bytes": 793779,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-057/TASK-186-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1494,
+                  "bytes": 1494
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-057/TASK-186-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 793779,
+                  "bytes": 793779
+                }
+              },
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "RPT-035",
+              "report_id": "RPT-035",
+              "report_parse_code": "CODEX_SUMMARY_PARSE_OK",
+              "report_parse_issue": {},
+              "report_submission_error": "",
+              "report_builder_evidence": {
+                "builder": "build_task_report_payload",
+                "source_file": "captured:stdout:sha256:e760083b820d0f0475f40edfde6abaa8e8f2a93b155ae041e5bce32c89c02c57",
+                "task_id": "TASK-186",
+                "task_ref": "PIPEF-105",
+                "policy_evidence_keys": [
+                  "codex_adapter_gate",
+                  "token_budget_gate"
+                ],
+                "check_names": [
+                  "codex_adapter",
+                  "token_budget_gate",
+                  "codex_adapter_gate"
+                ],
+                "check_results": [
+                  "pass",
+                  "pass",
+                  "pass"
+                ],
+                "changed_files_count": 0,
+                "generated_files_count": 0,
+                "warning_count": 1,
+                "blocker_count": 0,
+                "built_report_id": "RPT-035"
+              },
+              "report_instruction": "In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-186 --file <REPORT.json> --confirm"
+            },
+            "adapter_summary": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 469.87475,
+              "stdout_ref": "captured:stdout:sha256:e760083b820d0f0475f40edfde6abaa8e8f2a93b155ae041e5bce32c89c02c57",
+              "stderr_ref": "captured:stderr:sha256:10e6db00204f1e4ec51243da372ac3fcd7ab78dfd5099832dfd9992cb2695afd",
+              "stdout_snippet": "Active Role: Codex Executor\nActive Stage: TASK-186 execution\nActive Document: Codex Prompt Package / TASK-186\nExpected Result: Bounded implementation completed, not self-approved.\n\nImplemented within the allowed files. The selected-task Web action now forwards `auto_close_note` into session creation and shows it in delegated command metadata when supplied. The Actions page and row-level Run control now expose an `Auto-close Owner Note` input. Regression coverage now verifies missing-note failure before execution and present-note storage in the session policy snapshot.\n\nVerification passed:\n`python -m unittest tests.test_web_control_center` — 110 tests\n`git diff --check -- ai_project_ctl/web/actions.py ai_project_ctl/web/server.py tests/test_web_control_center.py`\n\nExisting dirty files outside this task’s allowed files were present in the worktree and left untouched.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \"Added selected-task Web Control Center auto-close owner note input, forwarded auto_close_note into UI-selected session creation, and covered missing-note and present-note selected-task run behavior.\",\n  \"notes\": [\n    \"The owner note is stored in \n[truncated: 1494 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02ed-f84d-7c32-8555-d9f9c0c46d26\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor\nActive Stage: TASK-186 execution\nActive Document: Codex Prompt Package / TASK-186\nExpected Result: Implement the bounded Web Control Center change within allowed files, run focused checks, and report without self-approval.\n\nI’ll load the required AI Development System docs and the coding-task instructions first, then inspect only the allowed implementation and test files before editing.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\ncodex\nI’m using `documentation-navigation` and `project-control-gateway` because this is bounded execution inside AI_Development_System and touches project-control tooling. I’ll keep `clarification-gate` in reserve unless inspection reveals an actual blocker.\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nI’ve activated the\n[truncated: 790005 bytes total]",
+              "stdout_bytes": 1494,
+              "stderr_bytes": 793779,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-057/TASK-186-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1494,
+                  "bytes": 1494
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-057/TASK-186-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 793779,
+                  "bytes": 793779
+                }
+              },
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "RPT-035",
+              "report_id": "RPT-035",
+              "report_ids": [
+                "RPT-035"
+              ]
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-5622807759D7",
+            "EVT-0795A7BFB37A"
+          ]
+        },
+        {
+          "phase": "collect_report",
+          "status": "passed",
+          "reason": "Structured execution report collected for selected task (freshness_basis=report_id).",
+          "next_action": "Run pipeline phase verify.",
+          "artifacts": {
+            "session_id": "PSESS-057",
+            "task_id": "TASK-186",
+            "report_id": "RPT-035",
+            "report_task_id": "TASK-186",
+            "expected_task_id": "TASK-186",
+            "selected_task_ref": "",
+            "record_task_id": "TASK-186",
+            "record_task_ref": "PIPEF-105",
+            "observed_report_task_id": "TASK-186",
+            "structured_report_task_id": "TASK-186",
+            "structured_report_task_ref": "PIPEF-105",
+            "reported_task_id": "TASK-186",
+            "reported_task_ref": "PIPEF-105",
+            "submitted_at": "2026-06-26T08:03:59Z",
+            "submitted_by": "codex",
+            "source_file": "captured:stdout:sha256:e760083b820d0f0475f40edfde6abaa8e8f2a93b155ae041e5bce32c89c02c57",
+            "report_found": true,
+            "freshness": {
+              "fresh": true,
+              "basis": "report_id",
+              "reason": "Report id matches the report produced by execute.",
+              "allow_existing_report": false,
+              "report_id": "RPT-035",
+              "report_submitted_at": "2026-06-26T08:03:59Z",
+              "execute_started_at": "2026-06-26T07:56:09Z",
+              "execute_finished_at": "2026-06-26T08:03:59Z",
+              "execute_before_report_id": "",
+              "execute_after_report_id": "RPT-035",
+              "execute_report_id": "RPT-035",
+              "execute_phase_status": "passed"
+            },
+            "freshness_basis": "report_id",
+            "allow_existing_report": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-0A008B57F528"
+          ]
+        },
+        {
+          "phase": "verify",
+          "status": "passed",
+          "reason": "Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy.",
+          "next_action": "Run pipeline phase review.",
+          "artifacts": {
+            "session_id": "PSESS-057",
+            "task_id": "TASK-186",
+            "report_id": "RPT-035",
+            "collected_report_id": "RPT-035",
+            "policy": "supervised_executable_local_commit_1h_auto_change",
+            "collect_report_phase": {
+              "phase": "collect_report",
+              "status": "passed",
+              "reason": "Structured execution report collected for selected task (freshness_basis=report_id).",
+              "report_id": "RPT-035",
+              "task_id": "TASK-186"
+            },
+            "report_gate_status": "warn",
+            "report_gate_code": "CODEX_REPORT_WARN",
+            "report_gate": {
+              "status": "warn",
+              "code": "CODEX_REPORT_WARN",
+              "reason": "Report contains warning(s): The worktree had pre-existing unrelated modified files, including protected project-control state/generated files; they were not edited for this task.",
+              "report_id": "RPT-035",
+              "task_id": "TASK-186",
+              "issues": [],
+              "warnings": [
+                {
+                  "code": "CODEX_REPORT_WARN",
+                  "message": "Report contains warning(s): The worktree had pre-existing unrelated modified files, including protected project-control state/generated files; they were not edited for this task.",
+                  "path": "warnings"
+                }
+              ],
+              "changed_files": [],
+              "generated_files": [],
+              "token_usage": {
+                "completion_tokens": 0,
+                "context_tokens": 0,
+                "max_context_tokens": 24000,
+                "min_remaining_tokens": 6000,
+                "model_context_limit": 32000,
+                "output_tokens": 0,
+                "prompt_tokens": 950,
+                "remaining_tokens": 31050,
+                "reserved_output_tokens": 0,
+                "total_tokens": 0,
+                "token_count_estimated": true,
+                "token_count_unavailable": false,
+                "token_count_strategy": "local_byte_estimate",
+                "token_count_unavailable_reason": ""
+              },
+              "checks": [
+                {
+                  "name": "codex_adapter",
+                  "command": "codex exec --sandbox danger-full-access",
+                  "result": "pass",
+                  "duration_sec": 469.840194,
+                  "blocking": true,
+                  "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+                },
+                {
+                  "name": "token_budget_gate",
+                  "command": "",
+                  "result": "pass",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "TOKEN_BUDGET_PASS within_token_budget"
+                },
+                {
+                  "name": "codex_adapter_gate",
+                  "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+                  "result": "pass",
+                  "duration_sec": 469.840194,
+                  "blocking": true,
+                  "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+                }
+              ]
+            },
+            "report_warning_policy": {
+              "allow_report_warnings": true,
+              "block_report_warnings": false,
+              "decision": "allowed",
+              "policy": "report_gate_warnings_allowed_by_policy",
+              "reason": "policy.verify.allow_report_warnings is true",
+              "report_gate_status": "warn",
+              "report_gate_code": "CODEX_REPORT_WARN"
+            },
+            "warn_policy": "report_gate_warnings_allowed_by_policy",
+            "git_diff_gates_policy": {
+              "run_git_diff_gates": false,
+              "mode": "relaxed",
+              "reason": "policy.verify.run_git_diff_gates is false"
+            },
+            "skipped_gates": [
+              {
+                "name": "git_diff_gate",
+                "status": "skipped",
+                "code": "GIT_DIFF_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              {
+                "name": "protected_files_gate",
+                "status": "skipped",
+                "code": "PROTECTED_FILES_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              {
+                "name": "allowed_files_gate",
+                "status": "skipped",
+                "code": "ALLOWED_FILES_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              }
+            ],
+            "verify_evidence": {
+              "schema_version": 1,
+              "phase": "verify",
+              "status": "passed",
+              "task_id": "TASK-186",
+              "report_id": "RPT-035",
+              "blocked_by": "",
+              "report_gate": {
+                "status": "warn",
+                "code": "CODEX_REPORT_WARN",
+                "reason": "Report contains warning(s): The worktree had pre-existing unrelated modified files, including protected project-control state/generated files; they were not edited for this task.",
+                "report_id": "RPT-035",
+                "task_id": "TASK-186",
+                "changed_files": [],
+                "generated_files": [],
+                "issues": [],
+                "warnings": [
+                  {
+                    "code": "CODEX_REPORT_WARN",
+                    "message": "Report contains warning(s): The worktree had pre-existing unrelated modified files, including protected project-control state/generated files; they were not edited for this task.",
+                    "path": "warnings"
+                  }
+                ],
+                "checks": [
+                  {
+                    "name": "codex_adapter",
+                    "result": "pass",
+                    "blocking": true,
+                    "command": "codex exec --sandbox danger-full-access",
+                    "duration_sec": 469.840194
+                  },
+                  {
+                    "name": "token_budget_gate",
+                    "result": "pass",
+                    "blocking": true
+                  },
+                  {
+                    "name": "codex_adapter_gate",
+                    "result": "pass",
+                    "blocking": true,
+                    "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+                    "duration_sec": 469.840194
+                  }
+                ]
+              },
+              "git_diff_gates_policy": {
+                "run_git_diff_gates": false,
+                "mode": "relaxed",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              "report_warning_policy": {
+                "allow_report_warnings": true,
+                "block_report_warnings": false,
+                "decision": "allowed",
+                "policy": "report_gate_warnings_allowed_by_policy",
+                "reason": "policy.verify.allow_report_warnings is true",
+                "report_gate_status": "warn",
+                "report_gate_code": "CODEX_REPORT_WARN"
+              },
+              "skipped_gates": [
+                {
+                  "name": "git_diff_gate",
+                  "status": "skipped",
+                  "code": "GIT_DIFF_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                },
+                {
+                  "name": "protected_files_gate",
+                  "status": "skipped",
+                  "code": "PROTECTED_FILES_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                },
+                {
+                  "name": "allowed_files_gate",
+                  "status": "skipped",
+                  "code": "ALLOWED_FILES_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                }
+              ]
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-85F645DF894F"
+          ]
+        }
+      ],
+      "current_step": "execute",
+      "current_step_status": "stopped",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-4DC74BA0D652",
+        "EVT-57B97AD62310",
+        "EVT-A8EFFAEEB4DD",
+        "EVT-5622807759D7",
+        "EVT-0795A7BFB37A",
+        "EVT-0A008B57F528",
+        "EVT-85F645DF894F",
+        "EVT-528A6A5B5D3E"
+      ],
+      "stop_reason": "MAX_STEPS_REACHED: Batch runner reached max_steps 5.",
+      "created_at": "2026-06-26T07:56:01Z",
+      "updated_at": "2026-06-26T08:04:00Z",
+      "started_at": "2026-06-26T07:56:01Z",
+      "finished_at": "2026-06-26T08:04:00Z"
+    },
+    {
+      "id": "PSESS-058",
+      "status": "stopped",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-106"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false,
+        "created_by_command": "ui.run",
+        "ui_run_confirmed": true,
+        "allow_internal_change_gate_bypass": true
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit_1h_auto_change",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": true,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": true,
+          "owner_approval_note": "Auto-approved by Human Owner for selected UI run"
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 3600,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": false,
+          "required_codex_decision": "none"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        },
+        "verify": {
+          "run_git_diff_gates": false,
+          "block_report_warnings": false,
+          "allow_report_warnings": true
+        }
+      },
+      "current_task_id": "TASK-187",
+      "current_task_ref": "",
+      "current_phase": "verify",
+      "current_phase_status": "passed",
+      "blocked_by": "",
+      "next_action": "Run pipeline phase review.",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-058",
+            "next_task": {
+              "id": "TASK-187",
+              "ref": "PIPEF-106",
+              "uid": "tsk_4dd0cafae529",
+              "legacy_id": "TASK-187",
+              "title": "Cover auto-close owner note close path",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-106"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-187",
+                  "ref": "PIPEF-106",
+                  "uid": "tsk_4dd0cafae529",
+                  "legacy_id": "TASK-187",
+                  "title": "Cover auto-close owner note close path",
+                  "status": "planned",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-106"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-A155036E063B"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "passed",
+          "reason": "Task preparation rebuilt artifacts; Codex execution has not been started.",
+          "next_action": "Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 3bc4af6ad49d81d324b3398907eb29444eddac8222da26a215a015297c23b631).",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-058",
+            "task_id": "TASK-187",
+            "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+            "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+            "prompt_sha256": "3bc4af6ad49d81d324b3398907eb29444eddac8222da26a215a015297c23b631",
+            "artifact_freshness": {
+              "status": "rebuilt",
+              "reason": "codex_status_not_ready",
+              "rebuild_required_before_prepare": true,
+              "fresh_before_prepare": false
+            },
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-187",
+              "ref": "PIPEF-106",
+              "uid": "tsk_4dd0cafae529",
+              "legacy_id": "TASK-187",
+              "title": "Cover auto-close owner note close path",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 106,
+              "local_seq": 106,
+              "selected_ref": "PIPEF-106",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "scope": "selected_task",
+              "selected_task_id": "TASK-187",
+              "selected_task_ref": "PIPEF-106",
+              "inspected_task_ids": [
+                "TASK-187"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-187",
+                  "task_ref": "PIPEF-106",
+                  "change_ids": []
+                }
+              ],
+              "linked_change_ids": [],
+              "change_ids": [],
+              "bypassed": true,
+              "bypass": {
+                "setting": "allow_internal_change_gate_bypass",
+                "enabled": true,
+                "reason": "confirmed_ui_internal_project_control_task",
+                "created_by_command": "ui.run",
+                "ui_run_confirmed": true,
+                "single_task_session": true,
+                "internal_project_control_task": true,
+                "session_id": "PSESS-058",
+                "allowed_files": [
+                  "tests/test_pipeline_e2e.py",
+                  "tests/test_pipeline_runner.py"
+                ]
+              }
+            },
+            "workflow": {
+              "ok": true,
+              "message": "Workflow completed.",
+              "steps": [
+                {
+                  "id": "resolve",
+                  "status": "ok"
+                },
+                {
+                  "id": "current_set",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_validate",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_graph",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_in_progress",
+                  "status": "ok"
+                },
+                {
+                  "id": "context_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "codex_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "doctor",
+                  "status": "ok"
+                }
+              ],
+              "errors": []
+            },
+            "codex_adapter_called": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-74E3C0598DC5"
+          ]
+        },
+        {
+          "phase": "execute",
+          "status": "passed",
+          "reason": "Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0)",
+          "next_action": "Run pipeline phase collect-report.",
+          "artifacts": {
+            "session_id": "PSESS-058",
+            "task_id": "TASK-187",
+            "policy": "supervised_executable_local_commit_1h_auto_change",
+            "prepare_artifacts": {
+              "task_id": "TASK-187",
+              "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+              "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "3bc4af6ad49d81d324b3398907eb29444eddac8222da26a215a015297c23b631"
+            },
+            "token_budget": {
+              "status": "pass",
+              "code": "TOKEN_BUDGET_PASS",
+              "reason": "within_token_budget",
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "3bc4af6ad49d81d324b3398907eb29444eddac8222da26a215a015297c23b631",
+              "prompt_bytes": 3680,
+              "prompt_tokens": 920,
+              "context_bytes": 0,
+              "context_tokens": 0,
+              "token_count_strategy": "local_byte_estimate",
+              "token_count_estimated": true,
+              "token_count_unavailable": false,
+              "token_count_unavailable_reason": "",
+              "model_context_limit": 32000,
+              "max_context_tokens": 24000,
+              "reserved_output_tokens": 0,
+              "min_remaining_tokens": 6000,
+              "remaining_tokens": 31080,
+              "context_requires_compact_or_split": false,
+              "context_requirement_reasons": [],
+              "context_pack": {}
+            },
+            "codex_adapter_called": true,
+            "execute_started_at": "2026-06-26T08:04:44Z",
+            "execute_finished_at": "2026-06-26T08:12:07Z",
+            "before_report_id": "",
+            "after_report_id": "RPT-036",
+            "report_id": "RPT-036",
+            "execute_evidence": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 443.669656,
+              "stdout_ref": "captured:stdout:sha256:0e0a37b09bc01f76ee791c96b6284c6d85e192b7fc91a39910ebddbb07181a7e",
+              "stderr_ref": "captured:stderr:sha256:5af80e813d43509085173573d7754c483c7803717acb4f0c830b7a6c1c5c0142",
+              "stdout_snippet": "Implemented focused close-phase regression coverage in `tests/test_pipeline_runner.py`. The new fixture records valid prior phase evidence and review approval, then verifies missing owner notes block with `CLOSE_OWNER_NOTES_REQUIRED` while present notes reach the close workflow without that blocker.\n\nVerification: focused close-path tests passed. `git diff --check -- tests/test_pipeline_runner.py` passed. A broader `python -m unittest tests.test_pipeline_runner` run still fails in unrelated existing `run_next` queue-preview expectations.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \"Added close_phase regression tests for owner-note auto-close behavior using temp fixture state and mocked close workflow, without real Codex execution or git commits.\",\n  \"notes\": [\n    \"Focused close-path regression tests passed.\",\n    \"Only tests/test_pipeline_runner.py was edited.\"\n  ],\n  \"warnings\": [\n    \"Full tests.test_pipeline_runner currently fails in unrelated existing run_next queue-preview expectations, where stop_code/step assertions are not reached.\"\n  ],\n  \"blockers\": []\n}\n```\n",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02f5-c6d8-7260-881e-fedaa28845ef\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor  \nActive Stage: [CODEX] Task Execution  \nActive Document: TASK-187 / PIPEF-106  \nExpected Result: Focused regression tests proving owner-note close behavior without real Codex execution or real git commits.\n\nUsing `documentation-navigation`, `clarification-gate`, and `project-control-gateway` because this is bounded Codex execution inside the AI Development System repository with project-control constraints. I’ll read the required system docs and task-relevant instructions before touching the allowed test files.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nI’ve activated the project and loaded Serena’s coding instructions. Next I’m reading only the mandated AI-system docs and the task-relevant skill guid\n[truncated: 502110 bytes total]",
+              "stdout_bytes": 1111,
+              "stderr_bytes": 505766,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-058/TASK-187-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1111,
+                  "bytes": 1111
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-058/TASK-187-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 505766,
+                  "bytes": 505766
+                }
+              },
+              "report_ids": [
+                "RPT-036"
+              ],
+              "report_required": true,
+              "started_at": "2026-06-26T08:04:44Z",
+              "finished_at": "2026-06-26T08:12:07Z",
+              "before_report_id": "",
+              "after_report_id": "RPT-036",
+              "report_id": "RPT-036"
+            },
+            "runtime_logs": {
+              "stdout": {
+                "path": "AI_PROJECT/logs/codex/PSESS-058/TASK-187-stdout.log",
+                "start_offset": 0,
+                "end_offset": 1111,
+                "bytes": 1111
+              },
+              "stderr": {
+                "path": "AI_PROJECT/logs/codex/PSESS-058/TASK-187-stderr.log",
+                "start_offset": 0,
+                "end_offset": 505766,
+                "bytes": 505766
+              }
+            },
+            "adapter": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "mode": "local_command",
+              "started_at": "2026-06-26T08:04:44Z",
+              "finished_at": "2026-06-26T08:12:07Z",
+              "duration_sec": 443.669656,
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "3bc4af6ad49d81d324b3398907eb29444eddac8222da26a215a015297c23b631",
+              "prompt_transport": "stdin",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "timeout_sec": 3600,
+              "timed_out": false,
+              "returncode": 0,
+              "stdout_ref": "captured:stdout:sha256:0e0a37b09bc01f76ee791c96b6284c6d85e192b7fc91a39910ebddbb07181a7e",
+              "stderr_ref": "captured:stderr:sha256:5af80e813d43509085173573d7754c483c7803717acb4f0c830b7a6c1c5c0142",
+              "stdout_snippet": "Implemented focused close-phase regression coverage in `tests/test_pipeline_runner.py`. The new fixture records valid prior phase evidence and review approval, then verifies missing owner notes block with `CLOSE_OWNER_NOTES_REQUIRED` while present notes reach the close workflow without that blocker.\n\nVerification: focused close-path tests passed. `git diff --check -- tests/test_pipeline_runner.py` passed. A broader `python -m unittest tests.test_pipeline_runner` run still fails in unrelated existing `run_next` queue-preview expectations.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \"Added close_phase regression tests for owner-note auto-close behavior using temp fixture state and mocked close workflow, without real Codex execution or git commits.\",\n  \"notes\": [\n    \"Focused close-path regression tests passed.\",\n    \"Only tests/test_pipeline_runner.py was edited.\"\n  ],\n  \"warnings\": [\n    \"Full tests.test_pipeline_runner currently fails in unrelated existing run_next queue-preview expectations, where stop_code/step assertions are not reached.\"\n  ],\n  \"blockers\": []\n}\n```\n",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02f5-c6d8-7260-881e-fedaa28845ef\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor  \nActive Stage: [CODEX] Task Execution  \nActive Document: TASK-187 / PIPEF-106  \nExpected Result: Focused regression tests proving owner-note close behavior without real Codex execution or real git commits.\n\nUsing `documentation-navigation`, `clarification-gate`, and `project-control-gateway` because this is bounded Codex execution inside the AI Development System repository with project-control constraints. I’ll read the required system docs and task-relevant instructions before touching the allowed test files.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nI’ve activated the project and loaded Serena’s coding instructions. Next I’m reading only the mandated AI-system docs and the task-relevant skill guid\n[truncated: 502110 bytes total]",
+              "stdout_bytes": 1111,
+              "stderr_bytes": 505766,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-058/TASK-187-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1111,
+                  "bytes": 1111
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-058/TASK-187-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 505766,
+                  "bytes": 505766
+                }
+              },
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "RPT-036",
+              "report_id": "RPT-036",
+              "report_parse_code": "CODEX_SUMMARY_PARSE_OK",
+              "report_parse_issue": {},
+              "report_submission_error": "",
+              "report_builder_evidence": {
+                "builder": "build_task_report_payload",
+                "source_file": "captured:stdout:sha256:0e0a37b09bc01f76ee791c96b6284c6d85e192b7fc91a39910ebddbb07181a7e",
+                "task_id": "TASK-187",
+                "task_ref": "PIPEF-106",
+                "policy_evidence_keys": [
+                  "codex_adapter_gate",
+                  "token_budget_gate"
+                ],
+                "check_names": [
+                  "codex_adapter",
+                  "token_budget_gate",
+                  "codex_adapter_gate"
+                ],
+                "check_results": [
+                  "pass",
+                  "pass",
+                  "pass"
+                ],
+                "changed_files_count": 0,
+                "generated_files_count": 0,
+                "warning_count": 1,
+                "blocker_count": 0,
+                "built_report_id": "RPT-036"
+              },
+              "report_instruction": "In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-187 --file <REPORT.json> --confirm"
+            },
+            "adapter_summary": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 443.669656,
+              "stdout_ref": "captured:stdout:sha256:0e0a37b09bc01f76ee791c96b6284c6d85e192b7fc91a39910ebddbb07181a7e",
+              "stderr_ref": "captured:stderr:sha256:5af80e813d43509085173573d7754c483c7803717acb4f0c830b7a6c1c5c0142",
+              "stdout_snippet": "Implemented focused close-phase regression coverage in `tests/test_pipeline_runner.py`. The new fixture records valid prior phase evidence and review approval, then verifies missing owner notes block with `CLOSE_OWNER_NOTES_REQUIRED` while present notes reach the close workflow without that blocker.\n\nVerification: focused close-path tests passed. `git diff --check -- tests/test_pipeline_runner.py` passed. A broader `python -m unittest tests.test_pipeline_runner` run still fails in unrelated existing `run_next` queue-preview expectations.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \"Added close_phase regression tests for owner-note auto-close behavior using temp fixture state and mocked close workflow, without real Codex execution or git commits.\",\n  \"notes\": [\n    \"Focused close-path regression tests passed.\",\n    \"Only tests/test_pipeline_runner.py was edited.\"\n  ],\n  \"warnings\": [\n    \"Full tests.test_pipeline_runner currently fails in unrelated existing run_next queue-preview expectations, where stop_code/step assertions are not reached.\"\n  ],\n  \"blockers\": []\n}\n```\n",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02f5-c6d8-7260-881e-fedaa28845ef\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor  \nActive Stage: [CODEX] Task Execution  \nActive Document: TASK-187 / PIPEF-106  \nExpected Result: Focused regression tests proving owner-note close behavior without real Codex execution or real git commits.\n\nUsing `documentation-navigation`, `clarification-gate`, and `project-control-gateway` because this is bounded Codex execution inside the AI Development System repository with project-control constraints. I’ll read the required system docs and task-relevant instructions before touching the allowed test files.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nI’ve activated the project and loaded Serena’s coding instructions. Next I’m reading only the mandated AI-system docs and the task-relevant skill guid\n[truncated: 502110 bytes total]",
+              "stdout_bytes": 1111,
+              "stderr_bytes": 505766,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-058/TASK-187-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1111,
+                  "bytes": 1111
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-058/TASK-187-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 505766,
+                  "bytes": 505766
+                }
+              },
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "RPT-036",
+              "report_id": "RPT-036",
+              "report_ids": [
+                "RPT-036"
+              ]
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-58967D95526B",
+            "EVT-D8733E604AFF"
+          ]
+        },
+        {
+          "phase": "collect_report",
+          "status": "passed",
+          "reason": "Structured execution report collected for selected task (freshness_basis=report_id).",
+          "next_action": "Run pipeline phase verify.",
+          "artifacts": {
+            "session_id": "PSESS-058",
+            "task_id": "TASK-187",
+            "report_id": "RPT-036",
+            "report_task_id": "TASK-187",
+            "expected_task_id": "TASK-187",
+            "selected_task_ref": "",
+            "record_task_id": "TASK-187",
+            "record_task_ref": "PIPEF-106",
+            "observed_report_task_id": "TASK-187",
+            "structured_report_task_id": "TASK-187",
+            "structured_report_task_ref": "PIPEF-106",
+            "reported_task_id": "TASK-187",
+            "reported_task_ref": "PIPEF-106",
+            "submitted_at": "2026-06-26T08:12:07Z",
+            "submitted_by": "codex",
+            "source_file": "captured:stdout:sha256:0e0a37b09bc01f76ee791c96b6284c6d85e192b7fc91a39910ebddbb07181a7e",
+            "report_found": true,
+            "freshness": {
+              "fresh": true,
+              "basis": "report_id",
+              "reason": "Report id matches the report produced by execute.",
+              "allow_existing_report": false,
+              "report_id": "RPT-036",
+              "report_submitted_at": "2026-06-26T08:12:07Z",
+              "execute_started_at": "2026-06-26T08:04:44Z",
+              "execute_finished_at": "2026-06-26T08:12:07Z",
+              "execute_before_report_id": "",
+              "execute_after_report_id": "RPT-036",
+              "execute_report_id": "RPT-036",
+              "execute_phase_status": "passed"
+            },
+            "freshness_basis": "report_id",
+            "allow_existing_report": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-236395B00395"
+          ]
+        },
+        {
+          "phase": "verify",
+          "status": "passed",
+          "reason": "Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy.",
+          "next_action": "Run pipeline phase review.",
+          "artifacts": {
+            "session_id": "PSESS-058",
+            "task_id": "TASK-187",
+            "report_id": "RPT-036",
+            "collected_report_id": "RPT-036",
+            "policy": "supervised_executable_local_commit_1h_auto_change",
+            "collect_report_phase": {
+              "phase": "collect_report",
+              "status": "passed",
+              "reason": "Structured execution report collected for selected task (freshness_basis=report_id).",
+              "report_id": "RPT-036",
+              "task_id": "TASK-187"
+            },
+            "report_gate_status": "warn",
+            "report_gate_code": "CODEX_REPORT_WARN",
+            "report_gate": {
+              "status": "warn",
+              "code": "CODEX_REPORT_WARN",
+              "reason": "Report contains warning(s): Full tests.test_pipeline_runner currently fails in unrelated existing run_next queue-preview expectations, where stop_code/step assertions are not reached.",
+              "report_id": "RPT-036",
+              "task_id": "TASK-187",
+              "issues": [],
+              "warnings": [
+                {
+                  "code": "CODEX_REPORT_WARN",
+                  "message": "Report contains warning(s): Full tests.test_pipeline_runner currently fails in unrelated existing run_next queue-preview expectations, where stop_code/step assertions are not reached.",
+                  "path": "warnings"
+                }
+              ],
+              "changed_files": [],
+              "generated_files": [],
+              "token_usage": {
+                "completion_tokens": 0,
+                "context_tokens": 0,
+                "max_context_tokens": 24000,
+                "min_remaining_tokens": 6000,
+                "model_context_limit": 32000,
+                "output_tokens": 0,
+                "prompt_tokens": 920,
+                "remaining_tokens": 31080,
+                "reserved_output_tokens": 0,
+                "total_tokens": 0,
+                "token_count_estimated": true,
+                "token_count_unavailable": false,
+                "token_count_strategy": "local_byte_estimate",
+                "token_count_unavailable_reason": ""
+              },
+              "checks": [
+                {
+                  "name": "codex_adapter",
+                  "command": "codex exec --sandbox danger-full-access",
+                  "result": "pass",
+                  "duration_sec": 443.56762,
+                  "blocking": true,
+                  "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+                },
+                {
+                  "name": "token_budget_gate",
+                  "command": "",
+                  "result": "pass",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "TOKEN_BUDGET_PASS within_token_budget"
+                },
+                {
+                  "name": "codex_adapter_gate",
+                  "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+                  "result": "pass",
+                  "duration_sec": 443.56762,
+                  "blocking": true,
+                  "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+                }
+              ]
+            },
+            "report_warning_policy": {
+              "allow_report_warnings": true,
+              "block_report_warnings": false,
+              "decision": "allowed",
+              "policy": "report_gate_warnings_allowed_by_policy",
+              "reason": "policy.verify.allow_report_warnings is true",
+              "report_gate_status": "warn",
+              "report_gate_code": "CODEX_REPORT_WARN"
+            },
+            "warn_policy": "report_gate_warnings_allowed_by_policy",
+            "git_diff_gates_policy": {
+              "run_git_diff_gates": false,
+              "mode": "relaxed",
+              "reason": "policy.verify.run_git_diff_gates is false"
+            },
+            "skipped_gates": [
+              {
+                "name": "git_diff_gate",
+                "status": "skipped",
+                "code": "GIT_DIFF_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              {
+                "name": "protected_files_gate",
+                "status": "skipped",
+                "code": "PROTECTED_FILES_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              {
+                "name": "allowed_files_gate",
+                "status": "skipped",
+                "code": "ALLOWED_FILES_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              }
+            ],
+            "verify_evidence": {
+              "schema_version": 1,
+              "phase": "verify",
+              "status": "passed",
+              "task_id": "TASK-187",
+              "report_id": "RPT-036",
+              "blocked_by": "",
+              "report_gate": {
+                "status": "warn",
+                "code": "CODEX_REPORT_WARN",
+                "reason": "Report contains warning(s): Full tests.test_pipeline_runner currently fails in unrelated existing run_next queue-preview expectations, where stop_code/step assertions are not reached.",
+                "report_id": "RPT-036",
+                "task_id": "TASK-187",
+                "changed_files": [],
+                "generated_files": [],
+                "issues": [],
+                "warnings": [
+                  {
+                    "code": "CODEX_REPORT_WARN",
+                    "message": "Report contains warning(s): Full tests.test_pipeline_runner currently fails in unrelated existing run_next queue-preview expectations, where stop_code/step assertions are not reached.",
+                    "path": "warnings"
+                  }
+                ],
+                "checks": [
+                  {
+                    "name": "codex_adapter",
+                    "result": "pass",
+                    "blocking": true,
+                    "command": "codex exec --sandbox danger-full-access",
+                    "duration_sec": 443.56762
+                  },
+                  {
+                    "name": "token_budget_gate",
+                    "result": "pass",
+                    "blocking": true
+                  },
+                  {
+                    "name": "codex_adapter_gate",
+                    "result": "pass",
+                    "blocking": true,
+                    "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+                    "duration_sec": 443.56762
+                  }
+                ]
+              },
+              "git_diff_gates_policy": {
+                "run_git_diff_gates": false,
+                "mode": "relaxed",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              "report_warning_policy": {
+                "allow_report_warnings": true,
+                "block_report_warnings": false,
+                "decision": "allowed",
+                "policy": "report_gate_warnings_allowed_by_policy",
+                "reason": "policy.verify.allow_report_warnings is true",
+                "report_gate_status": "warn",
+                "report_gate_code": "CODEX_REPORT_WARN"
+              },
+              "skipped_gates": [
+                {
+                  "name": "git_diff_gate",
+                  "status": "skipped",
+                  "code": "GIT_DIFF_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                },
+                {
+                  "name": "protected_files_gate",
+                  "status": "skipped",
+                  "code": "PROTECTED_FILES_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                },
+                {
+                  "name": "allowed_files_gate",
+                  "status": "skipped",
+                  "code": "ALLOWED_FILES_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                }
+              ]
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-F0E76EF926BB"
+          ]
+        }
+      ],
+      "current_step": "execute",
+      "current_step_status": "stopped",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-05DC77ED3A7A",
+        "EVT-A155036E063B",
+        "EVT-74E3C0598DC5",
+        "EVT-58967D95526B",
+        "EVT-D8733E604AFF",
+        "EVT-236395B00395",
+        "EVT-F0E76EF926BB",
+        "EVT-220513F0701D"
+      ],
+      "stop_reason": "MAX_STEPS_REACHED: Batch runner reached max_steps 5.",
+      "created_at": "2026-06-26T08:04:36Z",
+      "updated_at": "2026-06-26T08:12:09Z",
+      "started_at": "2026-06-26T08:04:36Z",
+      "finished_at": "2026-06-26T08:12:09Z"
+    },
+    {
+      "id": "PSESS-059",
+      "status": "stopped",
+      "selected_queue": {
+        "selection": "ready_queue",
+        "task_refs": [
+          "PIPEF-107"
+        ],
+        "epic_ids": [],
+        "statuses": [],
+        "max_tasks": 1,
+        "order_by": "selected",
+        "include_blocked_tasks": false,
+        "created_by_command": "ui.run",
+        "ui_run_confirmed": true,
+        "allow_internal_change_gate_bypass": true
+      },
+      "policy_snapshot": {
+        "name": "supervised_executable_local_commit_1h_auto_change",
+        "queue": {
+          "selection": "ready_queue",
+          "max_tasks": 1,
+          "include_blocked_tasks": false
+        },
+        "evolution": {
+          "create_missing_change": true,
+          "approve_linked_change": false,
+          "accept_linked_change": false,
+          "require_approved_change_for_execution": true,
+          "owner_approve_required_changes_for_session": true,
+          "owner_approval_note": "Auto-approved by Human Owner for selected UI run"
+        },
+        "token_budget": {
+          "require_gate_pass": true,
+          "max_prompt_tokens": 32000,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "reserved_output_tokens": 0
+        },
+        "codex": {
+          "mode": "run_codex",
+          "require_human_selected_policy": true,
+          "adapter_mode": "local_command",
+          "prompt_transport": "stdin",
+          "local_command": [
+            "codex",
+            "exec",
+            "--sandbox",
+            "danger-full-access"
+          ],
+          "command_allowlist": [
+            "codex exec --sandbox danger-full-access"
+          ],
+          "timeout_sec": 3600,
+          "require_report": true
+        },
+        "review": {
+          "require_machine_review": true,
+          "required_machine_outcome": "pass",
+          "require_codex_review": false,
+          "required_codex_decision": "none"
+        },
+        "rework": {
+          "allow_rework_loop": true,
+          "max_rework_attempts": 1,
+          "require_owner_decision_for_rework": true
+        },
+        "batch": {
+          "max_steps": 5,
+          "max_failures": 1
+        },
+        "closure": {
+          "auto_close_task": true,
+          "owner_approval_note": ""
+        },
+        "commit": {
+          "create_local_commit": true,
+          "mode": "local_only",
+          "require_commit_readiness": true,
+          "allow_push": false,
+          "allow_merge": false
+        },
+        "verify": {
+          "run_git_diff_gates": false,
+          "block_report_warnings": false,
+          "allow_report_warnings": true
+        }
+      },
+      "current_task_id": "TASK-188",
+      "current_task_ref": "",
+      "current_phase": "verify",
+      "current_phase_status": "passed",
+      "blocked_by": "",
+      "next_action": "Run pipeline phase review.",
+      "phase_history": [
+        {
+          "phase": "queue_preview",
+          "status": "passed",
+          "reason": "Next executable task is available.",
+          "next_action": "Run pipeline run-next when ready.",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-059",
+            "next_task": {
+              "id": "TASK-188",
+              "ref": "PIPEF-107",
+              "uid": "tsk_7814abc39b10",
+              "legacy_id": "TASK-188",
+              "title": "Document auto-close owner note workflow",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "selected_ref": "PIPEF-107"
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "queue_categories": {
+              "executable": [
+                {
+                  "id": "TASK-188",
+                  "ref": "PIPEF-107",
+                  "uid": "tsk_7814abc39b10",
+                  "legacy_id": "TASK-188",
+                  "title": "Document auto-close owner note workflow",
+                  "status": "planned",
+                  "epic_id": "EPIC-009",
+                  "selected_ref": "PIPEF-107"
+                }
+              ],
+              "waiting": [],
+              "blocked": [],
+              "skipped": []
+            },
+            "reason_summary": []
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-BF66A9F7B3EC"
+          ]
+        },
+        {
+          "phase": "prepare",
+          "status": "passed",
+          "reason": "Task preparation rebuilt artifacts; Codex execution has not been started.",
+          "next_action": "Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 2177c39087fa37eae47991f437edfecc1aa68d2778da6a54f8e4a9fc8cce20ac).",
+          "artifacts": {
+            "source": "session",
+            "session_id": "PSESS-059",
+            "task_id": "TASK-188",
+            "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+            "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+            "prompt_sha256": "2177c39087fa37eae47991f437edfecc1aa68d2778da6a54f8e4a9fc8cce20ac",
+            "artifact_freshness": {
+              "status": "rebuilt",
+              "reason": "codex_status_not_ready",
+              "rebuild_required_before_prepare": true,
+              "fresh_before_prepare": false
+            },
+            "selected_task": {
+              "category": "executable",
+              "executable": true,
+              "id": "TASK-188",
+              "ref": "PIPEF-107",
+              "uid": "tsk_7814abc39b10",
+              "legacy_id": "TASK-188",
+              "title": "Document auto-close owner note workflow",
+              "status": "planned",
+              "epic_id": "EPIC-009",
+              "priority": 1,
+              "order": 107,
+              "local_seq": 107,
+              "selected_ref": "PIPEF-107",
+              "reasons": []
+            },
+            "queue_counts": {
+              "executable": 1,
+              "waiting": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "change_gate": {
+              "required": true,
+              "scope": "selected_task",
+              "selected_task_id": "TASK-188",
+              "selected_task_ref": "PIPEF-107",
+              "inspected_task_ids": [
+                "TASK-188"
+              ],
+              "linked_changes_inspected": [
+                {
+                  "task_id": "TASK-188",
+                  "task_ref": "PIPEF-107",
+                  "change_ids": []
+                }
+              ],
+              "linked_change_ids": [],
+              "change_ids": [],
+              "bypassed": true,
+              "bypass": {
+                "setting": "allow_internal_change_gate_bypass",
+                "enabled": true,
+                "reason": "confirmed_ui_internal_project_control_task",
+                "created_by_command": "ui.run",
+                "ui_run_confirmed": true,
+                "single_task_session": true,
+                "internal_project_control_task": true,
+                "session_id": "PSESS-059",
+                "allowed_files": [
+                  "ai-system/project-control/pipeline-runner.md",
+                  "ai-system/project-control/10-owner-quickstart.md"
+                ]
+              }
+            },
+            "workflow": {
+              "ok": true,
+              "message": "Workflow completed.",
+              "steps": [
+                {
+                  "id": "resolve",
+                  "status": "ok"
+                },
+                {
+                  "id": "current_set",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_validate",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_graph",
+                  "status": "ok"
+                },
+                {
+                  "id": "task_in_progress",
+                  "status": "ok"
+                },
+                {
+                  "id": "context_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "codex_build",
+                  "status": "ok"
+                },
+                {
+                  "id": "doctor",
+                  "status": "ok"
+                }
+              ],
+              "errors": []
+            },
+            "codex_adapter_called": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-F5FBD35E9903"
+          ]
+        },
+        {
+          "phase": "execute",
+          "status": "passed",
+          "reason": "Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0)",
+          "next_action": "Run pipeline phase collect-report.",
+          "artifacts": {
+            "session_id": "PSESS-059",
+            "task_id": "TASK-188",
+            "policy": "supervised_executable_local_commit_1h_auto_change",
+            "prepare_artifacts": {
+              "task_id": "TASK-188",
+              "context_pack_path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+              "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "2177c39087fa37eae47991f437edfecc1aa68d2778da6a54f8e4a9fc8cce20ac"
+            },
+            "token_budget": {
+              "status": "pass",
+              "code": "TOKEN_BUDGET_PASS",
+              "reason": "within_token_budget",
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "2177c39087fa37eae47991f437edfecc1aa68d2778da6a54f8e4a9fc8cce20ac",
+              "prompt_bytes": 3574,
+              "prompt_tokens": 894,
+              "context_bytes": 0,
+              "context_tokens": 0,
+              "token_count_strategy": "local_byte_estimate",
+              "token_count_estimated": true,
+              "token_count_unavailable": false,
+              "token_count_unavailable_reason": "",
+              "model_context_limit": 32000,
+              "max_context_tokens": 24000,
+              "reserved_output_tokens": 0,
+              "min_remaining_tokens": 6000,
+              "remaining_tokens": 31106,
+              "context_requires_compact_or_split": false,
+              "context_requirement_reasons": [],
+              "context_pack": {}
+            },
+            "codex_adapter_called": true,
+            "execute_started_at": "2026-06-26T08:14:05Z",
+            "execute_finished_at": "2026-06-26T08:20:14Z",
+            "before_report_id": "",
+            "after_report_id": "RPT-037",
+            "report_id": "RPT-037",
+            "execute_evidence": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 369.02116,
+              "stdout_ref": "captured:stdout:sha256:cae0b79621db81aa519afa8455b3878eaaab213109cad74a1e05921d8a4e67b4",
+              "stderr_ref": "captured:stderr:sha256:31735193a8342af43b6ab7340270571ce7be6e8563b8ab9e087d309466cc6b18",
+              "stdout_snippet": "Active Role: Codex Executor  \nActive Stage: Task execution  \nActive Document: `ai-system/project-control/pipeline-runner.md`, `ai-system/project-control/10-owner-quickstart.md`  \nExpected Result: bounded documentation update for TASK-188\n\nUpdated both allowed docs to state that auto-close notes are explicit Human Owner approval inputs, added `--auto-close-note` examples for both `pipeline session create` and `ui run`, and documented the Web Control Center `Auto-close Owner Note` field for selected-task runs. The docs now explicitly say Codex must not invent, draft, fill, or provide owner approval notes.\n\nVerification passed: `git diff --check`, `python scripts/docctl.py validate`, `python scripts/docctl.py check-generated`, and `python scripts/check-docs-integrity.py`. `docctl.py validate` reported existing registry/status/hash warnings, including hash mismatch for the edited docs because I did not mutate protected doc-control state. I also observed dirty protected `AI_PROJECT/**` files outside the allowed scope and left them untouched.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \"Updated project-control pipeline documentation to require explicit Human Owne\n[truncated: 1865 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02fe-557e-7823-a913-66b446c35687\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor  \nActive Stage: Task execution  \nActive Document: `ai-system/project-control/pipeline-runner.md`, `ai-system/project-control/10-owner-quickstart.md`  \nExpected Result: bounded documentation update for TASK-188 with verification and execution summary.\n\nI’ll use the AI Development System documentation-navigation and project-control gateway instructions first, then inspect only the required docs and the two editable files before patching.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nI’m checking the required system documents and the two skill manuals now. The task is narrow, but this repository requires that bootstrap context before even small documentation edits.\nexec\n/usr/bin/zsh -lc 'wc -l /home/nikitoys/AI-\n[truncated: 806791 bytes total]",
+              "stdout_bytes": 1865,
+              "stderr_bytes": 810341,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-059/TASK-188-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1865,
+                  "bytes": 1865
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-059/TASK-188-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 810341,
+                  "bytes": 810341
+                }
+              },
+              "report_ids": [
+                "RPT-037"
+              ],
+              "report_required": true,
+              "started_at": "2026-06-26T08:14:05Z",
+              "finished_at": "2026-06-26T08:20:14Z",
+              "before_report_id": "",
+              "after_report_id": "RPT-037",
+              "report_id": "RPT-037"
+            },
+            "runtime_logs": {
+              "stdout": {
+                "path": "AI_PROJECT/logs/codex/PSESS-059/TASK-188-stdout.log",
+                "start_offset": 0,
+                "end_offset": 1865,
+                "bytes": 1865
+              },
+              "stderr": {
+                "path": "AI_PROJECT/logs/codex/PSESS-059/TASK-188-stderr.log",
+                "start_offset": 0,
+                "end_offset": 810341,
+                "bytes": 810341
+              }
+            },
+            "adapter": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "mode": "local_command",
+              "started_at": "2026-06-26T08:14:05Z",
+              "finished_at": "2026-06-26T08:20:14Z",
+              "duration_sec": 369.02116,
+              "prompt_path": "/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md",
+              "prompt_sha256": "2177c39087fa37eae47991f437edfecc1aa68d2778da6a54f8e4a9fc8cce20ac",
+              "prompt_transport": "stdin",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "timeout_sec": 3600,
+              "timed_out": false,
+              "returncode": 0,
+              "stdout_ref": "captured:stdout:sha256:cae0b79621db81aa519afa8455b3878eaaab213109cad74a1e05921d8a4e67b4",
+              "stderr_ref": "captured:stderr:sha256:31735193a8342af43b6ab7340270571ce7be6e8563b8ab9e087d309466cc6b18",
+              "stdout_snippet": "Active Role: Codex Executor  \nActive Stage: Task execution  \nActive Document: `ai-system/project-control/pipeline-runner.md`, `ai-system/project-control/10-owner-quickstart.md`  \nExpected Result: bounded documentation update for TASK-188\n\nUpdated both allowed docs to state that auto-close notes are explicit Human Owner approval inputs, added `--auto-close-note` examples for both `pipeline session create` and `ui run`, and documented the Web Control Center `Auto-close Owner Note` field for selected-task runs. The docs now explicitly say Codex must not invent, draft, fill, or provide owner approval notes.\n\nVerification passed: `git diff --check`, `python scripts/docctl.py validate`, `python scripts/docctl.py check-generated`, and `python scripts/check-docs-integrity.py`. `docctl.py validate` reported existing registry/status/hash warnings, including hash mismatch for the edited docs because I did not mutate protected doc-control state. I also observed dirty protected `AI_PROJECT/**` files outside the allowed scope and left them untouched.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \"Updated project-control pipeline documentation to require explicit Human Owne\n[truncated: 1865 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02fe-557e-7823-a913-66b446c35687\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor  \nActive Stage: Task execution  \nActive Document: `ai-system/project-control/pipeline-runner.md`, `ai-system/project-control/10-owner-quickstart.md`  \nExpected Result: bounded documentation update for TASK-188 with verification and execution summary.\n\nI’ll use the AI Development System documentation-navigation and project-control gateway instructions first, then inspect only the required docs and the two editable files before patching.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nI’m checking the required system documents and the two skill manuals now. The task is narrow, but this repository requires that bootstrap context before even small documentation edits.\nexec\n/usr/bin/zsh -lc 'wc -l /home/nikitoys/AI-\n[truncated: 806791 bytes total]",
+              "stdout_bytes": 1865,
+              "stderr_bytes": 810341,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-059/TASK-188-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1865,
+                  "bytes": 1865
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-059/TASK-188-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 810341,
+                  "bytes": 810341
+                }
+              },
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "RPT-037",
+              "report_id": "RPT-037",
+              "report_parse_code": "CODEX_SUMMARY_PARSE_OK",
+              "report_parse_issue": {},
+              "report_submission_error": "",
+              "report_builder_evidence": {
+                "builder": "build_task_report_payload",
+                "source_file": "captured:stdout:sha256:cae0b79621db81aa519afa8455b3878eaaab213109cad74a1e05921d8a4e67b4",
+                "task_id": "TASK-188",
+                "task_ref": "PIPEF-107",
+                "policy_evidence_keys": [
+                  "codex_adapter_gate",
+                  "token_budget_gate"
+                ],
+                "check_names": [
+                  "codex_adapter",
+                  "token_budget_gate",
+                  "codex_adapter_gate"
+                ],
+                "check_results": [
+                  "pass",
+                  "pass",
+                  "pass"
+                ],
+                "changed_files_count": 0,
+                "generated_files_count": 0,
+                "warning_count": 2,
+                "blocker_count": 0,
+                "built_report_id": "RPT-037"
+              },
+              "report_instruction": "In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-188 --file <REPORT.json> --confirm"
+            },
+            "adapter_summary": {
+              "status": "passed",
+              "code": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED",
+              "reason": "local_command_completed_with_report",
+              "command": [
+                "codex",
+                "exec",
+                "--sandbox",
+                "danger-full-access"
+              ],
+              "command_ref": "codex exec --sandbox danger-full-access",
+              "returncode": 0,
+              "duration_sec": 369.02116,
+              "stdout_ref": "captured:stdout:sha256:cae0b79621db81aa519afa8455b3878eaaab213109cad74a1e05921d8a4e67b4",
+              "stderr_ref": "captured:stderr:sha256:31735193a8342af43b6ab7340270571ce7be6e8563b8ab9e087d309466cc6b18",
+              "stdout_snippet": "Active Role: Codex Executor  \nActive Stage: Task execution  \nActive Document: `ai-system/project-control/pipeline-runner.md`, `ai-system/project-control/10-owner-quickstart.md`  \nExpected Result: bounded documentation update for TASK-188\n\nUpdated both allowed docs to state that auto-close notes are explicit Human Owner approval inputs, added `--auto-close-note` examples for both `pipeline session create` and `ui run`, and documented the Web Control Center `Auto-close Owner Note` field for selected-task runs. The docs now explicitly say Codex must not invent, draft, fill, or provide owner approval notes.\n\nVerification passed: `git diff --check`, `python scripts/docctl.py validate`, `python scripts/docctl.py check-generated`, and `python scripts/check-docs-integrity.py`. `docctl.py validate` reported existing registry/status/hash warnings, including hash mismatch for the edited docs because I did not mutate protected doc-control state. I also observed dirty protected `AI_PROJECT/**` files outside the allowed scope and left them untouched.\n\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{\n  \"implementation_summary\": \"Updated project-control pipeline documentation to require explicit Human Owne\n[truncated: 1865 bytes total]",
+              "stderr_snippet": "Reading prompt from stdin...\nOpenAI Codex v0.142.0\n--------\nworkdir: /home/nikitoys/AI-Development-System\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: danger-full-access\nreasoning effort: xhigh\nreasoning summaries: none\nsession id: 019f02fe-557e-7823-a913-66b446c35687\n--------\nuser\n[redacted: prompt input]\ncodex\nActive Role: Codex Executor  \nActive Stage: Task execution  \nActive Document: `ai-system/project-control/pipeline-runner.md`, `ai-system/project-control/10-owner-quickstart.md`  \nExpected Result: bounded documentation update for TASK-188 with verification and execution summary.\n\nI’ll use the AI Development System documentation-navigation and project-control gateway instructions first, then inspect only the required docs and the two editable files before patching.\nmcp: serena/initial_instructions started\nmcp: serena/initial_instructions (completed)\nmcp: serena/activate_project started\nmcp: serena/activate_project (completed)\ncodex\nI’m checking the required system documents and the two skill manuals now. The task is narrow, but this repository requires that bootstrap context before even small documentation edits.\nexec\n/usr/bin/zsh -lc 'wc -l /home/nikitoys/AI-\n[truncated: 806791 bytes total]",
+              "stdout_bytes": 1865,
+              "stderr_bytes": 810341,
+              "runtime_logs": {
+                "stdout": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-059/TASK-188-stdout.log",
+                  "start_offset": 0,
+                  "end_offset": 1865,
+                  "bytes": 1865
+                },
+                "stderr": {
+                  "path": "AI_PROJECT/logs/codex/PSESS-059/TASK-188-stderr.log",
+                  "start_offset": 0,
+                  "end_offset": 810341,
+                  "bytes": 810341
+                }
+              },
+              "report_required": true,
+              "before_report_id": "",
+              "after_report_id": "RPT-037",
+              "report_id": "RPT-037",
+              "report_ids": [
+                "RPT-037"
+              ]
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-B52CA4A87264",
+            "EVT-5E08F4DF9152"
+          ]
+        },
+        {
+          "phase": "collect_report",
+          "status": "passed",
+          "reason": "Structured execution report collected for selected task (freshness_basis=report_id).",
+          "next_action": "Run pipeline phase verify.",
+          "artifacts": {
+            "session_id": "PSESS-059",
+            "task_id": "TASK-188",
+            "report_id": "RPT-037",
+            "report_task_id": "TASK-188",
+            "expected_task_id": "TASK-188",
+            "selected_task_ref": "",
+            "record_task_id": "TASK-188",
+            "record_task_ref": "PIPEF-107",
+            "observed_report_task_id": "TASK-188",
+            "structured_report_task_id": "TASK-188",
+            "structured_report_task_ref": "PIPEF-107",
+            "reported_task_id": "TASK-188",
+            "reported_task_ref": "PIPEF-107",
+            "submitted_at": "2026-06-26T08:20:14Z",
+            "submitted_by": "codex",
+            "source_file": "captured:stdout:sha256:cae0b79621db81aa519afa8455b3878eaaab213109cad74a1e05921d8a4e67b4",
+            "report_found": true,
+            "freshness": {
+              "fresh": true,
+              "basis": "report_id",
+              "reason": "Report id matches the report produced by execute.",
+              "allow_existing_report": false,
+              "report_id": "RPT-037",
+              "report_submitted_at": "2026-06-26T08:20:14Z",
+              "execute_started_at": "2026-06-26T08:14:05Z",
+              "execute_finished_at": "2026-06-26T08:20:14Z",
+              "execute_before_report_id": "",
+              "execute_after_report_id": "RPT-037",
+              "execute_report_id": "RPT-037",
+              "execute_phase_status": "passed"
+            },
+            "freshness_basis": "report_id",
+            "allow_existing_report": false
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-7C2AA67B9E27"
+          ]
+        },
+        {
+          "phase": "verify",
+          "status": "passed",
+          "reason": "Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy.",
+          "next_action": "Run pipeline phase review.",
+          "artifacts": {
+            "session_id": "PSESS-059",
+            "task_id": "TASK-188",
+            "report_id": "RPT-037",
+            "collected_report_id": "RPT-037",
+            "policy": "supervised_executable_local_commit_1h_auto_change",
+            "collect_report_phase": {
+              "phase": "collect_report",
+              "status": "passed",
+              "reason": "Structured execution report collected for selected task (freshness_basis=report_id).",
+              "report_id": "RPT-037",
+              "task_id": "TASK-188"
+            },
+            "report_gate_status": "warn",
+            "report_gate_code": "CODEX_REPORT_WARN",
+            "report_gate": {
+              "status": "warn",
+              "code": "CODEX_REPORT_WARN",
+              "reason": "Report contains warning(s): docctl.py validate reported existing registry/status/hash warnings, including recorded content hash mismatches for the edited docs because protected doc-control state was not updated.; Protected AI_PROJECT files were already dirty outside this task scope and were left untouched.",
+              "report_id": "RPT-037",
+              "task_id": "TASK-188",
+              "issues": [],
+              "warnings": [
+                {
+                  "code": "CODEX_REPORT_WARN",
+                  "message": "Report contains warning(s): docctl.py validate reported existing registry/status/hash warnings, including recorded content hash mismatches for the edited docs because protected doc-control state was not updated.; Protected AI_PROJECT files were already dirty outside this task scope and were left untouched.",
+                  "path": "warnings"
+                }
+              ],
+              "changed_files": [],
+              "generated_files": [],
+              "token_usage": {
+                "completion_tokens": 0,
+                "context_tokens": 0,
+                "max_context_tokens": 24000,
+                "min_remaining_tokens": 6000,
+                "model_context_limit": 32000,
+                "output_tokens": 0,
+                "prompt_tokens": 894,
+                "remaining_tokens": 31106,
+                "reserved_output_tokens": 0,
+                "total_tokens": 0,
+                "token_count_estimated": true,
+                "token_count_unavailable": false,
+                "token_count_strategy": "local_byte_estimate",
+                "token_count_unavailable_reason": ""
+              },
+              "checks": [
+                {
+                  "name": "codex_adapter",
+                  "command": "codex exec --sandbox danger-full-access",
+                  "result": "pass",
+                  "duration_sec": 368.986903,
+                  "blocking": true,
+                  "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+                },
+                {
+                  "name": "token_budget_gate",
+                  "command": "",
+                  "result": "pass",
+                  "duration_sec": null,
+                  "blocking": true,
+                  "details": "TOKEN_BUDGET_PASS within_token_budget"
+                },
+                {
+                  "name": "codex_adapter_gate",
+                  "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+                  "result": "pass",
+                  "duration_sec": 368.986903,
+                  "blocking": true,
+                  "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+                }
+              ]
+            },
+            "report_warning_policy": {
+              "allow_report_warnings": true,
+              "block_report_warnings": false,
+              "decision": "allowed",
+              "policy": "report_gate_warnings_allowed_by_policy",
+              "reason": "policy.verify.allow_report_warnings is true",
+              "report_gate_status": "warn",
+              "report_gate_code": "CODEX_REPORT_WARN"
+            },
+            "warn_policy": "report_gate_warnings_allowed_by_policy",
+            "git_diff_gates_policy": {
+              "run_git_diff_gates": false,
+              "mode": "relaxed",
+              "reason": "policy.verify.run_git_diff_gates is false"
+            },
+            "skipped_gates": [
+              {
+                "name": "git_diff_gate",
+                "status": "skipped",
+                "code": "GIT_DIFF_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              {
+                "name": "protected_files_gate",
+                "status": "skipped",
+                "code": "PROTECTED_FILES_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              {
+                "name": "allowed_files_gate",
+                "status": "skipped",
+                "code": "ALLOWED_FILES_GATE_SKIPPED_BY_POLICY",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              }
+            ],
+            "verify_evidence": {
+              "schema_version": 1,
+              "phase": "verify",
+              "status": "passed",
+              "task_id": "TASK-188",
+              "report_id": "RPT-037",
+              "blocked_by": "",
+              "report_gate": {
+                "status": "warn",
+                "code": "CODEX_REPORT_WARN",
+                "reason": "Report contains warning(s): docctl.py validate reported existing registry/status/hash warnings, including recorded content hash mismatches for the edited docs because protected doc-control state was not updated.; Protected AI_PROJECT fil...",
+                "report_id": "RPT-037",
+                "task_id": "TASK-188",
+                "changed_files": [],
+                "generated_files": [],
+                "issues": [],
+                "warnings": [
+                  {
+                    "code": "CODEX_REPORT_WARN",
+                    "message": "Report contains warning(s): docctl.py validate reported existing registry/status/hash warnings, including recorded content hash mismatches for the edited docs because protected doc-control state was not updated.; Protected AI_PROJECT fil...",
+                    "path": "warnings"
+                  }
+                ],
+                "checks": [
+                  {
+                    "name": "codex_adapter",
+                    "result": "pass",
+                    "blocking": true,
+                    "command": "codex exec --sandbox danger-full-access",
+                    "duration_sec": 368.986903
+                  },
+                  {
+                    "name": "token_budget_gate",
+                    "result": "pass",
+                    "blocking": true
+                  },
+                  {
+                    "name": "codex_adapter_gate",
+                    "result": "pass",
+                    "blocking": true,
+                    "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+                    "duration_sec": 368.986903
+                  }
+                ]
+              },
+              "git_diff_gates_policy": {
+                "run_git_diff_gates": false,
+                "mode": "relaxed",
+                "reason": "policy.verify.run_git_diff_gates is false"
+              },
+              "report_warning_policy": {
+                "allow_report_warnings": true,
+                "block_report_warnings": false,
+                "decision": "allowed",
+                "policy": "report_gate_warnings_allowed_by_policy",
+                "reason": "policy.verify.allow_report_warnings is true",
+                "report_gate_status": "warn",
+                "report_gate_code": "CODEX_REPORT_WARN"
+              },
+              "skipped_gates": [
+                {
+                  "name": "git_diff_gate",
+                  "status": "skipped",
+                  "code": "GIT_DIFF_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                },
+                {
+                  "name": "protected_files_gate",
+                  "status": "skipped",
+                  "code": "PROTECTED_FILES_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                },
+                {
+                  "name": "allowed_files_gate",
+                  "status": "skipped",
+                  "code": "ALLOWED_FILES_GATE_SKIPPED_BY_POLICY",
+                  "reason": "policy.verify.run_git_diff_gates is false"
+                }
+              ]
+            }
+          },
+          "changed_files": [],
+          "generated_files": [],
+          "events": [
+            "EVT-FB8CD641360E"
+          ]
+        }
+      ],
+      "current_step": "execute",
+      "current_step_status": "stopped",
+      "attempt_counters": {
+        "steps": 0,
+        "tasks": 0,
+        "rework": 0
+      },
+      "gate_outcomes": [],
+      "steps": [],
+      "linked_change_ids": [],
+      "report_ids": [],
+      "review_ids": [],
+      "commit_ids": [],
+      "audit_event_ids": [
+        "EVT-C9181C215CF9",
+        "EVT-BF66A9F7B3EC",
+        "EVT-F5FBD35E9903",
+        "EVT-B52CA4A87264",
+        "EVT-5E08F4DF9152",
+        "EVT-7C2AA67B9E27",
+        "EVT-FB8CD641360E",
+        "EVT-A88D35D7D332"
+      ],
+      "stop_reason": "MAX_STEPS_REACHED: Batch runner reached max_steps 5.",
+      "created_at": "2026-06-26T08:13:58Z",
+      "updated_at": "2026-06-26T08:20:16Z",
+      "started_at": "2026-06-26T08:13:58Z",
+      "finished_at": "2026-06-26T08:20:16Z"
     }
   ]
 }

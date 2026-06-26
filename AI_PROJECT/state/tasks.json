@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1306,
+  "revision": 1336,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-26T06:59:59Z",
+  "updated_at": "2026-06-26T08:21:07Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -12370,6 +12370,294 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 102
+    },
+    {
+      "id": "TASK-184",
+      "epic_id": "EPIC-009",
+      "title": "Require auto-close owner note at session creation",
+      "status": "done",
+      "summary": "Auto-close pipeline sessions must fail before execution when no Human Owner auto-close note is provided.",
+      "description": "Move the owner-note requirement to session creation so Codex is not executed for sessions that can only block at close.",
+      "priority": 1,
+      "order": 103,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add validation in pipeline session creation for policies with closure.auto_close_task enabled and an empty auto-close note.",
+        "Return a stable error code and next-action details when the owner note is missing.",
+        "Preserve successful session creation when an explicit auto-close note is provided.",
+        "Add focused regression coverage for missing-note and present-note session creation."
+      ],
+      "out_of_scope": [
+        "Do not weaken close_phase owner approval checks.",
+        "Do not change Codex execution, report, verify, review, or commit behavior.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/session.py",
+        "tests/test_pipeline_runner.py"
+      ],
+      "acceptance_criteria": [
+        "Creating a session with closure.auto_close_task enabled and no auto-close note fails before any phase execution can start.",
+        "The failure uses a stable, explicit code such as AUTO_CLOSE_OWNER_NOTE_REQUIRED or PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED.",
+        "Creating the same auto-close session with an owner note succeeds and stores the note in policy_snapshot.closure.owner_approval_note.",
+        "Policies without auto-close enabled can still create sessions without an auto-close note.",
+        "Focused tests covering missing and present auto-close notes pass."
+      ],
+      "review_instructions": [
+        "Confirm the new guard runs before queue execution or Codex adapter execution."
+      ],
+      "notes": [
+        "The close phase must remain the final authority for task closure; this task only adds an earlier owner-note preflight."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T07:45:40Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-26T07:31:40Z",
+      "updated_at": "2026-06-26T07:45:40Z",
+      "uid": "tsk_ce339d5882a1",
+      "ref": "PIPEF-103",
+      "legacy_id": "TASK-184",
+      "aliases": [
+        "TASK-184"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 103
+    },
+    {
+      "id": "TASK-185",
+      "epic_id": "EPIC-009",
+      "title": "Add auto-close note to CLI UI run",
+      "status": "done",
+      "summary": "The ui run command must accept a Human Owner auto-close note and pass it into the created pipeline session.",
+      "description": "This fixes the CLI-backed UI run path so auto-close policies can be started only with explicit owner approval notes.",
+      "priority": 1,
+      "order": 104,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add an owner-facing --auto-close-note argument to the ui run command.",
+        "Pass the note from cmd_ui_run into create_session(auto_close_note=...).",
+        "Ensure missing-note failures from session creation are surfaced clearly without starting Codex execution.",
+        "Add focused CLI/UI-run tests for present and missing auto-close notes."
+      ],
+      "out_of_scope": [
+        "Do not generate owner approval notes automatically.",
+        "Do not change pipeline policy preset semantics.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "scripts/aictl.py",
+        "tests/test_pipeline_runner.py",
+        "tests/test_pipeline_batch.py"
+      ],
+      "acceptance_criteria": [
+        "python scripts/aictl.py ui run accepts --auto-close-note as an explicit owner-supplied argument.",
+        "When an auto-close policy is selected and the note is blank, ui run stops before session execution and before any Codex adapter call.",
+        "When an auto-close policy is selected and the note is provided, the created session snapshot contains closure.owner_approval_note.",
+        "Existing ui run behavior for non-auto-close policies remains unchanged.",
+        "Focused tests for ui run note handling pass."
+      ],
+      "review_instructions": [
+        "Check that the note is never synthesized by the code and only comes from an explicit argument."
+      ],
+      "notes": [
+        "This task should not mark tasks done or approve work; it only wires owner input into session creation."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T07:55:54Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-26T07:31:41Z",
+      "updated_at": "2026-06-26T07:55:55Z",
+      "uid": "tsk_42b9b31f1758",
+      "ref": "PIPEF-104",
+      "legacy_id": "TASK-185",
+      "aliases": [
+        "TASK-185"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 104
+    },
+    {
+      "id": "TASK-186",
+      "epic_id": "EPIC-009",
+      "title": "Expose auto-close note in Web UI run",
+      "status": "done",
+      "summary": "The Web Control Center selected-task run action must expose and forward a Human Owner auto-close note.",
+      "description": "This makes the browser UI path consistent with the CLI UI run path for auto-close policies.",
+      "priority": 1,
+      "order": 105,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add an auto-close owner approval note field to the selected-task run form or panel.",
+        "Forward the submitted auto_close_note through the ui.run_selected_task web action.",
+        "Include the note in the delegated command metadata without exposing it as a generated approval.",
+        "Add Web Control Center regression coverage for missing-note and present-note selected-task runs."
+      ],
+      "out_of_scope": [
+        "Do not auto-fill or infer Human Owner approval notes.",
+        "Do not change unrelated Web Control Center actions.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "The Web Control Center selected-task run UI exposes a clear auto-close owner note input.",
+        "The ui.run_selected_task action passes auto_close_note into session creation or delegated ui run handling.",
+        "Submitting an auto-close selected-task run without a note fails before Codex execution with a clear owner-action message.",
+        "Submitting an auto-close selected-task run with a note creates a session whose policy snapshot contains the note.",
+        "Existing web selected-task runs for non-auto-close policies remain unchanged.",
+        "Focused Web Control Center tests pass."
+      ],
+      "review_instructions": [
+        "Verify the owner note field is explicit and not hidden behind generic settings."
+      ],
+      "notes": [
+        "The UI should make clear that this note is a Human Owner approval input."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T08:04:28Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-26T07:31:41Z",
+      "updated_at": "2026-06-26T08:04:28Z",
+      "uid": "tsk_870cdc06115c",
+      "ref": "PIPEF-105",
+      "legacy_id": "TASK-186",
+      "aliases": [
+        "TASK-186"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 105
+    },
+    {
+      "id": "TASK-187",
+      "epic_id": "EPIC-009",
+      "title": "Cover auto-close owner note close path",
+      "status": "done",
+      "summary": "Regression tests must prove that owner-noted auto-close sessions do not fail close with CLOSE_OWNER_NOTES_REQUIRED.",
+      "description": "This adds close-path evidence that the earlier owner note reaches close_phase and preserves the missing-note safety gate.",
+      "priority": 1,
+      "order": 106,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Build or reuse a focused pipeline fixture with required passed phases and review approval evidence.",
+        "Assert close_phase still blocks with CLOSE_OWNER_NOTES_REQUIRED when the owner note is missing.",
+        "Assert close_phase does not block with CLOSE_OWNER_NOTES_REQUIRED when policy_snapshot.closure.owner_approval_note is present.",
+        "Keep the regression independent of real Codex execution and real git commits."
+      ],
+      "out_of_scope": [
+        "Do not change close_phase behavior unless a test exposes a real wiring defect.",
+        "Do not bypass review, machine review, or close preflight requirements.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "tests/test_pipeline_e2e.py",
+        "tests/test_pipeline_runner.py"
+      ],
+      "acceptance_criteria": [
+        "A missing owner note continues to produce CLOSE_OWNER_NOTES_REQUIRED at close.",
+        "A present owner note reaches close without CLOSE_OWNER_NOTES_REQUIRED when all required prior evidence is valid.",
+        "The test fixture does not require invoking the real Codex adapter.",
+        "The test fixture does not require creating a real local git commit.",
+        "Focused close-path regression tests pass."
+      ],
+      "review_instructions": [
+        "Review that tests preserve owner authority rather than weakening the close gate."
+      ],
+      "notes": [
+        "This task is primarily regression coverage for the owner-note contract across the close boundary."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T08:13:00Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-26T07:31:42Z",
+      "updated_at": "2026-06-26T08:13:00Z",
+      "uid": "tsk_4dd0cafae529",
+      "ref": "PIPEF-106",
+      "legacy_id": "TASK-187",
+      "aliases": [
+        "TASK-187"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 106
+    },
+    {
+      "id": "TASK-188",
+      "epic_id": "EPIC-009",
+      "title": "Document auto-close owner note workflow",
+      "status": "done",
+      "summary": "Project control docs must explain when and how the Human Owner supplies auto-close notes for pipeline runs.",
+      "description": "This updates operator guidance after the UI and CLI owner-note paths are explicit.",
+      "priority": 1,
+      "order": 107,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Document that auto-close policies require an explicit Human Owner auto-close note before execution.",
+        "Add CLI examples for ui run and pipeline session create with auto-close notes.",
+        "Add Web Control Center guidance for the selected-task run owner note field.",
+        "Clarify that Codex must not invent or provide owner approval notes."
+      ],
+      "out_of_scope": [
+        "Do not change runtime code.",
+        "Do not change task lifecycle rules unrelated to pipeline auto-close.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/pipeline-runner.md",
+        "ai-system/project-control/10-owner-quickstart.md"
+      ],
+      "acceptance_criteria": [
+        "Docs state that auto-close owner notes are explicit Human Owner approval inputs.",
+        "Docs include a current CLI example using --auto-close-note.",
+        "Docs mention the Web Control Center selected-task run owner note field.",
+        "Docs preserve the rule that Codex cannot approve, accept, or fabricate owner notes.",
+        "Documentation changes are limited to the auto-close owner-note workflow."
+      ],
+      "review_instructions": [
+        "Check that documentation does not imply automatic final acceptance."
+      ],
+      "notes": [
+        "Documentation should be updated only after the runtime path is understood."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T08:21:06Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-26T07:31:43Z",
+      "updated_at": "2026-06-26T08:21:07Z",
+      "uid": "tsk_7814abc39b10",
+      "ref": "PIPEF-107",
+      "legacy_id": "TASK-188",
+      "aliases": [
+        "TASK-188"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 107
     }
   ]
 }

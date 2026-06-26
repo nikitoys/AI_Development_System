@@ -1,15 +1,15 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/generated/CONTEXT_PACK.md -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-183 Add verify-to-review advisory warning pipeline regression Add an end-to-end pipeline regression proving advisory report warnings pass verify and do not block review. Guard the complete run-next flow that previously passed verify but blocked review. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Create a pipeline session fixture with a report that contains warnings and no blockers. Use a policy that allows advisory report warnings and relaxed git diff verification. Drive the session through verify and review without invoking external Codex. Assert verify passes with advisory warning evidence. Assert review does not block with REPORT_GATE_NOT_PASSED_AFTER_VERIFY. Do not change runtime pipeline behavior in this task. Do not add external Codex execution to the test. Do not edit protected project-control files manually. tests/test_pipeline_runner.py tests/pipeline/test_review_phase.py The regression fails on the old strict review behavior. The regression passes after review uses the shared report warning policy. The test does not run external Codex. The test asserts both verify and review phase outcomes. Focused pipeline/review tests pass. Confirm the test models the real blocker REPORT_GATE_NOT_PASSED_AFTER_VERIFY. Confirm the test is bounded and deterministic.","schema_version":1,"task_id":"TASK-183"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-188 Document auto-close owner note workflow Project control docs must explain when and how the Human Owner supplies auto-close notes for pipeline runs. This updates operator guidance after the UI and CLI owner-note paths are explicit. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Document that auto-close policies require an explicit Human Owner auto-close note before execution. Add CLI examples for ui run and pipeline session create with auto-close notes. Add Web Control Center guidance for the selected-task run owner note field. Clarify that Codex must not invent or provide owner approval notes. Do not change runtime code. Do not change task lifecycle rules unrelated to pipeline auto-close. Do not edit protected project-control files manually. ai-system/project-control/pipeline-runner.md ai-system/project-control/10-owner-quickstart.md Docs state that auto-close owner notes are explicit Human Owner approval inputs. Docs include a current CLI example using --auto-close-note. Docs mention the Web Control Center selected-task run owner note field. Docs preserve the rule that Codex cannot approve, accept, or fabricate owner notes. Documentation changes are limited to the auto-close owner-note workflow. Check that documentation does not imply automatic final acceptance.","schema_version":1,"task_id":"TASK-188"} -->
 
 # Context Status
 
 Context pack exists: `true`
 Mode: `task`
-Task ID: `TASK-183`
+Task ID: `TASK-188`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1303`
+Tasks revision: `1333`
 Indexed source documents: `10`
 Indexed chunks: `891`
 Selected chunks: `8`

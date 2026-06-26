@@ -3430,7 +3430,15 @@ def render_actions(data: Mapping[str, Any]) -> str:
         table(("Workflow", "Command", "Step Preview"), workflow_rows, "No workflows."),
         action_form(
             "ui.run_selected_task",
-            [input_field("task", "Task", default_task)],
+            [
+                input_field("task", "Task", default_task),
+                textarea_field(
+                    "auto_close_note",
+                    "Auto-close Owner Note",
+                    rows=2,
+                    placeholder="Required only when the selected policy auto-closes tasks.",
+                ),
+            ],
             button_label="Run Selected Task",
         ),
         action_form(
@@ -6205,7 +6213,15 @@ def task_row_start_control(task: Mapping[str, Any]) -> str:
         task_row_change_guidance(task),
         action_form(
             "ui.run_selected_task",
-            [hidden_field("task", task_ref)],
+            [
+                hidden_field("task", task_ref),
+                textarea_field(
+                    "auto_close_note",
+                    "Auto-close Owner Note",
+                    rows=2,
+                    placeholder="Required only when the selected policy auto-closes tasks.",
+                ),
+            ],
             button_label="Run",
         ),
     )

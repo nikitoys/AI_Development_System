@@ -1,10 +1,15 @@
+import importlib.util
+import io
 import json
 import subprocess
 import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import replace
 from pathlib import Path
+from unittest.mock import patch
 
+from ai_project_ctl.core.result import CommandResult
 from ai_project_ctl.pipeline import (
     BatchPolicy,
     CodexAdapterMode,
@@ -12,6 +17,7 @@ from ai_project_ctl.pipeline import (
     policy_preset,
 )
 from ai_project_ctl.pipeline.batch import run_until_blocker
+from ai_project_ctl.pipeline.close_phase import close_phase
 from ai_project_ctl.pipeline.codex_adapter import (
     CODE_REPORT_MISSING as CODEX_ADAPTER_REPORT_MISSING,
 )
@@ -27,8 +33,36 @@ from ai_project_ctl.pipeline.verify_phase import (
 )
 
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+AICTL_PATH = REPO_ROOT / "scripts" / "aictl.py"
+
+
 def completed(stdout="OK\n", returncode=0, stderr=""):
     return subprocess.CompletedProcess(args=[], returncode=returncode, stdout=stdout, stderr=stderr)
+
+
+def load_aictl_for_test():
+    spec = importlib.util.spec_from_file_location("aictl_pipeline_runner_test_module", AICTL_PATH)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def run_aictl_json(aictl, argv):
+    stdout = io.StringIO()
+    stderr = io.StringIO()
+    with redirect_stdout(stdout), redirect_stderr(stderr):
+        code = aictl.main(argv)
+    return code, json.loads(stdout.getvalue()), stderr.getvalue()
+
+
+def write_ui_settings(root: Path, *, default_policy: str) -> None:
+    config_dir = root / "AI_PROJECT" / "config"
+    config_dir.mkdir(parents=True)
+    (config_dir / "ui_settings.json").write_text(
+        json.dumps({"default_policy": default_policy}),
+        encoding="utf-8",
+    )
 
 
 def write_project_state(root: Path, *, change_status: str | None = "approved") -> None:
@@ -587,6 +621,78 @@ def record_collected_report(root: Path, session_id: str, report_id: str = "RPT-0
         raise AssertionError(result.errors)
 
 
+def force_auto_close_policy_note(root: Path, owner_note: str) -> None:
+    state_path = pipeline_state_path(root)
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    policy = state["sessions"][0]["policy_snapshot"]
+    policy["name"] = "supervised_autoclose"
+    closure = policy["closure"]
+    closure["auto_close_task"] = True
+    closure["owner_approval_note"] = owner_note
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+
+
+def record_close_ready_phase_history(
+    root: Path,
+    session_id: str,
+    *,
+    report_id: str = "RPT-001",
+) -> None:
+    phase_specs = (
+        ("prepare", "Task prepared for close preflight."),
+        ("execute", "Execution phase evidence recorded for close preflight."),
+        ("collect_report", "Structured report collected for close preflight."),
+        ("verify", "Machine verification passed for close preflight."),
+    )
+    for phase_name, reason in phase_specs:
+        result = record_phase_result(
+            session_id,
+            PhaseResult.passed(
+                phase_name,
+                reason=reason,
+                next_action="Continue close preflight.",
+                artifacts={
+                    "session_id": session_id,
+                    "task_id": "TASK-001",
+                    "task_ref": "APP-01",
+                    "report_id": report_id,
+                },
+            ),
+            root=root,
+            actor="tester",
+            task_id="TASK-001",
+            command="pipeline.phase.{}".format(phase_name),
+        )
+        if not result.ok:
+            raise AssertionError(result.errors)
+
+    result = record_phase_result(
+        session_id,
+        PhaseResult.passed(
+            "review",
+            reason="Codex Review approved the selected task.",
+            next_action="Close reviewed task.",
+            artifacts={
+                "session_id": session_id,
+                "task_id": "TASK-001",
+                "task_ref": "APP-01",
+                "report_id": report_id,
+                "review_id": "REV-001",
+                "review_status": "pass",
+                "review_code": "CODEX_REVIEW_APPROVE",
+                "review_reason": "Reviewer approved the task.",
+                "verdict": "APPROVE",
+            },
+        ),
+        root=root,
+        actor="tester",
+        task_id="TASK-001",
+        command="pipeline.phase.review",
+    )
+    if not result.ok:
+        raise AssertionError(result.errors)
+
+
 def load_pipeline(root: Path):
     return json.loads(pipeline_state_path(root).read_text(encoding="utf-8"))
 
@@ -619,6 +725,244 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(calls, [])
             self.assertEqual(latest["steps"][0]["status"], "stopped")
             self.assertEqual(latest["steps"][0]["gate_outcomes"][0]["name"], "codex_execution_policy")
+
+    def test_autoclose_session_creation_requires_owner_note(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+
+            result = create_session(
+                root=root,
+                actor="tester",
+                policy_name="supervised_autoclose",
+            )
+
+            self.assertFalse(result.ok)
+            self.assertEqual(result.message, "PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED")
+            self.assertEqual(len(result.errors), 1)
+            error = result.errors[0]
+            self.assertEqual(error.code, "PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED")
+            self.assertEqual(error.path, "closure.owner_approval_note")
+            self.assertEqual(error.details["policy"], "supervised_autoclose")
+            self.assertTrue(error.details["auto_close_task"])
+            self.assertFalse(error.details["owner_approval_note_present"])
+            self.assertEqual(error.details["required_argument"], "auto_close_note")
+            self.assertIn("--auto-close-note", error.details["next_action"])
+            self.assertEqual(result.next_actions, [error.details["next_action"]])
+            self.assertFalse(pipeline_state_path(root).exists())
+
+            allowed = create_session(root=root, actor="tester", policy_name="supervised")
+            self.assertTrue(allowed.ok)
+            closure = load_pipeline(root)["sessions"][0]["policy_snapshot"]["closure"]
+            self.assertFalse(closure["auto_close_task"])
+            self.assertEqual(closure["owner_approval_note"], "")
+
+    def test_autoclose_session_creation_stores_owner_note(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            note = "Owner approved auto-close for this test session."
+
+            result = create_session(
+                root=root,
+                actor="tester",
+                policy_name="supervised_autoclose",
+                auto_close_note=note,
+            )
+
+            self.assertTrue(result.ok)
+            state = load_pipeline(root)
+            closure = state["sessions"][0]["policy_snapshot"]["closure"]
+            self.assertTrue(closure["auto_close_task"])
+            self.assertEqual(closure["owner_approval_note"], note)
+
+    def test_close_phase_blocks_with_owner_notes_required_when_note_is_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status=None)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy_name="supervised",
+                current_task_id="TASK-001",
+                current_task_ref="APP-01",
+            )
+            self.assertTrue(session.ok)
+            force_auto_close_policy_note(root, "")
+            record_close_ready_phase_history(root, session.data["session_id"])
+
+            with patch(
+                "ai_project_ctl.pipeline.close_phase.run_review_close_workflow",
+                side_effect=AssertionError("close workflow must not run without owner note"),
+            ):
+                result = close_phase(
+                    session.data["session_id"],
+                    root=root,
+                    actor="tester",
+                    confirmed=True,
+                )
+
+            latest_phase = load_pipeline(root)["sessions"][0]["phase_history"][-1]
+            artifacts = latest_phase["artifacts"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(latest_phase["phase"], "close")
+            self.assertEqual(latest_phase["status"], "blocked")
+            self.assertTrue(artifacts["preflight_passed"])
+            self.assertEqual(artifacts["missing_gates"], [])
+            self.assertEqual(artifacts["blocked_by"], "CLOSE_OWNER_NOTES_REQUIRED")
+            self.assertFalse(artifacts["close_policy"]["owner_approval_note_present"])
+
+    def test_close_phase_reaches_close_workflow_when_owner_note_is_present(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status=None)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy_name="supervised",
+                current_task_id="TASK-001",
+                current_task_ref="APP-01",
+            )
+            self.assertTrue(session.ok)
+            note = "Owner approved auto-close for this close phase regression."
+            force_auto_close_policy_note(root, note)
+            record_close_ready_phase_history(root, session.data["session_id"])
+            workflow = CommandResult.success(
+                command="pipeline.review_close_policy",
+                domain="pipeline",
+                message="Task close workflow reached.",
+                data={"decision": {"action": "close_task"}, "workflows": []},
+            )
+
+            with patch(
+                "ai_project_ctl.pipeline.close_phase.run_review_close_workflow",
+                return_value=workflow,
+            ) as close_workflow:
+                result = close_phase(
+                    session.data["session_id"],
+                    root=root,
+                    actor="tester",
+                    confirmed=True,
+                )
+
+            latest_phase = load_pipeline(root)["sessions"][0]["phase_history"][-1]
+            artifacts = latest_phase["artifacts"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(latest_phase["phase"], "close")
+            self.assertEqual(latest_phase["status"], "passed")
+            self.assertTrue(artifacts["preflight_passed"])
+            self.assertEqual(artifacts["missing_gates"], [])
+            self.assertNotEqual(artifacts.get("blocked_by"), "CLOSE_OWNER_NOTES_REQUIRED")
+            self.assertTrue(artifacts["close_policy"]["owner_approval_note_present"])
+            self.assertEqual(
+                artifacts["close_workflow"]["message"],
+                "Task close workflow reached.",
+            )
+            close_workflow.assert_called_once()
+
+    def test_ui_run_autoclose_requires_owner_note_before_session_execution(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            write_ui_settings(root, default_policy="supervised_executable_autoclose")
+            aictl = load_aictl_for_test()
+
+            with patch.object(
+                aictl,
+                "run_codex_preflight",
+                side_effect=AssertionError("ui run must not run Codex preflight"),
+            ), patch.object(
+                aictl,
+                "run_pipeline_until_blocker",
+                side_effect=AssertionError("ui run must not start execution"),
+            ):
+                code, payload, _stderr = run_aictl_json(
+                    aictl,
+                    [
+                        "--root",
+                        str(root),
+                        "--actor",
+                        "tester",
+                        "--json",
+                        "ui",
+                        "run",
+                        "APP-01",
+                        "--confirm",
+                        "--preflight",
+                    ],
+                )
+
+            self.assertEqual(code, 1)
+            self.assertFalse(payload["ok"])
+            self.assertEqual(payload["data"]["policy"], "supervised_executable_autoclose")
+            self.assertEqual(
+                payload["errors"][0]["code"],
+                "PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED",
+            )
+            self.assertFalse(pipeline_state_path(root).exists())
+
+    def test_ui_run_autoclose_stores_owner_note_in_created_session(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            write_ui_settings(root, default_policy="supervised_autoclose")
+            aictl = load_aictl_for_test()
+            note = "Owner approved auto-close for this UI run."
+
+            code, payload, _stderr = run_aictl_json(
+                aictl,
+                [
+                    "--root",
+                    str(root),
+                    "--actor",
+                    "tester",
+                    "--json",
+                    "ui",
+                    "run",
+                    "APP-01",
+                    "--auto-close-note",
+                    note,
+                ],
+            )
+
+            self.assertEqual(code, 1)
+            self.assertFalse(payload["ok"])
+            self.assertEqual(payload["errors"][0]["code"], "UI_RUN_CONFIRMATION_REQUIRED")
+            self.assertEqual(payload["data"]["session_id"], "PSESS-001")
+            closure = load_pipeline(root)["sessions"][0]["policy_snapshot"]["closure"]
+            self.assertTrue(closure["auto_close_task"])
+            self.assertEqual(closure["owner_approval_note"], note)
+
+    def test_ui_run_non_autoclose_policy_still_allows_missing_note(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            write_ui_settings(root, default_policy="supervised")
+            aictl = load_aictl_for_test()
+
+            code, payload, _stderr = run_aictl_json(
+                aictl,
+                [
+                    "--root",
+                    str(root),
+                    "--actor",
+                    "tester",
+                    "--json",
+                    "ui",
+                    "run",
+                    "APP-01",
+                ],
+            )
+
+            self.assertEqual(code, 1)
+            self.assertFalse(payload["ok"])
+            self.assertEqual(payload["errors"][0]["code"], "UI_RUN_CONFIRMATION_REQUIRED")
+            self.assertEqual(payload["data"]["session_id"], "PSESS-001")
+            closure = load_pipeline(root)["sessions"][0]["policy_snapshot"]["closure"]
+            self.assertFalse(closure["auto_close_task"])
+            self.assertEqual(closure["owner_approval_note"], "")
 
     def test_supervised_blocks_when_approved_change_is_missing(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1730,29 +2074,22 @@ class PipelineRunnerTests(unittest.TestCase):
             )
             self.assertEqual(len(gates), 1)
 
-    def test_autoclose_policy_stops_when_build_prompt_only_cannot_review(self):
+    def test_autoclose_policy_blocks_build_prompt_only_session_without_owner_note(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write_project_state(root, change_status="approved")
-            session = create_session(
+            result = create_session(
                 root=root,
                 actor="tester",
                 policy_name="supervised_autoclose",
             )
-            calls = []
 
-            result = run_next(
-                session.data["session_id"],
-                root=root,
-                actor="tester",
-                runner=successful_workflow_runner(calls),
+            self.assertFalse(result.ok)
+            self.assertEqual(
+                result.errors[0].code,
+                "PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED",
             )
-            gate = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"][0]
-
-            self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "NOT_IMPLEMENTED")
-            self.assertEqual(gate["name"], "review_close_gate")
-            self.assertIn("requires Codex execution", result.data["stop_reason"])
+            self.assertFalse(pipeline_state_path(root).exists())
 
     def test_local_commit_policy_commits_after_close_and_green_readiness(self):
         with tempfile.TemporaryDirectory() as tmp:

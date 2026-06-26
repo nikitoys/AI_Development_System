@@ -64,6 +64,7 @@ Human Owner:
 - chooses the queue and policy preset;
 - confirms run actions;
 - approves Evolution Changes when approval is required;
+- supplies any auto-close owner note before an auto-close policy is executed;
 - decides whether to accept completed work, request rework, stop the session, or commit locally;
 - never treats pipeline success as automatic final acceptance.
 
@@ -98,6 +99,7 @@ The pipeline must not:
 - mark a Task done without the governed review/close path;
 - run Codex before Token Budget Gate passes when execution policy requires it;
 - close a Task automatically unless policy permits auto-close and both Machine Review and Codex Review gates pass;
+- close a Task automatically from an owner note invented, drafted, or supplied by Codex;
 - create commits unless policy permits local-only commit and commit readiness is green;
 - push, merge, reset, rebase, switch branches, restore files, clean files, or discard changes.
 
@@ -121,7 +123,7 @@ Important details:
 - `supervised_autoclose` and `supervised_local_commit` do not magically execute Codex. With their default prompt-only Codex mode, they stop before auto-close or commit because the execution and review evidence does not exist.
 - Executable presets use the local-command adapter with an exact allowlist for `codex exec`. The adapter validates prompt freshness and task identity before invoking the command, passes `AI_PROJECT/generated/CODEX_PROMPT.md` to `codex exec` through stdin by default, then requires a newly submitted structured execution report before downstream gates can pass.
 - Owner-configured Codex sandbox flags belong in `local_command` and must exactly match `command_allowlist`, for example `codex exec -s workspace-write`. The adapter does not hardcode `danger-full-access` or bypass modes.
-- Auto-close requires an explicit owner approval note on the session. Use `--auto-close-note "..."` when creating an executable auto-close session.
+- Auto-close requires an explicit Human Owner auto-close note on the session. The note is an owner approval input, not a Codex output. Codex may report that the note is missing, but it must not invent, draft, fill in, or provide the owner note.
 - Commit policy is always local-only when enabled. Push and merge are forbidden by policy validation.
 
 ## Session Lifecycle
@@ -177,11 +179,19 @@ or for an Epic queue:
 python scripts/aictl.py pipeline session create --policy supervised --epic EPIC-007 --status-filter ready --max-tasks 3
 ```
 
-Create an executable auto-close session only when the Human Owner explicitly approved auto-close for the selected queue:
+Create an executable auto-close session only when the Human Owner explicitly approved auto-close for the selected queue and supplied the exact auto-close note to record:
 
 ```bash
 python scripts/aictl.py pipeline session create --policy supervised_executable_autoclose --task-ref PIPE-25 --auto-close-note "APPROVED by Human Owner for this selected session"
 ```
+
+For a selected-task run through the UI command facade, pass the same Human Owner note with `ui run`:
+
+```bash
+python scripts/aictl.py ui run PIPE-25 --auto-close-note "APPROVED by Human Owner for this selected task run" --confirm
+```
+
+If the Human Owner has not supplied the note, create a non-auto-close session or stop and ask for the owner decision. Codex must not provide placeholder approval text.
 
 Do not create or edit `pipeline_sessions.json` manually.
 
@@ -491,7 +501,10 @@ Auto-close may run only when:
 - policy enables `auto_close_task`;
 - Codex Report Gate is PASS;
 - Machine Review is PASS;
-- Codex Review status is PASS and verdict is `APPROVE`.
+- Codex Review status is PASS and verdict is `APPROVE`;
+- the session already contains an explicit Human Owner auto-close note.
+
+The auto-close note is used as the owner approval note for the governed close workflow. It must be supplied by the Human Owner before execution of the auto-close policy. Codex must not fabricate, infer, or reuse generic approval notes to satisfy this gate.
 
 The close path delegates to governed workflows:
 
@@ -638,6 +651,8 @@ Create a session:
 
 ```bash
 python scripts/aictl.py pipeline session create --policy supervised --task-ref PIPE-15
+python scripts/aictl.py pipeline session create --policy supervised_executable_autoclose --task-ref PIPE-25 --auto-close-note "APPROVED by Human Owner for this selected session"
+python scripts/aictl.py ui run PIPE-25 --auto-close-note "APPROVED by Human Owner for this selected task run" --confirm
 ```
 
 Run one step:

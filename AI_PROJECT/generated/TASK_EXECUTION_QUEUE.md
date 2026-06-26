@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1306`
+Revision: `1336`
 
 ## Executable Now
 
@@ -369,4 +369,14 @@ _No tasks waiting only on dependencies._
 - `PIPEF-101 (TASK-182)` [done] `EPIC-009` priority `1` — Allow advisory report warnings in review phase
   - `status_not_executable`: status is done
 - `PIPEF-102 (TASK-183)` [done] `EPIC-009` priority `1` — Add verify-to-review advisory warning pipeline regression
+  - `status_not_executable`: status is done
+- `PIPEF-103 (TASK-184)` [done] `EPIC-009` priority `1` — Require auto-close owner note at session creation
+  - `status_not_executable`: status is done
+- `PIPEF-104 (TASK-185)` [done] `EPIC-009` priority `1` — Add auto-close note to CLI UI run
+  - `status_not_executable`: status is done
+- `PIPEF-105 (TASK-186)` [done] `EPIC-009` priority `1` — Expose auto-close note in Web UI run
+  - `status_not_executable`: status is done
+- `PIPEF-106 (TASK-187)` [done] `EPIC-009` priority `1` — Cover auto-close owner note close path
+  - `status_not_executable`: status is done
+- `PIPEF-107 (TASK-188)` [done] `EPIC-009` priority `1` — Document auto-close owner note workflow
   - `status_not_executable`: status is done

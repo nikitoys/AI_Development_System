@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 32,
+  "revision": 37,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-26T06:56:48Z",
+  "updated_at": "2026-06-26T08:20:14Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -2421,6 +2421,351 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-033",
+      "task_id": "TASK-184",
+      "task_ref": "PIPEF-103",
+      "submitted_at": "2026-06-26T07:39:53Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:0e789ca424abe18cd45acc53b10d8a8c4272ac4565eab797211d705f57c10f59",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-184",
+        "task_ref": "PIPEF-103",
+        "reported_task_id": "TASK-184",
+        "reported_task_ref": "PIPEF-103",
+        "implementation_summary": "Added auto-close owner-note validation during pipeline session creation and regression tests for missing-note failure, present-note persistence, and non-auto-close session creation without a note.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 465.088587,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 465.088587,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest is not installed in this environment.",
+          "Full tests.test_pipeline_runner unittest module currently fails in broad run_next/queue-preview expectations unrelated to the new session-creation guard.",
+          "Protected AI_PROJECT files were already modified in the working tree and were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused unittest regressions and py_compile passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 946,
+          "remaining_tokens": 31054,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-034",
+      "task_id": "TASK-185",
+      "task_ref": "PIPEF-104",
+      "submitted_at": "2026-06-26T07:55:07Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:f67977f50c947c996cd21b095b9d8f38bbf963bee2f089fe0baa8bf82bb914f4",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-185",
+        "task_ref": "PIPEF-104",
+        "reported_task_id": "TASK-185",
+        "reported_task_ref": "PIPEF-104",
+        "implementation_summary": "Added owner-supplied --auto-close-note support to aictl ui run, passed it into pipeline session creation, and covered missing, present, and non-auto-close UI-run behavior with focused tests.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 454.069916,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 454.069916,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Pre-existing dirty project-control files and ai_project_ctl/pipeline/session.py were present before this task and were not modified by this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused UI-run and session guard tests passed.",
+          "ui run --help now shows --auto-close-note."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 919,
+          "remaining_tokens": 31081,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-035",
+      "task_id": "TASK-186",
+      "task_ref": "PIPEF-105",
+      "submitted_at": "2026-06-26T08:03:59Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:e760083b820d0f0475f40edfde6abaa8e8f2a93b155ae041e5bce32c89c02c57",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-186",
+        "task_ref": "PIPEF-105",
+        "reported_task_id": "TASK-186",
+        "reported_task_ref": "PIPEF-105",
+        "implementation_summary": "Added selected-task Web Control Center auto-close owner note input, forwarded auto_close_note into UI-selected session creation, and covered missing-note and present-note selected-task run behavior.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 469.840194,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 469.840194,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree had pre-existing unrelated modified files, including protected project-control state/generated files; they were not edited for this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "The owner note is stored in the session policy snapshot closure metadata and is not added as a generated approval."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 950,
+          "remaining_tokens": 31050,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-036",
+      "task_id": "TASK-187",
+      "task_ref": "PIPEF-106",
+      "submitted_at": "2026-06-26T08:12:07Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:0e0a37b09bc01f76ee791c96b6284c6d85e192b7fc91a39910ebddbb07181a7e",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-187",
+        "task_ref": "PIPEF-106",
+        "reported_task_id": "TASK-187",
+        "reported_task_ref": "PIPEF-106",
+        "implementation_summary": "Added close_phase regression tests for owner-note auto-close behavior using temp fixture state and mocked close workflow, without real Codex execution or git commits.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 443.56762,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 443.56762,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Full tests.test_pipeline_runner currently fails in unrelated existing run_next queue-preview expectations, where stop_code/step assertions are not reached."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused close-path regression tests passed.",
+          "Only tests/test_pipeline_runner.py was edited."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 920,
+          "remaining_tokens": 31080,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-037",
+      "task_id": "TASK-188",
+      "task_ref": "PIPEF-107",
+      "submitted_at": "2026-06-26T08:20:14Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:cae0b79621db81aa519afa8455b3878eaaab213109cad74a1e05921d8a4e67b4",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-188",
+        "task_ref": "PIPEF-107",
+        "reported_task_id": "TASK-188",
+        "reported_task_ref": "PIPEF-107",
+        "implementation_summary": "Updated project-control pipeline documentation to require explicit Human Owner auto-close notes, added current CLI examples for pipeline session creation and ui run, and documented the Web Control Center selected-task Auto-close Owner Note field while preserving the rule that Codex cannot fabricate approval notes.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 368.986903,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 368.986903,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "docctl.py validate reported existing registry/status/hash warnings, including recorded content hash mismatches for the edited docs because protected doc-control state was not updated.",
+          "Protected AI_PROJECT files were already dirty outside this task scope and were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "Read-only documentation validation and integrity checks passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 894,
+          "remaining_tokens": 31106,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -2453,6 +2798,11 @@
     "TASK-180": "RPT-029",
     "TASK-181": "RPT-030",
     "TASK-182": "RPT-031",
-    "TASK-183": "RPT-032"
+    "TASK-183": "RPT-032",
+    "TASK-184": "RPT-033",
+    "TASK-185": "RPT-034",
+    "TASK-186": "RPT-035",
+    "TASK-187": "RPT-036",
+    "TASK-188": "RPT-037"
   }
 }

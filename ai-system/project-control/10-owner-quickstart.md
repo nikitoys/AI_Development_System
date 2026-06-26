@@ -52,6 +52,7 @@ The `Focus Tasks` section keeps the current Task plus ready, in-progress, review
 Task rows show only workflows that apply to the current status and pipeline hints:
 
 ```text
+Run                selected ready or planned Tasks through the effective UI pipeline policy
 Prepare for Codex  planned, ready or changes_requested Tasks
 Refresh Context    current or in_progress Tasks when available
 Submit for Review  in_progress Tasks
@@ -59,6 +60,8 @@ Approve & Done     in_review Tasks with Human Owner approval notes
 Request Changes    in_review Tasks with rework notes
 No row workflows   done or otherwise unavailable actions
 ```
+
+When a selected-task `Run` form shows `Auto-close Owner Note`, fill it only with an explicit Human Owner approval note for that run. Leave it blank for non-auto-close policies. Codex may point out that the field is required by an auto-close policy, but Codex must not invent or provide the note.
 
 Each workflow posts to `/actions`, delegates through registered `aictl.py` workflows and owning `*ctl.py` scripts, and then opens an Action Result panel. Read that panel before continuing. It shows PASS/FAIL, registered command, workflow, target, return code, step results, changed and generated files, warnings, errors, next actions, any Codex instruction to copy into a session, and technical details.
 
@@ -201,6 +204,8 @@ Policy presets decide what is allowed, but they do not remove owner gates:
 - `supervised_local_commit` is a prompt-only legacy preset; local commit is blocked before commit because close evidence is missing.
 - `supervised_executable_local_commit` adds local-only commit policy after executable run, approved review gates, auto-close and commit-readiness gates pass. Push and merge remain forbidden.
 
+Auto-close owner notes are explicit Human Owner approval inputs. Supply them only when the Human Owner has approved auto-close for the selected task or queue. Codex must not draft, fabricate, reuse, or paste approval notes on the owner's behalf.
+
 Executable pipeline policies pass `AI_PROJECT/generated/CODEX_PROMPT.md` to the local Codex command through stdin by default. The configured command must exactly match the policy allowlist. Owner-configured sandbox flags are allowed only when both `local_command` and `command_allowlist` include the exact command.
 
 UI settings provide the owner-facing command and timeout values:
@@ -232,6 +237,7 @@ CLI equivalents:
 python scripts/aictl.py pipeline status
 python scripts/aictl.py pipeline session create --policy supervised --task-ref PIPE-15
 python scripts/aictl.py pipeline session create --policy supervised_executable_autoclose --task-ref PIPE-25 --auto-close-note "APPROVED by Human Owner for this selected session"
+python scripts/aictl.py ui run PIPE-25 --auto-close-note "APPROVED by Human Owner for this selected task run" --confirm
 python scripts/aictl.py pipeline run-next
 python scripts/aictl.py pipeline run-until-blocker --confirm
 python scripts/aictl.py pipeline render
@@ -451,6 +457,8 @@ deferred
 ```
 
 The Web surface must not directly edit `AI_PROJECT/state/**`, `AI_PROJECT/events/**` or `AI_PROJECT/generated/**`. It must not silently approve tasks, accept tasks, accept evolution changes, or mark documents active. Owner-facing approval and acceptance actions require explicit notes, route through registered commands and remain Human Owner decisions.
+
+For selected-task runs, the Web Control Center exposes an `Auto-close Owner Note` field on the Task row `Run` form and the `Actions` selected-task run form. That field is the Web equivalent of `--auto-close-note`; use it only for an explicit Human Owner approval note for that selected run. If an auto-close policy is selected and the field is empty, the run must block for owner input. Codex must not fill the field or provide placeholder approval text.
 
 ## Protected Files And Generated Output
 

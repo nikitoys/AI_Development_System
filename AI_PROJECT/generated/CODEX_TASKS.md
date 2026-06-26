@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1306`
+Revision: `1336`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -3237,3 +3237,89 @@ Acceptance criteria:
 - The test does not run external Codex.
 - The test asserts both verify and review phase outcomes.
 - Focused pipeline/review tests pass.
+
+### PIPEF-103 (TASK-184) — Require auto-close owner note at session creation
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_ce339d5882a1`, legacy `TASK-184`, aliases `TASK-184`, local `PIPEF` / `103`
+
+Auto-close pipeline sessions must fail before execution when no Human Owner auto-close note is provided.
+
+Acceptance criteria:
+
+- Creating a session with closure.auto_close_task enabled and no auto-close note fails before any phase execution can start.
+- The failure uses a stable, explicit code such as AUTO_CLOSE_OWNER_NOTE_REQUIRED or PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED.
+- Creating the same auto-close session with an owner note succeeds and stores the note in policy_snapshot.closure.owner_approval_note.
+- Policies without auto-close enabled can still create sessions without an auto-close note.
+- Focused tests covering missing and present auto-close notes pass.
+
+### PIPEF-104 (TASK-185) — Add auto-close note to CLI UI run
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_42b9b31f1758`, legacy `TASK-185`, aliases `TASK-185`, local `PIPEF` / `104`
+
+The ui run command must accept a Human Owner auto-close note and pass it into the created pipeline session.
+
+Acceptance criteria:
+
+- python scripts/aictl.py ui run accepts --auto-close-note as an explicit owner-supplied argument.
+- When an auto-close policy is selected and the note is blank, ui run stops before session execution and before any Codex adapter call.
+- When an auto-close policy is selected and the note is provided, the created session snapshot contains closure.owner_approval_note.
+- Existing ui run behavior for non-auto-close policies remains unchanged.
+- Focused tests for ui run note handling pass.
+
+### PIPEF-105 (TASK-186) — Expose auto-close note in Web UI run
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_870cdc06115c`, legacy `TASK-186`, aliases `TASK-186`, local `PIPEF` / `105`
+
+The Web Control Center selected-task run action must expose and forward a Human Owner auto-close note.
+
+Acceptance criteria:
+
+- The Web Control Center selected-task run UI exposes a clear auto-close owner note input.
+- The ui.run_selected_task action passes auto_close_note into session creation or delegated ui run handling.
+- Submitting an auto-close selected-task run without a note fails before Codex execution with a clear owner-action message.
+- Submitting an auto-close selected-task run with a note creates a session whose policy snapshot contains the note.
+- Existing web selected-task runs for non-auto-close policies remain unchanged.
+- Focused Web Control Center tests pass.
+
+### PIPEF-106 (TASK-187) — Cover auto-close owner note close path
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_4dd0cafae529`, legacy `TASK-187`, aliases `TASK-187`, local `PIPEF` / `106`
+
+Regression tests must prove that owner-noted auto-close sessions do not fail close with CLOSE_OWNER_NOTES_REQUIRED.
+
+Acceptance criteria:
+
+- A missing owner note continues to produce CLOSE_OWNER_NOTES_REQUIRED at close.
+- A present owner note reaches close without CLOSE_OWNER_NOTES_REQUIRED when all required prior evidence is valid.
+- The test fixture does not require invoking the real Codex adapter.
+- The test fixture does not require creating a real local git commit.
+- Focused close-path regression tests pass.
+
+### PIPEF-107 (TASK-188) — Document auto-close owner note workflow
+
+Status: `done`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_7814abc39b10`, legacy `TASK-188`, aliases `TASK-188`, local `PIPEF` / `107`
+
+Project control docs must explain when and how the Human Owner supplies auto-close notes for pipeline runs.
+
+Acceptance criteria:
+
+- Docs state that auto-close owner notes are explicit Human Owner approval inputs.
+- Docs include a current CLI example using --auto-close-note.
+- Docs mention the Web Control Center selected-task run owner note field.
+- Docs preserve the rule that Codex cannot approve, accept, or fabricate owner notes.
+- Documentation changes are limited to the auto-close owner-note workflow.

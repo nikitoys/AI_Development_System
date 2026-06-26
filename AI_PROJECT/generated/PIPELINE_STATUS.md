@@ -3,23 +3,23 @@
 
 # Pipeline Status
 
-Revision: `300`
-Current session: `PSESS-054`
-Sessions: `54`
+Revision: `340`
+Current session: `PSESS-059`
+Sessions: `59`
 
 ## Current Session
 
-- ID: `PSESS-054`
-- Status: `blocked`
+- ID: `PSESS-059`
+- Status: `stopped`
 - Policy: `supervised_executable_local_commit_1h_auto_change`
-- Current task: `TASK-183`
-- Current phase: `close`
-- Phase status: `blocked`
-- Blocked by: `CLOSE_OWNER_NOTES_REQUIRED`
-- Next action: `Recreate or update the pipeline session with an explicit auto-close owner note before rerunning close.`
+- Current task: `TASK-188`
+- Current phase: `verify`
+- Phase status: `passed`
+- Blocked by: `none`
+- Next action: `Run pipeline phase review.`
 - Current step: `execute`
 - Step status: `stopped`
-- Stop reason: `Close blocked: task closure requires owner approval notes.`
+- Stop reason: `MAX_STEPS_REACHED: Batch runner reached max_steps 5.`
 
 ## Sessions
 
@@ -79,6 +79,11 @@ Sessions: `54`
 | `PSESS-052` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-181` | `verify` | `blocked` | CODEX_REPORT_WARN | Resolve report gate warnings or explicitly enable policy.verify.allow_report_warnings, then rerun verify. | `execute` | Report gate returned warning(s): Report contains warning(s): Repository had pre-existing dirty files outside the allowed task scope; they were left untouched. |
 | `PSESS-053` | `stopped` | `supervised_executable_local_commit_1h_auto_change` | `TASK-182` | `verify` | `passed` | none | Run pipeline phase review. | `execute` | MAX_STEPS_REACHED: Batch runner reached max_steps 5. |
 | `PSESS-054` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-183` | `close` | `blocked` | CLOSE_OWNER_NOTES_REQUIRED | Recreate or update the pipeline session with an explicit auto-close owner note before rerunning close. | `execute` | Close blocked: task closure requires owner approval notes. |
+| `PSESS-055` | `stopped` | `supervised_executable_local_commit_1h_auto_change` | `TASK-184` | `verify` | `passed` | none | Run pipeline phase review. | `execute` | MAX_STEPS_REACHED: Batch runner reached max_steps 5. |
+| `PSESS-056` | `stopped` | `supervised_executable_local_commit_1h_auto_change` | `TASK-185` | `verify` | `passed` | none | Run pipeline phase review. | `execute` | MAX_STEPS_REACHED: Batch runner reached max_steps 5. |
+| `PSESS-057` | `stopped` | `supervised_executable_local_commit_1h_auto_change` | `TASK-186` | `verify` | `passed` | none | Run pipeline phase review. | `execute` | MAX_STEPS_REACHED: Batch runner reached max_steps 5. |
+| `PSESS-058` | `stopped` | `supervised_executable_local_commit_1h_auto_change` | `TASK-187` | `verify` | `passed` | none | Run pipeline phase review. | `execute` | MAX_STEPS_REACHED: Batch runner reached max_steps 5. |
+| `PSESS-059` | `stopped` | `supervised_executable_local_commit_1h_auto_change` | `TASK-188` | `verify` | `passed` | none | Run pipeline phase review. | `execute` | MAX_STEPS_REACHED: Batch runner reached max_steps 5. |
 
 ## Phase History
 
@@ -273,3 +278,28 @@ Sessions: `54`
 | `PSESS-054` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
 | `PSESS-054` | 7 | `close` | `blocked` | Close blocked: task closure requires owner approval notes. | Recreate or update the pipeline session with an explicit auto-close owner note before rerunning close. | 0 | 0 | 1 |
 | `PSESS-054` | 8 | `close` | `blocked` | Close blocked: task closure requires owner approval notes. | Recreate or update the pipeline session with an explicit auto-close owner note before rerunning close. | 0 | 0 | 1 |
+| `PSESS-055` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-055` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 51a435b92ce8383fc5cdf888bdf04c6ddbf8583bd4c869efd831bcd42a77cc31). | 0 | 0 | 1 |
+| `PSESS-055` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-055` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-055` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-056` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-056` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 c0eb6d14643a4096e6ea08c8f503737c2485ffffa1e3428c90cfd3fb85e8e48d). | 0 | 0 | 1 |
+| `PSESS-056` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-056` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-056` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-057` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-057` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 a3cc6dd497169647fc639c131285fa26297a02d81d2ea06225d032a8f6f8511d). | 0 | 0 | 1 |
+| `PSESS-057` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-057` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-057` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-058` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-058` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 3bc4af6ad49d81d324b3398907eb29444eddac8222da26a215a015297c23b631). | 0 | 0 | 1 |
+| `PSESS-058` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-058` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-058` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-059` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-059` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 2177c39087fa37eae47991f437edfecc1aa68d2778da6a54f8e4a9fc8cce20ac). | 0 | 0 | 1 |
+| `PSESS-059` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-059` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-059` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |

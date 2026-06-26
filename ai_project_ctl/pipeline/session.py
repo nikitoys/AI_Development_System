@@ -42,6 +42,7 @@ from .state import (
 
 SESSION_ID_PREFIX = "PSESS-"
 LIVE_PHASE_STATUS = "running"
+CODE_AUTO_CLOSE_OWNER_NOTE_REQUIRED = "PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED"
 
 
 class PipelineSessionError(CommandError):
@@ -98,6 +99,11 @@ def create_session(
                 owner_approval_note=auto_close_note,
             ),
         )
+    if (
+        selected_policy.closure.auto_close_task
+        and not selected_policy.closure.owner_approval_note.strip()
+    ):
+        return _auto_close_owner_note_required_failure(selected_policy)
     queue = _queue_snapshot(
         selected_policy.queue,
         selected_queue=selected_queue,
@@ -142,6 +148,35 @@ def create_session(
         entity_id="new",
         mutate=mutate,
     )
+
+
+def _auto_close_owner_note_required_failure(policy: PipelinePolicy) -> CommandResult:
+    next_action = (
+        "Recreate the pipeline session with an explicit Human Owner auto-close "
+        "note, for example --auto-close-note <OWNER_NOTE>."
+    )
+    result = CommandResult.failure(
+        command="pipeline.session.create",
+        domain="pipeline",
+        message=CODE_AUTO_CLOSE_OWNER_NOTE_REQUIRED,
+        errors=[
+            CommandMessage(
+                CODE_AUTO_CLOSE_OWNER_NOTE_REQUIRED,
+                "Auto-close pipeline sessions require an explicit Human Owner auto-close note.",
+                path="closure.owner_approval_note",
+                details={
+                    "policy": policy.name,
+                    "auto_close_task": True,
+                    "owner_approval_note_present": False,
+                    "required_argument": "auto_close_note",
+                    "next_action": next_action,
+                },
+            )
+        ],
+    )
+    result.owner_action_required = "Provide Human Owner auto-close approval note."
+    result.next_actions.append(next_action)
+    return result
 
 
 def start_step(
