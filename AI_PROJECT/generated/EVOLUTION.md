@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `2279`
-Changes: `73`
+Revision: `2304`
+Changes: `74`
 
 ## Summary
 
-- `accepted`: 51
+- `accepted`: 52
 - `approved`: 16
 - `in_review`: 1
 - `ready`: 5
@@ -4631,3 +4631,60 @@ Impact:
 Linked tasks:
 
 - TASK-143
+
+### CHG-074 — PIPE-045 Update phase pipeline usage guide
+
+Status: `accepted`  
+Type: `docs`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-45 requires an explicit Evolution Change Proposal before implementation: Add user-facing documentation for the phase-based pipeline commands, outcomes, and common blocked states.
+
+Proposal:
+
+Implement the bounded task scope: Document the phase command sequence from queue preview to close.; Document passed, blocked, failed, and skipped outcomes.; Document manual handoff, missing report, review request changes, and CI exit-code behavior.; Add a compact quickstart with exact aictl commands.
+
+Rationale:
+
+Make the new pipeline usable without reading implementation code.
+
+Approved by: `human_owner` at `2026-06-26T09:01:20Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-061)  
+
+Accepted by: `human_owner` at `2026-06-26T12:47:54Z`  
+Acceptance notes: Approve; linked Change accepted after task TASK-124 close succeeded.  
+
+Affected files:
+
+- ai-system/pipeline-phase-usage.md
+- ai-system/README.md
+
+Risks:
+
+- Boundary risk: Do not change behavior unrelated to this task.
+- Boundary risk: Do not refactor unrelated code.
+- Boundary risk: Do not edit protected project-control files manually.
+- Check that documentation does not claim fully autonomous execution where manual gates remain required.
+- Verify command examples match actual CLI names.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-124.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Document the phase command sequence from queue preview to close.
+- Document passed, blocked, failed, and skipped outcomes.
+- Document manual handoff, missing report, review request changes, and CI exit-code behavior.
+- Add a compact quickstart with exact aictl commands.
+- The guide shows the command sequence: queue preview, prepare, execute, collect-report, verify, review, close.
+- The guide explains blocked outcomes as normal owner-action states.
+- The guide documents CI exit codes for passed, blocked, and failed outcomes.
+
+Linked tasks:
+
+- TASK-124

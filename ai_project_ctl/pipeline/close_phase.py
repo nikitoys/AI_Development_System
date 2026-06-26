@@ -14,6 +14,7 @@ from typing import Any, Mapping
 from ai_project_ctl.core.result import CommandMessage, CommandResult
 from ai_project_ctl.core.workflows import run_workflow
 
+from .artifact_bounds import bound_pipeline_artifact
 from .close_policy import (
     ACTION_CLOSE_TASK,
     CODE_TASK_AUTO_CLOSED,
@@ -190,6 +191,7 @@ def close_phase(
                 "task_ref": task_ref,
                 "close_policy": _safe_close_policy(close_policy),
                 "close_workflow": workflow.to_dict(),
+                **_close_recovery_artifacts(workflow),
                 "codex_execution_cleanup": _codex_execution_cleanup_report(
                     workflow,
                     task_id,
@@ -227,6 +229,7 @@ def close_phase(
         "preflight_passed": True,
         "close_policy": _safe_close_policy(close_policy),
         "close_workflow": workflow.to_dict(),
+        **_close_recovery_artifacts(workflow),
         "codex_execution_cleanup": _codex_execution_cleanup_report(
             workflow,
             task_id,
@@ -304,7 +307,13 @@ def close_phase(
         else:
             phase = PhaseResult.passed(
                 PHASE_NAME,
-                reason=_close_success_reason(change_acceptance, local_commit),
+                reason=_close_success_reason(
+                    change_acceptance,
+                    local_commit,
+                    already_closed=bool(
+                        phase_artifacts.get("already_closed_by_previous_attempt")
+                    ),
+                ),
                 next_action=_close_success_next_action(change_acceptance, local_commit),
                 artifacts=phase_artifacts,
                 changed_files=workflow.changed_files,
@@ -838,10 +847,29 @@ def _optional_int(value: Any) -> int | None:
 def _close_success_reason(
     change_acceptance: Mapping[str, Any],
     local_commit: LocalCommitResult,
+    *,
+    already_closed: bool = False,
 ) -> str:
     if local_commit.status == COMMIT_PASS:
+        if already_closed:
+            return "Close recovered an already-done task and local commit was created."
         return "Close completed and local commit was created."
     status = str(change_acceptance.get("status") or "")
+    if already_closed:
+        if status == "accepted":
+            return (
+                "Close recovered an already-done task with matching owner "
+                "approval evidence and linked Evolution Changes were accepted."
+            )
+        if status == "skipped":
+            return (
+                "Close recovered an already-done task with matching owner "
+                "approval evidence and linked Evolution Change acceptance was skipped."
+            )
+        return (
+            "Close recovered an already-done task with matching owner "
+            "approval evidence."
+        )
     if status == "accepted":
         return (
             "Close completed: the governed task close workflow marked the task "
@@ -1048,6 +1076,15 @@ def _run_close_workflow(
             "preflight": dict(evidence),
         },
     )
+    recovery = _already_closed_task_recovery_result(
+        task_id=task_id,
+        task_ref=task_ref,
+        approval_notes=approval_notes,
+        root=root,
+        decision=decision,
+    )
+    if recovery is not None:
+        return recovery
     return run_review_close_workflow(
         decision,
         root=root,
@@ -1056,6 +1093,105 @@ def _run_close_workflow(
         python_executable=sys.executable,
         runner=None,
     )
+
+
+def _already_closed_task_recovery_result(
+    *,
+    task_id: str,
+    task_ref: str,
+    approval_notes: str,
+    root: Path,
+    decision: ReviewCloseDecision,
+) -> CommandResult | None:
+    refs = load_reference_state(root)
+    task = _task_by_id(refs.get("tasks"), task_id)
+    if str(task.get("status") or "") != "done":
+        return None
+
+    recovery = _already_closed_recovery_evidence(
+        task=task,
+        task_id=task_id,
+        task_ref=task_ref,
+        approval_notes=approval_notes,
+    )
+    if recovery["status"] != "recovered":
+        result = CommandResult.failure(
+            command="pipeline.review_close_policy",
+            domain="pipeline",
+            message="Already-closed task recovery blocked.",
+            errors=[
+                CommandMessage(
+                    str(recovery["code"]),
+                    "Selected task is already done but lacks owner approval "
+                    "evidence matching this close attempt.",
+                    details=recovery,
+                )
+            ],
+        )
+        result.data = {
+            "decision": decision.to_dict(),
+            "workflows": [],
+            "already_closed_by_previous_attempt": False,
+            "recovery": recovery,
+        }
+        return result
+
+    return CommandResult.success(
+        command="pipeline.review_close_policy",
+        domain="pipeline",
+        message=(
+            "Task is already done with matching owner approval evidence; "
+            "skipped duplicate close workflows."
+        ),
+        data={
+            "decision": decision.to_dict(),
+            "workflows": [],
+            "already_closed_by_previous_attempt": True,
+            "recovery": recovery,
+        },
+    )
+
+
+def _already_closed_recovery_evidence(
+    *,
+    task: Mapping[str, Any],
+    task_id: str,
+    task_ref: str,
+    approval_notes: str,
+) -> dict[str, Any]:
+    approved_by = str(task.get("approved_by") or "").strip()
+    approved_at = str(task.get("approved_at") or "").strip()
+    stored_notes = str(task.get("approval_notes") or "").strip()
+    current_notes = approval_notes.strip()
+    notes_match = bool(stored_notes and stored_notes == current_notes)
+    missing_evidence = not (
+        approved_by
+        and approved_at
+        and stored_notes
+        and current_notes
+    )
+    code = "TASK_ALREADY_CLOSED_BY_PREVIOUS_ATTEMPT"
+    status = "recovered"
+    if missing_evidence:
+        code = "TASK_ALREADY_DONE_APPROVAL_EVIDENCE_MISSING"
+        status = "blocked"
+    elif not notes_match:
+        code = "TASK_ALREADY_DONE_APPROVAL_EVIDENCE_MISMATCH"
+        status = "blocked"
+
+    return {
+        "status": status,
+        "code": code,
+        "task_id": task_id,
+        "task_ref": task_ref,
+        "task_status": "done",
+        "approved_by": approved_by,
+        "approved_at": approved_at,
+        "approval_notes_present": bool(stored_notes),
+        "current_owner_approval_note_present": bool(current_notes),
+        "approval_notes_match_current_intent": notes_match,
+        "skipped_workflows": ["task.submit_for_review", "task.close_reviewed"],
+    }
 
 
 def _close_workflow_reason(evidence: Mapping[str, Any]) -> str:
@@ -1140,6 +1276,19 @@ def _codex_cleanup_reason(status: str, skip_reason: str) -> str:
     if status == "failed":
         return "Codex execution cleanup command failed."
     return "Codex execution cleanup status is unknown."
+
+
+def _close_recovery_artifacts(workflow: CommandResult) -> dict[str, Any]:
+    data = _mapping(workflow.data)
+    recovery = _mapping(data.get("recovery"))
+    if not recovery:
+        return {}
+    return {
+        "already_closed_by_previous_attempt": bool(
+            data.get("already_closed_by_previous_attempt")
+        ),
+        "close_recovery": dict(recovery),
+    }
 
 
 def _close_policy(session: Mapping[str, Any]) -> dict[str, Any]:
@@ -1326,6 +1475,7 @@ def _phase_command(
     root: Path,
     actor: str,
 ) -> CommandResult:
+    phase = _bound_close_phase_artifacts(phase)
     result = record_phase_result(
         session_id,
         phase,
@@ -1356,6 +1506,19 @@ def _phase_command(
             result.data["local_commit"] = dict(local_commit)
             result.data["commit_hash"] = str(local_commit.get("commit_hash") or "")
     return result
+
+
+def _bound_close_phase_artifacts(phase: PhaseResult) -> PhaseResult:
+    return PhaseResult(
+        phase=phase.phase,
+        status=phase.status,
+        reason=phase.reason,
+        next_action=phase.next_action,
+        artifacts=bound_pipeline_artifact(phase.artifacts),
+        changed_files=phase.changed_files,
+        generated_files=phase.generated_files,
+        events=phase.events,
+    )
 
 
 def _merge_command_effects(

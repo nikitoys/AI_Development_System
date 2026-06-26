@@ -198,6 +198,8 @@ The golden project includes a filled multi-agent planning example under `../exam
 
 The SOP / optional multi-agent pilot validation record is stored in `evolution/sop-multi-agent-pilot-validation.md`.
 
+[`pipeline-phase-usage.md`](pipeline-phase-usage.md) explains the owner-facing phase pipeline from queue preview through close, including normal blocked outcomes and CI exit-code behavior.
+
 ## Security and Privacy Baseline
 
 AI-assisted work must follow:
@@ -285,6 +287,7 @@ AI Development System
 - `project-control-files.md` — standard project-level control files for concrete repositories.
 - `project-control-connectivity.md` — project control index, importance levels, read policies and drift reporting.
 - `project-operation-profile.md` — surface-level project behavior profile for AI Dev System defaults.
+- [`pipeline-phase-usage.md`](pipeline-phase-usage.md) — owner-facing phase pipeline command usage, outcomes, blocked states and CI exit codes.
 - `project-bootstrap.md` — workflow for initializing new and existing project repositories.
 - `project-system-update.md` — workflow for updating already integrated project control layers.
 - `verification-modes.md` — explicit check modes, budgets and on-demand browser/visual QA rules.

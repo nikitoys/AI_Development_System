@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 2279,
+  "revision": 2304,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-25T08:38:45Z",
+  "updated_at": "2026-06-26T12:47:54Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -4385,6 +4385,59 @@
       "order": 73,
       "created_at": "2026-06-25T08:38:40Z",
       "updated_at": "2026-06-25T08:38:45Z"
+    },
+    {
+      "id": "CHG-074",
+      "title": "PIPE-045 Update phase pipeline usage guide",
+      "status": "accepted",
+      "change_type": "docs",
+      "rationale": "Make the new pipeline usable without reading implementation code.",
+      "problem": "Task PIPEF-45 requires an explicit Evolution Change Proposal before implementation: Add user-facing documentation for the phase-based pipeline commands, outcomes, and common blocked states.",
+      "proposal": "Implement the bounded task scope: Document the phase command sequence from queue preview to close.; Document passed, blocked, failed, and skipped outcomes.; Document manual handoff, missing report, review request changes, and CI exit-code behavior.; Add a compact quickstart with exact aictl commands.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai-system/pipeline-phase-usage.md",
+        "ai-system/README.md"
+      ],
+      "risks": [
+        "Boundary risk: Do not change behavior unrelated to this task.",
+        "Boundary risk: Do not refactor unrelated code.",
+        "Boundary risk: Do not edit protected project-control files manually.",
+        "Check that documentation does not claim fully autonomous execution where manual gates remain required.",
+        "Verify command examples match actual CLI names.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-124.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Document the phase command sequence from queue preview to close.",
+        "Document passed, blocked, failed, and skipped outcomes.",
+        "Document manual handoff, missing report, review request changes, and CI exit-code behavior.",
+        "Add a compact quickstart with exact aictl commands.",
+        "The guide shows the command sequence: queue preview, prepare, execute, collect-report, verify, review, close.",
+        "The guide explains blocked outcomes as normal owner-action states.",
+        "The guide documents CI exit codes for passed, blocked, and failed outcomes."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-124"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-26T09:01:20Z",
+      "approval_notes": "Auto-approved by Human Owner for selected UI run (pipeline session PSESS-061)",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-26T12:47:54Z",
+      "acceptance_notes": "Approve; linked Change accepted after task TASK-124 close succeeded.",
+      "notes": [],
+      "priority": 1,
+      "order": 74,
+      "created_at": "2026-06-26T09:01:17Z",
+      "updated_at": "2026-06-26T12:47:54Z"
     }
   ]
 }

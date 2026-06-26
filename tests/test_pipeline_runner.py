@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import io
 import json
 import subprocess
@@ -20,6 +21,7 @@ from ai_project_ctl.pipeline.batch import run_until_blocker
 from ai_project_ctl.pipeline.close_phase import close_phase
 from ai_project_ctl.pipeline.codex_adapter import (
     CODE_REPORT_MISSING as CODEX_ADAPTER_REPORT_MISSING,
+    CodexAdapterResult,
 )
 from ai_project_ctl.pipeline.phase import PhaseResult
 from ai_project_ctl.pipeline.report_gate import CODE_WARN as CODEX_REPORT_WARN
@@ -2073,6 +2075,187 @@ class PipelineRunnerTests(unittest.TestCase):
                 "TOKEN_BUDGET_LOW_REMAINING",
             )
             self.assertEqual(len(gates), 1)
+
+    def test_execute_blocks_on_stale_protected_outputs_before_token_budget_and_codex(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_stale_protected_outputs_test",
+                codex=replace(supervised.codex, mode=CodexExecutionMode.RUN_CODEX),
+                token_budget=replace(
+                    supervised.token_budget,
+                    max_prompt_tokens=30,
+                    max_context_tokens=30,
+                    min_remaining_tokens=20,
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            prompt_path = root / "AI_PROJECT" / "generated" / "CODEX_PROMPT.md"
+            prompt_text = "Source ID: TASK-001\n\n" + ("x" * 80)
+            prompt_path.parent.mkdir(parents=True, exist_ok=True)
+            prompt_path.write_text(prompt_text, encoding="utf-8")
+            prompt_sha256 = hashlib.sha256(prompt_text.encode("utf-8")).hexdigest()
+            prepared = record_phase_result(
+                session.data["session_id"],
+                PhaseResult.passed(
+                    "prepare",
+                    reason="Task prepared for execute regression.",
+                    next_action="Run pipeline phase execute.",
+                    artifacts={
+                        "session_id": session.data["session_id"],
+                        "task_id": "TASK-001",
+                        "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+                        "prompt_sha256": prompt_sha256,
+                    },
+                ),
+                root=root,
+                actor="tester",
+                task_id="TASK-001",
+                command="pipeline.phase.prepare",
+            )
+            self.assertTrue(prepared.ok)
+            calls = []
+
+            def fake_runner(argv):
+                args = list(argv)
+                calls.append(args)
+                if tuple(args[-2:]) == ("project", "protected-check"):
+                    return completed(
+                        stdout=json.dumps(
+                            {
+                                "ok": False,
+                                "errors": [
+                                    "OUTDATED_GENERATED_FILE: AI_PROJECT/generated/DOCS_GAPS.md"
+                                ],
+                                "warnings": [],
+                                "checked": ["generated output check reached"],
+                            }
+                        )
+                        + "\n",
+                        returncode=1,
+                    )
+                if args == ["codex", "exec"]:
+                    raise AssertionError("Codex adapter must not be called")
+                raise AssertionError("unexpected command: {}".format(args))
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=fake_runner,
+            )
+            latest = load_pipeline(root)["sessions"][0]
+            execute = latest["phase_history"][-1]
+            artifacts = execute["artifacts"]
+            protected_check = artifacts["protected_check"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["dispatched_phase"], "execute")
+            self.assertEqual(result.data["stop_code"], "PROTECTED_GENERATED_FRESHNESS_FAILED")
+            self.assertEqual(execute["phase"], "execute")
+            self.assertEqual(execute["status"], "blocked")
+            self.assertEqual(
+                artifacts["blocked_by"],
+                "PROTECTED_GENERATED_FRESHNESS_FAILED",
+            )
+            self.assertFalse(artifacts["codex_adapter_called"])
+            self.assertNotIn("token_budget", artifacts)
+            self.assertEqual(protected_check["returncode"], 1)
+            self.assertEqual(tuple(protected_check["command"][-2:]), ("project", "protected-check"))
+            self.assertIn("OUTDATED_GENERATED_FILE", protected_check["errors"][0])
+            self.assertFalse(any(call == ["codex", "exec"] for call in calls))
+
+    def test_execute_continues_to_token_budget_and_adapter_when_protected_check_passes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_protected_check_pass_test",
+                codex=replace(supervised.codex, mode=CodexExecutionMode.RUN_CODEX),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            prompt_path = root / "AI_PROJECT" / "generated" / "CODEX_PROMPT.md"
+            prompt_text = "Source ID: TASK-001\n\nSmall prompt."
+            prompt_path.parent.mkdir(parents=True, exist_ok=True)
+            prompt_path.write_text(prompt_text, encoding="utf-8")
+            prompt_sha256 = hashlib.sha256(prompt_text.encode("utf-8")).hexdigest()
+            prepared = record_phase_result(
+                session.data["session_id"],
+                PhaseResult.passed(
+                    "prepare",
+                    reason="Task prepared for protected pass regression.",
+                    next_action="Run pipeline phase execute.",
+                    artifacts={
+                        "session_id": session.data["session_id"],
+                        "task_id": "TASK-001",
+                        "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+                        "prompt_sha256": prompt_sha256,
+                    },
+                ),
+                root=root,
+                actor="tester",
+                task_id="TASK-001",
+                command="pipeline.phase.prepare",
+            )
+            self.assertTrue(prepared.ok)
+            calls = []
+            adapter_called = {"value": False}
+
+            def fake_runner(argv):
+                args = list(argv)
+                calls.append(args)
+                if tuple(args[-2:]) == ("project", "protected-check"):
+                    return completed(
+                        stdout=json.dumps(
+                            {
+                                "ok": True,
+                                "errors": [],
+                                "warnings": [],
+                                "checked": ["protected files are fresh"],
+                            }
+                        )
+                        + "\n"
+                    )
+                raise AssertionError("unexpected command: {}".format(args))
+
+            def fake_adapter(**kwargs):
+                adapter_called["value"] = True
+                token_gate = kwargs["token_gate"]
+                return CodexAdapterResult(
+                    status="blocked",
+                    code="TEST_ADAPTER_REACHED",
+                    reason="adapter_reached_after_protected_check",
+                    mode="test",
+                    started_at="2026-06-26T00:00:00Z",
+                    finished_at="2026-06-26T00:00:00Z",
+                    duration_sec=0.0,
+                    prompt_path=token_gate.prompt_path,
+                    prompt_sha256=token_gate.prompt_sha256,
+                )
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=fake_runner,
+                codex_adapter=fake_adapter,
+            )
+            latest = load_pipeline(root)["sessions"][0]
+            execute = latest["phase_history"][-1]
+            artifacts = execute["artifacts"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "TEST_ADAPTER_REACHED")
+            self.assertTrue(adapter_called["value"])
+            self.assertTrue(artifacts["codex_adapter_called"])
+            self.assertIn("token_budget", artifacts)
+            self.assertEqual(artifacts["adapter"]["code"], "TEST_ADAPTER_REACHED")
+            self.assertTrue(any(tuple(call[-2:]) == ("project", "protected-check") for call in calls))
 
     def test_autoclose_policy_blocks_build_prompt_only_session_without_owner_note(self):
         with tempfile.TemporaryDirectory() as tmp:

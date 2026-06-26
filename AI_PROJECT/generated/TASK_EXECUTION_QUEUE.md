@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1336`
+Revision: `1370`
 
 ## Executable Now
 
@@ -12,8 +12,6 @@ Revision: `1336`
 - `PIPE-20 (TASK-071)` [planned] `EPIC-007` priority `1` — PIPE-20 Document Dynamic Pipeline Policy Presets
 - `PIPE-21 (TASK-072)` [planned] `EPIC-007` priority `1` — PIPE-21 Fix Pipeline Queue Epic Filter Behavior
 - `PIPE-22 (TASK-073)` [planned] `EPIC-007` priority `1` — PIPE-22 Add Pipeline Session Resume After Blocker
-- `PIPEF-44 (TASK-123)` [planned] `EPIC-009` priority `1` — PIPE-044 Add fake reviewer close integration test
-- `PIPEF-45 (TASK-124)` [planned] `EPIC-009` priority `1` — PIPE-045 Update phase pipeline usage guide
 - `PIPEF-65 (TASK-144)` [planned] `EPIC-009` priority `1` — PIPE-060 Document Web live status and Codex log behavior
 - `PIPEF-71 (TASK-150)` [planned] `EPIC-009` priority `1` — PIPE-066 Document Web Settings and internal bypass behavior
 - `PIPEF-78 (TASK-157)` [planned] `EPIC-009` priority `1` — PIPE-073 Document Codex structured report auto-submit
@@ -262,6 +260,10 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-43 (TASK-122)` [done] `EPIC-009` priority `1` — PIPE-043 Add fake Codex happy path integration test
   - `status_not_executable`: status is done
+- `PIPEF-44 (TASK-123)` [done] `EPIC-009` priority `1` — PIPE-044 Add fake reviewer close integration test
+  - `status_not_executable`: status is done
+- `PIPEF-45 (TASK-124)` [done] `EPIC-009` priority `1` — PIPE-045 Update phase pipeline usage guide
+  - `status_not_executable`: status is done
 - `PIPEF-46 (TASK-125)` [done] `EPIC-009` priority `1` — Add UI settings defaults and loader
   - `status_not_executable`: status is done
 - `PIPEF-47 (TASK-126)` [done] `EPIC-009` priority `1` — Add UI settings CLI commands
@@ -379,4 +381,12 @@ _No tasks waiting only on dependencies._
 - `PIPEF-106 (TASK-187)` [done] `EPIC-009` priority `1` — Cover auto-close owner note close path
   - `status_not_executable`: status is done
 - `PIPEF-107 (TASK-188)` [done] `EPIC-009` priority `1` — Document auto-close owner note workflow
+  - `status_not_executable`: status is done
+- `PIPEF-108 (TASK-189)` [done] `EPIC-009` priority `1` — Bound close workflow artifacts
+  - `status_not_executable`: status is done
+- `PIPEF-109 (TASK-190)` [done] `EPIC-009` priority `1` — Recover already closed close phase
+  - `status_not_executable`: status is done
+- `PIPEF-110 (TASK-191)` [done] `EPIC-009` priority `1` — Block execute on stale protected outputs
+  - `status_not_executable`: status is done
+- `PIPEF-111 (TASK-192)` [done] `EPIC-009` priority `1` — Add close artifact regression coverage
   - `status_not_executable`: status is done

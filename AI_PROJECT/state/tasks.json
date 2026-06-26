@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1336,
+  "revision": 1370,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-26T08:21:07Z",
+  "updated_at": "2026-06-26T14:01:02Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -8719,7 +8719,7 @@
       "id": "TASK-123",
       "epic_id": "EPIC-009",
       "title": "PIPE-044 Add fake reviewer close integration test",
-      "status": "planned",
+      "status": "done",
       "summary": "Add an integration test where a fake reviewer returns APPROVE and the pipeline reaches close.",
       "description": "Prove the supervised happy path can complete after semantic review approval.",
       "priority": 1,
@@ -8757,11 +8757,11 @@
         "Draft ref: PIPE-044."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T08:54:19Z",
+      "approval_notes": "APPROVED by Human Owner: auto-close allowed for this selected task after verify and review pass.",
       "created_at": "2026-06-20T17:05:03Z",
-      "updated_at": "2026-06-20T17:05:03Z",
+      "updated_at": "2026-06-26T08:54:19Z",
       "uid": "tsk_99b00cf46e71",
       "ref": "PIPEF-44",
       "legacy_id": "TASK-123",
@@ -8775,7 +8775,7 @@
       "id": "TASK-124",
       "epic_id": "EPIC-009",
       "title": "PIPE-045 Update phase pipeline usage guide",
-      "status": "planned",
+      "status": "done",
       "summary": "Add user-facing documentation for the phase-based pipeline commands, outcomes, and common blocked states.",
       "description": "Make the new pipeline usable without reading implementation code.",
       "priority": 1,
@@ -8814,11 +8814,11 @@
         "Draft ref: PIPE-045."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T12:47:52Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-20T17:05:03Z",
-      "updated_at": "2026-06-20T17:05:03Z",
+      "updated_at": "2026-06-26T12:47:53Z",
       "uid": "tsk_925d6a510dc5",
       "ref": "PIPEF-45",
       "legacy_id": "TASK-124",
@@ -12658,6 +12658,245 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 107
+    },
+    {
+      "id": "TASK-189",
+      "epic_id": "EPIC-009",
+      "title": "Bound close workflow artifacts",
+      "status": "done",
+      "summary": "Prevent close phase workflow evidence from storing oversized stdout or stderr strings in pipeline session state.",
+      "description": "Close phase must keep compact evidence in state and avoid PIPELINE_OVERSIZED_TEXT_PAYLOAD when nested workflow steps emit large output.",
+      "priority": 1,
+      "order": 108,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a bounded artifact sanitizer for nested command and workflow result payloads used by pipeline phases.",
+        "Apply the sanitizer to close_phase artifacts before record_phase_result writes close_workflow, change_acceptance, and local_commit evidence.",
+        "Preserve compact failure context such as failed_workflow, error codes, messages, return codes, and truncation metadata.",
+        "Add regression coverage for a close workflow with nested stdout or stderr longer than the pipeline state string limit."
+      ],
+      "out_of_scope": [
+        "Do not change pipeline policy semantics.",
+        "Do not change task lifecycle transitions unrelated to close evidence storage.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/close_phase.py",
+        "ai_project_ctl/pipeline/artifact_bounds.py",
+        "tests/test_pipeline_phase_review_close.py",
+        "tests/test_pipeline_artifact_bounds.py"
+      ],
+      "acceptance_criteria": [
+        "A nested workflow step stdout or stderr longer than the pipeline state string limit is not stored verbatim in pipeline session state.",
+        "Bounded artifacts retain enough data to identify the failed workflow, step id, command name, return code, and error message.",
+        "Bounded artifacts record that stdout or stderr was truncated and expose original size metadata.",
+        "pipeline validate passes after recording close phase artifacts containing previously oversized nested workflow output.",
+        "Focused tests covering artifact bounding and close phase storage pass."
+      ],
+      "review_instructions": [
+        "Check that state JSON contains compact evidence and not full large stdout or stderr payloads.",
+        "Verify that failure diagnostics remain usable after truncation."
+      ],
+      "notes": [
+        "Observed failure: PIPELINE_OVERSIZED_TEXT_PAYLOAD under phase_history.close.artifacts.close_workflow.data.workflows[].data.steps[].stdout.",
+        "State files should store summaries and references; large process output belongs in logs or bounded snippets."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T13:21:33Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-26T13:08:27Z",
+      "updated_at": "2026-06-26T13:21:33Z",
+      "uid": "tsk_3646704f7c34",
+      "ref": "PIPEF-108",
+      "legacy_id": "TASK-189",
+      "aliases": [
+        "TASK-189"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 108
+    },
+    {
+      "id": "TASK-190",
+      "epic_id": "EPIC-009",
+      "title": "Recover already closed close phase",
+      "status": "done",
+      "summary": "Make pipeline close safely recover when a prior close attempt already moved the selected task to done but close evidence or commit did not finish.",
+      "description": "A retry of pipeline close should be idempotent for a selected task already approved and done by an earlier close workflow attempt.",
+      "priority": 1,
+      "order": 109,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Detect when the selected task is already done with owner approval evidence from the current close workflow intent.",
+        "Skip duplicate task.submit_for_review and task.close_reviewed workflow calls when the task is already closed.",
+        "Record compact recovery evidence that the task was already closed by a previous attempt.",
+        "Continue to linked change acceptance and local commit handling when policy allows it and preflight evidence is still valid."
+      ],
+      "out_of_scope": [
+        "Do not approve tasks without existing owner approval evidence.",
+        "Do not change task status transition rules outside the close retry path.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/close_phase.py",
+        "ai_project_ctl/pipeline/close_policy.py",
+        "tests/test_pipeline_phase_review_close.py"
+      ],
+      "acceptance_criteria": [
+        "Retrying close for a task already done with approval notes does not fail only because task.submit_for_review cannot rerun.",
+        "The retry path records an explicit already_closed_by_previous_attempt or equivalent recovery marker in close artifacts.",
+        "The retry path does not re-run task approval workflows when the task is already done.",
+        "The retry path still blocks if the task is done without usable owner approval evidence.",
+        "Focused close phase recovery tests pass."
+      ],
+      "review_instructions": [
+        "Verify that the idempotent path is narrow and cannot silently close unrelated tasks.",
+        "Check that local commit behavior still follows commit policy."
+      ],
+      "notes": [
+        "Observed state: TASK-124 reached done while PSESS-061 close phase failed before commit/evidence completion."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T13:33:30Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-26T13:08:34Z",
+      "updated_at": "2026-06-26T13:33:30Z",
+      "uid": "tsk_b1678d19812f",
+      "ref": "PIPEF-109",
+      "legacy_id": "TASK-190",
+      "aliases": [
+        "TASK-190"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 109
+    },
+    {
+      "id": "TASK-191",
+      "epic_id": "EPIC-009",
+      "title": "Block execute on stale protected outputs",
+      "status": "done",
+      "summary": "Run protected/generated freshness checks before Codex execution so stale generated files block before spending Codex quota.",
+      "description": "Generated-output freshness blockers such as stale DOCS_GAPS.md or CONTEXT_PACK.md should be surfaced before the Codex adapter runs.",
+      "priority": 1,
+      "order": 110,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a pre-execute protected-file freshness gate before token budget evaluation and Codex adapter invocation.",
+        "Block execute with compact evidence and codex_adapter_called=false when protected generated outputs are stale.",
+        "Preserve existing execute behavior when the protected check passes.",
+        "Add regression coverage proving Codex is not called when the pre-execute freshness gate fails."
+      ],
+      "out_of_scope": [
+        "Do not automatically render generated files in this task.",
+        "Do not weaken protected-file checks.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/execute_phase.py",
+        "tests/test_pipeline_runner.py",
+        "tests/test_pipeline_e2e.py"
+      ],
+      "acceptance_criteria": [
+        "If the protected/generated freshness check fails before execute, the execute phase records a blocked result before token budget or Codex adapter execution.",
+        "The blocked execute artifact includes the protected check command, return code, compact stdout or parsed errors, and codex_adapter_called=false.",
+        "If the protected check passes, existing execute phase token budget and Codex adapter behavior remain unchanged.",
+        "A test proves stale generated output prevents Codex adapter invocation.",
+        "Focused execute phase and runner tests pass."
+      ],
+      "review_instructions": [
+        "Confirm that this gate blocks before Codex execution, not after report, verify, review, or close.",
+        "Check that the protected check evidence is bounded and does not introduce oversized pipeline state strings."
+      ],
+      "notes": [
+        "Observed issue: stale DOCS_GAPS.md and context generated outputs were detected after Codex had already run."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T13:50:05Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-26T13:08:41Z",
+      "updated_at": "2026-06-26T13:50:06Z",
+      "uid": "tsk_88a4271596df",
+      "ref": "PIPEF-110",
+      "legacy_id": "TASK-191",
+      "aliases": [
+        "TASK-191"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 110
+    },
+    {
+      "id": "TASK-192",
+      "epic_id": "EPIC-009",
+      "title": "Add close artifact regression coverage",
+      "status": "done",
+      "summary": "Add end-to-end regression tests for close artifact bounding, already-closed close retry, and stale-output pre-execute blocking.",
+      "description": "This task verifies the recent close and pre-execute safety fixes through focused pipeline tests without changing production behavior.",
+      "priority": 1,
+      "order": 111,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a regression test that records close evidence with large nested workflow output and still validates pipeline state.",
+        "Add a regression test for retrying close after the selected task is already done from a previous partial close attempt.",
+        "Add a regression test that stale protected generated output blocks before Codex adapter execution.",
+        "Keep fixtures small and deterministic so the focused tests run quickly."
+      ],
+      "out_of_scope": [
+        "Do not change production pipeline behavior in this test-only task.",
+        "Do not add slow integration tests.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "tests/test_pipeline_phase_review_close.py",
+        "tests/test_pipeline_runner.py",
+        "tests/test_pipeline_e2e.py",
+        "tests/test_pipeline_artifact_bounds.py"
+      ],
+      "acceptance_criteria": [
+        "Tests fail against the old oversized close artifact behavior and pass after artifact bounding is implemented.",
+        "Tests cover the already-done close retry path without requiring manual state edits.",
+        "Tests cover pre-execute stale generated output blocking with Codex adapter not called.",
+        "Focused test commands complete successfully without running unrelated long test suites.",
+        "No production source files are modified by this task."
+      ],
+      "review_instructions": [
+        "Check that tests are deterministic and do not depend on live Codex or external services.",
+        "Verify that test names describe the specific regression they protect."
+      ],
+      "notes": [
+        "This is a test-only safety net task and may be run after the production fixes."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T14:01:02Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-26T13:08:47Z",
+      "updated_at": "2026-06-26T14:01:02Z",
+      "uid": "tsk_260eaac36dea",
+      "ref": "PIPEF-111",
+      "legacy_id": "TASK-192",
+      "aliases": [
+        "TASK-192"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 111
     }
   ]
 }

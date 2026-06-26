@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1336`
+Revision: `1370`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -2229,7 +2229,7 @@ Acceptance criteria:
 
 ### PIPEF-44 (TASK-123) — PIPE-044 Add fake reviewer close integration test
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_99b00cf46e71`, legacy `TASK-123`, aliases `TASK-123`, local `PIPEF` / `44`
@@ -2245,7 +2245,7 @@ Acceptance criteria:
 
 ### PIPEF-45 (TASK-124) — PIPE-045 Update phase pipeline usage guide
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_925d6a510dc5`, legacy `TASK-124`, aliases `TASK-124`, local `PIPEF` / `45`
@@ -3323,3 +3323,71 @@ Acceptance criteria:
 - Docs mention the Web Control Center selected-task run owner note field.
 - Docs preserve the rule that Codex cannot approve, accept, or fabricate owner notes.
 - Documentation changes are limited to the auto-close owner-note workflow.
+
+### PIPEF-108 (TASK-189) — Bound close workflow artifacts
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_3646704f7c34`, legacy `TASK-189`, aliases `TASK-189`, local `PIPEF` / `108`
+
+Prevent close phase workflow evidence from storing oversized stdout or stderr strings in pipeline session state.
+
+Acceptance criteria:
+
+- A nested workflow step stdout or stderr longer than the pipeline state string limit is not stored verbatim in pipeline session state.
+- Bounded artifacts retain enough data to identify the failed workflow, step id, command name, return code, and error message.
+- Bounded artifacts record that stdout or stderr was truncated and expose original size metadata.
+- pipeline validate passes after recording close phase artifacts containing previously oversized nested workflow output.
+- Focused tests covering artifact bounding and close phase storage pass.
+
+### PIPEF-109 (TASK-190) — Recover already closed close phase
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_b1678d19812f`, legacy `TASK-190`, aliases `TASK-190`, local `PIPEF` / `109`
+
+Make pipeline close safely recover when a prior close attempt already moved the selected task to done but close evidence or commit did not finish.
+
+Acceptance criteria:
+
+- Retrying close for a task already done with approval notes does not fail only because task.submit_for_review cannot rerun.
+- The retry path records an explicit already_closed_by_previous_attempt or equivalent recovery marker in close artifacts.
+- The retry path does not re-run task approval workflows when the task is already done.
+- The retry path still blocks if the task is done without usable owner approval evidence.
+- Focused close phase recovery tests pass.
+
+### PIPEF-110 (TASK-191) — Block execute on stale protected outputs
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_88a4271596df`, legacy `TASK-191`, aliases `TASK-191`, local `PIPEF` / `110`
+
+Run protected/generated freshness checks before Codex execution so stale generated files block before spending Codex quota.
+
+Acceptance criteria:
+
+- If the protected/generated freshness check fails before execute, the execute phase records a blocked result before token budget or Codex adapter execution.
+- The blocked execute artifact includes the protected check command, return code, compact stdout or parsed errors, and codex_adapter_called=false.
+- If the protected check passes, existing execute phase token budget and Codex adapter behavior remain unchanged.
+- A test proves stale generated output prevents Codex adapter invocation.
+- Focused execute phase and runner tests pass.
+
+### PIPEF-111 (TASK-192) — Add close artifact regression coverage
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_260eaac36dea`, legacy `TASK-192`, aliases `TASK-192`, local `PIPEF` / `111`
+
+Add end-to-end regression tests for close artifact bounding, already-closed close retry, and stale-output pre-execute blocking.
+
+Acceptance criteria:
+
+- Tests fail against the old oversized close artifact behavior and pass after artifact bounding is implemented.
+- Tests cover the already-done close retry path without requiring manual state edits.
+- Tests cover pre-execute stale generated output blocking with Codex adapter not called.
+- Focused test commands complete successfully without running unrelated long test suites.
+- No production source files are modified by this task.
