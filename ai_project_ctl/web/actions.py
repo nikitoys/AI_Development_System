@@ -23,6 +23,7 @@ from ai_project_ctl.pipeline.ui_policy import (
 )
 from ai_project_ctl.pipeline.ui_run import build_ui_run_selected_queue
 from ai_project_ctl.ui_settings import (
+    ALLOW_REPORT_WARNINGS_SETTING,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
     ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
@@ -66,6 +67,7 @@ UI_SETTINGS_WEB_ALLOWED_KEYS = (
     REQUIRE_CODEX_REVIEW_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
+    ALLOW_REPORT_WARNINGS_SETTING,
     ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
     "execution_timeout_sec",
     "preflight_timeout_sec",

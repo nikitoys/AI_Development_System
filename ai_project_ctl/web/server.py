@@ -29,13 +29,11 @@ from ai_project_ctl.web.actions import (
 )
 from ai_project_ctl.web.read_model import ReadOnlyProjectModel, WebControlError
 from ai_project_ctl.ui_settings import (
+    ALLOW_REPORT_WARNINGS_SETTING,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
     ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
-    load_ui_settings,
-    ui_settings_path,
-    ui_settings_source,
 )
 
 
@@ -3104,9 +3102,10 @@ def render_generated(data: Mapping[str, Any]) -> str:
 
 
 def render_settings(model: ReadOnlyProjectModel) -> str:
-    settings = load_ui_settings(root=model.root)
-    source = ui_settings_source(root=model.root)
-    path = ui_settings_path(model.root)
+    read_model = model.ui_settings()
+    settings = _mapping(read_model.get("settings"))
+    source = str(read_model.get("source") or "")
+    path = str(read_model.get("path") or "")
     body = [
         '<section class="panel settings-panel">',
         '<form method="post" action="/actions">',
@@ -3183,6 +3182,15 @@ def render_settings(model: ReadOnlyProjectModel) -> str:
                     helper=(
                         "UI runs only. Strict git diff verification remains the "
                         "default and is available by turning this off."
+                    ),
+                ),
+                settings_checkbox_row(
+                    ALLOW_REPORT_WARNINGS_SETTING,
+                    "Allow report-warning pass behavior for UI runs",
+                    settings,
+                    helper=(
+                        "UI runs only. Report warnings may pass verification; "
+                        "report errors and other gates still block."
                     ),
                 ),
                 settings_checkbox_row(

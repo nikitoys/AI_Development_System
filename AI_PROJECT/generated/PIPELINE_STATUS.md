@@ -3,23 +3,23 @@
 
 # Pipeline Status
 
-Revision: `222`
-Current session: `PSESS-044`
-Sessions: `44`
+Revision: `300`
+Current session: `PSESS-054`
+Sessions: `54`
 
 ## Current Session
 
-- ID: `PSESS-044`
+- ID: `PSESS-054`
 - Status: `blocked`
 - Policy: `supervised_executable_local_commit_1h_auto_change`
-- Current task: `TASK-121`
-- Current phase: `verify`
+- Current task: `TASK-183`
+- Current phase: `close`
 - Phase status: `blocked`
-- Blocked by: `CODEX_REPORT_WARN`
-- Next action: `Resolve report gate warnings or define an explicit follow-up policy, then rerun verify.`
+- Blocked by: `CLOSE_OWNER_NOTES_REQUIRED`
+- Next action: `Recreate or update the pipeline session with an explicit auto-close owner note before rerunning close.`
 - Current step: `execute`
-- Step status: `passed`
-- Stop reason: `Report gate returned warning(s): Report contains warning(s): python -m pytest tests/test_pipeline_git_diff_gate.py could not run because pytest is not installed.`
+- Step status: `stopped`
+- Stop reason: `Close blocked: task closure requires owner approval notes.`
 
 ## Sessions
 
@@ -69,6 +69,16 @@ Sessions: `44`
 | `PSESS-042` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-173` | `verify` | `blocked` | CODEX_REPORT_WARN | Resolve report gate warnings or define an explicit follow-up policy, then rerun verify. | `execute` | Report gate returned warning(s): Report contains warning(s): python -m pytest tests/pipeline/test_ui_policy.py could not run because pytest is not installed in this environment.; The worktree already contained unrelated dirty files outside this task scope; they were left untouched. |
 | `PSESS-043` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-174` | `verify` | `blocked` | CODEX_REPORT_WARN | Resolve report gate warnings or define an explicit follow-up policy, then rerun verify. | `execute` | Report gate returned warning(s): Report contains warning(s): python -m pytest tests/test_web_control_center.py -k "settings_page or ui_settings" could not run because pytest is not installed. |
 | `PSESS-044` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-121` | `verify` | `blocked` | CODEX_REPORT_WARN | Resolve report gate warnings or define an explicit follow-up policy, then rerun verify. | `execute` | Report gate returned warning(s): Report contains warning(s): python -m pytest tests/test_pipeline_git_diff_gate.py could not run because pytest is not installed. |
+| `PSESS-045` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-122` | `verify` | `blocked` | CODEX_REPORT_WARN | Resolve report gate warnings or define an explicit follow-up policy, then rerun verify. | `execute` | Report gate returned warning(s): Report contains warning(s): Pre-existing dirty AI_PROJECT files were present outside the allowed file scope and were left untouched. |
+| `PSESS-046` | `stopped` | `supervised_executable_local_commit_1h_auto_change` | `TASK-175` | `verify` | `passed` | none | Run pipeline phase review. | `execute` | MAX_STEPS_REACHED: Batch runner reached max_steps 5. |
+| `PSESS-047` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-176` | `verify` | `blocked` | CODEX_REPORT_WARN | Resolve report gate warnings or define an explicit follow-up policy, then rerun verify. | `execute` | Report gate returned warning(s): Report contains warning(s): Preexisting worktree changes outside the allowed files were left untouched. |
+| `PSESS-048` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-177` | `verify` | `blocked` | CODEX_REPORT_WARN | Resolve report gate warnings or define an explicit follow-up policy, then rerun verify. | `execute` | Report gate returned warning(s): Report contains warning(s): The worktree had pre-existing unrelated modified project-control generated/state/event files and verify-phase files; they were left untouched. |
+| `PSESS-049` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-178` | `verify` | `blocked` | CODEX_REPORT_WARN | Resolve report gate warnings or define an explicit follow-up policy, then rerun verify. | `execute` | Report gate returned warning(s): Report contains warning(s): pytest is not installed, so the pytest-focused command could not run; equivalent focused unittest checks were run instead.; The worktree had unrelated pre-existing dirty files, including protected AI_PROJECT paths; they were not edited by this task. |
+| `PSESS-050` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-179` | `review` | `blocked` | REPORT_GATE_NOT_PASSED_AFTER_VERIFY | Resolve report gate issues and rerun verify before review. | `execute` | Latest report gate no longer passes. |
+| `PSESS-051` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-180` | `verify` | `blocked` | CODEX_REPORT_WARN | Resolve report gate warnings or explicitly enable policy.verify.allow_report_warnings, then rerun verify. | `execute` | Report gate returned warning(s): Report contains warning(s): The working tree contains unrelated dirty files outside this task's allowed files; they were not modified for this task. |
+| `PSESS-052` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-181` | `verify` | `blocked` | CODEX_REPORT_WARN | Resolve report gate warnings or explicitly enable policy.verify.allow_report_warnings, then rerun verify. | `execute` | Report gate returned warning(s): Report contains warning(s): Repository had pre-existing dirty files outside the allowed task scope; they were left untouched. |
+| `PSESS-053` | `stopped` | `supervised_executable_local_commit_1h_auto_change` | `TASK-182` | `verify` | `passed` | none | Run pipeline phase review. | `execute` | MAX_STEPS_REACHED: Batch runner reached max_steps 5. |
+| `PSESS-054` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-183` | `close` | `blocked` | CLOSE_OWNER_NOTES_REQUIRED | Recreate or update the pipeline session with an explicit auto-close owner note before rerunning close. | `execute` | Close blocked: task closure requires owner approval notes. |
 
 ## Phase History
 
@@ -209,3 +219,57 @@ Sessions: `44`
 | `PSESS-044` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
 | `PSESS-044` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
 | `PSESS-044` | 5 | `verify` | `blocked` | Report gate returned warning(s): Report contains warning(s): python -m pytest tests/test_pipeline_git_diff_gate.py could not run because pytest is not installed. | Resolve report gate warnings or define an explicit follow-up policy, then rerun verify. | 0 | 0 | 1 |
+| `PSESS-045` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-045` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 efc4227595533288da1fb9efc5bd869394cc8365e063229c0cc4f2b86453eb8d). | 0 | 0 | 1 |
+| `PSESS-045` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-045` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-045` | 5 | `verify` | `blocked` | Report gate returned warning(s): Report contains warning(s): Pre-existing dirty AI_PROJECT files were present outside the allowed file scope and were left untouched. | Resolve report gate warnings or define an explicit follow-up policy, then rerun verify. | 0 | 0 | 1 |
+| `PSESS-046` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-046` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 6ba46af9f668b7c81c2ed28b443ec0df601448918a6da38fc4c83044a58b80bc). | 0 | 0 | 1 |
+| `PSESS-046` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-046` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-046` | 5 | `verify` | `passed` | Report gate passed; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-047` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-047` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 b7739454b44bcdb804ab7b86c799615550fc6425081c2aead5993aa8d1fd0719). | 0 | 0 | 1 |
+| `PSESS-047` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-047` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-047` | 5 | `verify` | `blocked` | Report gate returned warning(s): Report contains warning(s): Preexisting worktree changes outside the allowed files were left untouched. | Resolve report gate warnings or define an explicit follow-up policy, then rerun verify. | 0 | 0 | 1 |
+| `PSESS-048` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-048` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 78f03104b7be4f9482c70a3e8d18fb792d1abe24160f9f9679846a6119858a4d). | 0 | 0 | 1 |
+| `PSESS-048` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-048` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-048` | 5 | `verify` | `blocked` | Report gate returned warning(s): Report contains warning(s): The worktree had pre-existing unrelated modified project-control generated/state/event files and verify-phase files; they were left untouched. | Resolve report gate warnings or define an explicit follow-up policy, then rerun verify. | 0 | 0 | 1 |
+| `PSESS-049` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-049` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 fcf1d22d08784b5dadb20485c2a9798af355ae54616ec986b565749153df6af5). | 0 | 0 | 1 |
+| `PSESS-049` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-049` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-049` | 5 | `verify` | `blocked` | Report gate returned warning(s): Report contains warning(s): pytest is not installed, so the pytest-focused command could not run; equivalent focused unittest checks were run instead.; The worktree had unrelated pre-existing dirty files, including protected AI_PROJECT paths; they were not edited by this task. | Resolve report gate warnings or define an explicit follow-up policy, then rerun verify. | 0 | 0 | 1 |
+| `PSESS-050` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-050` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 267be248051473ec12eec03ac62a9036b436a916af898270a06113b8f05ccab4). | 0 | 0 | 1 |
+| `PSESS-050` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-050` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-050` | 5 | `verify` | `passed` | Report gate warning(s) are advisory by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-050` | 6 | `review` | `blocked` | Latest report gate no longer passes. | Resolve report gate issues and rerun verify before review. | 0 | 0 | 1 |
+| `PSESS-051` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-051` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 65777fbc862b353452479d08f429b31f7b60519b9e289ec132c7d64ff8e6c6b1). | 0 | 0 | 1 |
+| `PSESS-051` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-051` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-051` | 5 | `verify` | `blocked` | Report gate returned warning(s): Report contains warning(s): The working tree contains unrelated dirty files outside this task's allowed files; they were not modified for this task. | Resolve report gate warnings or explicitly enable policy.verify.allow_report_warnings, then rerun verify. | 0 | 0 | 1 |
+| `PSESS-052` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-052` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 a13fff82b54c8cbc49cdac0b4f7c59c67a16deba643fa5af7ba2f71a91bb7149). | 0 | 0 | 1 |
+| `PSESS-052` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-052` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-052` | 5 | `verify` | `blocked` | Report gate returned warning(s): Report contains warning(s): Repository had pre-existing dirty files outside the allowed task scope; they were left untouched. | Resolve report gate warnings or explicitly enable policy.verify.allow_report_warnings, then rerun verify. | 0 | 0 | 1 |
+| `PSESS-053` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-053` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 e55aa395dee63b917c69d1184232e4ed80f95c7fe182511a292ea67f0602613f). | 0 | 0 | 1 |
+| `PSESS-053` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-053` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-053` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-054` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-054` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 76a2cb2c7c9b6d07ac78b78f02060b26f17a0f141768204a65c515863f5df70b). | 0 | 0 | 1 |
+| `PSESS-054` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-054` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-054` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-054` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-054` | 7 | `close` | `blocked` | Close blocked: task closure requires owner approval notes. | Recreate or update the pipeline session with an explicit auto-close owner note before rerunning close. | 0 | 0 | 1 |
+| `PSESS-054` | 8 | `close` | `blocked` | Close blocked: task closure requires owner approval notes. | Recreate or update the pipeline session with an explicit auto-close owner note before rerunning close. | 0 | 0 | 1 |

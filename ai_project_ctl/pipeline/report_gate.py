@@ -134,6 +134,66 @@ class ReportGateResult:
         }
 
 
+@dataclass(frozen=True)
+class ReportGateAcceptance:
+    allow: bool
+    reason: str
+    policy: str
+    report_gate_status: str
+    report_gate_code: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "allow": self.allow,
+            "reason": self.reason,
+            "policy": self.policy,
+            "report_gate_status": self.report_gate_status,
+            "report_gate_code": self.report_gate_code,
+        }
+
+
+def evaluate_report_gate_acceptance(
+    report_gate: ReportGateResult,
+    policy: PipelinePolicy,
+) -> ReportGateAcceptance:
+    """Decide whether a report gate result may continue to downstream phases."""
+
+    if report_gate.status == PASS and report_gate.code == CODE_PASS:
+        return ReportGateAcceptance(
+            allow=True,
+            reason="Report gate passed.",
+            policy="report_gate_pass_allows_downstream",
+            report_gate_status=report_gate.status,
+            report_gate_code=report_gate.code,
+        )
+
+    if report_gate.status == WARN and report_gate.code == CODE_WARN:
+        allow = bool(policy.verify.allow_report_warnings)
+        return ReportGateAcceptance(
+            allow=allow,
+            reason=(
+                "policy.verify.allow_report_warnings is true"
+                if allow
+                else "policy.verify.allow_report_warnings is false"
+            ),
+            policy=(
+                "report_gate_warn_allowed_by_policy"
+                if allow
+                else "report_gate_warn_blocks_downstream"
+            ),
+            report_gate_status=report_gate.status,
+            report_gate_code=report_gate.code,
+        )
+
+    return ReportGateAcceptance(
+        allow=False,
+        reason=report_gate.reason,
+        policy="report_gate_result_blocks_downstream",
+        report_gate_status=report_gate.status,
+        report_gate_code=report_gate.code,
+    )
+
+
 def evaluate_report_gate(
     *,
     root: str | Path,

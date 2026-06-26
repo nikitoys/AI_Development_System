@@ -14,6 +14,7 @@ from ai_project_ctl.core.registry import command_describe
 from ai_project_ctl.core.result import CommandResult
 from ai_project_ctl.pipeline.policy import policy_preset
 from ai_project_ctl.ui_settings import (
+    ALLOW_REPORT_WARNINGS_SETTING,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
     ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
@@ -158,6 +159,25 @@ class WebControlCenterTests(unittest.TestCase):
             "Allow relaxed git diff verification for UI runs",
             body,
         )
+        self.assertIn("<code>allow_report_warnings</code>", body)
+        self.assertIn(
+            "Report warnings may pass verification",
+            body,
+        )
+        self.assertIn(
+            'type="hidden" name="allow_report_warnings" value="false"',
+            body,
+        )
+        self.assertIn(
+            'type="checkbox" name="allow_report_warnings" value="true">'
+            "Allow report-warning pass behavior for UI runs",
+            body,
+        )
+        self.assertNotIn(
+            'type="checkbox" name="allow_report_warnings" value="true" checked>'
+            "Allow report-warning pass behavior for UI runs",
+            body,
+        )
         self.assertIn("<code>allow_relaxed_report_warnings</code>", body)
         self.assertIn(
             "Fast UI runs only. Report warnings become advisory",
@@ -218,6 +238,7 @@ class WebControlCenterTests(unittest.TestCase):
                     "command_line": "codex exec --json",
                     "default_policy": "supervised",
                     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING: "true",
+                    ALLOW_REPORT_WARNINGS_SETTING: "true",
                     ALLOW_RELAXED_REPORT_WARNINGS_SETTING: "true",
                     INTERNAL_CHANGE_GATE_BYPASS_SETTING: "true",
                     "execution_timeout_sec": "1800",
@@ -252,6 +273,12 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn(
             'type="checkbox" name="allow_relaxed_git_diff_verification" value="true" checked>'
             "Allow relaxed git diff verification for UI runs",
+            body,
+        )
+        self.assertIn("<code>allow_report_warnings</code>", body)
+        self.assertIn(
+            'type="checkbox" name="allow_report_warnings" value="true" checked>'
+            "Allow report-warning pass behavior for UI runs",
             body,
         )
         self.assertIn("<code>allow_relaxed_report_warnings</code>", body)
@@ -292,6 +319,21 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertNotIn('value="ui.settings.init"', body)
         self.assertNotIn('name="change_gate"', body)
         self.assertNotIn('name="bypass"', body)
+
+    def test_settings_read_model_returns_effective_allow_report_warnings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            write_ui_settings(root, {ALLOW_REPORT_WARNINGS_SETTING: "true"})
+
+            data = ReadOnlyProjectModel(root, actor="tester").ui_settings()
+
+        self.assertIs(data["settings"][ALLOW_REPORT_WARNINGS_SETTING], True)
+        self.assertIs(
+            data["settings"][ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING],
+            False,
+        )
+        self.assertEqual(data["source"], "project_file")
 
     def test_tasks_page_filters_searches_groups_and_shows_readable_refs(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -3382,6 +3424,10 @@ class WebControlCenterTests(unittest.TestCase):
             key_argument["choices"],
         )
         self.assertIn(
+            ALLOW_REPORT_WARNINGS_SETTING,
+            key_argument["choices"],
+        )
+        self.assertIn(
             ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
             key_argument["choices"],
         )
@@ -3515,6 +3561,59 @@ class WebControlCenterTests(unittest.TestCase):
         )
         self.assertEqual(false_data["value"], "false")
 
+    def test_ui_settings_web_action_updates_report_warning_allowance_values(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = ui_settings_path(root)
+            executor = WebActionExecutor(root, actor="tester")
+
+            true_result = executor.execute(
+                {
+                    "action": "ui.settings.set",
+                    "confirm": "yes",
+                    "key": ALLOW_REPORT_WARNINGS_SETTING,
+                    "value": "true",
+                }
+            )
+            true_settings = json.loads(path.read_text(encoding="utf-8"))
+            true_data = true_result.to_dict()["result"]["data"]
+
+            false_result = executor.execute(
+                {
+                    "action": "ui.settings.set",
+                    "confirm": "yes",
+                    "key": ALLOW_REPORT_WARNINGS_SETTING,
+                    "value": "false",
+                }
+            )
+            false_settings = json.loads(path.read_text(encoding="utf-8"))
+            false_data = false_result.to_dict()["result"]["data"]
+
+        self.assertTrue(true_result.ok)
+        self.assertIs(true_settings[ALLOW_REPORT_WARNINGS_SETTING], True)
+        self.assertIs(
+            true_data["settings"][ALLOW_REPORT_WARNINGS_SETTING],
+            True,
+        )
+        self.assertIs(
+            true_data["settings"][ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING],
+            False,
+        )
+        self.assertEqual(true_data["key"], ALLOW_REPORT_WARNINGS_SETTING)
+        self.assertEqual(true_data["value"], "true")
+        self.assertTrue(false_result.ok)
+        self.assertIs(false_settings[ALLOW_REPORT_WARNINGS_SETTING], False)
+        self.assertIs(
+            false_data["settings"][ALLOW_REPORT_WARNINGS_SETTING],
+            False,
+        )
+        self.assertIs(
+            false_data["settings"][ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING],
+            False,
+        )
+        self.assertEqual(false_data["key"], ALLOW_REPORT_WARNINGS_SETTING)
+        self.assertEqual(false_data["value"], "false")
+
     def test_ui_settings_apply_web_action_saves_allowlisted_settings(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -3529,6 +3628,7 @@ class WebControlCenterTests(unittest.TestCase):
                     REQUIRE_CODEX_REVIEW_SETTING: "false",
                     INTERNAL_CHANGE_GATE_BYPASS_SETTING: "false",
                     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING: "true",
+                    ALLOW_REPORT_WARNINGS_SETTING: "true",
                     ALLOW_RELAXED_REPORT_WARNINGS_SETTING: "true",
                     "execution_timeout_sec": "1800",
                     "preflight_timeout_sec": "45",
@@ -3545,6 +3645,7 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIs(settings[REQUIRE_CODEX_REVIEW_SETTING], False)
         self.assertIs(settings[INTERNAL_CHANGE_GATE_BYPASS_SETTING], False)
         self.assertIs(settings[ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING], True)
+        self.assertIs(settings[ALLOW_REPORT_WARNINGS_SETTING], True)
         self.assertIs(settings[ALLOW_RELAXED_REPORT_WARNINGS_SETTING], True)
         self.assertEqual(settings["execution_timeout_sec"], "1800")
         self.assertEqual(settings["preflight_timeout_sec"], "45")
@@ -3560,6 +3661,7 @@ class WebControlCenterTests(unittest.TestCase):
                 REQUIRE_CODEX_REVIEW_SETTING,
                 INTERNAL_CHANGE_GATE_BYPASS_SETTING,
                 ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
+                ALLOW_REPORT_WARNINGS_SETTING,
                 ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
                 "execution_timeout_sec",
                 "preflight_timeout_sec",

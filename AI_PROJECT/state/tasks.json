@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1242,
+  "revision": 1306,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-25T17:41:43Z",
+  "updated_at": "2026-06-26T06:59:59Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -8663,7 +8663,7 @@
       "id": "TASK-122",
       "epic_id": "EPIC-009",
       "title": "PIPE-043 Add fake Codex happy path integration test",
-      "status": "planned",
+      "status": "done",
       "summary": "Add an integration test where a fake Codex adapter creates a structured report and the pipeline advances through verify.",
       "description": "Prove the phase pipeline can pass through execution and verification without external Codex.",
       "priority": 1,
@@ -8701,11 +8701,11 @@
         "Draft ref: PIPE-043."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T18:03:24Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-20T17:05:02Z",
-      "updated_at": "2026-06-20T17:05:02Z",
+      "updated_at": "2026-06-25T18:03:25Z",
       "uid": "tsk_6d574d8b0795",
       "ref": "PIPEF-43",
       "legacy_id": "TASK-122",
@@ -11794,6 +11794,582 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 93
+    },
+    {
+      "id": "TASK-175",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-094 Add report warning verify policy flag",
+      "status": "done",
+      "summary": "Add an explicit verify policy flag that controls whether structured Codex report warnings may pass verify.",
+      "description": "Introduce a dedicated report-warning policy field instead of reusing relaxed git-diff verification.",
+      "priority": 1,
+      "order": 94,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Extend VerifyPolicy with a boolean allow_report_warnings field defaulting to false.",
+        "Update policy serialization, deserialization, validation, and behavior labels for the new field.",
+        "Add focused policy tests proving default strict behavior and explicit true serialization.",
+        "Keep run_git_diff_gates behavior unchanged and independent from allow_report_warnings."
+      ],
+      "out_of_scope": [
+        "Do not change verify phase pass or block behavior in this task.",
+        "Do not change UI settings or web controls in this task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/policy.py",
+        "tests/pipeline/test_verify_phase.py"
+      ],
+      "acceptance_criteria": [
+        "PipelinePolicy.default().verify.allow_report_warnings is false.",
+        "PipelinePolicy.to_dict() omits verify.allow_report_warnings when it is false by default.",
+        "PipelinePolicy.to_dict() includes verify.allow_report_warnings when it is explicitly true.",
+        "PipelinePolicy.from_dict() restores allow_report_warnings correctly from a policy snapshot.",
+        "Non-boolean verify.allow_report_warnings is rejected by policy validation or parsing.",
+        "Existing run_git_diff_gates tests continue to pass without semantic changes."
+      ],
+      "review_instructions": [
+        "Check that the new policy field is separate from run_git_diff_gates.",
+        "Check backward compatibility for old policy snapshots without the new field."
+      ],
+      "notes": [
+        "This task only creates the policy contract; enforcement is a separate task.",
+        "The previous relaxed git-diff setting must not be repurposed for report warnings."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-174",
+          "type": "hard",
+          "created_at": "2026-06-25T18:33:33Z"
+        }
+      ],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T18:44:15Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T18:33:32Z",
+      "updated_at": "2026-06-25T18:44:16Z",
+      "uid": "tsk_4b64732575a7",
+      "ref": "PIPEF-94",
+      "legacy_id": "TASK-175",
+      "aliases": [
+        "TASK-175"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 94
+    },
+    {
+      "id": "TASK-176",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-095 Allow report warnings in verify when policy permits",
+      "status": "done",
+      "summary": "Update verify so CODEX_REPORT_WARN can pass only when verify.allow_report_warnings is explicitly enabled.",
+      "description": "Make report-warning behavior policy-controlled while keeping report failures and other gate failures blocking.",
+      "priority": 1,
+      "order": 95,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Pass the effective PipelinePolicy into verify helper paths that decide report warning outcomes.",
+        "Keep CODEX_REPORT_WARN blocking by default when allow_report_warnings is false.",
+        "Allow verify to pass after report warnings when allow_report_warnings is true and all other enabled gates pass.",
+        "Record clear verify artifacts showing whether report warnings were blocked or allowed by policy.",
+        "Add regression tests using a structured report with a non-empty warnings array."
+      ],
+      "out_of_scope": [
+        "Do not change report schema validation rules.",
+        "Do not relax report failures, blockers, owner_decision_required, or failed blocking checks.",
+        "Do not change UI settings or web controls in this task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/verify_phase.py",
+        "tests/pipeline/test_verify_phase.py"
+      ],
+      "acceptance_criteria": [
+        "A report with warnings still blocks verify when allow_report_warnings is false.",
+        "A report with warnings passes verify when allow_report_warnings is true and git diff, protected-files, and allowed-files gates pass.",
+        "A report with warnings passes verify when allow_report_warnings is true and git diff gates are skipped by policy.",
+        "A report with warnings still blocks if another enabled gate fails.",
+        "Verify artifacts distinguish report_gate_warn_blocks_verify from report_gate_warnings_allowed_by_policy.",
+        "Focused verify phase tests cover both strict and allowed report-warning paths."
+      ],
+      "review_instructions": [
+        "Check that only report warnings are relaxed, not report errors or blockers.",
+        "Check that old sessions without allow_report_warnings remain strict."
+      ],
+      "notes": [
+        "This task addresses the observed blocked_by=CODEX_REPORT_WARN failure mode.",
+        "The implementation should not rely on allow_relaxed_git_diff_verification."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-174",
+          "type": "hard",
+          "created_at": "2026-06-25T18:33:34Z"
+        }
+      ],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T18:54:30Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T18:33:33Z",
+      "updated_at": "2026-06-25T18:54:31Z",
+      "uid": "tsk_a82be276b7a5",
+      "ref": "PIPEF-95",
+      "legacy_id": "TASK-176",
+      "aliases": [
+        "TASK-176"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 95
+    },
+    {
+      "id": "TASK-177",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-096 Wire report warning policy into UI settings",
+      "status": "done",
+      "summary": "Add a UI setting that maps directly to verify.allow_report_warnings without affecting relaxed git-diff verification.",
+      "description": "Expose report-warning behavior at the settings-to-policy layer, not yet in the web control surface.",
+      "priority": 1,
+      "order": 96,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add an allow_report_warnings UI setting with a default value of false.",
+        "Normalize and validate the new setting as a boolean UI setting.",
+        "Map allow_report_warnings=true to policy.verify.allow_report_warnings=true in UI policy resolution.",
+        "Add tests proving allow_report_warnings is independent from allow_relaxed_git_diff_verification."
+      ],
+      "out_of_scope": [
+        "Do not change verify phase behavior in this task.",
+        "Do not add or modify web UI controls in this task.",
+        "Do not rename allow_relaxed_git_diff_verification.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/ui_settings.py",
+        "ai_project_ctl/pipeline/ui_policy.py",
+        "tests/pipeline/test_ui_policy.py",
+        "AI_PROJECT/config/ui_settings.json"
+      ],
+      "acceptance_criteria": [
+        "Default UI settings include allow_report_warnings=false.",
+        "String and boolean values for allow_report_warnings are normalized consistently with other boolean settings.",
+        "Invalid allow_report_warnings values are rejected with the existing UI boolean error path.",
+        "resolve_pipeline_policy_from_settings sets verify.allow_report_warnings only from allow_report_warnings.",
+        "allow_relaxed_git_diff_verification continues to control only verify.run_git_diff_gates.",
+        "Focused UI policy tests cover true, false, and independence from relaxed git-diff verification."
+      ],
+      "review_instructions": [
+        "Check that the setting name says report warnings, not git diff.",
+        "Check that project-local ui_settings.json remains valid JSON."
+      ],
+      "notes": [
+        "This task creates the settings contract consumed by UI and pipeline sessions.",
+        "Existing sessions may still need recreation because they store policy_snapshot."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-174",
+          "type": "hard",
+          "created_at": "2026-06-25T18:33:35Z"
+        }
+      ],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T19:02:43Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T18:33:35Z",
+      "updated_at": "2026-06-25T19:02:43Z",
+      "uid": "tsk_4ea27c95cccf",
+      "ref": "PIPEF-96",
+      "legacy_id": "TASK-177",
+      "aliases": [
+        "TASK-177"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 96
+    },
+    {
+      "id": "TASK-178",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-097 Expose report warnings toggle in Control Center",
+      "status": "done",
+      "summary": "Expose allow_report_warnings in the web control surface so UI-created pipeline sessions can opt into report-warning pass behavior.",
+      "description": "Make the new setting visible and writable through existing Control Center settings flows.",
+      "priority": 1,
+      "order": 97,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add allow_report_warnings to the web settings read model and editable settings allowlist.",
+        "Render a distinct Control Center control for report warning allowance.",
+        "Ensure setting updates persist to AI_PROJECT/config/ui_settings.json through existing settings actions.",
+        "Add web tests proving the setting is displayed, submitted, and reflected independently from relaxed git-diff verification."
+      ],
+      "out_of_scope": [
+        "Do not change pipeline verify semantics in this task.",
+        "Do not change unrelated Control Center layout or styling.",
+        "Do not rename existing UI settings.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/server.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "Control Center exposes allow_report_warnings as a separate setting from relaxed git-diff verification.",
+        "Submitting the setting writes allow_report_warnings to the project UI settings file through existing guarded actions.",
+        "The web read model returns the effective allow_report_warnings value.",
+        "Existing allow_relaxed_git_diff_verification behavior is unchanged.",
+        "Web tests cover display and update of allow_report_warnings.",
+        "Focused web control tests pass."
+      ],
+      "review_instructions": [
+        "Check that users can understand the difference between report warnings and git diff relaxation.",
+        "Check that no unrelated web actions are broadened."
+      ],
+      "notes": [
+        "This task depends on the UI settings contract being present.",
+        "After this task, new UI-created sessions can include the new policy in policy_snapshot."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-174",
+          "type": "hard",
+          "created_at": "2026-06-25T18:33:36Z"
+        }
+      ],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T19:11:53Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T18:33:36Z",
+      "updated_at": "2026-06-25T19:11:54Z",
+      "uid": "tsk_67327ed51512",
+      "ref": "PIPEF-97",
+      "legacy_id": "TASK-178",
+      "aliases": [
+        "TASK-178"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 97
+    },
+    {
+      "id": "TASK-179",
+      "epic_id": "EPIC-009",
+      "title": "PIPE-098 Add report warning pipeline regression coverage",
+      "status": "done",
+      "summary": "Add an end-to-end regression test proving a UI-resolved policy can carry allow_report_warnings into verify and pass a warning report.",
+      "description": "Cover the exact failure class where report warnings were confused with relaxed git-diff behavior.",
+      "priority": 1,
+      "order": 98,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create a focused integration-style test that resolves policy from UI settings with allow_report_warnings=true.",
+        "Run verify against a structured report containing a non-empty warnings array.",
+        "Assert the phase passes only because report warnings are explicitly allowed by policy.",
+        "Assert disabling allow_report_warnings restores the CODEX_REPORT_WARN blocked path."
+      ],
+      "out_of_scope": [
+        "Do not add new production behavior in this task.",
+        "Do not run real Codex or external commands.",
+        "Do not cover unrelated pipeline phases.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "tests/pipeline/test_verify_phase.py",
+        "tests/pipeline/test_ui_policy.py"
+      ],
+      "acceptance_criteria": [
+        "Regression tests fail against the old behavior where CODEX_REPORT_WARN always blocks verify.",
+        "Regression tests pass when allow_report_warnings=true is carried into the policy snapshot.",
+        "Regression tests confirm allow_relaxed_git_diff_verification alone does not allow report warnings.",
+        "Regression tests confirm allow_report_warnings=false preserves strict blocking behavior.",
+        "The tests are bounded and do not invoke real Codex.",
+        "Focused pipeline tests pass."
+      ],
+      "review_instructions": [
+        "Check that the regression covers report warnings, not only git diff warnings.",
+        "Check that the test name makes the previous bug obvious."
+      ],
+      "notes": [
+        "This task is test-only and should run after the implementation tasks are imported and ordered.",
+        "Do not add dependencies on tasks from this same import until their generated task IDs are known."
+      ],
+      "depends_on": [
+        {
+          "task_id": "TASK-174",
+          "type": "hard",
+          "created_at": "2026-06-25T18:33:37Z"
+        }
+      ],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T19:42:41Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T18:33:37Z",
+      "updated_at": "2026-06-25T19:42:42Z",
+      "uid": "tsk_0ed311b8994a",
+      "ref": "PIPEF-98",
+      "legacy_id": "TASK-179",
+      "aliases": [
+        "TASK-179"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 98
+    },
+    {
+      "id": "TASK-180",
+      "epic_id": "EPIC-009",
+      "title": "Add report gate downstream policy helper",
+      "status": "done",
+      "summary": "Add a shared policy-aware helper that decides whether a report gate result may continue to downstream pipeline phases.",
+      "description": "Centralize report PASS/WARN acceptance so verify and review cannot diverge on advisory report warnings.",
+      "priority": 1,
+      "order": 99,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a shared helper for downstream report gate acceptance.",
+        "Accept report gate PASS unconditionally.",
+        "Accept report gate WARN only when the pipeline verify policy allows advisory report warnings.",
+        "Keep FAIL and schema/blocker/out-of-scope report gate results blocking.",
+        "Add focused helper tests for PASS, WARN allowed, WARN disallowed, and FAIL cases."
+      ],
+      "out_of_scope": [
+        "Do not change review phase behavior in this task.",
+        "Do not change UI settings behavior in this task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/report_gate.py",
+        "tests/pipeline/test_report_gate_acceptance.py"
+      ],
+      "acceptance_criteria": [
+        "A shared helper returns allow=true for CODEX_REPORT_PASS.",
+        "The helper returns allow=true for CODEX_REPORT_WARN only when the policy allows advisory report warnings.",
+        "The helper returns allow=false for CODEX_REPORT_WARN when advisory report warnings are disabled.",
+        "The helper returns allow=false for report gate FAIL results.",
+        "Focused unit tests cover all acceptance branches."
+      ],
+      "review_instructions": [
+        "Confirm the helper depends on policy state rather than hard-coded warning acceptance.",
+        "Confirm existing report gate validation semantics are unchanged."
+      ],
+      "notes": [
+        "This task creates the common primitive needed by verify and review."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T19:59:35Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T19:41:13Z",
+      "updated_at": "2026-06-25T19:59:36Z",
+      "uid": "tsk_ff42792e6d6e",
+      "ref": "PIPEF-99",
+      "legacy_id": "TASK-180",
+      "aliases": [
+        "TASK-180"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 99
+    },
+    {
+      "id": "TASK-181",
+      "epic_id": "EPIC-009",
+      "title": "Use shared report gate helper in verify phase",
+      "status": "done",
+      "summary": "Refactor verify phase to use the shared report gate acceptance helper without changing existing verify outcomes.",
+      "description": "Keep current advisory report warning behavior but route the decision through the common helper.",
+      "priority": 1,
+      "order": 100,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Replace inline report gate PASS/WARN acceptance logic in verify phase with the shared helper.",
+        "Preserve advisory report warning pass behavior when the policy allows warnings.",
+        "Preserve CODEX_REPORT_WARN blocking when the policy does not allow warnings.",
+        "Preserve git diff, protected-files, allowed-files, and skipped-gate artifacts.",
+        "Update focused verify tests only where assertions need to reflect the shared helper path."
+      ],
+      "out_of_scope": [
+        "Do not change review phase behavior in this task.",
+        "Do not change UI settings behavior in this task.",
+        "Do not refactor unrelated verify phase logic."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/verify_phase.py",
+        "tests/pipeline/test_verify_phase.py"
+      ],
+      "acceptance_criteria": [
+        "Verify still passes a report warning when the policy allows advisory report warnings.",
+        "Verify still blocks a report warning when the policy does not allow advisory report warnings.",
+        "Verify still blocks report gate FAIL results.",
+        "Existing git diff gate skip artifacts remain unchanged.",
+        "Focused verify tests pass."
+      ],
+      "review_instructions": [
+        "Check that this is a behavior-preserving refactor for verify.",
+        "Check that no new verify policy field names are introduced."
+      ],
+      "notes": [
+        "This task reduces policy drift before applying the same acceptance rule in review."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-25T20:12:18Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T19:41:13Z",
+      "updated_at": "2026-06-25T20:12:18Z",
+      "uid": "tsk_ae9a87d05290",
+      "ref": "PIPEF-100",
+      "legacy_id": "TASK-181",
+      "aliases": [
+        "TASK-181"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 100
+    },
+    {
+      "id": "TASK-182",
+      "epic_id": "EPIC-009",
+      "title": "Allow advisory report warnings in review phase",
+      "status": "done",
+      "summary": "Update review phase revalidation so a verified advisory report warning does not block review when policy allows it.",
+      "description": "Fix REPORT_GATE_NOT_PASSED_AFTER_VERIFY by making review use the same report warning policy as verify.",
+      "priority": 1,
+      "order": 101,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Replace the strict REPORT_GATE_PASS-only check in review phase with the shared report gate acceptance helper.",
+        "Keep REPORT_CHANGED_AFTER_VERIFY blocking when the latest report id differs from the verified report id.",
+        "Keep report gate FAIL and disallowed WARN results blocking with stable evidence.",
+        "Add review-phase regression coverage for advisory report warnings passing review.",
+        "Preserve existing machine review and Codex review policy behavior."
+      ],
+      "out_of_scope": [
+        "Do not change verify phase behavior in this task.",
+        "Do not change close phase behavior in this task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/review_phase.py",
+        "tests/pipeline/test_review_phase.py",
+        "tests/test_pipeline_codex_review_toggle.py"
+      ],
+      "acceptance_criteria": [
+        "Review no longer blocks with REPORT_GATE_NOT_PASSED_AFTER_VERIFY for the same verified report when advisory report warnings are allowed.",
+        "Review still blocks with REPORT_GATE_NOT_PASSED_AFTER_VERIFY when advisory report warnings are disabled.",
+        "Review still blocks with REPORT_CHANGED_AFTER_VERIFY when the latest report id differs from the verified report id.",
+        "Review still blocks report gate FAIL results.",
+        "Focused review tests pass."
+      ],
+      "review_instructions": [
+        "Confirm the fix is policy-aware and does not blindly allow all warnings.",
+        "Confirm report id revalidation remains strict."
+      ],
+      "notes": [
+        "This task directly fixes the current review blocker observed after verify passed with advisory report warnings."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T06:46:21Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T19:41:14Z",
+      "updated_at": "2026-06-26T06:46:21Z",
+      "uid": "tsk_b44abaa8f7b7",
+      "ref": "PIPEF-101",
+      "legacy_id": "TASK-182",
+      "aliases": [
+        "TASK-182"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 101
+    },
+    {
+      "id": "TASK-183",
+      "epic_id": "EPIC-009",
+      "title": "Add verify-to-review advisory warning pipeline regression",
+      "status": "done",
+      "summary": "Add an end-to-end pipeline regression proving advisory report warnings pass verify and do not block review.",
+      "description": "Guard the complete run-next flow that previously passed verify but blocked review.",
+      "priority": 1,
+      "order": 102,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create a pipeline session fixture with a report that contains warnings and no blockers.",
+        "Use a policy that allows advisory report warnings and relaxed git diff verification.",
+        "Drive the session through verify and review without invoking external Codex.",
+        "Assert verify passes with advisory warning evidence.",
+        "Assert review does not block with REPORT_GATE_NOT_PASSED_AFTER_VERIFY."
+      ],
+      "out_of_scope": [
+        "Do not change runtime pipeline behavior in this task.",
+        "Do not add external Codex execution to the test.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "tests/test_pipeline_runner.py",
+        "tests/pipeline/test_review_phase.py"
+      ],
+      "acceptance_criteria": [
+        "The regression fails on the old strict review behavior.",
+        "The regression passes after review uses the shared report warning policy.",
+        "The test does not run external Codex.",
+        "The test asserts both verify and review phase outcomes.",
+        "Focused pipeline/review tests pass."
+      ],
+      "review_instructions": [
+        "Confirm the test models the real blocker REPORT_GATE_NOT_PASSED_AFTER_VERIFY.",
+        "Confirm the test is bounded and deterministic."
+      ],
+      "notes": [
+        "This task prevents recurrence of the verify passed / review blocked mismatch."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-26T06:59:59Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-25T19:41:15Z",
+      "updated_at": "2026-06-26T06:59:59Z",
+      "uid": "tsk_ae36b784755b",
+      "ref": "PIPEF-102",
+      "legacy_id": "TASK-183",
+      "aliases": [
+        "TASK-183"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 102
     }
   ]
 }

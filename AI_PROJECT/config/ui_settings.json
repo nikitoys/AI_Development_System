@@ -4,6 +4,8 @@
   "require_codex_review": false,
   "allow_internal_change_gate_bypass": true,
   "allow_relaxed_git_diff_verification": true,
+  "allow_report_warnings": true,
+  "allow_relaxed_report_warnings": true,
   "preflight_timeout_sec": "120",
   "execution_timeout_sec": "3600"
 }

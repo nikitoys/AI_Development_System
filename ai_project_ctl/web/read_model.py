@@ -30,6 +30,7 @@ from ai_project_ctl.core.workflows import (
 from ai_project_ctl.pipeline.policy import policy_behavior_label, policy_preset, preset_names
 from ai_project_ctl.pipeline.queue import QueuePlannerRequest, preview_queue
 from ai_project_ctl.pipeline.state import load_pipeline_state
+from ai_project_ctl.ui_settings import load_ui_settings, ui_settings_path, ui_settings_source
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[2]
@@ -229,6 +230,15 @@ class ReadOnlyProjectModel:
     @property
     def root(self) -> Path:
         return self.paths.root
+
+    def ui_settings(self) -> dict[str, Any]:
+        """Return effective project-local UI settings for web rendering."""
+
+        return {
+            "settings": load_ui_settings(root=self.root),
+            "source": ui_settings_source(root=self.root),
+            "path": str(ui_settings_path(self.root)),
+        }
 
     def dashboard(
         self,
