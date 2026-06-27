@@ -3,23 +3,23 @@
 
 # Pipeline Status
 
-Revision: `535`
-Current session: `PSESS-079`
-Sessions: `79`
+Revision: `608`
+Current session: `PSESS-088`
+Sessions: `88`
 
 ## Current Session
 
-- ID: `PSESS-079`
+- ID: `PSESS-088`
 - Status: `blocked`
 - Policy: `supervised_executable_local_commit_1h_auto_change`
-- Current task: `TASK-204`
+- Current task: `TASK-157`
 - Current phase: `close`
 - Phase status: `blocked`
 - Blocked by: `COMMIT_READINESS_FAILED`
 - Next action: `Resolve local commit readiness blockers, then rerun pipeline close.`
 - Current step: `execute`
-- Step status: `stopped`
-- Stop reason: `Close completed, but local commit was blocked: Machine Review FAIL blocks local commit.`
+- Step status: `passed`
+- Stop reason: `Close completed, but local commit was blocked: Machine Review WARN is not accepted for local commit; unapproved warning evidence: report_declared_test_1=warn code=MACHINE_REVIEW_UNSAFE_TEST_COMMAND blocking=False, report_declared_test_3=warn code=MACHINE_REVIEW_UNSAFE_TEST_COMMAND blocking=False. Allowed warning evidence must be the policy-approved codex_report_gate report warning.`
 
 ## Sessions
 
@@ -104,6 +104,15 @@ Sessions: `79`
 | `PSESS-077` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-202` | `close` | `blocked` | COMMIT_READINESS_FAILED | Resolve local commit readiness blockers, then rerun pipeline close. | `execute` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. |
 | `PSESS-078` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-203` | `close` | `blocked` | COMMIT_READINESS_FAILED | Resolve local commit readiness blockers, then rerun pipeline close. | `execute` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. |
 | `PSESS-079` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-204` | `close` | `blocked` | COMMIT_READINESS_FAILED | Resolve local commit readiness blockers, then rerun pipeline close. | `execute` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. |
+| `PSESS-080` | `failed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-150` | `execute` | `failed` | none | In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-150 --file <REPORT.json> --confirm | `execute` | Codex execution adapter failed: local_command_nonzero_exit (status=failed, code=CODEX_ADAPTER_LOCAL_COMMAND_FAILED, returncode=1) |
+| `PSESS-081` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-150` | `close` | `blocked` | COMMIT_READINESS_FAILED | Resolve local commit readiness blockers, then rerun pipeline close. | `execute` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. |
+| `PSESS-082` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `` | `queue_preview` | `blocked` | NO_EXECUTABLE_TASK | Create or unblock a ready task, then rerun queue preview. | `` | No executable task is available in the selected queue. |
+| `PSESS-083` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-211` | `close` | `blocked` | COMMIT_READINESS_FAILED | Resolve local commit readiness blockers, then rerun pipeline close. | `execute` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. |
+| `PSESS-084` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-212` | `close` | `blocked` | COMMIT_READINESS_FAILED | Resolve local commit readiness blockers, then rerun pipeline close. | `execute` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. |
+| `PSESS-085` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-213` | `close` | `blocked` | COMMIT_READINESS_FAILED | Resolve local commit readiness blockers, then rerun pipeline close. | `execute` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. |
+| `PSESS-086` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-214` | `close` | `blocked` | COMMIT_READINESS_FAILED | Resolve local commit readiness blockers, then rerun pipeline close. | `execute` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. |
+| `PSESS-087` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-215` | `close` | `blocked` | COMMIT_READINESS_FAILED | Resolve local commit readiness blockers, then rerun pipeline close. | `execute` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. |
+| `PSESS-088` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-157` | `close` | `blocked` | COMMIT_READINESS_FAILED | Resolve local commit readiness blockers, then rerun pipeline close. | `execute` | Close completed, but local commit was blocked: Machine Review WARN is not accepted for local commit; unapproved warning evidence: report_declared_test_1=warn code=MACHINE_REVIEW_UNSAFE_TEST_COMMAND blocking=False, report_declared_test_3=warn code=MACHINE_REVIEW_UNSAFE_TEST_COMMAND blocking=False. Allowed warning evidence must be the policy-approved codex_report_gate report warning. |
 
 ## Phase History
 
@@ -457,3 +466,59 @@ Sessions: `79`
 | `PSESS-079` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
 | `PSESS-079` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
 | `PSESS-079` | 7 | `close` | `blocked` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. | Resolve local commit readiness blockers, then rerun pipeline close. | 0 | 0 | 1 |
+| `PSESS-080` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-080` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 54bf976933fa189a53b72729ef42bafdef28a619214061eb4b2d1a587cc5e2e7). | 0 | 0 | 1 |
+| `PSESS-080` | 3 | `execute` | `failed` | Codex execution adapter failed: local_command_nonzero_exit (status=failed, code=CODEX_ADAPTER_LOCAL_COMMAND_FAILED, returncode=1) | In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-150 --file <REPORT.json> --confirm | 0 | 0 | 2 |
+| `PSESS-081` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-081` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 3c2f178ed1f718cffd54f5883134a075700017f517dff6a359767330711c3d0e). | 0 | 0 | 1 |
+| `PSESS-081` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-081` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-081` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-081` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-081` | 7 | `close` | `blocked` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. | Resolve local commit readiness blockers, then rerun pipeline close. | 0 | 0 | 1 |
+| `PSESS-082` | 1 | `queue_preview` | `blocked` | No executable task is available in the selected queue. | Create or unblock a ready task, then rerun queue preview. | 0 | 0 | 1 |
+| `PSESS-083` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-083` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 3460f3fc2b3ac2c05348a15ccd924299f70123360e81860ff5e1f4ce24e08887). | 0 | 0 | 1 |
+| `PSESS-083` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-083` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-083` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-083` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-083` | 7 | `close` | `blocked` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. | Resolve local commit readiness blockers, then rerun pipeline close. | 0 | 0 | 1 |
+| `PSESS-084` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-084` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 51b6b19f0d9ae4693bbb9722eec6f441e5d606650211ff16ec4a86b91be7b6d5). | 0 | 0 | 1 |
+| `PSESS-084` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-084` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-084` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-084` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-084` | 7 | `close` | `blocked` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. | Resolve local commit readiness blockers, then rerun pipeline close. | 0 | 0 | 1 |
+| `PSESS-085` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-085` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 27f1333beb3acc020acd2229c836f8112439945b3a61b411da73fca64ef186ae). | 0 | 0 | 1 |
+| `PSESS-085` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-085` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-085` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-085` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-085` | 7 | `close` | `blocked` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. | Resolve local commit readiness blockers, then rerun pipeline close. | 0 | 0 | 1 |
+| `PSESS-086` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-086` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 1b66b803733f99fbf45ab0d7da075d5640f7db7a50abe90370969c8b9188d5cb). | 0 | 0 | 1 |
+| `PSESS-086` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-086` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-086` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-086` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-086` | 7 | `close` | `blocked` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. | Resolve local commit readiness blockers, then rerun pipeline close. | 0 | 0 | 1 |
+| `PSESS-087` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-087` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 868429408c4897f68c708f6dbfa4ffc895986602b0ee80ee194e52376fd16e48). | 0 | 0 | 1 |
+| `PSESS-087` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-087` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-087` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-087` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-087` | 7 | `close` | `blocked` | Close completed, but local commit was blocked: Machine Review FAIL blocks local commit. | Resolve local commit readiness blockers, then rerun pipeline close. | 0 | 0 | 1 |
+| `PSESS-088` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-088` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 bd0fc20f1779af194c1b5069d5d520a9e07823aae7dbbc85ca548511134108ba). | 0 | 0 | 1 |
+| `PSESS-088` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-088` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-088` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 0 | 0 | 1 |
+| `PSESS-088` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-088` | 7 | `close` | `blocked` | Close workflow blocked: Review close workflow failed: task.submit_for_review | Resolve the close workflow blocker, then rerun pipeline close. | 0 | 0 | 1 |
+| `PSESS-088` | 8 | `close` | `blocked` | Close workflow blocked: Review close workflow failed: task.submit_for_review | Resolve the close workflow blocker, then rerun pipeline close. | 0 | 0 | 1 |
+| `PSESS-088` | 9 | `close` | `blocked` | Close workflow blocked: Review close workflow failed: task.submit_for_review | Resolve the close workflow blocker, then rerun pipeline close. | 0 | 0 | 1 |
+| `PSESS-088` | 10 | `close` | `blocked` | Close completed, but local commit was blocked: Machine Review WARN is not accepted for local commit; unapproved warning evidence: report_declared_test_1=warn code=MACHINE_REVIEW_UNSAFE_TEST_COMMAND blocking=False, report_declared_test_3=warn code=MACHINE_REVIEW_UNSAFE_TEST_COMMAND blocking=False. Allowed warning evidence must be the policy-approved codex_report_gate report warning. | Resolve local commit readiness blockers, then rerun pipeline close. | 0 | 0 | 1 |

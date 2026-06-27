@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1447,
+  "revision": 1518,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-26T22:41:32Z",
+  "updated_at": "2026-06-27T13:03:46Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -10288,7 +10288,7 @@
       "id": "TASK-150",
       "epic_id": "EPIC-009",
       "title": "PIPE-066 Document Web Settings and internal bypass behavior",
-      "status": "planned",
+      "status": "done",
       "summary": "Document the Web Settings page and the internal Change gate bypass setting for the Human Owner.",
       "description": "Owner-facing docs should explain when the bypass setting is appropriate and what it does not skip.",
       "priority": 1,
@@ -10324,14 +10324,15 @@
         "Verify that the docs do not encourage bypassing governance for normal product tasks."
       ],
       "notes": [
-        "This task should be done after implementation behavior is clear."
+        "This task should be done after implementation behavior is clear.",
+        "Re do"
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-27T10:07:51Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-24T10:37:53Z",
-      "updated_at": "2026-06-24T10:37:53Z",
+      "updated_at": "2026-06-27T10:07:51Z",
       "uid": "tsk_98a41c988bbe",
       "ref": "PIPEF-71",
       "legacy_id": "TASK-150",
@@ -10695,7 +10696,7 @@
       "id": "TASK-157",
       "epic_id": "EPIC-009",
       "title": "PIPE-073 Document Codex structured report auto-submit",
-      "status": "planned",
+      "status": "done",
       "summary": "Document how Codex structured reports are emitted, parsed, auto-submitted and recovered in Web UI.",
       "description": "Owner-facing docs should explain why Run no longer normally stops at REPORT_MISSING and what to do when it still does.",
       "priority": 1,
@@ -10736,11 +10737,11 @@
         "Write this after the implementation behavior is stable."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-27T12:59:25Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-24T11:23:00Z",
-      "updated_at": "2026-06-24T11:23:00Z",
+      "updated_at": "2026-06-27T12:59:25Z",
       "uid": "tsk_6ac4e09604aa",
       "ref": "PIPEF-78",
       "legacy_id": "TASK-157",
@@ -13597,6 +13598,1540 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 123
+    },
+    {
+      "id": "TASK-205",
+      "epic_id": "EPIC-009",
+      "title": "Expose Web policy catalog",
+      "status": "planned",
+      "summary": "Expose the registered built-in and custom pipeline policy presets to the Web read model for safe UI selection.",
+      "description": "Add a compact policy catalog for Web Settings so the UI can render known policy names instead of free-text input.",
+      "priority": 1,
+      "order": 124,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a Web-facing policy catalog payload with policy name, kind, behavior label, and compact effective summary fields.",
+        "Include both built-in policy presets and custom policy presets loaded from the governed policy store.",
+        "Expose the policy catalog through the Web read model without mutating project state.",
+        "Add regression coverage for built-in and custom policy catalog rendering inputs."
+      ],
+      "out_of_scope": [
+        "Do not change pipeline execution behavior.",
+        "Do not create, update, or delete policy presets.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/pipeline/policy_store.py",
+        "tests/test_web_control_center.py",
+        "tests/pipeline/test_ui_settings_policy.py"
+      ],
+      "acceptance_criteria": [
+        "The Web read model exposes a deterministic list of selectable pipeline policies.",
+        "The catalog includes built-in presets and any valid custom presets from the policy store.",
+        "Each catalog item includes enough summary data to explain review, close, commit, and batch behavior.",
+        "Invalid custom policy store state still fails through existing validation paths.",
+        "Existing Web Control Center tests continue to pass."
+      ],
+      "review_instructions": [
+        "Verify that the catalog is read-only and does not bypass policy-store validation.",
+        "Check that policy names are sourced from existing policy registration mechanisms, not duplicated hardcoded HTML."
+      ],
+      "notes": [
+        "This task is only the policy catalog foundation for later UI rendering."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T10:36:41Z",
+      "updated_at": "2026-06-27T10:36:41Z",
+      "uid": "tsk_8f2ba8631f4c",
+      "ref": "PIPEF-124",
+      "legacy_id": "TASK-205",
+      "aliases": [
+        "TASK-205"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 124
+    },
+    {
+      "id": "TASK-206",
+      "epic_id": "EPIC-009",
+      "title": "Render policy dropdown in Settings",
+      "status": "planned",
+      "summary": "Replace the Web Settings free-text default_policy field with a dropdown populated from registered pipeline policies.",
+      "description": "Make default policy selection owner-safe by allowing only existing policy preset names in the Settings form.",
+      "priority": 1,
+      "order": 125,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Render default_policy as a select control populated from the Web policy catalog.",
+        "Keep the currently effective default_policy selected when the Settings page loads.",
+        "Reject unknown default_policy values submitted through Web settings actions.",
+        "Preserve the existing project-local ui_settings.json write path."
+      ],
+      "out_of_scope": [
+        "Do not change policy preset definitions.",
+        "Do not change non-policy settings behavior.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/ui_settings.py",
+        "tests/test_web_control_center.py",
+        "tests/pipeline/test_ui_settings_policy.py"
+      ],
+      "acceptance_criteria": [
+        "The Settings page no longer renders default_policy as a free-text input.",
+        "The Settings page renders every registered policy preset as a selectable option.",
+        "Submitting a known policy updates ui_settings.json through the existing settings action.",
+        "Submitting an unknown policy through the Web action returns a controlled error.",
+        "Existing settings such as command_line and review toggles continue to apply normally."
+      ],
+      "review_instructions": [
+        "Check that validation happens on write, not only in HTML rendering.",
+        "Confirm that existing project-local settings remain backwards compatible."
+      ],
+      "notes": [
+        "The text input may remain only in a clearly separated debug path if required, but normal Settings must use the dropdown."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T10:36:42Z",
+      "updated_at": "2026-06-27T10:36:42Z",
+      "uid": "tsk_f12e091f47df",
+      "ref": "PIPEF-125",
+      "legacy_id": "TASK-206",
+      "aliases": [
+        "TASK-206"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 125
+    },
+    {
+      "id": "TASK-207",
+      "epic_id": "EPIC-009",
+      "title": "Show effective policy summary",
+      "status": "planned",
+      "summary": "Show an owner-facing effective pipeline policy summary in Web Settings and selected-run views.",
+      "description": "Make hidden policy behavior visible before running a task, especially batch limits, review mode, auto-close, and commit behavior.",
+      "priority": 1,
+      "order": 126,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Render an effective policy summary panel on the Settings page for the selected default policy.",
+        "Render the effective policy summary near the selected task run controls where practical.",
+        "Include batch.max_steps, batch.max_failures, review requirement, auto-close status, commit status, and warning policy.",
+        "Keep the summary read-only and clearly separate it from editable settings."
+      ],
+      "out_of_scope": [
+        "Do not add new policy fields.",
+        "Do not change pipeline runner behavior.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/server.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "Owners can see the effective batch max_steps before starting a Web run.",
+        "Owners can see whether Codex Review is required or skipped by the effective policy.",
+        "Owners can see whether auto-close and local commit are enabled by the effective policy.",
+        "Owners can see whether report warnings and git diff gates are strict or relaxed.",
+        "The summary updates when the effective selected policy changes."
+      ],
+      "review_instructions": [
+        "Check that the summary uses the resolved effective policy, including UI setting overrides.",
+        "Confirm that the summary does not imply disabled gates are running."
+      ],
+      "notes": [
+        "This task prevents the max_steps=5 surprise seen before review and close."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T10:36:43Z",
+      "updated_at": "2026-06-27T10:36:43Z",
+      "uid": "tsk_92e534ba39e2",
+      "ref": "PIPEF-126",
+      "legacy_id": "TASK-207",
+      "aliases": [
+        "TASK-207"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 126
+    },
+    {
+      "id": "TASK-208",
+      "epic_id": "EPIC-009",
+      "title": "Add Web run batch overrides",
+      "status": "planned",
+      "summary": "Add validated Web-run batch limit settings so selected task runs can reach review and close without hidden max_steps stops.",
+      "description": "Allow project-local UI settings to override safe batch limits for Web runs while preserving policy validation.",
+      "priority": 1,
+      "order": 127,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add project-local UI settings for Web run max_steps and max_failures.",
+        "Validate batch override values as positive integers within safe bounds.",
+        "Apply the overrides when resolving the effective UI pipeline policy.",
+        "Render the override controls in Settings with owner-facing helper text."
+      ],
+      "out_of_scope": [
+        "Do not change non-Web pipeline policy presets.",
+        "Do not remove the policy-level batch limits.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/ui_settings.py",
+        "ai_project_ctl/pipeline/ui_policy.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "tests/pipeline/test_ui_settings_policy.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "A Web run can be configured with max_steps high enough to cover all seven pipeline phases.",
+        "Invalid batch override values are rejected with controlled UI settings errors.",
+        "If no override is set, existing policy defaults remain effective.",
+        "The Settings page displays the configured batch overrides.",
+        "Policy resolution tests cover default behavior and override behavior."
+      ],
+      "review_instructions": [
+        "Verify that overrides are scoped to UI-resolved policy only.",
+        "Check that safe bounds prevent accidental unbounded batch execution."
+      ],
+      "notes": [
+        "Use a default or recommended value of at least 7 phases for single-task Web runs."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T10:36:44Z",
+      "updated_at": "2026-06-27T10:36:44Z",
+      "uid": "tsk_f0f89049f343",
+      "ref": "PIPEF-127",
+      "legacy_id": "TASK-208",
+      "aliases": [
+        "TASK-208"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 127
+    },
+    {
+      "id": "TASK-209",
+      "epic_id": "EPIC-009",
+      "title": "Warn on incomplete Web run policy",
+      "status": "planned",
+      "summary": "Warn owners before starting a Web run when the effective policy cannot reach review and close in one batch.",
+      "description": "Add owner-facing guardrails for policies whose batch max_steps is lower than the full pipeline phase count.",
+      "priority": 1,
+      "order": 128,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Detect when the effective Web run max_steps is lower than the full phase sequence count.",
+        "Render a visible warning in Settings and selected-run controls.",
+        "Require explicit owner confirmation for a run that is expected to stop before review or close.",
+        "Ensure the warning explains that Resume Session can continue the next phase."
+      ],
+      "out_of_scope": [
+        "Do not block deliberate one-phase or partial-session workflows.",
+        "Do not change the core phase sequence.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "A policy with max_steps below the full phase count shows a warning before Web Run starts.",
+        "The warning names the expected stopping point risk: review and close may not run.",
+        "The run action can still proceed only after explicit owner confirmation.",
+        "A policy with sufficient max_steps does not show the incomplete-run warning.",
+        "Tests cover both warning and no-warning cases."
+      ],
+      "review_instructions": [
+        "Check that warning copy is clear and does not claim an error when a partial run is intentional.",
+        "Verify that Resume Session remains available for stopped sessions."
+      ],
+      "notes": [
+        "This task improves UX without changing runner semantics."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T10:36:45Z",
+      "updated_at": "2026-06-27T10:36:45Z",
+      "uid": "tsk_084920753b67",
+      "ref": "PIPEF-128",
+      "legacy_id": "TASK-209",
+      "aliases": [
+        "TASK-209"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 128
+    },
+    {
+      "id": "TASK-210",
+      "epic_id": "EPIC-009",
+      "title": "Document Web policy settings",
+      "status": "deferred",
+      "summary": "Document the improved Web Settings policy selector, effective policy summary, and batch run limit behavior.",
+      "description": "Update owner-facing docs so users understand how to choose policies and why Web runs may stop before review or close.",
+      "priority": 1,
+      "order": 129,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Document the policy dropdown and how policy presets are selected.",
+        "Document the effective policy summary fields shown in Settings.",
+        "Document Web run batch limits and the recommended max_steps for full single-task runs.",
+        "Document how to resume a stopped session when a partial run is intentional."
+      ],
+      "out_of_scope": [
+        "Do not change Web UI behavior.",
+        "Do not document future settings that are not implemented.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/08-usage-guide.md",
+        "ai-system/project-control/10-owner-quickstart.md"
+      ],
+      "acceptance_criteria": [
+        "The usage guide explains that default_policy is selected from registered policy presets.",
+        "The owner quickstart explains how to spot insufficient max_steps before starting a run.",
+        "The docs explain the difference between Run selected task and Resume Session.",
+        "The docs do not claim full autonomous completion when policy limits intentionally stop the session.",
+        "Documentation validation and generated documentation checks pass."
+      ],
+      "review_instructions": [
+        "Check that docs match the implemented UI labels.",
+        "Verify that the docs do not encourage manual edits to protected project files."
+      ],
+      "notes": [
+        "Run docctl validation and check-generated after documentation changes."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T10:36:46Z",
+      "updated_at": "2026-06-27T10:37:55Z",
+      "uid": "tsk_c80966a220c5",
+      "ref": "PIPEF-129",
+      "legacy_id": "TASK-210",
+      "aliases": [
+        "TASK-210"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 129
+    },
+    {
+      "id": "TASK-211",
+      "epic_id": "EPIC-009",
+      "title": "Preserve report file lists",
+      "status": "done",
+      "summary": "Preserve Codex summary changed_files and generated_files when building automatic task reports.",
+      "description": "Automatic reports built from CODEX_EXECUTION_SUMMARY_JSON must not drop file lists provided by Codex.",
+      "priority": 1,
+      "order": 130,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Extend report builder file-list extraction to read changed_files and generated_files from the parsed Codex summary.",
+        "Keep existing session and policy evidence file-list sources as fallbacks and deduplicate all file paths.",
+        "Add focused regression tests for summary-provided changed_files and generated_files.",
+        "Preserve existing report payload schema and validation behavior."
+      ],
+      "out_of_scope": [
+        "Do not change task report schema.",
+        "Do not infer changed files from free-form prose.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/report_builder.py",
+        "tests/pipeline/test_report_builder.py",
+        "tests/pipeline/test_codex_adapter.py"
+      ],
+      "acceptance_criteria": [
+        "A parsed Codex summary containing changed_files produces a task report with the same changed files.",
+        "A parsed Codex summary containing generated_files produces a task report with the same generated files.",
+        "Duplicate file paths from summary, session, and policy evidence are stored only once.",
+        "Existing report builder behavior still works when the summary omits file lists.",
+        "Focused report builder and Codex adapter tests pass."
+      ],
+      "review_instructions": [
+        "Check that file lists come only from structured summary fields or trusted evidence.",
+        "Verify that free-form implementation_summary text is not parsed for paths."
+      ],
+      "notes": [
+        "Observed issue: RPT-057 had changed_files=[] while Codex stdout said two documentation files were edited.",
+        "Recommended first task in this fix sequence."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-27T10:44:07Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-27T10:38:39Z",
+      "updated_at": "2026-06-27T10:44:07Z",
+      "uid": "tsk_5a0d9fe1d1c7",
+      "ref": "PIPEF-130",
+      "legacy_id": "TASK-211",
+      "aliases": [
+        "TASK-211"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 130
+    },
+    {
+      "id": "TASK-212",
+      "epic_id": "EPIC-009",
+      "title": "Refresh context before commit",
+      "status": "done",
+      "summary": "Refresh generated Context Pack outputs after task close and before local commit readiness is evaluated.",
+      "description": "Close workflow mutates task/current state, so local commit must not run against stale CONTEXT_PACK.md or CONTEXT_STATUS.md.",
+      "priority": 1,
+      "order": 131,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a governed context refresh step in close phase after successful task close and linked change handling.",
+        "Run the refresh before local commit readiness and include it in local commit side effects.",
+        "Block close with compact evidence if the context refresh command fails.",
+        "Add regression coverage for stale context outputs becoming fresh before local commit."
+      ],
+      "out_of_scope": [
+        "Do not bypass contextctl check-generated.",
+        "Do not commit stale generated context files.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/close_phase.py",
+        "tests/test_pipeline_phase_review_close.py",
+        "tests/test_pipeline_runner.py"
+      ],
+      "acceptance_criteria": [
+        "Close phase runs a governed context build for the selected task before attempting local commit.",
+        "Generated context outputs are included as governed side effects for commit readiness file approval.",
+        "If context refresh fails, close records a blocked phase with a clear context refresh blocker code.",
+        "A stale CONTEXT_PACK.md or CONTEXT_STATUS.md no longer causes local commit readiness to fail after successful refresh.",
+        "Focused close phase tests pass."
+      ],
+      "review_instructions": [
+        "Verify that context refresh happens after task close, because task state changes can stale Context Pack.",
+        "Check that refresh evidence is bounded and does not store large stdout or stderr payloads."
+      ],
+      "notes": [
+        "Observed blocker: context_check_generated failed on CONTEXT_PACK.md and CONTEXT_STATUS.md during local commit Machine Review."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-27T11:02:25Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-27T10:38:40Z",
+      "updated_at": "2026-06-27T11:02:26Z",
+      "uid": "tsk_1caf66c97cb8",
+      "ref": "PIPEF-131",
+      "legacy_id": "TASK-212",
+      "aliases": [
+        "TASK-212"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 131
+    },
+    {
+      "id": "TASK-213",
+      "epic_id": "EPIC-009",
+      "title": "Allow approved review warnings",
+      "status": "done",
+      "summary": "Allow local commit when Machine Review has only policy-approved report warnings and all commit-critical checks pass.",
+      "description": "Local commit readiness should block Machine Review failures and unknown warnings, but allow report warnings that the active policy explicitly permits.",
+      "priority": 1,
+      "order": 132,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Replace the strict Machine Review PASS-only commit gate with a policy-aware blocker check.",
+        "Keep any blocking Machine Review FAIL as a local commit blocker.",
+        "Allow codex_report_gate WARN only when report warnings are accepted by the effective policy.",
+        "Add tests for allowed report warning, disallowed warning, and blocking failure cases."
+      ],
+      "out_of_scope": [
+        "Do not weaken commit-critical generated-file checks.",
+        "Do not allow unknown Machine Review warnings.",
+        "Do not change Codex Review policy semantics."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/git_commit.py",
+        "tests/test_pipeline_git_commit.py",
+        "tests/test_pipeline_phase_review_close.py"
+      ],
+      "acceptance_criteria": [
+        "Machine Review FAIL still blocks local commit.",
+        "Machine Review WARN from codex_report_gate is allowed only when policy allows report warnings.",
+        "Unknown blocking Machine Review WARN still blocks local commit.",
+        "Required commit readiness checks still must exist and pass.",
+        "Focused git commit readiness tests pass."
+      ],
+      "review_instructions": [
+        "Check that this does not turn all warnings into commit approval.",
+        "Verify that required generated-output checks still run and still block on failure."
+      ],
+      "notes": [
+        "This fixes the policy mismatch between verify allowing report warnings and commit requiring absolute Machine Review PASS."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-27T11:18:07Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-27T10:38:41Z",
+      "updated_at": "2026-06-27T11:18:08Z",
+      "uid": "tsk_236114b44fed",
+      "ref": "PIPEF-132",
+      "legacy_id": "TASK-213",
+      "aliases": [
+        "TASK-213"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 132
+    },
+    {
+      "id": "TASK-214",
+      "epic_id": "EPIC-009",
+      "title": "Record commit review diagnostics",
+      "status": "done",
+      "summary": "Store compact Machine Review diagnostics in local commit readiness evidence when commit is blocked.",
+      "description": "Commit blockers should identify the failing or warning Machine Review checks directly in pipeline artifacts.",
+      "priority": 1,
+      "order": 133,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add compact Machine Review summary data to local commit readiness or local commit result serialization.",
+        "Include non-pass Machine Review checks with name, status, code, reason, command, and bounded stdout or stderr summaries.",
+        "Expose the new diagnostics through existing close phase local_commit artifacts.",
+        "Add tests proving context_check_generated failures are visible in local_commit artifacts."
+      ],
+      "out_of_scope": [
+        "Do not store full command stdout or stderr in pipeline state.",
+        "Do not change Machine Review execution order.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/git_commit.py",
+        "ai_project_ctl/pipeline/close_phase.py",
+        "ai_project_ctl/web/server.py",
+        "tests/test_pipeline_git_commit.py",
+        "tests/test_pipeline_phase_review_close.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "A local commit blocked by Machine Review includes compact non-pass check diagnostics in local_commit artifacts.",
+        "Diagnostics identify the exact failing check name such as context_check_generated.",
+        "Diagnostics include bounded stdout_summary or stderr_summary without oversized pipeline state strings.",
+        "Existing local commit success artifacts remain compatible.",
+        "Focused pipeline and Web rendering tests pass."
+      ],
+      "review_instructions": [
+        "Check that diagnostics are useful from the Web UI without rerunning custom Python snippets.",
+        "Verify that artifact payloads remain bounded and validate successfully."
+      ],
+      "notes": [
+        "Observed issue: local_commit reason said Machine Review FAIL but did not include the failing check details."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-27T11:32:23Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-27T10:38:41Z",
+      "updated_at": "2026-06-27T11:32:24Z",
+      "uid": "tsk_3f12a03cbb4e",
+      "ref": "PIPEF-133",
+      "legacy_id": "TASK-214",
+      "aliases": [
+        "TASK-214"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 133
+    },
+    {
+      "id": "TASK-215",
+      "epic_id": "EPIC-009",
+      "title": "Prevent stale context commit regression",
+      "status": "done",
+      "summary": "Add regression coverage for close-to-commit flow with context refresh, report file lists, and policy-approved warnings.",
+      "description": "Protect the recovery path that previously closed a task but blocked local commit because context outputs were stale and diagnostics were incomplete.",
+      "priority": 1,
+      "order": 134,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a regression test for close phase refreshing context before commit.",
+        "Add a regression test for automatic report builder preserving changed files from Codex summary through commit readiness.",
+        "Add a regression test for policy-approved report warnings not blocking local commit when commit-critical checks pass.",
+        "Keep tests deterministic and independent from live Codex execution."
+      ],
+      "out_of_scope": [
+        "Do not add slow live-Codex integration tests.",
+        "Do not change production behavior in this test-only task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "tests/test_pipeline_phase_review_close.py",
+        "tests/test_pipeline_runner.py",
+        "tests/pipeline/test_codex_adapter.py",
+        "tests/pipeline/test_report_builder.py",
+        "tests/test_pipeline_git_commit.py"
+      ],
+      "acceptance_criteria": [
+        "Tests fail against the old stale-context local commit behavior and pass after the production fixes.",
+        "Tests cover automatic report file lists reaching report gate and commit readiness.",
+        "Tests cover Machine Review WARN allowed by policy without allowing Machine Review FAIL.",
+        "Tests do not require network access or a live Codex process.",
+        "Focused regression test commands complete successfully."
+      ],
+      "review_instructions": [
+        "Check that tests are deterministic and use fakes or fixtures for Codex and project-control commands.",
+        "Verify that tests protect the observed PSESS-081 failure mode."
+      ],
+      "notes": [
+        "This task is a safety net and may be run after the production fixes are imported.",
+        "Do not add depends_on values for tasks created in this same bulk import."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-27T11:56:25Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-27T10:38:42Z",
+      "updated_at": "2026-06-27T11:56:26Z",
+      "uid": "tsk_8b04a750e499",
+      "ref": "PIPEF-134",
+      "legacy_id": "TASK-215",
+      "aliases": [
+        "TASK-215"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 134
+    },
+    {
+      "id": "TASK-216",
+      "epic_id": "EPIC-005",
+      "title": "Add shared Web owner shell",
+      "status": "planned",
+      "summary": "Introduce a shared Web Control Center shell with grouped sidebar navigation and a consistent main content layout for every route.",
+      "description": "Create the UI foundation for the Owner Cockpit without changing project-control write behavior.",
+      "priority": 1,
+      "order": 16,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Replace the long top navigation with grouped sidebar navigation in the shared page renderer.",
+        "Keep all existing GET routes available at the same URLs.",
+        "Add responsive layout classes for sidebar, top area, main content, cards, queues, drawers, and modals.",
+        "Ensure pages still render without JavaScript and without external assets."
+      ],
+      "out_of_scope": [
+        "Do not change action execution behavior.",
+        "Do not redesign individual page content beyond wrapping it in the shared shell.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py"
+      ],
+      "acceptance_criteria": [
+        "All existing Web Control Center routes render inside the new shared shell.",
+        "The old long horizontal nav is replaced by grouped sidebar navigation.",
+        "The active route remains visibly highlighted.",
+        "The UI remains usable on narrow screens.",
+        "No state-changing action is introduced by the shell itself."
+      ],
+      "review_instructions": [
+        "Check that route compatibility is preserved and that the shell does not bypass /actions."
+      ],
+      "notes": [
+        "Suggested sequence: run this foundation task before page-specific redesign tasks."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:34Z",
+      "updated_at": "2026-06-27T13:03:34Z",
+      "uid": "tsk_1634bff488b5",
+      "ref": "CTL-16",
+      "legacy_id": "TASK-216",
+      "aliases": [
+        "TASK-216"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 16
+    },
+    {
+      "id": "TASK-217",
+      "epic_id": "EPIC-005",
+      "title": "Add sticky current execution bar",
+      "status": "planned",
+      "summary": "Add a sticky owner-facing current execution bar that shows the current task, status, next action, prompt readiness, and safe quick actions.",
+      "description": "The bar should answer what is happening now and what the owner can safely do next.",
+      "priority": 1,
+      "order": 17,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a reusable current execution bar renderer fed from existing dashboard data.",
+        "Show current task ref, internal task id when available, status, title, and next owner action.",
+        "Expose only existing safe action forms or existing links for quick actions.",
+        "Show compact Codex Prompt and Context Pack readiness signals when available."
+      ],
+      "out_of_scope": [
+        "Do not create new backend actions.",
+        "Do not change task lifecycle transitions.",
+        "Do not expose push, merge, reset, restore, clean, rebase, or discard actions."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py"
+      ],
+      "acceptance_criteria": [
+        "Dashboard and Tasks pages show a sticky current execution bar when current execution data exists.",
+        "The bar degrades to a compact no-current-task state when no current task exists.",
+        "Every visible quick action maps to an existing /actions workflow or a read-only route.",
+        "The current task label matches existing dashboard current_task data.",
+        "No duplicate primary action is shown in both topbar and the same visible row without clear hierarchy."
+      ],
+      "review_instructions": [
+        "Verify that quick actions still require the existing confirmation path."
+      ],
+      "notes": [
+        "This should use existing execution_status_panel data rather than inventing new state."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:35Z",
+      "updated_at": "2026-06-27T13:03:35Z",
+      "uid": "tsk_e9d5369a0d0c",
+      "ref": "CTL-17",
+      "legacy_id": "TASK-217",
+      "aliases": [
+        "TASK-217"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 17
+    },
+    {
+      "id": "TASK-218",
+      "epic_id": "EPIC-005",
+      "title": "Add compact health summary panel",
+      "status": "planned",
+      "summary": "Replace large repeated health tables on owner work pages with a compact health summary and expandable detail block.",
+      "description": "Health should stay visible without consuming the main working area.",
+      "priority": 1,
+      "order": 18,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a reusable compact health summary renderer using existing doctor and artifact health data.",
+        "Show PASS, WARN, FAIL, and UNKNOWN counts in one compact line.",
+        "Keep detailed health rows available behind an expandable details area.",
+        "Keep the full Doctor page capable of showing complete findings."
+      ],
+      "out_of_scope": [
+        "Do not change doctor checks.",
+        "Do not change generated artifact validation behavior.",
+        "Do not remove existing repair/check workflows."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py"
+      ],
+      "acceptance_criteria": [
+        "Dashboard and Tasks no longer show a large health table by default.",
+        "A compact health summary is visible above or near owner work queues.",
+        "Detailed health signals remain reachable without navigating away.",
+        "Existing health action forms still post through /actions with confirmation.",
+        "The Doctor page still provides full diagnostic detail."
+      ],
+      "review_instructions": [
+        "Check that UNKNOWN is presented as diagnostic state, not as a false failure."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:36Z",
+      "updated_at": "2026-06-27T13:03:36Z",
+      "uid": "tsk_1b30b9da5168",
+      "ref": "CTL-18",
+      "legacy_id": "TASK-218",
+      "aliases": [
+        "TASK-218"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 18
+    },
+    {
+      "id": "TASK-219",
+      "epic_id": "EPIC-005",
+      "title": "Build owner action queue read model",
+      "status": "planned",
+      "summary": "Add a read-only owner action queue that categorizes tasks and changes by the next decision or safe action needed.",
+      "description": "The queue should drive the Cockpit and reduce the need to scan raw task tables.",
+      "priority": 1,
+      "order": 19,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Derive owner action categories from existing task, change, review, pipeline, and current execution data.",
+        "Create categories for needs_decision, current, ready_to_run, blocked, and watch_only.",
+        "Attach one primary next action label per item when it can be derived safely.",
+        "Preserve existing dashboard keys and avoid breaking /data.json consumers."
+      ],
+      "out_of_scope": [
+        "Do not mutate task or change state.",
+        "Do not add lifecycle statuses.",
+        "Do not change pipeline queue selection behavior."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/read_model.py"
+      ],
+      "acceptance_criteria": [
+        "/data.json includes an owner action queue or equivalent read-only structure.",
+        "Current in-progress task appears in the current category.",
+        "Ready Change Proposals that need owner approval appear in needs_decision.",
+        "Runnable tasks appear in ready_to_run only when existing guards allow a run action.",
+        "Blocked items include one compact owner-facing blocker reason.",
+        "Existing dashboard, tasks, changes, and pipeline data remains backward compatible."
+      ],
+      "review_instructions": [
+        "Review queue derivation for false-positive runnable actions."
+      ],
+      "notes": [
+        "If read_model.py already exposes similar data, extend it instead of duplicating logic."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:37Z",
+      "updated_at": "2026-06-27T13:03:37Z",
+      "uid": "tsk_edfef73a9c2d",
+      "ref": "CTL-19",
+      "legacy_id": "TASK-219",
+      "aliases": [
+        "TASK-219"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 19
+    },
+    {
+      "id": "TASK-220",
+      "epic_id": "EPIC-005",
+      "title": "Render Dashboard as Owner Cockpit",
+      "status": "planned",
+      "summary": "Convert the Dashboard into an Owner Cockpit showing current execution, health, action queue, and recent important signals.",
+      "description": "The root page should become the daily entry point where the owner sees what to do next.",
+      "priority": 1,
+      "order": 20,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Replace generic dashboard metrics with actionable owner metrics.",
+        "Render current execution, compact health, needs decision, current, ready to run, and blocked sections.",
+        "Show only one primary action per visible queue item.",
+        "Move raw/generated/doctor details behind links or expandable details."
+      ],
+      "out_of_scope": [
+        "Do not remove the dedicated Tasks, Pipeline, Evolution, Reviews, Doctor, Events, or Generated pages.",
+        "Do not add decorative cards that do not link, filter, explain, or trigger a safe action.",
+        "Do not change action executor behavior."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py"
+      ],
+      "acceptance_criteria": [
+        "The root page answers what is current, what needs owner decision, what can run, and what is blocked.",
+        "Non-actionable metrics such as total done tasks are not prominent on the first screen.",
+        "Every visible button either opens details, navigates, copies existing text, or posts an existing confirmed action.",
+        "The page remains readable without horizontal scrolling on normal desktop width.",
+        "Existing Dashboard route remains `/`."
+      ],
+      "review_instructions": [
+        "Verify that the page is a cockpit, not a raw data inventory."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:37Z",
+      "updated_at": "2026-06-27T13:03:37Z",
+      "uid": "tsk_9a5558850dfe",
+      "ref": "CTL-20",
+      "legacy_id": "TASK-220",
+      "aliases": [
+        "TASK-220"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 20
+    },
+    {
+      "id": "TASK-221",
+      "epic_id": "EPIC-005",
+      "title": "Convert Tasks to action queue",
+      "status": "planned",
+      "summary": "Convert the Tasks page default view from grouped raw tables to a compact action queue focused on owner work.",
+      "description": "The full task inventory should remain accessible, but the default should prioritize current and actionable tasks.",
+      "priority": 1,
+      "order": 21,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Make Action Queue the default Tasks page view.",
+        "Group tasks by current, needs_decision, ready_to_run, blocked, and other_active.",
+        "Reduce default task rows to Task, Status, Title, Next, and Action.",
+        "Keep existing filters and provide access to a full inventory view."
+      ],
+      "out_of_scope": [
+        "Do not remove existing task filters.",
+        "Do not change task state transitions.",
+        "Do not show done tasks by default unless the user requests them."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py"
+      ],
+      "acceptance_criteria": [
+        "/tasks defaults to owner-action grouping rather than epic grouping.",
+        "The full task list is still reachable from /tasks via a filter, view mode, or expandable section.",
+        "Rows do not include long unavailable-action lists by default.",
+        "Each visible row has at most one primary action.",
+        "Existing query filters for initiative, epic, status, search, group, and show_done keep working or have a compatible replacement."
+      ],
+      "review_instructions": [
+        "Check that planned, deferred, done, and blocked statuses are not presented as runnable when they are not."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:38Z",
+      "updated_at": "2026-06-27T13:03:38Z",
+      "uid": "tsk_af38da388a26",
+      "ref": "CTL-21",
+      "legacy_id": "TASK-221",
+      "aliases": [
+        "TASK-221"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 21
+    },
+    {
+      "id": "TASK-222",
+      "epic_id": "EPIC-005",
+      "title": "Add task details drawer",
+      "status": "planned",
+      "summary": "Move task summary, stage, blockers, linked change, policy, generated files, and recent events into a details drawer or equivalent progressive detail panel.",
+      "description": "Keep task rows compact while preserving all important inspection detail.",
+      "priority": 1,
+      "order": 22,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a reusable details drawer or server-rendered detail panel for selected tasks.",
+        "Populate details from existing task row, pipeline hints, policy summary, health, and event data.",
+        "Show one compact blocker reason in rows and the full blocker list only in details.",
+        "Ensure the detail panel works with keyboard and without breaking non-JavaScript fallback."
+      ],
+      "out_of_scope": [
+        "Do not remove any data required to understand task blockers.",
+        "Do not add new task fields to state.",
+        "Do not make details editable."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py"
+      ],
+      "acceptance_criteria": [
+        "Default task rows are compact and no longer contain large policy summaries.",
+        "Selecting or expanding a task reveals summary, stage, blockers, linked change, policy, and available actions.",
+        "Full unavailable-action explanations are visible only in details.",
+        "The first matching task can be inspected without relying on browser console behavior.",
+        "No state-changing action is triggered by merely opening details."
+      ],
+      "review_instructions": [
+        "Verify progressive disclosure: details are available but not noisy."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:39Z",
+      "updated_at": "2026-06-27T13:03:39Z",
+      "uid": "tsk_712758fa575f",
+      "ref": "CTL-22",
+      "legacy_id": "TASK-222",
+      "aliases": [
+        "TASK-222"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 22
+    },
+    {
+      "id": "TASK-223",
+      "epic_id": "EPIC-005",
+      "title": "Add safe action confirm modal",
+      "status": "planned",
+      "summary": "Add a reusable confirmation modal for owner actions while preserving the existing confirmed POST safety model.",
+      "description": "The modal should explain what will happen before Run, Submit, Approve, Resume, or repair actions execute.",
+      "priority": 1,
+      "order": 23,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add reusable confirm modal markup and JavaScript for action forms.",
+        "Show action label, target task or change, policy summary when relevant, and required owner note fields.",
+        "Keep server-side confirmation requirements intact for all POST actions.",
+        "Provide a non-JavaScript fallback using the existing confirm checkbox behavior."
+      ],
+      "out_of_scope": [
+        "Do not bypass required confirm fields.",
+        "Do not create new privileged actions.",
+        "Do not expose restricted git-destructive actions."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py"
+      ],
+      "acceptance_criteria": [
+        "Run, Submit, Approve, Resume, Doctor, and repair/check forms can use the confirm modal.",
+        "Action forms still post only to /actions.",
+        "Required owner notes remain required when the underlying workflow requires them.",
+        "The modal does not submit until the owner confirms.",
+        "If JavaScript is unavailable, existing confirmation controls still protect the action."
+      ],
+      "review_instructions": [
+        "Review for any accidental action execution without explicit confirmation."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:40Z",
+      "updated_at": "2026-06-27T13:03:40Z",
+      "uid": "tsk_21ea3eac7235",
+      "ref": "CTL-23",
+      "legacy_id": "TASK-223",
+      "aliases": [
+        "TASK-223"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 23
+    },
+    {
+      "id": "TASK-224",
+      "epic_id": "EPIC-005",
+      "title": "Redesign Pipeline as run monitor",
+      "status": "planned",
+      "summary": "Redesign the Pipeline page around the current session, phase progress, live logs, next safe action, and compact queue preview.",
+      "description": "Pipeline should be a run monitor first and a policy/queue inventory second.",
+      "priority": 1,
+      "order": 24,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Move current session status, current phase, phase status, stop reason, and next action to the top of /pipeline.",
+        "Keep live log access prominent for running sessions.",
+        "Place policy preset preview, queue selector, sessions, and audit tables behind compact sections.",
+        "Ensure Resume, Stop, Run Next, and Refresh Session remain clearly separated by safety level."
+      ],
+      "out_of_scope": [
+        "Do not change pipeline phase execution semantics.",
+        "Do not change polling intervals unless necessary for the UI layout.",
+        "Do not add automatic stop, resume, close, commit, or review behavior."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py"
+      ],
+      "acceptance_criteria": [
+        "/pipeline first screen shows current session, current phase, next action, and health of the run.",
+        "Running-session live logs remain accessible with existing endpoints.",
+        "Policy and queue details are still available but not the dominant first-screen content.",
+        "Restricted actions remain visually separated and confirmed.",
+        "Pipeline session detail pages remain reachable."
+      ],
+      "review_instructions": [
+        "Check that the UI does not imply automatic completion or auto-approval."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:40Z",
+      "updated_at": "2026-06-27T13:03:40Z",
+      "uid": "tsk_8a19213a6b72",
+      "ref": "CTL-24",
+      "legacy_id": "TASK-224",
+      "aliases": [
+        "TASK-224"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 24
+    },
+    {
+      "id": "TASK-225",
+      "epic_id": "EPIC-005",
+      "title": "Convert Reviews to decision queue",
+      "status": "planned",
+      "summary": "Convert Reviews into an owner decision queue focused on approve, request changes, and inspect review packages.",
+      "description": "Reviews should show what is awaiting owner judgment before low-level command details.",
+      "priority": 1,
+      "order": 25,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Group review candidates by awaiting_owner_review, changes_requested, current, and history.",
+        "Show compact rows with task ref, status, title, review signal, and one primary action.",
+        "Move command catalog and verbose review package details behind expandable detail sections.",
+        "Keep approve and request-changes forms using existing workflows and confirmation."
+      ],
+      "out_of_scope": [
+        "Do not change review lifecycle rules.",
+        "Do not change machine review or Codex review gates.",
+        "Do not auto-close reviewed tasks."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py"
+      ],
+      "acceptance_criteria": [
+        "/reviews prioritizes tasks that need owner review decisions.",
+        "Approve and Request Changes remain available only for eligible tasks.",
+        "Verbose review data is accessible but not shown in every row by default.",
+        "The review commands table remains available for diagnostics.",
+        "Rows do not present unavailable actions as primary actions."
+      ],
+      "review_instructions": [
+        "Verify that in_review and changes_requested are visually distinct."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:41Z",
+      "updated_at": "2026-06-27T13:03:41Z",
+      "uid": "tsk_c55c8882bbe7",
+      "ref": "CTL-25",
+      "legacy_id": "TASK-225",
+      "aliases": [
+        "TASK-225"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 25
+    },
+    {
+      "id": "TASK-226",
+      "epic_id": "EPIC-005",
+      "title": "Convert Evolution to change decision queue",
+      "status": "planned",
+      "summary": "Convert Evolution into an owner decision queue focused on creating, approving, accepting, rejecting, and inspecting Change Proposals.",
+      "description": "Evolution should make the next owner decision for each Change Proposal obvious.",
+      "priority": 1,
+      "order": 26,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Group Change Proposals by needs_approval, approved, in_review, accepted, and blocked_or_other.",
+        "Show compact change rows with change id, status, title, linked task, next action, and one primary action.",
+        "Keep Create Change For Task available but not visually dominant when decision items exist.",
+        "Move impact, affected files, and verbose status reasons into details."
+      ],
+      "out_of_scope": [
+        "Do not change evolution lifecycle transitions.",
+        "Do not approve or accept changes automatically.",
+        "Do not bypass linked-task or status gates."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py"
+      ],
+      "acceptance_criteria": [
+        "/evolution highlights ready Change Proposals that need approval.",
+        "Approved and in-review changes show the correct next owner action or blocker.",
+        "Create Change remains available for eligible tasks.",
+        "Existing filters remain available or have a compatible compact replacement.",
+        "Detailed affected files and impacts remain inspectable without bloating rows."
+      ],
+      "review_instructions": [
+        "Verify that ready, approved, in_review, and accepted actions remain lifecycle-safe."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:42Z",
+      "updated_at": "2026-06-27T13:03:42Z",
+      "uid": "tsk_42c8de7a2c80",
+      "ref": "CTL-26",
+      "legacy_id": "TASK-226",
+      "aliases": [
+        "TASK-226"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 26
+    },
+    {
+      "id": "TASK-227",
+      "epic_id": "EPIC-005",
+      "title": "Render Settings as policy control page",
+      "status": "planned",
+      "summary": "Refine Settings into a focused policy control page with clear sections, effective policy summary, and safe apply behavior.",
+      "description": "Settings should expose useful owner controls without looking like raw key-value editing.",
+      "priority": 1,
+      "order": 27,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Render Settings as cards for Pipeline, Review Gates, Timeouts, and Advanced controls.",
+        "Show the effective default policy summary near the pipeline policy setting when available.",
+        "Keep Apply Settings as the single state-changing action on the page.",
+        "Keep reset/navigation behavior safe and explicit."
+      ],
+      "out_of_scope": [
+        "Do not change validation rules for settings.",
+        "Do not add new settings keys.",
+        "Do not bypass locked settings."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py"
+      ],
+      "acceptance_criteria": [
+        "/settings is visually consistent with the owner shell.",
+        "Existing settings fields and names remain submitted to ui.settings.apply.",
+        "Locked controls remain locked and clearly marked.",
+        "The default policy field is easier to understand than a raw text-only control when policy data is available.",
+        "Apply Settings still requires explicit confirmation."
+      ],
+      "review_instructions": [
+        "Check that advanced bypass-related settings are not visually normalized as casual toggles."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:43Z",
+      "updated_at": "2026-06-27T13:03:43Z",
+      "uid": "tsk_d130cc75914f",
+      "ref": "CTL-27",
+      "legacy_id": "TASK-227",
+      "aliases": [
+        "TASK-227"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 27
+    },
+    {
+      "id": "TASK-228",
+      "epic_id": "EPIC-005",
+      "title": "Render Doctor as health center",
+      "status": "planned",
+      "summary": "Refine Doctor into a health center with compact status summary, grouped findings, and safe repair/check actions.",
+      "description": "Doctor should remain the full diagnostic view while matching the new Owner Cockpit layout.",
+      "priority": 1,
+      "order": 28,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Show overall doctor status and PASS, WARN, FAIL, UNKNOWN summary at the top.",
+        "Group findings by severity or area when enough data is available.",
+        "Keep commands and repair/check actions visible for each finding.",
+        "Keep generated/project health detail available below the main doctor findings."
+      ],
+      "out_of_scope": [
+        "Do not change doctor command implementation.",
+        "Do not hide failing findings.",
+        "Do not auto-run repair actions."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py"
+      ],
+      "acceptance_criteria": [
+        "/doctor remains the complete diagnostic page.",
+        "Failing or warning findings are easier to scan than in the old flat table.",
+        "Refresh Doctor remains a read/check action exposed safely.",
+        "Repair/check actions still use confirmed /actions forms.",
+        "No finding data is lost compared with the old doctor table."
+      ],
+      "review_instructions": [
+        "Verify that PASS findings do not bury WARN or FAIL findings."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:44Z",
+      "updated_at": "2026-06-27T13:03:44Z",
+      "uid": "tsk_23b5dc6ce709",
+      "ref": "CTL-28",
+      "legacy_id": "TASK-228",
+      "aliases": [
+        "TASK-228"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 28
+    },
+    {
+      "id": "TASK-229",
+      "epic_id": "EPIC-005",
+      "title": "Align inspection pages with owner shell",
+      "status": "planned",
+      "summary": "Align Epics, Commit, Events, Generated, Commands, and Actions pages with the shared shell while keeping them as deep inspection pages.",
+      "description": "These pages should remain available but should not compete with the Owner Cockpit as primary work screens.",
+      "priority": 1,
+      "order": 29,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Wrap Epics, Commit, Events, Generated, Commands, and Actions content in consistent shell panels.",
+        "Add compact page intro text that explains each page purpose.",
+        "Keep existing tables, forms, and links available.",
+        "Avoid adding decorative or nonfunctional controls."
+      ],
+      "out_of_scope": [
+        "Do not redesign deep inspection pages into primary work queues.",
+        "Do not remove low-level diagnostics.",
+        "Do not change commit readiness or action registry behavior."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py"
+      ],
+      "acceptance_criteria": [
+        "All non-primary pages visually match the shared owner shell.",
+        "Each page still exposes the same existing diagnostic or low-level information.",
+        "Actions page continues to use confirmed /actions forms.",
+        "Commit page does not expose push or remote operations.",
+        "No placeholder buttons or nonfunctional UI elements are introduced."
+      ],
+      "review_instructions": [
+        "Check that deep pages are calmer but still complete for troubleshooting."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:44Z",
+      "updated_at": "2026-06-27T13:03:44Z",
+      "uid": "tsk_01cba33064a0",
+      "ref": "CTL-29",
+      "legacy_id": "TASK-229",
+      "aliases": [
+        "TASK-229"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 29
+    },
+    {
+      "id": "TASK-230",
+      "epic_id": "EPIC-005",
+      "title": "Add owner UI regression tests",
+      "status": "planned",
+      "summary": "Add regression tests that verify the Owner Cockpit shell, action queues, confirmation safety, and key Web Control Center routes.",
+      "description": "Tests should protect the redesign from breaking safe routing or reintroducing noisy raw layouts.",
+      "priority": 1,
+      "order": 30,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add tests for shell rendering on core routes.",
+        "Add tests for compact health summary and current execution bar when data is available.",
+        "Add tests that action forms still post only to /actions and require confirmation.",
+        "Add tests that no exposed restricted git-destructive action appears in owner UI."
+      ],
+      "out_of_scope": [
+        "Do not add slow browser automation.",
+        "Do not require external services.",
+        "Do not test protected state mutation by editing state files manually."
+      ],
+      "allowed_files": [
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "Tests cover at least Dashboard, Tasks, Pipeline, Reviews, Evolution, Settings, and Doctor route rendering.",
+        "Tests verify sidebar or shared shell markers appear on rendered pages.",
+        "Tests verify confirmation safety for at least one state-changing form.",
+        "Tests verify restricted destructive git actions are not exposed.",
+        "The targeted test file can be run locally without network access."
+      ],
+      "review_instructions": [
+        "Prefer fast unit-style HTML/render tests over slow end-to-end browser tests."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:45Z",
+      "updated_at": "2026-06-27T13:03:45Z",
+      "uid": "tsk_6528449aa4ee",
+      "ref": "CTL-30",
+      "legacy_id": "TASK-230",
+      "aliases": [
+        "TASK-230"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 30
+    },
+    {
+      "id": "TASK-231",
+      "epic_id": "EPIC-005",
+      "title": "Document Owner Cockpit workflow",
+      "status": "planned",
+      "summary": "Update owner-facing documentation to describe the new Owner Cockpit layout, action queue, details panel, health summary, and safe action confirmation flow.",
+      "description": "Documentation should explain daily usage after the UI redesign lands.",
+      "priority": 1,
+      "order": 31,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Update the owner quickstart to make the root Dashboard the daily Owner Cockpit entry point.",
+        "Document how to use Action Queue categories and when to open full task inventory.",
+        "Document how health summary, Doctor, details panel, and confirmation modal should be used.",
+        "Clarify that deep inspection pages remain available for diagnostics and recovery."
+      ],
+      "out_of_scope": [
+        "Do not document future command palette behavior as implemented.",
+        "Do not change system lifecycle rules.",
+        "Do not edit generated documentation manually."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/10-owner-quickstart.md",
+        "ai-system/project-control/08-usage-guide.md"
+      ],
+      "acceptance_criteria": [
+        "Documentation names Dashboard as the Owner Cockpit daily entry point.",
+        "Documentation explains current execution bar, Action Queue, health summary, details panel, and confirmation modal.",
+        "Documentation does not claim non-MVP features such as command palette are implemented.",
+        "Documentation points users to Tasks, Pipeline, Reviews, Evolution, Doctor, Events, Generated, Commands, Actions, Commit, and Epics for deeper workflows.",
+        "No generated AI_PROJECT files are edited manually."
+      ],
+      "review_instructions": [
+        "Check that docs describe implemented behavior only."
+      ],
+      "notes": [],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-27T13:03:46Z",
+      "updated_at": "2026-06-27T13:03:46Z",
+      "uid": "tsk_b6e2538c4606",
+      "ref": "CTL-31",
+      "legacy_id": "TASK-231",
+      "aliases": [
+        "TASK-231"
+      ],
+      "epic_key": "CTL",
+      "local_seq": 31
     }
   ]
 }

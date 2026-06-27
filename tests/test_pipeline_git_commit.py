@@ -16,6 +16,7 @@ from ai_project_ctl.pipeline.git_commit import (
     CODE_READY,
     CODE_REPORT_NOT_PASS,
     CODE_REQUIRED_CHECK_NOT_PASS,
+    MACHINE_DIAGNOSTIC_SUMMARY_LIMIT,
     REQUIRED_MACHINE_CHECKS,
     evaluate_commit_readiness,
     run_git_command,
@@ -276,7 +277,7 @@ class PipelineGitCommitTests(unittest.TestCase):
         self.assertTrue(result.ok)
         self.assertEqual(result.code, CODE_READY)
 
-    def test_commit_readiness_accepts_machine_review_warn_with_nonblocking_warning(self):
+    def test_commit_readiness_blocks_machine_review_warn_with_nonreport_warning(self):
         advisory = MachineCheckEvidence(
             name="report_declared_test_1",
             status=MACHINE_REVIEW_WARN,
@@ -295,11 +296,12 @@ class PipelineGitCommitTests(unittest.TestCase):
                     code=MACHINE_REVIEW_CODE_WARN,
                     extra_checks=(advisory,),
                 ),
+                runner=_unexpected_git_runner,
             )
 
-        self.assertTrue(result.ok)
-        self.assertEqual(result.code, CODE_READY)
-        self.assertIn("advisory or policy-approved", result.reason)
+        self.assertFalse(result.ok)
+        self.assertEqual(result.code, CODE_MACHINE_REVIEW_NOT_PASS)
+        self.assertIn("report_declared_test_1", result.reason)
 
     def test_commit_readiness_accepts_machine_review_warn_with_policy_approved_report_warning(self):
         report_warning = MachineCheckEvidence(
@@ -327,6 +329,33 @@ class PipelineGitCommitTests(unittest.TestCase):
         self.assertTrue(result.ok)
         self.assertEqual(result.code, CODE_READY)
 
+    def test_commit_readiness_blocks_machine_review_report_warn_when_policy_disallows(self):
+        report_warning = MachineCheckEvidence(
+            name="codex_report_gate",
+            status=MACHINE_REVIEW_WARN,
+            code=MACHINE_REVIEW_CODE_WARN,
+            reason="Report gate warning is not policy-approved.",
+            blocking=True,
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_task_state(root)
+
+            result = _evaluate_commit_readiness_for_machine_review(
+                root,
+                _machine_review(
+                    status=MACHINE_REVIEW_WARN,
+                    code=MACHINE_REVIEW_CODE_WARN,
+                    extra_checks=(report_warning,),
+                ),
+                report_gate=_report_gate(status=REPORT_WARN, code=REPORT_CODE_WARN),
+                runner=_unexpected_git_runner,
+            )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.code, CODE_REPORT_NOT_PASS)
+        self.assertIn("allow_report_warnings is false", result.reason)
+
     def test_commit_readiness_blocks_machine_review_warn_with_blocking_warning(self):
         blocking_warning = MachineCheckEvidence(
             name="project_doctor",
@@ -351,7 +380,7 @@ class PipelineGitCommitTests(unittest.TestCase):
 
         self.assertFalse(result.ok)
         self.assertEqual(result.code, CODE_MACHINE_REVIEW_NOT_PASS)
-        self.assertIn("unsafe/blocking warning evidence", result.reason)
+        self.assertIn("unapproved warning evidence", result.reason)
         self.assertIn("project_doctor", result.reason)
 
     def test_commit_readiness_blocks_machine_review_warn_when_required_check_is_not_pass(self):
@@ -391,6 +420,102 @@ class PipelineGitCommitTests(unittest.TestCase):
         self.assertFalse(result.ok)
         self.assertEqual(result.code, CODE_MACHINE_REVIEW_NOT_PASS)
         self.assertIn("FAIL blocks", result.reason)
+
+    def test_commit_readiness_serializes_compact_machine_review_diagnostics(self):
+        stdout = "stdout-start " + ("x" * (MACHINE_DIAGNOSTIC_SUMMARY_LIMIT + 20)) + " stdout-tail"
+        stderr = "stderr-start " + ("y" * (MACHINE_DIAGNOSTIC_SUMMARY_LIMIT + 20)) + " stderr-tail"
+        checks = [
+            MachineCheckEvidence(
+                name=name,
+                status=MACHINE_REVIEW_PASS,
+                code=MACHINE_REVIEW_CODE_PASS,
+                reason="{} passed.".format(name),
+            )
+            for name in sorted(REQUIRED_MACHINE_CHECKS)
+            if name != "context_check_generated"
+        ]
+        checks.append(
+            MachineCheckEvidence(
+                name="context_check_generated",
+                status=MACHINE_REVIEW_FAIL,
+                code="CONTEXT_CHECK_GENERATED_FAILED",
+                reason="Context generated output is stale.",
+                command=("python", "scripts/contextctl.py", "check-generated"),
+                returncode=1,
+                stdout_summary=stdout,
+                stderr_summary=stderr,
+            )
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_task_state(root)
+
+            result = _evaluate_commit_readiness_for_machine_review(
+                root,
+                MachineReviewResult(
+                    status=MACHINE_REVIEW_FAIL,
+                    code="MACHINE_REVIEW_FAIL",
+                    reason="Machine Review failed.",
+                    task_id=TASK_ID,
+                    report_id=REPORT_ID,
+                    checks=tuple(checks),
+                ),
+                runner=_unexpected_git_runner,
+            )
+
+        payload = result.to_dict()
+        diagnostics = payload["machine_review_diagnostics"]
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.code, CODE_MACHINE_REVIEW_NOT_PASS)
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0]["name"], "context_check_generated")
+        self.assertEqual(diagnostics[0]["status"], MACHINE_REVIEW_FAIL)
+        self.assertEqual(diagnostics[0]["code"], "CONTEXT_CHECK_GENERATED_FAILED")
+        self.assertEqual(diagnostics[0]["reason"], "Context generated output is stale.")
+        self.assertEqual(
+            diagnostics[0]["command"],
+            ["python", "scripts/contextctl.py", "check-generated"],
+        )
+        self.assertLessEqual(
+            len(diagnostics[0]["stdout_summary"]),
+            MACHINE_DIAGNOSTIC_SUMMARY_LIMIT,
+        )
+        self.assertLessEqual(
+            len(diagnostics[0]["stderr_summary"]),
+            MACHINE_DIAGNOSTIC_SUMMARY_LIMIT,
+        )
+        self.assertIn("stdout-start", diagnostics[0]["stdout_summary"])
+        self.assertIn("stderr-start", diagnostics[0]["stderr_summary"])
+        self.assertNotIn("stdout-tail", json.dumps(payload))
+        self.assertNotIn("stderr-tail", json.dumps(payload))
+
+    def test_commit_readiness_blocks_machine_review_blocking_failure_evidence(self):
+        blocking_failure = MachineCheckEvidence(
+            name="project_doctor",
+            status=MACHINE_REVIEW_FAIL,
+            code="PROJECT_DOCTOR_FAILED",
+            reason="Project doctor failed.",
+            blocking=True,
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_task_state(root)
+
+            result = _evaluate_commit_readiness_for_machine_review(
+                root,
+                _machine_review(
+                    status=MACHINE_REVIEW_WARN,
+                    code=MACHINE_REVIEW_CODE_WARN,
+                    extra_checks=(blocking_failure,),
+                ),
+                runner=_unexpected_git_runner,
+            )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.code, CODE_MACHINE_REVIEW_NOT_PASS)
+        self.assertIn("Blocking Machine Review failure", result.reason)
+        self.assertIn("project_doctor", result.reason)
 
     def test_git_command_rejects_forbidden_subcommands_without_runner(self):
         calls = []

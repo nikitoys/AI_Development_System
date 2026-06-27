@@ -3,17 +3,36 @@
 
 # Task Execution Queue
 
-Revision: `1447`
+Revision: `1518`
 
 ## Executable Now
 
+- `CTL-16 (TASK-216)` [planned] `EPIC-005` priority `1` — Add shared Web owner shell
+- `CTL-17 (TASK-217)` [planned] `EPIC-005` priority `1` — Add sticky current execution bar
+- `CTL-18 (TASK-218)` [planned] `EPIC-005` priority `1` — Add compact health summary panel
+- `CTL-19 (TASK-219)` [planned] `EPIC-005` priority `1` — Build owner action queue read model
+- `CTL-20 (TASK-220)` [planned] `EPIC-005` priority `1` — Render Dashboard as Owner Cockpit
+- `CTL-21 (TASK-221)` [planned] `EPIC-005` priority `1` — Convert Tasks to action queue
+- `CTL-22 (TASK-222)` [planned] `EPIC-005` priority `1` — Add task details drawer
+- `CTL-23 (TASK-223)` [planned] `EPIC-005` priority `1` — Add safe action confirm modal
+- `CTL-24 (TASK-224)` [planned] `EPIC-005` priority `1` — Redesign Pipeline as run monitor
+- `CTL-25 (TASK-225)` [planned] `EPIC-005` priority `1` — Convert Reviews to decision queue
+- `CTL-26 (TASK-226)` [planned] `EPIC-005` priority `1` — Convert Evolution to change decision queue
+- `CTL-27 (TASK-227)` [planned] `EPIC-005` priority `1` — Render Settings as policy control page
+- `CTL-28 (TASK-228)` [planned] `EPIC-005` priority `1` — Render Doctor as health center
+- `CTL-29 (TASK-229)` [planned] `EPIC-005` priority `1` — Align inspection pages with owner shell
+- `CTL-30 (TASK-230)` [planned] `EPIC-005` priority `1` — Add owner UI regression tests
+- `CTL-31 (TASK-231)` [planned] `EPIC-005` priority `1` — Document Owner Cockpit workflow
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 - `PIPE-19 (TASK-070)` [planned] `EPIC-007` priority `1` — PIPE-19 Add Dynamic Policy Editor To Web Pipeline Dashboard
 - `PIPE-20 (TASK-071)` [planned] `EPIC-007` priority `1` — PIPE-20 Document Dynamic Pipeline Policy Presets
 - `PIPE-21 (TASK-072)` [planned] `EPIC-007` priority `1` — PIPE-21 Fix Pipeline Queue Epic Filter Behavior
 - `PIPE-22 (TASK-073)` [planned] `EPIC-007` priority `1` — PIPE-22 Add Pipeline Session Resume After Blocker
-- `PIPEF-71 (TASK-150)` [planned] `EPIC-009` priority `1` — PIPE-066 Document Web Settings and internal bypass behavior
-- `PIPEF-78 (TASK-157)` [planned] `EPIC-009` priority `1` — PIPE-073 Document Codex structured report auto-submit
+- `PIPEF-124 (TASK-205)` [planned] `EPIC-009` priority `1` — Expose Web policy catalog
+- `PIPEF-125 (TASK-206)` [planned] `EPIC-009` priority `1` — Render policy dropdown in Settings
+- `PIPEF-126 (TASK-207)` [planned] `EPIC-009` priority `1` — Show effective policy summary
+- `PIPEF-127 (TASK-208)` [planned] `EPIC-009` priority `1` — Add Web run batch overrides
+- `PIPEF-128 (TASK-209)` [planned] `EPIC-009` priority `1` — Warn on incomplete Web run policy
 
 ## Waiting For Dependencies
 
@@ -313,6 +332,8 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-70 (TASK-149)` [done] `EPIC-009` priority `1` — PIPE-065 Apply internal Change gate bypass to UI runs
   - `status_not_executable`: status is done
+- `PIPEF-71 (TASK-150)` [done] `EPIC-009` priority `1` — PIPE-066 Document Web Settings and internal bypass behavior
+  - `status_not_executable`: status is done
 - `PIPEF-72 (TASK-151)` [done] `EPIC-009` priority `1` — PIPE-067 Add structured Codex report block to prompt package
   - `status_not_executable`: status is done
 - `PIPEF-73 (TASK-152)` [done] `EPIC-009` priority `1` — PIPE-068 Parse structured Codex report from stdout
@@ -324,6 +345,8 @@ _No tasks waiting only on dependencies._
 - `PIPEF-76 (TASK-155)` [done] `EPIC-009` priority `1` — PIPE-071 Add pipeline regression test for Run report auto-collection
   - `status_not_executable`: status is done
 - `PIPEF-77 (TASK-156)` [done] `EPIC-009` priority `1` — PIPE-072 Add Web recovery action for report missing sessions
+  - `status_not_executable`: status is done
+- `PIPEF-78 (TASK-157)` [done] `EPIC-009` priority `1` — PIPE-073 Document Codex structured report auto-submit
   - `status_not_executable`: status is done
 - `PIPEF-79 (TASK-158)` [done] `EPIC-009` priority `1` — PIPE-074 Allow internal bypass setting in Web settings action
   - `status_not_executable`: status is done
@@ -414,4 +437,16 @@ _No tasks waiting only on dependencies._
 - `PIPEF-122 (TASK-203)` [done] `EPIC-009` priority `1` — Warn on incomplete Web run policy
   - `status_not_executable`: status is done
 - `PIPEF-123 (TASK-204)` [done] `EPIC-009` priority `1` — Document Web policy settings
+  - `status_not_executable`: status is done
+- `PIPEF-129 (TASK-210)` [deferred] `EPIC-009` priority `1` — Document Web policy settings
+  - `status_not_executable`: status is deferred
+- `PIPEF-130 (TASK-211)` [done] `EPIC-009` priority `1` — Preserve report file lists
+  - `status_not_executable`: status is done
+- `PIPEF-131 (TASK-212)` [done] `EPIC-009` priority `1` — Refresh context before commit
+  - `status_not_executable`: status is done
+- `PIPEF-132 (TASK-213)` [done] `EPIC-009` priority `1` — Allow approved review warnings
+  - `status_not_executable`: status is done
+- `PIPEF-133 (TASK-214)` [done] `EPIC-009` priority `1` — Record commit review diagnostics
+  - `status_not_executable`: status is done
+- `PIPEF-134 (TASK-215)` [done] `EPIC-009` priority `1` — Prevent stale context commit regression
   - `status_not_executable`: status is done

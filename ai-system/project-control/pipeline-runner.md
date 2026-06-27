@@ -357,6 +357,33 @@ If local Codex startup fails because the host sandbox is unavailable, such as `b
 
 When report evidence is required, the adapter expects a newer structured execution report for the task after the local command finishes.
 
+The normal local-command path is:
+
+```text
+1. Run the allowlisted Codex command with CODEX_PROMPT.md on stdin.
+2. If Codex submitted a newer structured report during execution, use that report.
+3. Otherwise parse stdout for exactly one CODEX_EXECUTION_SUMMARY_JSON block.
+4. Build a full TaskReport from the parsed summary plus trusted pipeline evidence.
+5. Submit the report through the task report service as codex_adapter.report.auto_submit.
+6. Continue to collect-report only after a newer report exists for the selected Task.
+```
+
+The summary block expected from Codex is:
+
+````text
+CODEX_EXECUTION_SUMMARY_JSON:
+```json
+{
+  "implementation_summary": "Summarize the completed implementation.",
+  "notes": [],
+  "warnings": [],
+  "blockers": []
+}
+```
+````
+
+The parser requires the marker on its own line, one fenced `json` block, a JSON object, and exactly those four top-level fields. The block must not include `task_id`, `changed_files`, `generated_files`, `checks`, `owner_decision_required` or `token_usage`; those fields belong to the TaskReport that the adapter builds from controlled evidence.
+
 Submit a report with:
 
 ```bash
@@ -375,6 +402,8 @@ Use the weakest sandbox that works in the local environment. If `danger-full-acc
 ## Codex Execution Report Requirements
 
 The report gate validates the latest structured report for the selected Task.
+
+Current generated prompts ask Codex for the compact `CODEX_EXECUTION_SUMMARY_JSON` block, not a full TaskReport payload. The local adapter converts that summary and pipeline evidence into the structured report record that this gate validates. Manual submissions must still use the full structured report shape accepted by `task report submit`.
 
 Required report fields:
 
@@ -703,6 +732,9 @@ Prefer `run-next` and `run-until-blocker` for normal operation.
 | `BLOCKED: Codex execution is disabled` | Policy does not permit Codex execution. | Use the prompt/manual handoff path or choose an approved execution policy. |
 | `PIPELINE_APPROVED_CHANGE_REQUIRED` | Task requires an approved linked Evolution Change. | Human Owner approves the linked Change, or create/approve the required Change. |
 | `TOKEN_BUDGET_FAILURE` | Prompt is missing, too large, unavailable to count in strict mode, low on remaining tokens, or requires compact/split. | Rebuild or reduce context, split the task, or use a policy that still preserves the required gate. |
+| `CODEX_ADAPTER_SUMMARY_MISSING` | The local Codex command exited successfully but stdout did not contain the required `CODEX_EXECUTION_SUMMARY_JSON` block. | Rerun Codex with the generated prompt and ensure the final output contains exactly one required summary block, or submit a valid structured report manually. |
+| `CODEX_ADAPTER_SUMMARY_INVALID` | The summary block was present but malformed, had invalid JSON, was not an object, had missing fields or had extra fields. | Fix the final output contract and rerun, or submit a valid structured report manually. |
+| `REPORT_MISSING` | The collect-report phase could not find a submitted structured report for the selected Task. | Submit the report with `task report submit`, or use the Web session detail `Report Recovery` action only after reviewing and confirming its recovered draft; then rerun collect-report and verify. |
 | `CODEX_REPORT_GATE_FAILURE` | Structured report is missing, mismatched, out of scope or contains blockers. | Submit a valid report with correct task identity, files, checks and token evidence. |
 | `MACHINE_REVIEW_FAILURE` | Deterministic checks failed. | Fix validation/generated/protected-file/test failures and rerun. |
 | `CODEX_REVIEW_REQUEST_CHANGES` | Semantic review found required changes. | Prepare bounded rework through governed task workflow. |

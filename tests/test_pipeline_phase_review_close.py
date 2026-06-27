@@ -42,6 +42,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = REPO_ROOT / "scripts"
 TASK_ID = "TASK-001"
 CHANGED_FILE = "tests/test_pipeline_phase_review_close.py"
+CONTEXT_PACK_FILE = "AI_PROJECT/generated/CONTEXT_PACK.md"
+CONTEXT_STATUS_FILE = "AI_PROJECT/generated/CONTEXT_STATUS.md"
+CONTEXT_EVENT_FILE = "AI_PROJECT/events/context-events.jsonl"
 OWNER_APPROVAL_NOTE = "Owner approved auto-close for this temp session."
 
 
@@ -390,6 +393,161 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
                 ],
             )
 
+    def test_close_local_commit_refreshes_context_before_readiness(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_temp_project(root)
+            _prepare_auto_close_workflow(root)
+            session_id = _create_close_session(
+                root,
+                policy=_local_commit_warning_policy(),
+            )
+            _record_close_preflight_history(root, session_id)
+            report_gate = _warning_report_gate()
+            machine_review = _machine_review_with_warning(
+                MachineCheckEvidence(
+                    name="codex_report_gate",
+                    status="warn",
+                    code="CODEX_REPORT_WARN",
+                    reason="Report warning is policy-approved for commit readiness.",
+                    blocking=True,
+                )
+            )
+            git_commands: list[list[str]] = []
+            git_status_stdout = (
+                " M {}\n"
+                " M {}\n"
+                " M {}\n"
+                " M {}\n"
+            ).format(
+                CHANGED_FILE,
+                CONTEXT_PACK_FILE,
+                CONTEXT_STATUS_FILE,
+                CONTEXT_EVENT_FILE,
+            )
+
+            def assert_context_refreshed() -> None:
+                pack_text = (root / CONTEXT_PACK_FILE).read_text(encoding="utf-8")
+                self.assertNotIn("Status: `in_progress`", pack_text)
+                self.assertIn("Status: `done`", pack_text)
+
+            with (
+                mock.patch.object(
+                    workflow_module.WorkflowExecutor,
+                    "_run_subprocess",
+                    _workflow_subprocess_with_oversized_doctor_output,
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.close_phase.evaluate_report_gate",
+                    return_value=report_gate,
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.close_phase.evaluate_machine_review",
+                    return_value=machine_review,
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.git_commit.run_git_command",
+                    side_effect=_fake_git_command_runner(
+                        git_commands,
+                        git_status_stdout=git_status_stdout,
+                        before_git_status=assert_context_refreshed,
+                    ),
+                ),
+            ):
+                close = close_phase(
+                    session_id,
+                    root=root,
+                    actor="tester",
+                    confirmed=True,
+                )
+
+            self.assertTrue(close.ok, close.errors)
+            phase_result = close.data["phase_result"]
+            self.assertEqual(phase_result["status"], "passed")
+            artifacts = phase_result["artifacts"]
+            self.assertTrue(artifacts["context_refresh"]["ok"])
+            local_commit = artifacts["local_commit"]
+            self.assertEqual(local_commit["status"], "pass")
+            self.assertEqual(local_commit["readiness"]["code"], COMMIT_READINESS_PASS)
+            self.assertEqual(
+                sorted(local_commit["readiness"]["approved_files"]),
+                sorted(
+                    [
+                        CHANGED_FILE,
+                        CONTEXT_EVENT_FILE,
+                        CONTEXT_PACK_FILE,
+                        CONTEXT_STATUS_FILE,
+                    ]
+                ),
+            )
+            self.assertEqual(
+                git_commands[1],
+                [
+                    "git",
+                    "add",
+                    "--",
+                    CONTEXT_EVENT_FILE,
+                    CONTEXT_PACK_FILE,
+                    CONTEXT_STATUS_FILE,
+                    CHANGED_FILE,
+                ],
+            )
+
+    def test_close_blocks_when_context_refresh_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_temp_project(root)
+            _prepare_auto_close_workflow(root)
+            session_id = _create_close_session(root)
+            _record_close_preflight_history(root, session_id)
+
+            def fail_context_build(
+                argv: tuple[str, ...],
+                *,
+                root: Path,
+            ) -> subprocess.CompletedProcess[str]:
+                return subprocess.CompletedProcess(
+                    args=list(argv),
+                    returncode=1,
+                    stdout="",
+                    stderr="context build failed\n",
+                )
+
+            with (
+                mock.patch.object(
+                    workflow_module.WorkflowExecutor,
+                    "_run_subprocess",
+                    _workflow_subprocess_with_oversized_doctor_output,
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.close_phase._run_context_refresh_command",
+                    side_effect=fail_context_build,
+                ),
+            ):
+                close = close_phase(
+                    session_id,
+                    root=root,
+                    actor="tester",
+                    confirmed=True,
+                )
+
+            self.assertTrue(close.ok, close.errors)
+            phase_result = close.data["phase_result"]
+            self.assertEqual(phase_result["status"], "blocked")
+            artifacts = phase_result["artifacts"]
+            self.assertEqual(artifacts["blocked_by"], "CLOSE_CONTEXT_REFRESH_FAILED")
+            context_refresh = artifacts["context_refresh"]
+            self.assertFalse(context_refresh["ok"])
+            self.assertEqual(context_refresh["data"]["failed_step"], "context_build")
+            self.assertEqual(
+                context_refresh["errors"][0]["code"],
+                "CLOSE_CONTEXT_REFRESH_FAILED",
+            )
+            self.assertEqual(
+                context_refresh["errors"][0]["details"]["stderr"],
+                "context build failed\n",
+            )
+
     def test_close_local_commit_blocks_unsafe_machine_review_warn(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -450,6 +608,81 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
                 CODE_MACHINE_REVIEW_NOT_PASS,
             )
             self.assertEqual(git_commands, [])
+
+    def test_close_local_commit_artifacts_include_context_check_generated_diagnostics(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_temp_project(root)
+            _prepare_auto_close_workflow(root)
+            session_id = _create_close_session(
+                root,
+                policy=_local_commit_warning_policy(),
+            )
+            _record_close_preflight_history(root, session_id)
+            report_gate = ReportGateResult(
+                status="pass",
+                code="CODEX_REPORT_PASS",
+                reason="Report gate passed.",
+                report_id="RPT-001",
+                task_id=TASK_ID,
+                changed_files=(CHANGED_FILE,),
+            )
+            machine_review = _machine_review_with_context_check_failure(
+                stdout_summary=(
+                    "context stdout "
+                    + ("x" * (MAX_STORED_STRING_LENGTH + 1))
+                    + " stdout-tail"
+                ),
+                stderr_summary="context stderr explains generated drift",
+            )
+
+            with (
+                mock.patch.object(
+                    workflow_module.WorkflowExecutor,
+                    "_run_subprocess",
+                    _workflow_subprocess_with_oversized_doctor_output,
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.close_phase.evaluate_report_gate",
+                    return_value=report_gate,
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.close_phase.evaluate_machine_review",
+                    return_value=machine_review,
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.git_commit.run_git_command",
+                    side_effect=AssertionError(
+                        "git must not run after Machine Review blocks readiness"
+                    ),
+                ),
+            ):
+                close = close_phase(
+                    session_id,
+                    root=root,
+                    actor="tester",
+                    confirmed=True,
+                )
+
+            self.assertTrue(close.ok, close.errors)
+            phase_result = close.data["phase_result"]
+            self.assertEqual(phase_result["status"], "blocked")
+            artifacts = phase_result["artifacts"]
+            local_commit = artifacts["local_commit"]
+            self.assertEqual(local_commit["status"], "blocked")
+            self.assertEqual(local_commit["code"], "COMMIT_READINESS_FAILED")
+            diagnostics = local_commit["readiness"]["machine_review_diagnostics"]
+            self.assertEqual(len(diagnostics), 1)
+            self.assertEqual(diagnostics[0]["name"], "context_check_generated")
+            self.assertEqual(diagnostics[0]["status"], "fail")
+            self.assertEqual(diagnostics[0]["code"], "CONTEXT_CHECK_GENERATED_FAILED")
+            self.assertEqual(
+                diagnostics[0]["command"],
+                [sys.executable, "scripts/contextctl.py", "check-generated"],
+            )
+            self.assertIn("context stdout", diagnostics[0]["stdout_summary"])
+            self.assertIn("context stderr", diagnostics[0]["stderr_summary"])
+            self.assertNotIn("stdout-tail", json.dumps(artifacts, sort_keys=True))
 
 
 def _write_temp_project(root: Path) -> None:
@@ -679,20 +912,64 @@ def _machine_review_with_warning(
     )
 
 
-def _fake_git_command_runner(calls: list[list[str]]):
+def _machine_review_with_context_check_failure(
+    *,
+    stdout_summary: str = "",
+    stderr_summary: str = "",
+) -> MachineReviewResult:
+    checks = [
+        MachineCheckEvidence(
+            name=name,
+            status="pass",
+            code="MACHINE_REVIEW_PASS",
+            reason="{} passed.".format(name),
+        )
+        for name in sorted(REQUIRED_MACHINE_CHECKS)
+        if name != "context_check_generated"
+    ]
+    checks.append(
+        MachineCheckEvidence(
+            name="context_check_generated",
+            status="fail",
+            code="CONTEXT_CHECK_GENERATED_FAILED",
+            reason="Context generated output is stale.",
+            command=(sys.executable, "scripts/contextctl.py", "check-generated"),
+            returncode=1,
+            stdout_summary=stdout_summary,
+            stderr_summary=stderr_summary,
+        )
+    )
+    return MachineReviewResult(
+        status="fail",
+        code="CONTEXT_CHECK_GENERATED_FAILED",
+        reason="Context generated output is stale.",
+        task_id=TASK_ID,
+        report_id="RPT-001",
+        checks=tuple(checks),
+    )
+
+
+def _fake_git_command_runner(
+    calls: list[list[str]],
+    *,
+    git_status_stdout: str | None = None,
+    before_git_status=None,
+):
     def runner(command, **_kwargs) -> GitCommandResult:
         argv = tuple(str(part) for part in command)
         calls.append(list(argv))
         if argv == ("git", "status", "--short", "--untracked-files=all"):
+            if before_git_status is not None:
+                before_git_status()
             return GitCommandResult(
                 ok=True,
                 code="GIT_STATUS_PASS",
                 reason="Fake git status found approved file changes.",
                 command=argv,
                 returncode=0,
-                stdout=" M {}\n".format(CHANGED_FILE),
+                stdout=git_status_stdout or " M {}\n".format(CHANGED_FILE),
             )
-        if argv == ("git", "add", "--", CHANGED_FILE):
+        if len(argv) >= 4 and argv[:3] == ("git", "add", "--"):
             return GitCommandResult(
                 ok=True,
                 code="GIT_ADD_PASS",

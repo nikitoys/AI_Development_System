@@ -2095,7 +2095,11 @@ def pipeline_collect_log_snippets(value: Any, *, source: str = "") -> list[dict[
     if isinstance(value, Mapping):
         name = str(value.get("name") or source)
         for stream in ("stdout", "stderr"):
-            text = str(value.get("{}_snippet".format(stream)) or "")
+            text = str(
+                value.get("{}_snippet".format(stream))
+                or value.get("{}_summary".format(stream))
+                or ""
+            )
             ref = str(value.get("{}_ref".format(stream)) or "")
             if text or ref:
                 snippets.append(

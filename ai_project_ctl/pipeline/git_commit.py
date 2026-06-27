@@ -67,6 +67,7 @@ REQUIRED_MACHINE_CHECKS = {
     "context_check_generated",
     "protected_file_check",
 }
+MACHINE_DIAGNOSTIC_SUMMARY_LIMIT = 1200
 
 GitRunner = Callable[[Sequence[str]], subprocess.CompletedProcess[str]]
 
@@ -120,13 +121,14 @@ class CommitReadinessResult:
     changed_files: tuple[GitStatusFile, ...] = ()
     blockers: tuple[str, ...] = ()
     git_status: GitCommandResult | None = None
+    machine_review_diagnostics: tuple[Mapping[str, Any], ...] = ()
 
     @property
     def ok(self) -> bool:
         return self.status == PASS
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        data: dict[str, Any] = {
             "status": self.status,
             "code": self.code,
             "reason": self.reason,
@@ -138,6 +140,11 @@ class CommitReadinessResult:
             "blockers": list(self.blockers),
             "git_status": self.git_status.to_dict() if self.git_status else None,
         }
+        if self.machine_review_diagnostics:
+            data["machine_review_diagnostics"] = [
+                dict(item) for item in self.machine_review_diagnostics
+            ]
+        return data
 
 
 @dataclass(frozen=True)
@@ -226,6 +233,11 @@ def evaluate_commit_readiness(
     gate_blocker = _gate_blocker(policy, report_gate, machine_review, codex_review)
     if gate_blocker:
         code, reason = gate_blocker
+        diagnostics = (
+            _machine_review_diagnostics(machine_review)
+            if code == CODE_MACHINE_REVIEW_NOT_PASS
+            else ()
+        )
         return _readiness(
             BLOCKED,
             code,
@@ -233,6 +245,7 @@ def evaluate_commit_readiness(
             task_id=task_id,
             change_ids=change_ids,
             accepted_change_ids=accepted_change_ids,
+            machine_review_diagnostics=diagnostics,
         )
 
     machine_blocker = _machine_check_blocker(machine_review)
@@ -245,6 +258,7 @@ def evaluate_commit_readiness(
             task_id=task_id,
             change_ids=change_ids,
             accepted_change_ids=accepted_change_ids,
+            machine_review_diagnostics=_machine_review_diagnostics(machine_review),
         )
 
     machine_warning_blocker = _machine_warning_blocker(policy, report_gate, machine_review)
@@ -257,6 +271,7 @@ def evaluate_commit_readiness(
             task_id=task_id,
             change_ids=change_ids,
             accepted_change_ids=accepted_change_ids,
+            machine_review_diagnostics=_machine_review_diagnostics(machine_review),
         )
 
     if str(task.get("status") or "") != "done":
@@ -330,7 +345,7 @@ def evaluate_commit_readiness(
     if machine_review.status == MACHINE_REVIEW_WARN:
         reason = (
             "Local commit readiness is green; Machine Review WARN contains only "
-            "advisory or policy-approved warning evidence."
+            "policy-approved report warning evidence."
         )
 
     return _readiness(
@@ -505,6 +520,7 @@ def _readiness(
     changed_files: Sequence[GitStatusFile] = (),
     blockers: Sequence[str] = (),
     git_status: GitCommandResult | None = None,
+    machine_review_diagnostics: Sequence[Mapping[str, Any]] = (),
 ) -> CommitReadinessResult:
     return CommitReadinessResult(
         status=status,
@@ -517,6 +533,7 @@ def _readiness(
         changed_files=tuple(changed_files),
         blockers=tuple(blockers),
         git_status=git_status,
+        machine_review_diagnostics=tuple(machine_review_diagnostics),
     )
 
 
@@ -590,7 +607,7 @@ def _machine_warning_blocker(
         )
 
     unsafe = [
-        _machine_warning_summary(check)
+        _machine_check_summary(check)
         for check in warning_checks
         if not _machine_warning_is_allowed(policy, report_gate, check)
     ]
@@ -599,8 +616,8 @@ def _machine_warning_blocker(
             CODE_MACHINE_REVIEW_NOT_PASS,
             (
                 "Machine Review WARN is not accepted for local commit; "
-                "unsafe/blocking warning evidence: {}. Allowed advisory warning "
-                "evidence must be non-blocking or explicitly policy-approved."
+                "unapproved warning evidence: {}. Allowed warning evidence must "
+                "be the policy-approved codex_report_gate report warning."
             ).format(", ".join(unsafe)),
         )
     return None
@@ -613,14 +630,12 @@ def _machine_warning_is_allowed(
 ) -> bool:
     if check.status != MACHINE_REVIEW_WARN:
         return True
-    if not check.blocking:
-        return True
     if check.name == "codex_report_gate" and report_gate.status == REPORT_GATE_WARN:
         return evaluate_report_gate_acceptance(report_gate, policy).allow
     return False
 
 
-def _machine_warning_summary(check: MachineCheckEvidence) -> str:
+def _machine_check_summary(check: MachineCheckEvidence) -> str:
     return "{}={} code={} blocking={}".format(
         check.name,
         check.status,
@@ -629,10 +644,56 @@ def _machine_warning_summary(check: MachineCheckEvidence) -> str:
     )
 
 
+def _machine_review_diagnostics(
+    machine_review: MachineReviewResult,
+) -> tuple[dict[str, Any], ...]:
+    return tuple(
+        _machine_check_diagnostic(check)
+        for check in machine_review.checks
+        if check.status != MACHINE_REVIEW_PASS
+    )
+
+
+def _machine_check_diagnostic(check: MachineCheckEvidence) -> dict[str, Any]:
+    data: dict[str, Any] = {
+        "name": check.name,
+        "status": check.status,
+        "code": check.code,
+        "reason": _bounded_machine_diagnostic_text(check.reason),
+        "command": list(check.command),
+    }
+    stdout_summary = _bounded_machine_diagnostic_text(check.stdout_summary)
+    stderr_summary = _bounded_machine_diagnostic_text(check.stderr_summary)
+    if stdout_summary:
+        data["stdout_summary"] = stdout_summary
+    if stderr_summary:
+        data["stderr_summary"] = stderr_summary
+    return data
+
+
+def _bounded_machine_diagnostic_text(value: Any) -> str:
+    text = str(value or "").strip()
+    if len(text) <= MACHINE_DIAGNOSTIC_SUMMARY_LIMIT:
+        return text
+    return text[: MACHINE_DIAGNOSTIC_SUMMARY_LIMIT - 3].rstrip() + "..."
+
+
 def _machine_check_blocker(
     machine_review: MachineReviewResult,
 ) -> tuple[str, str] | None:
     checks = {check.name: check for check in machine_review.checks}
+    blocking_failures = [
+        _machine_check_summary(check)
+        for check in machine_review.checks
+        if check.blocking and check.status == MACHINE_REVIEW_FAIL
+    ]
+    if blocking_failures:
+        return (
+            CODE_MACHINE_REVIEW_NOT_PASS,
+            "Blocking Machine Review failure evidence blocks local commit: {}".format(
+                ", ".join(blocking_failures)
+            ),
+        )
     missing = sorted(REQUIRED_MACHINE_CHECKS - set(checks))
     if missing:
         return (

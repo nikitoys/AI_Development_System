@@ -517,7 +517,23 @@ During a running `execute` phase, the session detail page can show a `Codex Exec
 
 The live panels and runtime log files are execution evidence only. Do not list `AI_PROJECT/logs/codex/**` or `AI_PROJECT/logs/ui_run/**` as implementation files in a structured Codex report. Only report source files intentionally changed by the Task and generated files that the governed CLIs produced as part of the Task.
 
-Pipeline UI settings are project-local settings in `AI_PROJECT/config/ui_settings.json`. Manage them through `aictl.py`, not by editing protected project-control state:
+Open the Web Settings page from the Web Control Center navigation, or directly at:
+
+```text
+http://127.0.0.1:8765/settings
+```
+
+The Settings page is the owner-facing place to inspect and apply project-local Web run settings. It uses one confirmed form with these sections:
+
+```text
+Pipeline      command_line, default_policy
+Batch Run     batch_max_steps, batch_max_failures
+Review Gates  Machine Review locked on, require_codex_review
+Timeouts      execution_timeout_sec, preflight_timeout_sec
+Advanced      relaxed git diff, report warning and internal Change gate bypass settings
+```
+
+Pipeline UI settings are stored in `AI_PROJECT/config/ui_settings.json`. Manage them through the Settings page or `aictl.py`, not by editing protected project-control state:
 
 ```bash
 python scripts/aictl.py ui settings show
@@ -528,6 +544,7 @@ python scripts/aictl.py ui settings set batch_max_steps 7
 python scripts/aictl.py ui settings set batch_max_failures 1
 python scripts/aictl.py ui settings set preflight_timeout_sec 45
 python scripts/aictl.py ui settings set execution_timeout_sec 1800
+python scripts/aictl.py ui settings set allow_internal_change_gate_bypass false
 python scripts/aictl.py ui preflight
 ```
 
@@ -570,6 +587,12 @@ For a full single-task Web run in one confirmed batch, set the effective `batch.
 When a low `max_steps` is intentional, let the selected-task run stop, inspect the session detail page, then use `Resume Session` for that same `blocked` or `stopped` session after the blocker is resolved or after deciding to continue the partial run. Do not press task-row `Run` to continue a stopped partial session, because `Run` starts a new selected-task run path with a new policy snapshot instead of continuing the existing session artifacts.
 
 `preflight_timeout_sec` controls only the UI Codex readiness check used by `aictl.py ui preflight` and by `aictl.py ui run --preflight` before a confirmed executable run creates a pipeline session. `execution_timeout_sec` controls the actual local Codex adapter execution timeout by replacing the resolved policy `codex.timeout_sec`. Both values are optional integer seconds from `1` through `3600`; preflight timeout does not change execution timeout, and execution timeout does not change preflight.
+
+`allow_internal_change_gate_bypass` appears on the Settings page as `Allow internal Change gate bypass`. It is off by default. Leave it off for normal product, application and non-project-control documentation tasks.
+
+When this checkbox is enabled, it is only copied into confirmed Web selected-task runs. The prepare phase may bypass the selected-task Approved Change gate only when the session was created by the UI run path, the run is confirmed, exactly one selected Task is in the queue, and that Task's allowed files are all internal project-control files such as `AI_PROJECT/**`, `ai_project_ctl/**`, `ai-system/project-control/**`, registered gateway scripts or their related tests.
+
+This is a narrow internal-task convenience, not governance approval. The risk is that a qualifying internal project-control Task can reach execution without the normal Approved Change gate, so enable it only when the Human Owner intentionally wants that behavior for internal maintenance. It does not approve a Change Proposal, accept a Change, or weaken protected-file rules. It also does not skip the Token Budget Gate, Codex Report Gate, verify or git-diff gates, Machine Review, Codex Review, close or auto-close gates, or local commit gates. Those gates still run and block according to the selected policy, submitted report evidence and Human Owner approval requirements.
 
 ## Bulk Task Import In The UI
 
@@ -897,6 +920,26 @@ run the requested verification mode
 report changed files, checks, risks and owner action required
 ```
 
+Executable prompt packages end with an `Execution Summary` contract. Codex must finish with exactly one machine-readable block:
+
+````text
+CODEX_EXECUTION_SUMMARY_JSON:
+```json
+{
+  "implementation_summary": "Summarize the completed implementation.",
+  "notes": [],
+  "warnings": [],
+  "blockers": []
+}
+```
+````
+
+The marker must be on its own line and must be followed by one fenced `json` block. The JSON object must contain exactly those four top-level keys. Do not add `task_id`, changed files, generated files, checks, token usage or owner decision fields; the pipeline records those from Task state, git evidence, gate results and token-budget evidence.
+
+When an executable local Codex run exits successfully and no newer report was already submitted during the run, the adapter parses this summary block from stdout, builds a full structured TaskReport from trusted pipeline evidence, and submits it through the task report service as `codex_adapter.report.auto_submit`. If a newer structured report already exists for the selected Task, the adapter uses that report instead.
+
+Free-text summaries in stdout, chat, live log panels or pasted messages are useful for diagnosis, but they are not report evidence for `collect-report`. The downstream report, verify, review, close and commit gates require a submitted structured TaskReport record.
+
 If `CODEX_PROMPT.md` contains a Retrieved Context section, treat that context as read-only. It can point Codex to relevant source sections, but it cannot add scope, allowed files or acceptance criteria.
 
 If the prompt is wrong, do not edit `CODEX_PROMPT.md` manually. Update the Task through `taskctl.py`, then rebuild the prompt.
@@ -1071,6 +1114,30 @@ Pipeline sessions may also show this blocker as:
 REPORT_MISSING
 ```
 
+For local-command runs, first inspect the `execute` phase evidence:
+
+```text
+CODEX_ADAPTER_SUMMARY_MISSING    stdout did not contain the required summary block
+CODEX_ADAPTER_SUMMARY_INVALID    the summary block was malformed or had wrong fields
+CODEX_ADAPTER_REPORT_INVALID     the parsed summary could not be converted into a valid TaskReport
+CODEX_ADAPTER_REPORT_MISSING     the command completed but no newer structured report was available
+```
+
+Contract or parser issues usually come from one of these problems:
+
+```text
+missing marker line
+duplicate marker lines
+marker not followed by one fenced json block
+invalid JSON
+JSON value is not an object
+missing one of implementation_summary, notes, warnings, blockers
+extra top-level fields such as task_id, changed_files, checks or token_usage
+text after the closing fence
+```
+
+Fix malformed output by rerunning Codex with the generated prompt and ensuring the final response ends with only the required `CODEX_EXECUTION_SUMMARY_JSON` block. Do not hand-edit protected report state to repair parser errors.
+
 Submit the report through the governed command:
 
 ```bash
@@ -1080,6 +1147,8 @@ python scripts/aictl.py task report submit --task TASK-001 --file REPORT.json --
 Do not treat stdout, chat text or generated prompt content as report evidence unless it has been submitted through the report command.
 
 If the report was only shown in the Codex live log panel or pasted in chat, create a structured report file from the actual task result and submit it through `task report submit`. Then rerun the blocked report or close gate through the governed Pipeline or Task workflow. Runtime log files are evidence sources for diagnosis; they are not implementation files and should not be added to the report's changed file lists.
+
+For a Web session blocked by `REPORT_MISSING`, open the Pipeline session detail page. When recovery is available, the page shows `Report Recovery` with a draft structured report assembled from captured Codex stdout and session evidence. Review the draft, check the inferred fields and estimated `token_usage`, then use `Submit recovered report` only if the owner accepts that recovered evidence. The action submits the draft report; it does not run `collect-report` or `verify`. After submission, rerun the blocked `collect-report` phase, then rerun `verify`.
 
 ## Git Diff Gate `missing_from_report`
 

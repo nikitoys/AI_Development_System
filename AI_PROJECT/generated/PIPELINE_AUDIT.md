@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `535`
-State revision: `535`
-Current session: `PSESS-079`
+Events: `608`
+State revision: `608`
+Current session: `PSESS-088`
 
 ## Timeline
 
@@ -546,6 +546,79 @@ Current session: `PSESS-079`
 | `2026-06-26T22:36:47Z` | `stop` | `pipeline.session.stop` | `PSESS-079` | `` | `` | stopped \| MAX_STEPS_REACHED: Batch runner reached max_steps 5. |
 | `2026-06-26T22:41:13Z` | `step.result` | `pipeline.phase.review` | `PSESS-079` | `` | `` | reports=RPT-056 |
 | `2026-06-26T22:41:38Z` | `step.result` | `pipeline.phase.close` | `PSESS-079` | `` | `` | reports=RPT-056 |
+| `2026-06-27T09:58:46Z` | `session.create` | `pipeline.session.create` | `PSESS-080` | `` | `` | PSESS-080 |
+| `2026-06-27T09:58:46Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-080` | `` | `` | PSESS-080 |
+| `2026-06-27T09:58:52Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-080` | `` | `` | PSESS-080 |
+| `2026-06-27T09:58:54Z` | `step.result` | `pipeline.phase.execute` | `PSESS-080` | `` | `` | PSESS-080 |
+| `2026-06-27T09:59:41Z` | `step.result` | `pipeline.phase.execute` | `PSESS-080` | `` | `` | PSESS-080 |
+| `2026-06-27T10:00:53Z` | `session.create` | `pipeline.session.create` | `PSESS-081` | `` | `` | PSESS-081 |
+| `2026-06-27T10:00:54Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-081` | `` | `` | PSESS-081 |
+| `2026-06-27T10:01:00Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-081` | `` | `` | PSESS-081 |
+| `2026-06-27T10:01:01Z` | `step.result` | `pipeline.phase.execute` | `PSESS-081` | `` | `` | PSESS-081 |
+| `2026-06-27T10:07:39Z` | `step.result` | `pipeline.phase.execute` | `PSESS-081` | `` | `` | reports=RPT-057 |
+| `2026-06-27T10:07:39Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-081` | `` | `` | reports=RPT-057 |
+| `2026-06-27T10:07:40Z` | `step.result` | `pipeline.phase.verify` | `PSESS-081` | `` | `` | reports=RPT-057 |
+| `2026-06-27T10:07:41Z` | `step.result` | `pipeline.phase.review` | `PSESS-081` | `` | `` | reports=RPT-057 |
+| `2026-06-27T10:07:56Z` | `step.result` | `pipeline.phase.close` | `PSESS-081` | `` | `` | reports=RPT-057 |
+| `2026-06-27T10:13:12Z` | `session.create` | `pipeline.session.create` | `PSESS-082` | `` | `` | PSESS-082 |
+| `2026-06-27T10:13:13Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-082` | `` | `` | PSESS-082 |
+| `2026-06-27T10:38:56Z` | `session.create` | `pipeline.session.create` | `PSESS-083` | `` | `` | PSESS-083 |
+| `2026-06-27T10:38:57Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-083` | `` | `` | PSESS-083 |
+| `2026-06-27T10:39:03Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-083` | `` | `` | PSESS-083 |
+| `2026-06-27T10:39:04Z` | `step.result` | `pipeline.phase.execute` | `PSESS-083` | `` | `` | PSESS-083 |
+| `2026-06-27T10:43:55Z` | `step.result` | `pipeline.phase.execute` | `PSESS-083` | `` | `` | reports=RPT-058 |
+| `2026-06-27T10:43:56Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-083` | `` | `` | reports=RPT-058 |
+| `2026-06-27T10:43:56Z` | `step.result` | `pipeline.phase.verify` | `PSESS-083` | `` | `` | reports=RPT-058 |
+| `2026-06-27T10:43:57Z` | `step.result` | `pipeline.phase.review` | `PSESS-083` | `` | `` | reports=RPT-058 |
+| `2026-06-27T10:44:12Z` | `step.result` | `pipeline.phase.close` | `PSESS-083` | `` | `` | reports=RPT-058 |
+| `2026-06-27T10:48:07Z` | `session.create` | `pipeline.session.create` | `PSESS-084` | `` | `` | PSESS-084 |
+| `2026-06-27T10:48:08Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-084` | `` | `` | PSESS-084 |
+| `2026-06-27T10:48:14Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-084` | `` | `` | PSESS-084 |
+| `2026-06-27T10:48:15Z` | `step.result` | `pipeline.phase.execute` | `PSESS-084` | `` | `` | PSESS-084 |
+| `2026-06-27T11:02:13Z` | `step.result` | `pipeline.phase.execute` | `PSESS-084` | `` | `` | reports=RPT-059 |
+| `2026-06-27T11:02:14Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-084` | `` | `` | reports=RPT-059 |
+| `2026-06-27T11:02:14Z` | `step.result` | `pipeline.phase.verify` | `PSESS-084` | `` | `` | reports=RPT-059 |
+| `2026-06-27T11:02:15Z` | `step.result` | `pipeline.phase.review` | `PSESS-084` | `` | `` | reports=RPT-059 |
+| `2026-06-27T11:02:31Z` | `step.result` | `pipeline.phase.close` | `PSESS-084` | `` | `` | reports=RPT-059 |
+| `2026-06-27T11:10:35Z` | `session.create` | `pipeline.session.create` | `PSESS-085` | `` | `` | PSESS-085 |
+| `2026-06-27T11:10:36Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-085` | `` | `` | PSESS-085 |
+| `2026-06-27T11:10:42Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-085` | `` | `` | PSESS-085 |
+| `2026-06-27T11:10:43Z` | `step.result` | `pipeline.phase.execute` | `PSESS-085` | `` | `` | PSESS-085 |
+| `2026-06-27T11:17:56Z` | `step.result` | `pipeline.phase.execute` | `PSESS-085` | `` | `` | reports=RPT-060 |
+| `2026-06-27T11:17:56Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-085` | `` | `` | reports=RPT-060 |
+| `2026-06-27T11:17:57Z` | `step.result` | `pipeline.phase.verify` | `PSESS-085` | `` | `` | reports=RPT-060 |
+| `2026-06-27T11:17:58Z` | `step.result` | `pipeline.phase.review` | `PSESS-085` | `` | `` | reports=RPT-060 |
+| `2026-06-27T11:18:13Z` | `step.result` | `pipeline.phase.close` | `PSESS-085` | `` | `` | reports=RPT-060 |
+| `2026-06-27T11:19:09Z` | `session.create` | `pipeline.session.create` | `PSESS-086` | `` | `` | PSESS-086 |
+| `2026-06-27T11:19:10Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-086` | `` | `` | PSESS-086 |
+| `2026-06-27T11:19:16Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-086` | `` | `` | PSESS-086 |
+| `2026-06-27T11:19:18Z` | `step.result` | `pipeline.phase.execute` | `PSESS-086` | `` | `` | PSESS-086 |
+| `2026-06-27T11:32:11Z` | `step.result` | `pipeline.phase.execute` | `PSESS-086` | `` | `` | reports=RPT-061 |
+| `2026-06-27T11:32:12Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-086` | `` | `` | reports=RPT-061 |
+| `2026-06-27T11:32:13Z` | `step.result` | `pipeline.phase.verify` | `PSESS-086` | `` | `` | reports=RPT-061 |
+| `2026-06-27T11:32:14Z` | `step.result` | `pipeline.phase.review` | `PSESS-086` | `` | `` | reports=RPT-061 |
+| `2026-06-27T11:32:29Z` | `step.result` | `pipeline.phase.close` | `PSESS-086` | `` | `` | reports=RPT-061 |
+| `2026-06-27T11:43:16Z` | `session.create` | `pipeline.session.create` | `PSESS-087` | `` | `` | PSESS-087 |
+| `2026-06-27T11:43:17Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-087` | `` | `` | PSESS-087 |
+| `2026-06-27T11:43:23Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-087` | `` | `` | PSESS-087 |
+| `2026-06-27T11:43:24Z` | `step.result` | `pipeline.phase.execute` | `PSESS-087` | `` | `` | PSESS-087 |
+| `2026-06-27T11:56:13Z` | `step.result` | `pipeline.phase.execute` | `PSESS-087` | `` | `` | reports=RPT-062 |
+| `2026-06-27T11:56:14Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-087` | `` | `` | reports=RPT-062 |
+| `2026-06-27T11:56:14Z` | `step.result` | `pipeline.phase.verify` | `PSESS-087` | `` | `` | reports=RPT-062 |
+| `2026-06-27T11:56:15Z` | `step.result` | `pipeline.phase.review` | `PSESS-087` | `` | `` | reports=RPT-062 |
+| `2026-06-27T11:56:31Z` | `step.result` | `pipeline.phase.close` | `PSESS-087` | `` | `` | reports=RPT-062 |
+| `2026-06-27T12:00:28Z` | `session.create` | `pipeline.session.create` | `PSESS-088` | `` | `` | PSESS-088 |
+| `2026-06-27T12:00:29Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-088` | `` | `` | PSESS-088 |
+| `2026-06-27T12:00:36Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-088` | `` | `` | PSESS-088 |
+| `2026-06-27T12:00:38Z` | `step.result` | `pipeline.phase.execute` | `PSESS-088` | `` | `` | PSESS-088 |
+| `2026-06-27T12:07:43Z` | `step.result` | `pipeline.phase.execute` | `PSESS-088` | `` | `` | reports=RPT-063 |
+| `2026-06-27T12:07:44Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-088` | `` | `` | reports=RPT-063 |
+| `2026-06-27T12:07:45Z` | `step.result` | `pipeline.phase.verify` | `PSESS-088` | `` | `` | reports=RPT-063 |
+| `2026-06-27T12:07:46Z` | `step.result` | `pipeline.phase.review` | `PSESS-088` | `` | `` | reports=RPT-063 |
+| `2026-06-27T12:07:47Z` | `step.result` | `pipeline.phase.close` | `PSESS-088` | `` | `` | reports=RPT-063 |
+| `2026-06-27T12:52:44Z` | `step.result` | `pipeline.phase.close` | `PSESS-088` | `` | `` | reports=RPT-063 |
+| `2026-06-27T12:53:18Z` | `step.result` | `pipeline.phase.close` | `PSESS-088` | `` | `` | reports=RPT-063 |
+| `2026-06-27T12:59:31Z` | `step.result` | `pipeline.phase.close` | `PSESS-088` | `` | `` | reports=RPT-063 |
 
 ## Event Type Coverage
 

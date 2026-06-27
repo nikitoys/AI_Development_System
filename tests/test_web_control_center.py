@@ -1545,6 +1545,83 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("[truncated:", body)
         self.assertNotIn("stderr-tail", body)
 
+    def test_pipeline_session_detail_renders_machine_review_diagnostic_summaries(self):
+        phase_history = [
+            {
+                "phase": "close",
+                "status": "blocked",
+                "reason": "Close completed, but local commit was blocked.",
+                "next_action": "Resolve local commit readiness blockers.",
+                "artifacts": {
+                    "blocked_by": "COMMIT_READINESS_FAILED",
+                    "local_commit": {
+                        "status": "blocked",
+                        "code": "COMMIT_READINESS_FAILED",
+                        "reason": "Machine Review FAIL blocks local commit.",
+                        "readiness": {
+                            "status": "blocked",
+                            "code": "COMMIT_MACHINE_REVIEW_NOT_PASS",
+                            "reason": "Machine Review FAIL blocks local commit.",
+                            "machine_review_diagnostics": [
+                                {
+                                    "name": "context_check_generated",
+                                    "status": "fail",
+                                    "code": "CONTEXT_CHECK_GENERATED_FAILED",
+                                    "reason": "Context generated output is stale.",
+                                    "command": [
+                                        "python",
+                                        "scripts/contextctl.py",
+                                        "check-generated",
+                                    ],
+                                    "stdout_summary": "context stdout summary",
+                                    "stderr_summary": "context stderr summary",
+                                }
+                            ],
+                        },
+                    },
+                },
+                "changed_files": [],
+                "generated_files": [],
+                "events": ["EVT-202"],
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "done",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=pipeline_detail_state(
+                    status="blocked",
+                    step_status="planned",
+                    finished_at="",
+                    current_step_status="blocked",
+                    stop_reason="Close completed, but local commit was blocked.",
+                    next_action="Resolve local commit readiness blockers.",
+                    steps=[],
+                    gate_outcomes=[],
+                    phase_history=phase_history,
+                ),
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/pipeline/sessions/PSESS-020", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("context_check_generated stdout", body)
+        self.assertIn("context stdout summary", body)
+        self.assertIn("context_check_generated stderr", body)
+        self.assertIn("context stderr summary", body)
+
     def test_pipeline_session_detail_renders_report_recovery_action(self):
         stdout = (
             "Implementation summary:\n"

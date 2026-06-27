@@ -83,6 +83,26 @@ Live Codex logs appear on the Pipeline session detail page during the `execute` 
 
 `Actions` contains direct forms for Task creation, Bulk Task Import, health and repair checks, Task workflows, Task transitions, current Task changes, generated-output refreshes, and Codex/context builds. Bulk Task Import supports pasted JSON and `.json` or `.txt` file upload; leave Confirm unchecked for preview and check Confirm only when the preview is ready to create Tasks.
 
+## Web Settings Page
+
+Open `Settings` from the Web Control Center navigation, or open `http://127.0.0.1:8765/settings` after starting the local server. The page shows one confirmed `Apply Settings` form and a read-only `Effective Policy Summary` for the policy Web runs will use.
+
+Supported settings are grouped by purpose:
+
+```text
+Pipeline      command_line, default_policy
+Batch Run     batch_max_steps, batch_max_failures
+Review Gates  Machine Review locked on, require_codex_review
+Timeouts      execution_timeout_sec, preflight_timeout_sec
+Advanced      relaxed git diff, report warning and internal Change gate bypass settings
+```
+
+Use `command_line` for the shell-style local Codex command used by executable UI runs. Use `default_policy` to choose a registered pipeline policy preset from the dropdown. Use `preflight_timeout_sec` for the UI readiness check and `execution_timeout_sec` for the actual local Codex adapter run; both are optional integer seconds from `1` through `3600`, and one timeout does not change the other.
+
+The advanced `Allow internal Change gate bypass` checkbox controls `allow_internal_change_gate_bypass`. It is off by default and should stay off for normal product, application and non-project-control documentation tasks. When enabled, it can affect only confirmed single-task Web runs whose selected Task is internal to Project Control Gateway, with allowed files limited to internal project-control paths such as `AI_PROJECT/**`, `ai_project_ctl/**`, `ai-system/project-control/**`, registered gateway scripts or their related tests.
+
+The risk is that a qualifying internal project-control Task can reach execution without the normal Approved Change gate, so enable it only when the Human Owner intentionally wants that behavior for internal maintenance. The bypass does not approve a Change Proposal, accept a Change, or weaken protected-file rules. It also does not skip the Token Budget Gate, Codex Report Gate, verify or git-diff gates, Machine Review, Codex Review, close or auto-close gates, or local commit gates. Those gates still run and block according to policy, submitted report evidence and Human Owner approval requirements.
+
 ## Command-Line Equivalents
 
 The UI is the preferred daily path, but the same control plane remains available from the shell.
@@ -216,6 +236,8 @@ Auto-close owner notes are explicit Human Owner approval inputs. Supply them onl
 
 Executable pipeline policies pass `AI_PROJECT/generated/CODEX_PROMPT.md` to the local Codex command through stdin by default. The configured command must exactly match the policy allowlist. Owner-configured sandbox flags are allowed only when both `local_command` and `command_allowlist` include the exact command.
 
+The generated prompt tells Codex to finish with one `CODEX_EXECUTION_SUMMARY_JSON` fenced JSON block containing exactly `implementation_summary`, `notes`, `warnings` and `blockers`. That block is not a full TaskReport. When the local command succeeds, the adapter parses it, builds the full structured report from trusted task, git, gate and token evidence, and auto-submits that report. Free-text stdout or chat summaries are not enough for `collect-report`.
+
 UI settings provide the owner-facing command and timeout values:
 
 ```bash
@@ -226,6 +248,7 @@ python scripts/aictl.py ui settings set batch_max_steps 7
 python scripts/aictl.py ui settings set batch_max_failures 1
 python scripts/aictl.py ui settings set preflight_timeout_sec 45
 python scripts/aictl.py ui settings set execution_timeout_sec 1800
+python scripts/aictl.py ui settings set allow_internal_change_gate_bypass false
 python scripts/aictl.py ui preflight
 ```
 
@@ -235,7 +258,9 @@ python scripts/aictl.py ui preflight
 
 If a session blocks with `CODEX_ADAPTER_TIMEOUT`, inspect the session detail `execute` phase for timeout, duration, command and bounded stdout/stderr evidence. If a close or commit gate says report evidence is missing, submit a structured report with `python scripts/aictl.py task report submit --task TASK-001 --file REPORT.json --confirm`; stdout or chat text is not report evidence until submitted through that command.
 
-If the blocker is `REPORT_MISSING`, submit the structured execution report through `task report submit`, then rerun the blocked collect-report, close or pipeline step. Do not treat live stdout, stderr, chat text or runtime log files as a submitted report.
+If the execute phase shows `CODEX_ADAPTER_SUMMARY_MISSING` or `CODEX_ADAPTER_SUMMARY_INVALID`, the local command did not emit a parseable `CODEX_EXECUTION_SUMMARY_JSON` block. Rerun Codex with the generated prompt and make the final output end with exactly one fenced JSON block containing only `implementation_summary`, `notes`, `warnings` and `blockers`, or submit a valid structured report manually.
+
+If the blocker is `REPORT_MISSING`, submit the structured execution report through `task report submit`, then rerun the blocked collect-report, close or pipeline step. In the Web UI, open the session detail page and use `Report Recovery` -> `Submit recovered report` only after reviewing the draft and accepting its inferred fields; then rerun `collect-report` and `verify`. Do not treat live stdout, stderr, chat text or runtime log files as a submitted report.
 
 If a diff gate reports `missing_from_report`, compare the missing paths with the Task contract. Add omitted real Task source changes to the structured report, include governed generated output only when the Task intentionally regenerated it, and leave runtime logs such as `AI_PROJECT/logs/codex/**` or `AI_PROJECT/logs/ui_run/**` out of implementation file lists. Resolve unrelated dirty files before rerunning the gate.
 

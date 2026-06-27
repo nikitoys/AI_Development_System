@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1447`
+Revision: `1518`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -610,6 +610,279 @@ Acceptance criteria:
 - `Require Codex Review before close` is visible as an editable checkbox with helper text about saving tokens.
 - `Allow internal Change gate bypass` is moved into the Advanced group.
 - Web Control Center tests verify the new layout and absence of the old generic key-value Settings form.
+
+### CTL-16 (TASK-216) — Add shared Web owner shell
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_1634bff488b5`, legacy `TASK-216`, aliases `TASK-216`, local `CTL` / `16`
+
+Introduce a shared Web Control Center shell with grouped sidebar navigation and a consistent main content layout for every route.
+
+Acceptance criteria:
+
+- All existing Web Control Center routes render inside the new shared shell.
+- The old long horizontal nav is replaced by grouped sidebar navigation.
+- The active route remains visibly highlighted.
+- The UI remains usable on narrow screens.
+- No state-changing action is introduced by the shell itself.
+
+### CTL-17 (TASK-217) — Add sticky current execution bar
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_e9d5369a0d0c`, legacy `TASK-217`, aliases `TASK-217`, local `CTL` / `17`
+
+Add a sticky owner-facing current execution bar that shows the current task, status, next action, prompt readiness, and safe quick actions.
+
+Acceptance criteria:
+
+- Dashboard and Tasks pages show a sticky current execution bar when current execution data exists.
+- The bar degrades to a compact no-current-task state when no current task exists.
+- Every visible quick action maps to an existing /actions workflow or a read-only route.
+- The current task label matches existing dashboard current_task data.
+- No duplicate primary action is shown in both topbar and the same visible row without clear hierarchy.
+
+### CTL-18 (TASK-218) — Add compact health summary panel
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_1b30b9da5168`, legacy `TASK-218`, aliases `TASK-218`, local `CTL` / `18`
+
+Replace large repeated health tables on owner work pages with a compact health summary and expandable detail block.
+
+Acceptance criteria:
+
+- Dashboard and Tasks no longer show a large health table by default.
+- A compact health summary is visible above or near owner work queues.
+- Detailed health signals remain reachable without navigating away.
+- Existing health action forms still post through /actions with confirmation.
+- The Doctor page still provides full diagnostic detail.
+
+### CTL-19 (TASK-219) — Build owner action queue read model
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_edfef73a9c2d`, legacy `TASK-219`, aliases `TASK-219`, local `CTL` / `19`
+
+Add a read-only owner action queue that categorizes tasks and changes by the next decision or safe action needed.
+
+Acceptance criteria:
+
+- /data.json includes an owner action queue or equivalent read-only structure.
+- Current in-progress task appears in the current category.
+- Ready Change Proposals that need owner approval appear in needs_decision.
+- Runnable tasks appear in ready_to_run only when existing guards allow a run action.
+- Blocked items include one compact owner-facing blocker reason.
+- Existing dashboard, tasks, changes, and pipeline data remains backward compatible.
+
+### CTL-20 (TASK-220) — Render Dashboard as Owner Cockpit
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_9a5558850dfe`, legacy `TASK-220`, aliases `TASK-220`, local `CTL` / `20`
+
+Convert the Dashboard into an Owner Cockpit showing current execution, health, action queue, and recent important signals.
+
+Acceptance criteria:
+
+- The root page answers what is current, what needs owner decision, what can run, and what is blocked.
+- Non-actionable metrics such as total done tasks are not prominent on the first screen.
+- Every visible button either opens details, navigates, copies existing text, or posts an existing confirmed action.
+- The page remains readable without horizontal scrolling on normal desktop width.
+- Existing Dashboard route remains `/`.
+
+### CTL-21 (TASK-221) — Convert Tasks to action queue
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_af38da388a26`, legacy `TASK-221`, aliases `TASK-221`, local `CTL` / `21`
+
+Convert the Tasks page default view from grouped raw tables to a compact action queue focused on owner work.
+
+Acceptance criteria:
+
+- /tasks defaults to owner-action grouping rather than epic grouping.
+- The full task list is still reachable from /tasks via a filter, view mode, or expandable section.
+- Rows do not include long unavailable-action lists by default.
+- Each visible row has at most one primary action.
+- Existing query filters for initiative, epic, status, search, group, and show_done keep working or have a compatible replacement.
+
+### CTL-22 (TASK-222) — Add task details drawer
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_712758fa575f`, legacy `TASK-222`, aliases `TASK-222`, local `CTL` / `22`
+
+Move task summary, stage, blockers, linked change, policy, generated files, and recent events into a details drawer or equivalent progressive detail panel.
+
+Acceptance criteria:
+
+- Default task rows are compact and no longer contain large policy summaries.
+- Selecting or expanding a task reveals summary, stage, blockers, linked change, policy, and available actions.
+- Full unavailable-action explanations are visible only in details.
+- The first matching task can be inspected without relying on browser console behavior.
+- No state-changing action is triggered by merely opening details.
+
+### CTL-23 (TASK-223) — Add safe action confirm modal
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_21ea3eac7235`, legacy `TASK-223`, aliases `TASK-223`, local `CTL` / `23`
+
+Add a reusable confirmation modal for owner actions while preserving the existing confirmed POST safety model.
+
+Acceptance criteria:
+
+- Run, Submit, Approve, Resume, Doctor, and repair/check forms can use the confirm modal.
+- Action forms still post only to /actions.
+- Required owner notes remain required when the underlying workflow requires them.
+- The modal does not submit until the owner confirms.
+- If JavaScript is unavailable, existing confirmation controls still protect the action.
+
+### CTL-24 (TASK-224) — Redesign Pipeline as run monitor
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_8a19213a6b72`, legacy `TASK-224`, aliases `TASK-224`, local `CTL` / `24`
+
+Redesign the Pipeline page around the current session, phase progress, live logs, next safe action, and compact queue preview.
+
+Acceptance criteria:
+
+- /pipeline first screen shows current session, current phase, next action, and health of the run.
+- Running-session live logs remain accessible with existing endpoints.
+- Policy and queue details are still available but not the dominant first-screen content.
+- Restricted actions remain visually separated and confirmed.
+- Pipeline session detail pages remain reachable.
+
+### CTL-25 (TASK-225) — Convert Reviews to decision queue
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_c55c8882bbe7`, legacy `TASK-225`, aliases `TASK-225`, local `CTL` / `25`
+
+Convert Reviews into an owner decision queue focused on approve, request changes, and inspect review packages.
+
+Acceptance criteria:
+
+- /reviews prioritizes tasks that need owner review decisions.
+- Approve and Request Changes remain available only for eligible tasks.
+- Verbose review data is accessible but not shown in every row by default.
+- The review commands table remains available for diagnostics.
+- Rows do not present unavailable actions as primary actions.
+
+### CTL-26 (TASK-226) — Convert Evolution to change decision queue
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_42c8de7a2c80`, legacy `TASK-226`, aliases `TASK-226`, local `CTL` / `26`
+
+Convert Evolution into an owner decision queue focused on creating, approving, accepting, rejecting, and inspecting Change Proposals.
+
+Acceptance criteria:
+
+- /evolution highlights ready Change Proposals that need approval.
+- Approved and in-review changes show the correct next owner action or blocker.
+- Create Change remains available for eligible tasks.
+- Existing filters remain available or have a compatible compact replacement.
+- Detailed affected files and impacts remain inspectable without bloating rows.
+
+### CTL-27 (TASK-227) — Render Settings as policy control page
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_d130cc75914f`, legacy `TASK-227`, aliases `TASK-227`, local `CTL` / `27`
+
+Refine Settings into a focused policy control page with clear sections, effective policy summary, and safe apply behavior.
+
+Acceptance criteria:
+
+- /settings is visually consistent with the owner shell.
+- Existing settings fields and names remain submitted to ui.settings.apply.
+- Locked controls remain locked and clearly marked.
+- The default policy field is easier to understand than a raw text-only control when policy data is available.
+- Apply Settings still requires explicit confirmation.
+
+### CTL-28 (TASK-228) — Render Doctor as health center
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_23b5dc6ce709`, legacy `TASK-228`, aliases `TASK-228`, local `CTL` / `28`
+
+Refine Doctor into a health center with compact status summary, grouped findings, and safe repair/check actions.
+
+Acceptance criteria:
+
+- /doctor remains the complete diagnostic page.
+- Failing or warning findings are easier to scan than in the old flat table.
+- Refresh Doctor remains a read/check action exposed safely.
+- Repair/check actions still use confirmed /actions forms.
+- No finding data is lost compared with the old doctor table.
+
+### CTL-29 (TASK-229) — Align inspection pages with owner shell
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_01cba33064a0`, legacy `TASK-229`, aliases `TASK-229`, local `CTL` / `29`
+
+Align Epics, Commit, Events, Generated, Commands, and Actions pages with the shared shell while keeping them as deep inspection pages.
+
+Acceptance criteria:
+
+- All non-primary pages visually match the shared owner shell.
+- Each page still exposes the same existing diagnostic or low-level information.
+- Actions page continues to use confirmed /actions forms.
+- Commit page does not expose push or remote operations.
+- No placeholder buttons or nonfunctional UI elements are introduced.
+
+### CTL-30 (TASK-230) — Add owner UI regression tests
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_6528449aa4ee`, legacy `TASK-230`, aliases `TASK-230`, local `CTL` / `30`
+
+Add regression tests that verify the Owner Cockpit shell, action queues, confirmation safety, and key Web Control Center routes.
+
+Acceptance criteria:
+
+- Tests cover at least Dashboard, Tasks, Pipeline, Reviews, Evolution, Settings, and Doctor route rendering.
+- Tests verify sidebar or shared shell markers appear on rendered pages.
+- Tests verify confirmation safety for at least one state-changing form.
+- Tests verify restricted destructive git actions are not exposed.
+- The targeted test file can be run locally without network access.
+
+### CTL-31 (TASK-231) — Document Owner Cockpit workflow
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_b6e2538c4606`, legacy `TASK-231`, aliases `TASK-231`, local `CTL` / `31`
+
+Update owner-facing documentation to describe the new Owner Cockpit layout, action queue, details panel, health summary, and safe action confirmation flow.
+
+Acceptance criteria:
+
+- Documentation names Dashboard as the Owner Cockpit daily entry point.
+- Documentation explains current execution bar, Action Queue, health summary, details panel, and confirmation modal.
+- Documentation does not claim non-MVP features such as command palette are implemented.
+- Documentation points users to Tasks, Pipeline, Reviews, Evolution, Doctor, Events, Generated, Commands, Actions, Commit, and Epics for deeper workflows.
+- No generated AI_PROJECT files are edited manually.
 
 ## Epic `EPIC-006`
 
@@ -2689,7 +2962,7 @@ Acceptance criteria:
 
 ### PIPEF-71 (TASK-150) — PIPE-066 Document Web Settings and internal bypass behavior
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_98a41c988bbe`, legacy `TASK-150`, aliases `TASK-150`, local `PIPEF` / `71`
@@ -2808,7 +3081,7 @@ Acceptance criteria:
 
 ### PIPEF-78 (TASK-157) — PIPE-073 Document Codex structured report auto-submit
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_6ac4e09604aa`, legacy `TASK-157`, aliases `TASK-157`, local `PIPEF` / `78`
@@ -3594,3 +3867,190 @@ Acceptance criteria:
 - The docs explain the difference between Run selected task and Resume Session.
 - The docs do not claim full autonomous completion when policy limits intentionally stop the session.
 - Documentation validation and generated documentation checks pass.
+
+### PIPEF-124 (TASK-205) — Expose Web policy catalog
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_8f2ba8631f4c`, legacy `TASK-205`, aliases `TASK-205`, local `PIPEF` / `124`
+
+Expose the registered built-in and custom pipeline policy presets to the Web read model for safe UI selection.
+
+Acceptance criteria:
+
+- The Web read model exposes a deterministic list of selectable pipeline policies.
+- The catalog includes built-in presets and any valid custom presets from the policy store.
+- Each catalog item includes enough summary data to explain review, close, commit, and batch behavior.
+- Invalid custom policy store state still fails through existing validation paths.
+- Existing Web Control Center tests continue to pass.
+
+### PIPEF-125 (TASK-206) — Render policy dropdown in Settings
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_f12e091f47df`, legacy `TASK-206`, aliases `TASK-206`, local `PIPEF` / `125`
+
+Replace the Web Settings free-text default_policy field with a dropdown populated from registered pipeline policies.
+
+Acceptance criteria:
+
+- The Settings page no longer renders default_policy as a free-text input.
+- The Settings page renders every registered policy preset as a selectable option.
+- Submitting a known policy updates ui_settings.json through the existing settings action.
+- Submitting an unknown policy through the Web action returns a controlled error.
+- Existing settings such as command_line and review toggles continue to apply normally.
+
+### PIPEF-126 (TASK-207) — Show effective policy summary
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_92e534ba39e2`, legacy `TASK-207`, aliases `TASK-207`, local `PIPEF` / `126`
+
+Show an owner-facing effective pipeline policy summary in Web Settings and selected-run views.
+
+Acceptance criteria:
+
+- Owners can see the effective batch max_steps before starting a Web run.
+- Owners can see whether Codex Review is required or skipped by the effective policy.
+- Owners can see whether auto-close and local commit are enabled by the effective policy.
+- Owners can see whether report warnings and git diff gates are strict or relaxed.
+- The summary updates when the effective selected policy changes.
+
+### PIPEF-127 (TASK-208) — Add Web run batch overrides
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_f0f89049f343`, legacy `TASK-208`, aliases `TASK-208`, local `PIPEF` / `127`
+
+Add validated Web-run batch limit settings so selected task runs can reach review and close without hidden max_steps stops.
+
+Acceptance criteria:
+
+- A Web run can be configured with max_steps high enough to cover all seven pipeline phases.
+- Invalid batch override values are rejected with controlled UI settings errors.
+- If no override is set, existing policy defaults remain effective.
+- The Settings page displays the configured batch overrides.
+- Policy resolution tests cover default behavior and override behavior.
+
+### PIPEF-128 (TASK-209) — Warn on incomplete Web run policy
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_084920753b67`, legacy `TASK-209`, aliases `TASK-209`, local `PIPEF` / `128`
+
+Warn owners before starting a Web run when the effective policy cannot reach review and close in one batch.
+
+Acceptance criteria:
+
+- A policy with max_steps below the full phase count shows a warning before Web Run starts.
+- The warning names the expected stopping point risk: review and close may not run.
+- The run action can still proceed only after explicit owner confirmation.
+- A policy with sufficient max_steps does not show the incomplete-run warning.
+- Tests cover both warning and no-warning cases.
+
+### PIPEF-129 (TASK-210) — Document Web policy settings
+
+Status: `deferred`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_c80966a220c5`, legacy `TASK-210`, aliases `TASK-210`, local `PIPEF` / `129`
+
+Document the improved Web Settings policy selector, effective policy summary, and batch run limit behavior.
+
+Acceptance criteria:
+
+- The usage guide explains that default_policy is selected from registered policy presets.
+- The owner quickstart explains how to spot insufficient max_steps before starting a run.
+- The docs explain the difference between Run selected task and Resume Session.
+- The docs do not claim full autonomous completion when policy limits intentionally stop the session.
+- Documentation validation and generated documentation checks pass.
+
+### PIPEF-130 (TASK-211) — Preserve report file lists
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_5a0d9fe1d1c7`, legacy `TASK-211`, aliases `TASK-211`, local `PIPEF` / `130`
+
+Preserve Codex summary changed_files and generated_files when building automatic task reports.
+
+Acceptance criteria:
+
+- A parsed Codex summary containing changed_files produces a task report with the same changed files.
+- A parsed Codex summary containing generated_files produces a task report with the same generated files.
+- Duplicate file paths from summary, session, and policy evidence are stored only once.
+- Existing report builder behavior still works when the summary omits file lists.
+- Focused report builder and Codex adapter tests pass.
+
+### PIPEF-131 (TASK-212) — Refresh context before commit
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_1caf66c97cb8`, legacy `TASK-212`, aliases `TASK-212`, local `PIPEF` / `131`
+
+Refresh generated Context Pack outputs after task close and before local commit readiness is evaluated.
+
+Acceptance criteria:
+
+- Close phase runs a governed context build for the selected task before attempting local commit.
+- Generated context outputs are included as governed side effects for commit readiness file approval.
+- If context refresh fails, close records a blocked phase with a clear context refresh blocker code.
+- A stale CONTEXT_PACK.md or CONTEXT_STATUS.md no longer causes local commit readiness to fail after successful refresh.
+- Focused close phase tests pass.
+
+### PIPEF-132 (TASK-213) — Allow approved review warnings
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_236114b44fed`, legacy `TASK-213`, aliases `TASK-213`, local `PIPEF` / `132`
+
+Allow local commit when Machine Review has only policy-approved report warnings and all commit-critical checks pass.
+
+Acceptance criteria:
+
+- Machine Review FAIL still blocks local commit.
+- Machine Review WARN from codex_report_gate is allowed only when policy allows report warnings.
+- Unknown blocking Machine Review WARN still blocks local commit.
+- Required commit readiness checks still must exist and pass.
+- Focused git commit readiness tests pass.
+
+### PIPEF-133 (TASK-214) — Record commit review diagnostics
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_3f12a03cbb4e`, legacy `TASK-214`, aliases `TASK-214`, local `PIPEF` / `133`
+
+Store compact Machine Review diagnostics in local commit readiness evidence when commit is blocked.
+
+Acceptance criteria:
+
+- A local commit blocked by Machine Review includes compact non-pass check diagnostics in local_commit artifacts.
+- Diagnostics identify the exact failing check name such as context_check_generated.
+- Diagnostics include bounded stdout_summary or stderr_summary without oversized pipeline state strings.
+- Existing local commit success artifacts remain compatible.
+- Focused pipeline and Web rendering tests pass.
+
+### PIPEF-134 (TASK-215) — Prevent stale context commit regression
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_8b04a750e499`, legacy `TASK-215`, aliases `TASK-215`, local `PIPEF` / `134`
+
+Add regression coverage for close-to-commit flow with context refresh, report file lists, and policy-approved warnings.
+
+Acceptance criteria:
+
+- Tests fail against the old stale-context local commit behavior and pass after the production fixes.
+- Tests cover automatic report file lists reaching report gate and commit readiness.
+- Tests cover Machine Review WARN allowed by policy without allowing Machine Review FAIL.
+- Tests do not require network access or a live Codex process.
+- Focused regression test commands complete successfully.
