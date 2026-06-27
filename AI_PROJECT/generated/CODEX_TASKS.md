@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1518`
+Revision: `1646`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -613,7 +613,7 @@ Acceptance criteria:
 
 ### CTL-16 (TASK-216) — Add shared Web owner shell
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_1634bff488b5`, legacy `TASK-216`, aliases `TASK-216`, local `CTL` / `16`
@@ -630,7 +630,7 @@ Acceptance criteria:
 
 ### CTL-17 (TASK-217) — Add sticky current execution bar
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_e9d5369a0d0c`, legacy `TASK-217`, aliases `TASK-217`, local `CTL` / `17`
@@ -647,7 +647,7 @@ Acceptance criteria:
 
 ### CTL-18 (TASK-218) — Add compact health summary panel
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_1b30b9da5168`, legacy `TASK-218`, aliases `TASK-218`, local `CTL` / `18`
@@ -664,7 +664,7 @@ Acceptance criteria:
 
 ### CTL-19 (TASK-219) — Build owner action queue read model
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_edfef73a9c2d`, legacy `TASK-219`, aliases `TASK-219`, local `CTL` / `19`
@@ -682,7 +682,7 @@ Acceptance criteria:
 
 ### CTL-20 (TASK-220) — Render Dashboard as Owner Cockpit
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_9a5558850dfe`, legacy `TASK-220`, aliases `TASK-220`, local `CTL` / `20`
@@ -699,7 +699,7 @@ Acceptance criteria:
 
 ### CTL-21 (TASK-221) — Convert Tasks to action queue
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_af38da388a26`, legacy `TASK-221`, aliases `TASK-221`, local `CTL` / `21`
@@ -716,7 +716,7 @@ Acceptance criteria:
 
 ### CTL-22 (TASK-222) — Add task details drawer
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_712758fa575f`, legacy `TASK-222`, aliases `TASK-222`, local `CTL` / `22`
@@ -733,7 +733,7 @@ Acceptance criteria:
 
 ### CTL-23 (TASK-223) — Add safe action confirm modal
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_21ea3eac7235`, legacy `TASK-223`, aliases `TASK-223`, local `CTL` / `23`
@@ -750,7 +750,7 @@ Acceptance criteria:
 
 ### CTL-24 (TASK-224) — Redesign Pipeline as run monitor
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_8a19213a6b72`, legacy `TASK-224`, aliases `TASK-224`, local `CTL` / `24`
@@ -767,7 +767,7 @@ Acceptance criteria:
 
 ### CTL-25 (TASK-225) — Convert Reviews to decision queue
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_c55c8882bbe7`, legacy `TASK-225`, aliases `TASK-225`, local `CTL` / `25`
@@ -784,7 +784,7 @@ Acceptance criteria:
 
 ### CTL-26 (TASK-226) — Convert Evolution to change decision queue
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_42c8de7a2c80`, legacy `TASK-226`, aliases `TASK-226`, local `CTL` / `26`
@@ -801,7 +801,7 @@ Acceptance criteria:
 
 ### CTL-27 (TASK-227) — Render Settings as policy control page
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_d130cc75914f`, legacy `TASK-227`, aliases `TASK-227`, local `CTL` / `27`
@@ -818,7 +818,7 @@ Acceptance criteria:
 
 ### CTL-28 (TASK-228) — Render Doctor as health center
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_23b5dc6ce709`, legacy `TASK-228`, aliases `TASK-228`, local `CTL` / `28`
@@ -835,7 +835,7 @@ Acceptance criteria:
 
 ### CTL-29 (TASK-229) — Align inspection pages with owner shell
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_01cba33064a0`, legacy `TASK-229`, aliases `TASK-229`, local `CTL` / `29`
@@ -852,7 +852,7 @@ Acceptance criteria:
 
 ### CTL-30 (TASK-230) — Add owner UI regression tests
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_6528449aa4ee`, legacy `TASK-230`, aliases `TASK-230`, local `CTL` / `30`
@@ -869,7 +869,7 @@ Acceptance criteria:
 
 ### CTL-31 (TASK-231) — Document Owner Cockpit workflow
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `standard`
 Identity: uid `tsk_b6e2538c4606`, legacy `TASK-231`, aliases `TASK-231`, local `CTL` / `31`
@@ -883,6 +883,143 @@ Acceptance criteria:
 - Documentation does not claim non-MVP features such as command palette are implemented.
 - Documentation points users to Tasks, Pipeline, Reviews, Evolution, Doctor, Events, Generated, Commands, Actions, Commit, and Epics for deeper workflows.
 - No generated AI_PROJECT files are edited manually.
+
+### CTL-32 (TASK-232) — Remove duplicate Tasks current execution panel
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_5ba735a21a32`, legacy `TASK-232`, aliases `TASK-232`, local `CTL` / `32`
+
+Keep a single Current Execution entry point on /tasks by removing the duplicate full Current Execution panel below the filters.
+
+Acceptance criteria:
+
+- /tasks renders the Current Execution bar once and does not render the old execution-panel block.
+- The no-current-task state still shows a clear next owner action in the top bar.
+- The current-task state still shows task ref, status, next action, and safe controls in the top bar.
+- Existing POST actions still route through /actions with confirmation.
+- Web Control Center tests and project-control validations pass.
+
+### CTL-33 (TASK-233) — Build compact task queue read model
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_a35d80fa956d`, legacy `TASK-233`, aliases `TASK-233`, local `CTL` / `33`
+
+Add a compact /tasks queue read model that separates row fields from detailed task inspection data.
+
+Acceptance criteria:
+
+- The read model exposes compact task rows without embedding full task details in each row.
+- The read model exposes task detail payloads keyed by task id, ref, or stable detail key.
+- Full inventory data remains available for the inventory view.
+- Missing optional detail fields render as controlled empty values instead of exceptions.
+- Read-model tests cover at least one planned task, one blocked task, and one task with a linked Change.
+
+### CTL-34 (TASK-234) — Render Tasks details drawer
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_0cc4b4b51e35`, legacy `TASK-234`, aliases `TASK-234`, local `CTL` / `34`
+
+Replace inline task table expansion on /tasks with a right-side details drawer that shows selected task details without increasing row height.
+
+Acceptance criteria:
+
+- Opening task details no longer expands a table row into a large inline detail block.
+- The action queue table keeps compact rows with only Task, Status, Title, Next, and Primary Action or Details columns.
+- The drawer shows the selected task detail sections.
+- A fallback path exists for viewing details when JavaScript is unavailable.
+- Responsive layout remains usable on narrow screens.
+
+### CTL-35 (TASK-235) — Fix Tasks action queue grouping
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_e07bf8c7ec5b`, legacy `TASK-235`, aliases `TASK-235`, local `CTL` / `35`
+
+Classify /tasks Action Queue groups from available owner actions so runnable tasks do not fall into Other Active.
+
+Acceptance criteria:
+
+- A task with available Prepare for Codex or Run appears in Ready To Run, not Other Active.
+- A task with available Approve Change appears in Needs Decision.
+- An in_progress or selected current task appears in Current.
+- A blocked task appears in Blocked.
+- Deferred tasks are hidden from the primary queue by default and remain discoverable through explicit filters.
+- Queue classification tests cover available actions rather than only task status.
+
+### CTL-36 (TASK-236) — Add one primary task row action
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_52687710450e`, legacy `TASK-236`, aliases `TASK-236`, local `CTL` / `36`
+
+Render one primary owner action per /tasks row and move unavailable-action explanations into the task details drawer.
+
+Acceptance criteria:
+
+- Each /tasks action queue row has at most one primary action button.
+- Approve Change rows show an Approve or Open Change primary action instead of only generic navigation when direct approval is available.
+- Ready To Run rows show Run, Prepare, or the existing safe execution action.
+- Unavailable actions are not repeated inline in the table row.
+- Mutating row actions still require confirmation and submit through the existing governed /actions path.
+
+### CTL-37 (TASK-237) — Move policy summary to drawer and modal
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_5b3da4595c6d`, legacy `TASK-237`, aliases `TASK-237`, local `CTL` / `37`
+
+Stop repeating Effective Policy summaries inside every task row and show policy details only in the drawer and confirmation modal.
+
+Acceptance criteria:
+
+- The /tasks action queue table does not render an Effective Run Policy block inside every row.
+- The selected task drawer can show the effective policy summary.
+- The confirmation modal shows policy context for mutating run or prepare actions when available.
+- Existing policy summary content remains accurate.
+- Tests verify policy summary placement.
+
+### CTL-38 (TASK-238) — Consolidate task diagnostics in drawer
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_dfeb243913f6`, legacy `TASK-238`, aliases `TASK-238`, local `CTL` / `38`
+
+Move Generated Files, Health, and Recent Events out of repeated task rows and into collapsed sections of the selected task drawer.
+
+Acceptance criteria:
+
+- Generated Files are not repeated inside every task table row.
+- Health is not repeated as a full table for every task row.
+- Recent Events are not repeated as a full list for every task row.
+- The selected task drawer still provides access to generated files, health signals, and recent events.
+- The compact global Project Health panel remains visible once on the page.
+
+### CTL-39 (TASK-239) — Replace Tasks metrics with action counts
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_20a0c26c5bdd`, legacy `TASK-239`, aliases `TASK-239`, local `CTL` / `39`
+
+Replace non-actionable /tasks metrics with owner-actionable counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues.
+
+Acceptance criteria:
+
+- The default /tasks metrics show Needs Decision, Ready To Run, Current, Blocked, and Health Issues.
+- The default /tasks metrics do not emphasize done count as a primary owner-action metric.
+- Metric counts match the rendered action queue groups.
+- Metrics remain usable when there is no current task.
+- Tests cover the action-count metrics.
 
 ## Epic `EPIC-006`
 

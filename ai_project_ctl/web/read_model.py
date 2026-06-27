@@ -90,10 +90,55 @@ EXECUTABLE_QUEUE_STATUSES = (
     "in_review",
     "changes_requested",
 )
+TASK_QUEUE_EXCLUDED_STATUSES = {"done", "archived", "deferred"}
+TASK_QUEUE_ROW_FIELDS = (
+    "task_ref",
+    "status",
+    "title",
+    "next_label",
+    "primary_action",
+    "detail_key",
+)
 TASK_PREPARE_STATUSES = {"planned", "ready", "changes_requested"}
 TASK_DEPENDENCY_SATISFIED_STATUSES = {"done"}
 TASK_APPROVED_CHANGE_STATUSES = {"approved", "in_review", "accepted"}
 CHANGE_CLOSED_STATUSES = {"accepted", "rejected", "archived"}
+OWNER_ACTION_CATEGORY_KEYS = (
+    "needs_decision",
+    "current",
+    "ready_to_run",
+    "blocked",
+    "watch_only",
+)
+OWNER_ACTION_DECISION_LABELS = {
+    "Approve Change",
+    "Approve & Done",
+    "Accept Change",
+    "Request Changes",
+}
+OWNER_ACTION_DECISION_ACTIONS = {
+    "evolution.approve_change",
+    "evolution.accept_change",
+    "task.close_reviewed",
+    "task.request_changes",
+}
+OWNER_ACTION_RUN_LABELS = {
+    "Prepare for Codex",
+    "Run",
+    "Run Selected Task",
+    "Run selected task",
+    "Run next pipeline step",
+    "Run until blocker",
+}
+OWNER_ACTION_RUN_ACTIONS = {
+    "task.prepare_for_codex",
+    "ui.run_selected_task",
+    "pipeline.run_next",
+    "pipeline.run_until_blocker",
+}
+OWNER_ACTION_RUN_ACTION_PREFIXES = ("ui.run_", "pipeline.run_")
+OWNER_ACTION_PIPELINE_CURRENT_STATUSES = {"active", "in_progress", "running"}
+OWNER_ACTION_PIPELINE_BLOCKED_STATUSES = {"blocked", "failed", "cancelled"}
 
 
 class WebControlError(CommandError):
@@ -298,13 +343,21 @@ class ReadOnlyProjectModel:
         )
         events = self.audit_events(last=5) if include_events else []
         commands = command_list(include_planned=True)
+        pipeline = self.pipeline_dashboard(**dict(pipeline_options or {}))
         return {
             "root": str(self.root),
             "current_task": current_task,
             "tasks": tasks,
             "task_reports": self.task_reports(),
             "task_counts": dict(Counter(task.get("status", "unknown") for task in tasks)),
+            "task_queue": task_queue_read_model(tasks, events=events),
             "queue": self.executable_queue(tasks),
+            "owner_action_queue": owner_action_queue(
+                tasks,
+                changes,
+                current_task=current_task,
+                pipeline=pipeline,
+            ),
             "initiatives": initiatives,
             "epics": epics,
             "epic_counts": dict(Counter(epic.get("status", "unknown") for epic in epics)),
@@ -316,7 +369,7 @@ class ReadOnlyProjectModel:
             "health": health,
             "execution": execution,
             "execution_context": execution_context,
-            "pipeline": self.pipeline_dashboard(**dict(pipeline_options or {})),
+            "pipeline": pipeline,
             "ui_settings": self.ui_settings(),
             "generated": generated,
             "events": events,
@@ -1661,6 +1714,67 @@ def change_hints(
     return enriched
 
 
+def owner_action_queue(
+    tasks: Sequence[Mapping[str, Any]],
+    changes: Sequence[Mapping[str, Any]],
+    *,
+    current_task: Mapping[str, Any],
+    pipeline: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Return a read-only owner-facing action queue derived from existing hints."""
+
+    categories: dict[str, list[dict[str, Any]]] = {
+        key: [] for key in OWNER_ACTION_CATEGORY_KEYS
+    }
+    for task in tasks:
+        category, item = _task_owner_action_item(task, current_task=current_task)
+        if category:
+            categories[category].append(item)
+
+    for change in changes:
+        category, item = _change_owner_action_item(change)
+        if category:
+            categories[category].append(item)
+
+    pipeline_category, pipeline_item = _pipeline_owner_action_item(pipeline)
+    if pipeline_category:
+        categories[pipeline_category].append(pipeline_item)
+
+    return {
+        **categories,
+        "counts": {key: len(categories[key]) for key in OWNER_ACTION_CATEGORY_KEYS},
+    }
+
+
+def task_queue_read_model(
+    tasks: Sequence[Mapping[str, Any]],
+    *,
+    events: Sequence[Mapping[str, Any]] = (),
+) -> dict[str, Any]:
+    """Return compact task queue rows with separate task inspection payloads."""
+
+    rows = []
+    details_by_key: dict[str, dict[str, Any]] = {}
+    detail_keys: dict[str, str] = {}
+    for task in tasks:
+        status = str(task.get("status") or "unknown")
+        if status in TASK_QUEUE_EXCLUDED_STATUSES:
+            continue
+        detail_key = _task_detail_key(task)
+        rows.append(_task_queue_row(task, detail_key=detail_key))
+        detail = _task_detail_payload(task, detail_key=detail_key, events=events)
+        for key in _task_detail_lookup_keys(task, detail_key):
+            details_by_key[key] = detail
+            detail_keys[key] = detail_key
+
+    return {
+        "row_fields": list(TASK_QUEUE_ROW_FIELDS),
+        "rows": rows,
+        "details_by_key": details_by_key,
+        "detail_keys": detail_keys,
+    }
+
+
 def epic_hints(
     epics: Sequence[Mapping[str, Any]],
     tasks: Sequence[Mapping[str, Any]],
@@ -1988,6 +2102,499 @@ def _action_hint(label: str, action: str, available: bool, reason: str) -> dict[
         "available": bool(available),
         "reason": reason,
     }
+
+
+def _task_queue_row(task: Mapping[str, Any], *, detail_key: str) -> dict[str, str]:
+    action = _primary_available_action(_mapping(task.get("pipeline_hints")))
+    next_label = _task_queue_next_label(task, action)
+    return {
+        "task_ref": _task_display_ref(task),
+        "status": str(task.get("status") or "unknown"),
+        "title": str(task.get("title") or ""),
+        "next_label": next_label,
+        "primary_action": str(action.get("action") or ""),
+        "detail_key": detail_key,
+    }
+
+
+def _task_queue_next_label(
+    task: Mapping[str, Any],
+    action: Mapping[str, Any],
+) -> str:
+    hints = _mapping(task.get("pipeline_hints"))
+    next_action = _first_string(hints.get("next_actions"))
+    if next_action:
+        return next_action
+    action_label = str(action.get("label") or "")
+    if action_label:
+        return action_label
+    status = str(task.get("status") or "unknown")
+    if status == "blocked" or _task_has_structural_blocker(task, hints):
+        return "Blocked"
+    if status == "planned":
+        return "Planned"
+    if status == "in_progress":
+        return "Current"
+    if status == "in_review":
+        return "Review"
+    return ""
+
+
+def _task_detail_payload(
+    task: Mapping[str, Any],
+    *,
+    detail_key: str,
+    events: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    hints = _mapping(task.get("pipeline_hints"))
+    latest_report = _mapping(task.get("latest_report"))
+    linked_changes = [
+        dict(change)
+        for change in hints.get("linked_changes", [])
+        if isinstance(change, Mapping)
+    ]
+    return {
+        "detail_key": detail_key,
+        "id": str(task.get("id") or ""),
+        "ref": _task_display_ref(task),
+        "summary": str(task.get("summary") or ""),
+        "scope": _string_list(task.get("scope")),
+        "acceptance_criteria": _string_list(task.get("acceptance_criteria")),
+        "blockers": _task_detail_blockers(task, hints, latest_report),
+        "actions": _task_detail_actions(hints),
+        "linked_change": linked_changes[0] if linked_changes else {},
+        "linked_changes": linked_changes,
+        "policy": _task_detail_policy(task),
+        "generated_files": _task_detail_generated_files(task, latest_report),
+        "health": _task_detail_health(task, hints, latest_report),
+        "recent_events": _task_recent_events(task, events),
+    }
+
+
+def _task_detail_policy(task: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "verification_mode": str(task.get("verification_mode") or ""),
+        "verification_budget": str(task.get("verification_budget") or ""),
+        "allowed_slow_checks": bool(task.get("allowed_slow_checks"))
+        if isinstance(task.get("allowed_slow_checks"), bool)
+        else False,
+        "runtime_tracking": str(task.get("runtime_tracking") or ""),
+        "owner_approved": bool(task.get("owner_approved"))
+        if isinstance(task.get("owner_approved"), bool)
+        else False,
+        "allowed_files": _string_list(task.get("allowed_files")),
+        "out_of_scope": _string_list(task.get("out_of_scope")),
+    }
+
+
+def _task_detail_generated_files(
+    task: Mapping[str, Any],
+    latest_report: Mapping[str, Any],
+) -> list[str]:
+    return _unique_strings(
+        _string_list(task.get("generated_files")),
+        _string_list(latest_report.get("generated_files")),
+    )
+
+
+def _task_detail_health(
+    task: Mapping[str, Any],
+    hints: Mapping[str, Any],
+    latest_report: Mapping[str, Any],
+) -> dict[str, Any]:
+    blockers = _task_detail_blockers(task, hints, latest_report)
+    context = _mapping(hints.get("context"))
+    dependencies = _mapping(hints.get("dependencies"))
+    return {
+        "status": "blocked" if blockers else "ok",
+        "has_blockers": bool(blockers),
+        "dependency_blocked": bool(dependencies.get("blocked")),
+        "context_stale": bool(context.get("stale")),
+        "next_actions": _string_list(hints.get("next_actions")),
+        "latest_report": {
+            "id": str(latest_report.get("id") or ""),
+            "submitted_at": str(latest_report.get("submitted_at") or ""),
+            "has_blockers": bool(latest_report.get("has_blockers")),
+            "blocking_failures": int(latest_report.get("blocking_failures") or 0),
+            "check_counts": dict(_mapping(latest_report.get("check_counts"))),
+        },
+    }
+
+
+def _task_detail_blockers(
+    task: Mapping[str, Any],
+    hints: Mapping[str, Any],
+    latest_report: Mapping[str, Any],
+) -> list[str]:
+    dependencies = _mapping(hints.get("dependencies"))
+    values = _string_values(
+        task.get("blocked_reason"),
+        task.get("blocker_reason"),
+        task.get("reason"),
+        task.get("blockers"),
+        task.get("blocked_reasons"),
+        latest_report.get("blockers"),
+        dependencies.get("blocking"),
+    )
+    if str(task.get("status") or "") == "blocked" and not values:
+        values.append("task status is blocked")
+    return _unique_strings(values)
+
+
+def _task_detail_actions(hints: Mapping[str, Any]) -> list[dict[str, Any]]:
+    actions = []
+    for action in hints.get("actions", []):
+        if not isinstance(action, Mapping):
+            continue
+        actions.append(
+            {
+                "label": str(action.get("label") or action.get("action") or ""),
+                "action": str(action.get("action") or ""),
+                "available": bool(action.get("available")),
+                "reason": str(action.get("reason") or ""),
+            }
+        )
+    return actions
+
+
+def _task_recent_events(
+    task: Mapping[str, Any],
+    events: Sequence[Mapping[str, Any]],
+) -> list[dict[str, str]]:
+    refs = _task_refs(task)
+    if not refs:
+        return []
+    recent = []
+    for event_group in events:
+        domain = str(event_group.get("domain") or "")
+        for line in _string_list(event_group.get("lines")):
+            if any(ref in line for ref in refs):
+                recent.append(
+                    {
+                        "domain": domain,
+                        "line": line[:240],
+                    }
+                )
+    return recent[-5:]
+
+
+def _task_detail_key(task: Mapping[str, Any]) -> str:
+    ref = str(task.get("id") or task.get("ref") or task.get("legacy_id") or "")
+    if not ref:
+        ref = _task_display_ref(task)
+    safe = re.sub(r"[^A-Za-z0-9_.:-]+", "-", ref.strip()).strip("-")
+    return "task:{}".format(safe or "unknown")
+
+
+def _task_detail_lookup_keys(
+    task: Mapping[str, Any],
+    detail_key: str,
+) -> list[str]:
+    return _unique_strings([detail_key], sorted(_task_refs(task)))
+
+
+def _task_owner_action_item(
+    task: Mapping[str, Any],
+    *,
+    current_task: Mapping[str, Any],
+) -> tuple[str, dict[str, Any]]:
+    status = str(task.get("status") or "unknown")
+    hints = _mapping(task.get("pipeline_hints"))
+    action = _primary_available_action(hints)
+    action_label = str(action.get("label") or "")
+    is_current = _is_same_task(task, current_task)
+    blocker_reason = _task_owner_blocker_reason(task, hints)
+
+    if status == "deferred":
+        return "", {}
+    if _task_has_structural_blocker(task, hints):
+        category = "blocked"
+    elif status == "in_progress" or is_current:
+        category = "current"
+    elif _owner_action_is_decision(action):
+        category = "needs_decision"
+    elif _owner_action_is_run(action):
+        category = "ready_to_run"
+    elif action_label:
+        category = "watch_only"
+    else:
+        return "", {}
+
+    return category, _owner_action_item(
+        kind="task",
+        item_id=str(task.get("id") or ""),
+        title=str(task.get("title") or ""),
+        status=status,
+        category=category,
+        primary_next_action=action_label,
+        action=str(action.get("action") or ""),
+        blocker_reason=blocker_reason if category == "blocked" else "",
+        ref=_task_display_ref(task),
+        updated_at=str(task.get("updated_at") or ""),
+        extra={
+            "epic_id": str(task.get("epic_id") or ""),
+            "current": is_current,
+        },
+    )
+
+
+def _change_owner_action_item(change: Mapping[str, Any]) -> tuple[str, dict[str, Any]]:
+    status = str(change.get("status") or "unknown")
+    hints = _mapping(change.get("pipeline_hints"))
+    action = _primary_available_action(hints)
+    action_label = str(action.get("label") or "")
+    has_blocker = _change_has_structural_blocker(change, hints)
+    blocker_reason = _change_owner_blocker_reason(change, hints)
+
+    if status == CHANGE_APPROVE_REQUIRED_STATUS or _owner_action_is_decision(action):
+        category = "needs_decision"
+    elif has_blocker:
+        category = "blocked"
+    elif action_label:
+        category = "watch_only"
+    else:
+        return "", {}
+
+    return category, _owner_action_item(
+        kind="change",
+        item_id=str(change.get("id") or ""),
+        title=str(change.get("title") or ""),
+        status=status,
+        category=category,
+        primary_next_action=action_label,
+        action=str(action.get("action") or ""),
+        blocker_reason=blocker_reason if category == "blocked" else "",
+        ref=str(change.get("id") or ""),
+        updated_at=str(change.get("updated_at") or ""),
+        extra={
+            "change_type": str(change.get("change_type") or ""),
+            "linked_tasks": _string_list(change.get("linked_tasks")),
+        },
+    )
+
+
+def _pipeline_owner_action_item(
+    pipeline: Mapping[str, Any],
+) -> tuple[str, dict[str, Any]]:
+    current_session = _mapping(pipeline.get("current_session"))
+    queue_error = _mapping(pipeline.get("queue_error"))
+    if queue_error:
+        return "blocked", _owner_action_item(
+            kind="pipeline",
+            item_id="queue_preview",
+            title="Pipeline queue preview",
+            status="blocked",
+            category="blocked",
+            primary_next_action="Review Pipeline Queue",
+            action="",
+            blocker_reason=_compact_owner_reason(
+                str(queue_error.get("message") or queue_error.get("code") or ""),
+                fallback="pipeline queue preview is blocked",
+            ),
+            ref="pipeline",
+            updated_at="",
+        )
+
+    if not current_session:
+        return "", {}
+
+    status = str(current_session.get("status") or "unknown")
+    next_action = str(current_session.get("next_action") or "")
+    blocker_reason = _compact_owner_reason(
+        str(
+            current_session.get("stop_reason")
+            or current_session.get("blocked_by")
+            or next_action
+            or ""
+        ),
+        fallback="pipeline session status is {}".format(status),
+    )
+
+    if status in OWNER_ACTION_PIPELINE_CURRENT_STATUSES:
+        category = "current"
+        label = next_action or "Monitor Pipeline"
+    elif status in OWNER_ACTION_PIPELINE_BLOCKED_STATUSES or blocker_reason:
+        category = "blocked"
+        label = next_action or "Review Pipeline Session"
+    else:
+        category = "watch_only"
+        label = next_action or "Review Pipeline Session"
+
+    return category, _owner_action_item(
+        kind="pipeline_session",
+        item_id=str(current_session.get("id") or ""),
+        title="Pipeline session",
+        status=status,
+        category=category,
+        primary_next_action=label,
+        action="",
+        blocker_reason=blocker_reason if category == "blocked" else "",
+        ref=str(current_session.get("id") or "pipeline"),
+        updated_at=str(current_session.get("updated_at") or ""),
+        extra={
+            "current_task_id": str(current_session.get("current_task_id") or ""),
+            "current_task_ref": str(current_session.get("current_task_ref") or ""),
+        },
+    )
+
+
+def _owner_action_item(
+    *,
+    kind: str,
+    item_id: str,
+    title: str,
+    status: str,
+    category: str,
+    primary_next_action: str,
+    action: str,
+    blocker_reason: str,
+    ref: str,
+    updated_at: str,
+    extra: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    item = {
+        "kind": kind,
+        "id": item_id,
+        "ref": ref,
+        "title": title,
+        "status": status,
+        "category": category,
+        "primary_next_action": primary_next_action,
+        "next_action": primary_next_action,
+        "action": action,
+        "blocker_reason": blocker_reason,
+        "updated_at": updated_at,
+    }
+    if extra:
+        item.update(dict(extra))
+    return item
+
+
+def _primary_available_action(hints: Mapping[str, Any]) -> dict[str, Any]:
+    actions = [
+        dict(action)
+        for action in hints.get("actions", [])
+        if isinstance(action, Mapping) and bool(action.get("available"))
+    ]
+    next_actions = _string_list(hints.get("next_actions"))
+    for label in next_actions:
+        for action in actions:
+            if str(action.get("label") or "") == label:
+                return action
+    return actions[0] if actions else {}
+
+
+def _owner_action_is_decision(action: Mapping[str, Any]) -> bool:
+    return _owner_action_matches(
+        action,
+        labels=OWNER_ACTION_DECISION_LABELS,
+        action_ids=OWNER_ACTION_DECISION_ACTIONS,
+    )
+
+
+def _owner_action_is_run(action: Mapping[str, Any]) -> bool:
+    return _owner_action_matches(
+        action,
+        labels=OWNER_ACTION_RUN_LABELS,
+        action_ids=OWNER_ACTION_RUN_ACTIONS,
+        action_prefixes=OWNER_ACTION_RUN_ACTION_PREFIXES,
+    )
+
+
+def _owner_action_matches(
+    action: Mapping[str, Any],
+    *,
+    labels: set[str],
+    action_ids: set[str],
+    action_prefixes: Sequence[str] = (),
+) -> bool:
+    label = str(action.get("label") or "")
+    action_id = str(action.get("action") or "")
+    return (
+        label in labels
+        or action_id in action_ids
+        or any(action_id.startswith(prefix) for prefix in action_prefixes)
+    )
+
+
+def _task_has_structural_blocker(
+    task: Mapping[str, Any],
+    hints: Mapping[str, Any],
+) -> bool:
+    if str(task.get("status") or "") == "blocked":
+        return True
+    if _first_string(task.get("blockers")) or _first_string(task.get("blocked_reasons")):
+        return True
+    latest_report = _mapping(task.get("latest_report"))
+    if _first_string(latest_report.get("blockers")):
+        return True
+    dependencies = _mapping(hints.get("dependencies"))
+    if bool(dependencies.get("blocked")):
+        return True
+    return False
+
+
+def _change_has_structural_blocker(
+    change: Mapping[str, Any],
+    hints: Mapping[str, Any],
+) -> bool:
+    if str(change.get("status") or "") == "blocked":
+        return True
+    if _first_string(change.get("blockers")) or _first_string(change.get("blocked_reasons")):
+        return True
+    return (
+        str(change.get("status") or "") in CHANGE_ACCEPTABLE_STATUSES
+        and bool(_string_list(hints.get("linked_task_blockers")))
+    )
+
+
+def _task_owner_blocker_reason(
+    task: Mapping[str, Any],
+    hints: Mapping[str, Any],
+) -> str:
+    dependencies = _mapping(hints.get("dependencies"))
+    context = _mapping(hints.get("context"))
+    latest_report = _mapping(task.get("latest_report"))
+    return _compact_owner_reason(
+        str(task.get("blocked_reason") or ""),
+        str(task.get("blocker_reason") or ""),
+        str(task.get("reason") or ""),
+        _first_string(task.get("blockers")),
+        _first_string(task.get("blocked_reasons")),
+        _first_string(latest_report.get("blockers")),
+        _first_string(dependencies.get("blocking")),
+        str(context.get("reason") or ""),
+        fallback="task status is {}".format(task.get("status") or "unknown"),
+    )
+
+
+def _change_owner_blocker_reason(
+    change: Mapping[str, Any],
+    hints: Mapping[str, Any],
+) -> str:
+    return _compact_owner_reason(
+        str(change.get("blocked_reason") or ""),
+        str(change.get("blocker_reason") or ""),
+        _first_string(change.get("blockers")),
+        _first_string(change.get("blocked_reasons")),
+        _first_string(hints.get("linked_task_blockers")),
+        fallback="change status is {}".format(change.get("status") or "unknown"),
+    )
+
+
+def _first_string(value: Any) -> str:
+    items = _string_list(value)
+    return items[0] if items else ""
+
+
+def _compact_owner_reason(*values: str, fallback: str = "") -> str:
+    for value in values:
+        text = re.sub(r"\s+", " ", str(value or "")).strip()
+        if not text:
+            continue
+        text = re.sub(r"^[^:]{1,80} unavailable:\s*", "", text)
+        return text[:177] + "..." if len(text) > 180 else text
+    return fallback
 
 
 def _blocking_dependencies(
@@ -2650,6 +3257,30 @@ def _string_list(value: Any) -> list[str]:
     if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
         return []
     return [str(item) for item in value if str(item).strip()]
+
+
+def _string_values(*values: Any) -> list[str]:
+    items = []
+    for value in values:
+        if isinstance(value, str):
+            text = value.strip()
+            if text:
+                items.append(text)
+            continue
+        items.extend(_string_list(value))
+    return items
+
+
+def _unique_strings(*groups: Sequence[str]) -> list[str]:
+    seen = set()
+    unique = []
+    for group in groups:
+        for item in group:
+            text = str(item).strip()
+            if text and text not in seen:
+                seen.add(text)
+                unique.append(text)
+    return unique
 
 
 def _mapping(value: Any) -> Mapping[str, Any]:

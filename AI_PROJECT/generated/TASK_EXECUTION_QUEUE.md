@@ -3,26 +3,10 @@
 
 # Task Execution Queue
 
-Revision: `1518`
+Revision: `1646`
 
 ## Executable Now
 
-- `CTL-16 (TASK-216)` [planned] `EPIC-005` priority `1` — Add shared Web owner shell
-- `CTL-17 (TASK-217)` [planned] `EPIC-005` priority `1` — Add sticky current execution bar
-- `CTL-18 (TASK-218)` [planned] `EPIC-005` priority `1` — Add compact health summary panel
-- `CTL-19 (TASK-219)` [planned] `EPIC-005` priority `1` — Build owner action queue read model
-- `CTL-20 (TASK-220)` [planned] `EPIC-005` priority `1` — Render Dashboard as Owner Cockpit
-- `CTL-21 (TASK-221)` [planned] `EPIC-005` priority `1` — Convert Tasks to action queue
-- `CTL-22 (TASK-222)` [planned] `EPIC-005` priority `1` — Add task details drawer
-- `CTL-23 (TASK-223)` [planned] `EPIC-005` priority `1` — Add safe action confirm modal
-- `CTL-24 (TASK-224)` [planned] `EPIC-005` priority `1` — Redesign Pipeline as run monitor
-- `CTL-25 (TASK-225)` [planned] `EPIC-005` priority `1` — Convert Reviews to decision queue
-- `CTL-26 (TASK-226)` [planned] `EPIC-005` priority `1` — Convert Evolution to change decision queue
-- `CTL-27 (TASK-227)` [planned] `EPIC-005` priority `1` — Render Settings as policy control page
-- `CTL-28 (TASK-228)` [planned] `EPIC-005` priority `1` — Render Doctor as health center
-- `CTL-29 (TASK-229)` [planned] `EPIC-005` priority `1` — Align inspection pages with owner shell
-- `CTL-30 (TASK-230)` [planned] `EPIC-005` priority `1` — Add owner UI regression tests
-- `CTL-31 (TASK-231)` [planned] `EPIC-005` priority `1` — Document Owner Cockpit workflow
 - `TASK-011` [planned] `EPIC-003` priority `1` — P3 Add optional vector backend for contextctl
 - `PIPE-19 (TASK-070)` [planned] `EPIC-007` priority `1` — PIPE-19 Add Dynamic Policy Editor To Web Pipeline Dashboard
 - `PIPE-20 (TASK-071)` [planned] `EPIC-007` priority `1` — PIPE-20 Document Dynamic Pipeline Policy Presets
@@ -77,6 +61,54 @@ _No tasks waiting only on dependencies._
 - `CTL-14 (TASK-159)` [done] `EPIC-005` priority `1` — Add batch UI settings apply action
   - `status_not_executable`: status is done
 - `CTL-15 (TASK-160)` [done] `EPIC-005` priority `1` — Render unified Web Settings panel
+  - `status_not_executable`: status is done
+- `CTL-16 (TASK-216)` [done] `EPIC-005` priority `1` — Add shared Web owner shell
+  - `status_not_executable`: status is done
+- `CTL-17 (TASK-217)` [done] `EPIC-005` priority `1` — Add sticky current execution bar
+  - `status_not_executable`: status is done
+- `CTL-18 (TASK-218)` [done] `EPIC-005` priority `1` — Add compact health summary panel
+  - `status_not_executable`: status is done
+- `CTL-19 (TASK-219)` [done] `EPIC-005` priority `1` — Build owner action queue read model
+  - `status_not_executable`: status is done
+- `CTL-20 (TASK-220)` [done] `EPIC-005` priority `1` — Render Dashboard as Owner Cockpit
+  - `status_not_executable`: status is done
+- `CTL-21 (TASK-221)` [done] `EPIC-005` priority `1` — Convert Tasks to action queue
+  - `status_not_executable`: status is done
+- `CTL-22 (TASK-222)` [done] `EPIC-005` priority `1` — Add task details drawer
+  - `status_not_executable`: status is done
+- `CTL-23 (TASK-223)` [done] `EPIC-005` priority `1` — Add safe action confirm modal
+  - `status_not_executable`: status is done
+- `CTL-24 (TASK-224)` [done] `EPIC-005` priority `1` — Redesign Pipeline as run monitor
+  - `status_not_executable`: status is done
+- `CTL-25 (TASK-225)` [done] `EPIC-005` priority `1` — Convert Reviews to decision queue
+  - `status_not_executable`: status is done
+- `CTL-26 (TASK-226)` [done] `EPIC-005` priority `1` — Convert Evolution to change decision queue
+  - `status_not_executable`: status is done
+- `CTL-27 (TASK-227)` [done] `EPIC-005` priority `1` — Render Settings as policy control page
+  - `status_not_executable`: status is done
+- `CTL-28 (TASK-228)` [done] `EPIC-005` priority `1` — Render Doctor as health center
+  - `status_not_executable`: status is done
+- `CTL-29 (TASK-229)` [done] `EPIC-005` priority `1` — Align inspection pages with owner shell
+  - `status_not_executable`: status is done
+- `CTL-30 (TASK-230)` [done] `EPIC-005` priority `1` — Add owner UI regression tests
+  - `status_not_executable`: status is done
+- `CTL-31 (TASK-231)` [done] `EPIC-005` priority `1` — Document Owner Cockpit workflow
+  - `status_not_executable`: status is done
+- `CTL-32 (TASK-232)` [done] `EPIC-005` priority `1` — Remove duplicate Tasks current execution panel
+  - `status_not_executable`: status is done
+- `CTL-33 (TASK-233)` [done] `EPIC-005` priority `1` — Build compact task queue read model
+  - `status_not_executable`: status is done
+- `CTL-34 (TASK-234)` [done] `EPIC-005` priority `1` — Render Tasks details drawer
+  - `status_not_executable`: status is done
+- `CTL-35 (TASK-235)` [done] `EPIC-005` priority `1` — Fix Tasks action queue grouping
+  - `status_not_executable`: status is done
+- `CTL-36 (TASK-236)` [done] `EPIC-005` priority `1` — Add one primary task row action
+  - `status_not_executable`: status is done
+- `CTL-37 (TASK-237)` [done] `EPIC-005` priority `1` — Move policy summary to drawer and modal
+  - `status_not_executable`: status is done
+- `CTL-38 (TASK-238)` [done] `EPIC-005` priority `1` — Consolidate task diagnostics in drawer
+  - `status_not_executable`: status is done
+- `CTL-39 (TASK-239)` [done] `EPIC-005` priority `1` — Replace Tasks metrics with action counts
   - `status_not_executable`: status is done
 - `TASK-002` [done] `EPIC-002` priority `1` — Document Skills Layer Roadmap
   - `status_not_executable`: status is done

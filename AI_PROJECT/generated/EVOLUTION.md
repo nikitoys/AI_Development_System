@@ -3,15 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `2304`
-Changes: `74`
+Revision: `2414`
+Changes: `78`
 
 ## Summary
 
-- `accepted`: 52
-- `approved`: 16
-- `in_review`: 1
-- `ready`: 5
+- `accepted`: 57
+- `approved`: 21
 
 ## Changes
 
@@ -3484,7 +3482,7 @@ Linked tasks:
 
 ### CHG-055 — PIPE-19 Add Dynamic Policy Editor To Web Pipeline Dashboard
 
-Status: `ready`  
+Status: `approved`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -3501,6 +3499,9 @@ Implement the bounded task scope: Add a policy editor panel to the Pipeline page
 Rationale:
 
 Improve the Pipeline page so the Human Owner can select a policy, immediately see its preview, edit policy fields, save custom presets, and delete custom presets without manual JSON editing.
+
+Approved by: `human_owner` at `2026-06-27T18:02:06Z`  
+Approval notes: Approve  
 
 Affected files:
 
@@ -3546,7 +3547,7 @@ Linked tasks:
 
 ### CHG-056 — PIPE-20 Document Dynamic Pipeline Policy Presets
 
-Status: `ready`  
+Status: `approved`  
 Type: `docs`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -3563,6 +3564,9 @@ Implement the bounded task scope: Update pipeline runner SOP with custom preset 
 Rationale:
 
 Document how to use built-in and custom pipeline policy presets from CLI and Web Control Center, including save/delete rules, validation, safety boundaries, and immediate preview behavior.
+
+Approved by: `human_owner` at `2026-06-27T18:02:13Z`  
+Approval notes: Approve  
 
 Affected files:
 
@@ -3604,7 +3608,7 @@ Linked tasks:
 
 ### CHG-057 — PIPE-21 Fix Pipeline Queue Epic Filter Behavior
 
-Status: `ready`  
+Status: `approved`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -3621,6 +3625,9 @@ Implement the bounded task scope: Inspect ai_project_ctl/pipeline/queue.py filte
 Rationale:
 
 Fix the Pipeline Queue Preview behavior where selecting an Epic still renders tasks from other Epics as skipped rows with epic_filter_mismatch. The owner-facing queue preview should focus on the selected Epic by default, while still allowing diagnostic visibility when explicitly requested.
+
+Approved by: `human_owner` at `2026-06-27T18:02:20Z`  
+Approval notes: Approve  
 
 Affected files:
 
@@ -3674,7 +3681,7 @@ Linked tasks:
 
 ### CHG-058 — PIPE-24 Add Owner-Approved Session Changes Policy Checkbox
 
-Status: `ready`  
+Status: `approved`  
 Type: `tooling`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -3691,6 +3698,9 @@ Implement the bounded task scope: Add a new safe policy field distinct from evol
 Rationale:
 
 Add a safe owner-approved policy mode for approving required Evolution Changes across the selected pipeline session. This is not autonomous pipeline self-approval: the Human Owner must explicitly select the policy checkbox, confirm the session, and provide an approval note. The pipeline may then approve only the Changes required by that selected session queue.
+
+Approved by: `human_owner` at `2026-06-27T18:02:28Z`  
+Approval notes: Approve  
 
 Affected files:
 
@@ -4032,7 +4042,7 @@ Linked tasks:
 
 ### CHG-062 — Compact codexctl execute prompt renderer
 
-Status: `in_review`  
+Status: `accepted`  
 Type: `prompt`  
 Priority: `1`  
 Backward compatibility: `compatible`  
@@ -4052,6 +4062,9 @@ The attached Codex execution request asks for compact runtime prompt generation 
 
 Approved by: `human_owner` at `2026-06-20T15:44:09Z`  
 Approval notes: Approved  
+
+Accepted by: `human_owner` at `2026-06-27T18:01:19Z`  
+Acceptance notes: Accept  
 
 Affected files:
 
@@ -4152,7 +4165,7 @@ Linked tasks:
 
 ### CHG-065 — PIPE-051 Document phase-based Web Pipeline display behavior
 
-Status: `ready`  
+Status: `approved`  
 Type: `docs`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -4169,6 +4182,9 @@ Implement the bounded task scope: Document that Web Pipeline UI uses phase_histo
 Rationale:
 
 Owner-facing documentation should explain phase_history display, legacy fallback and UI timeout configuration.
+
+Approved by: `human_owner` at `2026-06-27T18:02:37Z`  
+Approval notes: Approve  
 
 Affected files:
 
@@ -4688,3 +4704,235 @@ Impact:
 Linked tasks:
 
 - TASK-124
+
+### CHG-075 — Build compact task queue read model
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task CTL-33 requires an explicit Evolution Change Proposal before implementation: Add a compact /tasks queue read model that separates row fields from detailed task inspection data.
+
+Proposal:
+
+Implement the bounded task scope: Add compact row fields for task ref, status, title, next label, primary action, and detail key.; Add a separate detail payload for summary, scope, acceptance criteria, blockers, linked change, policy, generated files, health, and recent events.; Keep existing full inventory data available for the inventory view.; Add regression coverage for compact row and detail payload generation.
+
+Rationale:
+
+The renderer needs row-level data for the compact table and a separate detail payload for the drawer.
+
+Approved by: `human_owner` at `2026-06-27T17:59:41Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-106)  
+
+Accepted by: `human_owner` at `2026-06-27T18:08:24Z`  
+Acceptance notes: Approve; linked Change accepted after task TASK-233 close succeeded.  
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- tests/test_web_control_center_read_model.py
+
+Risks:
+
+- Boundary risk: Do not change task state transitions.
+- Boundary risk: Do not change pipeline execution policy.
+- Boundary risk: Do not edit protected project-control files manually.
+- Verify that compact row data is small enough for table rendering and detailed fields are not duplicated per row.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-233.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Add compact row fields for task ref, status, title, next label, primary action, and detail key.
+- Add a separate detail payload for summary, scope, acceptance criteria, blockers, linked change, policy, generated files, health, and recent events.
+- Keep existing full inventory data available for the inventory view.
+- Add regression coverage for compact row and detail payload generation.
+- The read model exposes compact task rows without embedding full task details in each row.
+- The read model exposes task detail payloads keyed by task id, ref, or stable detail key.
+- Full inventory data remains available for the inventory view.
+
+Linked tasks:
+
+- TASK-233
+
+### CHG-076 — Fix Tasks action queue grouping
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task CTL-35 requires an explicit Evolution Change Proposal before implementation: Classify /tasks Action Queue groups from available owner actions so runnable tasks do not fall into Other Active.
+
+Proposal:
+
+Implement the bounded task scope: Group tasks with available Approve Change or review decision actions into Needs Decision.; Group tasks with available Prepare for Codex, Run, or equivalent execution actions into Ready To Run.; Group current or in_progress tasks into Current and blocked tasks into Blocked.; Hide deferred tasks from the primary queue by default unless filters explicitly request them.; Add regression coverage for the queue classification rules.
+
+Rationale:
+
+Tasks with available Prepare for Codex or Run actions should be visible in Ready To Run, and tasks needing Change approval should be visible in Needs Decision.
+
+Approved by: `human_owner` at `2026-06-27T18:37:32Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-108)  
+
+Accepted by: `human_owner` at `2026-06-27T18:48:02Z`  
+Acceptance notes: Approve; linked Change accepted after task TASK-235 close succeeded.  
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- tests/test_web_control_center_read_model.py
+- tests/test_web_control_center.py
+
+Risks:
+
+- Boundary risk: Do not change task lifecycle state names.
+- Boundary risk: Do not change Evolution Change approval semantics.
+- Boundary risk: Do not edit protected project-control files manually.
+- Verify the queue grouping uses action availability as the primary signal.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-235.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Group tasks with available Approve Change or review decision actions into Needs Decision.
+- Group tasks with available Prepare for Codex, Run, or equivalent execution actions into Ready To Run.
+- Group current or in_progress tasks into Current and blocked tasks into Blocked.
+- Hide deferred tasks from the primary queue by default unless filters explicitly request them.
+- Add regression coverage for the queue classification rules.
+- A task with available Prepare for Codex or Run appears in Ready To Run, not Other Active.
+- A task with available Approve Change appears in Needs Decision.
+- An in_progress or selected current task appears in Current.
+
+Linked tasks:
+
+- TASK-235
+
+### CHG-077 — Add one primary task row action
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task CTL-36 requires an explicit Evolution Change Proposal before implementation: Render one primary owner action per /tasks row and move unavailable-action explanations into the task details drawer.
+
+Proposal:
+
+Implement the bounded task scope: Derive a single primary action for each compact task row from the task action availability data.; Render primary buttons such as Approve, Run, Prepare, Submit, Resume, or Open Details.; Route mutating primary actions through the existing /actions confirmation modal.; Move unavailable-action explanations and blocker details into the drawer.; Add regression coverage for primary action selection.
+
+Rationale:
+
+The row should show the next safe thing the Human Owner can do, not a repeated table of every available and unavailable action.
+
+Approved by: `human_owner` at `2026-06-27T19:28:40Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-109)  
+
+Accepted by: `human_owner` at `2026-06-27T19:48:36Z`  
+Acceptance notes: Approve; linked Change accepted after task TASK-236 close succeeded.  
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- tests/test_web_control_center_read_model.py
+- tests/test_web_control_center.py
+
+Risks:
+
+- Boundary risk: Do not bypass existing confirmation requirements.
+- Boundary risk: Do not add new lifecycle transitions.
+- Boundary risk: Do not edit protected project-control files manually.
+- Check that no row contains multiple competing action forms.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-236.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Derive a single primary action for each compact task row from the task action availability data.
+- Render primary buttons such as Approve, Run, Prepare, Submit, Resume, or Open Details.
+- Route mutating primary actions through the existing /actions confirmation modal.
+- Move unavailable-action explanations and blocker details into the drawer.
+- Add regression coverage for primary action selection.
+- Each /tasks action queue row has at most one primary action button.
+- Approve Change rows show an Approve or Open Change primary action instead of only generic navigation when direct approval is available.
+- Ready To Run rows show Run, Prepare, or the existing safe execution action.
+
+Linked tasks:
+
+- TASK-236
+
+### CHG-078 — Replace Tasks metrics with action counts
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task CTL-39 requires an explicit Evolution Change Proposal before implementation: Replace non-actionable /tasks metrics with owner-actionable counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues.
+
+Proposal:
+
+Implement the bounded task scope: Compute action queue counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues.; Render these counts in the /tasks default Action Queue view.; Keep inventory-style metrics available only in Full Inventory or diagnostic views if they already exist.; Add regression coverage for the displayed action counts.
+
+Rationale:
+
+Counts like done and visible are useful for inventory, but the Owner Cockpit default should show work that needs attention.
+
+Approved by: `human_owner` at `2026-06-27T20:22:34Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-112)  
+
+Accepted by: `human_owner` at `2026-06-27T20:33:06Z`  
+Acceptance notes: Approve; linked Change accepted after task TASK-239 close succeeded.  
+
+Affected files:
+
+- ai_project_ctl/web/read_model.py
+- ai_project_ctl/web/server.py
+- tests/test_web_control_center_read_model.py
+- tests/test_web_control_center.py
+
+Risks:
+
+- Boundary risk: Do not remove task inventory data from the system.
+- Boundary risk: Do not change task statuses or stored task counts.
+- Boundary risk: Do not edit protected project-control files manually.
+- Compare metric counts with the queue groups rendered below them.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-239.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Compute action queue counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues.
+- Render these counts in the /tasks default Action Queue view.
+- Keep inventory-style metrics available only in Full Inventory or diagnostic views if they already exist.
+- Add regression coverage for the displayed action counts.
+- The default /tasks metrics show Needs Decision, Ready To Run, Current, Blocked, and Health Issues.
+- The default /tasks metrics do not emphasize done count as a primary owner-action metric.
+- Metric counts match the rendered action queue groups.
+
+Linked tasks:
+
+- TASK-239

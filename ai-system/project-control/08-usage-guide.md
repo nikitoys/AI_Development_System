@@ -393,24 +393,82 @@ The Web Control Center is a local loopback surface. Read views display dashboard
 
 Controlled write actions are submitted only through confirmed `POST` requests to `/actions`. Web route handlers must not edit protected files directly. A Web write action must route through a registered command, delegate through `aictl.py`, and rely on the owning CLI for validation, audit events and generated-output updates.
 
-Use the Web Control Center as the normal daily cockpit:
+Use the Web Control Center as the normal daily cockpit. The root `Dashboard` is the Owner Cockpit and should be the first page opened for daily operation:
 
 ```text
-Dashboard  current execution, queue and project doctor summary
-Tasks      filtered Task workflow cockpit
-Evolution  Change Proposal management
+Dashboard  Owner Cockpit with current execution, Action Queue and health summary
+Tasks      Action Queue and full Task inventory
 Pipeline   supervised batch pipeline cockpit and session detail pages
-Actions    Task creation, Bulk Task Import, repair/check and workflow forms
+Reviews    owner review decisions and rework routing
+Evolution  Change Proposal management
 Doctor     detailed project health findings
+Events     audit-event inspection
 Generated  read-only generated output previews
 Commands   registered command metadata
+Actions    Task creation, Bulk Task Import, repair/check and workflow forms
+Commit     local commit readiness inspection
+Epics      planning container inspection and close helpers
 ```
 
 The UI does not make protected state editable. It submits governed actions and then shows the resulting command evidence.
 
+## Owner Cockpit Dashboard
+
+Open `http://127.0.0.1:8765/` to use the root `Dashboard` as the daily Owner Cockpit.
+
+The Owner Cockpit is designed for the first owner scan of the day:
+
+```text
+Current Execution bar  current Task, prompt/context readiness and next owner action
+Action Queue           owner-action cards grouped by decision, current, run-ready and blocked work
+Health summary         compact PASS/WARN/FAIL/UNKNOWN counts and repair/check affordances
+Details panels         expandable evidence before taking a governed action
+Recent Signals         watch-only items that may matter but do not need an immediate action
+```
+
+Use the `Current Execution` bar first. It shows the current Task, status, title, prompt readiness, Context Pack readiness and next owner action. If there is no current Task, open `Tasks` and select or prepare one through the governed workflow. If the current Task is in review, follow the link to `Reviews`; if it is runnable or blocked inside a Pipeline session, follow the link to `Pipeline` or the Task details.
+
+Open `Current Execution Details` when you need deeper evidence: prompt and Context Pack paths, generated-file links, copy text, or the current Task clear action. The details panel is for inspection and recovery. It does not approve work, mark work done or bypass the Task lifecycle.
+
+The cockpit Action Queue is grouped for owner decisions:
+
+```text
+Needs Decision  review, approval or acceptance work that needs Human Owner judgment
+Current         selected or in-progress work
+Ready To Run    ready Tasks with a safe next run action
+Blocked         Tasks or sessions waiting on a blocker
+Recent Signals  watch-only items for awareness
+```
+
+Use the primary link on a queue card to open the page that owns the next action. Decision cards usually route to `Reviews` or `Evolution`. Run-ready cards route to `Tasks` run controls or `Pipeline` session setup. Blocked and current cards route to `Tasks` or a Pipeline session detail page for evidence and recovery.
+
+Use the health summary for a quick status read. `PASS` means the signal is healthy, `WARN` needs attention but may be non-blocking, `FAIL` needs recovery before relying on the affected flow, and `UNKNOWN` means the signal has not been reported yet. Open `Doctor` for the full health report before diagnosing failures or running repair/check actions.
+
+## Deep Inspection Pages
+
+The Owner Cockpit is the daily entry point, not the only control surface. Use deeper pages for focused workflows, diagnostics and recovery:
+
+```text
+Tasks      full Task inventory, filters, row workflows and Task details
+Pipeline   queue preview, policy selection, session monitor and recovery controls
+Reviews    Task review decisions and rework routing
+Evolution  Change Proposal approval, review and acceptance workflows
+Doctor     full health findings and recovery checks
+Events     audit history inspection
+Generated  read-only generated output previews
+Commands   registered command metadata
+Actions    direct confirmed action forms
+Commit     local commit readiness inspection
+Epics      planning container inspection and close helpers
+```
+
 ## Tasks Cockpit
 
-The `Tasks` view is designed for large task sets. It has filters for Initiative, Epic, Status and search text. It can group by `Epic`, `Status` or `None`; done Tasks are hidden by default unless `Show done` is selected or a done status filter is active. Grouped results are rendered as collapsible sections. Done status groups start collapsed.
+The `Tasks` page opens in `Action Queue` view by default. This view is the owner-action version of the Task list. It groups active work by the next useful state: `Current`, `Needs Decision`, `Ready To Run`, `Blocked` and `Other Active`.
+
+Use `Action Queue` when the owner wants to answer "what should I do next?" without scanning the full Task inventory. Each queue row or card exposes the Task identity, status, next action or blocker, details and the page or workflow that owns the next step.
+
+Open `Full Inventory` when you need to search broadly, inspect many Tasks, show `done` Tasks, or group the list by `Epic`, `Status` or `None`. Inventory view has filters for Initiative, Epic, Status and search text. Done Tasks are hidden by default unless `Show done` is selected or a done status filter is active. Grouped results are rendered as collapsible sections. Done status groups start collapsed.
 
 The `Focus Tasks` section keeps the current Task plus ready, in-progress, review and changes-requested Tasks near the top. Use it for the owner loop when a Task is being prepared, executed, reviewed or sent back for rework.
 
@@ -434,6 +492,8 @@ Use `Resume` or `Resume Session` only after an existing pipeline session is `blo
 
 Codex may use `Submit for Review` after satisfying a Task contract when the Task scope permits it. Codex must not use `Approve & Done` or provide Human Owner approval notes unless the Human Owner explicitly gave the approval decision.
 
+Open a Task details panel before acting when the compact row does not give enough evidence. The details panel can show the Task summary, description, scope, acceptance criteria, blockers, linked Change, effective run policy, generated files, health signals, recent events and available actions. Details panels are read-only evidence and action affordances; they do not change lifecycle state by themselves.
+
 ## Action Result Panel
 
 Every Web write action returns an Action Result panel. Read it before taking the next step.
@@ -456,6 +516,23 @@ technical details
 ```
 
 The Action Result panel is evidence, not approval. A passing action result does not mean Human Owner acceptance, review closure or permission to edit protected files manually.
+
+## Safe Action Confirmation Modal
+
+Confirmed Web write actions use a confirmation modal before the browser sends the governed `/actions` POST.
+
+The modal summarizes:
+
+```text
+Action          button label and registered action ID
+Target          Task, Change, Epic, Pipeline session or project-control target when available
+Policy          selected policy, max task count, order or other run-policy context when available
+Owner Notes     required note fields and whether they are provided
+```
+
+Use the modal as a final owner-side check before a state-changing action. If the action, target, policy or owner-note status is wrong, cancel and correct the form. Choose `Confirm Action` only when the action matches the intended Human Owner decision or routine governed operation.
+
+The modal does not replace server-side safety. After confirmation, the Web action must still pass required form validation, registered command routing, owning CLI validation, lifecycle rules, required owner notes and protected-file rules.
 
 ## Evolution Management Tab
 
@@ -689,27 +766,29 @@ Use this UI-first flow for ordinary controlled work:
 python scripts/aictl.py web --host 127.0.0.1 --port 8765
 ```
 
-2. Open `http://127.0.0.1:8765/`, check `Dashboard` and `Doctor`, and use `Tasks` to find the current work by Initiative, Epic, Status or search.
+2. Open `http://127.0.0.1:8765/` and treat the root `Dashboard` as the Owner Cockpit. Check the `Current Execution` bar, Action Queue and health summary before taking action.
 
-3. Create or import bounded Tasks from `Actions` when needed. Use Bulk Task Import preview before confirming creation.
+3. Use the Action Queue for daily routing. Open `Reviews` or `Evolution` for decision cards, `Pipeline` for run-ready or resumable work, `Tasks` for current or blocked Task details, and `Doctor` for health failures.
 
-4. Prepare an executable Task from its row workflow button or from `Actions`:
+4. Open `Tasks` -> `Full Inventory` when you need broad filtering, done Tasks, grouping, or detailed Task inspection. Create or import bounded Tasks from `Actions` when needed. Use Bulk Task Import preview before confirming creation.
+
+5. Prepare an executable Task from its row workflow button or from `Actions`:
 
 ```text
 Prepare for Codex
 ```
 
-5. Execute only the Task scope from `AI_PROJECT/generated/CODEX_PROMPT.md`.
+6. Execute only the Task scope from `AI_PROJECT/generated/CODEX_PROMPT.md`.
 
-6. Use the Action Result panel and generated prompt package to decide the next step. Refresh context if the current Task or source documents changed.
+7. Use the confirmation modal before governed Web actions and read the Action Result panel after each action. Refresh context if the current Task or source documents changed.
 
-7. Validate and submit for review from the Task row:
+8. Validate and submit for review from the Task row:
 
 ```text
 Submit for Review
 ```
 
-8. Wait for review and Human Owner acceptance. If the Human Owner accepts the reviewed result, use `Approve & Done` with explicit owner notes. If the Human Owner requests rework, use `Request Changes` with the required notes.
+9. Wait for review and Human Owner acceptance. If the Human Owner accepts the reviewed result, use `Approve & Done` with explicit owner notes. If the Human Owner requests rework, use `Request Changes` with the required notes.
 
 Do not mark the Task approved, done or archived as accepted unless the Human Owner explicitly accepts the result.
 

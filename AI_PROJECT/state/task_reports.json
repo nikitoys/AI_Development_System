@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 63,
+  "revision": 87,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-27T12:07:43Z",
+  "updated_at": "2026-06-27T20:32:48Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -4565,6 +4565,1664 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-064",
+      "task_id": "TASK-216",
+      "task_ref": "CTL-16",
+      "submitted_at": "2026-06-27T13:16:36Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:b629ea14cbf8bf99c9f4c991f7d1436cff766a1e90acebabcad4c95a82bf4a21",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-216",
+        "task_ref": "CTL-16",
+        "reported_task_id": "TASK-216",
+        "reported_task_ref": "CTL-16",
+        "implementation_summary": "Introduced a shared Web Control Center shell with grouped sidebar navigation, consistent top/main layout, responsive shell styles, and reusable layout classes while preserving existing routes and action behavior.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 350.401255,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 350.401255,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree already contained protected AI_PROJECT state/event/generated modifications before this task; they were not edited manually."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only ai_project_ctl/web/server.py.",
+          "All existing HTML GET routes in the route map rendered inside the new shell in the focused render sweep."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 878,
+          "remaining_tokens": 31122,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-065",
+      "task_id": "TASK-217",
+      "task_ref": "CTL-17",
+      "submitted_at": "2026-06-27T13:27:10Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:f2491be7faba3e7673fd378ee580436df5c159a2a79462f00848a0d246298b80",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-217",
+        "task_ref": "CTL-17",
+        "reported_task_id": "TASK-217",
+        "reported_task_ref": "CTL-17",
+        "implementation_summary": "Added a reusable sticky current execution bar to Dashboard and Tasks using existing dashboard execution context data, with current task identity, next owner action, prompt/context readiness signals, and existing safe quick actions.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 574.644315,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 574.644315,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest is not installed in this environment, so focused unittest checks were run directly.",
+          "git status shows dirty AI_PROJECT state/event/generated files outside the allowed implementation file; they were not manually edited for this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Dashboard detailed execution actions were hidden so the sticky bar is the clear quick-action surface.",
+          "Targeted compile, render, unittest, task validation, strict project doctor, and diff whitespace checks passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 914,
+          "remaining_tokens": 31086,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-066",
+      "task_id": "TASK-218",
+      "task_ref": "CTL-18",
+      "submitted_at": "2026-06-27T13:34:17Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:171139fc6b4aa21bafb0205a84bc9cff4781f7066993627a83b4279cd73fb25d",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-218",
+        "task_ref": "CTL-18",
+        "reported_task_id": "TASK-218",
+        "reported_task_ref": "CTL-18",
+        "implementation_summary": "Added reusable compact project health rendering with PASS/WARN/FAIL/UNKNOWN counts and expandable detail rows, then switched Dashboard and Tasks to compact mode while preserving full Doctor diagnostics.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 384.641869,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 384.641869,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest is not installed in this environment; targeted unittest and direct render assertions were run instead.",
+          "The worktree already contained modified AI_PROJECT state/event/generated files; they were not edited for this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Existing health action forms still render inside the expandable detail table and post to /actions.",
+          "Doctor and Generated pages continue using the full health table rendering path."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 862,
+          "remaining_tokens": 31138,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-067",
+      "task_id": "TASK-219",
+      "task_ref": "CTL-19",
+      "submitted_at": "2026-06-27T13:48:38Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:e5b3e5249fa129674bd2d12a9c07f4b9be4ca9dfe1c350a466577165753bf190",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-219",
+        "task_ref": "CTL-19",
+        "reported_task_id": "TASK-219",
+        "reported_task_ref": "CTL-19",
+        "implementation_summary": "Added an additive read-only owner_action_queue to the web read model with needs_decision, current, ready_to_run, blocked, and watch_only categories derived from existing task, change, report, current-task, and pipeline data.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 547.327222,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 547.327222,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "python -m ruff check and python -m black --check could not run because ruff and black are not installed.",
+          "The worktree contained pre-existing modifications outside ai_project_ctl/web/read_model.py; they were not touched."
+        ],
+        "blockers": [],
+        "notes": [
+          "Live read-model smoke showed TASK-219 / CTL-19 in owner_action_queue.current with Submit for Review as the derived next action.",
+          "Existing /data.json keys remain present; the existing executable queue behavior was not changed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 897,
+          "remaining_tokens": 31103,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-068",
+      "task_id": "TASK-220",
+      "task_ref": "CTL-20",
+      "submitted_at": "2026-06-27T14:04:40Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:59c85297589923aa96b2b76cdfb71b1acb7d262277ea88f2860b70c9af2f4cdb",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-220",
+        "task_ref": "CTL-20",
+        "reported_task_id": "TASK-220",
+        "reported_task_ref": "CTL-20",
+        "implementation_summary": "Converted the root Dashboard into an Owner Cockpit with actionable owner metrics, current execution, compact health, needs-decision/current/ready/blocked queues, recent signals, and collapsed raw details while preserving the / route and existing action execution behavior.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 789.923244,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 789.923244,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree had pre-existing protected AI_PROJECT state/event/generated changes; they were not edited manually."
+        ],
+        "blockers": [],
+        "notes": [
+          "Local Web Control Center is running at http://127.0.0.1:8765.",
+          "Verification passed for py_compile, git diff whitespace check, route/HTTP smoke, and the focused WebControlCenterTests suite."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 913,
+          "remaining_tokens": 31087,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-069",
+      "task_id": "TASK-221",
+      "task_ref": "CTL-21",
+      "submitted_at": "2026-06-27T14:18:07Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:a27ceed2b97476f1790a8932ee2936e8ec127a8802e59d3b8ec29497281a2012",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-221",
+        "task_ref": "CTL-21",
+        "reported_task_id": "TASK-221",
+        "reported_task_ref": "CTL-21",
+        "implementation_summary": "Converted the Tasks page default to a compact owner Action Queue, added queue grouping and one-action rows, and preserved the full grouped inventory through view=inventory plus legacy group/show_done compatibility.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 631.048,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 631.048,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Worktree had pre-existing modifications outside the allowed file, including protected AI_PROJECT paths and ai_project_ctl/web/read_model.py; this execution edited only ai_project_ctl/web/server.py."
+        ],
+        "blockers": [],
+        "notes": [
+          "Verification passed: compileall, focused render assertions, and 11 existing Tasks page unit tests."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 871,
+          "remaining_tokens": 31129,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-070",
+      "task_id": "TASK-222",
+      "task_ref": "CTL-22",
+      "submitted_at": "2026-06-27T14:30:04Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:47b45072cb84f2df9ec17dae7fbb6e6be0b9b9018bdb2fe9cdd00ced2611f397",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-222",
+        "task_ref": "CTL-22",
+        "reported_task_id": "TASK-222",
+        "reported_task_ref": "CTL-22",
+        "implementation_summary": "Added server-rendered task detail panels on /tasks, compacted task rows, moved blocker/action/policy/generated/health/event detail into progressive disclosure, and removed the large policy summary from row run controls.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 624.968935,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 624.968935,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest was not installed; used python -m unittest for focused tests.",
+          "The worktree contains unrelated dirty files outside the allowed task scope; they were not modified by this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused unittest task-page checks passed: 9 tests.",
+          "Direct render acceptance check confirmed task detail panels are read-only and contain policy, generated files, recent events, and full action explanations."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 913,
+          "remaining_tokens": 31087,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-071",
+      "task_id": "TASK-223",
+      "task_ref": "CTL-23",
+      "submitted_at": "2026-06-27T15:51:37Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:3edb7ed2ed7a8d9e0ee4c22c49301c8ca429e086aecfb883aa55a91f9e72a900",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-223",
+        "task_ref": "CTL-23",
+        "reported_task_id": "TASK-223",
+        "reported_task_ref": "CTL-23",
+        "implementation_summary": "Added a reusable JavaScript confirmation modal for confirmed owner action forms in ai_project_ctl/web/server.py while preserving POST /actions, server-side confirm requirements, required owner-note validation, and checkbox fallback behavior.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 690.305021,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 690.305021,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest is not installed, so the focused test module was run with unittest instead."
+        ],
+        "blockers": [],
+        "notes": [
+          "Implemented modal metadata through the shared action_form helper so Run, Submit, Approve, Resume, Doctor, repair, and check forms can use the same confirmation flow.",
+          "Added effective policy summary metadata for UI run forms where the policy is known at render time."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 872,
+          "remaining_tokens": 31128,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-072",
+      "task_id": "TASK-224",
+      "task_ref": "CTL-24",
+      "submitted_at": "2026-06-27T16:01:54Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:da6122ee78a3f087b2f991a7cf4f95265a47d918dddd046c3922a1d898fa61aa",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-224",
+        "task_ref": "CTL-24",
+        "reported_task_id": "TASK-224",
+        "reported_task_ref": "CTL-24",
+        "implementation_summary": "Redesigned the Pipeline page as a current-run monitor with top-level session/phase/health/next-action metrics, prominent live-log access, grouped safety-level controls, compact queue preview, and collapsible policy/queue/session/audit sections.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 573.832156,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 573.832156,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [],
+        "blockers": [],
+        "notes": [
+          "Only ai_project_ctl/web/server.py was edited for this task.",
+          "Pre-existing working tree changes in protected AI_PROJECT files and ai_project_ctl/web/read_model.py were left untouched."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 902,
+          "remaining_tokens": 31098,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-073",
+      "task_id": "TASK-225",
+      "task_ref": "CTL-25",
+      "submitted_at": "2026-06-27T16:13:55Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:0a7f57c04548de4b1a80300b118229ce9f4de05224e08701db6a6640c2facd1e",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-225",
+        "task_ref": "CTL-25",
+        "reported_task_id": "TASK-225",
+        "reported_task_ref": "CTL-25",
+        "implementation_summary": "Converted the Reviews page into grouped owner decision queues with compact rows, selected/eligible expandable review packages, and collapsed review command diagnostics while preserving existing approve and request-changes workflows.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 561.998698,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 561.998698,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree contained unrelated pre-existing modified project-control/generated files and other web changes; this task only edited ai_project_ctl/web/server.py."
+        ],
+        "blockers": [],
+        "notes": [
+          "Approve and Request Changes controls remain rendered only for in_review tasks.",
+          "Default historical/current/rework rows stay compact and link to selected package inspection instead of embedding every package."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 869,
+          "remaining_tokens": 31131,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-074",
+      "task_id": "TASK-226",
+      "task_ref": "CTL-26",
+      "submitted_at": "2026-06-27T16:25:32Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:a43a247b8f14906d57bcbf2019aefd9aabc40e1eecf3f4ff9f1bffce6d2d1ad1",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-226",
+        "task_ref": "CTL-26",
+        "reported_task_id": "TASK-226",
+        "reported_task_ref": "CTL-26",
+        "implementation_summary": "Converted the Evolution page into a grouped owner decision queue with compact Change Proposal rows, lifecycle-safe primary actions, collapsed Create Change controls, and detailed inspectable metadata.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 655.517391,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 655.517391,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree already contained unrelated modified AI_PROJECT protected/generated files and ai_project_ctl/web/read_model.py before this task; they were not edited."
+        ],
+        "blockers": [],
+        "notes": [
+          "Existing status/type/search filters remain available.",
+          "Ready Change Proposals are highlighted in the Needs Approval group.",
+          "Verbose action blockers and affected files/impact/risks are preserved in row details."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 893,
+          "remaining_tokens": 31107,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-075",
+      "task_id": "TASK-227",
+      "task_ref": "CTL-27",
+      "submitted_at": "2026-06-27T16:34:38Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:f5261f1357af3a1110775baa773d702f001616817f991a0b1c37a0a5e16bddc3",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-227",
+        "task_ref": "CTL-27",
+        "reported_task_id": "TASK-227",
+        "reported_task_ref": "CTL-27",
+        "implementation_summary": "Refined the Settings page into focused policy control cards, moved the effective policy summary next to the default policy selector, preserved existing submitted field names and confirmation behavior, and made locked/advanced controls clearer without changing validation or action handling.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 405.887891,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 405.887891,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "python -m pytest could not run because pytest is not installed in this environment."
+        ],
+        "blockers": [],
+        "notes": [
+          "Only ai_project_ctl/web/server.py was edited for this task.",
+          "Targeted Settings unittest checks passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 862,
+          "remaining_tokens": 31138,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-076",
+      "task_id": "TASK-228",
+      "task_ref": "CTL-28",
+      "submitted_at": "2026-06-27T16:45:06Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:158020a602da60003cb5dfa2b9025b320ff0422b58ffe2101d2125ebff7b4793",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-228",
+        "task_ref": "CTL-28",
+        "reported_task_id": "TASK-228",
+        "reported_task_ref": "CTL-28",
+        "implementation_summary": "Refined /doctor into a health-center view with compact status counts, severity-grouped findings, preserved command/detail data, confirmed repair/check forms where safe mappings exist, and project health detail below the main Doctor findings.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 487.29987,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 487.29987,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest is not installed in this environment; targeted tests were run with unittest instead.",
+          "The worktree had pre-existing unrelated modifications in protected/generated project-control files and ai_project_ctl/web/read_model.py; they were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "PASS findings are placed after FAIL, WARN, and UNKNOWN findings and collapse when attention findings exist.",
+          "Refresh Doctor remains exposed as a safe /doctor?refresh=1 read/check link."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 844,
+          "remaining_tokens": 31156,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-077",
+      "task_id": "TASK-229",
+      "task_ref": "CTL-29",
+      "submitted_at": "2026-06-27T17:16:43Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:6a73a340b9959f00af8da356f51c906f0ff50bb3f5347b424c1122d5186f2d02",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-229",
+        "task_ref": "CTL-29",
+        "reported_task_id": "TASK-229",
+        "reported_task_ref": "CTL-29",
+        "implementation_summary": "Aligned the Epics, Commit, Events, Generated, Commands, and Actions pages with compact inspection intro panels and consistent shell panel wrapping while preserving existing diagnostics, links, and confirmed /actions forms.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 450.434249,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 450.434249,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree already contained modified protected AI_PROJECT state/events/generated files; this task did not edit those paths."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused web-control tests and route smoke checks passed for the changed page surfaces."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 867,
+          "remaining_tokens": 31133,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-078",
+      "task_id": "TASK-230",
+      "task_ref": "CTL-30",
+      "submitted_at": "2026-06-27T17:30:32Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:6985ebafdcde50249f2d59120134707ace633ccf59f6237cd53d6a58dd856866",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-230",
+        "task_ref": "CTL-30",
+        "reported_task_id": "TASK-230",
+        "reported_task_ref": "CTL-30",
+        "implementation_summary": "Added Web Control Center regression tests for core Owner Cockpit shell routes, compact health and current execution rendering, confirmed /actions form safety, and restricted destructive git action absence.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 558.03321,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 558.03321,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [],
+        "blockers": [],
+        "notes": [
+          "Changed only tests/test_web_control_center.py.",
+          "Focused and full target test runs passed locally."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 884,
+          "remaining_tokens": 31116,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-079",
+      "task_id": "TASK-231",
+      "task_ref": "CTL-31",
+      "submitted_at": "2026-06-27T17:37:10Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:72c0e730ee3b54a9de5d143ca508b472d06a0ec8857e8179f1ee02893fadc8bc",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-231",
+        "task_ref": "CTL-31",
+        "reported_task_id": "TASK-231",
+        "reported_task_ref": "CTL-31",
+        "implementation_summary": "Updated the owner quickstart and project-control usage guide to document the Owner Cockpit daily Dashboard flow, Action Queue categories, current execution bar, health summary, details panels, safe confirmation modal, and deeper workflow pages.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 333.142207,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 333.142207,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "docctl validate reported non-blocking existing registry/status/content-hash warnings, including stale content hashes for the two edited source documents after this documentation update.",
+          "The worktree already contained modified AI_PROJECT protected/generated files and Web UI source files before this task; this execution did not manually edit AI_PROJECT files."
+        ],
+        "blockers": [],
+        "notes": [
+          "Documentation now directs owners to the root Dashboard as the daily Owner Cockpit entry point.",
+          "Read-only validation passed for documentation, generated documentation freshness, task state, and whitespace checks."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 951,
+          "remaining_tokens": 31049,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-080",
+      "task_id": "TASK-232",
+      "task_ref": "CTL-32",
+      "submitted_at": "2026-06-27T17:57:37Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:b4f504df4ad72d5d09132f233fbf4091e693de0c8eb3c455ae3793add85786c5",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-232",
+        "task_ref": "CTL-32",
+        "reported_task_id": "TASK-232",
+        "reported_task_ref": "CTL-32",
+        "implementation_summary": "Removed the duplicate full Current Execution panel from /tasks while preserving the top Current Execution bar for current, no-current, and selected-task warning states. Added regression coverage for single Current Execution rendering and confirmed tasks POST actions still route through /actions with confirmation.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 527.022578,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 527.022578,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree had pre-existing dirty files outside the two allowed task files; they were not manually modified for this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Full Web Control Center unittest suite passed: 122 tests.",
+          "Project-control validation, task generated checks, and protected-files checks passed.",
+          "pytest is not installed, so focused and full Web Control Center checks were run with unittest."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 910,
+          "remaining_tokens": 31090,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-081",
+      "task_id": "TASK-233",
+      "task_ref": "CTL-33",
+      "submitted_at": "2026-06-27T18:08:07Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:71d4746f8b2fbcba6af51674eec6f296bf8c9d1c656629f23c0bc7daf1544e81",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-233",
+        "task_ref": "CTL-33",
+        "reported_task_id": "TASK-233",
+        "reported_task_ref": "CTL-33",
+        "implementation_summary": "Added a compact task_queue read model with row-only queue fields and separate keyed task detail payloads, while preserving the existing full tasks inventory. Added focused regression tests for planned, blocked, linked-Change, and missing-optional-field cases.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 497.025257,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 497.025257,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Worktree had pre-existing dirty protected AI_PROJECT files and local read_model.py edits; protected files were not manually edited."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused unittest checks and git diff whitespace check passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 914,
+          "remaining_tokens": 31086,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-082",
+      "task_id": "TASK-234",
+      "task_ref": "CTL-34",
+      "submitted_at": "2026-06-27T18:25:40Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:b29f55792479fe4f931ad1b51fac3e1aae4f579f7fd9133bf25bbb1f46608bad",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-234",
+        "task_ref": "CTL-34",
+        "reported_task_id": "TASK-234",
+        "reported_task_ref": "CTL-34",
+        "implementation_summary": "Replaced inline task details in /tasks rows with compact Details links and a right-side selected-task drawer, preserving URL-based no-JavaScript fallback and adding regression coverage for drawer markup and compact rows.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 660.956965,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 660.956965,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest is not installed in this environment; equivalent unittest checks were run instead.",
+          "The worktree had pre-existing modified protected/generated files before this task; they were not edited manually."
+        ],
+        "blockers": [],
+        "notes": [
+          "Only ai_project_ctl/web/server.py and tests/test_web_control_center.py were edited.",
+          "The full Web Control Center unittest module passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 936,
+          "remaining_tokens": 31064,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-083",
+      "task_id": "TASK-235",
+      "task_ref": "CTL-35",
+      "submitted_at": "2026-06-27T18:47:46Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:330568accd85e41ab4196c7a49bc41f68d44746033e2415e40a705667bc6a4a1",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-235",
+        "task_ref": "CTL-35",
+        "reported_task_id": "TASK-235",
+        "reported_task_ref": "CTL-35",
+        "implementation_summary": "Updated /tasks and read-model queue classification to use available owner action labels/action ids, added structural blocker handling, default deferred filtering, and regression coverage for decision/run/current/blocked/deferred grouping.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 605.085547,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 605.085547,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Protected AI_PROJECT state/event/generated files were already dirty before execution and were not modified manually."
+        ],
+        "blockers": [],
+        "notes": [
+          "Used unittest-compatible checks because pytest is not installed in the environment."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 955,
+          "remaining_tokens": 31045,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-084",
+      "task_id": "TASK-236",
+      "task_ref": "CTL-36",
+      "submitted_at": "2026-06-27T19:48:19Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:44cae8fe54f8adec5966ba7122053ab6f0223901a27e521c3ade1e8bcad35713",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-236",
+        "task_ref": "CTL-36",
+        "reported_task_id": "TASK-236",
+        "reported_task_ref": "CTL-36",
+        "implementation_summary": "Implemented single primary /tasks row actions backed by existing action availability data, routed mutating controls through the governed /actions confirmation flow, and moved unavailable-action explanations into task details/drawer rendering with regression coverage.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 1169.93366,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 1169.93366,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest is not installed in this environment, so pytest-based checks could not be run."
+        ],
+        "blockers": [],
+        "notes": [
+          "Verified with unittest, py_compile, and diff whitespace checks.",
+          "The working tree contains unrelated existing AI_PROJECT/** and documentation modifications that were left untouched."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 948,
+          "remaining_tokens": 31052,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-085",
+      "task_id": "TASK-237",
+      "task_ref": "CTL-37",
+      "submitted_at": "2026-06-27T19:58:37Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:eaeac2b6613957f67112c0abd0cd9cb9ebffbbeab784fb14aeb674197d04d408",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-237",
+        "task_ref": "CTL-37",
+        "reported_task_id": "TASK-237",
+        "reported_task_ref": "CTL-37",
+        "implementation_summary": "Moved effective policy confirmation context to a single modal-level source for Run and Prepare actions, kept visible policy details in the task drawer, and added regressions proving queue rows do not repeat policy summary content.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 563.772291,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 563.772291,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest is not installed in this environment, so verification used unittest instead.",
+          "The repository had pre-existing dirty protected/generated files and unrelated allowed-file changes before this execution; they were not modified for this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Updated ai_project_ctl/web/server.py and tests/test_web_control_center.py only.",
+          "Full Web Control Center unittest module passed with 126 tests."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 903,
+          "remaining_tokens": 31097,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-086",
+      "task_id": "TASK-238",
+      "task_ref": "CTL-38",
+      "submitted_at": "2026-06-27T20:13:46Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:e8ce3f52506068e5e7929637fd8c7152dd052033352bd434fccac14c611ca2a2",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-238",
+        "task_ref": "CTL-38",
+        "reported_task_id": "TASK-238",
+        "reported_task_ref": "CTL-38",
+        "implementation_summary": "Moved task diagnostics into collapsed selected-task drawer sections and added focused regression coverage for drawer placement, compact rows, and single global project health visibility.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 432.626693,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 432.626693,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "ai_project_ctl/web/read_model.py was already dirty before this task and was not modified for this implementation."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused verification passed with unittest, py_compile, and git diff whitespace checks.",
+          "pytest was unavailable in the environment, so equivalent focused unittest commands were used."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 916,
+          "remaining_tokens": 31084,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-087",
+      "task_id": "TASK-239",
+      "task_ref": "CTL-39",
+      "submitted_at": "2026-06-27T20:32:48Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:6da3363cfd612e4e29f61739528530033f72cf99f46a900a8821c8479efe9ad3",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-239",
+        "task_ref": "CTL-39",
+        "reported_task_id": "TASK-239",
+        "reported_task_ref": "CTL-39",
+        "implementation_summary": "Updated the /tasks default Action Queue metrics to show owner-action counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues, while keeping status inventory metrics in Full Inventory. Added rendered-page regression coverage for action-count metrics and no-current-task behavior.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 604.856539,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 604.856539,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "pytest is not installed in this environment; relevant checks were run with unittest."
+        ],
+        "blockers": [],
+        "notes": [
+          "Health Issues counts health signals whose status is not PASS.",
+          "Inventory status metrics remain available in the Full Inventory view."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 915,
+          "remaining_tokens": 31085,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -4628,6 +6286,30 @@
     "TASK-213": "RPT-060",
     "TASK-214": "RPT-061",
     "TASK-215": "RPT-062",
-    "TASK-157": "RPT-063"
+    "TASK-157": "RPT-063",
+    "TASK-216": "RPT-064",
+    "TASK-217": "RPT-065",
+    "TASK-218": "RPT-066",
+    "TASK-219": "RPT-067",
+    "TASK-220": "RPT-068",
+    "TASK-221": "RPT-069",
+    "TASK-222": "RPT-070",
+    "TASK-223": "RPT-071",
+    "TASK-224": "RPT-072",
+    "TASK-225": "RPT-073",
+    "TASK-226": "RPT-074",
+    "TASK-227": "RPT-075",
+    "TASK-228": "RPT-076",
+    "TASK-229": "RPT-077",
+    "TASK-230": "RPT-078",
+    "TASK-231": "RPT-079",
+    "TASK-232": "RPT-080",
+    "TASK-233": "RPT-081",
+    "TASK-234": "RPT-082",
+    "TASK-235": "RPT-083",
+    "TASK-236": "RPT-084",
+    "TASK-237": "RPT-085",
+    "TASK-238": "RPT-086",
+    "TASK-239": "RPT-087"
   }
 }

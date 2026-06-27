@@ -28,24 +28,33 @@ Never edit protected AI_PROJECT files directly.
 python scripts/aictl.py web --host 127.0.0.1 --port 8765
 ```
 
-Open `http://127.0.0.1:8765/`. The Web Control Center is local and loopback-only. Use it as the daily cockpit; use command lines when a runbook requires an exact command or when the UI does not expose the needed operation.
+Open `http://127.0.0.1:8765/`. The root `Dashboard` is the daily Owner Cockpit. The Web Control Center is local and loopback-only. Use the Owner Cockpit first for current work, owner actions and health signals; use command lines when a runbook requires an exact command or when the UI does not expose the needed operation.
 
-2. Check the dashboard and health.
+2. Start from the Owner Cockpit.
 
 ```text
-Dashboard  current execution, queue, project doctor summary
+Dashboard  Owner Cockpit daily entry point with current execution, queue and health
+Tasks      Action Queue and full Task inventory
 Doctor     detailed PASS, WARN and FAIL findings
 Generated  read-only generated outputs
 Commands   registered command metadata
 ```
 
-`project doctor` aggregates registered command checks, plan/task/evolution validation, task graph validation, generated-output freshness, context and Codex prompt status, and protected-file checks. It reports explicit `PASS`, `WARN` and `FAIL` findings and does not mutate project-control state.
+The Owner Cockpit shows the `Current Execution` bar at the top. Use it to confirm the current Task, prompt and Context Pack readiness, and the next owner action before preparing, running, reviewing or resuming work. Open the expandable `Current Execution Details` panel when you need prompt paths, context paths, copy text, generated-file links, or the current Task clear action.
 
-3. Work from the Tasks cockpit.
+The cockpit Action Queue groups daily owner work by `Needs Decision`, `Current`, `Ready To Run`, `Blocked` and watch-only signals. Use the card's primary link to open the right page for the next action: Reviews for owner review decisions, Tasks for current, blocked or run-ready Task details, Pipeline for session state, and Evolution for Change decisions.
 
-Use `Tasks` to filter by Initiative, Epic, Status and search text. Choose Group by `Epic`, `Status` or `None`; `done` Tasks are hidden by default unless `Show done` is selected or `status=done` is selected. Task groups are collapsible, and done status groups start collapsed.
+Use the compact health summary to scan `PASS`, `WARN`, `FAIL` and `UNKNOWN` signals. Open `Doctor` for the full project health report, detailed findings and recovery guidance. `project doctor` aggregates registered command checks, plan/task/evolution validation, task graph validation, generated-output freshness, context and Codex prompt status, and protected-file checks. It reports explicit `PASS`, `WARN` and `FAIL` findings and does not mutate project-control state.
+
+3. Use Tasks when the queue is not enough.
+
+The `Tasks` page opens in `Action Queue` view by default. Use it for a compact owner-action view grouped by the next useful task state: `Current`, `Needs Decision`, `Ready To Run`, `Blocked` and `Other Active`.
+
+Open `Full Inventory` from the Action Queue when you need to inspect many Tasks, search by ref or title, show `done` work, or group results by `Epic`, `Status` or `None`. In inventory view, `done` Tasks are hidden by default unless `Show done` is selected or `status=done` is selected. Task groups are collapsible, and done status groups start collapsed.
 
 The `Focus Tasks` section keeps the current Task plus ready, in-progress, review and changes-requested Tasks visible. Task references such as `CTL-12` are human-readable aliases. The same Task may also resolve by legacy ID such as `TASK-030`, immutable UID, or alias when `taskctl.py` supports that resolver. Use the readable ref in chat and prompts, but remember that state in `AI_PROJECT/state/tasks.json` remains the source of truth.
+
+Open a Task details panel before acting when you need its summary, scope, blockers, linked Change, effective run policy, generated files, health signals, recent events or available actions. Details panels are inspection aids; they do not approve work or bypass lifecycle gates.
 
 4. Use row workflow buttons for normal Task movement.
 
@@ -69,7 +78,9 @@ Before pressing `Run`, open `Settings` and check `Effective Policy Summary`. If 
 
 Each workflow posts to `/actions`, delegates through registered `aictl.py` workflows and owning `*ctl.py` scripts, and then opens an Action Result panel. Read that panel before continuing. It shows PASS/FAIL, registered command, workflow, target, return code, step results, changed and generated files, warnings, errors, next actions, any Codex instruction to copy into a session, and technical details.
 
-5. Use Evolution and Actions when needed.
+Confirmed Web actions open a safe confirmation modal before the `/actions` POST is sent. Review the action, target, policy summary and required owner notes, then choose `Confirm Action` only when the action matches the intended owner decision. The modal is a client-side safety review; server-side confirmation, required notes, lifecycle validation and protected-file rules still apply after confirmation.
+
+5. Use deeper pages when needed.
 
 `Evolution` lets you filter Change Proposals by Status, Type and search text, create a Change for a Task, and run owner-facing change workflows such as approve, move to review and accept when the proposal state allows them. Human Owner approval or acceptance notes are still required where the lifecycle requires them; Codex must not provide those notes on its own.
 
@@ -82,6 +93,22 @@ Codex is actually running only when the session status is `running`, the current
 Live Codex logs appear on the Pipeline session detail page during the `execute` phase as separate `STDOUT` and `STDERR` panels. `stdout` is normal command output; `stderr` is diagnostics or error output. These runtime logs are execution evidence and troubleshooting context, not implementation files to list in a structured report.
 
 `Actions` contains direct forms for Task creation, Bulk Task Import, health and repair checks, Task workflows, Task transitions, current Task changes, generated-output refreshes, and Codex/context builds. Bulk Task Import supports pasted JSON and `.json` or `.txt` file upload; leave Confirm unchecked for preview and check Confirm only when the preview is ready to create Tasks.
+
+The deeper pages remain available for diagnostics, recovery and focused workflows:
+
+```text
+Tasks      full inventory, filters, row workflows and Task details
+Pipeline   queue runner, session monitor and run recovery
+Reviews    owner review decisions and rework routing
+Evolution  Change Proposal approval, review and acceptance workflows
+Doctor     full health findings and recovery checks
+Events     audit-event inspection
+Generated  read-only generated output previews
+Commands   registered command metadata
+Actions    direct confirmed action forms
+Commit     local commit readiness inspection
+Epics      planning container inspection and close helpers
+```
 
 ## Web Settings Page
 

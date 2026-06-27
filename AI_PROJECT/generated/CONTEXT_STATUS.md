@@ -1,15 +1,15 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/generated/CONTEXT_PACK.md -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-157 PIPE-073 Document Codex structured report auto-submit Document how Codex structured reports are emitted, parsed, auto-submitted and recovered in Web UI. Owner-facing docs should explain why Run no longer normally stops at REPORT_MISSING and what to do when it still does. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Document the structured final report contract used by Codex prompts. Document automatic task report submission after successful local Codex execution. Document REPORT_MISSING fallback behavior and Web recovery action. Add troubleshooting guidance for malformed report output. Do not document unimplemented behavior as complete. Do not edit generated documentation manually. Do not change pipeline code in this documentation task. ai-system/project-control/06-prompt-package-spec.md ai-system/project-control/08-usage-guide.md ai-system/project-control/10-owner-quickstart.md ai-system/project-control/pipeline-runner.md Documentation explains the final structured report block expected from Codex. Documentation explains when the adapter auto-submits a report. Documentation explains why free-text summaries are not enough for collect-report. Documentation explains the manual or Web recovery path for REPORT_MISSING sessions. Documentation validation and generated checks can be rerun after edits. Verify that documentation matches implemented behavior and does not overpromise.","schema_version":1,"task_id":"TASK-157"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-239 Replace Tasks metrics with action counts Replace non-actionable /tasks metrics with owner-actionable counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues. Counts like done and visible are useful for inventory, but the Owner Cockpit default should show work that needs attention. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Compute action queue counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues. Render these counts in the /tasks default Action Queue view. Keep inventory-style metrics available only in Full Inventory or diagnostic views if they already exist. Add regression coverage for the displayed action counts. Do not remove task inventory data from the system. Do not change task statuses or stored task counts. Do not edit protected project-control files manually. ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py tests/test_web_control_center_read_model.py tests/test_web_control_center.py The default /tasks metrics show Needs Decision, Ready To Run, Current, Blocked, and Health Issues. The default /tasks metrics do not emphasize done count as a primary owner-action metric. Metric counts match the rendered action queue groups. Metrics remain usable when there is no current task. Tests cover the action-count metrics. Compare metric counts with the queue groups rendered below them.","schema_version":1,"task_id":"TASK-239"} -->
 
 # Context Status
 
 Context pack exists: `true`
 Mode: `task`
-Task ID: `TASK-157`
+Task ID: `TASK-239`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1502`
+Tasks revision: `1646`
 Indexed source documents: `10`
 Indexed chunks: `891`
 Selected chunks: `8`
@@ -17,9 +17,9 @@ Excluded registered sources: `135`
 
 ## Selected Source Paths
 
+- ai-system/project-control/03-state-model.md
 - ai-system/project-control/04-command-catalog.md
 - ai-system/project-control/06-prompt-package-spec.md
-- ai-system/project-control/07-validation-and-tests.md
 - ai-system/skills/README.md
 
 ## Exclusion Reasons
