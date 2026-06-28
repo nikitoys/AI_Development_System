@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 103,
+  "revision": 104,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-28T18:41:08Z",
+  "updated_at": "2026-06-28T18:56:29Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -7330,6 +7330,78 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-104",
+      "task_id": "TASK-254",
+      "task_ref": "PIPEF-149",
+      "submitted_at": "2026-06-28T18:56:29Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:54ca74b7ff70b3d1c5a050e6f9d36a682ad96ffae5d257f7c0f8fa6aed6e119c",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-254",
+        "task_ref": "PIPEF-149",
+        "reported_task_id": "TASK-254",
+        "reported_task_ref": "PIPEF-149",
+        "implementation_summary": "Updated tmp/run-smoke/web-run-clean-commit-smoke.md with deterministic smoke content containing WEB_RUN_CLEAN_COMMIT_OK and explicit Web Run local commit validation purpose text.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 187.341223,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 187.341223,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree already contained modified protected AI_PROJECT files before this task; they were not edited.",
+          "Direct Web Run local commit completion is performed by the surrounding Web Run pipeline, not manually by this task execution."
+        ],
+        "blockers": [],
+        "notes": [
+          "Verified the file exists.",
+          "Verified the exact marker WEB_RUN_CLEAN_COMMIT_OK is present.",
+          "Verified the required smoke-artifact purpose statement is present.",
+          "Verified tmp/run-smoke/web-run-clean-commit-smoke.md appears as a modified file in git status."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 881,
+          "remaining_tokens": 31119,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -7431,6 +7503,7 @@
     "TASK-250": "RPT-098",
     "TASK-251": "RPT-099",
     "TASK-252": "RPT-101",
-    "TASK-253": "RPT-103"
+    "TASK-253": "RPT-103",
+    "TASK-254": "RPT-104"
   }
 }

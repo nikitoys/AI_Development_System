@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `2562`
+Revision: `2565`
 Changes: `84`
 
 ## Summary
 
-- `accepted`: 62
-- `approved`: 22
+- `accepted`: 63
+- `approved`: 21
 
 ## Changes
 
@@ -5226,7 +5226,7 @@ Linked tasks:
 
 ### CHG-084 — Verify Web Run clean commit path
 
-Status: `approved`  
+Status: `accepted`  
 Type: `process`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -5246,6 +5246,9 @@ This task validates the fixed Web Run local commit path after the bootstrap repa
 
 Approved by: `human_owner` at `2026-06-28T18:53:10Z`  
 Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-130)  
+
+Accepted by: `human_owner` at `2026-06-28T18:56:48Z`  
+Acceptance notes: Approve; linked Change accepted after task TASK-254 close succeeded.  
 
 Affected files:
 

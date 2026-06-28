@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `1733`
-Current task: `TASK-254`
+Revision: `1736`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -4432,9 +4432,9 @@ Acceptance criteria:
 - The generated report evidence includes tmp/run-smoke/web-run-clean-commit-smoke.md as a changed file.
 - Web Run reaches local commit without COMMIT_READINESS_FAILED.
 
-### PIPEF-149 (TASK-254) — Verify Web Run clean commit path ⭐
+### PIPEF-149 (TASK-254) — Verify Web Run clean commit path
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `light`
 Identity: uid `tsk_ccbe7708be33`, legacy `TASK-254`, aliases `TASK-254`, local `PIPEF` / `149`

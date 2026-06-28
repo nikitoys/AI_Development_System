@@ -12,7 +12,7 @@ Task ID: `TASK-254`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1733`
+Tasks revision: `1736`
 
 ## Query
 
@@ -23,7 +23,7 @@ TASK-254 Verify Web Run clean commit path Create a deterministic smoke artifact 
 ## Task Boundary Snapshot
 
 Task: `TASK-254` - Verify Web Run clean commit path
-Status: `in_progress`
+Status: `done`
 
 Scope:
 - Create tmp/run-smoke/web-run-clean-commit-smoke.md.

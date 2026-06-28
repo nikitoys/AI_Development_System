@@ -3,23 +3,17 @@
 
 # Codex Execution Status
 
-Status: `READY`
-Code: `CODEX_READY`
-Updated: `2026-06-28T18:53:14Z`
+Status: `BLOCKED`
+Code: `CODEX_NO_PROMPT_PACKAGE`
+Updated: `2026-06-28T18:56:47Z`
 
-Prompt exists: `true`
+Prompt exists: `false`
 Prompt path: `/home/nikitoys/AI-Development-System/AI_PROJECT/generated/CODEX_PROMPT.md`
 
-Source type: `task`
-Source ID: `TASK-254`
-Source status: `in_progress`
+Source type: `none`
+Source ID: `none`
+Source status: `unknown`
 
-Context Pack:
+Blocked reason:
 
-- Path: `AI_PROJECT/generated/CONTEXT_PACK.md`
-- SHA-256: `0b6c3f6db5ddd6501bd152cafe2cf22441b099c8f11ab964ca7fdb49087b7b23`
-- Mode: `task`
-- Task ID: `TASK-254`
-- Docs revision: `28`
-- Tasks revision: `1733`
-- Selected sources: `8`
+No executable Codex prompt package is currently selected.
