@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `1724`
-Current task: `none`
+Revision: `1733`
+Current task: `TASK-254`
 
 ## Epic `EPIC-001`
 
@@ -4413,4 +4413,38 @@ Acceptance criteria:
 - The file contains the exact marker WEB_RUN_FINAL_SMOKE_OK.
 - The file states that it is only a smoke artifact for Web Run commit validation.
 - The generated report evidence includes tmp/run-smoke/web-run-final-smoke.md as a changed file.
+- Web Run reaches local commit without COMMIT_READINESS_FAILED.
+
+### PIPEF-148 (TASK-253) — Verify Web Run clean commit path
+
+Status: `done`
+Priority: `1`
+Verification: `light`
+Identity: uid `tsk_dec6f940c56e`, legacy `TASK-253`, aliases `TASK-253`, local `PIPEF` / `148`
+
+Create a deterministic smoke artifact to verify that Web Run reaches local commit from a clean worktree.
+
+Acceptance criteria:
+
+- tmp/run-smoke/web-run-clean-commit-smoke.md exists after execution.
+- The file contains the exact marker WEB_RUN_CLEAN_COMMIT_OK.
+- The file states that it is only a smoke artifact for Web Run local commit validation.
+- The generated report evidence includes tmp/run-smoke/web-run-clean-commit-smoke.md as a changed file.
+- Web Run reaches local commit without COMMIT_READINESS_FAILED.
+
+### PIPEF-149 (TASK-254) — Verify Web Run clean commit path ⭐
+
+Status: `in_progress`
+Priority: `1`
+Verification: `light`
+Identity: uid `tsk_ccbe7708be33`, legacy `TASK-254`, aliases `TASK-254`, local `PIPEF` / `149`
+
+Create a deterministic smoke artifact to verify that Web Run reaches local commit from a clean worktree.
+
+Acceptance criteria:
+
+- tmp/run-smoke/web-run-clean-commit-smoke.md exists after execution.
+- The file contains the exact marker WEB_RUN_CLEAN_COMMIT_OK.
+- The file states that it is only a smoke artifact for Web Run local commit validation.
+- The generated report evidence includes tmp/run-smoke/web-run-clean-commit-smoke.md as a changed file.
 - Web Run reaches local commit without COMMIT_READINESS_FAILED.

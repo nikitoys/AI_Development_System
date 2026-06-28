@@ -1,6 +1,6 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/state/docs.json + AI_PROJECT/state/tasks.json -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-252 Verify Web Run commit smoke path Create a deterministic smoke artifact to verify that Web Run reaches local commit after pipeline commit fixes. This task is only for validating the fixed Web Run execution and commit path. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Create tmp/run-smoke/web-run-final-smoke.md. Add the exact marker WEB_RUN_FINAL_SMOKE_OK. State that this file is only a smoke artifact for Web Run commit validation. Keep the content deterministic and timestamp-free. Do not change behavior unrelated to this task. Do not refactor unrelated code. Do not edit protected project-control files manually. Do not change pipeline, Web UI, policy, task, evolution, context, or Codex control behavior. tmp/run-smoke/web-run-final-smoke.md tmp/run-smoke/web-run-final-smoke.md exists after execution. The file contains the exact marker WEB_RUN_FINAL_SMOKE_OK. The file states that it is only a smoke artifact for Web Run commit validation. The generated report evidence includes tmp/run-smoke/web-run-final-smoke.md as a changed file. Web Run reaches local commit without COMMIT_READINESS_FAILED. Confirm that only the smoke artifact and session-owned project-control files are included in commit readiness.","schema_version":1,"task_id":"TASK-252"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-254 Verify Web Run clean commit path Create a deterministic smoke artifact to verify that Web Run reaches local commit from a clean worktree. This task validates the fixed Web Run local commit path after the bootstrap repair commit. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Create tmp/run-smoke/web-run-clean-commit-smoke.md. Add the exact marker WEB_RUN_CLEAN_COMMIT_OK. State that this file is only a smoke artifact for Web Run local commit validation. Keep the content deterministic and timestamp-free. Do not change behavior unrelated to this task. Do not refactor unrelated code. Do not edit protected project-control files manually. Do not change pipeline, Web UI, policy, task, evolution, context, or Codex control behavior. tmp/run-smoke/web-run-clean-commit-smoke.md tmp/run-smoke/web-run-clean-commit-smoke.md exists after execution. The file contains the exact marker WEB_RUN_CLEAN_COMMIT_OK. The file states that it is only a smoke artifact for Web Run local commit validation. The generated report evidence includes tmp/run-smoke/web-run-clean-commit-smoke.md as a changed file. Web Run reaches local commit without COMMIT_READINESS_FAILED. Confirm that Web Run creates a local commit from a clean worktree.","schema_version":1,"task_id":"TASK-254"} -->
 
 # Context Pack
 
@@ -8,37 +8,37 @@ This generated Context Pack is derived output only. It is not source of truth.
 It does not expand task scope, allowed files, out-of-scope items, or acceptance criteria.
 
 Mode: `task`
-Task ID: `TASK-252`
+Task ID: `TASK-254`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1724`
+Tasks revision: `1733`
 
 ## Query
 
 ```text
-TASK-252 Verify Web Run commit smoke path Create a deterministic smoke artifact to verify that Web Run reaches local commit after pipeline commit fixes. This task is only for validating the fixed Web Run execution and commit path. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Create tmp/run-smoke/web-run-final-smoke.md. Add the exact marker WEB_RUN_FINAL_SMOKE_OK. State that this file is only a smoke artifact for Web Run commit validation. Keep the content deterministic and timestamp-free. Do not change behavior unrelated to this task. Do not refactor unrelated code. Do not edit protected project-control files manually. Do not change pipeline, Web UI, policy, task, evolution, context, or Codex control behavior. tmp/run-smoke/web-run-final-smoke.md tmp/run-smoke/web-run-final-smoke.md exists after execution. The file contains the exact marker WEB_RUN_FINAL_SMOKE_OK. The file states that it is only a smoke artifact for Web Run commit validation. The generated report evidence includes tmp/run-smoke/web-run-final-smoke.md as a changed file. Web Run reaches local commit without COMMIT_READINESS_FAILED. Confirm that only the smoke artifact and session-owned project-control files are included in commit readiness.
+TASK-254 Verify Web Run clean commit path Create a deterministic smoke artifact to verify that Web Run reaches local commit from a clean worktree. This task validates the fixed Web Run local commit path after the bootstrap repair commit. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Create tmp/run-smoke/web-run-clean-commit-smoke.md. Add the exact marker WEB_RUN_CLEAN_COMMIT_OK. State that this file is only a smoke artifact for Web Run local commit validation. Keep the content deterministic and timestamp-free. Do not change behavior unrelated to this task. Do not refactor unrelated code. Do not edit protected project-control files manually. Do not change pipeline, Web UI, policy, task, evolution, context, or Codex control behavior. tmp/run-smoke/web-run-clean-commit-smoke.md tmp/run-smoke/web-run-clean-commit-smoke.md exists after execution. The file contains the exact marker WEB_RUN_CLEAN_COMMIT_OK. The file states that it is only a smoke artifact for Web Run local commit validation. The generated report evidence includes tmp/run-smoke/web-run-clean-commit-smoke.md as a changed file. Web Run reaches local commit without COMMIT_READINESS_FAILED. Confirm that Web Run creates a local commit from a clean worktree.
 ```
 
 ## Task Boundary Snapshot
 
-Task: `TASK-252` - Verify Web Run commit smoke path
-Status: `done`
+Task: `TASK-254` - Verify Web Run clean commit path
+Status: `in_progress`
 
 Scope:
-- Create tmp/run-smoke/web-run-final-smoke.md.
-- Add the exact marker WEB_RUN_FINAL_SMOKE_OK.
-- State that this file is only a smoke artifact for Web Run commit validation.
+- Create tmp/run-smoke/web-run-clean-commit-smoke.md.
+- Add the exact marker WEB_RUN_CLEAN_COMMIT_OK.
+- State that this file is only a smoke artifact for Web Run local commit validation.
 - Keep the content deterministic and timestamp-free.
 
 Allowed Files:
-- tmp/run-smoke/web-run-final-smoke.md
+- tmp/run-smoke/web-run-clean-commit-smoke.md
 
 Acceptance Criteria:
-- tmp/run-smoke/web-run-final-smoke.md exists after execution.
-- The file contains the exact marker WEB_RUN_FINAL_SMOKE_OK.
-- The file states that it is only a smoke artifact for Web Run commit validation.
-- The generated report evidence includes tmp/run-smoke/web-run-final-smoke.md as a changed file.
+- tmp/run-smoke/web-run-clean-commit-smoke.md exists after execution.
+- The file contains the exact marker WEB_RUN_CLEAN_COMMIT_OK.
+- The file states that it is only a smoke artifact for Web Run local commit validation.
+- The generated report evidence includes tmp/run-smoke/web-run-clean-commit-smoke.md as a changed file.
 - Web Run reaches local commit without COMMIT_READINESS_FAILED.
 
 ## Index Summary
@@ -54,14 +54,14 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 | Score | Source | Heading | Lines | Content hash | Chunk hash | Reasons |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 119 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 607-707 | `f5e4b5e551ae` | `6c704ec11dd6` | metadata token match: control, md, project-control; content token match: a, acceptance, after, ai_project, and, change, changed, completed |
-| 113 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: context, control, state; metadata token match: context, control, md, project-control, state; content token match: a, acceptance, ai_project, and, are, content, context, control |
-| 110 | `ai-system/project-control/06-prompt-package-spec.md` | 7. Section Requirements > 7.14 Final Report Requirements | 434-474 | `f5e4b5e551ae` | `6effcae6ee95` | heading token match: report; metadata token match: control, md, project-control, report; content token match: a, acceptance, after, and, as, changed, codex, completed |
-| 109 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: create, to; metadata token match: create, md, to; content token match: a, acceptance, and, as, commit, control, create, criteria |
-| 106 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 834-870 | `f5e4b5e551ae` | `1ed18819b1db` | heading token match: context; metadata token match: context, control, md, project-control; content token match: a, acceptance, add, and, change, codex, context, criteria |
-| 101 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | metadata token match: md; content token match: a, acceptance, add, after, ai_project, and, as, behavior |
-| 99 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 65-119 | `f824429b0a39` | `5b78d4503548` | heading token match: control; metadata token match: control, md, project-control; content token match: a, acceptance, ai_project, and, are, as, changed, content |
-| 89 | `ai-system/project-control/07-validation-and-tests.md` | 20. Acceptance Criteria For Validation Layer | 1368-1386 | `61710bd7deee` | `9ed7e5fda92c` | heading token match: acceptance, criteria, for, validation; metadata token match: acceptance, and, control, criteria, for, md, project-control, validation; content token match: a, acceptance, and, are, criteria, do, for, generated |
+| 113 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 607-707 | `f5e4b5e551ae` | `6c704ec11dd6` | metadata token match: control, md, project-control; content token match: a, acceptance, after, ai_project, and, change, changed, completed |
+| 107 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: context, control, state; metadata token match: context, control, md, project-control, state; content token match: a, acceptance, ai_project, and, content, context, control, criteria |
+| 105 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: create, to; metadata token match: create, md, to; content token match: a, acceptance, and, as, commit, control, create, criteria |
+| 104 | `ai-system/project-control/06-prompt-package-spec.md` | 7. Section Requirements > 7.14 Final Report Requirements | 434-474 | `f5e4b5e551ae` | `6effcae6ee95` | heading token match: report; metadata token match: control, md, project-control, report; content token match: a, acceptance, after, and, as, changed, codex, completed |
+| 102 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 834-870 | `f5e4b5e551ae` | `1ed18819b1db` | heading token match: context; metadata token match: context, control, md, project-control; content token match: a, acceptance, add, and, change, codex, context, criteria |
+| 93 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | metadata token match: md; content token match: a, acceptance, add, after, ai_project, and, as, behavior |
+| 89 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 65-119 | `f824429b0a39` | `5b78d4503548` | heading token match: control; metadata token match: control, md, project-control; content token match: a, acceptance, ai_project, and, as, changed, content, context |
+| 83 | `ai-system/project-control/07-validation-and-tests.md` | 20. Acceptance Criteria For Validation Layer | 1368-1386 | `61710bd7deee` | `9ed7e5fda92c` | heading token match: acceptance, criteria, for, validation; metadata token match: acceptance, and, control, criteria, for, md, project-control, validation; content token match: a, acceptance, and, criteria, do, for, generated, is |
 
 ## Selected Context
 
@@ -71,7 +71,7 @@ Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 12. Prompt Package Template
 Lines: `607-707`
-Score: `119`
+Score: `113`
 Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
 Chunk hash: `6c704ec11dd6768d6ef9c65207d80f3aa00e1bf0da58c3d765defabe8ff08815`
 Reasons: metadata token match: control, md, project-control; content token match: a, acceptance, after, ai_project, and, change, changed, completed
@@ -153,10 +153,10 @@ Title: Project Control State Model
 Status: `active`  Type: `reference`
 Heading: Project Control State Model > Context Control State
 Lines: `104-125`
-Score: `113`
+Score: `107`
 Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
 Chunk hash: `0cd80bdf0d55e5284fa6355477f50005896398136bf33b7e1a181718f309f8b4`
-Reasons: heading token match: context, control, state; metadata token match: context, control, md, project-control, state; content token match: a, acceptance, ai_project, and, are, content, context, control
+Reasons: heading token match: context, control, state; metadata token match: context, control, md, project-control, state; content token match: a, acceptance, ai_project, and, content, context, control, criteria
 
 ```text
 ## Context Control State
@@ -182,13 +182,36 @@ By default, context control indexes registered active source documents only. It 
 ---
 ```
 
-### 3. `ai-system/project-control/06-prompt-package-spec.md`
+### 3. `ai-system/skills/README.md`
+
+Title: Skills Layer Roadmap
+Status: `active`  Type: `guide`
+Heading: Skills Layer Roadmap > Recommended Skills To Create
+Lines: `80-92`
+Score: `105`
+Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
+Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
+Reasons: heading token match: create, to; metadata token match: create, md, to; content token match: a, acceptance, and, as, commit, control, create, criteria
+
+```text
+## Recommended Skills To Create
+
+| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
+| --- | --- | --- | --- | --- | --- |
+| Documentation Control Skill | Guide documentation registration, status changes, generated indexes and documentation validation. | `docctl.py` | P0 | Register documents, set draft/review status, render/check generated docs, explain documentation lifecycle. | Mark documents active without Human Owner approval; manually edit `docs.json`, doc events or generated doc indexes. |
+| Protected Files Skill | Keep agents inside the protected-files boundary and detect unsafe project-control edits. | `check-protected-project-files.py`, `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Explain protected paths, run protected-files checks, route repairs through CLIs. | Edit protected state/events/generated files manually; use ad hoc scripts to mutate protected files; hide drift. |
+| Review Gate Skill | Guide review intake before a Task can be accepted or closed. | `taskctl.py`; future review control CLI if approved | P1 | Check scope, allowed files, acceptance criteria, validation output and review status; recommend APPROVED, REWORK, REJECTED or DEFERRED. | Self-approve work; mark a Task done without the required approval path; ignore Critical or Major findings. |
+
+[...truncated by contextctl...]
+```
+
+### 4. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 7. Section Requirements > 7.14 Final Report Requirements
 Lines: `434-474`
-Score: `110`
+Score: `104`
 Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
 Chunk hash: `6effcae6ee956170dbc3f9127d2af67ea9fcf3027b9a669f88ec02f76a1e6410`
 Reasons: heading token match: report; metadata token match: control, md, project-control, report; content token match: a, acceptance, after, and, as, changed, codex, completed
@@ -236,36 +259,13 @@ Rules:
 The local pipeline adapter parses this block from Codex stdout. It uses the four Codex-authored fields as summary input and derives task identity, changed files, generated files, checks, owner decision status and token usage from trusted pipeline and task evidence.
 ```
 
-### 4. `ai-system/skills/README.md`
-
-Title: Skills Layer Roadmap
-Status: `active`  Type: `guide`
-Heading: Skills Layer Roadmap > Recommended Skills To Create
-Lines: `80-92`
-Score: `109`
-Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
-Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
-Reasons: heading token match: create, to; metadata token match: create, md, to; content token match: a, acceptance, and, as, commit, control, create, criteria
-
-```text
-## Recommended Skills To Create
-
-| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
-| --- | --- | --- | --- | --- | --- |
-| Documentation Control Skill | Guide documentation registration, status changes, generated indexes and documentation validation. | `docctl.py` | P0 | Register documents, set draft/review status, render/check generated docs, explain documentation lifecycle. | Mark documents active without Human Owner approval; manually edit `docs.json`, doc events or generated doc indexes. |
-| Protected Files Skill | Keep agents inside the protected-files boundary and detect unsafe project-control edits. | `check-protected-project-files.py`, `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Explain protected paths, run protected-files checks, route repairs through CLIs. | Edit protected state/events/generated files manually; use ad hoc scripts to mutate protected files; hide drift. |
-| Review Gate Skill | Guide review intake before a Task can be accepted or closed. | `taskctl.py`; future review control CLI if approved | P1 | Check scope, allowed files, acceptance criteria, validation output and review status; recommend APPROVED, REWORK, REJECTED or DEFERRED. | Self-approve work; mark a Task done without the required approval path; ignore Critical or Major findings. |
-
-[...truncated by contextctl...]
-```
-
 ### 5. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 14. Context Budget Rules > Context Pack Boundary
 Lines: `834-870`
-Score: `106`
+Score: `102`
 Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
 Chunk hash: `1ed18819b1db2849347b56648bdbea293730ca187154bd5be940636cfe902e79`
 Reasons: heading token match: context; metadata token match: context, control, md, project-control; content token match: a, acceptance, add, and, change, codex, context, criteria
@@ -315,7 +315,7 @@ Title: Skills Layer Roadmap
 Status: `active`  Type: `guide`
 Heading: Skills Layer Roadmap > Existing Useful Skills
 Lines: `34-43`
-Score: `101`
+Score: `93`
 Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
 Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
 Reasons: metadata token match: md; content token match: a, acceptance, add, after, ai_project, and, as, behavior
@@ -338,10 +338,10 @@ Title: Project Control Command Catalog
 Status: `active`  Type: `reference`
 Heading: Project Control Command Catalog > Self-Hosted Command Boundary
 Lines: `65-119`
-Score: `99`
+Score: `89`
 Content hash: `f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6`
 Chunk hash: `5b78d45035483b51a58d0a7bed1cf1402fe3b2e6bc9a7ffcda911c0d12fcb6bc`
-Reasons: heading token match: control; metadata token match: control, md, project-control; content token match: a, acceptance, ai_project, and, are, as, changed, content
+Reasons: heading token match: control; metadata token match: control, md, project-control; content token match: a, acceptance, ai_project, and, as, changed, content, context
 
 ```text
 ## Self-Hosted Command Boundary
@@ -388,10 +388,10 @@ Title: Project Control Validation and Tests
 Status: `active`  Type: `process`
 Heading: 20. Acceptance Criteria For Validation Layer
 Lines: `1368-1386`
-Score: `89`
+Score: `83`
 Content hash: `61710bd7deeed5b710aa500acaf478c77f7ad43ffcd3943c0245da65015ff2c9`
 Chunk hash: `9ed7e5fda92cce9da485202d3c05867d3fcf000f7ab294fcf2397088db94d3cf`
-Reasons: heading token match: acceptance, criteria, for, validation; metadata token match: acceptance, and, control, criteria, for, md, project-control, validation; content token match: a, acceptance, and, are, criteria, do, for, generated
+Reasons: heading token match: acceptance, criteria, for, validation; metadata token match: acceptance, and, control, criteria, for, md, project-control, validation; content token match: a, acceptance, and, criteria, do, for, generated, is
 
 ```text
 # 20. Acceptance Criteria For Validation Layer

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 101,
+  "revision": 103,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-28T17:33:44Z",
+  "updated_at": "2026-06-28T18:41:08Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -7190,6 +7190,146 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-102",
+      "task_id": "TASK-253",
+      "task_ref": "PIPEF-148",
+      "submitted_at": "2026-06-28T18:41:08Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:bb09595a5e98a8769df8e2b8f741af2c602cdb8e3bdf5e8620a31b0dee73f888",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-253",
+        "task_ref": "PIPEF-148",
+        "reported_task_id": "TASK-253",
+        "reported_task_ref": "PIPEF-148",
+        "implementation_summary": "Created tmp/run-smoke/web-run-clean-commit-smoke.md with deterministic smoke content, including the exact WEB_RUN_CLEAN_COMMIT_OK marker and Web Run local commit validation purpose statement.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 174.455527,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 174.455527,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree had pre-existing unrelated protected project-control changes before this task; they were not modified."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only the allowed smoke artifact path.",
+          "Light file verification passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 881,
+          "remaining_tokens": 31119,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-103",
+      "task_id": "TASK-253",
+      "task_ref": "PIPEF-148",
+      "submitted_at": "2026-06-28T18:41:08Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-102",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-253",
+        "task_ref": "PIPEF-148",
+        "reported_task_id": "TASK-253",
+        "reported_task_ref": "PIPEF-148",
+        "implementation_summary": "Created tmp/run-smoke/web-run-clean-commit-smoke.md with deterministic smoke content, including the exact WEB_RUN_CLEAN_COMMIT_OK marker and Web Run local commit validation purpose statement.",
+        "changed_files": [
+          "tmp/run-smoke/web-run-clean-commit-smoke.md"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 174.455527,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 174.455527,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree had pre-existing unrelated protected project-control changes before this task; they were not modified."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only the allowed smoke artifact path.",
+          "Light file verification passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 881,
+          "remaining_tokens": 31119,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -7290,6 +7430,7 @@
     "TASK-249": "RPT-097",
     "TASK-250": "RPT-098",
     "TASK-251": "RPT-099",
-    "TASK-252": "RPT-101"
+    "TASK-252": "RPT-101",
+    "TASK-253": "RPT-103"
   }
 }

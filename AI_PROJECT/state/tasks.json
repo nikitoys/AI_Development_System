@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1724,
-  "current_task_id": null,
+  "revision": 1733,
+  "current_task_id": "TASK-254",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-28T17:34:02Z",
+  "updated_at": "2026-06-28T18:53:12Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -16383,6 +16383,120 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 147
+    },
+    {
+      "id": "TASK-253",
+      "epic_id": "EPIC-009",
+      "title": "Verify Web Run clean commit path",
+      "status": "done",
+      "summary": "Create a deterministic smoke artifact to verify that Web Run reaches local commit from a clean worktree.",
+      "description": "This task validates the fixed Web Run local commit path after the bootstrap repair commit.",
+      "priority": 1,
+      "order": 148,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "light",
+      "scope": [
+        "Create tmp/run-smoke/web-run-clean-commit-smoke.md.",
+        "Add the exact marker WEB_RUN_CLEAN_COMMIT_OK.",
+        "State that this file is only a smoke artifact for Web Run local commit validation.",
+        "Keep the content deterministic and timestamp-free."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually.",
+        "Do not change pipeline, Web UI, policy, task, evolution, context, or Codex control behavior."
+      ],
+      "allowed_files": [
+        "tmp/run-smoke/web-run-clean-commit-smoke.md"
+      ],
+      "acceptance_criteria": [
+        "tmp/run-smoke/web-run-clean-commit-smoke.md exists after execution.",
+        "The file contains the exact marker WEB_RUN_CLEAN_COMMIT_OK.",
+        "The file states that it is only a smoke artifact for Web Run local commit validation.",
+        "The generated report evidence includes tmp/run-smoke/web-run-clean-commit-smoke.md as a changed file.",
+        "Web Run reaches local commit without COMMIT_READINESS_FAILED."
+      ],
+      "review_instructions": [
+        "Confirm that Web Run creates a local commit from a clean worktree."
+      ],
+      "notes": [
+        "Run this only after the Web Run commit-readiness bootstrap fix has been manually committed."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-28T18:41:25Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-28T18:37:38Z",
+      "updated_at": "2026-06-28T18:41:26Z",
+      "uid": "tsk_dec6f940c56e",
+      "ref": "PIPEF-148",
+      "legacy_id": "TASK-253",
+      "aliases": [
+        "TASK-253"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 148
+    },
+    {
+      "id": "TASK-254",
+      "epic_id": "EPIC-009",
+      "title": "Verify Web Run clean commit path",
+      "status": "in_progress",
+      "summary": "Create a deterministic smoke artifact to verify that Web Run reaches local commit from a clean worktree.",
+      "description": "This task validates the fixed Web Run local commit path after the bootstrap repair commit.",
+      "priority": 1,
+      "order": 149,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "light",
+      "scope": [
+        "Create tmp/run-smoke/web-run-clean-commit-smoke.md.",
+        "Add the exact marker WEB_RUN_CLEAN_COMMIT_OK.",
+        "State that this file is only a smoke artifact for Web Run local commit validation.",
+        "Keep the content deterministic and timestamp-free."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually.",
+        "Do not change pipeline, Web UI, policy, task, evolution, context, or Codex control behavior."
+      ],
+      "allowed_files": [
+        "tmp/run-smoke/web-run-clean-commit-smoke.md"
+      ],
+      "acceptance_criteria": [
+        "tmp/run-smoke/web-run-clean-commit-smoke.md exists after execution.",
+        "The file contains the exact marker WEB_RUN_CLEAN_COMMIT_OK.",
+        "The file states that it is only a smoke artifact for Web Run local commit validation.",
+        "The generated report evidence includes tmp/run-smoke/web-run-clean-commit-smoke.md as a changed file.",
+        "Web Run reaches local commit without COMMIT_READINESS_FAILED."
+      ],
+      "review_instructions": [
+        "Confirm that Web Run creates a local commit from a clean worktree."
+      ],
+      "notes": [
+        "Run this only after the Web Run commit-readiness bootstrap fix has been manually committed."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-28T18:52:48Z",
+      "updated_at": "2026-06-28T18:53:12Z",
+      "uid": "tsk_ccbe7708be33",
+      "ref": "PIPEF-149",
+      "legacy_id": "TASK-254",
+      "aliases": [
+        "TASK-254"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 149
     }
   ]
 }

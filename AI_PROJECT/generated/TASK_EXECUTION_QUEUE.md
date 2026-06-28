@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1724`
+Revision: `1733`
 
 ## Executable Now
 
@@ -508,3 +508,7 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-147 (TASK-252)` [done] `EPIC-009` priority `1` — Verify Web Run commit smoke path
   - `status_not_executable`: status is done
+- `PIPEF-148 (TASK-253)` [done] `EPIC-009` priority `1` — Verify Web Run clean commit path
+  - `status_not_executable`: status is done
+- `PIPEF-149 (TASK-254)` [in_progress] `EPIC-009` priority `1` — Verify Web Run clean commit path
+  - `status_not_executable`: status is in_progress
