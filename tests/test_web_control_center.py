@@ -479,6 +479,93 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(metrics["Ready To Run"], "1")
         self.assertIn("Health Issues", metrics)
 
+    def test_tasks_ready_to_run_rows_show_run_prepare_and_details(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-RUN",
+                        "ref": "RUN-01",
+                        "legacy_id": "TASK-RUN",
+                        "status": "ready",
+                        "title": "Ready runnable task",
+                        "epic_id": "EPIC-001",
+                    },
+                    {
+                        "id": "TASK-BLOCK",
+                        "ref": "BLOCK-01",
+                        "legacy_id": "TASK-BLOCK",
+                        "status": "blocked",
+                        "title": "Blocked task",
+                        "epic_id": "EPIC-001",
+                    },
+                ],
+                epics=[{"id": "EPIC-001", "status": "active"}],
+            )
+            status, _, body = route(
+                "/tasks",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
+
+        rows = re.findall(r"<tr>.*?</tr>", body, flags=re.DOTALL)
+        ready_row = next(row for row in rows if "RUN-01" in row)
+        blocked_row = next(row for row in rows if "BLOCK-01" in row)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Ready To Run", body)
+        self.assertIn('data-confirm-effective-policy-summary="', body)
+        self.assertIn("batch.max_steps:", body)
+        self.assertIn("submitInProgress", body)
+        self.assertIn('value="ui.run_selected_task"', ready_row)
+        self.assertIn('name="task" value="TASK-RUN"', ready_row)
+        self.assertIn('data-confirm-modal="action"', ready_row)
+        self.assertIn('data-submit-once="action"', ready_row)
+        self.assertIn('<button type="submit">Run</button>', ready_row)
+        self.assertIn('value="task.prepare_for_codex"', ready_row)
+        self.assertIn('<button type="submit">Prepare</button>', ready_row)
+        self.assertIn("Details", ready_row)
+        self.assertIn("Open Details", blocked_row)
+        self.assertNotIn('value="ui.run_selected_task"', blocked_row)
+        self.assertNotIn('<button type="submit">Run</button>', blocked_row)
+
+    def test_current_execution_bar_shows_run_current_for_current_ready_task(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-CURRENT",
+                        "ref": "CUR-01",
+                        "legacy_id": "TASK-CURRENT",
+                        "status": "ready",
+                        "title": "Current runnable task",
+                        "epic_id": "EPIC-001",
+                    }
+                ],
+                current_task_id="TASK-CURRENT",
+                epics=[{"id": "EPIC-001", "status": "active"}],
+            )
+            status, _, body = route(
+                "/tasks",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
+
+        current_bar = re.search(
+            r'<section class="current-execution-bar".*?</section>',
+            body,
+            flags=re.DOTALL,
+        )
+        current_html = current_bar.group(0) if current_bar else ""
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("Run Current", current_html)
+        self.assertIn('value="ui.run_selected_task"', current_html)
+        self.assertIn('name="task" value="TASK-CURRENT"', current_html)
+        self.assertIn('data-confirm-modal="action"', current_html)
+
     def test_settings_page_renders_default_ui_settings(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -1249,7 +1336,9 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(len(detail_rows), 1)
         self.assertIn("DRAW-03", detail_rows[0])
         self.assertNotIn("Compact row scope.", detail_rows[0])
-        self.assertLessEqual(detail_rows[0].count('<button type="submit">'), 1)
+        self.assertLessEqual(detail_rows[0].count('<button type="submit">'), 2)
+        self.assertIn('value="ui.run_selected_task"', detail_rows[0])
+        self.assertIn('value="task.prepare_for_codex"', detail_rows[0])
         self.assertNotIn("unavailable:", detail_rows[0])
         self.assertNotIn("Effective Run Policy", detail_rows[0])
         self.assertNotIn("batch.max_steps", detail_rows[0])
@@ -1511,9 +1600,10 @@ class WebControlCenterTests(unittest.TestCase):
         )
         self.assertIn("Codex Prompt", tasks_body)
         self.assertIn("Context Pack", tasks_body)
+        self.assertIn('class="current-execution-actions"', tasks_body)
         self.assertRegex(
             tasks_body,
-            r'<div class="current-execution-actions"><a class="button-link" href="[^"]+">Open (Task|Review|Change)</a></div>',
+            r'class="current-execution-actions"[\s\S]*Open (Task|Review|Change)',
         )
 
     def test_pipeline_page_shows_policy_queue_session_audit_and_actions(self):
@@ -2204,6 +2294,38 @@ class WebControlCenterTests(unittest.TestCase):
                                     ],
                                     "stdout_summary": "context stdout summary",
                                     "stderr_summary": "context stderr summary",
+                                },
+                                {
+                                    "name": "report_declared_test_1",
+                                    "status": "warn",
+                                    "code": "MACHINE_REVIEW_UNSAFE_TEST_COMMAND",
+                                    "reason": "test_command_skipped_as_unsafe",
+                                    "blocking": False,
+                                },
+                            ],
+                            "blocking_non_pass_checks": [
+                                {
+                                    "name": "context_check_generated",
+                                    "status": "fail",
+                                    "code": "CONTEXT_CHECK_GENERATED_FAILED",
+                                    "reason": "Context generated output is stale.",
+                                    "blocking": True,
+                                    "command": [
+                                        "python",
+                                        "scripts/contextctl.py",
+                                        "check-generated",
+                                    ],
+                                    "stdout_summary": "context stdout summary",
+                                    "stderr_summary": "context stderr summary",
+                                }
+                            ],
+                            "advisory_non_pass_checks": [
+                                {
+                                    "name": "report_declared_test_1",
+                                    "status": "warn",
+                                    "code": "MACHINE_REVIEW_UNSAFE_TEST_COMMAND",
+                                    "reason": "test_command_skipped_as_unsafe",
+                                    "blocking": False,
                                 }
                             ],
                         },
@@ -2246,10 +2368,15 @@ class WebControlCenterTests(unittest.TestCase):
             status, _, body = route("/pipeline/sessions/PSESS-020", model)
 
         self.assertEqual(status.value, 200)
+        self.assertIn("Local Commit Diagnostics", body)
+        self.assertIn("Blocking Non-pass Checks", body)
+        self.assertIn("Advisory Non-pass Checks", body)
         self.assertIn("context_check_generated stdout", body)
         self.assertIn("context stdout summary", body)
         self.assertIn("context_check_generated stderr", body)
         self.assertIn("context stderr summary", body)
+        self.assertIn("report_declared_test_1", body)
+        self.assertIn("test_command_skipped_as_unsafe", body)
 
     def test_pipeline_session_detail_renders_report_recovery_action(self):
         stdout = (
@@ -5273,6 +5400,108 @@ class WebControlCenterTests(unittest.TestCase):
             "/pipeline/sessions/PSESS-009",
         )
 
+    def test_ui_run_selected_task_web_action_does_not_create_session_for_done_task(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "legacy_id": "TASK-001",
+                        "aliases": ["TASK-001"],
+                        "status": "done",
+                        "title": "Done task",
+                        "epic_id": "EPIC-001",
+                    }
+                ],
+                epics=[{"id": "EPIC-001", "status": "active"}],
+            )
+
+            with patch("ai_project_ctl.web.actions.create_session") as create:
+                with patch("ai_project_ctl.web.actions.run_until_blocker") as run_until:
+                    result = WebActionExecutor(root, actor="tester").execute(
+                        {
+                            "action": "ui.run_selected_task",
+                            "confirm": "yes",
+                            "task": "APP-01",
+                        }
+                    )
+
+            pipeline_path = root / "AI_PROJECT" / "state" / "pipeline_sessions.json"
+            pipeline_exists = pipeline_path.exists()
+
+        create.assert_not_called()
+        run_until.assert_not_called()
+        self.assertFalse(pipeline_exists)
+        payload = result.to_dict()
+        self.assertTrue(result.ok)
+        self.assertEqual(payload["result"]["data"]["outcome"], "not_run")
+        self.assertEqual(payload["result"]["data"]["task_status"], "done")
+        self.assertEqual(payload["result"]["data"]["session_id"], "")
+        self.assertIn("NOT RUN", payload["result"]["message"])
+
+    def test_ui_run_selected_task_web_action_links_existing_session_without_duplicate_run(self):
+        pipeline = pipeline_detail_state(
+            status="blocked",
+            step_status="blocked",
+            finished_at="",
+            current_step_status="blocked",
+            stop_reason="Waiting for owner action.",
+            next_action="Resume when ready.",
+        )
+        session = pipeline["sessions"][0]
+        session["id"] = "PSESS-EXISTING"
+        session["current_task_id"] = "TASK-001"
+        session["current_task_ref"] = "APP-01"
+        session["selected_queue"]["task_refs"] = ["APP-01"]
+        pipeline["current_session_id"] = "PSESS-EXISTING"
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "legacy_id": "TASK-001",
+                        "aliases": ["TASK-001"],
+                        "status": "ready",
+                        "title": "Ready task with existing session",
+                        "epic_id": "EPIC-001",
+                    }
+                ],
+                epics=[{"id": "EPIC-001", "status": "active"}],
+                pipeline=pipeline,
+            )
+
+            with patch("ai_project_ctl.web.actions.create_session") as create:
+                with patch("ai_project_ctl.web.actions.run_until_blocker") as run_until:
+                    result = WebActionExecutor(root, actor="tester").execute(
+                        {
+                            "action": "ui.run_selected_task",
+                            "confirm": "yes",
+                            "task": "TASK-001",
+                        }
+                    )
+
+        create.assert_not_called()
+        run_until.assert_not_called()
+        payload = result.to_dict()
+        self.assertTrue(result.ok)
+        self.assertEqual(payload["result"]["data"]["outcome"], "existing_session")
+        self.assertEqual(payload["result"]["data"]["session_id"], "PSESS-EXISTING")
+        self.assertEqual(
+            payload["result"]["data"]["session_href"],
+            "/pipeline/sessions/PSESS-EXISTING",
+        )
+        self.assertIn(
+            "Open pipeline session PSESS-EXISTING.",
+            payload["result"]["next_actions"],
+        )
+
     def test_ui_run_selected_task_web_action_reads_internal_bypass_setting(self):
         selected_policy = policy_preset("supervised_executable_local_commit")
         session_result = CommandResult.success(
@@ -5696,6 +5925,137 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("pipeline.run_next", body)
         self.assertIn("AI_PROJECT/generated/PIPELINE_STATUS.md", body)
         self.assertIn("Review the blocked pipeline session.", body)
+
+    def test_pipeline_action_result_panel_renders_no_executable_task_as_not_run(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "ok": True,
+                    "command": "pipeline.run_until_blocker",
+                    "domain": "pipeline",
+                    "message": "NO_EXECUTABLE_TASK: No executable task is available.",
+                    "data": {
+                        "session_id": "PSESS-EMPTY",
+                        "session_href": "/pipeline/sessions/PSESS-EMPTY",
+                        "session_status": "blocked",
+                        "phase_status": "blocked",
+                        "stop_code": "NO_EXECUTABLE_TASK",
+                        "stop_reason": "No executable task is available in the selected queue.",
+                        "blocked_by": "NO_EXECUTABLE_TASK",
+                        "next_action": "Create or unblock a ready task, then rerun prepare.",
+                    },
+                    "owner_action_required": "Create or unblock a ready task, then rerun prepare.",
+                }
+            )
+            + "\n",
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "pipeline.run_until_blocker",
+                    "confirm": "yes",
+                    "session_id": "PSESS-EMPTY",
+                }
+            )
+
+        body = render_action_result(result)
+
+        self.assertIn('class="panel action-result action-result-warn"', body)
+        self.assertIn('<span class="badge warn">NOT RUN</span>', body)
+        self.assertNotIn('<span class="badge pass">PASS</span>', body)
+        self.assertIn("NO_EXECUTABLE_TASK", body)
+        self.assertIn("No executable task is available in the selected queue.", body)
+        self.assertIn("Create or unblock a ready task, then rerun prepare.", body)
+
+    def test_pipeline_action_result_panel_renders_commit_readiness_as_commit_blocked(self):
+        next_action = "Task is done, but local commit is blocked by commit readiness."
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "ok": True,
+                    "command": "pipeline.run_until_blocker",
+                    "domain": "pipeline",
+                    "message": "COMMIT_READINESS_FAILED: local commit is blocked.",
+                    "data": {
+                        "session_id": "PSESS-COMMIT",
+                        "session_href": "/pipeline/sessions/PSESS-COMMIT",
+                        "session_status": "blocked",
+                        "phase_status": "blocked",
+                        "stop_code": "COMMIT_READINESS_FAILED",
+                        "stop_reason": "Machine Review FAIL blocks local commit.",
+                        "blocked_by": "COMMIT_READINESS_FAILED",
+                        "next_action": next_action,
+                        "commit_status": "blocked",
+                        "commit_code": "COMMIT_READINESS_FAILED",
+                    },
+                    "next_actions": [next_action],
+                }
+            )
+            + "\n",
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "pipeline.run_until_blocker",
+                    "confirm": "yes",
+                    "session_id": "PSESS-COMMIT",
+                }
+            )
+
+        body = render_action_result(result)
+
+        self.assertIn('class="panel action-result action-result-warn"', body)
+        self.assertIn('<span class="badge warn">COMMIT BLOCKED</span>', body)
+        self.assertNotIn('<span class="badge pass">PASS</span>', body)
+        self.assertIn("COMMIT_READINESS_FAILED", body)
+        self.assertIn("Machine Review FAIL blocks local commit.", body)
+        self.assertIn(next_action, body)
+
+    def test_pipeline_action_result_panel_keeps_completed_run_as_pass(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "ok": True,
+                    "command": "pipeline.run_until_blocker",
+                    "domain": "pipeline",
+                    "message": "QUEUE_COMPLETE: Selected queue completed.",
+                    "data": {
+                        "session_id": "PSESS-DONE",
+                        "session_href": "/pipeline/sessions/PSESS-DONE",
+                        "session_status": "completed",
+                        "stop_code": "QUEUE_COMPLETE",
+                        "stop_reason": "Selected queue completed.",
+                    },
+                }
+            )
+            + "\n",
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "pipeline.run_until_blocker",
+                    "confirm": "yes",
+                    "session_id": "PSESS-DONE",
+                }
+            )
+
+        body = render_action_result(result)
+
+        self.assertIn('class="panel action-result action-result-pass"', body)
+        self.assertIn('<span class="badge pass">PASS</span>', body)
+        self.assertIn("QUEUE_COMPLETE", body)
 
     def test_action_error_panel_keeps_failed_workflow_step_visible(self):
         error = WebActionError(

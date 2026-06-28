@@ -5,6 +5,7 @@ import unittest
 from dataclasses import replace
 from pathlib import Path
 
+from ai_project_ctl.core.result import CommandResult
 from ai_project_ctl.pipeline.codex_review import (
     CODE_PASS as CODEX_REVIEW_CODE_PASS,
     PASS as CODEX_REVIEW_PASS,
@@ -16,6 +17,7 @@ from ai_project_ctl.pipeline.git_commit import (
     CODE_READY,
     CODE_REPORT_NOT_PASS,
     CODE_REQUIRED_CHECK_NOT_PASS,
+    CODE_UNRELATED_FILES,
     MACHINE_DIAGNOSTIC_SUMMARY_LIMIT,
     REQUIRED_MACHINE_CHECKS,
     evaluate_commit_readiness,
@@ -46,6 +48,10 @@ from ai_project_ctl.pipeline.report_gate import (
 TASK_ID = "TASK-001"
 REPORT_ID = "RPT-001"
 CHANGED_FILE = "ai_project_ctl/pipeline/git_commit.py"
+CONTROL_STATE_FILE = "AI_PROJECT/state/tasks.json"
+CONTROL_EVENT_FILE = "AI_PROJECT/events/task-events.jsonl"
+CONTROL_GENERATED_FILE = "AI_PROJECT/generated/CODEX_TASKS.md"
+UNRELATED_FILE = "tests/unrelated_dirty_file.py"
 
 
 def completed(stdout="", returncode=0, stderr=""):
@@ -90,6 +96,8 @@ def _report_gate(
     *,
     status: str = REPORT_PASS,
     code: str = REPORT_CODE_PASS,
+    changed_files: tuple[str, ...] = (CHANGED_FILE,),
+    generated_files: tuple[str, ...] = (),
 ) -> ReportGateResult:
     return ReportGateResult(
         status=status,
@@ -97,7 +105,8 @@ def _report_gate(
         reason="report gate {}".format(status),
         report_id=REPORT_ID,
         task_id=TASK_ID,
-        changed_files=(CHANGED_FILE,),
+        changed_files=changed_files,
+        generated_files=generated_files,
     )
 
 
@@ -130,6 +139,16 @@ def _machine_review(
     )
 
 
+def _nonblocking_report_declared_warning() -> MachineCheckEvidence:
+    return MachineCheckEvidence(
+        name="report_declared_test_1",
+        status=MACHINE_REVIEW_WARN,
+        code=CODE_UNSAFE_TEST_COMMAND,
+        reason="test_command_skipped_as_unsafe",
+        blocking=False,
+    )
+
+
 def _codex_review() -> CodexReviewResult:
     return CodexReviewResult(
         status=CODEX_REVIEW_PASS,
@@ -148,6 +167,15 @@ def _git_status_with_changed_file(argv):
     if tuple(argv) != ("git", "status", "--short", "--untracked-files=all"):
         raise AssertionError("unexpected git command: {}".format(argv))
     return completed(stdout=" M {}\n".format(CHANGED_FILE))
+
+
+def _git_status_for_paths(*paths: str):
+    def runner(argv):
+        if tuple(argv) != ("git", "status", "--short", "--untracked-files=all"):
+            raise AssertionError("unexpected git command: {}".format(argv))
+        return completed(stdout="".join(" M {}\n".format(path) for path in paths))
+
+    return runner
 
 
 def _unexpected_git_runner(argv):
@@ -191,6 +219,35 @@ def _evaluate_commit_readiness_for_machine_review(
     )
 
 
+def _session_file_evidence(
+    *,
+    pre_existing: tuple[str, ...] = (),
+    session_owned: tuple[str, ...] = (),
+) -> dict:
+    return {
+        "id": "PSESS-001",
+        "file_evidence": {
+            "pre_existing_dirty_files": list(pre_existing),
+            "session_owned_changed_files": list(session_owned),
+        },
+    }
+
+
+def _side_effect(
+    *,
+    changed_files: tuple[str, ...] = (),
+    generated_files: tuple[str, ...] = (),
+) -> CommandResult:
+    result = CommandResult.success(
+        command="test.side.effect",
+        domain="test",
+        message="side effect",
+    )
+    result.changed_files.extend(changed_files)
+    result.generated_files.extend(generated_files)
+    return result
+
+
 class PipelineGitCommitTests(unittest.TestCase):
     def test_commit_readiness_accepts_report_gate_pass(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -204,6 +261,126 @@ class PipelineGitCommitTests(unittest.TestCase):
 
         self.assertTrue(result.ok)
         self.assertEqual(result.code, CODE_READY)
+
+    def test_commit_readiness_accepts_session_owned_governed_control_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_task_state(root)
+
+            result = evaluate_commit_readiness(
+                root=root,
+                task_id=TASK_ID,
+                policy=_policy(),
+                report_gate=_report_gate(),
+                machine_review=_machine_review(),
+                codex_review=_codex_review(),
+                session=_session_file_evidence(
+                    session_owned=(
+                        CONTROL_STATE_FILE,
+                        CONTROL_EVENT_FILE,
+                        CONTROL_GENERATED_FILE,
+                    )
+                ),
+                runner=_git_status_for_paths(
+                    CHANGED_FILE,
+                    CONTROL_STATE_FILE,
+                    CONTROL_EVENT_FILE,
+                    CONTROL_GENERATED_FILE,
+                ),
+            )
+
+        self.assertTrue(result.ok)
+        self.assertEqual(result.code, CODE_READY)
+        self.assertEqual(
+            sorted(result.approved_files),
+            sorted(
+                [
+                    CHANGED_FILE,
+                    CONTROL_STATE_FILE,
+                    CONTROL_EVENT_FILE,
+                    CONTROL_GENERATED_FILE,
+                ]
+            ),
+        )
+
+    def test_commit_readiness_blocks_pre_existing_control_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_task_state(root)
+
+            result = evaluate_commit_readiness(
+                root=root,
+                task_id=TASK_ID,
+                policy=_policy(),
+                report_gate=_report_gate(),
+                machine_review=_machine_review(),
+                codex_review=_codex_review(),
+                side_effects=(
+                    _side_effect(
+                        changed_files=(CONTROL_STATE_FILE, CONTROL_EVENT_FILE)
+                    ),
+                ),
+                session=_session_file_evidence(
+                    pre_existing=(CONTROL_STATE_FILE,),
+                    session_owned=(CONTROL_EVENT_FILE,),
+                ),
+                runner=_git_status_for_paths(
+                    CHANGED_FILE,
+                    CONTROL_STATE_FILE,
+                    CONTROL_EVENT_FILE,
+                ),
+            )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.code, CODE_UNRELATED_FILES)
+        self.assertEqual(result.blockers, (CONTROL_STATE_FILE,))
+        self.assertNotIn(CONTROL_STATE_FILE, result.approved_files)
+        self.assertIn(CONTROL_EVENT_FILE, result.approved_files)
+
+    def test_commit_readiness_blocks_unrelated_code_with_session_owned_control_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_task_state(root)
+
+            result = evaluate_commit_readiness(
+                root=root,
+                task_id=TASK_ID,
+                policy=_policy(),
+                report_gate=_report_gate(),
+                machine_review=_machine_review(),
+                codex_review=_codex_review(),
+                session=_session_file_evidence(session_owned=(CONTROL_STATE_FILE,)),
+                runner=_git_status_for_paths(
+                    CHANGED_FILE,
+                    CONTROL_STATE_FILE,
+                    UNRELATED_FILE,
+                ),
+            )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.code, CODE_UNRELATED_FILES)
+        self.assertEqual(result.blockers, (UNRELATED_FILE,))
+        self.assertIn(CONTROL_STATE_FILE, result.approved_files)
+
+    def test_commit_readiness_requires_report_task_artifact_with_session_control_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_task_state(root)
+
+            result = evaluate_commit_readiness(
+                root=root,
+                task_id=TASK_ID,
+                policy=_policy(),
+                report_gate=_report_gate(changed_files=()),
+                machine_review=_machine_review(),
+                codex_review=_codex_review(),
+                session=_session_file_evidence(session_owned=(CONTROL_STATE_FILE,)),
+                runner=_git_status_for_paths(CONTROL_STATE_FILE),
+            )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.code, CODE_UNRELATED_FILES)
+        self.assertEqual(result.blockers, ("target_task_artifact_missing",))
 
     def test_commit_readiness_accepts_report_gate_warn_when_policy_allows(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -277,14 +454,8 @@ class PipelineGitCommitTests(unittest.TestCase):
         self.assertTrue(result.ok)
         self.assertEqual(result.code, CODE_READY)
 
-    def test_commit_readiness_blocks_machine_review_warn_with_nonreport_warning(self):
-        advisory = MachineCheckEvidence(
-            name="report_declared_test_1",
-            status=MACHINE_REVIEW_WARN,
-            code=CODE_UNSAFE_TEST_COMMAND,
-            reason="test_command_skipped_as_unsafe",
-            blocking=False,
-        )
+    def test_commit_readiness_accepts_machine_review_warn_with_nonblocking_warning(self):
+        advisory = _nonblocking_report_declared_warning()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _write_task_state(root)
@@ -296,12 +467,18 @@ class PipelineGitCommitTests(unittest.TestCase):
                     code=MACHINE_REVIEW_CODE_WARN,
                     extra_checks=(advisory,),
                 ),
-                runner=_unexpected_git_runner,
             )
 
-        self.assertFalse(result.ok)
-        self.assertEqual(result.code, CODE_MACHINE_REVIEW_NOT_PASS)
-        self.assertIn("report_declared_test_1", result.reason)
+        self.assertTrue(result.ok)
+        self.assertEqual(result.code, CODE_READY)
+        self.assertNotIn("unapproved warning evidence", result.reason)
+        self.assertNotIn("report_declared_test_1", result.reason)
+        payload = result.to_dict()
+        self.assertEqual(payload["blocking_non_pass_checks"], [])
+        self.assertEqual(
+            [check["name"] for check in payload["advisory_non_pass_checks"]],
+            ["report_declared_test_1"],
+        )
 
     def test_commit_readiness_accepts_machine_review_warn_with_policy_approved_report_warning(self):
         report_warning = MachineCheckEvidence(
@@ -328,6 +505,80 @@ class PipelineGitCommitTests(unittest.TestCase):
 
         self.assertTrue(result.ok)
         self.assertEqual(result.code, CODE_READY)
+
+    def test_commit_readiness_accepts_policy_approved_report_warning_with_nonblocking_warning(self):
+        report_warning = MachineCheckEvidence(
+            name="codex_report_gate",
+            status=MACHINE_REVIEW_WARN,
+            code=MACHINE_REVIEW_CODE_WARN,
+            reason="Report gate warning is policy-approved.",
+            blocking=True,
+        )
+        advisory = _nonblocking_report_declared_warning()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_task_state(root)
+
+            result = _evaluate_commit_readiness_for_machine_review(
+                root,
+                _machine_review(
+                    status=MACHINE_REVIEW_WARN,
+                    code=MACHINE_REVIEW_CODE_WARN,
+                    extra_checks=(report_warning, advisory),
+                ),
+                report_gate=_report_gate(status=REPORT_WARN, code=REPORT_CODE_WARN),
+                allow_report_warnings=True,
+            )
+
+        self.assertTrue(result.ok)
+        self.assertEqual(result.code, CODE_READY)
+        self.assertNotIn("report_declared_test_1", result.reason)
+        payload = result.to_dict()
+        self.assertEqual(payload["blocking_non_pass_checks"], [])
+        self.assertEqual(
+            [check["name"] for check in payload["advisory_non_pass_checks"]],
+            ["codex_report_gate", "report_declared_test_1"],
+        )
+
+    def test_commit_readiness_blocks_policy_approved_report_warning_with_blocking_unsafe_warning(self):
+        report_warning = MachineCheckEvidence(
+            name="codex_report_gate",
+            status=MACHINE_REVIEW_WARN,
+            code=MACHINE_REVIEW_CODE_WARN,
+            reason="Report gate warning is policy-approved.",
+            blocking=True,
+        )
+        unsafe_warning = replace(_nonblocking_report_declared_warning(), blocking=True)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_task_state(root)
+
+            result = _evaluate_commit_readiness_for_machine_review(
+                root,
+                _machine_review(
+                    status=MACHINE_REVIEW_WARN,
+                    code=MACHINE_REVIEW_CODE_WARN,
+                    extra_checks=(report_warning, unsafe_warning),
+                ),
+                report_gate=_report_gate(status=REPORT_WARN, code=REPORT_CODE_WARN),
+                allow_report_warnings=True,
+                runner=_unexpected_git_runner,
+            )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.code, CODE_MACHINE_REVIEW_NOT_PASS)
+        self.assertIn("unapproved warning evidence", result.reason)
+        self.assertIn("report_declared_test_1", result.reason)
+        self.assertIn("blocking=True", result.reason)
+        payload = result.to_dict()
+        self.assertEqual(
+            [check["name"] for check in payload["blocking_non_pass_checks"]],
+            ["report_declared_test_1"],
+        )
+        self.assertEqual(
+            [check["name"] for check in payload["advisory_non_pass_checks"]],
+            ["codex_report_gate"],
+        )
 
     def test_commit_readiness_blocks_machine_review_report_warn_when_policy_disallows(self):
         report_warning = MachineCheckEvidence(
@@ -364,6 +615,7 @@ class PipelineGitCommitTests(unittest.TestCase):
             reason="Project doctor warning needs review.",
             blocking=True,
         )
+        advisory = _nonblocking_report_declared_warning()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _write_task_state(root)
@@ -373,7 +625,7 @@ class PipelineGitCommitTests(unittest.TestCase):
                 _machine_review(
                     status=MACHINE_REVIEW_WARN,
                     code=MACHINE_REVIEW_CODE_WARN,
-                    extra_checks=(blocking_warning,),
+                    extra_checks=(blocking_warning, advisory),
                 ),
                 runner=_unexpected_git_runner,
             )
@@ -382,6 +634,16 @@ class PipelineGitCommitTests(unittest.TestCase):
         self.assertEqual(result.code, CODE_MACHINE_REVIEW_NOT_PASS)
         self.assertIn("unapproved warning evidence", result.reason)
         self.assertIn("project_doctor", result.reason)
+        self.assertNotIn("report_declared_test_1", result.reason)
+        payload = result.to_dict()
+        self.assertEqual(
+            [check["name"] for check in payload["blocking_non_pass_checks"]],
+            ["project_doctor"],
+        )
+        self.assertEqual(
+            [check["name"] for check in payload["advisory_non_pass_checks"]],
+            ["report_declared_test_1"],
+        )
 
     def test_commit_readiness_blocks_machine_review_warn_when_required_check_is_not_pass(self):
         required_check = sorted(REQUIRED_MACHINE_CHECKS)[0]
@@ -465,14 +727,20 @@ class PipelineGitCommitTests(unittest.TestCase):
 
         payload = result.to_dict()
         diagnostics = payload["machine_review_diagnostics"]
+        blocking_checks = payload["blocking_non_pass_checks"]
+        advisory_checks = payload["advisory_non_pass_checks"]
 
         self.assertFalse(result.ok)
         self.assertEqual(result.code, CODE_MACHINE_REVIEW_NOT_PASS)
         self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(len(blocking_checks), 1)
+        self.assertEqual(advisory_checks, [])
         self.assertEqual(diagnostics[0]["name"], "context_check_generated")
+        self.assertEqual(blocking_checks[0]["name"], "context_check_generated")
         self.assertEqual(diagnostics[0]["status"], MACHINE_REVIEW_FAIL)
         self.assertEqual(diagnostics[0]["code"], "CONTEXT_CHECK_GENERATED_FAILED")
         self.assertEqual(diagnostics[0]["reason"], "Context generated output is stale.")
+        self.assertTrue(diagnostics[0]["blocking"])
         self.assertEqual(
             diagnostics[0]["command"],
             ["python", "scripts/contextctl.py", "check-generated"],

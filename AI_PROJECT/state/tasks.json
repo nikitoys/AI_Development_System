@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1646,
+  "revision": 1724,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-27T20:33:05Z",
+  "updated_at": "2026-06-28T17:34:02Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -15600,6 +15600,789 @@
       ],
       "epic_key": "CTL",
       "local_seq": 39
+    },
+    {
+      "id": "TASK-240",
+      "epic_id": "EPIC-009",
+      "title": "Ignore nonblocking review warnings",
+      "status": "done",
+      "summary": "Make local commit readiness ignore Machine Review warnings whose evidence is marked blocking=false.",
+      "description": "Local commit must not block on advisory Machine Review warnings such as unsafe report-declared test commands when those checks are explicitly nonblocking.",
+      "priority": 1,
+      "order": 135,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Update local commit Machine Review warning classification to consider only checks with blocking=true as commit blockers.",
+        "Keep Machine Review FAIL checks blocking regardless of warning policy.",
+        "Keep unapproved blocking Machine Review WARN checks blocking local commit.",
+        "Allow policy-approved codex_report_gate WARN while ignoring unrelated nonblocking WARN checks.",
+        "Add focused commit readiness tests for nonblocking warning behavior."
+      ],
+      "out_of_scope": [
+        "Do not allow Machine Review FAIL to pass local commit readiness.",
+        "Do not allow unknown blocking Machine Review WARN checks.",
+        "Do not change Codex Review required or skipped semantics.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/git_commit.py",
+        "tests/test_pipeline_git_commit.py"
+      ],
+      "acceptance_criteria": [
+        "A Machine Review with report_declared_test warnings marked blocking=false no longer blocks local commit readiness.",
+        "A Machine Review with codex_report_gate WARN passes commit readiness only when report warnings are accepted by policy.",
+        "A Machine Review with any blocking FAIL still blocks local commit readiness.",
+        "A Machine Review with an unapproved blocking WARN still blocks local commit readiness.",
+        "The blocker reason no longer lists nonblocking warnings as unapproved warning evidence.",
+        "Focused git commit readiness tests pass."
+      ],
+      "review_instructions": [
+        "Check that the implementation filters warning blockers by check.blocking before applying policy approval rules.",
+        "Verify that advisory warnings remain available in diagnostics but do not affect commit decision."
+      ],
+      "notes": [
+        "Observed blocker listed report_declared_test_1 and report_declared_test_3 as unapproved warnings even though both had blocking=false.",
+        "This task narrows the previously added policy-aware Machine Review WARN gate."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-27T21:51:19Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-27T21:00:05Z",
+      "updated_at": "2026-06-27T21:51:19Z",
+      "uid": "tsk_cc7783c67519",
+      "ref": "PIPEF-135",
+      "legacy_id": "TASK-240",
+      "aliases": [
+        "TASK-240"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 135
+    },
+    {
+      "id": "TASK-241",
+      "epic_id": "EPIC-009",
+      "title": "Add nonblocking warning regression",
+      "status": "done",
+      "summary": "Add regression coverage for close-to-commit flow with policy-approved report warning and nonblocking unsafe test warnings.",
+      "description": "The PSESS-081 recovery path should prove that advisory report-declared test warnings do not prevent local commit after the real blockers are resolved.",
+      "priority": 1,
+      "order": 136,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a deterministic regression test that builds Machine Review evidence with codex_report_gate WARN and nonblocking report_declared_test WARN checks.",
+        "Assert that local commit readiness accepts the policy-approved report warning and ignores the nonblocking unsafe test warnings.",
+        "Assert that changing the unsafe test warning to blocking=true makes commit readiness block.",
+        "Keep the test independent from live Codex execution and network access."
+      ],
+      "out_of_scope": [
+        "Do not add slow live-Codex integration tests.",
+        "Do not change production code outside the commit readiness behavior under test.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "tests/test_pipeline_git_commit.py",
+        "tests/test_pipeline_phase_review_close.py"
+      ],
+      "acceptance_criteria": [
+        "Regression tests cover nonblocking unsafe report-declared test warnings during commit readiness.",
+        "Regression tests cover policy-approved codex_report_gate WARN plus nonblocking report_declared_test WARN checks passing local commit readiness.",
+        "Regression tests prove that a blocking unsafe test warning still blocks local commit readiness.",
+        "Regression tests use fakes or fixtures and do not invoke a live Codex process.",
+        "Focused pipeline commit and close tests pass."
+      ],
+      "review_instructions": [
+        "Check that the regression directly protects the observed blocker text involving report_declared_test_1 and report_declared_test_3.",
+        "Verify that the test does not depend on current local repository dirty state."
+      ],
+      "notes": [
+        "This is a safety-net task for the warning classification bug.",
+        "Do not add depends_on values for tasks created in this same bulk import."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-27T22:01:36Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-27T21:00:06Z",
+      "updated_at": "2026-06-27T22:01:36Z",
+      "uid": "tsk_3da4271deaee",
+      "ref": "PIPEF-136",
+      "legacy_id": "TASK-241",
+      "aliases": [
+        "TASK-241"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 136
+    },
+    {
+      "id": "TASK-242",
+      "epic_id": "EPIC-009",
+      "title": "Separate warning diagnostics",
+      "status": "done",
+      "summary": "Separate blocking and nonblocking Machine Review warning diagnostics in local commit artifacts.",
+      "description": "Local commit artifacts should show advisory warnings without presenting them as commit blockers.",
+      "priority": 1,
+      "order": 137,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add compact local commit diagnostics that separate blocking_non_pass_checks from advisory_non_pass_checks.",
+        "Keep nonblocking warning diagnostics visible for review without including them in blocker reasons.",
+        "Render or expose the separated warning diagnostics through existing close phase local_commit artifacts.",
+        "Add focused tests for diagnostic serialization and Web-visible close artifacts."
+      ],
+      "out_of_scope": [
+        "Do not store full stdout or stderr payloads in pipeline state.",
+        "Do not change Machine Review execution order.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/git_commit.py",
+        "ai_project_ctl/web/server.py",
+        "tests/test_pipeline_git_commit.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "Local commit artifacts distinguish blocking non-pass checks from advisory non-pass checks.",
+        "Nonblocking report_declared_test warnings appear as advisory diagnostics, not blocker evidence.",
+        "Blocker reasons include only checks that can actually block commit readiness.",
+        "Artifact strings remain bounded and do not violate pipeline state payload limits.",
+        "Focused commit artifact and Web rendering tests pass."
+      ],
+      "review_instructions": [
+        "Check that diagnostics are useful from the Web UI without confusing advisory warnings with blockers.",
+        "Verify that existing local commit success artifacts remain backwards compatible."
+      ],
+      "notes": [
+        "This task improves debuggability after the decision logic is corrected."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-27T22:22:59Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-27T21:00:06Z",
+      "updated_at": "2026-06-27T22:23:00Z",
+      "uid": "tsk_0a8962b5f17b",
+      "ref": "PIPEF-137",
+      "legacy_id": "TASK-242",
+      "aliases": [
+        "TASK-242"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 137
+    },
+    {
+      "id": "TASK-243",
+      "epic_id": "EPIC-009",
+      "title": "Add Web Run smoke artifact",
+      "status": "done",
+      "summary": "Create a tiny deterministic smoke artifact file to verify that the existing Web Run button can execute, close, and commit a simple task.",
+      "description": "This is a deliberately minimal repository change for testing the owner Web Run flow without touching pipeline behavior.",
+      "priority": 1,
+      "order": 138,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "light",
+      "scope": [
+        "Create or update tmp/run-smoke/web-run-smoke.md.",
+        "Add a short Markdown note explaining that the file is a safe smoke artifact for the Web Run flow.",
+        "Include the exact marker WEB_RUN_SMOKE_OK in the file content.",
+        "Keep the file content deterministic and timestamp-free."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually.",
+        "Do not change pipeline, Web UI, policy, task, evolution, context, or Codex control behavior."
+      ],
+      "allowed_files": [
+        "tmp/run-smoke/web-run-smoke.md"
+      ],
+      "acceptance_criteria": [
+        "tmp/run-smoke/web-run-smoke.md exists after execution.",
+        "The file contains the exact marker WEB_RUN_SMOKE_OK.",
+        "The file states that it is only a smoke artifact for testing the Web Run flow.",
+        "The file content is deterministic and does not include timestamps, hostnames, random IDs, or environment-specific data.",
+        "The implementation does not modify repository files outside tmp/run-smoke/web-run-smoke.md, excluding governed project-control state/events/generated artifacts produced by the runner itself.",
+        "The task can be reviewed by reading the file and inspecting the final git diff."
+      ],
+      "review_instructions": [
+        "Verify that the task stayed limited to the smoke artifact and did not alter pipeline behavior."
+      ],
+      "notes": [
+        "Use this task only to test the existing Web Run selected task flow.",
+        "The marker WEB_RUN_SMOKE_OK is the main review signal."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-28T13:47:53Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-28T13:42:58Z",
+      "updated_at": "2026-06-28T13:47:53Z",
+      "uid": "tsk_47318e97bc6a",
+      "ref": "PIPEF-138",
+      "legacy_id": "TASK-243",
+      "aliases": [
+        "TASK-243"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 138
+    },
+    {
+      "id": "TASK-244",
+      "epic_id": "EPIC-009",
+      "title": "Add pipeline git status snapshot helper",
+      "status": "done",
+      "summary": "Add a reusable helper that captures, normalizes, and diffs git status snapshots for pipeline session file evidence.",
+      "description": "This creates the low-level primitive needed to distinguish pre-existing dirty files from files changed by the current Web Run.",
+      "priority": 1,
+      "order": 139,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a pipeline git status helper for running or parsing git status --short --untracked-files=all.",
+        "Normalize git status paths consistently with existing commit readiness path handling.",
+        "Add a helper that returns files added or changed after a baseline snapshot.",
+        "Cover modified, untracked, deleted, and renamed path parsing in focused tests."
+      ],
+      "out_of_scope": [
+        "Do not change Web UI behavior in this task.",
+        "Do not change commit readiness policy in this task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/git_status.py",
+        "tests/pipeline/test_git_status_snapshot.py"
+      ],
+      "acceptance_criteria": [
+        "The helper can parse git status --short output into normalized repository-relative paths.",
+        "The helper can compute after-minus-before dirty file deltas without including pre-existing dirty files.",
+        "Modified, untracked, deleted, and renamed files are covered by tests.",
+        "Existing commit safety rules are not relaxed by this helper alone.",
+        "Focused tests for the new helper pass."
+      ],
+      "review_instructions": [
+        "Verify that the helper has no side effects except when an explicit runner is invoked.",
+        "Verify that path normalization cannot approve paths outside the repository root."
+      ],
+      "notes": [
+        "Suggested first task for the Web Run local commit fix sequence.",
+        "This task should be safe to run before changing session or commit behavior."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-28T14:20:59Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-28T14:13:20Z",
+      "updated_at": "2026-06-28T14:21:00Z",
+      "uid": "tsk_e1ae911006d8",
+      "ref": "PIPEF-139",
+      "legacy_id": "TASK-244",
+      "aliases": [
+        "TASK-244"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 139
+    },
+    {
+      "id": "TASK-245",
+      "epic_id": "EPIC-009",
+      "title": "Record Web Run session file baseline",
+      "status": "done",
+      "summary": "Store a git status baseline and session-owned file delta evidence for each selected Web Run session.",
+      "description": "The session must know which dirty files existed before the Run and which files appeared during the Run.",
+      "priority": 1,
+      "order": 140,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Capture a git status baseline when a selected-task pipeline session is created or first run.",
+        "Persist baseline evidence in the pipeline session state without breaking existing sessions.",
+        "Record per-session file delta evidence after governed pipeline phases.",
+        "Expose session-owned changed files in pipeline status data for downstream gates."
+      ],
+      "out_of_scope": [
+        "Do not change Codex report parsing in this task.",
+        "Do not create local commits in this task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/session.py",
+        "ai_project_ctl/pipeline/runner.py",
+        "ai_project_ctl/pipeline/git_status.py",
+        "tests/pipeline/test_pipeline_session_git_baseline.py",
+        "tests/test_pipeline_runner.py"
+      ],
+      "acceptance_criteria": [
+        "A new selected-task session records the initial git dirty baseline.",
+        "Session evidence can distinguish pre-existing dirty files from files changed during the session.",
+        "Existing pipeline sessions without baseline data remain readable.",
+        "Pipeline status output includes enough evidence for commit readiness to consume session-owned files.",
+        "Focused session and runner tests pass."
+      ],
+      "review_instructions": [
+        "Verify that baseline capture happens before prepare or execute can mutate project-control files.",
+        "Verify that existing session JSON compatibility is preserved."
+      ],
+      "notes": [
+        "This task depends conceptually on the git status snapshot helper, but dependencies should be added after import if desired."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-28T14:38:58Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-28T14:13:21Z",
+      "updated_at": "2026-06-28T14:38:58Z",
+      "uid": "tsk_2f7e1f3b111b",
+      "ref": "PIPEF-140",
+      "legacy_id": "TASK-245",
+      "aliases": [
+        "TASK-245"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 140
+    },
+    {
+      "id": "TASK-246",
+      "epic_id": "EPIC-009",
+      "title": "Capture Codex-created changed files",
+      "status": "done",
+      "summary": "Make the execute/report path include files created or modified by Codex in structured report evidence.",
+      "description": "Codex-created artifacts such as tmp/run-smoke/web-run-smoke.md must appear in report changed_files evidence when they are within the task scope.",
+      "priority": 1,
+      "order": 141,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Capture git status before and after local-command Codex execution.",
+        "Compute Codex-created or Codex-modified file delta from the execute snapshot.",
+        "Filter captured files against the task allowed_files contract before adding them to report evidence.",
+        "Persist captured files in the generated task report payload used by report gate and commit readiness."
+      ],
+      "out_of_scope": [
+        "Do not relax allowed_files enforcement.",
+        "Do not change Web UI rendering in this task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/execute_phase.py",
+        "ai_project_ctl/pipeline/report_builder.py",
+        "ai_project_ctl/pipeline/git_status.py",
+        "tests/pipeline/test_execute_phase.py",
+        "tests/pipeline/test_report_builder.py"
+      ],
+      "acceptance_criteria": [
+        "A file created by Codex inside task allowed_files appears in report changed_files evidence.",
+        "A file changed by Codex outside task allowed_files is not silently approved.",
+        "The report gate receives non-empty changed_files for a Codex-created smoke artifact.",
+        "Existing reports that explicitly declare changed files still work.",
+        "Focused execute/report builder tests pass."
+      ],
+      "review_instructions": [
+        "Verify that the implementation cannot approve unrelated files by default.",
+        "Verify that captured changed_files are repository-relative paths."
+      ],
+      "notes": [
+        "This addresses the TASK-243 symptom where Codex created a file but changed_files_count was zero."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-28T14:53:42Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-28T14:13:22Z",
+      "updated_at": "2026-06-28T14:53:43Z",
+      "uid": "tsk_5dfe49a637f3",
+      "ref": "PIPEF-141",
+      "legacy_id": "TASK-246",
+      "aliases": [
+        "TASK-246"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 141
+    },
+    {
+      "id": "TASK-247",
+      "epic_id": "EPIC-009",
+      "title": "Approve session-owned control side effects for commit",
+      "status": "done",
+      "summary": "Allow commit readiness to include governed project-control side effects created by the current pipeline session while still blocking unrelated dirty files.",
+      "description": "Pipeline-owned mutations under AI_PROJECT/state, AI_PROJECT/events, and AI_PROJECT/generated should be approved only when tied to the current session evidence.",
+      "priority": 1,
+      "order": 142,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Extend commit readiness approved_files with session-owned changed and generated files from the current pipeline session.",
+        "Keep pre-existing dirty files outside the approved session delta blocked.",
+        "Ensure governed AI_PROJECT state, event, and generated files can be committed when created by the current Run.",
+        "Add tests that unrelated code files remain blocked even when session-owned control files are approved."
+      ],
+      "out_of_scope": [
+        "Do not whitelist all AI_PROJECT paths unconditionally.",
+        "Do not allow push, merge, reset, rebase, clean, or restore operations.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/git_commit.py",
+        "ai_project_ctl/pipeline/session.py",
+        "ai_project_ctl/pipeline/close_phase.py",
+        "tests/test_pipeline_git_commit.py",
+        "tests/test_pipeline_phase_review_close.py"
+      ],
+      "acceptance_criteria": [
+        "Commit readiness approves governed project-control files that are proven to be changed by the current session.",
+        "Commit readiness blocks project-control files that were dirty before the session baseline.",
+        "Commit readiness blocks unrelated code or test files not owned by the current session.",
+        "The target task artifact remains required through report or allowed file evidence.",
+        "Focused git commit and close phase tests pass."
+      ],
+      "review_instructions": [
+        "Check that this task does not add a broad AI_PROJECT/** bypass.",
+        "Check that session-owned evidence is required for protected control side effects."
+      ],
+      "notes": [
+        "This fixes the blocker where normal task, evolution, context, report, and pipeline event files were treated as unrelated dirty files."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-28T15:16:07Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-28T14:13:22Z",
+      "updated_at": "2026-06-28T15:16:08Z",
+      "uid": "tsk_59541eac288b",
+      "ref": "PIPEF-142",
+      "legacy_id": "TASK-247",
+      "aliases": [
+        "TASK-247"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 142
+    },
+    {
+      "id": "TASK-248",
+      "epic_id": "EPIC-009",
+      "title": "Expose commit-blocked closed task state",
+      "status": "done",
+      "summary": "Make the close phase clearly expose when a task was closed but local commit readiness failed.",
+      "description": "The UI and pipeline status must not make a done task without a commit look like a completed happy path.",
+      "priority": 1,
+      "order": 143,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Preserve COMMIT_READINESS_FAILED as the session stop code when local commit is blocked after close.",
+        "Expose a clear commit-blocked status in close phase artifacts and pipeline status data.",
+        "Include owner next action explaining that the task is done but local commit is blocked.",
+        "Add tests for the done-but-commit-blocked path."
+      ],
+      "out_of_scope": [
+        "Do not introduce a new task lifecycle status unless existing state validation supports it.",
+        "Do not change report gate semantics in this task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/close_phase.py",
+        "ai_project_ctl/pipeline/runner.py",
+        "ai_project_ctl/pipeline/session.py",
+        "tests/test_pipeline_phase_review_close.py",
+        "tests/test_pipeline_runner.py"
+      ],
+      "acceptance_criteria": [
+        "A close phase with local commit blocked leaves the pipeline session blocked with stop code COMMIT_READINESS_FAILED.",
+        "Pipeline status data distinguishes completed-with-commit from done-but-commit-blocked.",
+        "Owner next action tells how to resolve commit readiness blockers.",
+        "Existing auto-close behavior still closes tasks only through governed workflows.",
+        "Focused close phase and runner tests pass."
+      ],
+      "review_instructions": [
+        "Verify that the user cannot confuse commit-blocked with completed.",
+        "Verify that no manual protected file edits are introduced."
+      ],
+      "notes": [
+        "This uses the explicit visibility option instead of adding a new task status."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-28T15:29:43Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-28T14:13:23Z",
+      "updated_at": "2026-06-28T15:29:44Z",
+      "uid": "tsk_a668d08766ae",
+      "ref": "PIPEF-143",
+      "legacy_id": "TASK-248",
+      "aliases": [
+        "TASK-248"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 143
+    },
+    {
+      "id": "TASK-249",
+      "epic_id": "EPIC-009",
+      "title": "Classify blocked Web Run results correctly",
+      "status": "done",
+      "summary": "Render Web Action Result badges from pipeline outcome fields instead of only HTTP success or command ok.",
+      "description": "Blocked sessions such as NO_EXECUTABLE_TASK and COMMIT_READINESS_FAILED must not appear as green PASS.",
+      "priority": 1,
+      "order": 144,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add Web result classification for session_status, stop_code, blocked_by, and phase_status.",
+        "Render NO_EXECUTABLE_TASK as NOT RUN or BLOCKED instead of PASS.",
+        "Render COMMIT_READINESS_FAILED as COMMIT BLOCKED instead of PASS.",
+        "Update tests for action result rendering and summary text."
+      ],
+      "out_of_scope": [
+        "Do not change pipeline execution semantics in this task.",
+        "Do not change task status transitions in this task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/read_model.py",
+        "ai_project_ctl/web/actions.py",
+        "tests/test_web_control_center.py",
+        "tests/test_web_control_center_read_model.py"
+      ],
+      "acceptance_criteria": [
+        "Action Result does not show PASS when the pipeline result has session_status blocked.",
+        "NO_EXECUTABLE_TASK is displayed as a non-success outcome with a clear reason.",
+        "COMMIT_READINESS_FAILED is displayed as COMMIT BLOCKED with next action text.",
+        "Successful completed runs still display PASS.",
+        "Focused Web Control Center tests pass."
+      ],
+      "review_instructions": [
+        "Verify that UI labels align with pipeline outcome rather than subprocess return code alone.",
+        "Verify that blocked outcomes remain easy for the owner to act on."
+      ],
+      "notes": [
+        "This addresses the PSESS-119 symptom where NO_EXECUTABLE_TASK was rendered with a green PASS badge."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-28T15:48:05Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-28T14:13:24Z",
+      "updated_at": "2026-06-28T15:48:05Z",
+      "uid": "tsk_ac83675b9c1d",
+      "ref": "PIPEF-144",
+      "legacy_id": "TASK-249",
+      "aliases": [
+        "TASK-249"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 144
+    },
+    {
+      "id": "TASK-250",
+      "epic_id": "EPIC-009",
+      "title": "Make selected Web Run idempotent",
+      "status": "done",
+      "summary": "Prevent repeated Web Run submits from creating misleading sessions for already completed or active selected tasks.",
+      "description": "Repeated Run clicks should return a useful existing session or NOT RUN result instead of creating a new blocked session for a done task.",
+      "priority": 1,
+      "order": 145,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Resolve the selected task before creating a ui.run_selected_task pipeline session.",
+        "Return NOT RUN without creating a session when the selected task is done, deferred, or archived.",
+        "Return a link to an active or latest relevant session when a selected task already has a running or recently blocked session.",
+        "Disable or guard the Run form against duplicate submit in the Web UI."
+      ],
+      "out_of_scope": [
+        "Do not change queue selection rules for normal planned or ready tasks.",
+        "Do not change Codex execution behavior in this task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/pipeline/ui_run.py",
+        "ai_project_ctl/pipeline/session.py",
+        "tests/test_ui_run_command.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "Running a done selected task does not create a new pipeline session.",
+        "A repeated Run on an active task points the owner to the existing relevant session.",
+        "A normal planned or ready selected task still creates and runs a session.",
+        "The Web form is guarded against duplicate submit in the browser.",
+        "Focused UI run and Web Control Center tests pass."
+      ],
+      "review_instructions": [
+        "Verify that idempotency does not hide real blockers for executable tasks.",
+        "Verify that the owner sees a clear link to the relevant session."
+      ],
+      "notes": [
+        "This addresses the PSESS-119 duplicate-run symptom after PSESS-118 already closed TASK-243."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-28T16:06:55Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-28T14:13:24Z",
+      "updated_at": "2026-06-28T16:06:55Z",
+      "uid": "tsk_859961037176",
+      "ref": "PIPEF-145",
+      "legacy_id": "TASK-250",
+      "aliases": [
+        "TASK-250"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 145
+    },
+    {
+      "id": "TASK-251",
+      "epic_id": "EPIC-009",
+      "title": "Add Web Run local commit smoke test",
+      "status": "done",
+      "summary": "Add an end-to-end smoke test for selected Web Run creating an allowed artifact, closing the task, and creating a local commit.",
+      "description": "The test should prove the fixed happy path and protect against regressions in evidence, close, commit, and repeated-run behavior.",
+      "priority": 1,
+      "order": 146,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create a focused Web Run smoke test using a minimal planned task and one allowed artifact file.",
+        "Assert that Codex-created artifact evidence reaches report gate and commit readiness.",
+        "Assert that the task reaches done only with a clear commit outcome.",
+        "Assert that repeated Run does not create a misleading PASS session for a done task."
+      ],
+      "out_of_scope": [
+        "Do not depend on a real external Codex invocation.",
+        "Do not perform a push or remote repository mutation.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "tests/test_web_run_local_commit_e2e.py",
+        "tests/test_ui_run_command.py",
+        "tests/test_pipeline_git_commit.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "The smoke test uses a fake or controlled Codex adapter and does not require network access.",
+        "The test fails if changed_files evidence for the task artifact is empty.",
+        "The test fails if governed session side effects are treated as unrelated dirty files.",
+        "The test fails if a blocked Web Run result renders as PASS.",
+        "The focused smoke test passes locally."
+      ],
+      "review_instructions": [
+        "Verify that the test is deterministic and does not rely on wall-clock timestamps.",
+        "Verify that the test isolates git state and does not modify the developer worktree."
+      ],
+      "notes": [
+        "Use this as the final regression guard after the implementation fixes are applied."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-28T16:47:43Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-28T14:13:25Z",
+      "updated_at": "2026-06-28T16:47:44Z",
+      "uid": "tsk_c0d7f9739711",
+      "ref": "PIPEF-146",
+      "legacy_id": "TASK-251",
+      "aliases": [
+        "TASK-251"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 146
+    },
+    {
+      "id": "TASK-252",
+      "epic_id": "EPIC-009",
+      "title": "Verify Web Run commit smoke path",
+      "status": "done",
+      "summary": "Create a deterministic smoke artifact to verify that Web Run reaches local commit after pipeline commit fixes.",
+      "description": "This task is only for validating the fixed Web Run execution and commit path.",
+      "priority": 1,
+      "order": 147,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "light",
+      "scope": [
+        "Create tmp/run-smoke/web-run-final-smoke.md.",
+        "Add the exact marker WEB_RUN_FINAL_SMOKE_OK.",
+        "State that this file is only a smoke artifact for Web Run commit validation.",
+        "Keep the content deterministic and timestamp-free."
+      ],
+      "out_of_scope": [
+        "Do not change behavior unrelated to this task.",
+        "Do not refactor unrelated code.",
+        "Do not edit protected project-control files manually.",
+        "Do not change pipeline, Web UI, policy, task, evolution, context, or Codex control behavior."
+      ],
+      "allowed_files": [
+        "tmp/run-smoke/web-run-final-smoke.md"
+      ],
+      "acceptance_criteria": [
+        "tmp/run-smoke/web-run-final-smoke.md exists after execution.",
+        "The file contains the exact marker WEB_RUN_FINAL_SMOKE_OK.",
+        "The file states that it is only a smoke artifact for Web Run commit validation.",
+        "The generated report evidence includes tmp/run-smoke/web-run-final-smoke.md as a changed file.",
+        "Web Run reaches local commit without COMMIT_READINESS_FAILED."
+      ],
+      "review_instructions": [
+        "Confirm that only the smoke artifact and session-owned project-control files are included in commit readiness."
+      ],
+      "notes": [
+        "This task validates the Web Run fix set after implementation."
+      ],
+      "depends_on": [],
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-28T17:34:01Z",
+      "approval_notes": "Approve",
+      "created_at": "2026-06-28T17:29:58Z",
+      "updated_at": "2026-06-28T17:34:02Z",
+      "uid": "tsk_f3bdae22a7d9",
+      "ref": "PIPEF-147",
+      "legacy_id": "TASK-252",
+      "aliases": [
+        "TASK-252"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 147
     }
   ]
 }

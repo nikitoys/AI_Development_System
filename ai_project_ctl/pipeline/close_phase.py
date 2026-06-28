@@ -56,6 +56,12 @@ REQUIRED_PHASE_ORDER = (*REQUIRED_PASSED_PHASES, REVIEW_PHASE_NAME)
 CHANGE_ACCEPTABLE_STATUSES = {"approved", "in_review"}
 CHANGE_ALREADY_ACCEPTED_STATUS = "accepted"
 CODEX_CLEAR_STEP_ID = "codex_clear"
+CLOSE_STATUS_KEY = "close_status"
+CLOSE_OUTCOME_CLOSED_WITH_COMMIT = "closed_with_local_commit"
+CLOSE_OUTCOME_DONE_COMMIT_BLOCKED = "done_but_commit_blocked"
+CLOSE_OUTCOME_DONE_COMMIT_FAILED = "done_but_commit_failed"
+CLOSE_OUTCOME_DONE_WITHOUT_COMMIT = "done_without_local_commit"
+CLOSE_OUTCOME_DONE_COMMIT_UNKNOWN = "done_commit_unknown"
 SCRIPTS_DIR = Path(__file__).resolve().parents[2] / "scripts"
 
 
@@ -307,14 +313,16 @@ def close_phase(
                 phase_artifacts["commit_hash"] = local_commit.commit_hash
 
         if context_refresh.ok and local_commit.status == COMMIT_FAIL:
+            next_action = _commit_failed_next_action(local_commit)
+            phase_artifacts.update(
+                _close_status_artifacts(local_commit, owner_next_action=next_action)
+            )
             phase = PhaseResult.failed(
                 PHASE_NAME,
                 reason="Close completed, but local commit failed: {}".format(
                     local_commit.reason
                 ),
-                next_action=(
-                    "Resolve the local commit failure, then rerun pipeline close."
-                ),
+                next_action=next_action,
                 artifacts={
                     "error_code": local_commit.code,
                     **phase_artifacts,
@@ -324,15 +332,16 @@ def close_phase(
                 events=workflow.events,
             )
         elif context_refresh.ok and local_commit.status == COMMIT_BLOCKED:
+            next_action = _commit_blocked_next_action(local_commit)
+            phase_artifacts.update(
+                _close_status_artifacts(local_commit, owner_next_action=next_action)
+            )
             phase = PhaseResult.blocked(
                 PHASE_NAME,
                 reason="Close completed, but local commit was blocked: {}".format(
                     local_commit.reason
                 ),
-                next_action=(
-                    "Resolve local commit readiness blockers, then rerun "
-                    "pipeline close."
-                ),
+                next_action=next_action,
                 artifacts={
                     "blocked_by": local_commit.code,
                     **phase_artifacts,
@@ -342,6 +351,10 @@ def close_phase(
                 events=workflow.events,
             )
         elif context_refresh.ok:
+            next_action = _close_success_next_action(change_acceptance, local_commit)
+            phase_artifacts.update(
+                _close_status_artifacts(local_commit, owner_next_action=next_action)
+            )
             phase = PhaseResult.passed(
                 PHASE_NAME,
                 reason=_close_success_reason(
@@ -351,7 +364,7 @@ def close_phase(
                         phase_artifacts.get("already_closed_by_previous_attempt")
                     ),
                 ),
-                next_action=_close_success_next_action(change_acceptance, local_commit),
+                next_action=next_action,
                 artifacts=phase_artifacts,
                 changed_files=workflow.changed_files,
                 generated_files=workflow.generated_files,
@@ -943,6 +956,7 @@ def _run_local_commit_after_close(
         machine_review=machine_review,
         codex_review=codex_review,
         side_effects=side_effects,
+        session=session,
     )
 
 
@@ -1118,6 +1132,62 @@ def _close_success_next_action(
             "Evolution Changes only with Human Owner approval."
         )
     return "Review the close workflow evidence and select the next task when ready."
+
+
+def _commit_blocked_next_action(local_commit: LocalCommitResult) -> str:
+    readiness = local_commit.readiness
+    readiness_code = readiness.code if readiness else local_commit.code
+    return (
+        "Task is done, but local commit is blocked by commit readiness ({}). "
+        "Resolve the local_commit.readiness blockers or gate diagnostics, then "
+        "rerun pipeline close to create the local commit."
+    ).format(readiness_code or local_commit.code)
+
+
+def _commit_failed_next_action(local_commit: LocalCommitResult) -> str:
+    return (
+        "Task is done, but local commit failed ({}). Resolve the local commit "
+        "failure, then rerun pipeline close."
+    ).format(local_commit.code)
+
+
+def _close_status_artifacts(
+    local_commit: LocalCommitResult,
+    *,
+    owner_next_action: str,
+) -> dict[str, Any]:
+    readiness = local_commit.readiness
+    close_status = {
+        "outcome": _close_outcome(local_commit),
+        "task_closed": True,
+        "task_status": "done",
+        "commit_status": local_commit.status,
+        "commit_code": local_commit.code,
+        "commit_hash": local_commit.commit_hash,
+        "commit_readiness_status": readiness.status if readiness else "",
+        "commit_readiness_code": readiness.code if readiness else "",
+        "owner_next_action": owner_next_action,
+    }
+    return {
+        CLOSE_STATUS_KEY: close_status,
+        "close_outcome": close_status["outcome"],
+        "task_closed": True,
+        "commit_status": local_commit.status,
+        "commit_blocked": local_commit.status == COMMIT_BLOCKED,
+        "owner_next_action": owner_next_action,
+    }
+
+
+def _close_outcome(local_commit: LocalCommitResult) -> str:
+    if local_commit.status == COMMIT_PASS:
+        return CLOSE_OUTCOME_CLOSED_WITH_COMMIT
+    if local_commit.status == COMMIT_BLOCKED:
+        return CLOSE_OUTCOME_DONE_COMMIT_BLOCKED
+    if local_commit.status == COMMIT_FAIL:
+        return CLOSE_OUTCOME_DONE_COMMIT_FAILED
+    if local_commit.status == "skipped":
+        return CLOSE_OUTCOME_DONE_WITHOUT_COMMIT
+    return CLOSE_OUTCOME_DONE_COMMIT_UNKNOWN
 
 
 def _preflight_evidence(
@@ -1718,6 +1788,13 @@ def _phase_command(
         if isinstance(local_commit, Mapping):
             result.data["local_commit"] = dict(local_commit)
             result.data["commit_hash"] = str(local_commit.get("commit_hash") or "")
+        close_status = artifacts.get(CLOSE_STATUS_KEY)
+        if isinstance(close_status, Mapping):
+            result.data[CLOSE_STATUS_KEY] = dict(close_status)
+            result.data["close_outcome"] = str(close_status.get("outcome") or "")
+            result.data["commit_status"] = str(
+                close_status.get("commit_status") or ""
+            )
     return result
 
 

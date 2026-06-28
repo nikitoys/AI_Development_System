@@ -26,7 +26,7 @@ from .policy import (
 from .report_gate import ReportGateResult
 from .report_gate import WARN as REPORT_GATE_WARN
 from .report_gate import evaluate_report_gate_acceptance
-from .state import load_reference_state
+from .state import load_pipeline_state, load_reference_state
 
 
 PASS = "pass"
@@ -68,6 +68,14 @@ REQUIRED_MACHINE_CHECKS = {
     "protected_file_check",
 }
 MACHINE_DIAGNOSTIC_SUMMARY_LIMIT = 1200
+FILE_EVIDENCE_KEY = "file_evidence"
+PRE_EXISTING_DIRTY_FILES_KEY = "pre_existing_dirty_files"
+SESSION_OWNED_CHANGED_FILES_KEY = "session_owned_changed_files"
+GOVERNED_PROJECT_CONTROL_PREFIXES = (
+    "AI_PROJECT/state/",
+    "AI_PROJECT/events/",
+    "AI_PROJECT/generated/",
+)
 
 GitRunner = Callable[[Sequence[str]], subprocess.CompletedProcess[str]]
 
@@ -122,6 +130,8 @@ class CommitReadinessResult:
     blockers: tuple[str, ...] = ()
     git_status: GitCommandResult | None = None
     machine_review_diagnostics: tuple[Mapping[str, Any], ...] = ()
+    blocking_non_pass_checks: tuple[Mapping[str, Any], ...] = ()
+    advisory_non_pass_checks: tuple[Mapping[str, Any], ...] = ()
 
     @property
     def ok(self) -> bool:
@@ -140,10 +150,13 @@ class CommitReadinessResult:
             "blockers": list(self.blockers),
             "git_status": self.git_status.to_dict() if self.git_status else None,
         }
-        if self.machine_review_diagnostics:
-            data["machine_review_diagnostics"] = [
-                dict(item) for item in self.machine_review_diagnostics
-            ]
+        diagnostics = [dict(item) for item in self.machine_review_diagnostics]
+        blocking_checks = [dict(item) for item in self.blocking_non_pass_checks]
+        advisory_checks = [dict(item) for item in self.advisory_non_pass_checks]
+        if diagnostics or blocking_checks or advisory_checks:
+            data["machine_review_diagnostics"] = diagnostics
+            data["blocking_non_pass_checks"] = blocking_checks
+            data["advisory_non_pass_checks"] = advisory_checks
         return data
 
 
@@ -188,6 +201,7 @@ def evaluate_commit_readiness(
     machine_review: MachineReviewResult,
     codex_review: CodexReviewResult,
     side_effects: Sequence[CommandResult] = (),
+    session: Mapping[str, Any] | None = None,
     runner: GitRunner | None = None,
 ) -> CommitReadinessResult:
     """Verify that a local commit is allowed and only approved files are dirty."""
@@ -230,14 +244,14 @@ def evaluate_commit_readiness(
             accepted_change_ids=accepted_change_ids,
         )
 
+    machine_diagnostics = _machine_review_diagnostic_kwargs(
+        policy,
+        report_gate,
+        machine_review,
+    )
     gate_blocker = _gate_blocker(policy, report_gate, machine_review, codex_review)
     if gate_blocker:
         code, reason = gate_blocker
-        diagnostics = (
-            _machine_review_diagnostics(machine_review)
-            if code == CODE_MACHINE_REVIEW_NOT_PASS
-            else ()
-        )
         return _readiness(
             BLOCKED,
             code,
@@ -245,7 +259,7 @@ def evaluate_commit_readiness(
             task_id=task_id,
             change_ids=change_ids,
             accepted_change_ids=accepted_change_ids,
-            machine_review_diagnostics=diagnostics,
+            **machine_diagnostics,
         )
 
     machine_blocker = _machine_check_blocker(machine_review)
@@ -258,7 +272,7 @@ def evaluate_commit_readiness(
             task_id=task_id,
             change_ids=change_ids,
             accepted_change_ids=accepted_change_ids,
-            machine_review_diagnostics=_machine_review_diagnostics(machine_review),
+            **machine_diagnostics,
         )
 
     machine_warning_blocker = _machine_warning_blocker(policy, report_gate, machine_review)
@@ -271,7 +285,7 @@ def evaluate_commit_readiness(
             task_id=task_id,
             change_ids=change_ids,
             accepted_change_ids=accepted_change_ids,
-            machine_review_diagnostics=_machine_review_diagnostics(machine_review),
+            **machine_diagnostics,
         )
 
     if str(task.get("status") or "") != "done":
@@ -283,6 +297,7 @@ def evaluate_commit_readiness(
             change_ids=change_ids,
             accepted_change_ids=accepted_change_ids,
             blockers=(str(task.get("status") or "missing"),),
+            **machine_diagnostics,
         )
     if linked_changes and not accepted_changes:
         return _readiness(
@@ -293,6 +308,7 @@ def evaluate_commit_readiness(
             change_ids=change_ids,
             accepted_change_ids=accepted_change_ids,
             blockers=change_ids,
+            **machine_diagnostics,
         )
 
     git_status = run_git_command(
@@ -309,6 +325,7 @@ def evaluate_commit_readiness(
             change_ids=change_ids,
             accepted_change_ids=accepted_change_ids,
             git_status=git_status,
+            **machine_diagnostics,
         )
 
     changed_files = tuple(_parse_git_status(git_status.stdout))
@@ -321,9 +338,15 @@ def evaluate_commit_readiness(
             change_ids=change_ids,
             accepted_change_ids=accepted_change_ids,
             git_status=git_status,
+            **machine_diagnostics,
         )
 
-    approved_files = _approved_files(root_path, report_gate, side_effects)
+    approved_files = _approved_files(
+        root_path,
+        report_gate,
+        side_effects,
+        session=session,
+    )
     unrelated = [
         item.path for item in changed_files if _normalize_path(root_path, item.path) not in approved_files
     ]
@@ -339,13 +362,32 @@ def evaluate_commit_readiness(
             changed_files=changed_files,
             blockers=tuple(unrelated),
             git_status=git_status,
+            **machine_diagnostics,
+        )
+
+    if not _target_task_artifact_evidence(root_path, report_gate):
+        return _readiness(
+            BLOCKED,
+            CODE_UNRELATED_FILES,
+            (
+                "Local commit requires target task artifact evidence from the "
+                "Codex report before committing governed session side effects."
+            ),
+            task_id=task_id,
+            change_ids=change_ids,
+            accepted_change_ids=accepted_change_ids,
+            approved_files=tuple(sorted(approved_files)),
+            changed_files=changed_files,
+            blockers=("target_task_artifact_missing",),
+            git_status=git_status,
+            **machine_diagnostics,
         )
 
     reason = "Local commit readiness is green."
     if machine_review.status == MACHINE_REVIEW_WARN:
         reason = (
             "Local commit readiness is green; Machine Review WARN contains only "
-            "policy-approved report warning evidence."
+            "nonblocking or policy-accepted warning evidence."
         )
 
     return _readiness(
@@ -358,6 +400,7 @@ def evaluate_commit_readiness(
         approved_files=tuple(sorted(approved_files)),
         changed_files=changed_files,
         git_status=git_status,
+        **machine_diagnostics,
     )
 
 
@@ -371,6 +414,7 @@ def run_local_commit(
     machine_review: MachineReviewResult,
     codex_review: CodexReviewResult,
     side_effects: Sequence[CommandResult] = (),
+    session: Mapping[str, Any] | None = None,
     runner: GitRunner | None = None,
 ) -> LocalCommitResult:
     """Create a local commit after readiness passes."""
@@ -384,6 +428,7 @@ def run_local_commit(
         machine_review=machine_review,
         codex_review=codex_review,
         side_effects=side_effects,
+        session=session or _session_by_id(load_pipeline_state(root_path), session_id),
         runner=runner,
     )
     if not readiness.ok:
@@ -521,6 +566,8 @@ def _readiness(
     blockers: Sequence[str] = (),
     git_status: GitCommandResult | None = None,
     machine_review_diagnostics: Sequence[Mapping[str, Any]] = (),
+    blocking_non_pass_checks: Sequence[Mapping[str, Any]] = (),
+    advisory_non_pass_checks: Sequence[Mapping[str, Any]] = (),
 ) -> CommitReadinessResult:
     return CommitReadinessResult(
         status=status,
@@ -534,6 +581,8 @@ def _readiness(
         blockers=tuple(blockers),
         git_status=git_status,
         machine_review_diagnostics=tuple(machine_review_diagnostics),
+        blocking_non_pass_checks=tuple(blocking_non_pass_checks),
+        advisory_non_pass_checks=tuple(advisory_non_pass_checks),
     )
 
 
@@ -597,14 +646,12 @@ def _machine_warning_blocker(
         return None
 
     warning_checks = [
-        check for check in machine_review.checks if check.status == MACHINE_REVIEW_WARN
+        check
+        for check in machine_review.checks
+        if check.blocking and check.status == MACHINE_REVIEW_WARN
     ]
     if not warning_checks:
-        return (
-            CODE_MACHINE_REVIEW_NOT_PASS,
-            "Machine Review WARN is not accepted for local commit; no warning evidence "
-            "explains the WARN outcome.",
-        )
+        return None
 
     unsafe = [
         _machine_check_summary(check)
@@ -654,12 +701,70 @@ def _machine_review_diagnostics(
     )
 
 
+def _machine_review_diagnostic_kwargs(
+    policy: PipelinePolicy,
+    report_gate: ReportGateResult,
+    machine_review: MachineReviewResult,
+) -> dict[str, tuple[dict[str, Any], ...]]:
+    diagnostics, blocking_checks, advisory_checks = _machine_review_diagnostic_groups(
+        policy,
+        report_gate,
+        machine_review,
+    )
+    if not diagnostics and not blocking_checks and not advisory_checks:
+        return {}
+    return {
+        "machine_review_diagnostics": diagnostics,
+        "blocking_non_pass_checks": blocking_checks,
+        "advisory_non_pass_checks": advisory_checks,
+    }
+
+
+def _machine_review_diagnostic_groups(
+    policy: PipelinePolicy,
+    report_gate: ReportGateResult,
+    machine_review: MachineReviewResult,
+) -> tuple[tuple[dict[str, Any], ...], tuple[dict[str, Any], ...], tuple[dict[str, Any], ...]]:
+    diagnostics: list[dict[str, Any]] = []
+    blocking_checks: list[dict[str, Any]] = []
+    advisory_checks: list[dict[str, Any]] = []
+    for check in machine_review.checks:
+        if check.status == MACHINE_REVIEW_PASS:
+            continue
+        diagnostic = _machine_check_diagnostic(check)
+        diagnostics.append(diagnostic)
+        if _machine_check_blocks_commit(policy, report_gate, check):
+            blocking_checks.append(diagnostic)
+        else:
+            advisory_checks.append(diagnostic)
+    return tuple(diagnostics), tuple(blocking_checks), tuple(advisory_checks)
+
+
+def _machine_check_blocks_commit(
+    policy: PipelinePolicy,
+    report_gate: ReportGateResult,
+    check: MachineCheckEvidence,
+) -> bool:
+    if check.status == MACHINE_REVIEW_PASS:
+        return False
+    if check.name in REQUIRED_MACHINE_CHECKS:
+        return True
+    if check.status == MACHINE_REVIEW_WARN:
+        return bool(check.blocking) and not _machine_warning_is_allowed(
+            policy,
+            report_gate,
+            check,
+        )
+    return bool(check.blocking)
+
+
 def _machine_check_diagnostic(check: MachineCheckEvidence) -> dict[str, Any]:
     data: dict[str, Any] = {
         "name": check.name,
         "status": check.status,
         "code": check.code,
         "reason": _bounded_machine_diagnostic_text(check.reason),
+        "blocking": check.blocking,
         "command": list(check.command),
     }
     stdout_summary = _bounded_machine_diagnostic_text(check.stdout_summary)
@@ -721,6 +826,8 @@ def _approved_files(
     root: Path,
     report_gate: ReportGateResult,
     side_effects: Sequence[CommandResult],
+    *,
+    session: Mapping[str, Any] | None = None,
 ) -> set[str]:
     approved = {
         _normalize_path(root, path)
@@ -731,7 +838,89 @@ def _approved_files(
         for path in (*effect.changed_files, *effect.generated_files):
             if str(path).strip():
                 approved.add(_normalize_path(root, path))
+    approved.update(_session_owned_governed_control_files(root, session))
+    approved.difference_update(_session_pre_existing_dirty_files(root, session))
     return approved
+
+
+def _session_owned_governed_control_files(
+    root: Path,
+    session: Mapping[str, Any] | None,
+) -> set[str]:
+    evidence = _session_file_evidence(session)
+    owned_files = _string_values(evidence.get(SESSION_OWNED_CHANGED_FILES_KEY))
+    pre_existing = {
+        _normalize_path(root, path)
+        for path in _string_values(evidence.get(PRE_EXISTING_DIRTY_FILES_KEY))
+    }
+    return {
+        normalized
+        for normalized in (_normalize_path(root, path) for path in owned_files)
+        if normalized not in pre_existing and _is_governed_project_control_file(normalized)
+    }
+
+
+def _session_pre_existing_dirty_files(
+    root: Path,
+    session: Mapping[str, Any] | None,
+) -> set[str]:
+    evidence = _session_file_evidence(session)
+    return {
+        _normalize_path(root, path)
+        for path in _string_values(evidence.get(PRE_EXISTING_DIRTY_FILES_KEY))
+    }
+
+
+def _session_file_evidence(
+    session: Mapping[str, Any] | None,
+) -> Mapping[str, Any]:
+    if not isinstance(session, Mapping):
+        return {}
+    evidence = session.get(FILE_EVIDENCE_KEY)
+    return evidence if isinstance(evidence, Mapping) else {}
+
+
+def _target_task_artifact_evidence(
+    root: Path,
+    report_gate: ReportGateResult,
+) -> tuple[str, ...]:
+    return tuple(
+        sorted(
+            {
+                normalized
+                for normalized in (
+                    _normalize_path(root, path)
+                    for path in (*report_gate.changed_files, *report_gate.generated_files)
+                )
+                if normalized and not _is_governed_project_control_file(normalized)
+            }
+        )
+    )
+
+
+def _is_governed_project_control_file(path: str) -> bool:
+    return any(path.startswith(prefix) for prefix in GOVERNED_PROJECT_CONTROL_PREFIXES)
+
+
+def _session_by_id(
+    state: Mapping[str, Any],
+    session_id: str,
+) -> Mapping[str, Any] | None:
+    if not session_id:
+        return None
+    sessions = state.get("sessions")
+    if not isinstance(sessions, Sequence) or isinstance(sessions, (str, bytes)):
+        return None
+    for session in sessions:
+        if isinstance(session, Mapping) and str(session.get("id") or "") == session_id:
+            return session
+    return None
+
+
+def _string_values(value: Any) -> tuple[str, ...]:
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
+        return ()
+    return tuple(_unique_strings(str(item) for item in value))
 
 
 def _parse_git_status(stdout: str) -> list[GitStatusFile]:

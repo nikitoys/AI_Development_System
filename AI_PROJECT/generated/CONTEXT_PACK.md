@@ -1,6 +1,6 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/state/docs.json + AI_PROJECT/state/tasks.json -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-239 Replace Tasks metrics with action counts Replace non-actionable /tasks metrics with owner-actionable counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues. Counts like done and visible are useful for inventory, but the Owner Cockpit default should show work that needs attention. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Compute action queue counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues. Render these counts in the /tasks default Action Queue view. Keep inventory-style metrics available only in Full Inventory or diagnostic views if they already exist. Add regression coverage for the displayed action counts. Do not remove task inventory data from the system. Do not change task statuses or stored task counts. Do not edit protected project-control files manually. ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py tests/test_web_control_center_read_model.py tests/test_web_control_center.py The default /tasks metrics show Needs Decision, Ready To Run, Current, Blocked, and Health Issues. The default /tasks metrics do not emphasize done count as a primary owner-action metric. Metric counts match the rendered action queue groups. Metrics remain usable when there is no current task. Tests cover the action-count metrics. Compare metric counts with the queue groups rendered below them.","schema_version":1,"task_id":"TASK-239"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-252 Verify Web Run commit smoke path Create a deterministic smoke artifact to verify that Web Run reaches local commit after pipeline commit fixes. This task is only for validating the fixed Web Run execution and commit path. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Create tmp/run-smoke/web-run-final-smoke.md. Add the exact marker WEB_RUN_FINAL_SMOKE_OK. State that this file is only a smoke artifact for Web Run commit validation. Keep the content deterministic and timestamp-free. Do not change behavior unrelated to this task. Do not refactor unrelated code. Do not edit protected project-control files manually. Do not change pipeline, Web UI, policy, task, evolution, context, or Codex control behavior. tmp/run-smoke/web-run-final-smoke.md tmp/run-smoke/web-run-final-smoke.md exists after execution. The file contains the exact marker WEB_RUN_FINAL_SMOKE_OK. The file states that it is only a smoke artifact for Web Run commit validation. The generated report evidence includes tmp/run-smoke/web-run-final-smoke.md as a changed file. Web Run reaches local commit without COMMIT_READINESS_FAILED. Confirm that only the smoke artifact and session-owned project-control files are included in commit readiness.","schema_version":1,"task_id":"TASK-252"} -->
 
 # Context Pack
 
@@ -8,41 +8,38 @@ This generated Context Pack is derived output only. It is not source of truth.
 It does not expand task scope, allowed files, out-of-scope items, or acceptance criteria.
 
 Mode: `task`
-Task ID: `TASK-239`
+Task ID: `TASK-252`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1646`
+Tasks revision: `1724`
 
 ## Query
 
 ```text
-TASK-239 Replace Tasks metrics with action counts Replace non-actionable /tasks metrics with owner-actionable counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues. Counts like done and visible are useful for inventory, but the Owner Cockpit default should show work that needs attention. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Compute action queue counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues. Render these counts in the /tasks default Action Queue view. Keep inventory-style metrics available only in Full Inventory or diagnostic views if they already exist. Add regression coverage for the displayed action counts. Do not remove task inventory data from the system. Do not change task statuses or stored task counts. Do not edit protected project-control files manually. ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py tests/test_web_control_center_read_model.py tests/test_web_control_center.py The default /tasks metrics show Needs Decision, Ready To Run, Current, Blocked, and Health Issues. The default /tasks metrics do not emphasize done count as a primary owner-action metric. Metric counts match the rendered action queue groups. Metrics remain usable when there is no current task. Tests cover the action-count metrics. Compare metric counts with the queue groups rendered below them.
+TASK-252 Verify Web Run commit smoke path Create a deterministic smoke artifact to verify that Web Run reaches local commit after pipeline commit fixes. This task is only for validating the fixed Web Run execution and commit path. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Create tmp/run-smoke/web-run-final-smoke.md. Add the exact marker WEB_RUN_FINAL_SMOKE_OK. State that this file is only a smoke artifact for Web Run commit validation. Keep the content deterministic and timestamp-free. Do not change behavior unrelated to this task. Do not refactor unrelated code. Do not edit protected project-control files manually. Do not change pipeline, Web UI, policy, task, evolution, context, or Codex control behavior. tmp/run-smoke/web-run-final-smoke.md tmp/run-smoke/web-run-final-smoke.md exists after execution. The file contains the exact marker WEB_RUN_FINAL_SMOKE_OK. The file states that it is only a smoke artifact for Web Run commit validation. The generated report evidence includes tmp/run-smoke/web-run-final-smoke.md as a changed file. Web Run reaches local commit without COMMIT_READINESS_FAILED. Confirm that only the smoke artifact and session-owned project-control files are included in commit readiness.
 ```
 
 ## Task Boundary Snapshot
 
-Task: `TASK-239` - Replace Tasks metrics with action counts
+Task: `TASK-252` - Verify Web Run commit smoke path
 Status: `done`
 
 Scope:
-- Compute action queue counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues.
-- Render these counts in the /tasks default Action Queue view.
-- Keep inventory-style metrics available only in Full Inventory or diagnostic views if they already exist.
-- Add regression coverage for the displayed action counts.
+- Create tmp/run-smoke/web-run-final-smoke.md.
+- Add the exact marker WEB_RUN_FINAL_SMOKE_OK.
+- State that this file is only a smoke artifact for Web Run commit validation.
+- Keep the content deterministic and timestamp-free.
 
 Allowed Files:
-- ai_project_ctl/web/read_model.py
-- ai_project_ctl/web/server.py
-- tests/test_web_control_center_read_model.py
-- tests/test_web_control_center.py
+- tmp/run-smoke/web-run-final-smoke.md
 
 Acceptance Criteria:
-- The default /tasks metrics show Needs Decision, Ready To Run, Current, Blocked, and Health Issues.
-- The default /tasks metrics do not emphasize done count as a primary owner-action metric.
-- Metric counts match the rendered action queue groups.
-- Metrics remain usable when there is no current task.
-- Tests cover the action-count metrics.
+- tmp/run-smoke/web-run-final-smoke.md exists after execution.
+- The file contains the exact marker WEB_RUN_FINAL_SMOKE_OK.
+- The file states that it is only a smoke artifact for Web Run commit validation.
+- The generated report evidence includes tmp/run-smoke/web-run-final-smoke.md as a changed file.
+- Web Run reaches local commit without COMMIT_READINESS_FAILED.
 
 ## Index Summary
 
@@ -57,14 +54,14 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 | Score | Source | Heading | Lines | Content hash | Chunk hash | Reasons |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 116 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 607-707 | `f5e4b5e551ae` | `6c704ec11dd6` | metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, below, change, completed, criteria |
-| 108 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: to; metadata token match: md, to; content token match: a, acceptance, and, as, criteria, decision, done, edit |
-| 106 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 834-870 | `f5e4b5e551ae` | `1ed18819b1db` | metadata token match: md, project-control; content token match: a, acceptance, add, and, but, change, criteria, current |
-| 106 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | heading token match: useful; metadata token match: md, useful; content token match: a, acceptance, add, ai_project, and, as, change, done |
-| 94 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 911-943 | `f5e4b5e551ae` | `1d3f69b9e6a5` | heading token match: and, py, to; metadata token match: and, md, project-control, py, to; content token match: a, and, but, current, for, generated, in, md |
-| 92 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 65-119 | `f824429b0a39` | `5b78d4503548` | metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, are, as, but, criteria |
-| 89 | `ai-system/project-control/06-prompt-package-spec.md` | 3. Current Implementation | 123-162 | `f5e4b5e551ae` | `4fe051d2de08` | heading token match: current; metadata token match: current, md, project-control; content token match: a, ai_project, and, are, current, default, for, generated |
-| 88 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, are, criteria, current, default |
+| 119 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 607-707 | `f5e4b5e551ae` | `6c704ec11dd6` | metadata token match: control, md, project-control; content token match: a, acceptance, after, ai_project, and, change, changed, completed |
+| 113 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: context, control, state; metadata token match: context, control, md, project-control, state; content token match: a, acceptance, ai_project, and, are, content, context, control |
+| 110 | `ai-system/project-control/06-prompt-package-spec.md` | 7. Section Requirements > 7.14 Final Report Requirements | 434-474 | `f5e4b5e551ae` | `6effcae6ee95` | heading token match: report; metadata token match: control, md, project-control, report; content token match: a, acceptance, after, and, as, changed, codex, completed |
+| 109 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: create, to; metadata token match: create, md, to; content token match: a, acceptance, and, as, commit, control, create, criteria |
+| 106 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 834-870 | `f5e4b5e551ae` | `1ed18819b1db` | heading token match: context; metadata token match: context, control, md, project-control; content token match: a, acceptance, add, and, change, codex, context, criteria |
+| 101 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | metadata token match: md; content token match: a, acceptance, add, after, ai_project, and, as, behavior |
+| 99 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 65-119 | `f824429b0a39` | `5b78d4503548` | heading token match: control; metadata token match: control, md, project-control; content token match: a, acceptance, ai_project, and, are, as, changed, content |
+| 89 | `ai-system/project-control/07-validation-and-tests.md` | 20. Acceptance Criteria For Validation Layer | 1368-1386 | `61710bd7deee` | `9ed7e5fda92c` | heading token match: acceptance, criteria, for, validation; metadata token match: acceptance, and, control, criteria, for, md, project-control, validation; content token match: a, acceptance, and, are, criteria, do, for, generated |
 
 ## Selected Context
 
@@ -74,10 +71,10 @@ Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 12. Prompt Package Template
 Lines: `607-707`
-Score: `116`
+Score: `119`
 Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
 Chunk hash: `6c704ec11dd6768d6ef9c65207d80f3aa00e1bf0da58c3d765defabe8ff08815`
-Reasons: metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, below, change, completed, criteria
+Reasons: metadata token match: control, md, project-control; content token match: a, acceptance, after, ai_project, and, change, changed, completed
 
 ```text
 # 12. Prompt Package Template
@@ -150,16 +147,105 @@ Execution Rules:
 [...truncated by contextctl...]
 ```
 
-### 2. `ai-system/skills/README.md`
+### 2. `ai-system/project-control/03-state-model.md`
+
+Title: Project Control State Model
+Status: `active`  Type: `reference`
+Heading: Project Control State Model > Context Control State
+Lines: `104-125`
+Score: `113`
+Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
+Chunk hash: `0cd80bdf0d55e5284fa6355477f50005896398136bf33b7e1a181718f309f8b4`
+Reasons: heading token match: context, control, state; metadata token match: context, control, md, project-control, state; content token match: a, acceptance, ai_project, and, are, content, context, control
+
+```text
+## Context Control State
+
+Context control uses the state/events/generated model without adding a new source-of-truth state file:
+
+```text
+AI_PROJECT/state/docs.json
+AI_PROJECT/state/tasks.json
+AI_PROJECT/events/context-events.jsonl
+AI_PROJECT/generated/CONTEXT_PACK.md
+AI_PROJECT/generated/CONTEXT_STATUS.md
+```
+
+`scripts/contextctl.py` builds a deterministic derived index in memory from registered documents in `docs.json` and optional Task context from `tasks.json`.
+
+The derived index and Context Pack are not source of truth. They must not expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task or source documents, the Task and source documents remain authoritative.
+
+By default, context control indexes registered active source documents only. It excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless the operator explicitly enables the relevant include flag.
+
+`CONTEXT_PACK.md` includes selected source paths, headings, line ranges, source content hashes, chunk hashes, deterministic keyword scores and selection reasons. `CONTEXT_STATUS.md` summarizes the current generated pack, selected paths and exclusion reasons. Both files are generated output and must be regenerated through `contextctl.py`.
+
+---
+```
+
+### 3. `ai-system/project-control/06-prompt-package-spec.md`
+
+Title: Project Control Prompt Package Specification
+Status: `active`  Type: `reference`
+Heading: 7. Section Requirements > 7.14 Final Report Requirements
+Lines: `434-474`
+Score: `110`
+Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
+Chunk hash: `6effcae6ee956170dbc3f9127d2af67ea9fcf3027b9a669f88ec02f76a1e6410`
+Reasons: heading token match: report; metadata token match: control, md, project-control, report; content token match: a, acceptance, after, and, as, changed, codex, completed
+
+```text
+## 7.14 Final Report Requirements
+
+Prompt Package should require Codex to report:
+
+```text id="5af40m"
+- changed files;
+- commands run;
+- validation result;
+- generated files updated;
+- acceptance criteria status;
+- unresolved risks;
+- owner action required.
+```
+
+For executable pipeline prompts, the human-readable report is not enough. The generated prompt must also require a final machine-readable execution summary block using this exact contract:
+
+````text
+CODEX_EXECUTION_SUMMARY_JSON:
+```json
+{
+  "implementation_summary": "Summarize the completed implementation.",
+  "notes": [],
+  "warnings": [],
+  "blockers": []
+}
+```
+````
+
+Rules:
+
+```text
+- the marker must appear on its own line;
+- it must be followed by one fenced `json` block;
+- the JSON value must be an object;
+- the object must contain exactly `implementation_summary`, `notes`, `warnings` and `blockers`;
+- no prose, bullets or other text may appear after the closing fence;
+- Codex must not emit a full TaskReport payload in this block.
+```
+
+The local pipeline adapter parses this block from Codex stdout. It uses the four Codex-authored fields as summary input and derives task identity, changed files, generated files, checks, owner decision status and token usage from trusted pipeline and task evidence.
+```
+
+### 4. `ai-system/skills/README.md`
 
 Title: Skills Layer Roadmap
 Status: `active`  Type: `guide`
 Heading: Skills Layer Roadmap > Recommended Skills To Create
 Lines: `80-92`
-Score: `108`
+Score: `109`
 Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
 Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
-Reasons: heading token match: to; metadata token match: md, to; content token match: a, acceptance, and, as, criteria, decision, done, edit
+Reasons: heading token match: create, to; metadata token match: create, md, to; content token match: a, acceptance, and, as, commit, control, create, criteria
 
 ```text
 ## Recommended Skills To Create
@@ -173,7 +259,7 @@ Reasons: heading token match: to; metadata token match: md, to; content token ma
 [...truncated by contextctl...]
 ```
 
-### 3. `ai-system/project-control/06-prompt-package-spec.md`
+### 5. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
@@ -182,7 +268,7 @@ Lines: `834-870`
 Score: `106`
 Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
 Chunk hash: `1ed18819b1db2849347b56648bdbea293730ca187154bd5be940636cfe902e79`
-Reasons: metadata token match: md, project-control; content token match: a, acceptance, add, and, but, change, criteria, current
+Reasons: heading token match: context; metadata token match: context, control, md, project-control; content token match: a, acceptance, add, and, change, codex, context, criteria
 
 ```text
 ## Context Pack Boundary
@@ -223,16 +309,16 @@ If validation fails, `codexctl.py` must fail clearly and must not include stale 
 ---
 ```
 
-### 4. `ai-system/skills/README.md`
+### 6. `ai-system/skills/README.md`
 
 Title: Skills Layer Roadmap
 Status: `active`  Type: `guide`
 Heading: Skills Layer Roadmap > Existing Useful Skills
 Lines: `34-43`
-Score: `106`
+Score: `101`
 Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
 Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
-Reasons: heading token match: useful; metadata token match: md, useful; content token match: a, acceptance, add, ai_project, and, as, change, done
+Reasons: metadata token match: md; content token match: a, acceptance, add, after, ai_project, and, as, behavior
 
 ```text
 ## Existing Useful Skills
@@ -246,62 +332,16 @@ Reasons: heading token match: useful; metadata token match: md, useful; content 
 [...truncated by contextctl...]
 ```
 
-### 5. `ai-system/project-control/06-prompt-package-spec.md`
-
-Title: Project Control Prompt Package Specification
-Status: `active`  Type: `reference`
-Heading: 17. Relationship To taskctl.py And codexctl.py
-Lines: `911-943`
-Score: `94`
-Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
-Chunk hash: `1d3f69b9e6a541b647d67281fe6878bd0cffde8324082ef979a9a7ca2a729d9a`
-Reasons: heading token match: and, py, to; metadata token match: and, md, project-control, py, to; content token match: a, and, but, current, for, generated, in, md
-
-```text
-# 17. Relationship To taskctl.py And codexctl.py
-
-Task prompt output can be built by `taskctl.py`.
-
-`taskctl.py` owns:
-
-```text id="d2esmn"
-Task state
-Current Task
-Task generated Markdown
-Codex Prompt Package
-Task audit events
-```
-
-`codexctl.py` owns:
-
-```text
-Current Codex execution state
-CODEX_STATUS.md
-Codex prompt build and clear audit events
-Optional read-only Context Pack inclusion in CODEX_PROMPT.md
-```
-
-Prompt Package build must not bypass task validation.
-
-Before building the package, task state must be valid.
-
-`contextctl.py` may read Task state to derive a search query for a Context Pack, but it does not mutate Task state and does not make retrieved context executable scope.
-
-`codexctl.py` may validate and include an existing Context Pack, but it must not build the index or refresh Context Pack content itself.
-
----
-```
-
-### 6. `ai-system/project-control/04-command-catalog.md`
+### 7. `ai-system/project-control/04-command-catalog.md`
 
 Title: Project Control Command Catalog
 Status: `active`  Type: `reference`
 Heading: Project Control Command Catalog > Self-Hosted Command Boundary
 Lines: `65-119`
-Score: `92`
+Score: `99`
 Content hash: `f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6`
 Chunk hash: `5b78d45035483b51a58d0a7bed1cf1402fe3b2e6bc9a7ffcda911c0d12fcb6bc`
-Reasons: metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, are, as, but, criteria
+Reasons: heading token match: control; metadata token match: control, md, project-control; content token match: a, acceptance, ai_project, and, are, as, changed, content
 
 ```text
 ## Self-Hosted Command Boundary
@@ -342,90 +382,34 @@ python scripts/docctl.py audit --last 20
 [...truncated by contextctl...]
 ```
 
-### 7. `ai-system/project-control/06-prompt-package-spec.md`
+### 8. `ai-system/project-control/07-validation-and-tests.md`
 
-Title: Project Control Prompt Package Specification
-Status: `active`  Type: `reference`
-Heading: 3. Current Implementation
-Lines: `123-162`
+Title: Project Control Validation and Tests
+Status: `active`  Type: `process`
+Heading: 20. Acceptance Criteria For Validation Layer
+Lines: `1368-1386`
 Score: `89`
-Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
-Chunk hash: `4fe051d2de08383b0737cc69ca48f864bb8341acd7154ddc8b2d3a70fb1ad30a`
-Reasons: heading token match: current; metadata token match: current, md, project-control; content token match: a, ai_project, and, are, current, default, for, generated
+Content hash: `61710bd7deeed5b710aa500acaf478c77f7ad43ffcd3943c0245da65015ff2c9`
+Chunk hash: `9ed7e5fda92cce9da485202d3c05867d3fcf000f7ab294fcf2397088db94d3cf`
+Reasons: heading token match: acceptance, criteria, for, validation; metadata token match: acceptance, and, control, criteria, for, md, project-control, validation; content token match: a, acceptance, and, are, criteria, do, for, generated
 
 ```text
-# 3. Current Implementation
+# 20. Acceptance Criteria For Validation Layer
 
-Current CLI:
+Validation and tests are acceptable when:
 
-```bash id="55p5jr"
-python scripts/taskctl.py prompt build
+```text id="xnp5jd"
+- happy path passes in a temp root;
+- invalid lifecycle transitions fail;
+- missing parent references fail;
+- generated task drift is detected;
+- prompt build requires selected or explicit Task;
+- audit events are written for successful mutations;
+- failed commands do not write success events;
+- task validation checks plan references by default;
+- generated Markdown can be regenerated;
+- smoke test can run locally and in CI.
 ```
-
-Supported options:
-
-```text id="xuo71y"
---task <TASK_ID>       Build prompt for a specific Task.
---write                Write prompt to AI_PROJECT/generated/CODEX_PROMPT.md.
---out <PATH>           Write prompt to custom output path.
---allow-inactive       Allow prompt build for non-executable statuses.
---skip-plan-check      Validate tasks without checking plan references.
-```
-
-Default behavior:
-
-```text id="d56ig6"
-If --task is not provided, taskctl.py uses current_task_id.
-If no current task exists, prompt build fails.
-If task status is not executable and --allow-inactive is not provided, prompt build fails.
-```
-
-Dedicated Codex execution CLI:
-
-```bash
-python scripts/codexctl.py build --task <TASK_ID>
-python scripts/codexctl.py build --task <TASK_ID> --with-context
-python scripts/codexctl.py build --task <TASK_ID> --context-pack AI_PROJECT/generated/CONTEXT_PACK.md
-python scripts/codexctl.py status
-python scripts/codexctl.py clear
-```
-
-`--with-context` uses the default generated Context Pack path. `--context-pack` allows an explicit repository-relative or absolute Context Pack path. Both options are read-only with respect to context generation; `contextctl.py` remains responsible for building and refreshing Context Packs.
-
----
-```
-
-### 8. `ai-system/project-control/03-state-model.md`
-
-Title: Project Control State Model
-Status: `active`  Type: `reference`
-Heading: Project Control State Model > Context Control State
-Lines: `104-125`
-Score: `88`
-Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
-Chunk hash: `0cd80bdf0d55e5284fa6355477f50005896398136bf33b7e1a181718f309f8b4`
-Reasons: metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, are, criteria, current, default
-
-```text
-## Context Control State
-
-Context control uses the state/events/generated model without adding a new source-of-truth state file:
-
-```text
-AI_PROJECT/state/docs.json
-AI_PROJECT/state/tasks.json
-AI_PROJECT/events/context-events.jsonl
-AI_PROJECT/generated/CONTEXT_PACK.md
-AI_PROJECT/generated/CONTEXT_STATUS.md
-```
-
-`scripts/contextctl.py` builds a deterministic derived index in memory from registered documents in `docs.json` and optional Task context from `tasks.json`.
-
-The derived index and Context Pack are not source of truth. They must not expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task or source documents, the Task and source documents remain authoritative.
-
-By default, context control indexes registered active source documents only. It excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless the operator explicitly enables the relevant include flag.
-
-`CONTEXT_PACK.md` includes selected source paths, headings, line ranges, source content hashes, chunk hashes, deterministic keyword scores and selection reasons. `CONTEXT_STATUS.md` summarizes the current generated pack, selected paths and exclusion reasons. Both files are generated output and must be regenerated through `contextctl.py`.
 
 ---
 ```

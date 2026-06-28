@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1646`
+Revision: `1724`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4191,3 +4191,226 @@ Acceptance criteria:
 - Tests cover Machine Review WARN allowed by policy without allowing Machine Review FAIL.
 - Tests do not require network access or a live Codex process.
 - Focused regression test commands complete successfully.
+
+### PIPEF-135 (TASK-240) — Ignore nonblocking review warnings
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_cc7783c67519`, legacy `TASK-240`, aliases `TASK-240`, local `PIPEF` / `135`
+
+Make local commit readiness ignore Machine Review warnings whose evidence is marked blocking=false.
+
+Acceptance criteria:
+
+- A Machine Review with report_declared_test warnings marked blocking=false no longer blocks local commit readiness.
+- A Machine Review with codex_report_gate WARN passes commit readiness only when report warnings are accepted by policy.
+- A Machine Review with any blocking FAIL still blocks local commit readiness.
+- A Machine Review with an unapproved blocking WARN still blocks local commit readiness.
+- The blocker reason no longer lists nonblocking warnings as unapproved warning evidence.
+- Focused git commit readiness tests pass.
+
+### PIPEF-136 (TASK-241) — Add nonblocking warning regression
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_3da4271deaee`, legacy `TASK-241`, aliases `TASK-241`, local `PIPEF` / `136`
+
+Add regression coverage for close-to-commit flow with policy-approved report warning and nonblocking unsafe test warnings.
+
+Acceptance criteria:
+
+- Regression tests cover nonblocking unsafe report-declared test warnings during commit readiness.
+- Regression tests cover policy-approved codex_report_gate WARN plus nonblocking report_declared_test WARN checks passing local commit readiness.
+- Regression tests prove that a blocking unsafe test warning still blocks local commit readiness.
+- Regression tests use fakes or fixtures and do not invoke a live Codex process.
+- Focused pipeline commit and close tests pass.
+
+### PIPEF-137 (TASK-242) — Separate warning diagnostics
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_0a8962b5f17b`, legacy `TASK-242`, aliases `TASK-242`, local `PIPEF` / `137`
+
+Separate blocking and nonblocking Machine Review warning diagnostics in local commit artifacts.
+
+Acceptance criteria:
+
+- Local commit artifacts distinguish blocking non-pass checks from advisory non-pass checks.
+- Nonblocking report_declared_test warnings appear as advisory diagnostics, not blocker evidence.
+- Blocker reasons include only checks that can actually block commit readiness.
+- Artifact strings remain bounded and do not violate pipeline state payload limits.
+- Focused commit artifact and Web rendering tests pass.
+
+### PIPEF-138 (TASK-243) — Add Web Run smoke artifact
+
+Status: `done`
+Priority: `1`
+Verification: `light`
+Identity: uid `tsk_47318e97bc6a`, legacy `TASK-243`, aliases `TASK-243`, local `PIPEF` / `138`
+
+Create a tiny deterministic smoke artifact file to verify that the existing Web Run button can execute, close, and commit a simple task.
+
+Acceptance criteria:
+
+- tmp/run-smoke/web-run-smoke.md exists after execution.
+- The file contains the exact marker WEB_RUN_SMOKE_OK.
+- The file states that it is only a smoke artifact for testing the Web Run flow.
+- The file content is deterministic and does not include timestamps, hostnames, random IDs, or environment-specific data.
+- The implementation does not modify repository files outside tmp/run-smoke/web-run-smoke.md, excluding governed project-control state/events/generated artifacts produced by the runner itself.
+- The task can be reviewed by reading the file and inspecting the final git diff.
+
+### PIPEF-139 (TASK-244) — Add pipeline git status snapshot helper
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_e1ae911006d8`, legacy `TASK-244`, aliases `TASK-244`, local `PIPEF` / `139`
+
+Add a reusable helper that captures, normalizes, and diffs git status snapshots for pipeline session file evidence.
+
+Acceptance criteria:
+
+- The helper can parse git status --short output into normalized repository-relative paths.
+- The helper can compute after-minus-before dirty file deltas without including pre-existing dirty files.
+- Modified, untracked, deleted, and renamed files are covered by tests.
+- Existing commit safety rules are not relaxed by this helper alone.
+- Focused tests for the new helper pass.
+
+### PIPEF-140 (TASK-245) — Record Web Run session file baseline
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_2f7e1f3b111b`, legacy `TASK-245`, aliases `TASK-245`, local `PIPEF` / `140`
+
+Store a git status baseline and session-owned file delta evidence for each selected Web Run session.
+
+Acceptance criteria:
+
+- A new selected-task session records the initial git dirty baseline.
+- Session evidence can distinguish pre-existing dirty files from files changed during the session.
+- Existing pipeline sessions without baseline data remain readable.
+- Pipeline status output includes enough evidence for commit readiness to consume session-owned files.
+- Focused session and runner tests pass.
+
+### PIPEF-141 (TASK-246) — Capture Codex-created changed files
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_5dfe49a637f3`, legacy `TASK-246`, aliases `TASK-246`, local `PIPEF` / `141`
+
+Make the execute/report path include files created or modified by Codex in structured report evidence.
+
+Acceptance criteria:
+
+- A file created by Codex inside task allowed_files appears in report changed_files evidence.
+- A file changed by Codex outside task allowed_files is not silently approved.
+- The report gate receives non-empty changed_files for a Codex-created smoke artifact.
+- Existing reports that explicitly declare changed files still work.
+- Focused execute/report builder tests pass.
+
+### PIPEF-142 (TASK-247) — Approve session-owned control side effects for commit
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_59541eac288b`, legacy `TASK-247`, aliases `TASK-247`, local `PIPEF` / `142`
+
+Allow commit readiness to include governed project-control side effects created by the current pipeline session while still blocking unrelated dirty files.
+
+Acceptance criteria:
+
+- Commit readiness approves governed project-control files that are proven to be changed by the current session.
+- Commit readiness blocks project-control files that were dirty before the session baseline.
+- Commit readiness blocks unrelated code or test files not owned by the current session.
+- The target task artifact remains required through report or allowed file evidence.
+- Focused git commit and close phase tests pass.
+
+### PIPEF-143 (TASK-248) — Expose commit-blocked closed task state
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_a668d08766ae`, legacy `TASK-248`, aliases `TASK-248`, local `PIPEF` / `143`
+
+Make the close phase clearly expose when a task was closed but local commit readiness failed.
+
+Acceptance criteria:
+
+- A close phase with local commit blocked leaves the pipeline session blocked with stop code COMMIT_READINESS_FAILED.
+- Pipeline status data distinguishes completed-with-commit from done-but-commit-blocked.
+- Owner next action tells how to resolve commit readiness blockers.
+- Existing auto-close behavior still closes tasks only through governed workflows.
+- Focused close phase and runner tests pass.
+
+### PIPEF-144 (TASK-249) — Classify blocked Web Run results correctly
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_ac83675b9c1d`, legacy `TASK-249`, aliases `TASK-249`, local `PIPEF` / `144`
+
+Render Web Action Result badges from pipeline outcome fields instead of only HTTP success or command ok.
+
+Acceptance criteria:
+
+- Action Result does not show PASS when the pipeline result has session_status blocked.
+- NO_EXECUTABLE_TASK is displayed as a non-success outcome with a clear reason.
+- COMMIT_READINESS_FAILED is displayed as COMMIT BLOCKED with next action text.
+- Successful completed runs still display PASS.
+- Focused Web Control Center tests pass.
+
+### PIPEF-145 (TASK-250) — Make selected Web Run idempotent
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_859961037176`, legacy `TASK-250`, aliases `TASK-250`, local `PIPEF` / `145`
+
+Prevent repeated Web Run submits from creating misleading sessions for already completed or active selected tasks.
+
+Acceptance criteria:
+
+- Running a done selected task does not create a new pipeline session.
+- A repeated Run on an active task points the owner to the existing relevant session.
+- A normal planned or ready selected task still creates and runs a session.
+- The Web form is guarded against duplicate submit in the browser.
+- Focused UI run and Web Control Center tests pass.
+
+### PIPEF-146 (TASK-251) — Add Web Run local commit smoke test
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_c0d7f9739711`, legacy `TASK-251`, aliases `TASK-251`, local `PIPEF` / `146`
+
+Add an end-to-end smoke test for selected Web Run creating an allowed artifact, closing the task, and creating a local commit.
+
+Acceptance criteria:
+
+- The smoke test uses a fake or controlled Codex adapter and does not require network access.
+- The test fails if changed_files evidence for the task artifact is empty.
+- The test fails if governed session side effects are treated as unrelated dirty files.
+- The test fails if a blocked Web Run result renders as PASS.
+- The focused smoke test passes locally.
+
+### PIPEF-147 (TASK-252) — Verify Web Run commit smoke path
+
+Status: `done`
+Priority: `1`
+Verification: `light`
+Identity: uid `tsk_f3bdae22a7d9`, legacy `TASK-252`, aliases `TASK-252`, local `PIPEF` / `147`
+
+Create a deterministic smoke artifact to verify that Web Run reaches local commit after pipeline commit fixes.
+
+Acceptance criteria:
+
+- tmp/run-smoke/web-run-final-smoke.md exists after execution.
+- The file contains the exact marker WEB_RUN_FINAL_SMOKE_OK.
+- The file states that it is only a smoke artifact for Web Run commit validation.
+- The generated report evidence includes tmp/run-smoke/web-run-final-smoke.md as a changed file.
+- Web Run reaches local commit without COMMIT_READINESS_FAILED.

@@ -14,7 +14,11 @@ from ai_project_ctl.pipeline.machine_review import (
     MachineCheckEvidence,
     MachineReviewResult,
 )
-from ai_project_ctl.pipeline.report_builder import build_task_report_payload
+from ai_project_ctl.pipeline.report_builder import (
+    CAPTURED_OUT_OF_SCOPE_WARNING_PREFIX,
+    build_task_report_payload,
+    report_payload_with_captured_changed_files,
+)
 from ai_project_ctl.pipeline.report_gate import (
     CODE_PASS as REPORT_GATE_PASS_CODE,
     PASS as REPORT_GATE_PASS,
@@ -187,6 +191,54 @@ class PipelineReportBuilderTests(unittest.TestCase):
                 "app/session.py",
             ],
         )
+
+    def test_execute_file_delta_evidence_adds_changed_files(self):
+        payload = build_task_report_payload(
+            session={},
+            task=task(),
+            adapter_result=adapter(),
+            summary=summary(),
+            policy_evidence={
+                "execute_file_delta": {
+                    "allowed_changed_files": [
+                        "tmp/run-smoke/web-run-smoke.md",
+                    ]
+                }
+            },
+        )
+
+        self.assertEqual(
+            payload["changed_files"],
+            ["tmp/run-smoke/web-run-smoke.md"],
+        )
+
+    def test_captured_changed_file_merge_preserves_explicit_report_files(self):
+        payload = build_task_report_payload(
+            session={},
+            task=task(),
+            adapter_result=adapter(),
+            summary=summary(changed_files=["app/explicit.py"]),
+            policy_evidence={},
+        )
+
+        enriched = report_payload_with_captured_changed_files(
+            payload,
+            changed_files=[
+                "app/explicit.py",
+                "tmp/run-smoke/web-run-smoke.md",
+            ],
+            out_of_scope_files=["outside-task.txt"],
+        )
+
+        self.assertEqual(
+            enriched["changed_files"],
+            ["app/explicit.py", "tmp/run-smoke/web-run-smoke.md"],
+        )
+        self.assertEqual(len(enriched["warnings"]), 1)
+        self.assertTrue(
+            enriched["warnings"][0].startswith(CAPTURED_OUT_OF_SCOPE_WARNING_PREFIX)
+        )
+        self.assertIn("outside-task.txt", enriched["warnings"][0])
 
     def test_summary_file_lists_reach_report_gate_and_commit_readiness(self):
         with tempfile.TemporaryDirectory() as tmp:

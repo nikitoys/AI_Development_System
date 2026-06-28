@@ -47,6 +47,10 @@ GATE_EVIDENCE_KEYS = (
     "protected_files_gate",
     "allowed_files_gate",
 )
+CAPTURED_OUT_OF_SCOPE_WARNING_PREFIX = (
+    "Codex changed file(s) outside task allowed_files; not added to "
+    "report changed_files: "
+)
 
 
 class ReportBuilderError(ValueError):
@@ -88,6 +92,31 @@ def build_task_report_payload(
         "owner_decision_required": _owner_decision_required(session_data, evidence),
         "token_usage": _token_usage(evidence),
     }
+
+
+def report_payload_with_captured_changed_files(
+    report_payload: Mapping[str, Any],
+    *,
+    changed_files: Sequence[str] = (),
+    out_of_scope_files: Sequence[str] = (),
+) -> dict[str, Any]:
+    """Return a report payload augmented with trusted execute file evidence."""
+
+    payload = dict(report_payload)
+    payload.pop("reported_task_id", None)
+    payload.pop("reported_task_ref", None)
+    payload["changed_files"] = _dedupe_strings(
+        [
+            *_string_list(payload.get("changed_files")),
+            *_string_list(changed_files),
+        ]
+    )
+    warnings = _string_list(payload.get("warnings"))
+    out_of_scope = _string_list(out_of_scope_files)
+    if out_of_scope:
+        warnings.append(_captured_out_of_scope_warning(out_of_scope))
+    payload["warnings"] = _dedupe_strings(warnings)
+    return payload
 
 
 def _implementation_summary(summary: Mapping[str, Any]) -> str:
@@ -222,6 +251,13 @@ def _changed_files(
     values: list[str] = []
     values.extend(_string_list(summary.get("changed_files")))
     values.extend(_string_list(evidence.get("changed_files")))
+    values.extend(
+        _string_list(
+            _object_mapping(evidence.get("execute_file_delta")).get(
+                "allowed_changed_files"
+            )
+        )
+    )
     values.extend(_string_list(_object_mapping(evidence.get("git_diff_gate")).get("actual_changed_files")))
     values.extend(_string_list(_object_mapping(evidence.get("git_diff_gate")).get("tracked_files")))
     values.extend(_string_list(session.get("changed_files")))
@@ -338,6 +374,20 @@ def _dedupe_strings(values: Sequence[str]) -> list[str]:
     return result
 
 
+def _captured_out_of_scope_warning(paths: Sequence[str]) -> str:
+    values = _string_list(paths)
+    limit = 8
+    shown = values[:limit]
+    suffix = ""
+    if len(values) > limit:
+        suffix = " and {} more".format(len(values) - limit)
+    return "{}{}{}".format(
+        CAPTURED_OUT_OF_SCOPE_WARNING_PREFIX,
+        ", ".join(shown),
+        suffix,
+    )
+
+
 def _dedupe_checks(checks: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
     seen: set[tuple[str, str, str]] = set()
@@ -408,6 +458,8 @@ def _join_details(*parts: Any) -> str:
 
 __all__ = [
     "CHECK_RESULT_BY_STATUS",
+    "CAPTURED_OUT_OF_SCOPE_WARNING_PREFIX",
     "ReportBuilderError",
     "build_task_report_payload",
+    "report_payload_with_captured_changed_files",
 ]

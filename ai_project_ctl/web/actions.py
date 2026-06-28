@@ -23,7 +23,11 @@ from ai_project_ctl.pipeline.ui_policy import (
     resolve_ui_pipeline_policy,
     ui_internal_change_gate_bypass_enabled,
 )
-from ai_project_ctl.pipeline.ui_run import build_ui_run_selected_queue
+from ai_project_ctl.pipeline.ui_run import (
+    UIRunSelectionResolution,
+    build_ui_run_selected_queue,
+    resolve_ui_run_selection,
+)
 from ai_project_ctl.ui_settings import (
     ALLOW_REPORT_WARNINGS_SETTING,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
@@ -399,6 +403,35 @@ class WebActionExecutor:
         task_ref = _task_ref(fields)
         auto_close_note = _field(fields, "auto_close_note")
         try:
+            selection = resolve_ui_run_selection(self.root, task_ref)
+            if not selection.should_run:
+                result = _ui_run_selection_not_run_result(selection)
+                command = [
+                    self.python_executable,
+                    str(SCRIPTS_DIR / "aictl.py"),
+                    "--root",
+                    str(self.root),
+                    "--actor",
+                    self.actor,
+                    "--json",
+                    "ui",
+                    "run",
+                    task_ref,
+                ]
+                if auto_close_note:
+                    command.extend(["--auto-close-note", auto_close_note])
+                command.append("--confirm")
+                return ActionProcessResult(
+                    command=command,
+                    returncode=0,
+                    stdout=json.dumps(
+                        result.to_dict(),
+                        ensure_ascii=False,
+                        sort_keys=True,
+                    ),
+                    stderr="",
+                )
+
             selected_policy = resolve_ui_pipeline_policy(root=self.root)
             _require_incomplete_run_confirmation(selected_policy, fields)
             session_result = create_session(
@@ -1027,6 +1060,58 @@ def _parse_json(text: str) -> Any | None:
         return json.loads(stripped)
     except json.JSONDecodeError:
         return None
+
+
+def _ui_run_selection_not_run_result(
+    selection: UIRunSelectionResolution,
+) -> CommandResult:
+    task_label = selection.task_id or selection.task_ref or "selected task"
+    session_id = selection.session_id
+    data: dict[str, Any] = {
+        "task_ref": selection.task_ref,
+        "task_id": selection.task_id,
+        "task_status": selection.task_status,
+        "outcome": selection.outcome,
+        "not_run": True,
+        "session_id": session_id,
+        "session_status": selection.session_status,
+        "session": selection.session_summary() or None,
+    }
+    if session_id:
+        target = "/pipeline/sessions/{}".format(session_id)
+        data["session_href"] = target
+        data["redirect_target"] = target
+
+    if selection.outcome == "existing_session":
+        message = (
+            "NOT RUN: selected task {} already has pipeline session {}{}.".format(
+                task_label,
+                session_id or "(unknown)",
+                " ({})".format(selection.session_status)
+                if selection.session_status
+                else "",
+            )
+        )
+        owner_action = (
+            "Open the existing pipeline session instead of starting a duplicate run."
+        )
+    else:
+        message = "NOT RUN: selected task {} is {}.".format(
+            task_label,
+            selection.task_status or "not executable",
+        )
+        owner_action = "Select a planned or ready task before starting a Web Run."
+
+    result = CommandResult.success(
+        command="ui.run",
+        domain="ui",
+        message=message,
+        data=data,
+    )
+    result.owner_action_required = owner_action
+    if session_id:
+        result.next_actions.append("Open pipeline session {}.".format(session_id))
+    return result
 
 
 def _action_result_summary(
