@@ -714,6 +714,7 @@ def _prepare_verify_session(root: Path, policy: PipelinePolicy) -> str:
         policy=policy,
         current_task_id="TASK-001",
         current_task_ref="APP-01",
+        auto_close_note="Approve verify phase test",
     )
     if not result.ok:
         raise AssertionError(result.errors)
