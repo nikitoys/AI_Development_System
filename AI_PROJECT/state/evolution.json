@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 2565,
+  "revision": 2589,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-28T18:56:48Z",
+  "updated_at": "2026-06-28T19:39:45Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -4973,6 +4973,58 @@
       "order": 84,
       "created_at": "2026-06-28T18:53:05Z",
       "updated_at": "2026-06-28T18:56:48Z"
+    },
+    {
+      "id": "CHG-085",
+      "title": "Verify Web Run clean commit path 2",
+      "status": "accepted",
+      "change_type": "process",
+      "rationale": "This task validates Web Run local commit after committing all previous bootstrap and task-import state.",
+      "problem": "Task PIPEF-150 requires an explicit Evolution Change Proposal before implementation: Create a new deterministic smoke artifact to verify that Web Run reaches local commit from a clean worktree.",
+      "proposal": "Implement the bounded task scope: Create tmp/run-smoke/web-run-clean-commit-smoke-2.md.; Add the exact marker WEB_RUN_CLEAN_COMMIT_2_OK.; State that this file is only a smoke artifact for Web Run local commit validation.; Keep the content deterministic and timestamp-free.",
+      "affected_areas": [],
+      "affected_files": [
+        "tmp/run-smoke/web-run-clean-commit-smoke-2.md"
+      ],
+      "risks": [
+        "Boundary risk: Do not change behavior unrelated to this task.",
+        "Boundary risk: Do not refactor unrelated code.",
+        "Boundary risk: Do not edit protected project-control files manually.",
+        "Boundary risk: Do not change pipeline, Web UI, policy, task, evolution, context, or Codex control behavior.",
+        "Confirm that this task starts from a clean worktree and creates a local commit.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-255.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Create tmp/run-smoke/web-run-clean-commit-smoke-2.md.",
+        "Add the exact marker WEB_RUN_CLEAN_COMMIT_2_OK.",
+        "State that this file is only a smoke artifact for Web Run local commit validation.",
+        "Keep the content deterministic and timestamp-free.",
+        "tmp/run-smoke/web-run-clean-commit-smoke-2.md exists after execution.",
+        "The file contains the exact marker WEB_RUN_CLEAN_COMMIT_2_OK.",
+        "The file states that it is only a smoke artifact for Web Run local commit validation."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-255"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-28T19:36:22Z",
+      "approval_notes": "Auto-approved by Human Owner for selected UI run (pipeline session PSESS-131)",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-28T19:39:45Z",
+      "acceptance_notes": "Approve; linked Change accepted after task TASK-255 close succeeded.",
+      "notes": [],
+      "priority": 1,
+      "order": 85,
+      "created_at": "2026-06-28T19:36:18Z",
+      "updated_at": "2026-06-28T19:39:45Z"
     }
   ]
 }

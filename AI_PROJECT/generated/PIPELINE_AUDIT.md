@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `965`
-State revision: `965`
-Current session: `PSESS-130`
+Events: `973`
+State revision: `973`
+Current session: `PSESS-131`
 
 ## Timeline
 
@@ -976,6 +976,14 @@ Current session: `PSESS-130`
 | `2026-06-28T18:56:34Z` | `step.result` | `pipeline.phase.verify` | `PSESS-130` | `` | `` | reports=RPT-104 |
 | `2026-06-28T18:56:36Z` | `step.result` | `pipeline.phase.review` | `PSESS-130` | `` | `` | reports=RPT-104 |
 | `2026-06-28T18:56:54Z` | `step.result` | `pipeline.phase.close` | `PSESS-130` | `` | `` | changes=CHG-084 \| reports=RPT-104 |
+| `2026-06-28T19:36:14Z` | `session.create` | `pipeline.session.create` | `PSESS-131` | `` | `` | PSESS-131 |
+| `2026-06-28T19:36:16Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-131` | `` | `` | PSESS-131 |
+| `2026-06-28T19:36:28Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-131` | `` | `` | changes=CHG-085 |
+| `2026-06-28T19:36:31Z` | `step.result` | `pipeline.phase.execute` | `PSESS-131` | `` | `` | PSESS-131 |
+| `2026-06-28T19:39:26Z` | `step.result` | `pipeline.phase.execute` | `PSESS-131` | `` | `` | reports=RPT-106 |
+| `2026-06-28T19:39:29Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-131` | `` | `` | reports=RPT-106 |
+| `2026-06-28T19:39:31Z` | `step.result` | `pipeline.phase.verify` | `PSESS-131` | `` | `` | reports=RPT-106 |
+| `2026-06-28T19:39:33Z` | `step.result` | `pipeline.phase.review` | `PSESS-131` | `` | `` | reports=RPT-106 |
 
 ## Event Type Coverage
 

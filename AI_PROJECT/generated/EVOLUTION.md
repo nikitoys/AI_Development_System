@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `2565`
-Changes: `84`
+Revision: `2589`
+Changes: `85`
 
 ## Summary
 
-- `accepted`: 63
+- `accepted`: 64
 - `approved`: 21
 
 ## Changes
@@ -5279,3 +5279,59 @@ Impact:
 Linked tasks:
 
 - TASK-254
+
+### CHG-085 — Verify Web Run clean commit path 2
+
+Status: `accepted`  
+Type: `process`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-150 requires an explicit Evolution Change Proposal before implementation: Create a new deterministic smoke artifact to verify that Web Run reaches local commit from a clean worktree.
+
+Proposal:
+
+Implement the bounded task scope: Create tmp/run-smoke/web-run-clean-commit-smoke-2.md.; Add the exact marker WEB_RUN_CLEAN_COMMIT_2_OK.; State that this file is only a smoke artifact for Web Run local commit validation.; Keep the content deterministic and timestamp-free.
+
+Rationale:
+
+This task validates Web Run local commit after committing all previous bootstrap and task-import state.
+
+Approved by: `human_owner` at `2026-06-28T19:36:22Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-131)  
+
+Accepted by: `human_owner` at `2026-06-28T19:39:45Z`  
+Acceptance notes: Approve; linked Change accepted after task TASK-255 close succeeded.  
+
+Affected files:
+
+- tmp/run-smoke/web-run-clean-commit-smoke-2.md
+
+Risks:
+
+- Boundary risk: Do not change behavior unrelated to this task.
+- Boundary risk: Do not refactor unrelated code.
+- Boundary risk: Do not edit protected project-control files manually.
+- Boundary risk: Do not change pipeline, Web UI, policy, task, evolution, context, or Codex control behavior.
+- Confirm that this task starts from a clean worktree and creates a local commit.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-255.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Create tmp/run-smoke/web-run-clean-commit-smoke-2.md.
+- Add the exact marker WEB_RUN_CLEAN_COMMIT_2_OK.
+- State that this file is only a smoke artifact for Web Run local commit validation.
+- Keep the content deterministic and timestamp-free.
+- tmp/run-smoke/web-run-clean-commit-smoke-2.md exists after execution.
+- The file contains the exact marker WEB_RUN_CLEAN_COMMIT_2_OK.
+- The file states that it is only a smoke artifact for Web Run local commit validation.
+
+Linked tasks:
+
+- TASK-255

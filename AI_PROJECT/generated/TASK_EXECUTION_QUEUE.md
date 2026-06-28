@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1737`
+Revision: `1742`
 
 ## Executable Now
 
@@ -17,7 +17,6 @@ Revision: `1737`
 - `PIPEF-126 (TASK-207)` [planned] `EPIC-009` priority `1` — Show effective policy summary
 - `PIPEF-127 (TASK-208)` [planned] `EPIC-009` priority `1` — Add Web run batch overrides
 - `PIPEF-128 (TASK-209)` [planned] `EPIC-009` priority `1` — Warn on incomplete Web run policy
-- `PIPEF-150 (TASK-255)` [planned] `EPIC-009` priority `1` — Verify Web Run clean commit path 2
 
 ## Waiting For Dependencies
 
@@ -512,4 +511,6 @@ _No tasks waiting only on dependencies._
 - `PIPEF-148 (TASK-253)` [done] `EPIC-009` priority `1` — Verify Web Run clean commit path
   - `status_not_executable`: status is done
 - `PIPEF-149 (TASK-254)` [done] `EPIC-009` priority `1` — Verify Web Run clean commit path
+  - `status_not_executable`: status is done
+- `PIPEF-150 (TASK-255)` [done] `EPIC-009` priority `1` — Verify Web Run clean commit path 2
   - `status_not_executable`: status is done

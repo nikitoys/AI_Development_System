@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 104,
+  "revision": 106,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-28T18:56:29Z",
+  "updated_at": "2026-06-28T19:39:26Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -7402,6 +7402,144 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-105",
+      "task_id": "TASK-255",
+      "task_ref": "PIPEF-150",
+      "submitted_at": "2026-06-28T19:39:26Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:4fecfb6d6be73284f3410b43b367ef196bb8acbdc4a2598abfce68f645a3e51f",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-255",
+        "task_ref": "PIPEF-150",
+        "reported_task_id": "TASK-255",
+        "reported_task_ref": "PIPEF-150",
+        "implementation_summary": "Created tmp/run-smoke/web-run-clean-commit-smoke-2.md with deterministic timestamp-free smoke content, including the required WEB_RUN_CLEAN_COMMIT_2_OK marker and Web Run local commit validation statement.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 173.756292,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 173.756292,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Full git status shows pre-existing protected project-control state/event/generated changes outside the allowed file; they were not edited manually for this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed file evidence: ?? tmp/run-smoke/web-run-clean-commit-smoke-2.md"
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 886,
+          "remaining_tokens": 31114,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-106",
+      "task_id": "TASK-255",
+      "task_ref": "PIPEF-150",
+      "submitted_at": "2026-06-28T19:39:26Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-105",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-255",
+        "task_ref": "PIPEF-150",
+        "reported_task_id": "TASK-255",
+        "reported_task_ref": "PIPEF-150",
+        "implementation_summary": "Created tmp/run-smoke/web-run-clean-commit-smoke-2.md with deterministic timestamp-free smoke content, including the required WEB_RUN_CLEAN_COMMIT_2_OK marker and Web Run local commit validation statement.",
+        "changed_files": [
+          "tmp/run-smoke/web-run-clean-commit-smoke-2.md"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 173.756292,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 173.756292,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Full git status shows pre-existing protected project-control state/event/generated changes outside the allowed file; they were not edited manually for this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed file evidence: ?? tmp/run-smoke/web-run-clean-commit-smoke-2.md"
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 886,
+          "remaining_tokens": 31114,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -7504,6 +7642,7 @@
     "TASK-251": "RPT-099",
     "TASK-252": "RPT-101",
     "TASK-253": "RPT-103",
-    "TASK-254": "RPT-104"
+    "TASK-254": "RPT-104",
+    "TASK-255": "RPT-106"
   }
 }

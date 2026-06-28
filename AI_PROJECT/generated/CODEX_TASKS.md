@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1737`
+Revision: `1742`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4451,7 +4451,7 @@ Acceptance criteria:
 
 ### PIPEF-150 (TASK-255) — Verify Web Run clean commit path 2
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `light`
 Identity: uid `tsk_9ec7dcfc19be`, legacy `TASK-255`, aliases `TASK-255`, local `PIPEF` / `150`
