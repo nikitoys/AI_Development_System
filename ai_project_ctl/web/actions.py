@@ -12,10 +12,12 @@ from typing import Any, Callable, Mapping, Sequence
 from ai_project_ctl.core.registry import command_describe
 from ai_project_ctl.core.result import CommandError, CommandResult
 from ai_project_ctl.pipeline.batch import run_until_blocker
+from ai_project_ctl.pipeline.policy_store import load_policy_preset
 from ai_project_ctl.pipeline.report_recovery import (
     ReportRecoveryError,
     submit_recovered_report,
 )
+from ai_project_ctl.pipeline.runner import RUN_NEXT_PHASE_SEQUENCE
 from ai_project_ctl.pipeline.session import create_session
 from ai_project_ctl.pipeline.ui_policy import (
     resolve_ui_pipeline_policy,
@@ -26,6 +28,8 @@ from ai_project_ctl.ui_settings import (
     ALLOW_REPORT_WARNINGS_SETTING,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
     ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
+    BATCH_MAX_FAILURES_SETTING,
+    BATCH_MAX_STEPS_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
     apply_ui_settings,
@@ -61,9 +65,12 @@ PIPELINE_SESSION_STATUSES = {
 }
 PIPELINE_STOP_STATUSES = {"stopped", "blocked", "failed"}
 PIPELINE_ORDER_OPTIONS = {"execution", "owner", "selected"}
+INCOMPLETE_RUN_CONFIRM_FIELD = "incomplete_run_confirm"
 UI_SETTINGS_WEB_ALLOWED_KEYS = (
     "command_line",
     "default_policy",
+    BATCH_MAX_STEPS_SETTING,
+    BATCH_MAX_FAILURES_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
@@ -390,13 +397,16 @@ class WebActionExecutor:
         fields: Mapping[str, str],
     ) -> ActionProcessResult:
         task_ref = _task_ref(fields)
+        auto_close_note = _field(fields, "auto_close_note")
         try:
             selected_policy = resolve_ui_pipeline_policy(root=self.root)
+            _require_incomplete_run_confirmation(selected_policy, fields)
             session_result = create_session(
                 root=self.root,
                 actor=self.actor,
                 policy=selected_policy,
                 policy_name=selected_policy.name,
+                auto_close_note=auto_close_note,
                 selected_queue=build_ui_run_selected_queue(
                     selected_policy,
                     task_ref,
@@ -447,8 +457,10 @@ class WebActionExecutor:
             "ui",
             "run",
             task_ref,
-            "--confirm",
         ]
+        if auto_close_note:
+            command.extend(["--auto-close-note", auto_close_note])
+        command.append("--confirm")
         return ActionProcessResult(
             command=command,
             returncode=0 if result.ok else 1,
@@ -464,6 +476,8 @@ class WebActionExecutor:
     def _update_ui_setting(self, fields: Mapping[str, str]) -> ActionProcessResult:
         key = _allowed_ui_setting_key(fields)
         value = _require_field(fields, "value")
+        if key == "default_policy":
+            _validate_default_policy_value(value, root=self.root)
         try:
             path = upsert_ui_setting(key, value, root=self.root)
             result = CommandResult.success(
@@ -540,6 +554,8 @@ class WebActionExecutor:
 
     def _apply_ui_settings(self, fields: Mapping[str, str]) -> ActionProcessResult:
         values = _allowed_ui_settings_values(fields)
+        if "default_policy" in values:
+            _validate_default_policy_value(values["default_policy"], root=self.root)
         try:
             path = apply_ui_settings(
                 values,
@@ -773,7 +789,12 @@ def _build_pipeline_session_create(fields: Mapping[str, str]) -> list[str]:
 
 
 def _build_ui_run_selected_task(fields: Mapping[str, str]) -> list[str]:
-    return ["ui", "run", _task_ref(fields), "--confirm"]
+    args = ["ui", "run", _task_ref(fields)]
+    auto_close_note = _field(fields, "auto_close_note")
+    if auto_close_note:
+        args.extend(["--auto-close-note", auto_close_note])
+    args.append("--confirm")
+    return args
 
 
 def _build_ui_settings_set(fields: Mapping[str, str]) -> list[str]:
@@ -900,6 +921,69 @@ def _allowed_ui_settings_values(fields: Mapping[str, str]) -> dict[str, str]:
         for key in UI_SETTINGS_WEB_ALLOWED_KEYS
         if key in fields
     }
+
+
+def _validate_default_policy_value(value: str, *, root: str | Path) -> None:
+    policy_name = str(value or "")
+    if not policy_name:
+        raise WebActionError(
+            "WEB_UI_DEFAULT_POLICY_REQUIRED",
+            "Web UI default_policy must be a registered pipeline policy preset.",
+            path="default_policy",
+            details={"default_policy": policy_name},
+        )
+    try:
+        load_policy_preset(policy_name, root=root)
+    except CommandError as exc:
+        if exc.code == "POLICY_PRESET_NOT_FOUND":
+            raise WebActionError(
+                "WEB_UI_DEFAULT_POLICY_UNKNOWN",
+                "Web UI default_policy is not a registered pipeline policy preset: {}".format(
+                    policy_name
+                ),
+                path="default_policy",
+                details={"default_policy": policy_name, "source_code": exc.code},
+            ) from exc
+        raise WebActionError(
+            "WEB_UI_DEFAULT_POLICY_INVALID",
+            "Web UI default_policy could not be validated: {}".format(policy_name),
+            path="default_policy",
+            details={"default_policy": policy_name, "source_code": exc.code},
+        ) from exc
+    except (KeyError, TypeError, ValueError) as exc:
+        raise WebActionError(
+            "WEB_UI_DEFAULT_POLICY_INVALID",
+            "Web UI default_policy is not a valid pipeline policy preset: {}".format(
+                policy_name
+            ),
+            path="default_policy",
+            details={"default_policy": policy_name, "error": str(exc)},
+        ) from exc
+
+
+def _require_incomplete_run_confirmation(policy, fields: Mapping[str, str]) -> None:
+    max_steps = int(policy.batch.max_steps)
+    phase_count = len(RUN_NEXT_PHASE_SEQUENCE)
+    if max_steps >= phase_count:
+        return
+    if _field(fields, INCOMPLETE_RUN_CONFIRM_FIELD).lower() in CONFIRM_VALUES:
+        return
+    raise WebActionError(
+        "WEB_INCOMPLETE_RUN_CONFIRMATION_REQUIRED",
+        (
+            "Effective Web run policy batch.max_steps is {max_steps}, but a full "
+            "pipeline run has {phase_count} phases. Risk: review and close may not "
+            "run in one batch. Resume Session can continue the next phase."
+        ).format(max_steps=max_steps, phase_count=phase_count),
+        path=INCOMPLETE_RUN_CONFIRM_FIELD,
+        details={
+            "policy": policy.name,
+            "max_steps": max_steps,
+            "phase_count": phase_count,
+            "phase_sequence": list(RUN_NEXT_PHASE_SEQUENCE),
+            "required_confirmation": INCOMPLETE_RUN_CONFIRM_FIELD,
+        },
+    )
 
 
 def _require_field(fields: Mapping[str, str], name: str) -> str:

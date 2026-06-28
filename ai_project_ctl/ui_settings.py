@@ -14,6 +14,12 @@ from ai_project_ctl.core.store import StoreError, read_json_file, write_json_fil
 UI_SETTINGS_FILE_NAME = "ui_settings.json"
 TIMEOUT_SETTING_MIN_SEC = 1
 TIMEOUT_SETTING_MAX_SEC = 3600
+BATCH_MAX_STEPS_SETTING = "batch_max_steps"
+BATCH_MAX_FAILURES_SETTING = "batch_max_failures"
+BATCH_MAX_STEPS_MIN = 1
+BATCH_MAX_STEPS_MAX = 50
+BATCH_MAX_FAILURES_MIN = 1
+BATCH_MAX_FAILURES_MAX = 10
 INTERNAL_CHANGE_GATE_BYPASS_SETTING = "allow_internal_change_gate_bypass"
 REQUIRE_CODEX_REVIEW_SETTING = "require_codex_review"
 ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING = (
@@ -30,9 +36,16 @@ BOOLEAN_UI_SETTING_KEYS = (
 )
 BOOLEAN_SETTING_FALSE_STRINGS = {"0", "false"}
 BOOLEAN_SETTING_TRUE_STRINGS = {"1", "true"}
+BATCH_LIMIT_UI_SETTING_BOUNDS = {
+    BATCH_MAX_STEPS_SETTING: (BATCH_MAX_STEPS_MIN, BATCH_MAX_STEPS_MAX),
+    BATCH_MAX_FAILURES_SETTING: (BATCH_MAX_FAILURES_MIN, BATCH_MAX_FAILURES_MAX),
+}
+BATCH_LIMIT_UI_SETTING_KEYS = tuple(BATCH_LIMIT_UI_SETTING_BOUNDS)
 DEFAULT_UI_SETTINGS: dict[str, Any] = {
     "command_line": "codex exec",
     "default_policy": "supervised_executable_local_commit",
+    BATCH_MAX_STEPS_SETTING: None,
+    BATCH_MAX_FAILURES_SETTING: None,
     REQUIRE_CODEX_REVIEW_SETTING: True,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING: False,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING: False,
@@ -91,13 +104,23 @@ def load_ui_settings(*, root: str | Path = ".") -> dict[str, Any]:
 
     effective = default_ui_settings()
     effective.update(loaded)
-    _normalize_boolean_settings(effective)
+    _normalize_ui_settings(effective)
     return effective
+
+
+def _normalize_ui_settings(settings: dict[str, Any]) -> None:
+    _normalize_boolean_settings(settings)
+    _normalize_batch_limit_settings(settings)
 
 
 def _normalize_boolean_settings(settings: dict[str, Any]) -> None:
     for key in BOOLEAN_UI_SETTING_KEYS:
         settings[key] = _ui_boolean_setting(settings, key)
+
+
+def _normalize_batch_limit_settings(settings: dict[str, Any]) -> None:
+    for key in BATCH_LIMIT_UI_SETTING_KEYS:
+        settings[key] = optional_ui_batch_limit(settings, key)
 
 
 def _ui_boolean_setting(settings: Mapping[str, Any], key: str) -> bool:
@@ -198,6 +221,62 @@ def _raise_timeout_setting_error(key: str, value: Any) -> None:
     )
 
 
+def optional_ui_batch_limit(settings: Mapping[str, Any], key: str) -> int | None:
+    """Return an optional UI batch limit override as a bounded integer."""
+
+    if key not in BATCH_LIMIT_UI_SETTING_BOUNDS:
+        raise UISettingsError(
+            "UI_SETTINGS_BATCH_LIMIT_UNKNOWN",
+            "UI batch limit setting is not supported: {}".format(key),
+            path=key,
+            details={
+                "setting": key,
+                "allowed_settings": list(BATCH_LIMIT_UI_SETTING_KEYS),
+            },
+        )
+    if key not in settings or settings.get(key) is None:
+        return None
+
+    value = settings[key]
+    if isinstance(value, bool):
+        _raise_batch_limit_setting_error(key, value)
+    elif isinstance(value, int):
+        limit = value
+    elif isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        if not text.isdecimal():
+            _raise_batch_limit_setting_error(key, value)
+        limit = int(text)
+    else:
+        _raise_batch_limit_setting_error(key, value)
+
+    min_value, max_value = BATCH_LIMIT_UI_SETTING_BOUNDS[key]
+    if limit < min_value or limit > max_value:
+        _raise_batch_limit_setting_error(key, value)
+    return limit
+
+
+def _raise_batch_limit_setting_error(key: str, value: Any) -> None:
+    min_value, max_value = BATCH_LIMIT_UI_SETTING_BOUNDS[key]
+    raise UISettingsError(
+        "UI_SETTINGS_BATCH_LIMIT_INVALID",
+        "UI setting {} must be a positive integer between {} and {}.".format(
+            key,
+            min_value,
+            max_value,
+        ),
+        path=key,
+        details={
+            "setting": key,
+            "value": value,
+            "min": min_value,
+            "max": max_value,
+        },
+    )
+
+
 def init_ui_settings(*, root: str | Path = ".", confirm: bool = False) -> Path:
     path = ui_settings_path(root)
     if not confirm:
@@ -247,7 +326,7 @@ def apply_ui_settings(
         if key in values:
             _set_ui_setting_value(settings, key, values[key])
 
-    _normalize_boolean_settings(settings)
+    _normalize_ui_settings(settings)
     write_json_file(path, settings)
     return path
 
@@ -260,7 +339,7 @@ def upsert_ui_setting(key: str, value: str, *, root: str | Path = ".") -> Path:
     else:
         settings = default_ui_settings()
     _set_ui_setting_value(settings, key, value)
-    _normalize_boolean_settings(settings)
+    _normalize_ui_settings(settings)
     write_json_file(path, settings)
     return path
 
@@ -268,5 +347,7 @@ def upsert_ui_setting(key: str, value: str, *, root: str | Path = ".") -> Path:
 def _set_ui_setting_value(settings: dict[str, Any], key: str, value: Any) -> None:
     if key in BOOLEAN_UI_SETTING_KEYS:
         settings[key] = _parse_ui_boolean_value(key, value)
+    elif key in BATCH_LIMIT_UI_SETTING_KEYS:
+        settings[key] = optional_ui_batch_limit({key: value}, key)
     else:
         settings[key] = value

@@ -12,7 +12,10 @@ from ai_project_ctl.core.result import CommandResult
 from .codex_review import PASS as CODEX_REVIEW_PASS
 from .codex_review import VERDICT_APPROVE
 from .codex_review import CodexReviewResult
+from .machine_review import FAIL as MACHINE_REVIEW_FAIL
 from .machine_review import PASS as MACHINE_REVIEW_PASS
+from .machine_review import WARN as MACHINE_REVIEW_WARN
+from .machine_review import MachineCheckEvidence
 from .machine_review import MachineReviewResult
 from .policy import (
     CommitMode,
@@ -20,8 +23,9 @@ from .policy import (
     disables_codex_review_by_policy,
     requires_codex_review_approve,
 )
-from .report_gate import PASS as REPORT_GATE_PASS
 from .report_gate import ReportGateResult
+from .report_gate import WARN as REPORT_GATE_WARN
+from .report_gate import evaluate_report_gate_acceptance
 from .state import load_reference_state
 
 
@@ -63,6 +67,7 @@ REQUIRED_MACHINE_CHECKS = {
     "context_check_generated",
     "protected_file_check",
 }
+MACHINE_DIAGNOSTIC_SUMMARY_LIMIT = 1200
 
 GitRunner = Callable[[Sequence[str]], subprocess.CompletedProcess[str]]
 
@@ -116,13 +121,14 @@ class CommitReadinessResult:
     changed_files: tuple[GitStatusFile, ...] = ()
     blockers: tuple[str, ...] = ()
     git_status: GitCommandResult | None = None
+    machine_review_diagnostics: tuple[Mapping[str, Any], ...] = ()
 
     @property
     def ok(self) -> bool:
         return self.status == PASS
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        data: dict[str, Any] = {
             "status": self.status,
             "code": self.code,
             "reason": self.reason,
@@ -134,6 +140,11 @@ class CommitReadinessResult:
             "blockers": list(self.blockers),
             "git_status": self.git_status.to_dict() if self.git_status else None,
         }
+        if self.machine_review_diagnostics:
+            data["machine_review_diagnostics"] = [
+                dict(item) for item in self.machine_review_diagnostics
+            ]
+        return data
 
 
 @dataclass(frozen=True)
@@ -222,6 +233,11 @@ def evaluate_commit_readiness(
     gate_blocker = _gate_blocker(policy, report_gate, machine_review, codex_review)
     if gate_blocker:
         code, reason = gate_blocker
+        diagnostics = (
+            _machine_review_diagnostics(machine_review)
+            if code == CODE_MACHINE_REVIEW_NOT_PASS
+            else ()
+        )
         return _readiness(
             BLOCKED,
             code,
@@ -229,6 +245,7 @@ def evaluate_commit_readiness(
             task_id=task_id,
             change_ids=change_ids,
             accepted_change_ids=accepted_change_ids,
+            machine_review_diagnostics=diagnostics,
         )
 
     machine_blocker = _machine_check_blocker(machine_review)
@@ -241,6 +258,20 @@ def evaluate_commit_readiness(
             task_id=task_id,
             change_ids=change_ids,
             accepted_change_ids=accepted_change_ids,
+            machine_review_diagnostics=_machine_review_diagnostics(machine_review),
+        )
+
+    machine_warning_blocker = _machine_warning_blocker(policy, report_gate, machine_review)
+    if machine_warning_blocker:
+        code, reason = machine_warning_blocker
+        return _readiness(
+            BLOCKED,
+            code,
+            reason,
+            task_id=task_id,
+            change_ids=change_ids,
+            accepted_change_ids=accepted_change_ids,
+            machine_review_diagnostics=_machine_review_diagnostics(machine_review),
         )
 
     if str(task.get("status") or "") != "done":
@@ -310,10 +341,17 @@ def evaluate_commit_readiness(
             git_status=git_status,
         )
 
+    reason = "Local commit readiness is green."
+    if machine_review.status == MACHINE_REVIEW_WARN:
+        reason = (
+            "Local commit readiness is green; Machine Review WARN contains only "
+            "policy-approved report warning evidence."
+        )
+
     return _readiness(
         PASS,
         CODE_READY,
-        "Local commit readiness is green.",
+        reason,
         task_id=task_id,
         change_ids=change_ids,
         accepted_change_ids=accepted_change_ids,
@@ -482,6 +520,7 @@ def _readiness(
     changed_files: Sequence[GitStatusFile] = (),
     blockers: Sequence[str] = (),
     git_status: GitCommandResult | None = None,
+    machine_review_diagnostics: Sequence[Mapping[str, Any]] = (),
 ) -> CommitReadinessResult:
     return CommitReadinessResult(
         status=status,
@@ -494,6 +533,7 @@ def _readiness(
         changed_files=tuple(changed_files),
         blockers=tuple(blockers),
         git_status=git_status,
+        machine_review_diagnostics=tuple(machine_review_diagnostics),
     )
 
 
@@ -516,10 +556,23 @@ def _gate_blocker(
     machine_review: MachineReviewResult,
     codex_review: CodexReviewResult,
 ) -> tuple[str, str] | None:
-    if report_gate.status != REPORT_GATE_PASS:
-        return CODE_REPORT_NOT_PASS, "Codex Report Gate must be PASS before local commit."
-    if machine_review.status != MACHINE_REVIEW_PASS:
-        return CODE_MACHINE_REVIEW_NOT_PASS, "Machine Review must be PASS before local commit."
+    report_gate_acceptance = evaluate_report_gate_acceptance(report_gate, policy)
+    if not report_gate_acceptance.allow:
+        return (
+            CODE_REPORT_NOT_PASS,
+            "Codex Report Gate is not accepted for local commit: {}".format(
+                report_gate_acceptance.reason
+            ),
+        )
+    if machine_review.status == MACHINE_REVIEW_FAIL:
+        return CODE_MACHINE_REVIEW_NOT_PASS, "Machine Review FAIL blocks local commit."
+    if machine_review.status not in {MACHINE_REVIEW_PASS, MACHINE_REVIEW_WARN}:
+        return (
+            CODE_MACHINE_REVIEW_NOT_PASS,
+            "Machine Review status is not accepted for local commit: {}".format(
+                machine_review.status or "missing"
+            ),
+        )
     if disables_codex_review_by_policy(policy):
         return None
     if not requires_codex_review_approve(policy):
@@ -535,10 +588,112 @@ def _gate_blocker(
     return None
 
 
+def _machine_warning_blocker(
+    policy: PipelinePolicy,
+    report_gate: ReportGateResult,
+    machine_review: MachineReviewResult,
+) -> tuple[str, str] | None:
+    if machine_review.status != MACHINE_REVIEW_WARN:
+        return None
+
+    warning_checks = [
+        check for check in machine_review.checks if check.status == MACHINE_REVIEW_WARN
+    ]
+    if not warning_checks:
+        return (
+            CODE_MACHINE_REVIEW_NOT_PASS,
+            "Machine Review WARN is not accepted for local commit; no warning evidence "
+            "explains the WARN outcome.",
+        )
+
+    unsafe = [
+        _machine_check_summary(check)
+        for check in warning_checks
+        if not _machine_warning_is_allowed(policy, report_gate, check)
+    ]
+    if unsafe:
+        return (
+            CODE_MACHINE_REVIEW_NOT_PASS,
+            (
+                "Machine Review WARN is not accepted for local commit; "
+                "unapproved warning evidence: {}. Allowed warning evidence must "
+                "be the policy-approved codex_report_gate report warning."
+            ).format(", ".join(unsafe)),
+        )
+    return None
+
+
+def _machine_warning_is_allowed(
+    policy: PipelinePolicy,
+    report_gate: ReportGateResult,
+    check: MachineCheckEvidence,
+) -> bool:
+    if check.status != MACHINE_REVIEW_WARN:
+        return True
+    if check.name == "codex_report_gate" and report_gate.status == REPORT_GATE_WARN:
+        return evaluate_report_gate_acceptance(report_gate, policy).allow
+    return False
+
+
+def _machine_check_summary(check: MachineCheckEvidence) -> str:
+    return "{}={} code={} blocking={}".format(
+        check.name,
+        check.status,
+        check.code,
+        check.blocking,
+    )
+
+
+def _machine_review_diagnostics(
+    machine_review: MachineReviewResult,
+) -> tuple[dict[str, Any], ...]:
+    return tuple(
+        _machine_check_diagnostic(check)
+        for check in machine_review.checks
+        if check.status != MACHINE_REVIEW_PASS
+    )
+
+
+def _machine_check_diagnostic(check: MachineCheckEvidence) -> dict[str, Any]:
+    data: dict[str, Any] = {
+        "name": check.name,
+        "status": check.status,
+        "code": check.code,
+        "reason": _bounded_machine_diagnostic_text(check.reason),
+        "command": list(check.command),
+    }
+    stdout_summary = _bounded_machine_diagnostic_text(check.stdout_summary)
+    stderr_summary = _bounded_machine_diagnostic_text(check.stderr_summary)
+    if stdout_summary:
+        data["stdout_summary"] = stdout_summary
+    if stderr_summary:
+        data["stderr_summary"] = stderr_summary
+    return data
+
+
+def _bounded_machine_diagnostic_text(value: Any) -> str:
+    text = str(value or "").strip()
+    if len(text) <= MACHINE_DIAGNOSTIC_SUMMARY_LIMIT:
+        return text
+    return text[: MACHINE_DIAGNOSTIC_SUMMARY_LIMIT - 3].rstrip() + "..."
+
+
 def _machine_check_blocker(
     machine_review: MachineReviewResult,
 ) -> tuple[str, str] | None:
     checks = {check.name: check for check in machine_review.checks}
+    blocking_failures = [
+        _machine_check_summary(check)
+        for check in machine_review.checks
+        if check.blocking and check.status == MACHINE_REVIEW_FAIL
+    ]
+    if blocking_failures:
+        return (
+            CODE_MACHINE_REVIEW_NOT_PASS,
+            "Blocking Machine Review failure evidence blocks local commit: {}".format(
+                ", ".join(blocking_failures)
+            ),
+        )
     missing = sorted(REQUIRED_MACHINE_CHECKS - set(checks))
     if missing:
         return (

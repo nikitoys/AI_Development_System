@@ -1,10 +1,16 @@
+import importlib.util
+import hashlib
+import io
 import json
 import subprocess
 import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import replace
 from pathlib import Path
+from unittest.mock import patch
 
+from ai_project_ctl.core.result import CommandResult
 from ai_project_ctl.pipeline import (
     BatchPolicy,
     CodexAdapterMode,
@@ -12,11 +18,25 @@ from ai_project_ctl.pipeline import (
     policy_preset,
 )
 from ai_project_ctl.pipeline.batch import run_until_blocker
+from ai_project_ctl.pipeline.close_phase import close_phase
 from ai_project_ctl.pipeline.codex_adapter import (
     CODE_REPORT_MISSING as CODEX_ADAPTER_REPORT_MISSING,
+    CodexAdapterResult,
+)
+from ai_project_ctl.pipeline.codex_review import CodexReviewResult, VERDICT_APPROVE
+from ai_project_ctl.pipeline.git_commit import (
+    CODE_READY as COMMIT_READINESS_PASS,
+    CODE_REPORT_NOT_PASS as COMMIT_REPORT_NOT_PASS,
+    REQUIRED_MACHINE_CHECKS,
+    evaluate_commit_readiness,
+)
+from ai_project_ctl.pipeline.machine_review import (
+    MachineCheckEvidence,
+    MachineReviewResult,
 )
 from ai_project_ctl.pipeline.phase import PhaseResult
 from ai_project_ctl.pipeline.report_gate import CODE_WARN as CODEX_REPORT_WARN
+from ai_project_ctl.pipeline.report_gate import ReportGateResult
 from ai_project_ctl.pipeline.runner import run_next
 from ai_project_ctl.pipeline.session import create_session, record_phase_result
 from ai_project_ctl.pipeline.state import pipeline_state_path
@@ -27,8 +47,36 @@ from ai_project_ctl.pipeline.verify_phase import (
 )
 
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+AICTL_PATH = REPO_ROOT / "scripts" / "aictl.py"
+
+
 def completed(stdout="OK\n", returncode=0, stderr=""):
     return subprocess.CompletedProcess(args=[], returncode=returncode, stdout=stdout, stderr=stderr)
+
+
+def load_aictl_for_test():
+    spec = importlib.util.spec_from_file_location("aictl_pipeline_runner_test_module", AICTL_PATH)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def run_aictl_json(aictl, argv):
+    stdout = io.StringIO()
+    stderr = io.StringIO()
+    with redirect_stdout(stdout), redirect_stderr(stderr):
+        code = aictl.main(argv)
+    return code, json.loads(stdout.getvalue()), stderr.getvalue()
+
+
+def write_ui_settings(root: Path, *, default_policy: str) -> None:
+    config_dir = root / "AI_PROJECT" / "config"
+    config_dir.mkdir(parents=True)
+    (config_dir / "ui_settings.json").write_text(
+        json.dumps({"default_policy": default_policy}),
+        encoding="utf-8",
+    )
 
 
 def write_project_state(root: Path, *, change_status: str | None = "approved") -> None:
@@ -534,6 +582,61 @@ def valid_review_output(verdict="APPROVE", findings=None) -> str:
     )
 
 
+def warning_report_gate() -> ReportGateResult:
+    return ReportGateResult(
+        status="warn",
+        code=CODEX_REPORT_WARN,
+        reason="Report contains advisory warning(s).",
+        report_id="RPT-001",
+        task_id="TASK-001",
+        changed_files=("ai_project_ctl/pipeline/report_gate.py",),
+    )
+
+
+def blocking_report_gate(status: str) -> ReportGateResult:
+    return ReportGateResult(
+        status=status,
+        code="CODEX_REPORT_{}".format(status.upper()),
+        reason="Report gate {} should block local commit.".format(status),
+        report_id="RPT-001",
+        task_id="TASK-001",
+        changed_files=("ai_project_ctl/pipeline/report_gate.py",),
+    )
+
+
+def passing_machine_review() -> MachineReviewResult:
+    return MachineReviewResult(
+        status="pass",
+        code="MACHINE_REVIEW_PASS",
+        reason="Machine Review passed.",
+        task_id="TASK-001",
+        report_id="RPT-001",
+        checks=tuple(
+            MachineCheckEvidence(
+                name=name,
+                status="pass",
+                code="MACHINE_REVIEW_PASS",
+                reason="{} passed.".format(name),
+            )
+            for name in sorted(REQUIRED_MACHINE_CHECKS)
+        ),
+    )
+
+
+def approved_codex_review() -> CodexReviewResult:
+    return CodexReviewResult(
+        status="pass",
+        code="CODEX_REVIEW_APPROVE",
+        reason="Codex Review approved the task.",
+        verdict=VERDICT_APPROVE,
+        task_id="TASK-001",
+        report_id="RPT-001",
+        review_id="REV-001",
+        prompt_sha256="sha256",
+        prompt_bytes=1,
+    )
+
+
 def write_report_state(root: Path, task_id: str, report_id: str, report: dict | None = None) -> None:
     report_data = report or valid_report(task_id)
     state_dir = root / "AI_PROJECT" / "state"
@@ -587,6 +690,78 @@ def record_collected_report(root: Path, session_id: str, report_id: str = "RPT-0
         raise AssertionError(result.errors)
 
 
+def force_auto_close_policy_note(root: Path, owner_note: str) -> None:
+    state_path = pipeline_state_path(root)
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    policy = state["sessions"][0]["policy_snapshot"]
+    policy["name"] = "supervised_autoclose"
+    closure = policy["closure"]
+    closure["auto_close_task"] = True
+    closure["owner_approval_note"] = owner_note
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+
+
+def record_close_ready_phase_history(
+    root: Path,
+    session_id: str,
+    *,
+    report_id: str = "RPT-001",
+) -> None:
+    phase_specs = (
+        ("prepare", "Task prepared for close preflight."),
+        ("execute", "Execution phase evidence recorded for close preflight."),
+        ("collect_report", "Structured report collected for close preflight."),
+        ("verify", "Machine verification passed for close preflight."),
+    )
+    for phase_name, reason in phase_specs:
+        result = record_phase_result(
+            session_id,
+            PhaseResult.passed(
+                phase_name,
+                reason=reason,
+                next_action="Continue close preflight.",
+                artifacts={
+                    "session_id": session_id,
+                    "task_id": "TASK-001",
+                    "task_ref": "APP-01",
+                    "report_id": report_id,
+                },
+            ),
+            root=root,
+            actor="tester",
+            task_id="TASK-001",
+            command="pipeline.phase.{}".format(phase_name),
+        )
+        if not result.ok:
+            raise AssertionError(result.errors)
+
+    result = record_phase_result(
+        session_id,
+        PhaseResult.passed(
+            "review",
+            reason="Codex Review approved the selected task.",
+            next_action="Close reviewed task.",
+            artifacts={
+                "session_id": session_id,
+                "task_id": "TASK-001",
+                "task_ref": "APP-01",
+                "report_id": report_id,
+                "review_id": "REV-001",
+                "review_status": "pass",
+                "review_code": "CODEX_REVIEW_APPROVE",
+                "review_reason": "Reviewer approved the task.",
+                "verdict": "APPROVE",
+            },
+        ),
+        root=root,
+        actor="tester",
+        task_id="TASK-001",
+        command="pipeline.phase.review",
+    )
+    if not result.ok:
+        raise AssertionError(result.errors)
+
+
 def load_pipeline(root: Path):
     return json.loads(pipeline_state_path(root).read_text(encoding="utf-8"))
 
@@ -619,6 +794,244 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(calls, [])
             self.assertEqual(latest["steps"][0]["status"], "stopped")
             self.assertEqual(latest["steps"][0]["gate_outcomes"][0]["name"], "codex_execution_policy")
+
+    def test_autoclose_session_creation_requires_owner_note(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+
+            result = create_session(
+                root=root,
+                actor="tester",
+                policy_name="supervised_autoclose",
+            )
+
+            self.assertFalse(result.ok)
+            self.assertEqual(result.message, "PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED")
+            self.assertEqual(len(result.errors), 1)
+            error = result.errors[0]
+            self.assertEqual(error.code, "PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED")
+            self.assertEqual(error.path, "closure.owner_approval_note")
+            self.assertEqual(error.details["policy"], "supervised_autoclose")
+            self.assertTrue(error.details["auto_close_task"])
+            self.assertFalse(error.details["owner_approval_note_present"])
+            self.assertEqual(error.details["required_argument"], "auto_close_note")
+            self.assertIn("--auto-close-note", error.details["next_action"])
+            self.assertEqual(result.next_actions, [error.details["next_action"]])
+            self.assertFalse(pipeline_state_path(root).exists())
+
+            allowed = create_session(root=root, actor="tester", policy_name="supervised")
+            self.assertTrue(allowed.ok)
+            closure = load_pipeline(root)["sessions"][0]["policy_snapshot"]["closure"]
+            self.assertFalse(closure["auto_close_task"])
+            self.assertEqual(closure["owner_approval_note"], "")
+
+    def test_autoclose_session_creation_stores_owner_note(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            note = "Owner approved auto-close for this test session."
+
+            result = create_session(
+                root=root,
+                actor="tester",
+                policy_name="supervised_autoclose",
+                auto_close_note=note,
+            )
+
+            self.assertTrue(result.ok)
+            state = load_pipeline(root)
+            closure = state["sessions"][0]["policy_snapshot"]["closure"]
+            self.assertTrue(closure["auto_close_task"])
+            self.assertEqual(closure["owner_approval_note"], note)
+
+    def test_close_phase_blocks_with_owner_notes_required_when_note_is_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status=None)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy_name="supervised",
+                current_task_id="TASK-001",
+                current_task_ref="APP-01",
+            )
+            self.assertTrue(session.ok)
+            force_auto_close_policy_note(root, "")
+            record_close_ready_phase_history(root, session.data["session_id"])
+
+            with patch(
+                "ai_project_ctl.pipeline.close_phase.run_review_close_workflow",
+                side_effect=AssertionError("close workflow must not run without owner note"),
+            ):
+                result = close_phase(
+                    session.data["session_id"],
+                    root=root,
+                    actor="tester",
+                    confirmed=True,
+                )
+
+            latest_phase = load_pipeline(root)["sessions"][0]["phase_history"][-1]
+            artifacts = latest_phase["artifacts"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(latest_phase["phase"], "close")
+            self.assertEqual(latest_phase["status"], "blocked")
+            self.assertTrue(artifacts["preflight_passed"])
+            self.assertEqual(artifacts["missing_gates"], [])
+            self.assertEqual(artifacts["blocked_by"], "CLOSE_OWNER_NOTES_REQUIRED")
+            self.assertFalse(artifacts["close_policy"]["owner_approval_note_present"])
+
+    def test_close_phase_reaches_close_workflow_when_owner_note_is_present(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status=None)
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy_name="supervised",
+                current_task_id="TASK-001",
+                current_task_ref="APP-01",
+            )
+            self.assertTrue(session.ok)
+            note = "Owner approved auto-close for this close phase regression."
+            force_auto_close_policy_note(root, note)
+            record_close_ready_phase_history(root, session.data["session_id"])
+            workflow = CommandResult.success(
+                command="pipeline.review_close_policy",
+                domain="pipeline",
+                message="Task close workflow reached.",
+                data={"decision": {"action": "close_task"}, "workflows": []},
+            )
+
+            with patch(
+                "ai_project_ctl.pipeline.close_phase.run_review_close_workflow",
+                return_value=workflow,
+            ) as close_workflow:
+                result = close_phase(
+                    session.data["session_id"],
+                    root=root,
+                    actor="tester",
+                    confirmed=True,
+                )
+
+            latest_phase = load_pipeline(root)["sessions"][0]["phase_history"][-1]
+            artifacts = latest_phase["artifacts"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(latest_phase["phase"], "close")
+            self.assertEqual(latest_phase["status"], "passed")
+            self.assertTrue(artifacts["preflight_passed"])
+            self.assertEqual(artifacts["missing_gates"], [])
+            self.assertNotEqual(artifacts.get("blocked_by"), "CLOSE_OWNER_NOTES_REQUIRED")
+            self.assertTrue(artifacts["close_policy"]["owner_approval_note_present"])
+            self.assertEqual(
+                artifacts["close_workflow"]["message"],
+                "Task close workflow reached.",
+            )
+            close_workflow.assert_called_once()
+
+    def test_ui_run_autoclose_requires_owner_note_before_session_execution(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            write_ui_settings(root, default_policy="supervised_executable_autoclose")
+            aictl = load_aictl_for_test()
+
+            with patch.object(
+                aictl,
+                "run_codex_preflight",
+                side_effect=AssertionError("ui run must not run Codex preflight"),
+            ), patch.object(
+                aictl,
+                "run_pipeline_until_blocker",
+                side_effect=AssertionError("ui run must not start execution"),
+            ):
+                code, payload, _stderr = run_aictl_json(
+                    aictl,
+                    [
+                        "--root",
+                        str(root),
+                        "--actor",
+                        "tester",
+                        "--json",
+                        "ui",
+                        "run",
+                        "APP-01",
+                        "--confirm",
+                        "--preflight",
+                    ],
+                )
+
+            self.assertEqual(code, 1)
+            self.assertFalse(payload["ok"])
+            self.assertEqual(payload["data"]["policy"], "supervised_executable_autoclose")
+            self.assertEqual(
+                payload["errors"][0]["code"],
+                "PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED",
+            )
+            self.assertFalse(pipeline_state_path(root).exists())
+
+    def test_ui_run_autoclose_stores_owner_note_in_created_session(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            write_ui_settings(root, default_policy="supervised_autoclose")
+            aictl = load_aictl_for_test()
+            note = "Owner approved auto-close for this UI run."
+
+            code, payload, _stderr = run_aictl_json(
+                aictl,
+                [
+                    "--root",
+                    str(root),
+                    "--actor",
+                    "tester",
+                    "--json",
+                    "ui",
+                    "run",
+                    "APP-01",
+                    "--auto-close-note",
+                    note,
+                ],
+            )
+
+            self.assertEqual(code, 1)
+            self.assertFalse(payload["ok"])
+            self.assertEqual(payload["errors"][0]["code"], "UI_RUN_CONFIRMATION_REQUIRED")
+            self.assertEqual(payload["data"]["session_id"], "PSESS-001")
+            closure = load_pipeline(root)["sessions"][0]["policy_snapshot"]["closure"]
+            self.assertTrue(closure["auto_close_task"])
+            self.assertEqual(closure["owner_approval_note"], note)
+
+    def test_ui_run_non_autoclose_policy_still_allows_missing_note(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            write_ui_settings(root, default_policy="supervised")
+            aictl = load_aictl_for_test()
+
+            code, payload, _stderr = run_aictl_json(
+                aictl,
+                [
+                    "--root",
+                    str(root),
+                    "--actor",
+                    "tester",
+                    "--json",
+                    "ui",
+                    "run",
+                    "APP-01",
+                ],
+            )
+
+            self.assertEqual(code, 1)
+            self.assertFalse(payload["ok"])
+            self.assertEqual(payload["errors"][0]["code"], "UI_RUN_CONFIRMATION_REQUIRED")
+            self.assertEqual(payload["data"]["session_id"], "PSESS-001")
+            closure = load_pipeline(root)["sessions"][0]["policy_snapshot"]["closure"]
+            self.assertFalse(closure["auto_close_task"])
+            self.assertEqual(closure["owner_approval_note"], "")
 
     def test_supervised_blocks_when_approved_change_is_missing(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1730,29 +2143,203 @@ class PipelineRunnerTests(unittest.TestCase):
             )
             self.assertEqual(len(gates), 1)
 
-    def test_autoclose_policy_stops_when_build_prompt_only_cannot_review(self):
+    def test_execute_blocks_on_stale_protected_outputs_before_token_budget_and_codex(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write_project_state(root, change_status="approved")
-            session = create_session(
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_stale_protected_outputs_test",
+                codex=replace(supervised.codex, mode=CodexExecutionMode.RUN_CODEX),
+                token_budget=replace(
+                    supervised.token_budget,
+                    max_prompt_tokens=30,
+                    max_context_tokens=30,
+                    min_remaining_tokens=20,
+                ),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            prompt_path = root / "AI_PROJECT" / "generated" / "CODEX_PROMPT.md"
+            prompt_text = "Source ID: TASK-001\n\n" + ("x" * 80)
+            prompt_path.parent.mkdir(parents=True, exist_ok=True)
+            prompt_path.write_text(prompt_text, encoding="utf-8")
+            prompt_sha256 = hashlib.sha256(prompt_text.encode("utf-8")).hexdigest()
+            prepared = record_phase_result(
+                session.data["session_id"],
+                PhaseResult.passed(
+                    "prepare",
+                    reason="Task prepared for execute regression.",
+                    next_action="Run pipeline phase execute.",
+                    artifacts={
+                        "session_id": session.data["session_id"],
+                        "task_id": "TASK-001",
+                        "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+                        "prompt_sha256": prompt_sha256,
+                    },
+                ),
                 root=root,
                 actor="tester",
-                policy_name="supervised_autoclose",
+                task_id="TASK-001",
+                command="pipeline.phase.prepare",
             )
+            self.assertTrue(prepared.ok)
             calls = []
+
+            def fake_runner(argv):
+                args = list(argv)
+                calls.append(args)
+                if tuple(args[-2:]) == ("project", "protected-check"):
+                    return completed(
+                        stdout=json.dumps(
+                            {
+                                "ok": False,
+                                "errors": [
+                                    "OUTDATED_GENERATED_FILE: AI_PROJECT/generated/DOCS_GAPS.md"
+                                ],
+                                "warnings": [],
+                                "checked": ["generated output check reached"],
+                            }
+                        )
+                        + "\n",
+                        returncode=1,
+                    )
+                if args == ["codex", "exec"]:
+                    raise AssertionError("Codex adapter must not be called")
+                raise AssertionError("unexpected command: {}".format(args))
 
             result = run_next(
                 session.data["session_id"],
                 root=root,
                 actor="tester",
-                runner=successful_workflow_runner(calls),
+                runner=fake_runner,
             )
-            gate = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"][0]
+            latest = load_pipeline(root)["sessions"][0]
+            execute = latest["phase_history"][-1]
+            artifacts = execute["artifacts"]
+            protected_check = artifacts["protected_check"]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "NOT_IMPLEMENTED")
-            self.assertEqual(gate["name"], "review_close_gate")
-            self.assertIn("requires Codex execution", result.data["stop_reason"])
+            self.assertEqual(result.data["dispatched_phase"], "execute")
+            self.assertEqual(result.data["stop_code"], "PROTECTED_GENERATED_FRESHNESS_FAILED")
+            self.assertEqual(execute["phase"], "execute")
+            self.assertEqual(execute["status"], "blocked")
+            self.assertEqual(
+                artifacts["blocked_by"],
+                "PROTECTED_GENERATED_FRESHNESS_FAILED",
+            )
+            self.assertFalse(artifacts["codex_adapter_called"])
+            self.assertNotIn("token_budget", artifacts)
+            self.assertEqual(protected_check["returncode"], 1)
+            self.assertEqual(tuple(protected_check["command"][-2:]), ("project", "protected-check"))
+            self.assertIn("OUTDATED_GENERATED_FILE", protected_check["errors"][0])
+            self.assertFalse(any(call == ["codex", "exec"] for call in calls))
+
+    def test_execute_continues_to_token_budget_and_adapter_when_protected_check_passes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="run_codex_protected_check_pass_test",
+                codex=replace(supervised.codex, mode=CodexExecutionMode.RUN_CODEX),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            prompt_path = root / "AI_PROJECT" / "generated" / "CODEX_PROMPT.md"
+            prompt_text = "Source ID: TASK-001\n\nSmall prompt."
+            prompt_path.parent.mkdir(parents=True, exist_ok=True)
+            prompt_path.write_text(prompt_text, encoding="utf-8")
+            prompt_sha256 = hashlib.sha256(prompt_text.encode("utf-8")).hexdigest()
+            prepared = record_phase_result(
+                session.data["session_id"],
+                PhaseResult.passed(
+                    "prepare",
+                    reason="Task prepared for protected pass regression.",
+                    next_action="Run pipeline phase execute.",
+                    artifacts={
+                        "session_id": session.data["session_id"],
+                        "task_id": "TASK-001",
+                        "prompt_path": "AI_PROJECT/generated/CODEX_PROMPT.md",
+                        "prompt_sha256": prompt_sha256,
+                    },
+                ),
+                root=root,
+                actor="tester",
+                task_id="TASK-001",
+                command="pipeline.phase.prepare",
+            )
+            self.assertTrue(prepared.ok)
+            calls = []
+            adapter_called = {"value": False}
+
+            def fake_runner(argv):
+                args = list(argv)
+                calls.append(args)
+                if tuple(args[-2:]) == ("project", "protected-check"):
+                    return completed(
+                        stdout=json.dumps(
+                            {
+                                "ok": True,
+                                "errors": [],
+                                "warnings": [],
+                                "checked": ["protected files are fresh"],
+                            }
+                        )
+                        + "\n"
+                    )
+                raise AssertionError("unexpected command: {}".format(args))
+
+            def fake_adapter(**kwargs):
+                adapter_called["value"] = True
+                token_gate = kwargs["token_gate"]
+                return CodexAdapterResult(
+                    status="blocked",
+                    code="TEST_ADAPTER_REACHED",
+                    reason="adapter_reached_after_protected_check",
+                    mode="test",
+                    started_at="2026-06-26T00:00:00Z",
+                    finished_at="2026-06-26T00:00:00Z",
+                    duration_sec=0.0,
+                    prompt_path=token_gate.prompt_path,
+                    prompt_sha256=token_gate.prompt_sha256,
+                )
+
+            result = run_next(
+                session.data["session_id"],
+                root=root,
+                actor="tester",
+                runner=fake_runner,
+                codex_adapter=fake_adapter,
+            )
+            latest = load_pipeline(root)["sessions"][0]
+            execute = latest["phase_history"][-1]
+            artifacts = execute["artifacts"]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "TEST_ADAPTER_REACHED")
+            self.assertTrue(adapter_called["value"])
+            self.assertTrue(artifacts["codex_adapter_called"])
+            self.assertIn("token_budget", artifacts)
+            self.assertEqual(artifacts["adapter"]["code"], "TEST_ADAPTER_REACHED")
+            self.assertTrue(any(tuple(call[-2:]) == ("project", "protected-check") for call in calls))
+
+    def test_autoclose_policy_blocks_build_prompt_only_session_without_owner_note(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            result = create_session(
+                root=root,
+                actor="tester",
+                policy_name="supervised_autoclose",
+            )
+
+            self.assertFalse(result.ok)
+            self.assertEqual(
+                result.errors[0].code,
+                "PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED",
+            )
+            self.assertFalse(pipeline_state_path(root).exists())
 
     def test_local_commit_policy_commits_after_close_and_green_readiness(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1802,6 +2389,104 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(git_calls[3], ["git", "rev-parse", "--verify", "HEAD"])
             self.assertFalse(any("push" in call for call in git_calls))
             self.assertFalse(any("reset" in call for call in git_calls))
+
+    def test_commit_readiness_allows_warn_report_gate_when_policy_allows_advisory_warnings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            _write_task_status(root, "done")
+            supervised = policy_preset("supervised_local_commit")
+            policy = replace(
+                supervised,
+                verify=replace(
+                    supervised.verify,
+                    allow_report_warnings=True,
+                    block_report_warnings=False,
+                ),
+            )
+            git_calls = []
+
+            def git_status_runner(argv):
+                git_calls.append(list(argv))
+                return completed(stdout=" M ai_project_ctl/pipeline/report_gate.py\n")
+
+            result = evaluate_commit_readiness(
+                root=root,
+                task_id="TASK-001",
+                policy=policy,
+                report_gate=warning_report_gate(),
+                machine_review=passing_machine_review(),
+                codex_review=approved_codex_review(),
+                runner=git_status_runner,
+            )
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.code, COMMIT_READINESS_PASS)
+            self.assertEqual(
+                git_calls,
+                [["git", "status", "--short", "--untracked-files=all"]],
+            )
+            self.assertEqual(
+                result.approved_files,
+                ("ai_project_ctl/pipeline/report_gate.py",),
+            )
+
+    def test_commit_readiness_blocks_warn_report_gate_when_policy_disallows_advisory_warnings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            _write_task_status(root, "done")
+
+            def git_status_runner(argv):
+                raise AssertionError("git status should not run after report gate blocker")
+
+            result = evaluate_commit_readiness(
+                root=root,
+                task_id="TASK-001",
+                policy=policy_preset("supervised_local_commit"),
+                report_gate=warning_report_gate(),
+                machine_review=passing_machine_review(),
+                codex_review=approved_codex_review(),
+                runner=git_status_runner,
+            )
+
+            self.assertFalse(result.ok)
+            self.assertEqual(result.code, COMMIT_REPORT_NOT_PASS)
+            self.assertIn("policy.verify.allow_report_warnings is false", result.reason)
+
+    def test_commit_readiness_blocks_report_failure_even_when_warning_policy_allows(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            _write_task_status(root, "done")
+            supervised = policy_preset("supervised_local_commit")
+            policy = replace(
+                supervised,
+                verify=replace(
+                    supervised.verify,
+                    allow_report_warnings=True,
+                    block_report_warnings=False,
+                ),
+            )
+
+            def git_status_runner(argv):
+                raise AssertionError("git status should not run after report gate blocker")
+
+            for status in ("fail", "blocked"):
+                with self.subTest(status=status):
+                    result = evaluate_commit_readiness(
+                        root=root,
+                        task_id="TASK-001",
+                        policy=policy,
+                        report_gate=blocking_report_gate(status),
+                        machine_review=passing_machine_review(),
+                        codex_review=approved_codex_review(),
+                        runner=git_status_runner,
+                    )
+
+                    self.assertFalse(result.ok)
+                    self.assertEqual(result.code, COMMIT_REPORT_NOT_PASS)
+                    self.assertIn("Report gate {} should block".format(status), result.reason)
 
     def test_local_commit_blocks_until_linked_change_is_accepted(self):
         with tempfile.TemporaryDirectory() as tmp:

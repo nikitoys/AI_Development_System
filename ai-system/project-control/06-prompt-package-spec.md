@@ -445,6 +445,33 @@ Prompt Package should require Codex to report:
 - owner action required.
 ```
 
+For executable pipeline prompts, the human-readable report is not enough. The generated prompt must also require a final machine-readable execution summary block using this exact contract:
+
+````text
+CODEX_EXECUTION_SUMMARY_JSON:
+```json
+{
+  "implementation_summary": "Summarize the completed implementation.",
+  "notes": [],
+  "warnings": [],
+  "blockers": []
+}
+```
+````
+
+Rules:
+
+```text
+- the marker must appear on its own line;
+- it must be followed by one fenced `json` block;
+- the JSON value must be an object;
+- the object must contain exactly `implementation_summary`, `notes`, `warnings` and `blockers`;
+- no prose, bullets or other text may appear after the closing fence;
+- Codex must not emit a full TaskReport payload in this block.
+```
+
+The local pipeline adapter parses this block from Codex stdout. It uses the four Codex-authored fields as summary input and derives task identity, changed files, generated files, checks, owner decision status and token usage from trusted pipeline and task evidence.
+
 ## 7.15 Stop Conditions
 
 Prompt Package must define stop conditions.
@@ -655,14 +682,24 @@ python scripts/taskctl.py task transition <TASK_ID> --to in_review
 python scripts/taskctl.py validate
 ````
 
-Final Report:
+Execution Summary:
 
-* Changed files:
-* Commands run:
-* Validation result:
-* Acceptance criteria status:
-* Risks:
-* Owner action required:
+Finish your response with a machine-readable execution summary block.
+Use the exact marker shown below followed by one fenced JSON block.
+No prose, Markdown bullets, or extra text may appear after the closing fence.
+Keep exactly the four JSON keys shown; replace placeholder values with actual results.
+Do not emit a full TaskReport payload.
+Do not include task_id, changed_files, generated_files, checks, owner_decision_required, or token_usage; the pipeline records those separately.
+
+CODEX_EXECUTION_SUMMARY_JSON:
+```json
+{
+  "implementation_summary": "Summarize the completed implementation.",
+  "notes": [],
+  "warnings": [],
+  "blockers": []
+}
+```
 
 ````
 
@@ -1096,6 +1133,7 @@ Prompt Package MVP is successful when:
 - prompt build fails without selected Task;
 - prompt build fails for inactive Task unless override is used;
 - prompt build writes an audit event when output is written;
+- prompt includes the `CODEX_EXECUTION_SUMMARY_JSON` execution summary contract;
 - Codex can execute using only generated prompt package.
 ```
 
@@ -1112,7 +1150,7 @@ Recommended next improvements:
 - require non-empty allowed_files before executable prompt build;
 - require non-empty acceptance_criteria before executable prompt build;
 - add explicit Stop Conditions section to generated prompt;
-- add Final Report template to generated prompt;
+- keep the execution summary contract aligned with the local Codex adapter parser;
 - link prompt package to execution session;
 - store prompt metadata in prompts.json;
 - support evolution prompt packages through evolutionctl.py.

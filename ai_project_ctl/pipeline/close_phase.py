@@ -7,6 +7,7 @@ Changes and creating a local-only commit when policy and readiness allow it.
 
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Mapping
@@ -14,6 +15,7 @@ from typing import Any, Mapping
 from ai_project_ctl.core.result import CommandMessage, CommandResult
 from ai_project_ctl.core.workflows import run_workflow
 
+from .artifact_bounds import bound_pipeline_artifact
 from .close_policy import (
     ACTION_CLOSE_TASK,
     CODE_TASK_AUTO_CLOSED,
@@ -40,12 +42,21 @@ from .state import load_pipeline_state, load_reference_state, pipeline_state_pat
 
 COMMAND_NAME = "pipeline.phase.close"
 PHASE_NAME = "close"
+CONTEXT_REFRESH_COMMAND = "pipeline.close.context_refresh"
+CONTEXT_REFRESH_FAILED = "CLOSE_CONTEXT_REFRESH_FAILED"
+CONTEXT_REFRESH_GENERATED_FILES = (
+    "AI_PROJECT/generated/CONTEXT_PACK.md",
+    "AI_PROJECT/generated/CONTEXT_STATUS.md",
+)
+CONTEXT_REFRESH_EVENT_FILE = "AI_PROJECT/events/context-events.jsonl"
+CONTEXT_REFRESH_OUTPUT_LIMIT = 1200
 REQUIRED_PASSED_PHASES = ("prepare", "execute", "collect_report", "verify")
 REVIEW_PHASE_NAME = "review"
 REQUIRED_PHASE_ORDER = (*REQUIRED_PASSED_PHASES, REVIEW_PHASE_NAME)
 CHANGE_ACCEPTABLE_STATUSES = {"approved", "in_review"}
 CHANGE_ALREADY_ACCEPTED_STATUS = "accepted"
 CODEX_CLEAR_STEP_ID = "codex_clear"
+SCRIPTS_DIR = Path(__file__).resolve().parents[2] / "scripts"
 
 
 def close_phase(
@@ -190,6 +201,7 @@ def close_phase(
                 "task_ref": task_ref,
                 "close_policy": _safe_close_policy(close_policy),
                 "close_workflow": workflow.to_dict(),
+                **_close_recovery_artifacts(workflow),
                 "codex_execution_cleanup": _codex_execution_cleanup_report(
                     workflow,
                     task_id,
@@ -219,6 +231,7 @@ def close_phase(
         root=root_path,
         actor=actor,
     )
+    side_effects: list[CommandResult] = [workflow, *acceptance_results]
     local_commit = _local_commit_skipped(session, task_id)
     phase_artifacts = {
         "session_id": selected_session_id,
@@ -227,6 +240,7 @@ def close_phase(
         "preflight_passed": True,
         "close_policy": _safe_close_policy(close_policy),
         "close_workflow": workflow.to_dict(),
+        **_close_recovery_artifacts(workflow),
         "codex_execution_cleanup": _codex_execution_cleanup_report(
             workflow,
             task_id,
@@ -254,19 +268,45 @@ def close_phase(
             events=workflow.events,
         )
     else:
-        if _commit_policy_enabled(session):
+        context_refresh = _refresh_context_after_close(
+            task_id=task_id,
+            root=root_path,
+            actor=actor,
+        )
+        side_effects.append(context_refresh)
+        phase_artifacts["context_refresh"] = context_refresh.to_dict()
+        if not context_refresh.ok:
+            phase = PhaseResult.blocked(
+                PHASE_NAME,
+                reason=(
+                    "Close completed, but context refresh was blocked: {}".format(
+                        context_refresh.message
+                    )
+                ),
+                next_action=(
+                    "Resolve the context refresh blocker, then rerun pipeline close."
+                ),
+                artifacts={
+                    "blocked_by": CONTEXT_REFRESH_FAILED,
+                    **phase_artifacts,
+                },
+                changed_files=_side_effect_changed_files(side_effects),
+                generated_files=_side_effect_generated_files(side_effects),
+                events=_side_effect_events(side_effects),
+            )
+        elif _commit_policy_enabled(session):
             local_commit = _run_local_commit_after_close(
                 session=session,
                 session_id=selected_session_id,
                 task_id=task_id,
                 root=root_path,
-                side_effects=(workflow, *acceptance_results),
+                side_effects=tuple(side_effects),
             )
             phase_artifacts["local_commit"] = local_commit.to_dict()
             if local_commit.commit_hash:
                 phase_artifacts["commit_hash"] = local_commit.commit_hash
 
-        if local_commit.status == COMMIT_FAIL:
+        if context_refresh.ok and local_commit.status == COMMIT_FAIL:
             phase = PhaseResult.failed(
                 PHASE_NAME,
                 reason="Close completed, but local commit failed: {}".format(
@@ -283,7 +323,7 @@ def close_phase(
                 generated_files=workflow.generated_files,
                 events=workflow.events,
             )
-        elif local_commit.status == COMMIT_BLOCKED:
+        elif context_refresh.ok and local_commit.status == COMMIT_BLOCKED:
             phase = PhaseResult.blocked(
                 PHASE_NAME,
                 reason="Close completed, but local commit was blocked: {}".format(
@@ -301,10 +341,16 @@ def close_phase(
                 generated_files=workflow.generated_files,
                 events=workflow.events,
             )
-        else:
+        elif context_refresh.ok:
             phase = PhaseResult.passed(
                 PHASE_NAME,
-                reason=_close_success_reason(change_acceptance, local_commit),
+                reason=_close_success_reason(
+                    change_acceptance,
+                    local_commit,
+                    already_closed=bool(
+                        phase_artifacts.get("already_closed_by_previous_attempt")
+                    ),
+                ),
                 next_action=_close_success_next_action(change_acceptance, local_commit),
                 artifacts=phase_artifacts,
                 changed_files=workflow.changed_files,
@@ -318,7 +364,7 @@ def close_phase(
         root=root_path,
         actor=actor,
     )
-    _merge_command_effects(result, (workflow, *acceptance_results))
+    _merge_command_effects(result, tuple(side_effects))
     return result
 
 
@@ -676,6 +722,182 @@ def _change_acceptance_notes(
     )
 
 
+def _refresh_context_after_close(
+    *,
+    task_id: str,
+    root: Path,
+    actor: str,
+) -> CommandResult:
+    """Refresh generated Context Pack outputs after task close mutates state."""
+
+    build_argv = (
+        sys.executable,
+        str(SCRIPTS_DIR / "contextctl.py"),
+        "--root",
+        str(root),
+        "--actor",
+        actor,
+        "pack",
+        "build",
+        "--task",
+        task_id,
+        "--write",
+    )
+    build_step = _run_context_refresh_step(
+        "context_build",
+        "Build task Context Pack after close",
+        build_argv,
+        root=root,
+    )
+    if build_step["returncode"] != 0:
+        return _context_refresh_failure(task_id, build_step, steps=[build_step])
+
+    check_argv = (
+        sys.executable,
+        str(SCRIPTS_DIR / "contextctl.py"),
+        "--root",
+        str(root),
+        "--actor",
+        actor,
+        "check-generated",
+    )
+    check_step = _run_context_refresh_step(
+        "context_check",
+        "Check generated context output after close",
+        check_argv,
+        root=root,
+    )
+    steps = [build_step, check_step]
+    if check_step["returncode"] != 0:
+        return _context_refresh_failure(task_id, check_step, steps=steps)
+
+    result = CommandResult.success(
+        command=CONTEXT_REFRESH_COMMAND,
+        domain="context",
+        message="Context Pack refreshed after task close.",
+        data={
+            "task_id": task_id,
+            "steps": steps,
+            "generated_files": list(CONTEXT_REFRESH_GENERATED_FILES),
+            "events": [CONTEXT_REFRESH_EVENT_FILE],
+        },
+    )
+    result.generated_files = list(CONTEXT_REFRESH_GENERATED_FILES)
+    result.changed_files = [CONTEXT_REFRESH_EVENT_FILE]
+    result.events = [CONTEXT_REFRESH_EVENT_FILE]
+    return result
+
+
+def _context_refresh_failure(
+    task_id: str,
+    failed_step: Mapping[str, Any],
+    *,
+    steps: list[Mapping[str, Any]],
+) -> CommandResult:
+    result = CommandResult.failure(
+        command=CONTEXT_REFRESH_COMMAND,
+        domain="context",
+        message="Context refresh failed after task close.",
+        errors=[
+            CommandMessage(
+                CONTEXT_REFRESH_FAILED,
+                "Context refresh command failed after task close.",
+                details={
+                    "task_id": task_id,
+                    "failed_step": str(failed_step.get("step") or ""),
+                    "returncode": int(failed_step.get("returncode") or 0),
+                    "stdout": failed_step.get("stdout"),
+                    "stderr": failed_step.get("stderr"),
+                },
+            )
+        ],
+    )
+    result.data = {
+        "task_id": task_id,
+        "failed_step": str(failed_step.get("step") or ""),
+        "steps": list(steps),
+    }
+    if str(failed_step.get("step") or "") == "context_check":
+        result.generated_files = list(CONTEXT_REFRESH_GENERATED_FILES)
+        result.changed_files = [CONTEXT_REFRESH_EVENT_FILE]
+        result.events = [CONTEXT_REFRESH_EVENT_FILE]
+    return result
+
+
+def _run_context_refresh_step(
+    step: str,
+    title: str,
+    argv: tuple[str, ...],
+    *,
+    root: Path,
+) -> dict[str, Any]:
+    try:
+        completed = _run_context_refresh_command(argv, root=root)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        completed = subprocess.CompletedProcess(
+            args=list(argv),
+            returncode=1,
+            stdout="",
+            stderr=str(exc),
+        )
+    return {
+        "step": step,
+        "title": title,
+        "command": list(argv),
+        "returncode": int(completed.returncode),
+        "stdout": _compact_context_refresh_output(str(completed.stdout or "")),
+        "stderr": _compact_context_refresh_output(str(completed.stderr or "")),
+    }
+
+
+def _run_context_refresh_command(
+    argv: tuple[str, ...],
+    *,
+    root: Path,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        list(argv),
+        cwd=str(SCRIPTS_DIR.parent),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=300,
+        check=False,
+    )
+
+
+def _compact_context_refresh_output(value: str) -> str | dict[str, Any]:
+    if len(value) <= CONTEXT_REFRESH_OUTPUT_LIMIT:
+        return value
+    return {
+        "truncated": True,
+        "original_size": len(value),
+        "stored_size": CONTEXT_REFRESH_OUTPUT_LIMIT,
+        "snippet": value[:CONTEXT_REFRESH_OUTPUT_LIMIT],
+    }
+
+
+def _side_effect_changed_files(results: list[CommandResult]) -> list[str]:
+    values: list[str] = []
+    for result in results:
+        _extend_unique(values, result.changed_files)
+    return values
+
+
+def _side_effect_generated_files(results: list[CommandResult]) -> list[str]:
+    values: list[str] = []
+    for result in results:
+        _extend_unique(values, result.generated_files)
+    return values
+
+
+def _side_effect_events(results: list[CommandResult]) -> list[str]:
+    values: list[str] = []
+    for result in results:
+        _extend_unique(values, result.events)
+    return values
+
+
 def _run_local_commit_after_close(
     *,
     session: Mapping[str, Any],
@@ -838,10 +1060,29 @@ def _optional_int(value: Any) -> int | None:
 def _close_success_reason(
     change_acceptance: Mapping[str, Any],
     local_commit: LocalCommitResult,
+    *,
+    already_closed: bool = False,
 ) -> str:
     if local_commit.status == COMMIT_PASS:
+        if already_closed:
+            return "Close recovered an already-done task and local commit was created."
         return "Close completed and local commit was created."
     status = str(change_acceptance.get("status") or "")
+    if already_closed:
+        if status == "accepted":
+            return (
+                "Close recovered an already-done task with matching owner "
+                "approval evidence and linked Evolution Changes were accepted."
+            )
+        if status == "skipped":
+            return (
+                "Close recovered an already-done task with matching owner "
+                "approval evidence and linked Evolution Change acceptance was skipped."
+            )
+        return (
+            "Close recovered an already-done task with matching owner "
+            "approval evidence."
+        )
     if status == "accepted":
         return (
             "Close completed: the governed task close workflow marked the task "
@@ -1048,6 +1289,15 @@ def _run_close_workflow(
             "preflight": dict(evidence),
         },
     )
+    recovery = _already_closed_task_recovery_result(
+        task_id=task_id,
+        task_ref=task_ref,
+        approval_notes=approval_notes,
+        root=root,
+        decision=decision,
+    )
+    if recovery is not None:
+        return recovery
     return run_review_close_workflow(
         decision,
         root=root,
@@ -1056,6 +1306,105 @@ def _run_close_workflow(
         python_executable=sys.executable,
         runner=None,
     )
+
+
+def _already_closed_task_recovery_result(
+    *,
+    task_id: str,
+    task_ref: str,
+    approval_notes: str,
+    root: Path,
+    decision: ReviewCloseDecision,
+) -> CommandResult | None:
+    refs = load_reference_state(root)
+    task = _task_by_id(refs.get("tasks"), task_id)
+    if str(task.get("status") or "") != "done":
+        return None
+
+    recovery = _already_closed_recovery_evidence(
+        task=task,
+        task_id=task_id,
+        task_ref=task_ref,
+        approval_notes=approval_notes,
+    )
+    if recovery["status"] != "recovered":
+        result = CommandResult.failure(
+            command="pipeline.review_close_policy",
+            domain="pipeline",
+            message="Already-closed task recovery blocked.",
+            errors=[
+                CommandMessage(
+                    str(recovery["code"]),
+                    "Selected task is already done but lacks owner approval "
+                    "evidence matching this close attempt.",
+                    details=recovery,
+                )
+            ],
+        )
+        result.data = {
+            "decision": decision.to_dict(),
+            "workflows": [],
+            "already_closed_by_previous_attempt": False,
+            "recovery": recovery,
+        }
+        return result
+
+    return CommandResult.success(
+        command="pipeline.review_close_policy",
+        domain="pipeline",
+        message=(
+            "Task is already done with matching owner approval evidence; "
+            "skipped duplicate close workflows."
+        ),
+        data={
+            "decision": decision.to_dict(),
+            "workflows": [],
+            "already_closed_by_previous_attempt": True,
+            "recovery": recovery,
+        },
+    )
+
+
+def _already_closed_recovery_evidence(
+    *,
+    task: Mapping[str, Any],
+    task_id: str,
+    task_ref: str,
+    approval_notes: str,
+) -> dict[str, Any]:
+    approved_by = str(task.get("approved_by") or "").strip()
+    approved_at = str(task.get("approved_at") or "").strip()
+    stored_notes = str(task.get("approval_notes") or "").strip()
+    current_notes = approval_notes.strip()
+    notes_match = bool(stored_notes and stored_notes == current_notes)
+    missing_evidence = not (
+        approved_by
+        and approved_at
+        and stored_notes
+        and current_notes
+    )
+    code = "TASK_ALREADY_CLOSED_BY_PREVIOUS_ATTEMPT"
+    status = "recovered"
+    if missing_evidence:
+        code = "TASK_ALREADY_DONE_APPROVAL_EVIDENCE_MISSING"
+        status = "blocked"
+    elif not notes_match:
+        code = "TASK_ALREADY_DONE_APPROVAL_EVIDENCE_MISMATCH"
+        status = "blocked"
+
+    return {
+        "status": status,
+        "code": code,
+        "task_id": task_id,
+        "task_ref": task_ref,
+        "task_status": "done",
+        "approved_by": approved_by,
+        "approved_at": approved_at,
+        "approval_notes_present": bool(stored_notes),
+        "current_owner_approval_note_present": bool(current_notes),
+        "approval_notes_match_current_intent": notes_match,
+        "skipped_workflows": ["task.submit_for_review", "task.close_reviewed"],
+    }
 
 
 def _close_workflow_reason(evidence: Mapping[str, Any]) -> str:
@@ -1140,6 +1489,19 @@ def _codex_cleanup_reason(status: str, skip_reason: str) -> str:
     if status == "failed":
         return "Codex execution cleanup command failed."
     return "Codex execution cleanup status is unknown."
+
+
+def _close_recovery_artifacts(workflow: CommandResult) -> dict[str, Any]:
+    data = _mapping(workflow.data)
+    recovery = _mapping(data.get("recovery"))
+    if not recovery:
+        return {}
+    return {
+        "already_closed_by_previous_attempt": bool(
+            data.get("already_closed_by_previous_attempt")
+        ),
+        "close_recovery": dict(recovery),
+    }
 
 
 def _close_policy(session: Mapping[str, Any]) -> dict[str, Any]:
@@ -1326,6 +1688,7 @@ def _phase_command(
     root: Path,
     actor: str,
 ) -> CommandResult:
+    phase = _bound_close_phase_artifacts(phase)
     result = record_phase_result(
         session_id,
         phase,
@@ -1356,6 +1719,19 @@ def _phase_command(
             result.data["local_commit"] = dict(local_commit)
             result.data["commit_hash"] = str(local_commit.get("commit_hash") or "")
     return result
+
+
+def _bound_close_phase_artifacts(phase: PhaseResult) -> PhaseResult:
+    return PhaseResult(
+        phase=phase.phase,
+        status=phase.status,
+        reason=phase.reason,
+        next_action=phase.next_action,
+        artifacts=bound_pipeline_artifact(phase.artifacts),
+        changed_files=phase.changed_files,
+        generated_files=phase.generated_files,
+        events=phase.events,
+    )
 
 
 def _merge_command_effects(

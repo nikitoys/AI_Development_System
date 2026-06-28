@@ -1,15 +1,15 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/generated/CONTEXT_PACK.md -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-183 Add verify-to-review advisory warning pipeline regression Add an end-to-end pipeline regression proving advisory report warnings pass verify and do not block review. Guard the complete run-next flow that previously passed verify but blocked review. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Create a pipeline session fixture with a report that contains warnings and no blockers. Use a policy that allows advisory report warnings and relaxed git diff verification. Drive the session through verify and review without invoking external Codex. Assert verify passes with advisory warning evidence. Assert review does not block with REPORT_GATE_NOT_PASSED_AFTER_VERIFY. Do not change runtime pipeline behavior in this task. Do not add external Codex execution to the test. Do not edit protected project-control files manually. tests/test_pipeline_runner.py tests/pipeline/test_review_phase.py The regression fails on the old strict review behavior. The regression passes after review uses the shared report warning policy. The test does not run external Codex. The test asserts both verify and review phase outcomes. Focused pipeline/review tests pass. Confirm the test models the real blocker REPORT_GATE_NOT_PASSED_AFTER_VERIFY. Confirm the test is bounded and deterministic.","schema_version":1,"task_id":"TASK-183"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-239 Replace Tasks metrics with action counts Replace non-actionable /tasks metrics with owner-actionable counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues. Counts like done and visible are useful for inventory, but the Owner Cockpit default should show work that needs attention. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Compute action queue counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues. Render these counts in the /tasks default Action Queue view. Keep inventory-style metrics available only in Full Inventory or diagnostic views if they already exist. Add regression coverage for the displayed action counts. Do not remove task inventory data from the system. Do not change task statuses or stored task counts. Do not edit protected project-control files manually. ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py tests/test_web_control_center_read_model.py tests/test_web_control_center.py The default /tasks metrics show Needs Decision, Ready To Run, Current, Blocked, and Health Issues. The default /tasks metrics do not emphasize done count as a primary owner-action metric. Metric counts match the rendered action queue groups. Metrics remain usable when there is no current task. Tests cover the action-count metrics. Compare metric counts with the queue groups rendered below them.","schema_version":1,"task_id":"TASK-239"} -->
 
 # Context Status
 
 Context pack exists: `true`
 Mode: `task`
-Task ID: `TASK-183`
+Task ID: `TASK-239`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1303`
+Tasks revision: `1646`
 Indexed source documents: `10`
 Indexed chunks: `891`
 Selected chunks: `8`

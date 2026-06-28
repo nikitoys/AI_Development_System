@@ -12,10 +12,13 @@ from ai_project_ctl.ui_settings import (
     ALLOW_REPORT_WARNINGS_SETTING,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
     ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
+    BATCH_MAX_FAILURES_SETTING,
+    BATCH_MAX_STEPS_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
     UISettingsError,
     load_ui_settings,
+    optional_ui_batch_limit,
     optional_ui_timeout_sec,
 )
 
@@ -76,6 +79,7 @@ def resolve_pipeline_policy_from_settings(
             policy,
             verify=replace(policy.verify, block_report_warnings=False),
         )
+    policy = _apply_batch_overrides(policy, settings)
     execution_timeout_sec = _execution_timeout_sec(settings)
     if execution_timeout_sec is not None:
         policy = replace(
@@ -186,6 +190,38 @@ def _execution_timeout_sec(settings: Mapping[str, Any]) -> int | None:
     except UISettingsError as exc:
         raise UIPipelinePolicyError(
             "UI_POLICY_EXECUTION_TIMEOUT_INVALID",
+            exc.message,
+            path=exc.path,
+            details={"source_code": exc.code, **exc.details},
+        ) from exc
+
+
+def _apply_batch_overrides(
+    policy: PipelinePolicy,
+    settings: Mapping[str, Any],
+) -> PipelinePolicy:
+    max_steps = _optional_batch_limit(settings, BATCH_MAX_STEPS_SETTING)
+    max_failures = _optional_batch_limit(settings, BATCH_MAX_FAILURES_SETTING)
+    if max_steps is None and max_failures is None:
+        return policy
+    return replace(
+        policy,
+        batch=replace(
+            policy.batch,
+            max_steps=max_steps if max_steps is not None else policy.batch.max_steps,
+            max_failures=(
+                max_failures if max_failures is not None else policy.batch.max_failures
+            ),
+        ),
+    )
+
+
+def _optional_batch_limit(settings: Mapping[str, Any], key: str) -> int | None:
+    try:
+        return optional_ui_batch_limit(settings, key)
+    except UISettingsError as exc:
+        raise UIPipelinePolicyError(
+            "UI_POLICY_BATCH_LIMIT_INVALID",
             exc.message,
             path=exc.path,
             details={"source_code": exc.code, **exc.details},

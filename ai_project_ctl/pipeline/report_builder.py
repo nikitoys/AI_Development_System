@@ -79,8 +79,8 @@ def build_task_report_payload(
         "task_id": task_id,
         "task_ref": task_ref,
         "implementation_summary": _implementation_summary(summary_data),
-        "changed_files": _changed_files(session_data, evidence),
-        "generated_files": _generated_files(session_data, evidence),
+        "changed_files": _changed_files(summary_data, session_data, evidence),
+        "generated_files": _generated_files(summary_data, session_data, evidence),
         "checks": _checks(adapter_data, evidence),
         "warnings": _summary_list(summary_data.get("warnings")),
         "blockers": _summary_list(summary_data.get("blockers")),
@@ -215,10 +215,12 @@ def _check_result(value: Any) -> str:
 
 
 def _changed_files(
+    summary: Mapping[str, Any],
     session: Mapping[str, Any],
     evidence: Mapping[str, Any],
 ) -> list[str]:
     values: list[str] = []
+    values.extend(_string_list(summary.get("changed_files")))
     values.extend(_string_list(evidence.get("changed_files")))
     values.extend(_string_list(_object_mapping(evidence.get("git_diff_gate")).get("actual_changed_files")))
     values.extend(_string_list(_object_mapping(evidence.get("git_diff_gate")).get("tracked_files")))
@@ -227,10 +229,12 @@ def _changed_files(
 
 
 def _generated_files(
+    summary: Mapping[str, Any],
     session: Mapping[str, Any],
     evidence: Mapping[str, Any],
 ) -> list[str]:
     values: list[str] = []
+    values.extend(_string_list(summary.get("generated_files")))
     values.extend(_string_list(evidence.get("generated_files")))
     values.extend(
         _string_list(

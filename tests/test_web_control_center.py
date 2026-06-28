@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -6,17 +7,25 @@ import threading
 import unittest
 import urllib.error
 import urllib.request
+from dataclasses import replace
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
 
 from ai_project_ctl.core.registry import command_describe
 from ai_project_ctl.core.result import CommandResult
+from ai_project_ctl.core.validation import ValidationError
 from ai_project_ctl.pipeline.policy import policy_preset
+from ai_project_ctl.pipeline.policy_store import (
+    pipeline_policy_store_path,
+    save_policy_preset,
+)
 from ai_project_ctl.ui_settings import (
     ALLOW_REPORT_WARNINGS_SETTING,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
     ALLOW_RELAXED_REPORT_WARNINGS_SETTING,
+    BATCH_MAX_FAILURES_SETTING,
+    BATCH_MAX_STEPS_SETTING,
     INTERNAL_CHANGE_GATE_BYPASS_SETTING,
     REQUIRE_CODEX_REVIEW_SETTING,
     ui_settings_path,
@@ -36,10 +45,14 @@ from ai_project_ctl.web.server import (
     PIPELINE_LOG_SNIPPET_LIMIT,
     WEB_IMPORT_FILE_MAX_BYTES,
     WebServerError,
+    filter_tasks,
     make_handler,
     render_action_error,
     render_action_result,
     route,
+    task_action_metric_counts,
+    task_action_queue_groups,
+    task_filter_state,
 )
 
 
@@ -103,6 +116,369 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(payload["doctor"]["overall_status"], "UNKNOWN")
         self.assertFalse(payload["doctor"]["cache"]["cached"])
 
+    def test_owner_cockpit_shell_renders_core_routes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-230",
+                        "ref": "CTL-30",
+                        "legacy_id": "TASK-230",
+                        "status": "in_progress",
+                        "title": "Owner UI regression tests",
+                        "epic_id": "EPIC-005",
+                        "epic_key": "CTL",
+                    },
+                    {
+                        "id": "TASK-231",
+                        "ref": "CTL-31",
+                        "legacy_id": "TASK-231",
+                        "status": "ready",
+                        "title": "Ready cockpit follow-up",
+                        "epic_id": "EPIC-005",
+                        "epic_key": "CTL",
+                    },
+                    {
+                        "id": "TASK-232",
+                        "ref": "CTL-32",
+                        "legacy_id": "TASK-232",
+                        "status": "in_review",
+                        "title": "Reviewed cockpit follow-up",
+                        "epic_id": "EPIC-005",
+                        "epic_key": "CTL",
+                    },
+                ],
+                current_task_id="TASK-230",
+                epics=[{"id": "EPIC-005", "key": "CTL", "status": "active"}],
+                changes=[
+                    {
+                        "id": "CHG-230",
+                        "status": "ready",
+                        "type": "tooling",
+                        "title": "Owner cockpit route safety",
+                    }
+                ],
+            )
+
+            routes = {
+                "/": "Owner Cockpit",
+                "/tasks": "Tasks",
+                "/pipeline": "Pipeline",
+                "/reviews": "Reviews",
+                "/evolution": "Evolution",
+                "/settings": "Settings",
+                "/doctor": "Doctor",
+            }
+            for path, title in routes.items():
+                with self.subTest(path=path):
+                    status, content_type, body = route(
+                        path,
+                        ReadOnlyProjectModel(root, actor="tester"),
+                    )
+
+                self.assertEqual(status.value, 200)
+                self.assertEqual(content_type, "text/html; charset=utf-8")
+                self.assertIn('<div class="app-shell">', body)
+                self.assertIn(
+                    '<aside class="sidebar" aria-label="Web Control Center navigation">',
+                    body,
+                )
+                self.assertIn('<main class="main-content">', body)
+                self.assertIn('<a class="brand" href="/">AI Control Center</a>', body)
+                self.assertIn("<h1>{}</h1>".format(title), body)
+                self.assertIn(
+                    'href="{}" class="active">{}</a>'.format(path, title),
+                    body,
+                )
+                for nav_label in (
+                    "Owner Cockpit",
+                    "Tasks",
+                    "Pipeline",
+                    "Reviews",
+                    "Evolution",
+                    "Doctor",
+                    "Settings",
+                ):
+                    self.assertIn(">{}</a>".format(nav_label), body)
+                assert_no_restricted_git_actions(self, body)
+
+    def test_dashboard_renders_compact_health_current_execution_and_safe_actions(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            prompt_path = root / "AI_PROJECT/generated/CODEX_PROMPT.md"
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-230",
+                        "ref": "CTL-30",
+                        "legacy_id": "TASK-230",
+                        "status": "in_progress",
+                        "title": "Owner UI regression tests",
+                        "epic_id": "EPIC-005",
+                        "epic_key": "CTL",
+                    }
+                ],
+                current_task_id="TASK-230",
+                epics=[{"id": "EPIC-005", "key": "CTL", "status": "active"}],
+                execution={
+                    "status": "READY",
+                    "code": "CODEX_READY",
+                    "updated_at": "2026-06-27T17:21:09Z",
+                    "prompt_exists": True,
+                    "prompt_path": str(prompt_path),
+                    "source_type": "task",
+                    "source_id": "TASK-230",
+                    "source_status": "in_progress",
+                    "context_pack": {
+                        "path": "AI_PROJECT/generated/CONTEXT_PACK.md",
+                        "task_id": "TASK-230",
+                        "tasks_revision": 1,
+                        "docs_revision": 28,
+                    },
+                },
+            )
+
+            status, _, body = route("/", ReadOnlyProjectModel(root, actor="tester"))
+
+        self.assertEqual(status.value, 200)
+        self.assertIn('class="current-execution-bar"', body)
+        self.assertIn("Current Execution", body)
+        self.assertIn("CTL-30", body)
+        self.assertIn("CODEX_READY", body)
+        self.assertIn("tasks rev 1, docs rev 28", body)
+        self.assertIn(
+            'class="panel health-panel health-panel-compact" id="owner-health"',
+            body,
+        )
+        self.assertIn('class="health-summary-counts"', body)
+        self.assertIn("Project Doctor", body)
+        self.assertIn('class="panel owner-queue-section owner-queue-current"', body)
+
+        action_forms = [
+            form
+            for form in post_forms(body)
+            if 'name="action" value="' in form
+        ]
+        self.assertGreater(len(action_forms), 0)
+        for form in action_forms:
+            self.assertIn('action="/actions"', form)
+
+        current_clear_forms = [
+            form
+            for form in action_forms
+            if 'name="action" value="current.clear"' in form
+        ]
+        self.assertGreater(len(current_clear_forms), 0)
+        for form in current_clear_forms:
+            self.assertIn('data-confirm-modal="action"', form)
+            self.assertIn('name="confirm" value="yes" required', form)
+
+    def test_task_action_queue_groups_follow_available_owner_actions(self):
+        def queue_task(ref, status, *, label="", action="", title=""):
+            task = {
+                "id": "TASK-{}".format(ref),
+                "ref": ref,
+                "status": status,
+                "title": title or ref,
+            }
+            if label or action:
+                task["pipeline_hints"] = {
+                    "next_actions": [label] if label else [],
+                    "actions": [
+                        {
+                            "label": label,
+                            "action": action,
+                            "available": True,
+                            "reason": "",
+                        }
+                    ],
+                }
+            return task
+
+        tasks = [
+            queue_task(
+                "PREP-01",
+                "planned",
+                label="Prepare for Codex",
+                action="task.prepare_for_codex",
+            ),
+            queue_task(
+                "RUN-01",
+                "planned",
+                label="Run",
+                action="ui.run_selected_task",
+            ),
+            queue_task(
+                "DECIDE-01",
+                "ready",
+                label="Approve Change",
+                action="evolution.approve_change",
+            ),
+            queue_task(
+                "REVIEW-01",
+                "ready",
+                label="Request Changes",
+                action="task.request_changes",
+            ),
+            queue_task(
+                "CUR-01",
+                "ready",
+                label="Prepare for Codex",
+                action="task.prepare_for_codex",
+            ),
+            queue_task("PROG-01", "in_progress"),
+            queue_task(
+                "BLOCK-01",
+                "blocked",
+                label="Run",
+                action="ui.run_selected_task",
+            ),
+            queue_task("DEFER-01", "deferred"),
+        ]
+        data = {
+            "tasks": tasks,
+            "epics": [],
+            "current_task": {"id": "TASK-CUR-01", "ref": "CUR-01"},
+        }
+
+        default_filters = task_filter_state(data, {})
+        visible_tasks = filter_tasks(tasks, data, default_filters)
+        groups = task_action_queue_groups(visible_tasks, data)
+        refs_by_group = {
+            key: {str(task.get("ref") or "") for task in grouped}
+            for key, grouped in groups.items()
+        }
+
+        self.assertEqual(refs_by_group["ready_to_run"], {"PREP-01", "RUN-01"})
+        self.assertEqual(refs_by_group["needs_decision"], {"DECIDE-01", "REVIEW-01"})
+        self.assertEqual(refs_by_group["current"], {"CUR-01", "PROG-01"})
+        self.assertEqual(refs_by_group["blocked"], {"BLOCK-01"})
+        self.assertNotIn("DEFER-01", set().union(*refs_by_group.values()))
+
+        deferred_filters = task_filter_state(data, {"status": ["deferred"]})
+        deferred_tasks = filter_tasks(tasks, data, deferred_filters)
+
+        self.assertEqual([task["ref"] for task in deferred_tasks], ["DEFER-01"])
+
+    def test_tasks_page_default_metrics_show_owner_action_counts(self):
+        tasks = [
+            {
+                "id": "TASK-RUN",
+                "ref": "RUN-01",
+                "legacy_id": "TASK-RUN",
+                "status": "ready",
+                "title": "Runnable task",
+                "epic_id": "EPIC-001",
+            },
+            {
+                "id": "TASK-CURRENT",
+                "ref": "CUR-01",
+                "legacy_id": "TASK-CURRENT",
+                "status": "ready",
+                "title": "Current task",
+                "epic_id": "EPIC-001",
+            },
+            {
+                "id": "TASK-PROGRESS",
+                "ref": "PROG-01",
+                "legacy_id": "TASK-PROGRESS",
+                "status": "in_progress",
+                "title": "In-progress task",
+                "epic_id": "EPIC-001",
+            },
+            {
+                "id": "TASK-REVIEW",
+                "ref": "REV-01",
+                "legacy_id": "TASK-REVIEW",
+                "status": "in_review",
+                "title": "Review decision task",
+                "epic_id": "EPIC-001",
+            },
+            {
+                "id": "TASK-BLOCKED",
+                "ref": "BLOCK-01",
+                "legacy_id": "TASK-BLOCKED",
+                "status": "blocked",
+                "title": "Blocked task",
+                "epic_id": "EPIC-001",
+            },
+            {
+                "id": "TASK-DONE",
+                "ref": "DONE-01",
+                "legacy_id": "TASK-DONE",
+                "status": "done",
+                "title": "Done inventory task",
+                "epic_id": "EPIC-001",
+            },
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=tasks,
+                current_task_id="TASK-CURRENT",
+                epics=[{"id": "EPIC-001", "status": "active"}],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+            data = model.dashboard(include_events=True)
+            status, _, body = route("/tasks", model)
+            inventory_status, _, inventory_body = route(
+                "/tasks?view=inventory&show_done=1",
+                model,
+            )
+
+        filters = task_filter_state(data, {})
+        visible_tasks = filter_tasks(data["tasks"], data, filters)
+        groups = task_action_queue_groups(visible_tasks, data)
+        expected = task_action_metric_counts(visible_tasks, data)
+        metrics = summary_grid_metrics(body)
+        inventory_metrics = summary_grid_metrics(inventory_body)
+
+        self.assertEqual(status.value, 200)
+        self.assertEqual(inventory_status.value, 200)
+        self.assertEqual(metrics["Needs Decision"], str(len(groups["needs_decision"])))
+        self.assertEqual(metrics["Ready To Run"], str(len(groups["ready_to_run"])))
+        self.assertEqual(metrics["Current"], str(len(groups["current"])))
+        self.assertEqual(metrics["Blocked"], str(len(groups["blocked"])))
+        self.assertEqual(metrics["Health Issues"], str(expected["health_issues"]))
+        self.assertNotIn("done", metrics)
+        self.assertNotIn("Visible", metrics)
+        self.assertIn("done", inventory_metrics)
+        self.assertIn("Visible", inventory_metrics)
+
+    def test_tasks_page_action_metrics_remain_usable_without_current_task(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-READY",
+                        "ref": "READY-01",
+                        "legacy_id": "TASK-READY",
+                        "status": "ready",
+                        "title": "Ready without current",
+                        "epic_id": "EPIC-001",
+                    }
+                ],
+                current_task_id=None,
+                epics=[{"id": "EPIC-001", "status": "active"}],
+            )
+            status, _, body = route(
+                "/tasks",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
+
+        metrics = summary_grid_metrics(body)
+
+        self.assertEqual(status.value, 200)
+        self.assertEqual(metrics["Current"], "0")
+        self.assertEqual(metrics["Ready To Run"], "1")
+        self.assertIn("Health Issues", metrics)
+
     def test_settings_page_renders_default_ui_settings(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -119,13 +495,53 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(body.count('method="post" action="/actions"'), 1)
         self.assertEqual(body.count('<button type="submit">Apply Settings</button>'), 1)
         self.assertIn("Pipeline", body)
+        self.assertIn("Batch Run", body)
         self.assertIn("Review Gates", body)
         self.assertIn("Timeouts", body)
         self.assertIn("Advanced", body)
+        self.assertIn("Effective Policy Summary", body)
+        self.assertIn("<dt>Policy</dt><dd>supervised_executable_local_commit</dd>", body)
+        self.assertIn("<dt>batch.max_steps</dt><dd>5</dd>", body)
+        self.assertIn("<dt>batch.max_failures</dt><dd>1</dd>", body)
+        self.assertIn("<dt>Codex Review</dt><dd>required (approve)</dd>", body)
+        self.assertIn("<dt>Auto-close</dt><dd>enabled (note required)</dd>", body)
+        self.assertIn("<dt>Local Commit</dt><dd>enabled (local_only)</dd>", body)
+        self.assertIn("<dt>Report Warnings</dt><dd>strict (blocking)</dd>", body)
+        self.assertIn("<dt>Git Diff Gates</dt><dd>strict (required)</dd>", body)
+        self.assertIn("Incomplete Web Run", body)
+        self.assertIn("review and close may not run in one batch", body)
+        self.assertIn("Resume Session can continue the next phase", body)
         self.assertIn("<code>command_line</code>", body)
         self.assertIn('name="command_line" value="codex exec"', body)
         self.assertIn("<code>default_policy</code>", body)
-        self.assertIn('name="default_policy" value="supervised_executable_local_commit"', body)
+        self.assertIn('<select name="default_policy">', body)
+        for policy_name in (
+            "dry_run",
+            "supervised",
+            "supervised_executable",
+            "supervised_autoclose",
+            "supervised_executable_autoclose",
+            "supervised_local_commit",
+            "supervised_executable_local_commit",
+        ):
+            self.assertIn('<option value="{}"'.format(policy_name), body)
+        self.assertIn(
+            '<option value="supervised_executable_local_commit" selected>',
+            body,
+        )
+        self.assertNotIn('<input type="text" name="default_policy"', body)
+        self.assertIn("<code>batch_max_steps</code>", body)
+        self.assertIn(
+            "Optional Web-run override for policy batch.max_steps.",
+            body,
+        )
+        self.assertIn('name="batch_max_steps" value=""', body)
+        self.assertIn("<code>batch_max_failures</code>", body)
+        self.assertIn(
+            "Optional Web-run override for policy batch.max_failures.",
+            body,
+        )
+        self.assertIn('name="batch_max_failures" value=""', body)
         self.assertIn("Machine Review", body)
         self.assertIn("<code>machine_review</code>", body)
         self.assertIn('<input type="checkbox" checked disabled>Locked ON', body)
@@ -241,6 +657,8 @@ class WebControlCenterTests(unittest.TestCase):
                     ALLOW_REPORT_WARNINGS_SETTING: "true",
                     ALLOW_RELAXED_REPORT_WARNINGS_SETTING: "true",
                     INTERNAL_CHANGE_GATE_BYPASS_SETTING: "true",
+                    BATCH_MAX_STEPS_SETTING: "9",
+                    BATCH_MAX_FAILURES_SETTING: 2,
                     "execution_timeout_sec": "1800",
                     "preflight_timeout_sec": 45,
                 },
@@ -255,13 +673,22 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(body.count('class="panel settings-panel"'), 1)
         self.assertEqual(body.count('<button type="submit">Apply Settings</button>'), 1)
         self.assertIn("Pipeline", body)
+        self.assertIn("Batch Run", body)
         self.assertIn("Review Gates", body)
         self.assertIn("Timeouts", body)
         self.assertIn("Advanced", body)
         self.assertIn("<code>command_line</code>", body)
         self.assertIn('name="command_line" value="codex exec --json"', body)
         self.assertIn("<code>default_policy</code>", body)
-        self.assertIn('name="default_policy" value="supervised"', body)
+        self.assertIn('<select name="default_policy">', body)
+        self.assertIn('<option value="supervised" selected>', body)
+        self.assertNotIn('<input type="text" name="default_policy"', body)
+        self.assertIn("<dt>batch.max_steps</dt><dd>9</dd>", body)
+        self.assertIn("<dt>batch.max_failures</dt><dd>2</dd>", body)
+        self.assertIn("<code>batch_max_steps</code>", body)
+        self.assertIn('name="batch_max_steps" value="9"', body)
+        self.assertIn("<code>batch_max_failures</code>", body)
+        self.assertIn('name="batch_max_failures" value="2"', body)
         self.assertIn("Machine Review", body)
         self.assertIn('<input type="checkbox" checked disabled>Locked ON', body)
         self.assertIn(
@@ -320,6 +747,36 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertNotIn('name="change_gate"', body)
         self.assertNotIn('name="bypass"', body)
 
+    def test_settings_page_policy_dropdown_includes_custom_presets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            write_ui_settings(root, {"default_policy": "owner_supervised"})
+            base = policy_preset("supervised")
+            custom = replace(
+                base,
+                name="owner_supervised",
+                batch=replace(base.batch, max_steps=9, max_failures=2),
+            )
+            result = save_policy_preset(
+                "owner_supervised",
+                custom,
+                root=root,
+                actor="tester",
+            )
+            self.assertTrue(result.ok)
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/settings", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn('<select name="default_policy">', body)
+        self.assertIn('<option value="owner_supervised" selected>', body)
+        self.assertIn("<dt>Policy</dt><dd>owner_supervised</dd>", body)
+        self.assertIn("<dt>batch.max_steps</dt><dd>9</dd>", body)
+        self.assertIn("<dt>batch.max_failures</dt><dd>2</dd>", body)
+        self.assertNotIn('<input type="text" name="default_policy"', body)
+
     def test_settings_read_model_returns_effective_allow_report_warnings(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -334,6 +791,217 @@ class WebControlCenterTests(unittest.TestCase):
             False,
         )
         self.assertEqual(data["source"], "project_file")
+
+    def test_settings_effective_policy_summary_applies_ui_overrides(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            write_ui_settings(
+                root,
+                {
+                    "default_policy": "supervised",
+                    REQUIRE_CODEX_REVIEW_SETTING: "false",
+                    ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING: "true",
+                    ALLOW_REPORT_WARNINGS_SETTING: "true",
+                    ALLOW_RELAXED_REPORT_WARNINGS_SETTING: "true",
+                    BATCH_MAX_STEPS_SETTING: "8",
+                    BATCH_MAX_FAILURES_SETTING: "3",
+                },
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            data = model.ui_settings()
+            status, _, body = route("/settings", model)
+
+        self.assertEqual(status.value, 200)
+        summary = data["policy_catalog"]["effective_policy"]
+        self.assertEqual(summary["name"], "supervised")
+        self.assertEqual(summary["batch"], {"max_steps": 8, "max_failures": 3})
+        self.assertEqual(
+            summary["review"],
+            {
+                "machine_review_required": True,
+                "machine_review_outcome": "pass",
+                "codex_review_required": False,
+                "codex_review_decision": "none",
+            },
+        )
+        self.assertEqual(
+            summary["verify"],
+            {
+                "run_git_diff_gates": False,
+                "block_report_warnings": False,
+                "allow_report_warnings": True,
+            },
+        )
+        selected = next(
+            policy
+            for policy in data["policy_catalog"]["policies"]
+            if policy["selected"]
+        )
+        self.assertEqual(selected["effective_summary"], summary)
+        self.assertIn("<dt>Policy</dt><dd>supervised</dd>", body)
+        self.assertIn("<dt>batch.max_steps</dt><dd>8</dd>", body)
+        self.assertIn("<dt>batch.max_failures</dt><dd>3</dd>", body)
+        self.assertIn("<dt>Codex Review</dt><dd>skipped</dd>", body)
+        self.assertIn(
+            "<dt>Report Warnings</dt><dd>relaxed (allowed / advisory)</dd>",
+            body,
+        )
+        self.assertIn("<dt>Git Diff Gates</dt><dd>relaxed (not run)</dd>", body)
+        self.assertNotIn("Incomplete Web Run", body)
+
+    def test_settings_read_model_exposes_builtin_policy_catalog(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+
+            data = ReadOnlyProjectModel(root, actor="tester").ui_settings()
+
+        catalog = data["policy_catalog"]
+        policies = catalog["policies"]
+        names = [policy["name"] for policy in policies]
+        self.assertEqual(
+            names,
+            [
+                "dry_run",
+                "supervised",
+                "supervised_executable",
+                "supervised_autoclose",
+                "supervised_executable_autoclose",
+                "supervised_local_commit",
+                "supervised_executable_local_commit",
+            ],
+        )
+        self.assertEqual(
+            catalog["counts"],
+            {"built_in": 7, "custom": 0, "total": 7},
+        )
+        self.assertEqual(
+            catalog["selected_policy"],
+            "supervised_executable_local_commit",
+        )
+        self.assertTrue(catalog["selected_known"])
+
+        selected = next(policy for policy in policies if policy["selected"])
+        self.assertEqual(selected["kind"], "built_in")
+        self.assertEqual(
+            selected["behavior_label"],
+            "executable / auto-close needs note / local-commit",
+        )
+        summary = selected["effective_summary"]
+        self.assertEqual(
+            summary["review"],
+            {
+                "machine_review_required": True,
+                "machine_review_outcome": "pass",
+                "codex_review_required": True,
+                "codex_review_decision": "approve",
+            },
+        )
+        self.assertEqual(
+            summary["close"],
+            {
+                "auto_close_task": True,
+                "owner_approval_note_present": False,
+            },
+        )
+        self.assertEqual(
+            summary["commit"],
+            {
+                "create_local_commit": True,
+                "mode": "local_only",
+                "require_commit_readiness": True,
+                "allow_push": False,
+                "allow_merge": False,
+            },
+        )
+        self.assertEqual(summary["batch"], {"max_steps": 5, "max_failures": 1})
+        self.assertEqual(
+            summary["verify"],
+            {
+                "run_git_diff_gates": True,
+                "block_report_warnings": True,
+                "allow_report_warnings": False,
+            },
+        )
+        self.assertEqual(catalog["effective_policy"], summary)
+
+    def test_settings_read_model_policy_catalog_includes_custom_presets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            write_ui_settings(root, {"default_policy": "owner_supervised"})
+            base = policy_preset("supervised")
+            custom = replace(
+                base,
+                name="owner_supervised",
+                batch=replace(base.batch, max_steps=9, max_failures=2),
+            )
+            result = save_policy_preset(
+                "owner_supervised",
+                custom,
+                root=root,
+                actor="tester",
+            )
+            self.assertTrue(result.ok)
+
+            data = ReadOnlyProjectModel(root, actor="tester").ui_settings()
+
+        catalog = data["policy_catalog"]
+        self.assertEqual(catalog["counts"], {"built_in": 7, "custom": 1, "total": 8})
+        self.assertEqual(catalog["policies"][-1]["name"], "owner_supervised")
+        custom_item = catalog["policies"][-1]
+        self.assertEqual(custom_item["kind"], "custom")
+        self.assertEqual(custom_item["behavior_label"], "prompt-only")
+        self.assertTrue(custom_item["selected"])
+        self.assertEqual(
+            custom_item["effective_summary"]["batch"],
+            {"max_steps": 9, "max_failures": 2},
+        )
+        self.assertEqual(
+            custom_item["effective_summary"]["review"],
+            {
+                "machine_review_required": True,
+                "machine_review_outcome": "pass",
+                "codex_review_required": True,
+                "codex_review_decision": "approve",
+            },
+        )
+
+    def test_settings_read_model_policy_catalog_uses_store_validation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(root)
+            path = pipeline_policy_store_path(root)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "revision": 1,
+                        "created_at": "2026-06-20T00:00:00Z",
+                        "updated_at": "2026-06-20T00:00:00Z",
+                        "presets": [
+                            {
+                                "name": "dry_run",
+                                "policy": policy_preset("dry_run").to_dict(),
+                                "created_at": "2026-06-20T00:00:00Z",
+                                "updated_at": "2026-06-20T00:00:00Z",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(ValidationError) as raised:
+                ReadOnlyProjectModel(root, actor="tester").ui_settings()
+
+        self.assertEqual(
+            raised.exception.result.errors[0].code,
+            "POLICY_PRESET_BUILTIN_IMMUTABLE",
+        )
 
     def test_tasks_page_filters_searches_groups_and_shows_readable_refs(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -396,19 +1064,268 @@ class WebControlCenterTests(unittest.TestCase):
 
         self.assertEqual(status.value, 200)
         self.assertIn("Prepare for Codex", body)
-        self.assertIn("Prepare for Codex unavailable: another current task is WFA-07", body)
+        self.assertNotIn("Prepare for Codex unavailable:", body)
         self.assertNotIn('value="task.prepare_for_codex"', body)
         self.assertIn("Refresh Context", body)
         self.assertIn('value="task.refresh_execution_context"', body)
         self.assertIn("Submit for Review", body)
-        self.assertIn("Submit for Review unavailable: no current Codex prompt state exists", body)
+        self.assertNotIn("Submit for Review unavailable:", body)
+        self.assertIn("no current Codex prompt state exists", body)
         self.assertNotIn('value="task.submit_for_review"', body)
         self.assertIn("Approve &amp; Done", body)
         self.assertIn('value="task.close_reviewed"', body)
-        self.assertIn("Request Changes", body)
-        self.assertIn('value="task.request_changes"', body)
-        self.assertIn("Build Codex prompt with context", body)
+        self.assertNotIn('value="task.request_changes"', body)
         self.assertIn('name="confirm" value="yes" required', body)
+        action_forms = [
+            form
+            for form in post_forms(body)
+            if 'name="action" value="' in form
+        ]
+        self.assertGreater(len(action_forms), 0)
+        for form in action_forms:
+            self.assertIn('action="/actions"', form)
+            self.assertIn('name="confirm" value="yes" required', form)
+
+    def test_tasks_page_renders_selected_task_details_drawer(self):
+        tasks = [
+            {
+                "id": "TASK-300",
+                "ref": "DRAW-01",
+                "legacy_id": "TASK-300",
+                "status": "ready",
+                "title": "Drawer task",
+                "summary": "Drawer summary text.",
+                "description": "Drawer description text.",
+                "scope": ["Drawer scope item."],
+                "acceptance_criteria": ["Drawer acceptance item."],
+                "blockers": ["Waiting on owner input."],
+                "epic_id": "EPIC-DRAW",
+                "epic_key": "DRAW",
+                "pipeline_hints": {
+                    "actions": [
+                        {
+                            "label": "Prepare for Codex",
+                            "action": "task.prepare_for_codex",
+                            "available": True,
+                            "reason": "Ready to prepare.",
+                        }
+                    ],
+                    "linked_changes": [
+                        {
+                            "id": "CHG-777",
+                            "status": "ready",
+                            "title": "Drawer linked change",
+                        }
+                    ],
+                },
+            },
+            {
+                "id": "TASK-301",
+                "ref": "DRAW-02",
+                "legacy_id": "TASK-301",
+                "status": "ready",
+                "title": "Other drawer task",
+                "epic_id": "EPIC-DRAW",
+                "epic_key": "DRAW",
+            },
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=tasks,
+                changes=[
+                    {
+                        "id": "CHG-777",
+                        "status": "ready",
+                        "title": "Drawer linked change",
+                        "linked_tasks": ["DRAW-01"],
+                    }
+                ],
+                epics=[{"id": "EPIC-DRAW", "key": "DRAW", "status": "active"}],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/tasks?task=DRAW-01", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn('class="task-page-layout"', body)
+        self.assertIn(
+            '<aside class="drawer task-detail-drawer" id="task-details-drawer"',
+            body,
+        )
+        self.assertIn("Selected task inspection stays outside the table rows.", body)
+        self.assertIn("Drawer summary text.", body)
+        self.assertIn("Drawer scope item.", body)
+        self.assertIn("Drawer acceptance item.", body)
+        self.assertIn("Waiting on owner input.", body)
+        self.assertIn("CHG-777 ready", body)
+        self.assertIn("Prepare for Codex", body)
+        self.assertIn(
+            'href="/tasks?view=queue&amp;group=epic&amp;task=DRAW-01#task-details-drawer"',
+            body,
+        )
+        drawer = re.search(
+            r'<aside class="drawer task-detail-drawer".*?</aside>',
+            body,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(drawer)
+        drawer_html = drawer.group(0) if drawer else ""
+        self.assertIn("Effective Run Policy", drawer_html)
+        self.assertIn("<dt>batch.max_steps</dt>", drawer_html)
+        self.assertIn(
+            '<details class="task-detail-section task-diagnostic-section task-diagnostic-generated-files">',
+            drawer_html,
+        )
+        self.assertIn(
+            '<details class="task-detail-section task-diagnostic-section task-diagnostic-health">',
+            drawer_html,
+        )
+        self.assertIn(
+            '<details class="task-detail-section task-diagnostic-section task-diagnostic-recent-events">',
+            drawer_html,
+        )
+        self.assertIn("<span>Generated Files</span>", drawer_html)
+        self.assertIn("<span>Health</span>", drawer_html)
+        self.assertIn("<span>Recent Events</span>", drawer_html)
+        diagnostic_sections = re.findall(
+            r'<details class="task-detail-section task-diagnostic-section task-diagnostic-[^"]*".*?</details>',
+            drawer_html,
+            flags=re.DOTALL,
+        )
+        self.assertEqual(len(diagnostic_sections), 3)
+        for section in diagnostic_sections:
+            self.assertNotIn(" open", section.split(">", 1)[0])
+        self.assertEqual(body.count("<h2>Project Health</h2>"), 1)
+        detail_rows = [
+            row for row in re.findall(r"<tr>.*?</tr>", body, flags=re.DOTALL)
+            if 'class="button-link secondary task-detail-link"' in row
+        ]
+        for row in detail_rows:
+            self.assertNotIn("Effective Run Policy", row)
+            self.assertNotIn("batch.max_steps", row)
+            self.assertNotIn("Generated Files", row)
+            self.assertNotIn("Recent Events", row)
+            self.assertNotIn("Project Health", row)
+
+    def test_tasks_page_keeps_action_queue_rows_compact(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-302",
+                        "ref": "DRAW-03",
+                        "legacy_id": "TASK-302",
+                        "status": "ready",
+                        "title": "Compact row task",
+                        "summary": "Large inline detail should not be inside the row.",
+                        "scope": ["Compact row scope."],
+                        "acceptance_criteria": ["Compact row acceptance."],
+                        "epic_id": "EPIC-DRAW",
+                        "epic_key": "DRAW",
+                    }
+                ],
+                epics=[{"id": "EPIC-DRAW", "key": "DRAW", "status": "active"}],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/tasks", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn(
+            "<th>Task</th><th>Status</th><th>Title</th><th>Next</th><th>Primary Action</th><th>Details</th>",
+            body,
+        )
+        self.assertNotIn("<th>Summary</th>", body)
+        self.assertNotIn("<th>Stage</th>", body)
+        self.assertNotIn('<details class="task-detail-panel"', body)
+        detail_rows = [
+            row for row in re.findall(r"<tr>.*?</tr>", body, flags=re.DOTALL)
+            if 'class="button-link secondary task-detail-link"' in row
+        ]
+        self.assertEqual(len(detail_rows), 1)
+        self.assertIn("DRAW-03", detail_rows[0])
+        self.assertNotIn("Compact row scope.", detail_rows[0])
+        self.assertLessEqual(detail_rows[0].count('<button type="submit">'), 1)
+        self.assertNotIn("unavailable:", detail_rows[0])
+        self.assertNotIn("Effective Run Policy", detail_rows[0])
+        self.assertNotIn("batch.max_steps", detail_rows[0])
+        self.assertNotIn("Generated Files", detail_rows[0])
+        self.assertNotIn("Recent Events", detail_rows[0])
+        self.assertNotIn("Project Health", detail_rows[0])
+        self.assertIn("Compact row scope.", body)
+
+    def test_tasks_page_keeps_policy_summary_out_of_queue_rows_and_in_modal(self):
+        tasks = [
+            {
+                "id": "TASK-303",
+                "ref": "POL-01",
+                "legacy_id": "TASK-303",
+                "status": "ready",
+                "title": "Prepare policy task",
+                "epic_id": "EPIC-POL",
+                "epic_key": "POL",
+                "pipeline_hints": {
+                    "actions": [
+                        {
+                            "label": "Prepare for Codex",
+                            "action": "task.prepare_for_codex",
+                            "available": True,
+                            "reason": "Ready to prepare.",
+                        }
+                    ],
+                },
+            },
+            {
+                "id": "TASK-304",
+                "ref": "POL-02",
+                "legacy_id": "TASK-304",
+                "status": "ready",
+                "title": "Run policy task",
+                "epic_id": "EPIC-POL",
+                "epic_key": "POL",
+                "pipeline_hints": {
+                    "actions": [
+                        {
+                            "label": "Run",
+                            "action": "ui.run_selected_task",
+                            "available": True,
+                            "reason": "Ready to run.",
+                        }
+                    ],
+                },
+            },
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=tasks,
+                epics=[{"id": "EPIC-POL", "key": "POL", "status": "active"}],
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/tasks", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn('data-confirm-effective-policy-summary="', body)
+        self.assertIn("batch.max_steps:", body)
+        self.assertNotIn("data-confirm-policy-summary", body)
+        self.assertIn('value="task.prepare_for_codex"', body)
+        self.assertIn('data-confirm-action-id="task.prepare_for_codex"', body)
+
+        detail_rows = [
+            row for row in re.findall(r"<tr>.*?</tr>", body, flags=re.DOTALL)
+            if 'class="button-link secondary task-detail-link"' in row
+        ]
+        self.assertEqual(len(detail_rows), 2)
+        for row in detail_rows:
+            self.assertNotIn("Effective Run Policy", row)
+            self.assertNotIn("batch.max_steps", row)
+            self.assertNotIn("Codex Review", row)
 
     def test_tasks_page_shows_task_row_run_resume_and_terminal_visibility(self):
         pipeline = pipeline_detail_state(
@@ -498,14 +1415,24 @@ class WebControlCenterTests(unittest.TestCase):
             status, _, body = route("/tasks?show_done=1&group=none", model)
 
         self.assertEqual(status.value, 200)
-        self.assertIn('value="ui.run_selected_task"', body)
-        self.assertIn('name="task" value="PLAN-01"', body)
-        self.assertIn('name="task" value="READY-01"', body)
-        self.assertIn(
+        self.assertNotIn('value="task.prepare_for_codex"', body)
+        self.assertNotIn('name="task" value="PLAN-01"', body)
+        self.assertNotIn('name="task" value="READY-01"', body)
+        self.assertIn("Effective Run Policy", body)
+        self.assertIn("<dt>batch.max_steps</dt><dd>5</dd>", body)
+        self.assertIn("<dt>Codex Review</dt><dd>required (approve)</dd>", body)
+        self.assertIn("<dt>Auto-close</dt><dd>enabled (note required)</dd>", body)
+        self.assertIn("<dt>Local Commit</dt><dd>enabled (local_only)</dd>", body)
+        self.assertIn("<dt>Report Warnings</dt><dd>strict (blocking)</dd>", body)
+        self.assertIn("<dt>Git Diff Gates</dt><dd>strict (required)</dd>", body)
+        self.assertNotIn("Incomplete Web Run", body)
+        self.assertNotIn('name="incomplete_run_confirm" value="yes" required', body)
+        self.assertNotIn(
             "Requires approved linked Evolution Change before execution.",
             body,
         )
-        self.assertIn("CHG-201 ready", body)
+        self.assertIn('data-confirm-action-id="evolution.approve_change"', body)
+        self.assertIn('name="change" value="CHG-201"', body)
         self.assertIn("<button type=\"submit\">Resume</button>", body)
         self.assertIn('value="pipeline.run_next"', body)
         self.assertIn('name="session_id" value="PSESS-ROW"', body)
@@ -574,7 +1501,20 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("Refresh Context", dashboard_body)
         self.assertIn("Refresh Prompt", dashboard_body)
         self.assertIn("Clear Current", dashboard_body)
-        self.assertIn("Current Execution", tasks_body)
+        self.assertEqual(tasks_body.count("Current Execution"), 1)
+        self.assertIn('class="current-execution-bar"', tasks_body)
+        self.assertNotIn('class="panel execution-panel"', tasks_body)
+        self.assertIn("WFA-17 in_progress", tasks_body)
+        self.assertRegex(
+            tasks_body,
+            r'<div class="current-execution-next">Next owner action: <span>[^<]+</span></div>',
+        )
+        self.assertIn("Codex Prompt", tasks_body)
+        self.assertIn("Context Pack", tasks_body)
+        self.assertRegex(
+            tasks_body,
+            r'<div class="current-execution-actions"><a class="button-link" href="[^"]+">Open (Task|Review|Change)</a></div>',
+        )
 
     def test_pipeline_page_shows_policy_queue_session_audit_and_actions(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1233,6 +2173,83 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("captured:stderr:sha256:timeout", body)
         self.assertIn("[truncated:", body)
         self.assertNotIn("stderr-tail", body)
+
+    def test_pipeline_session_detail_renders_machine_review_diagnostic_summaries(self):
+        phase_history = [
+            {
+                "phase": "close",
+                "status": "blocked",
+                "reason": "Close completed, but local commit was blocked.",
+                "next_action": "Resolve local commit readiness blockers.",
+                "artifacts": {
+                    "blocked_by": "COMMIT_READINESS_FAILED",
+                    "local_commit": {
+                        "status": "blocked",
+                        "code": "COMMIT_READINESS_FAILED",
+                        "reason": "Machine Review FAIL blocks local commit.",
+                        "readiness": {
+                            "status": "blocked",
+                            "code": "COMMIT_MACHINE_REVIEW_NOT_PASS",
+                            "reason": "Machine Review FAIL blocks local commit.",
+                            "machine_review_diagnostics": [
+                                {
+                                    "name": "context_check_generated",
+                                    "status": "fail",
+                                    "code": "CONTEXT_CHECK_GENERATED_FAILED",
+                                    "reason": "Context generated output is stale.",
+                                    "command": [
+                                        "python",
+                                        "scripts/contextctl.py",
+                                        "check-generated",
+                                    ],
+                                    "stdout_summary": "context stdout summary",
+                                    "stderr_summary": "context stderr summary",
+                                }
+                            ],
+                        },
+                    },
+                },
+                "changed_files": [],
+                "generated_files": [],
+                "events": ["EVT-202"],
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-078",
+                        "ref": "PIPE-27",
+                        "legacy_id": "TASK-078",
+                        "status": "done",
+                        "title": "Persistent session detail page",
+                        "epic_id": "EPIC-007",
+                        "order": 27,
+                    }
+                ],
+                pipeline=pipeline_detail_state(
+                    status="blocked",
+                    step_status="planned",
+                    finished_at="",
+                    current_step_status="blocked",
+                    stop_reason="Close completed, but local commit was blocked.",
+                    next_action="Resolve local commit readiness blockers.",
+                    steps=[],
+                    gate_outcomes=[],
+                    phase_history=phase_history,
+                ),
+            )
+            model = ReadOnlyProjectModel(root, actor="tester")
+
+            status, _, body = route("/pipeline/sessions/PSESS-020", model)
+
+        self.assertEqual(status.value, 200)
+        self.assertIn("context_check_generated stdout", body)
+        self.assertIn("context stdout summary", body)
+        self.assertIn("context_check_generated stderr", body)
+        self.assertIn("context stderr summary", body)
 
     def test_pipeline_session_detail_renders_report_recovery_action(self):
         stdout = (
@@ -1938,15 +2955,26 @@ class WebControlCenterTests(unittest.TestCase):
                 "/",
                 ReadOnlyProjectModel(root, actor="tester"),
             )
+            tasks_status, _, tasks_body = route(
+                "/tasks",
+                ReadOnlyProjectModel(root, actor="tester"),
+            )
 
         payload = json.loads(data_body)
 
         self.assertEqual(data_status.value, 200)
         self.assertEqual(dashboard_status.value, 200)
+        self.assertEqual(tasks_status.value, 200)
         self.assertEqual(payload["execution_context"]["prompt"]["status"], "unknown")
         self.assertEqual(payload["execution_context"]["context_pack"]["status"], "unknown")
         self.assertIn("No current task selected.", dashboard_body)
         self.assertNotIn('value="current.clear"', dashboard_body)
+        self.assertEqual(tasks_body.count("Current Execution"), 1)
+        self.assertIn('class="current-execution-bar no-current"', tasks_body)
+        self.assertIn("No current task", tasks_body)
+        self.assertIn("Next owner action", tasks_body)
+        self.assertIn("Select a task to prepare or execute.", tasks_body)
+        self.assertNotIn('class="panel execution-panel"', tasks_body)
 
     def test_dashboard_exposes_latest_task_execution_report(self):
         report_state = {
@@ -2210,10 +3238,11 @@ class WebControlCenterTests(unittest.TestCase):
 
         self.assertEqual(status.value, 200)
         self.assertIn("Next:</strong> Create Change", body)
-        self.assertIn("Prepare for Codex unavailable", body)
+        self.assertNotIn("Prepare for Codex unavailable", body)
         self.assertIn("WFA-09 status is in_progress", body)
         self.assertIn("linked Evolution Change is missing", body)
         self.assertIn("another current task is WFA-20", body)
+        self.assertIn('value="evolution.create_for_task"', body)
         self.assertNotIn('value="task.prepare_for_codex"', body)
 
     def test_tasks_page_shows_linked_change_status_and_approval_hint(self):
@@ -2254,6 +3283,10 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("Next:</strong> Approve Change", body)
         self.assertIn("Linked Change:</strong> CHG-050 ready", body)
         self.assertIn("linked Change CHG-050 ready needs approval", body)
+        self.assertIn('value="evolution.approve_change"', body)
+        self.assertIn('name="change" value="CHG-050"', body)
+        self.assertIn('name="notes" rows="2"', body)
+        self.assertIn('data-confirm-modal="action"', body)
         self.assertNotIn('value="task.prepare_for_codex"', body)
 
     def test_tasks_page_suggests_prepare_for_changes_requested(self):
@@ -2298,9 +3331,7 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("Approve &amp; Done", review_body)
         self.assertIn('value="task.close_reviewed"', review_body)
         self.assertIn("Approval Notes", review_body)
-        self.assertIn("Request Changes", review_body)
-        self.assertIn('value="task.request_changes"', review_body)
-        self.assertIn("Change Request Notes", review_body)
+        self.assertNotIn('value="task.request_changes"', review_body)
         self.assertIn('name="notes" rows="2"', review_body)
         self.assertNotIn('value="task.prepare_for_codex"', review_body)
         self.assertNotIn('value="task.refresh_execution_context"', review_body)
@@ -3063,6 +4094,12 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("Run Selected Task", body)
         self.assertIn('value="ui.run_selected_task"', body)
         self.assertIn('name="task" value="CTL-01"', body)
+        self.assertIn('value="task.prepare_for_codex"', body)
+        self.assertIn('data-confirm-effective-policy-summary="', body)
+        self.assertIn("batch.max_steps:", body)
+        self.assertNotIn("data-confirm-policy-summary", body)
+        self.assertIn("Auto-close Owner Note", body)
+        self.assertIn('name="auto_close_note"', body)
 
     def test_task_import_web_action_previews_without_confirmation(self):
         calls = []
@@ -3399,6 +4436,26 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("codex exec --json", body)
         self.assertIn(str(path), body)
 
+    def test_ui_settings_web_action_rejects_unknown_default_policy(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = ui_settings_path(root)
+
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor(root, actor="tester").execute(
+                    {
+                        "action": "ui.settings.set",
+                        "confirm": "yes",
+                        "key": "default_policy",
+                        "value": "reckless",
+                    }
+                )
+            self.assertFalse(path.exists())
+
+        self.assertEqual(raised.exception.code, "WEB_UI_DEFAULT_POLICY_UNKNOWN")
+        self.assertEqual(raised.exception.path, "default_policy")
+        self.assertEqual(raised.exception.details["default_policy"], "reckless")
+
     def test_ui_settings_web_action_metadata_includes_boolean_settings(self):
         settings_action = next(
             action
@@ -3625,6 +4682,8 @@ class WebControlCenterTests(unittest.TestCase):
                     "confirm": "yes",
                     "command_line": "codex exec --json",
                     "default_policy": "supervised",
+                    BATCH_MAX_STEPS_SETTING: "9",
+                    BATCH_MAX_FAILURES_SETTING: "2",
                     REQUIRE_CODEX_REVIEW_SETTING: "false",
                     INTERNAL_CHANGE_GATE_BYPASS_SETTING: "false",
                     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING: "true",
@@ -3642,6 +4701,8 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertTrue(result.ok)
         self.assertEqual(settings["command_line"], "codex exec --json")
         self.assertEqual(settings["default_policy"], "supervised")
+        self.assertEqual(settings[BATCH_MAX_STEPS_SETTING], 9)
+        self.assertEqual(settings[BATCH_MAX_FAILURES_SETTING], 2)
         self.assertIs(settings[REQUIRE_CODEX_REVIEW_SETTING], False)
         self.assertIs(settings[INTERNAL_CHANGE_GATE_BYPASS_SETTING], False)
         self.assertIs(settings[ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING], True)
@@ -3658,6 +4719,8 @@ class WebControlCenterTests(unittest.TestCase):
             [
                 "command_line",
                 "default_policy",
+                BATCH_MAX_STEPS_SETTING,
+                BATCH_MAX_FAILURES_SETTING,
                 REQUIRE_CODEX_REVIEW_SETTING,
                 INTERNAL_CHANGE_GATE_BYPASS_SETTING,
                 ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
@@ -3667,6 +4730,47 @@ class WebControlCenterTests(unittest.TestCase):
                 "preflight_timeout_sec",
             ],
         )
+
+    def test_ui_settings_apply_web_action_rejects_unknown_default_policy(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = ui_settings_path(root)
+
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor(root, actor="tester").execute(
+                    {
+                        "action": "ui.settings.apply",
+                        "confirm": "yes",
+                        "command_line": "codex exec --json",
+                        "default_policy": "reckless",
+                    }
+                )
+            self.assertFalse(path.exists())
+
+        self.assertEqual(raised.exception.code, "WEB_UI_DEFAULT_POLICY_UNKNOWN")
+        self.assertEqual(raised.exception.path, "default_policy")
+        self.assertEqual(raised.exception.details["default_policy"], "reckless")
+
+    def test_ui_settings_apply_web_action_rejects_invalid_batch_limit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = ui_settings_path(root)
+
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor(root, actor="tester").execute(
+                    {
+                        "action": "ui.settings.apply",
+                        "confirm": "yes",
+                        "command_line": "codex exec --json",
+                        "default_policy": "supervised",
+                        BATCH_MAX_STEPS_SETTING: "0",
+                    }
+                )
+            self.assertFalse(path.exists())
+
+        self.assertEqual(raised.exception.code, "UI_SETTINGS_BATCH_LIMIT_INVALID")
+        self.assertEqual(raised.exception.path, BATCH_MAX_STEPS_SETTING)
+        self.assertEqual(raised.exception.details["setting"], BATCH_MAX_STEPS_SETTING)
 
     def test_ui_settings_apply_web_action_rejects_disallowed_key(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -4118,6 +5222,7 @@ class WebControlCenterTests(unittest.TestCase):
                             {
                                 "action": "ui.run_selected_task",
                                 "confirm": "yes",
+                                "incomplete_run_confirm": "yes",
                                 "task": "TASK-001",
                             }
                         )
@@ -4127,6 +5232,7 @@ class WebControlCenterTests(unittest.TestCase):
         create_kwargs = create.call_args.kwargs
         self.assertEqual(create_kwargs["actor"], "tester")
         self.assertEqual(create_kwargs["policy_name"], selected_policy.name)
+        self.assertEqual(create_kwargs["auto_close_note"], "")
         self.assertNotIn("task_refs", create_kwargs)
         self.assertNotIn("max_tasks", create_kwargs)
         self.assertNotIn("order_by", create_kwargs)
@@ -4206,6 +5312,7 @@ class WebControlCenterTests(unittest.TestCase):
                             {
                                 "action": "ui.run_selected_task",
                                 "confirm": "yes",
+                                "incomplete_run_confirm": "yes",
                                 "task": "TASK-001",
                             }
                         )
@@ -4214,6 +5321,160 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertTrue(selected_queue["allow_internal_change_gate_bypass"])
         self.assertEqual(selected_queue["created_by_command"], "ui.run")
         self.assertTrue(selected_queue["ui_run_confirmed"])
+
+    def test_ui_run_selected_task_autoclose_requires_owner_note_before_execution(self):
+        selected_policy = policy_preset("supervised_executable_autoclose")
+
+        with patch(
+            "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
+            return_value=selected_policy,
+        ), patch(
+            "ai_project_ctl.web.actions.run_until_blocker",
+            side_effect=AssertionError("ui run must not start Codex execution"),
+        ) as run_until:
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor("/tmp/project", actor="tester").execute(
+                    {
+                        "action": "ui.run_selected_task",
+                        "confirm": "yes",
+                        "incomplete_run_confirm": "yes",
+                        "task": "TASK-001",
+                    }
+                )
+
+        self.assertEqual(raised.exception.code, "WEB_ACTION_COMMAND_FAILED")
+        result = raised.exception.details["result"]
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["message"], "PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED")
+        self.assertEqual(
+            result["owner_action_required"],
+            "Provide Human Owner auto-close approval note.",
+        )
+        self.assertEqual(
+            result["errors"][0]["code"],
+            "PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED",
+        )
+        self.assertEqual(
+            result["errors"][0]["details"]["required_argument"],
+            "auto_close_note",
+        )
+        run_until.assert_not_called()
+
+    def test_ui_run_selected_task_autoclose_stores_owner_note_in_session(self):
+        note = "Owner approved auto-close for selected UI task."
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "legacy_id": "TASK-001",
+                        "aliases": ["TASK-001"],
+                        "uid": "uid_task_001",
+                        "status": "ready",
+                        "title": "Runnable task",
+                        "epic_id": "EPIC-001",
+                        "allowed_files": ["tests/**"],
+                    }
+                ],
+                initiatives=[{"id": "INIT-001", "status": "active"}],
+                epics=[
+                    {
+                        "id": "EPIC-001",
+                        "initiative_id": "INIT-001",
+                        "status": "planned",
+                        "key": "APP",
+                    }
+                ],
+                changes=[
+                    {
+                        "id": "CHG-001",
+                        "status": "approved",
+                        "linked_tasks": ["TASK-001"],
+                    }
+                ],
+            )
+            write_ui_settings(
+                root,
+                {
+                    "default_policy": "supervised_executable_autoclose",
+                    "command_line": "codex exec",
+                },
+            )
+            run_result = CommandResult.success(
+                command="pipeline.run_until_blocker",
+                domain="pipeline",
+                message="Stopped at first blocker.",
+                data={"session_id": "PSESS-001"},
+            )
+
+            with patch(
+                "ai_project_ctl.web.actions.run_until_blocker",
+                return_value=run_result,
+            ) as run_until:
+                result = WebActionExecutor(root, actor="tester").execute(
+                    {
+                        "action": "ui.run_selected_task",
+                        "confirm": "yes",
+                        "incomplete_run_confirm": "yes",
+                        "task": "APP-01",
+                        "auto_close_note": note,
+                    }
+                )
+
+            state = json.loads(
+                (root / "AI_PROJECT" / "state" / "pipeline_sessions.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+
+        self.assertTrue(result.ok)
+        payload = result.to_dict()
+        self.assertIn("--auto-close-note", payload["delegate"])
+        self.assertIn(note, payload["delegate"])
+        run_until.assert_called_once_with(
+            "PSESS-001",
+            root=root.resolve(),
+            actor="tester",
+            confirmed=True,
+        )
+        closure = state["sessions"][0]["policy_snapshot"]["closure"]
+        self.assertTrue(closure["auto_close_task"])
+        self.assertEqual(closure["owner_approval_note"], note)
+        self.assertNotIn("owner_approval_note", state["sessions"][0]["selected_queue"])
+
+    def test_ui_run_selected_task_action_requires_incomplete_run_confirmation(self):
+        selected_policy = policy_preset("supervised_executable_local_commit")
+
+        with patch(
+            "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
+            return_value=selected_policy,
+        ), patch("ai_project_ctl.web.actions.create_session") as create, patch(
+            "ai_project_ctl.web.actions.run_until_blocker"
+        ) as run_until:
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor("/tmp/project", actor="tester").execute(
+                    {
+                        "action": "ui.run_selected_task",
+                        "confirm": "yes",
+                        "task": "TASK-001",
+                    }
+                )
+
+        self.assertEqual(
+            raised.exception.code,
+            "WEB_INCOMPLETE_RUN_CONFIRMATION_REQUIRED",
+        )
+        self.assertEqual(raised.exception.path, "incomplete_run_confirm")
+        self.assertEqual(raised.exception.details["max_steps"], 5)
+        self.assertEqual(raised.exception.details["phase_count"], 7)
+        self.assertIn("review and close may not run", raised.exception.message)
+        self.assertIn("Resume Session can continue", raised.exception.message)
+        create.assert_not_called()
+        run_until.assert_not_called()
 
     def test_ui_run_selected_task_action_requires_confirmation(self):
         with patch("ai_project_ctl.web.actions.create_session") as create:
@@ -5205,6 +6466,52 @@ def write_web_state(
             "".join(json.dumps(event) + "\n" for event in pipeline_events),
             encoding="utf-8",
         )
+
+
+def post_forms(body):
+    return re.findall(
+        r'<form\b(?=[^>]*method="post")[^>]*>.*?</form>',
+        body,
+        flags=re.DOTALL,
+    )
+
+
+def summary_grid_metrics(body):
+    match = re.search(
+        r'<section class="summary-grid"[^>]*>(.*?)</section>',
+        body,
+        flags=re.DOTALL,
+    )
+    if not match:
+        return {}
+    return {
+        label: value
+        for label, value in re.findall(
+            r"<span>(.*?)</span><strong>(.*?)</strong>",
+            match.group(1),
+            flags=re.DOTALL,
+        )
+    }
+
+
+def assert_no_restricted_git_actions(testcase, body):
+    for snippet in (
+        'name="action" value="git.',
+        'name="action" value="project.git',
+        "git reset",
+        "git clean",
+        "git checkout",
+        "git restore",
+        "git push",
+        "git merge",
+        "git rebase",
+        "reset --hard",
+        "clean -fd",
+        "checkout --",
+        "restore --staged",
+        "push origin",
+    ):
+        testcase.assertNotIn(snippet, body.lower())
 
 
 def write_ui_settings(root, payload):

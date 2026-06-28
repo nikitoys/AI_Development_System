@@ -9,8 +9,12 @@ from __future__ import annotations
 
 import hashlib
 import inspect
+import json
 import re
 import shlex
+import subprocess
+import sys
+import time
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
@@ -36,6 +40,10 @@ COMMAND_NAME = "pipeline.phase.execute"
 PHASE_NAME = "execute"
 PREPARE_PHASE_NAME = "prepare"
 LIVE_EXECUTE_STEP_NAME = "execute"
+PROTECTED_CHECK_FAILED = "PROTECTED_GENERATED_FRESHNESS_FAILED"
+PROTECTED_CHECK_TIMEOUT_SEC = 300
+PROTECTED_CHECK_TEXT_LIMIT = 1200
+PROTECTED_CHECK_ITEMS_LIMIT = 8
 
 CodexAdapter = Callable[..., CodexAdapterResult]
 
@@ -137,6 +145,32 @@ def execute_phase(
             next_action=(
                 "Select an executable policy or use the prepared prompt for manual "
                 "execution outside this phase."
+            ),
+        )
+
+    protected_check = _run_protected_freshness_check(
+        root_path,
+        runner=execution_runner,
+    )
+    if not protected_check["ok"]:
+        return _blocked(
+            PROTECTED_CHECK_FAILED,
+            "Protected/generated freshness check failed before Codex execution.",
+            session_id=selected_session_id,
+            task_id=task_id,
+            root=root_path,
+            actor=actor,
+            artifacts={
+                "policy": policy.name,
+                "prepare_artifacts": _bounded_prepare_artifacts(prepare_artifacts),
+                "protected_check": protected_check,
+                "protected_check_command": protected_check["command"],
+                "protected_check_returncode": protected_check["returncode"],
+                "codex_adapter_called": False,
+            },
+            next_action=(
+                "Refresh or repair protected generated outputs through the owning "
+                "CLI, then rerun execute."
             ),
         )
 
@@ -545,6 +579,166 @@ def _adapter_phase_reason(prefix: str, adapter_result: CodexAdapterResult) -> st
         ),
     ]
     return "{} ({})".format(prefix, ", ".join(details))
+
+
+def _run_protected_freshness_check(
+    root: Path,
+    *,
+    runner: OutputRunner | None,
+) -> dict[str, Any]:
+    command = _protected_check_command(root)
+    started = time.monotonic()
+    try:
+        if runner is not None:
+            completed = runner(tuple(command))
+        else:
+            completed = subprocess.run(
+                command,
+                cwd=root,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=PROTECTED_CHECK_TIMEOUT_SEC,
+                check=False,
+            )
+    except subprocess.TimeoutExpired as exc:
+        return _protected_check_result(
+            command,
+            returncode=None,
+            duration_sec=_elapsed(started),
+            stdout=_coerce_text(exc.stdout),
+            stderr=_coerce_text(exc.stderr),
+            code="PROTECTED_CHECK_TIMEOUT",
+            reason="protected_check_timed_out",
+        )
+    except OSError as exc:
+        return _protected_check_result(
+            command,
+            returncode=None,
+            duration_sec=_elapsed(started),
+            stdout="",
+            stderr=str(exc),
+            code="PROTECTED_CHECK_ERROR",
+            reason="protected_check_error",
+        )
+
+    return _protected_check_result(
+        command,
+        returncode=int(completed.returncode),
+        duration_sec=_elapsed(started),
+        stdout=_coerce_text(completed.stdout),
+        stderr=_coerce_text(completed.stderr),
+        code=(
+            "PROTECTED_CHECK_PASS"
+            if int(completed.returncode) == 0
+            else "PROTECTED_CHECK_FAILED"
+        ),
+        reason=(
+            "protected_check_passed"
+            if int(completed.returncode) == 0
+            else "protected_check_failed"
+        ),
+    )
+
+
+def _protected_check_command(root: Path) -> list[str]:
+    return [
+        sys.executable,
+        str(root / "scripts" / "aictl.py"),
+        "--root",
+        str(root),
+        "--json",
+        "project",
+        "protected-check",
+    ]
+
+
+def _protected_check_result(
+    command: list[str],
+    *,
+    returncode: int | None,
+    duration_sec: float,
+    stdout: str,
+    stderr: str,
+    code: str,
+    reason: str,
+) -> dict[str, Any]:
+    parsed = _parse_protected_check_payload(stdout)
+    errors = _limited_strings(parsed.get("errors") if parsed else ())
+    warnings = _limited_strings(parsed.get("warnings") if parsed else ())
+    checked = _limited_strings(parsed.get("checked") if parsed else ())
+    return {
+        "ok": returncode == 0,
+        "status": "pass" if returncode == 0 else "fail",
+        "code": code,
+        "reason": reason,
+        "command": list(command),
+        "returncode": returncode,
+        "duration_sec": duration_sec,
+        "stdout_summary": _bounded_text(stdout),
+        "stderr_summary": _bounded_text(stderr),
+        "stdout_bytes": _byte_len(stdout),
+        "stderr_bytes": _byte_len(stderr),
+        "stdout_truncated": len(stdout) > PROTECTED_CHECK_TEXT_LIMIT,
+        "stderr_truncated": len(stderr) > PROTECTED_CHECK_TEXT_LIMIT,
+        "errors": errors,
+        "warnings": warnings,
+        "checked": checked,
+        "error_count": _list_count(parsed.get("errors") if parsed else ()),
+        "warning_count": _list_count(parsed.get("warnings") if parsed else ()),
+        "checked_count": _list_count(parsed.get("checked") if parsed else ()),
+    }
+
+
+def _parse_protected_check_payload(stdout: str) -> Mapping[str, Any]:
+    try:
+        parsed = json.loads(stdout)
+    except (TypeError, json.JSONDecodeError):
+        return {}
+    if not isinstance(parsed, Mapping):
+        return {}
+    data = parsed.get("data")
+    if isinstance(data, Mapping):
+        delegated = data.get("result")
+        if isinstance(delegated, Mapping):
+            return delegated
+    return parsed
+
+
+def _limited_strings(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    result: list[str] = []
+    for item in value[:PROTECTED_CHECK_ITEMS_LIMIT]:
+        result.append(_bounded_text(str(item)))
+    return result
+
+
+def _list_count(value: Any) -> int:
+    return len(value) if isinstance(value, list) else 0
+
+
+def _bounded_text(value: str) -> str:
+    text = str(value or "").strip()
+    if len(text) <= PROTECTED_CHECK_TEXT_LIMIT:
+        return text
+    return text[:PROTECTED_CHECK_TEXT_LIMIT] + "...[truncated]"
+
+
+def _byte_len(value: str) -> int:
+    return len(str(value or "").encode("utf-8"))
+
+
+def _elapsed(started: float) -> float:
+    return round(max(0.0, time.monotonic() - started), 6)
+
+
+def _coerce_text(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return str(value)
 
 
 def _manual_prompt_path(

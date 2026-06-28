@@ -393,30 +393,89 @@ The Web Control Center is a local loopback surface. Read views display dashboard
 
 Controlled write actions are submitted only through confirmed `POST` requests to `/actions`. Web route handlers must not edit protected files directly. A Web write action must route through a registered command, delegate through `aictl.py`, and rely on the owning CLI for validation, audit events and generated-output updates.
 
-Use the Web Control Center as the normal daily cockpit:
+Use the Web Control Center as the normal daily cockpit. The root `Dashboard` is the Owner Cockpit and should be the first page opened for daily operation:
 
 ```text
-Dashboard  current execution, queue and project doctor summary
-Tasks      filtered Task workflow cockpit
-Evolution  Change Proposal management
+Dashboard  Owner Cockpit with current execution, Action Queue and health summary
+Tasks      Action Queue and full Task inventory
 Pipeline   supervised batch pipeline cockpit and session detail pages
-Actions    Task creation, Bulk Task Import, repair/check and workflow forms
+Reviews    owner review decisions and rework routing
+Evolution  Change Proposal management
 Doctor     detailed project health findings
+Events     audit-event inspection
 Generated  read-only generated output previews
 Commands   registered command metadata
+Actions    Task creation, Bulk Task Import, repair/check and workflow forms
+Commit     local commit readiness inspection
+Epics      planning container inspection and close helpers
 ```
 
 The UI does not make protected state editable. It submits governed actions and then shows the resulting command evidence.
 
+## Owner Cockpit Dashboard
+
+Open `http://127.0.0.1:8765/` to use the root `Dashboard` as the daily Owner Cockpit.
+
+The Owner Cockpit is designed for the first owner scan of the day:
+
+```text
+Current Execution bar  current Task, prompt/context readiness and next owner action
+Action Queue           owner-action cards grouped by decision, current, run-ready and blocked work
+Health summary         compact PASS/WARN/FAIL/UNKNOWN counts and repair/check affordances
+Details panels         expandable evidence before taking a governed action
+Recent Signals         watch-only items that may matter but do not need an immediate action
+```
+
+Use the `Current Execution` bar first. It shows the current Task, status, title, prompt readiness, Context Pack readiness and next owner action. If there is no current Task, open `Tasks` and select or prepare one through the governed workflow. If the current Task is in review, follow the link to `Reviews`; if it is runnable or blocked inside a Pipeline session, follow the link to `Pipeline` or the Task details.
+
+Open `Current Execution Details` when you need deeper evidence: prompt and Context Pack paths, generated-file links, copy text, or the current Task clear action. The details panel is for inspection and recovery. It does not approve work, mark work done or bypass the Task lifecycle.
+
+The cockpit Action Queue is grouped for owner decisions:
+
+```text
+Needs Decision  review, approval or acceptance work that needs Human Owner judgment
+Current         selected or in-progress work
+Ready To Run    ready Tasks with a safe next run action
+Blocked         Tasks or sessions waiting on a blocker
+Recent Signals  watch-only items for awareness
+```
+
+Use the primary link on a queue card to open the page that owns the next action. Decision cards usually route to `Reviews` or `Evolution`. Run-ready cards route to `Tasks` run controls or `Pipeline` session setup. Blocked and current cards route to `Tasks` or a Pipeline session detail page for evidence and recovery.
+
+Use the health summary for a quick status read. `PASS` means the signal is healthy, `WARN` needs attention but may be non-blocking, `FAIL` needs recovery before relying on the affected flow, and `UNKNOWN` means the signal has not been reported yet. Open `Doctor` for the full health report before diagnosing failures or running repair/check actions.
+
+## Deep Inspection Pages
+
+The Owner Cockpit is the daily entry point, not the only control surface. Use deeper pages for focused workflows, diagnostics and recovery:
+
+```text
+Tasks      full Task inventory, filters, row workflows and Task details
+Pipeline   queue preview, policy selection, session monitor and recovery controls
+Reviews    Task review decisions and rework routing
+Evolution  Change Proposal approval, review and acceptance workflows
+Doctor     full health findings and recovery checks
+Events     audit history inspection
+Generated  read-only generated output previews
+Commands   registered command metadata
+Actions    direct confirmed action forms
+Commit     local commit readiness inspection
+Epics      planning container inspection and close helpers
+```
+
 ## Tasks Cockpit
 
-The `Tasks` view is designed for large task sets. It has filters for Initiative, Epic, Status and search text. It can group by `Epic`, `Status` or `None`; done Tasks are hidden by default unless `Show done` is selected or a done status filter is active. Grouped results are rendered as collapsible sections. Done status groups start collapsed.
+The `Tasks` page opens in `Action Queue` view by default. This view is the owner-action version of the Task list. It groups active work by the next useful state: `Current`, `Needs Decision`, `Ready To Run`, `Blocked` and `Other Active`.
+
+Use `Action Queue` when the owner wants to answer "what should I do next?" without scanning the full Task inventory. Each queue row or card exposes the Task identity, status, next action or blocker, details and the page or workflow that owns the next step.
+
+Open `Full Inventory` when you need to search broadly, inspect many Tasks, show `done` Tasks, or group the list by `Epic`, `Status` or `None`. Inventory view has filters for Initiative, Epic, Status and search text. Done Tasks are hidden by default unless `Show done` is selected or a done status filter is active. Grouped results are rendered as collapsible sections. Done status groups start collapsed.
 
 The `Focus Tasks` section keeps the current Task plus ready, in-progress, review and changes-requested Tasks near the top. Use it for the owner loop when a Task is being prepared, executed, reviewed or sent back for rework.
 
 Task rows expose status-aware workflow controls. They show only actions that the Task status and pipeline hints allow:
 
 ```text
+Run                selected ready or planned Tasks through the effective UI pipeline policy
 Prepare for Codex  planned, ready or changes_requested Tasks
 Refresh Context    current or in_progress Tasks when available
 Submit for Review  in_progress Tasks
@@ -427,7 +486,13 @@ No row workflows   done or otherwise unavailable actions
 
 Row workflow buttons are convenience wrappers around registered workflows. They do not create a new lifecycle path. They still route through `aictl.py`, the owning `*ctl.py` script, validation, audit events and generated-output rendering.
 
+Use task-row `Run` when the owner wants to start a new selected-task pipeline run for a ready or planned Task through the current UI pipeline policy. `Run` creates or uses the selected-task run path; it is not the right control for continuing an already blocked session.
+
+Use `Resume` or `Resume Session` only after an existing pipeline session is `blocked` or `stopped` and the owner has resolved the blocker or intentionally wants to continue that same session. Resume submits `pipeline.run_next` for the existing session, preserving its session history, selected queue, policy snapshot and artifacts. For a running session, use the session page controls such as `Run Next`, `Run Until Blocker` or `Stop Session` as shown by the current status.
+
 Codex may use `Submit for Review` after satisfying a Task contract when the Task scope permits it. Codex must not use `Approve & Done` or provide Human Owner approval notes unless the Human Owner explicitly gave the approval decision.
+
+Open a Task details panel before acting when the compact row does not give enough evidence. The details panel can show the Task summary, description, scope, acceptance criteria, blockers, linked Change, effective run policy, generated files, health signals, recent events and available actions. Details panels are read-only evidence and action affordances; they do not change lifecycle state by themselves.
 
 ## Action Result Panel
 
@@ -452,6 +517,23 @@ technical details
 
 The Action Result panel is evidence, not approval. A passing action result does not mean Human Owner acceptance, review closure or permission to edit protected files manually.
 
+## Safe Action Confirmation Modal
+
+Confirmed Web write actions use a confirmation modal before the browser sends the governed `/actions` POST.
+
+The modal summarizes:
+
+```text
+Action          button label and registered action ID
+Target          Task, Change, Epic, Pipeline session or project-control target when available
+Policy          selected policy, max task count, order or other run-policy context when available
+Owner Notes     required note fields and whether they are provided
+```
+
+Use the modal as a final owner-side check before a state-changing action. If the action, target, policy or owner-note status is wrong, cancel and correct the form. Choose `Confirm Action` only when the action matches the intended Human Owner decision or routine governed operation.
+
+The modal does not replace server-side safety. After confirmation, the Web action must still pass required form validation, registered command routing, owning CLI validation, lifecycle rules, required owner notes and protected-file rules.
+
 ## Evolution Management Tab
 
 Use the `Evolution` tab for Change Proposal management. It provides Status, Type and search filters; a create-change-for-task form; Change Proposal rows with linked Tasks, affected files, risks, approval state, acceptance state and next-action hints; and lifecycle-aware row actions.
@@ -474,20 +556,120 @@ Current phase-based sessions store phase progress in `phase_history`. The Web Pi
 
 Older sessions may not have `phase_history`. For those sessions, the detail page falls back to the legacy `steps` records and their `gate_outcomes`, showing the Gate Flow, Gate Outcomes, linked artifacts and logs. If an older session has no step records at all, the page may show a planned `run_next` placeholder so the detail page remains readable.
 
-Pipeline UI settings are project-local settings in `AI_PROJECT/config/ui_settings.json`. Manage them through `aictl.py`, not by editing protected project-control state:
+### Live Status Refresh
+
+A Pipeline session detail page performs partial status refresh while the session status is `running`. The page polls:
+
+```text
+/pipeline/sessions/<SESSION_ID>/status.json
+```
+
+every two seconds and updates the status badge, current phase, current phase status, stop reason, next action, phase overview and owner guidance without reloading the whole page. This is a live status indicator, not a full historical rerender.
+
+When the session changes to `blocked`, `failed`, `completed` or `stopped`, polling stops and the page shows `Auto-refresh stopped`. At that point Codex is not actively running from that session page. Read the stop reason, next action and phase evidence before pressing any run control.
+
+The quickest way to tell whether Codex is actually running is to check the live status fields:
+
+```text
+session status is running
+current phase is execute
+current phase status is running
+the page says Status polling active
+```
+
+When runtime logs are available, the `Codex Execute running` panel gives additional evidence: stdout or stderr offsets may increase as output arrives.
+
+If the session is `blocked`, `failed`, `completed` or `stopped`, Codex execution is not currently active for that session even if old stdout or stderr snippets remain visible.
+
+### Live Codex Log Panels
+
+During a running `execute` phase, the session detail page can show a `Codex Execute running` panel with separate `STDOUT` and `STDERR` streams. These panels tail bounded chunks from runtime log files under `AI_PROJECT/logs/codex/...` through the Web route:
+
+```text
+/pipeline/sessions/<SESSION_ID>/logs/execute/stdout
+/pipeline/sessions/<SESSION_ID>/logs/execute/stderr
+```
+
+`stdout` is the local Codex command's normal output. It may include assistant progress, final execution summaries or structured report text emitted by the command. `stderr` is the command's diagnostic/error stream. It may include sandbox, timeout, warning or traceback information depending on the local command.
+
+The live panels and runtime log files are execution evidence only. Do not list `AI_PROJECT/logs/codex/**` or `AI_PROJECT/logs/ui_run/**` as implementation files in a structured Codex report. Only report source files intentionally changed by the Task and generated files that the governed CLIs produced as part of the Task.
+
+Open the Web Settings page from the Web Control Center navigation, or directly at:
+
+```text
+http://127.0.0.1:8765/settings
+```
+
+The Settings page is the owner-facing place to inspect and apply project-local Web run settings. It uses one confirmed form with these sections:
+
+```text
+Pipeline      command_line, default_policy
+Batch Run     batch_max_steps, batch_max_failures
+Review Gates  Machine Review locked on, require_codex_review
+Timeouts      execution_timeout_sec, preflight_timeout_sec
+Advanced      relaxed git diff, report warning and internal Change gate bypass settings
+```
+
+Pipeline UI settings are stored in `AI_PROJECT/config/ui_settings.json`. Manage them through the Settings page or `aictl.py`, not by editing protected project-control state:
 
 ```bash
 python scripts/aictl.py ui settings show
 python scripts/aictl.py ui settings init --confirm
 python scripts/aictl.py ui settings set command_line "codex exec --json"
+python scripts/aictl.py ui settings set default_policy supervised_executable_local_commit
+python scripts/aictl.py ui settings set batch_max_steps 7
+python scripts/aictl.py ui settings set batch_max_failures 1
 python scripts/aictl.py ui settings set preflight_timeout_sec 45
 python scripts/aictl.py ui settings set execution_timeout_sec 1800
+python scripts/aictl.py ui settings set allow_internal_change_gate_bypass false
 python scripts/aictl.py ui preflight
 ```
 
 `command_line` is the owner-facing, shell-style command string for local Codex execution. For executable policy presets, the UI policy resolver parses `command_line` into the effective policy `codex.local_command` tuple and sets `codex.command_allowlist` to that exact command string. `codex.local_command` is the lower-level policy field enforced by the adapter. Non-executable/prompt-only policies do not require `command_line`.
 
+The Settings page shows `Default Policy` as a dropdown. The dropdown is populated from registered pipeline policy presets: built-in presets plus any governed custom presets in the policy preset store. Saving `default_policy` stores the selected preset name; it does not store an arbitrary policy object. When the UI starts a selected-task run, it resolves that preset and then applies supported UI settings such as Codex Review, report-warning, git-diff, batch-limit and timeout overrides.
+
+The Settings page also shows a read-only `Effective Policy Summary` for the policy that would be used by Web runs. It includes:
+
+```text
+Policy
+batch.max_steps
+batch.max_failures
+Machine Review
+Codex Review
+Auto-close
+Local Commit
+Report Warnings
+Git Diff Gates
+```
+
+Use this summary before starting a Web run. It reflects the selected preset after UI overrides, so `batch.max_steps` and `batch.max_failures` may differ from the base preset when `Max Steps Override` or `Max Failures Override` is set.
+
+`Max Steps Override` maps to the effective policy `batch.max_steps`. It is optional; leave it blank to use the selected policy preset. Accepted values are `1` through `50`. `Max Failures Override` maps to `batch.max_failures`, is also optional, and accepts `1` through `10`.
+
+The current phase-based selected-task run has seven `run-next` phases:
+
+```text
+queue_preview
+prepare
+execute
+collect_report
+verify
+review
+close
+```
+
+For a full single-task Web run in one confirmed batch, set the effective `batch.max_steps` to at least `7`. If it is lower, the Web UI shows an `Incomplete Web Run` warning and selected-task `Run` requires `Confirm this partial Web run`. That warning means the session may stop before review or close by policy; it is not a claim that the Task has autonomously completed.
+
+When a low `max_steps` is intentional, let the selected-task run stop, inspect the session detail page, then use `Resume Session` for that same `blocked` or `stopped` session after the blocker is resolved or after deciding to continue the partial run. Do not press task-row `Run` to continue a stopped partial session, because `Run` starts a new selected-task run path with a new policy snapshot instead of continuing the existing session artifacts.
+
 `preflight_timeout_sec` controls only the UI Codex readiness check used by `aictl.py ui preflight` and by `aictl.py ui run --preflight` before a confirmed executable run creates a pipeline session. `execution_timeout_sec` controls the actual local Codex adapter execution timeout by replacing the resolved policy `codex.timeout_sec`. Both values are optional integer seconds from `1` through `3600`; preflight timeout does not change execution timeout, and execution timeout does not change preflight.
+
+`allow_internal_change_gate_bypass` appears on the Settings page as `Allow internal Change gate bypass`. It is off by default. Leave it off for normal product, application and non-project-control documentation tasks.
+
+When this checkbox is enabled, it is only copied into confirmed Web selected-task runs. The prepare phase may bypass the selected-task Approved Change gate only when the session was created by the UI run path, the run is confirmed, exactly one selected Task is in the queue, and that Task's allowed files are all internal project-control files such as `AI_PROJECT/**`, `ai_project_ctl/**`, `ai-system/project-control/**`, registered gateway scripts or their related tests.
+
+This is a narrow internal-task convenience, not governance approval. The risk is that a qualifying internal project-control Task can reach execution without the normal Approved Change gate, so enable it only when the Human Owner intentionally wants that behavior for internal maintenance. It does not approve a Change Proposal, accept a Change, or weaken protected-file rules. It also does not skip the Token Budget Gate, Codex Report Gate, verify or git-diff gates, Machine Review, Codex Review, close or auto-close gates, or local commit gates. Those gates still run and block according to the selected policy, submitted report evidence and Human Owner approval requirements.
 
 ## Bulk Task Import In The UI
 
@@ -521,6 +703,12 @@ evolution.approve_change
 evolution.move_to_review
 evolution.accept_change
 epic.close_if_complete
+ui.run_selected_task
+pipeline.session.create
+pipeline.run_next
+pipeline.run_until_blocker
+pipeline.session.stop
+pipeline.render
 ```
 
 Web task transitions are limited to non-acceptance statuses:
@@ -578,27 +766,29 @@ Use this UI-first flow for ordinary controlled work:
 python scripts/aictl.py web --host 127.0.0.1 --port 8765
 ```
 
-2. Open `http://127.0.0.1:8765/`, check `Dashboard` and `Doctor`, and use `Tasks` to find the current work by Initiative, Epic, Status or search.
+2. Open `http://127.0.0.1:8765/` and treat the root `Dashboard` as the Owner Cockpit. Check the `Current Execution` bar, Action Queue and health summary before taking action.
 
-3. Create or import bounded Tasks from `Actions` when needed. Use Bulk Task Import preview before confirming creation.
+3. Use the Action Queue for daily routing. Open `Reviews` or `Evolution` for decision cards, `Pipeline` for run-ready or resumable work, `Tasks` for current or blocked Task details, and `Doctor` for health failures.
 
-4. Prepare an executable Task from its row workflow button or from `Actions`:
+4. Open `Tasks` -> `Full Inventory` when you need broad filtering, done Tasks, grouping, or detailed Task inspection. Create or import bounded Tasks from `Actions` when needed. Use Bulk Task Import preview before confirming creation.
+
+5. Prepare an executable Task from its row workflow button or from `Actions`:
 
 ```text
 Prepare for Codex
 ```
 
-5. Execute only the Task scope from `AI_PROJECT/generated/CODEX_PROMPT.md`.
+6. Execute only the Task scope from `AI_PROJECT/generated/CODEX_PROMPT.md`.
 
-6. Use the Action Result panel and generated prompt package to decide the next step. Refresh context if the current Task or source documents changed.
+7. Use the confirmation modal before governed Web actions and read the Action Result panel after each action. Refresh context if the current Task or source documents changed.
 
-7. Validate and submit for review from the Task row:
+8. Validate and submit for review from the Task row:
 
 ```text
 Submit for Review
 ```
 
-8. Wait for review and Human Owner acceptance. If the Human Owner accepts the reviewed result, use `Approve & Done` with explicit owner notes. If the Human Owner requests rework, use `Request Changes` with the required notes.
+9. Wait for review and Human Owner acceptance. If the Human Owner accepts the reviewed result, use `Approve & Done` with explicit owner notes. If the Human Owner requests rework, use `Request Changes` with the required notes.
 
 Do not mark the Task approved, done or archived as accepted unless the Human Owner explicitly accepts the result.
 
@@ -809,6 +999,26 @@ run the requested verification mode
 report changed files, checks, risks and owner action required
 ```
 
+Executable prompt packages end with an `Execution Summary` contract. Codex must finish with exactly one machine-readable block:
+
+````text
+CODEX_EXECUTION_SUMMARY_JSON:
+```json
+{
+  "implementation_summary": "Summarize the completed implementation.",
+  "notes": [],
+  "warnings": [],
+  "blockers": []
+}
+```
+````
+
+The marker must be on its own line and must be followed by one fenced `json` block. The JSON object must contain exactly those four top-level keys. Do not add `task_id`, changed files, generated files, checks, token usage or owner decision fields; the pipeline records those from Task state, git evidence, gate results and token-budget evidence.
+
+When an executable local Codex run exits successfully and no newer report was already submitted during the run, the adapter parses this summary block from stdout, builds a full structured TaskReport from trusted pipeline evidence, and submits it through the task report service as `codex_adapter.report.auto_submit`. If a newer structured report already exists for the selected Task, the adapter uses that report instead.
+
+Free-text summaries in stdout, chat, live log panels or pasted messages are useful for diagnosis, but they are not report evidence for `collect-report`. The downstream report, verify, review, close and commit gates require a submitted structured TaskReport record.
+
 If `CODEX_PROMPT.md` contains a Retrieved Context section, treat that context as read-only. It can point Codex to relevant source sections, but it cannot add scope, allowed files or acceptance criteria.
 
 If the prompt is wrong, do not edit `CODEX_PROMPT.md` manually. Update the Task through `taskctl.py`, then rebuild the prompt.
@@ -977,6 +1187,36 @@ Executable pipeline policies require a structured Codex execution report after t
 No Codex execution report submitted for this task.
 ```
 
+Pipeline sessions may also show this blocker as:
+
+```text
+REPORT_MISSING
+```
+
+For local-command runs, first inspect the `execute` phase evidence:
+
+```text
+CODEX_ADAPTER_SUMMARY_MISSING    stdout did not contain the required summary block
+CODEX_ADAPTER_SUMMARY_INVALID    the summary block was malformed or had wrong fields
+CODEX_ADAPTER_REPORT_INVALID     the parsed summary could not be converted into a valid TaskReport
+CODEX_ADAPTER_REPORT_MISSING     the command completed but no newer structured report was available
+```
+
+Contract or parser issues usually come from one of these problems:
+
+```text
+missing marker line
+duplicate marker lines
+marker not followed by one fenced json block
+invalid JSON
+JSON value is not an object
+missing one of implementation_summary, notes, warnings, blockers
+extra top-level fields such as task_id, changed_files, checks or token_usage
+text after the closing fence
+```
+
+Fix malformed output by rerunning Codex with the generated prompt and ensuring the final response ends with only the required `CODEX_EXECUTION_SUMMARY_JSON` block. Do not hand-edit protected report state to repair parser errors.
+
 Submit the report through the governed command:
 
 ```bash
@@ -984,6 +1224,26 @@ python scripts/aictl.py task report submit --task TASK-001 --file REPORT.json --
 ```
 
 Do not treat stdout, chat text or generated prompt content as report evidence unless it has been submitted through the report command.
+
+If the report was only shown in the Codex live log panel or pasted in chat, create a structured report file from the actual task result and submit it through `task report submit`. Then rerun the blocked report or close gate through the governed Pipeline or Task workflow. Runtime log files are evidence sources for diagnosis; they are not implementation files and should not be added to the report's changed file lists.
+
+For a Web session blocked by `REPORT_MISSING`, open the Pipeline session detail page. When recovery is available, the page shows `Report Recovery` with a draft structured report assembled from captured Codex stdout and session evidence. Review the draft, check the inferred fields and estimated `token_usage`, then use `Submit recovered report` only if the owner accepts that recovered evidence. The action submits the draft report; it does not run `collect-report` or `verify`. After submission, rerun the blocked `collect-report` phase, then rerun `verify`.
+
+## Git Diff Gate `missing_from_report`
+
+If a verify or close gate reports `missing_from_report`, the current git diff contains paths that are not declared in the structured execution report. This usually means either the report omitted a real Task change or the working tree contains unrelated/generated/runtime changes.
+
+Respond by comparing the gate's missing paths with the Task contract:
+
+```text
+real Task source change        add it to the structured report and resubmit
+governed generated output      include it only when it was intentionally regenerated by the Task
+runtime logs or UI run logs    do not report as implementation files
+unrelated dirty file           resolve or separate it before rerunning the gate
+protected state/event output   do not edit manually; regenerate or mutate only through the owning CLI
+```
+
+After correcting the report or working tree, rerun the governed verify, close or pipeline step that produced the diff gate result.
 
 ## Unsupported Operation
 

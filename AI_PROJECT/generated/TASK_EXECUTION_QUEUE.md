@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1306`
+Revision: `1646`
 
 ## Executable Now
 
@@ -12,11 +12,11 @@ Revision: `1306`
 - `PIPE-20 (TASK-071)` [planned] `EPIC-007` priority `1` — PIPE-20 Document Dynamic Pipeline Policy Presets
 - `PIPE-21 (TASK-072)` [planned] `EPIC-007` priority `1` — PIPE-21 Fix Pipeline Queue Epic Filter Behavior
 - `PIPE-22 (TASK-073)` [planned] `EPIC-007` priority `1` — PIPE-22 Add Pipeline Session Resume After Blocker
-- `PIPEF-44 (TASK-123)` [planned] `EPIC-009` priority `1` — PIPE-044 Add fake reviewer close integration test
-- `PIPEF-45 (TASK-124)` [planned] `EPIC-009` priority `1` — PIPE-045 Update phase pipeline usage guide
-- `PIPEF-65 (TASK-144)` [planned] `EPIC-009` priority `1` — PIPE-060 Document Web live status and Codex log behavior
-- `PIPEF-71 (TASK-150)` [planned] `EPIC-009` priority `1` — PIPE-066 Document Web Settings and internal bypass behavior
-- `PIPEF-78 (TASK-157)` [planned] `EPIC-009` priority `1` — PIPE-073 Document Codex structured report auto-submit
+- `PIPEF-124 (TASK-205)` [planned] `EPIC-009` priority `1` — Expose Web policy catalog
+- `PIPEF-125 (TASK-206)` [planned] `EPIC-009` priority `1` — Render policy dropdown in Settings
+- `PIPEF-126 (TASK-207)` [planned] `EPIC-009` priority `1` — Show effective policy summary
+- `PIPEF-127 (TASK-208)` [planned] `EPIC-009` priority `1` — Add Web run batch overrides
+- `PIPEF-128 (TASK-209)` [planned] `EPIC-009` priority `1` — Warn on incomplete Web run policy
 
 ## Waiting For Dependencies
 
@@ -61,6 +61,54 @@ _No tasks waiting only on dependencies._
 - `CTL-14 (TASK-159)` [done] `EPIC-005` priority `1` — Add batch UI settings apply action
   - `status_not_executable`: status is done
 - `CTL-15 (TASK-160)` [done] `EPIC-005` priority `1` — Render unified Web Settings panel
+  - `status_not_executable`: status is done
+- `CTL-16 (TASK-216)` [done] `EPIC-005` priority `1` — Add shared Web owner shell
+  - `status_not_executable`: status is done
+- `CTL-17 (TASK-217)` [done] `EPIC-005` priority `1` — Add sticky current execution bar
+  - `status_not_executable`: status is done
+- `CTL-18 (TASK-218)` [done] `EPIC-005` priority `1` — Add compact health summary panel
+  - `status_not_executable`: status is done
+- `CTL-19 (TASK-219)` [done] `EPIC-005` priority `1` — Build owner action queue read model
+  - `status_not_executable`: status is done
+- `CTL-20 (TASK-220)` [done] `EPIC-005` priority `1` — Render Dashboard as Owner Cockpit
+  - `status_not_executable`: status is done
+- `CTL-21 (TASK-221)` [done] `EPIC-005` priority `1` — Convert Tasks to action queue
+  - `status_not_executable`: status is done
+- `CTL-22 (TASK-222)` [done] `EPIC-005` priority `1` — Add task details drawer
+  - `status_not_executable`: status is done
+- `CTL-23 (TASK-223)` [done] `EPIC-005` priority `1` — Add safe action confirm modal
+  - `status_not_executable`: status is done
+- `CTL-24 (TASK-224)` [done] `EPIC-005` priority `1` — Redesign Pipeline as run monitor
+  - `status_not_executable`: status is done
+- `CTL-25 (TASK-225)` [done] `EPIC-005` priority `1` — Convert Reviews to decision queue
+  - `status_not_executable`: status is done
+- `CTL-26 (TASK-226)` [done] `EPIC-005` priority `1` — Convert Evolution to change decision queue
+  - `status_not_executable`: status is done
+- `CTL-27 (TASK-227)` [done] `EPIC-005` priority `1` — Render Settings as policy control page
+  - `status_not_executable`: status is done
+- `CTL-28 (TASK-228)` [done] `EPIC-005` priority `1` — Render Doctor as health center
+  - `status_not_executable`: status is done
+- `CTL-29 (TASK-229)` [done] `EPIC-005` priority `1` — Align inspection pages with owner shell
+  - `status_not_executable`: status is done
+- `CTL-30 (TASK-230)` [done] `EPIC-005` priority `1` — Add owner UI regression tests
+  - `status_not_executable`: status is done
+- `CTL-31 (TASK-231)` [done] `EPIC-005` priority `1` — Document Owner Cockpit workflow
+  - `status_not_executable`: status is done
+- `CTL-32 (TASK-232)` [done] `EPIC-005` priority `1` — Remove duplicate Tasks current execution panel
+  - `status_not_executable`: status is done
+- `CTL-33 (TASK-233)` [done] `EPIC-005` priority `1` — Build compact task queue read model
+  - `status_not_executable`: status is done
+- `CTL-34 (TASK-234)` [done] `EPIC-005` priority `1` — Render Tasks details drawer
+  - `status_not_executable`: status is done
+- `CTL-35 (TASK-235)` [done] `EPIC-005` priority `1` — Fix Tasks action queue grouping
+  - `status_not_executable`: status is done
+- `CTL-36 (TASK-236)` [done] `EPIC-005` priority `1` — Add one primary task row action
+  - `status_not_executable`: status is done
+- `CTL-37 (TASK-237)` [done] `EPIC-005` priority `1` — Move policy summary to drawer and modal
+  - `status_not_executable`: status is done
+- `CTL-38 (TASK-238)` [done] `EPIC-005` priority `1` — Consolidate task diagnostics in drawer
+  - `status_not_executable`: status is done
+- `CTL-39 (TASK-239)` [done] `EPIC-005` priority `1` — Replace Tasks metrics with action counts
   - `status_not_executable`: status is done
 - `TASK-002` [done] `EPIC-002` priority `1` — Document Skills Layer Roadmap
   - `status_not_executable`: status is done
@@ -262,6 +310,10 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-43 (TASK-122)` [done] `EPIC-009` priority `1` — PIPE-043 Add fake Codex happy path integration test
   - `status_not_executable`: status is done
+- `PIPEF-44 (TASK-123)` [done] `EPIC-009` priority `1` — PIPE-044 Add fake reviewer close integration test
+  - `status_not_executable`: status is done
+- `PIPEF-45 (TASK-124)` [done] `EPIC-009` priority `1` — PIPE-045 Update phase pipeline usage guide
+  - `status_not_executable`: status is done
 - `PIPEF-46 (TASK-125)` [done] `EPIC-009` priority `1` — Add UI settings defaults and loader
   - `status_not_executable`: status is done
 - `PIPEF-47 (TASK-126)` [done] `EPIC-009` priority `1` — Add UI settings CLI commands
@@ -300,6 +352,8 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-64 (TASK-143)` [done] `EPIC-009` priority `1` — PIPE-059 Keep runtime pipeline logs out of task diff gates
   - `status_not_executable`: status is done
+- `PIPEF-65 (TASK-144)` [done] `EPIC-009` priority `1` — PIPE-060 Document Web live status and Codex log behavior
+  - `status_not_executable`: status is done
 - `PIPEF-66 (TASK-145)` [done] `EPIC-009` priority `1` — PIPE-061 Add Web Settings page route
   - `status_not_executable`: status is done
 - `PIPEF-67 (TASK-146)` [done] `EPIC-009` priority `1` — PIPE-062 Add confirmed Web actions for UI settings updates
@@ -309,6 +363,8 @@ _No tasks waiting only on dependencies._
 - `PIPEF-69 (TASK-148)` [done] `EPIC-009` priority `1` — PIPE-064 Render internal Change gate bypass checkbox
   - `status_not_executable`: status is done
 - `PIPEF-70 (TASK-149)` [done] `EPIC-009` priority `1` — PIPE-065 Apply internal Change gate bypass to UI runs
+  - `status_not_executable`: status is done
+- `PIPEF-71 (TASK-150)` [done] `EPIC-009` priority `1` — PIPE-066 Document Web Settings and internal bypass behavior
   - `status_not_executable`: status is done
 - `PIPEF-72 (TASK-151)` [done] `EPIC-009` priority `1` — PIPE-067 Add structured Codex report block to prompt package
   - `status_not_executable`: status is done
@@ -321,6 +377,8 @@ _No tasks waiting only on dependencies._
 - `PIPEF-76 (TASK-155)` [done] `EPIC-009` priority `1` — PIPE-071 Add pipeline regression test for Run report auto-collection
   - `status_not_executable`: status is done
 - `PIPEF-77 (TASK-156)` [done] `EPIC-009` priority `1` — PIPE-072 Add Web recovery action for report missing sessions
+  - `status_not_executable`: status is done
+- `PIPEF-78 (TASK-157)` [done] `EPIC-009` priority `1` — PIPE-073 Document Codex structured report auto-submit
   - `status_not_executable`: status is done
 - `PIPEF-79 (TASK-158)` [done] `EPIC-009` priority `1` — PIPE-074 Allow internal bypass setting in Web settings action
   - `status_not_executable`: status is done
@@ -369,4 +427,58 @@ _No tasks waiting only on dependencies._
 - `PIPEF-101 (TASK-182)` [done] `EPIC-009` priority `1` — Allow advisory report warnings in review phase
   - `status_not_executable`: status is done
 - `PIPEF-102 (TASK-183)` [done] `EPIC-009` priority `1` — Add verify-to-review advisory warning pipeline regression
+  - `status_not_executable`: status is done
+- `PIPEF-103 (TASK-184)` [done] `EPIC-009` priority `1` — Require auto-close owner note at session creation
+  - `status_not_executable`: status is done
+- `PIPEF-104 (TASK-185)` [done] `EPIC-009` priority `1` — Add auto-close note to CLI UI run
+  - `status_not_executable`: status is done
+- `PIPEF-105 (TASK-186)` [done] `EPIC-009` priority `1` — Expose auto-close note in Web UI run
+  - `status_not_executable`: status is done
+- `PIPEF-106 (TASK-187)` [done] `EPIC-009` priority `1` — Cover auto-close owner note close path
+  - `status_not_executable`: status is done
+- `PIPEF-107 (TASK-188)` [done] `EPIC-009` priority `1` — Document auto-close owner note workflow
+  - `status_not_executable`: status is done
+- `PIPEF-108 (TASK-189)` [done] `EPIC-009` priority `1` — Bound close workflow artifacts
+  - `status_not_executable`: status is done
+- `PIPEF-109 (TASK-190)` [done] `EPIC-009` priority `1` — Recover already closed close phase
+  - `status_not_executable`: status is done
+- `PIPEF-110 (TASK-191)` [done] `EPIC-009` priority `1` — Block execute on stale protected outputs
+  - `status_not_executable`: status is done
+- `PIPEF-111 (TASK-192)` [done] `EPIC-009` priority `1` — Add close artifact regression coverage
+  - `status_not_executable`: status is done
+- `PIPEF-112 (TASK-193)` [done] `EPIC-009` priority `1` — Allow advisory report warnings in local commit
+  - `status_not_executable`: status is done
+- `PIPEF-113 (TASK-194)` [done] `EPIC-009` priority `1` — Document advisory warning commit behavior
+  - `status_not_executable`: status is done
+- `PIPEF-114 (TASK-195)` [done] `EPIC-009` priority `1` — Allow advisory report warnings before local commit
+  - `status_not_executable`: status is done
+- `PIPEF-115 (TASK-196)` [done] `EPIC-009` priority `1` — Allow safe Machine Review warnings before local commit
+  - `status_not_executable`: status is done
+- `PIPEF-116 (TASK-197)` [done] `EPIC-009` priority `1` — Cover close local commit with advisory warnings
+  - `status_not_executable`: status is done
+- `PIPEF-117 (TASK-198)` [done] `EPIC-009` priority `1` — Document local commit warning policy
+  - `status_not_executable`: status is done
+- `PIPEF-118 (TASK-199)` [done] `EPIC-009` priority `1` — Expose Web policy catalog
+  - `status_not_executable`: status is done
+- `PIPEF-119 (TASK-200)` [done] `EPIC-009` priority `1` — Render policy dropdown in Settings
+  - `status_not_executable`: status is done
+- `PIPEF-120 (TASK-201)` [done] `EPIC-009` priority `1` — Show effective policy summary
+  - `status_not_executable`: status is done
+- `PIPEF-121 (TASK-202)` [done] `EPIC-009` priority `1` — Add Web run batch overrides
+  - `status_not_executable`: status is done
+- `PIPEF-122 (TASK-203)` [done] `EPIC-009` priority `1` — Warn on incomplete Web run policy
+  - `status_not_executable`: status is done
+- `PIPEF-123 (TASK-204)` [done] `EPIC-009` priority `1` — Document Web policy settings
+  - `status_not_executable`: status is done
+- `PIPEF-129 (TASK-210)` [deferred] `EPIC-009` priority `1` — Document Web policy settings
+  - `status_not_executable`: status is deferred
+- `PIPEF-130 (TASK-211)` [done] `EPIC-009` priority `1` — Preserve report file lists
+  - `status_not_executable`: status is done
+- `PIPEF-131 (TASK-212)` [done] `EPIC-009` priority `1` — Refresh context before commit
+  - `status_not_executable`: status is done
+- `PIPEF-132 (TASK-213)` [done] `EPIC-009` priority `1` — Allow approved review warnings
+  - `status_not_executable`: status is done
+- `PIPEF-133 (TASK-214)` [done] `EPIC-009` priority `1` — Record commit review diagnostics
+  - `status_not_executable`: status is done
+- `PIPEF-134 (TASK-215)` [done] `EPIC-009` priority `1` — Prevent stale context commit regression
   - `status_not_executable`: status is done

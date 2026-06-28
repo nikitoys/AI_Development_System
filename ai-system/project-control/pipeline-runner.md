@@ -64,6 +64,7 @@ Human Owner:
 - chooses the queue and policy preset;
 - confirms run actions;
 - approves Evolution Changes when approval is required;
+- supplies any auto-close owner note before an auto-close policy is executed;
 - decides whether to accept completed work, request rework, stop the session, or commit locally;
 - never treats pipeline success as automatic final acceptance.
 
@@ -98,6 +99,7 @@ The pipeline must not:
 - mark a Task done without the governed review/close path;
 - run Codex before Token Budget Gate passes when execution policy requires it;
 - close a Task automatically unless policy permits auto-close and both Machine Review and Codex Review gates pass;
+- close a Task automatically from an owner note invented, drafted, or supplied by Codex;
 - create commits unless policy permits local-only commit and commit readiness is green;
 - push, merge, reset, rebase, switch branches, restore files, clean files, or discard changes.
 
@@ -121,7 +123,7 @@ Important details:
 - `supervised_autoclose` and `supervised_local_commit` do not magically execute Codex. With their default prompt-only Codex mode, they stop before auto-close or commit because the execution and review evidence does not exist.
 - Executable presets use the local-command adapter with an exact allowlist for `codex exec`. The adapter validates prompt freshness and task identity before invoking the command, passes `AI_PROJECT/generated/CODEX_PROMPT.md` to `codex exec` through stdin by default, then requires a newly submitted structured execution report before downstream gates can pass.
 - Owner-configured Codex sandbox flags belong in `local_command` and must exactly match `command_allowlist`, for example `codex exec -s workspace-write`. The adapter does not hardcode `danger-full-access` or bypass modes.
-- Auto-close requires an explicit owner approval note on the session. Use `--auto-close-note "..."` when creating an executable auto-close session.
+- Auto-close requires an explicit Human Owner auto-close note on the session. The note is an owner approval input, not a Codex output. Codex may report that the note is missing, but it must not invent, draft, fill in, or provide the owner note.
 - Commit policy is always local-only when enabled. Push and merge are forbidden by policy validation.
 
 ## Session Lifecycle
@@ -177,11 +179,19 @@ or for an Epic queue:
 python scripts/aictl.py pipeline session create --policy supervised --epic EPIC-007 --status-filter ready --max-tasks 3
 ```
 
-Create an executable auto-close session only when the Human Owner explicitly approved auto-close for the selected queue:
+Create an executable auto-close session only when the Human Owner explicitly approved auto-close for the selected queue and supplied the exact auto-close note to record:
 
 ```bash
 python scripts/aictl.py pipeline session create --policy supervised_executable_autoclose --task-ref PIPE-25 --auto-close-note "APPROVED by Human Owner for this selected session"
 ```
+
+For a selected-task run through the UI command facade, pass the same Human Owner note with `ui run`:
+
+```bash
+python scripts/aictl.py ui run PIPE-25 --auto-close-note "APPROVED by Human Owner for this selected task run" --confirm
+```
+
+If the Human Owner has not supplied the note, create a non-auto-close session or stop and ask for the owner decision. Codex must not provide placeholder approval text.
 
 Do not create or edit `pipeline_sessions.json` manually.
 
@@ -347,6 +357,33 @@ If local Codex startup fails because the host sandbox is unavailable, such as `b
 
 When report evidence is required, the adapter expects a newer structured execution report for the task after the local command finishes.
 
+The normal local-command path is:
+
+```text
+1. Run the allowlisted Codex command with CODEX_PROMPT.md on stdin.
+2. If Codex submitted a newer structured report during execution, use that report.
+3. Otherwise parse stdout for exactly one CODEX_EXECUTION_SUMMARY_JSON block.
+4. Build a full TaskReport from the parsed summary plus trusted pipeline evidence.
+5. Submit the report through the task report service as codex_adapter.report.auto_submit.
+6. Continue to collect-report only after a newer report exists for the selected Task.
+```
+
+The summary block expected from Codex is:
+
+````text
+CODEX_EXECUTION_SUMMARY_JSON:
+```json
+{
+  "implementation_summary": "Summarize the completed implementation.",
+  "notes": [],
+  "warnings": [],
+  "blockers": []
+}
+```
+````
+
+The parser requires the marker on its own line, one fenced `json` block, a JSON object, and exactly those four top-level fields. The block must not include `task_id`, `changed_files`, `generated_files`, `checks`, `owner_decision_required` or `token_usage`; those fields belong to the TaskReport that the adapter builds from controlled evidence.
+
 Submit a report with:
 
 ```bash
@@ -365,6 +402,8 @@ Use the weakest sandbox that works in the local environment. If `danger-full-acc
 ## Codex Execution Report Requirements
 
 The report gate validates the latest structured report for the selected Task.
+
+Current generated prompts ask Codex for the compact `CODEX_EXECUTION_SUMMARY_JSON` block, not a full TaskReport payload. The local adapter converts that summary and pipeline evidence into the structured report record that this gate validates. Manual submissions must still use the full structured report shape accepted by `task report submit`.
 
 Required report fields:
 
@@ -410,7 +449,7 @@ The report gate blocks:
 - governed generated output reported incorrectly;
 - blocking failed checks.
 
-Warnings do not equal approval. They remain evidence for Machine Review and Human Owner review.
+Warnings do not equal approval. They remain evidence for Machine Review and Human Owner review. A report gate `PASS` may continue to downstream phases. A report gate `WARN` may continue only when policy explicitly allows advisory report warnings through `policy.verify.allow_report_warnings`; otherwise it blocks verify, review, close and local commit. Strict verification mode still blocks report `WARN` when advisory report warnings are disabled. Relaxing or skipping git diff gates does not turn report `WARN` into `PASS`.
 
 ## Machine Review Gate
 
@@ -437,7 +476,14 @@ python scripts/aictl.py project doctor
 python scripts/aictl.py project protected-check
 ```
 
-Machine Review PASS requires all blocking checks to pass. Blocking failures stop the pipeline before semantic review can approve anything.
+Machine Review outcomes have different effects:
+
+- `PASS` means all blocking checks passed.
+- Safe `WARN` means Machine Review returned warning evidence, but every warning is advisory for commit readiness: either a non-blocking Machine Review check, or the `codex_report_gate` warning explicitly accepted by the active policy.
+- Unsafe `WARN` means at least one warning is blocking, unapproved, lacks enough warning evidence, or causes a required commit-readiness Machine Review check to be missing or not `PASS`.
+- `FAIL` means deterministic Machine Review failed and blocks all downstream acceptance and local commit gates.
+
+Blocking failures stop the pipeline before semantic review can approve anything. Codex Review cannot turn Machine Review `FAIL` or unsafe `WARN` evidence into approved commit evidence.
 
 ## Codex Review Gate
 
@@ -491,7 +537,10 @@ Auto-close may run only when:
 - policy enables `auto_close_task`;
 - Codex Report Gate is PASS;
 - Machine Review is PASS;
-- Codex Review status is PASS and verdict is `APPROVE`.
+- Codex Review status is PASS and verdict is `APPROVE`;
+- the session already contains an explicit Human Owner auto-close note.
+
+The auto-close note is used as the owner approval note for the governed close workflow. It must be supplied by the Human Owner before execution of the auto-close policy. Codex must not fabricate, infer, or reuse generic approval notes to satisfy this gate.
 
 The close path delegates to governed workflows:
 
@@ -539,13 +588,17 @@ Push and merge are forbidden.
 Commit readiness requires:
 
 - safe commit policy;
-- Codex Report Gate PASS;
-- Machine Review PASS;
+- Codex Report Gate accepted by the same policy used by verify, review and close: `PASS`, or advisory `WARN` only when `policy.verify.allow_report_warnings` explicitly allows report warnings;
+- Machine Review `PASS`, or safe Machine Review `WARN` containing only advisory or policy-approved warning evidence;
 - Codex Review APPROVE;
-- required Machine Review checks present and PASS;
+- required commit-readiness Machine Review checks present and `PASS`;
 - selected Task is `done`;
 - linked Evolution Change is accepted when one exists;
 - dirty files are exactly the approved files from report or session evidence.
+
+Report gate `FAIL`, report gate `BLOCKED` and advisory-disabled report `WARN` still block local commit with `COMMIT_REPORT_GATE_NOT_PASS`. Advisory warning acceptance only permits the report gate status to proceed; it does not bypass Machine Review, Codex Review, Human Owner approval or acceptance, close requirements, linked Change acceptance, required Machine Review checks or dirty-file gates.
+
+Machine Review `FAIL` is never committable. Machine Review `WARN` is committable only when commit readiness classifies every warning as safe. Unsafe Machine Review `WARN` blocks local commit with `COMMIT_READINESS_FAILED`; inspect the `local_commit.readiness` evidence in the session artifacts or action result to see which warning or required check blocked the commit. The owner action is to fix the underlying warning evidence, adjust only an explicitly supported advisory-warning policy when appropriate, rerun the governed gates, and leave commit disabled until readiness is green.
 
 Allowed git commands are narrowly constrained:
 
@@ -638,6 +691,8 @@ Create a session:
 
 ```bash
 python scripts/aictl.py pipeline session create --policy supervised --task-ref PIPE-15
+python scripts/aictl.py pipeline session create --policy supervised_executable_autoclose --task-ref PIPE-25 --auto-close-note "APPROVED by Human Owner for this selected session"
+python scripts/aictl.py ui run PIPE-25 --auto-close-note "APPROVED by Human Owner for this selected task run" --confirm
 ```
 
 Run one step:
@@ -677,11 +732,15 @@ Prefer `run-next` and `run-until-blocker` for normal operation.
 | `BLOCKED: Codex execution is disabled` | Policy does not permit Codex execution. | Use the prompt/manual handoff path or choose an approved execution policy. |
 | `PIPELINE_APPROVED_CHANGE_REQUIRED` | Task requires an approved linked Evolution Change. | Human Owner approves the linked Change, or create/approve the required Change. |
 | `TOKEN_BUDGET_FAILURE` | Prompt is missing, too large, unavailable to count in strict mode, low on remaining tokens, or requires compact/split. | Rebuild or reduce context, split the task, or use a policy that still preserves the required gate. |
+| `CODEX_ADAPTER_SUMMARY_MISSING` | The local Codex command exited successfully but stdout did not contain the required `CODEX_EXECUTION_SUMMARY_JSON` block. | Rerun Codex with the generated prompt and ensure the final output contains exactly one required summary block, or submit a valid structured report manually. |
+| `CODEX_ADAPTER_SUMMARY_INVALID` | The summary block was present but malformed, had invalid JSON, was not an object, had missing fields or had extra fields. | Fix the final output contract and rerun, or submit a valid structured report manually. |
+| `REPORT_MISSING` | The collect-report phase could not find a submitted structured report for the selected Task. | Submit the report with `task report submit`, or use the Web session detail `Report Recovery` action only after reviewing and confirming its recovered draft; then rerun collect-report and verify. |
 | `CODEX_REPORT_GATE_FAILURE` | Structured report is missing, mismatched, out of scope or contains blockers. | Submit a valid report with correct task identity, files, checks and token evidence. |
 | `MACHINE_REVIEW_FAILURE` | Deterministic checks failed. | Fix validation/generated/protected-file/test failures and rerun. |
 | `CODEX_REVIEW_REQUEST_CHANGES` | Semantic review found required changes. | Prepare bounded rework through governed task workflow. |
 | `CODEX_REVIEW_BLOCKED` | Semantic review lacks enough evidence or found a blocking condition. | Add missing evidence or resolve the blocker. |
 | `REWORK_LIMIT_REACHED` | Policy rework attempt limit is exhausted. | Human Owner decides whether to create a follow-up task or stop. |
+| `COMMIT_REPORT_GATE_NOT_PASS` | The local commit gate rejected the report gate status. This can appear after close succeeds if the latest report gate is `WARN` without advisory warning allowance, or if the report gate is `FAIL` or `BLOCKED`. | For report `WARN`, enable advisory report warnings only when policy intentionally allows them, then rerun the governed gates. For `FAIL` or `BLOCKED`, fix and resubmit the structured report. |
 | `COMMIT_READINESS_FAILED` | Local commit prerequisites are not green. | Close/accept required state, clear unrelated dirty files, or leave commit disabled. |
 
 ## Audit Trail Interpretation
