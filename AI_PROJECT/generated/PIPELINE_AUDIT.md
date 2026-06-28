@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `973`
-State revision: `973`
-Current session: `PSESS-131`
+Events: `993`
+State revision: `993`
+Current session: `PSESS-133`
 
 ## Timeline
 
@@ -984,6 +984,26 @@ Current session: `PSESS-131`
 | `2026-06-28T19:39:29Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-131` | `` | `` | reports=RPT-106 |
 | `2026-06-28T19:39:31Z` | `step.result` | `pipeline.phase.verify` | `PSESS-131` | `` | `` | reports=RPT-106 |
 | `2026-06-28T19:39:33Z` | `step.result` | `pipeline.phase.review` | `PSESS-131` | `` | `` | reports=RPT-106 |
+| `2026-06-28T19:39:51Z` | `step.result` | `pipeline.phase.close` | `PSESS-131` | `` | `` | changes=CHG-085 \| reports=RPT-106 \| commits=a9f5e8ab0e38f1cd5c7789e77c1e8839ab01a1d9 |
+| `2026-06-28T19:39:53Z` | `stop` | `pipeline.session.stop` | `PSESS-131` | `` | `` | stopped \| MAX_STEPS_REACHED: Batch runner reached max_steps 7. |
+| `2026-06-28T19:55:39Z` | `session.create` | `pipeline.session.create` | `PSESS-132` | `` | `` | PSESS-132 |
+| `2026-06-28T19:55:41Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-132` | `` | `` | PSESS-132 |
+| `2026-06-28T19:55:49Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-132` | `` | `` | PSESS-132 |
+| `2026-06-28T19:55:51Z` | `step.result` | `pipeline.phase.execute` | `PSESS-132` | `` | `` | PSESS-132 |
+| `2026-06-28T20:05:23Z` | `step.result` | `pipeline.phase.execute` | `PSESS-132` | `` | `` | reports=RPT-108 |
+| `2026-06-28T20:05:25Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-132` | `` | `` | reports=RPT-108 |
+| `2026-06-28T20:05:27Z` | `step.result` | `pipeline.phase.verify` | `PSESS-132` | `` | `` | reports=RPT-108 |
+| `2026-06-28T20:05:29Z` | `step.result` | `pipeline.phase.review` | `PSESS-132` | `` | `` | reports=RPT-108 |
+| `2026-06-28T20:05:47Z` | `step.result` | `pipeline.phase.close` | `PSESS-132` | `` | `` | reports=RPT-108 |
+| `2026-06-28T20:19:27Z` | `session.create` | `pipeline.session.create` | `PSESS-133` | `` | `` | PSESS-133 |
+| `2026-06-28T20:19:30Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-133` | `` | `` | PSESS-133 |
+| `2026-06-28T20:19:37Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-133` | `` | `` | PSESS-133 |
+| `2026-06-28T20:19:39Z` | `step.result` | `pipeline.phase.execute` | `PSESS-133` | `` | `` | PSESS-133 |
+| `2026-06-28T20:32:38Z` | `step.result` | `pipeline.phase.execute` | `PSESS-133` | `` | `` | reports=RPT-110 |
+| `2026-06-28T20:32:40Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-133` | `` | `` | reports=RPT-110 |
+| `2026-06-28T20:32:42Z` | `step.result` | `pipeline.phase.verify` | `PSESS-133` | `` | `` | reports=RPT-110 |
+| `2026-06-28T20:32:44Z` | `step.result` | `pipeline.phase.review` | `PSESS-133` | `` | `` | reports=RPT-110 |
+| `2026-06-28T20:33:03Z` | `step.result` | `pipeline.phase.close` | `PSESS-133` | `` | `` | reports=RPT-110 |
 
 ## Event Type Coverage
 

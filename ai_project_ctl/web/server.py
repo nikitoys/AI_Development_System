@@ -4944,12 +4944,18 @@ def _pipeline_action_badge(fields: Mapping[str, str]) -> tuple[str, str]:
         fields.get("commit_status"),
         fields.get("commit_readiness_status"),
     ).lower()
+    close_outcome = fields.get("close_outcome", "").lower()
+    commit_hash = fields.get("commit_hash", "").strip()
 
     if (
         "COMMIT_READINESS_FAILED" in {stop_code, blocked_by, commit_code}
         or commit_status == "blocked"
     ):
         return "warn", "COMMIT BLOCKED"
+    if commit_hash and (
+        commit_status == "pass" or close_outcome == "closed_with_local_commit"
+    ):
+        return "pass", "PASS"
     if "NO_EXECUTABLE_TASK" in {stop_code, blocked_by}:
         return "warn", "NOT RUN"
     if outcome == "completed" or session_status == "completed" or stop_code == "QUEUE_COMPLETE":
@@ -4984,6 +4990,8 @@ def _has_pipeline_outcome_fields(fields: Mapping[str, str]) -> bool:
             "blocked_by",
             "commit_status",
             "commit_code",
+            "close_outcome",
+            "commit_hash",
             "commit_readiness_status",
             "commit_readiness_code",
         )
@@ -5075,6 +5083,19 @@ def _action_result_pipeline_fields(
             run_data.get("commit_status"),
             close_status.get("commit_status"),
             local_commit.get("status"),
+        ),
+        "close_outcome": first_nonempty_text(
+            data.get("close_outcome"),
+            run_data.get("close_outcome"),
+            close_status.get("outcome"),
+            phase_artifacts.get("close_outcome"),
+        ),
+        "commit_hash": first_nonempty_text(
+            data.get("commit_hash"),
+            run_data.get("commit_hash"),
+            close_status.get("commit_hash"),
+            local_commit.get("commit_hash"),
+            phase_artifacts.get("commit_hash"),
         ),
         "commit_code": first_nonempty_text(
             data.get("commit_code"),

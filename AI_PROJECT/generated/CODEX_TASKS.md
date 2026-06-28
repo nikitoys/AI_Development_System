@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1742`
+Revision: `1757`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4465,3 +4465,90 @@ Acceptance criteria:
 - The file states that it is only a smoke artifact for Web Run local commit validation.
 - The generated report evidence includes tmp/run-smoke/web-run-clean-commit-smoke-2.md as a changed file.
 - Web Run reaches local commit without COMMIT_READINESS_FAILED.
+
+### PIPEF-151 (TASK-256) — Classify successful close after max steps
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_3b73f02c8ed4`, legacy `TASK-256`, aliases `TASK-256`, local `PIPEF` / `151`
+
+Treat a pipeline session as completed when close passed and a local commit hash exists, even if the batch runner reaches max_steps immediately after close.
+
+Acceptance criteria:
+
+- A session with close status passed and a non-empty local commit hash is recorded and rendered as completed, not stopped.
+- The user-facing Action Result no longer shows STOPPED for a successful close with a created local commit.
+- The old MAX_STEPS_REACHED behavior still applies when max_steps is reached before successful close.
+- Regression tests cover the PSESS-131 style case: close passed, commit hash present, max_steps exhausted.
+- Focused tests for pipeline runner and Web Control Center pass.
+
+### PIPEF-152 (TASK-257) — Demote recovered close workflow warnings
+
+Status: `done`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_ca082da4761b`, legacy `TASK-257`, aliases `TASK-257`, local `PIPEF` / `152`
+
+Hide recovered close-time context/protected check warnings from owner-facing output when post-close context refresh succeeds.
+
+Acceptance criteria:
+
+- Recovered contextctl.check-generated warnings are not shown as owner-facing warnings when post-close context_refresh succeeds.
+- Recovered protected.check stale context or prompt warnings are not shown as owner-facing warnings when post-close context_refresh succeeds.
+- Technical evidence still records that the non-blocking checks warned during close.
+- Warnings remain owner-facing when post-close context_refresh fails, is missing, or does not repair the stale generated files.
+- Focused close-phase, runner, and Web Control Center tests pass.
+
+### PIPEF-153 (TASK-258) — Add dirty worktree preflight for Web Run
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_8b0e3a18a055`, legacy `TASK-258`, aliases `TASK-258`, local `PIPEF` / `153`
+
+Prevent Web Run from starting when the repository has uncommitted changes before the selected task is executed.
+
+Acceptance criteria:
+
+- A clean worktree still allows ui.run_selected_task to start the selected planned or ready task normally.
+- A dirty worktree returns not_run before Codex execution, before task transition, and before Evolution Change creation.
+- The action result clearly states that Web Run did not start because the worktree is dirty.
+- The action result includes dirty file paths from git status --short --untracked-files=all.
+- The action result includes manual checkpoint commit commands for the owner.
+- Tests cover clean and dirty worktree branches for ui.run_selected_task.
+
+### PIPEF-154 (TASK-259) — Add confirmed checkpoint commit action
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_34590799287f`, legacy `TASK-259`, aliases `TASK-259`, local `PIPEF` / `154`
+
+Add an owner-confirmed Web UI action that creates a checkpoint commit before Web Run starts.
+
+Acceptance criteria:
+
+- The checkpoint commit action is rejected when owner confirmation is missing.
+- The checkpoint commit action reports not_run when the worktree is already clean.
+- With confirmation and a dirty worktree, the action stages all current changes and creates a git commit.
+- The action result includes the checkpoint commit hash and a next action to run the selected task again.
+- The action does not execute Codex or transition any selected task.
+- Tests cover missing confirmation, clean worktree, dirty worktree, and successful commit hash reporting.
+
+### PIPEF-155 (TASK-260) — Link dirty preflight to checkpoint UX
+
+Status: `planned`
+Priority: `2`
+Verification: `strict`
+Identity: uid `tsk_830b7b756514`, legacy `TASK-260`, aliases `TASK-260`, local `PIPEF` / `155`
+
+Connect the dirty worktree preflight result to the confirmed checkpoint commit action in the Web UI.
+
+Acceptance criteria:
+
+- Dirty Web Run results show a checkpoint commit option when dirty files exist.
+- The selected task remains visible in the dirty preflight result and next-action text.
+- After checkpoint commit success, the result page points the owner back to running the same task.
+- No automatic Web Run is started after checkpoint commit.
+- Tests verify the dirty preflight to checkpoint commit UX path.

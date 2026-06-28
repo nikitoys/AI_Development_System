@@ -10,7 +10,7 @@ from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
 
-from ai_project_ctl.core.result import CommandResult
+from ai_project_ctl.core.result import CommandMessage, CommandResult
 import ai_project_ctl.pipeline.runner as runner_module
 from ai_project_ctl.pipeline import (
     BatchPolicy,
@@ -1447,6 +1447,185 @@ class PipelineRunnerTests(unittest.TestCase):
                 )
             )
             self.assertIn(["codex", "exec"], calls)
+
+    def test_run_until_blocker_keeps_max_steps_for_incomplete_session(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="approved")
+            supervised = policy_preset("supervised")
+            policy = replace(
+                supervised,
+                name="incomplete_max_steps_regression",
+                batch=BatchPolicy(max_steps=1, max_failures=1),
+            )
+            session = create_session(root=root, actor="tester", policy=policy)
+            session_id = session.data["session_id"]
+            recorded = record_phase_result(
+                session_id,
+                PhaseResult.passed(
+                    "prepare",
+                    reason="Task preparation completed.",
+                    next_action="Continue pipeline execution.",
+                    artifacts={
+                        "session_id": session_id,
+                        "task_id": "TASK-001",
+                        "task_ref": "APP-01",
+                    },
+                ),
+                root=root,
+                actor="tester",
+                task_id="TASK-001",
+                command="pipeline.phase.prepare",
+            )
+            self.assertTrue(recorded.ok)
+
+            result = run_until_blocker(
+                session_id,
+                root=root,
+                actor="tester",
+                confirmed=True,
+            )
+            latest = load_pipeline(root)["sessions"][0]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["stop_code"], "MAX_STEPS_REACHED")
+            self.assertEqual(result.data["session_status"], "stopped")
+            self.assertEqual(latest["status"], "stopped")
+            self.assertIn("MAX_STEPS_REACHED", latest["stop_reason"])
+
+    def test_run_until_blocker_completes_committed_close_before_max_steps(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            supervised = policy_preset("supervised_local_commit")
+            policy = replace(
+                supervised,
+                name="committed_close_max_steps_regression",
+                batch=BatchPolicy(max_steps=1, max_failures=1),
+            )
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
+            session_id = session.data["session_id"]
+            commit_hash = "abc1234deadbeef"
+            close_status = {
+                "outcome": "closed_with_local_commit",
+                "task_closed": True,
+                "task_status": "done",
+                "commit_status": "pass",
+                "commit_code": "LOCAL_COMMIT_CREATED",
+                "commit_hash": commit_hash,
+                "commit_readiness_status": "pass",
+                "commit_readiness_code": "COMMIT_READY",
+                "owner_next_action": "Review the completed pipeline session.",
+            }
+            recorded = record_phase_result(
+                session_id,
+                PhaseResult.passed(
+                    "close",
+                    reason="Close completed and local commit was created.",
+                    next_action=close_status["owner_next_action"],
+                    artifacts={
+                        "session_id": session_id,
+                        "task_id": "TASK-001",
+                        "task_ref": "APP-01",
+                        "close_status": close_status,
+                        "local_commit": {
+                            "status": "pass",
+                            "code": "LOCAL_COMMIT_CREATED",
+                            "commit_hash": commit_hash,
+                        },
+                    },
+                ),
+                root=root,
+                actor="tester",
+                task_id="TASK-001",
+                command="pipeline.phase.close",
+            )
+            self.assertTrue(recorded.ok)
+
+            result = run_until_blocker(
+                session_id,
+                root=root,
+                actor="tester",
+                confirmed=True,
+            )
+            latest = load_pipeline(root)["sessions"][0]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["session_status"], "completed")
+            self.assertEqual(result.data["stop_code"], "QUEUE_COMPLETE")
+            self.assertNotEqual(result.data["stop_code"], "MAX_STEPS_REACHED")
+            self.assertEqual(result.data["commit_hash"], commit_hash)
+            self.assertEqual(result.data["close_status"]["commit_hash"], commit_hash)
+            self.assertIn("TASK-001", result.data["completed_tasks"])
+            self.assertIn(commit_hash, result.data["commits"])
+            self.assertEqual(latest["status"], "completed")
+            self.assertNotIn("MAX_STEPS_REACHED", latest.get("stop_reason", ""))
+
+    def test_run_next_summary_keeps_recovered_close_warnings_technical_only(self):
+        recovered_warning = CommandMessage(
+            "WORKFLOW_NON_BLOCKING_STEP_FAILED",
+            "Non-blocking workflow step reported a warning: Check generated context output",
+            details={
+                "step": "context_generated",
+                "command_name": "contextctl.check-generated",
+                "returncode": 1,
+                "stdout": "stale context before post-close refresh",
+                "stderr": "",
+            },
+        )
+        delegated = CommandResult.success(
+            command="pipeline.phase.close",
+            domain="pipeline",
+            message="Close passed.",
+            data={
+                "phase_result": {
+                    "phase": "close",
+                    "status": "passed",
+                    "reason": "Close passed.",
+                    "next_action": "Review completed session.",
+                    "artifacts": {
+                        "context_refresh": {"ok": True},
+                        "close_workflow": {
+                            "warnings": [recovered_warning.to_dict()],
+                        },
+                        "recovered_close_warnings": [
+                            {
+                                "code": "CLOSE_RECOVERED_NON_BLOCKING_WARNING",
+                                "recovered_by": "pipeline.close.context_refresh",
+                                "source_command": "pipeline.review_close_policy",
+                                "warning": recovered_warning.to_dict(),
+                            }
+                        ],
+                    },
+                    "changed_files": [],
+                    "generated_files": [],
+                    "events": [],
+                }
+            },
+        )
+
+        result = runner_module._phase_dispatch_result(
+            delegated,
+            phase_name="close",
+            session={
+                "id": "PSESS-001",
+                "current_task_id": "TASK-001",
+                "current_task_ref": "APP-01",
+            },
+            effects=[delegated],
+        )
+
+        self.assertEqual(result.warnings, [])
+        self.assertEqual(result.data["dispatched_phase"], "close")
+        side_effect = result.data["side_effects"][0]
+        artifacts = side_effect["data"]["phase_result"]["artifacts"]
+        self.assertEqual(len(artifacts["close_workflow"]["warnings"]), 1)
+        self.assertEqual(len(artifacts["recovered_close_warnings"]), 1)
 
     def test_run_until_blocker_no_report_stdout_keeps_adapter_missing_code(self):
         with tempfile.TemporaryDirectory() as tmp:

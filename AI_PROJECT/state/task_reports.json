@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 106,
+  "revision": 110,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-28T19:39:26Z",
+  "updated_at": "2026-06-28T20:32:37Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -7540,6 +7540,291 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-107",
+      "task_id": "TASK-256",
+      "task_ref": "PIPEF-151",
+      "submitted_at": "2026-06-28T20:05:22Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:a8eb98856b412b28a30fadfb22a0c25928c813c44b35c8a969d74b9d30ef719e",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-256",
+        "task_ref": "PIPEF-151",
+        "reported_task_id": "TASK-256",
+        "reported_task_ref": "PIPEF-151",
+        "implementation_summary": "Committed close sessions now complete before max_steps can stop them, and Web Action Result treats passed committed closes as PASS rather than STOPPED.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 570.029431,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 570.029431,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Pre-existing AI_PROJECT state/generated changes were present and left untouched.",
+          "An unrelated existing direct run_next local-commit test still fails because it expects monolithic step history from the current phased runner."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused pipeline runner and Web Control Center regression checks passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1053,
+          "remaining_tokens": 30947,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-108",
+      "task_id": "TASK-256",
+      "task_ref": "PIPEF-151",
+      "submitted_at": "2026-06-28T20:05:22Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-107",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-256",
+        "task_ref": "PIPEF-151",
+        "reported_task_id": "TASK-256",
+        "reported_task_ref": "PIPEF-151",
+        "implementation_summary": "Committed close sessions now complete before max_steps can stop them, and Web Action Result treats passed committed closes as PASS rather than STOPPED.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/batch.py",
+          "ai_project_ctl/pipeline/session.py",
+          "ai_project_ctl/web/server.py",
+          "tests/test_pipeline_runner.py",
+          "tests/test_web_control_center.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 570.029431,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 570.029431,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Pre-existing AI_PROJECT state/generated changes were present and left untouched.",
+          "An unrelated existing direct run_next local-commit test still fails because it expects monolithic step history from the current phased runner."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused pipeline runner and Web Control Center regression checks passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1053,
+          "remaining_tokens": 30947,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-109",
+      "task_id": "TASK-257",
+      "task_ref": "PIPEF-152",
+      "submitted_at": "2026-06-28T20:32:37Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:bfd1a8f185c16c1d3bb2f4d54e3606749356b26d4a21bbd143a1fb9ac020e2ba",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-257",
+        "task_ref": "PIPEF-152",
+        "reported_task_id": "TASK-257",
+        "reported_task_ref": "PIPEF-152",
+        "implementation_summary": "Demoted recovered close-time context/protected warnings from owner-facing warnings after successful post-close context refresh, while preserving recovered warning evidence in close technical artifacts and adding focused regression coverage.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 776.492085,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 776.492085,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The working tree contains pre-existing dirty files outside this task, including protected AI_PROJECT state/generated files and earlier pipeline/web edits; they were not edited manually for this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused pytest selection passed: 7 close-phase, runner, and Web Control Center tests.",
+          "Syntax check passed for ai_project_ctl/pipeline/close_phase.py."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1040,
+          "remaining_tokens": 30960,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-110",
+      "task_id": "TASK-257",
+      "task_ref": "PIPEF-152",
+      "submitted_at": "2026-06-28T20:32:37Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-109",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-257",
+        "task_ref": "PIPEF-152",
+        "reported_task_id": "TASK-257",
+        "reported_task_ref": "PIPEF-152",
+        "implementation_summary": "Demoted recovered close-time context/protected warnings from owner-facing warnings after successful post-close context refresh, while preserving recovered warning evidence in close technical artifacts and adding focused regression coverage.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/close_phase.py",
+          "tests/test_pipeline_phase_review_close.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 776.492085,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 776.492085,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The working tree contains pre-existing dirty files outside this task, including protected AI_PROJECT state/generated files and earlier pipeline/web edits; they were not edited manually for this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused pytest selection passed: 7 close-phase, runner, and Web Control Center tests.",
+          "Syntax check passed for ai_project_ctl/pipeline/close_phase.py."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1040,
+          "remaining_tokens": 30960,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -7643,6 +7928,8 @@
     "TASK-252": "RPT-101",
     "TASK-253": "RPT-103",
     "TASK-254": "RPT-104",
-    "TASK-255": "RPT-106"
+    "TASK-255": "RPT-106",
+    "TASK-256": "RPT-108",
+    "TASK-257": "RPT-110"
   }
 }

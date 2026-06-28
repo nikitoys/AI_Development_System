@@ -3,23 +3,23 @@
 
 # Pipeline Status
 
-Revision: `973`
-Current session: `PSESS-131`
-Sessions: `131`
+Revision: `993`
+Current session: `PSESS-133`
+Sessions: `133`
 
 ## Current Session
 
-- ID: `PSESS-131`
-- Status: `running`
+- ID: `PSESS-133`
+- Status: `blocked`
 - Policy: `supervised_executable_local_commit_1h_auto_change`
-- Current task: `TASK-255`
-- Current phase: `review`
-- Phase status: `skipped`
-- Blocked by: `none`
-- Next action: `Continue only through governed close or commit readiness; Machine Review evidence remains required.`
+- Current task: `TASK-257`
+- Current phase: `close`
+- Phase status: `blocked`
+- Blocked by: `COMMIT_READINESS_FAILED`
+- Next action: `Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit.`
 - Current step: `execute`
 - Step status: `passed`
-- Stop reason: `none`
+- Stop reason: `Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence.`
 
 ## Sessions
 
@@ -155,7 +155,9 @@ Sessions: `131`
 | `PSESS-128` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-252` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
 | `PSESS-129` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-253` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
 | `PSESS-130` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-254` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
-| `PSESS-131` | `running` | `supervised_executable_local_commit_1h_auto_change` | `TASK-255` | `review` | `skipped` | none | Continue only through governed close or commit readiness; Machine Review evidence remains required. | `execute` |  |
+| `PSESS-131` | `stopped` | `supervised_executable_local_commit_1h_auto_change` | `TASK-255` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | MAX_STEPS_REACHED: Batch runner reached max_steps 7. |
+| `PSESS-132` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-256` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
+| `PSESS-133` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-257` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
 
 ## Phase History
 
@@ -847,3 +849,18 @@ Sessions: `131`
 | `PSESS-131` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
 | `PSESS-131` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 1 | 0 | 1 |
 | `PSESS-131` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-131` | 7 | `close` | `passed` | Close completed and local commit was created. | Review the close artifacts and local commit hash, then select the next task. | 0 | 0 | 1 |
+| `PSESS-132` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-132` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 0ef6bba805bd3a95a8f0806a719ea74204a80008efd84471aed18b42608d1da8). | 0 | 0 | 1 |
+| `PSESS-132` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-132` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-132` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 5 | 0 | 1 |
+| `PSESS-132` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-132` | 7 | `close` | `blocked` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | 0 | 0 | 1 |
+| `PSESS-133` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-133` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 57a217cb600009b6539613bc72855267689442356b0a1a042fdd7308fb16ae3c). | 0 | 0 | 1 |
+| `PSESS-133` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-133` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-133` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 2 | 0 | 1 |
+| `PSESS-133` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-133` | 7 | `close` | `blocked` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | 0 | 0 | 1 |

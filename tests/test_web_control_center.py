@@ -6057,6 +6057,181 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('<span class="badge pass">PASS</span>', body)
         self.assertIn("QUEUE_COMPLETE", body)
 
+    def test_pipeline_action_result_panel_treats_committed_close_as_pass(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "ok": True,
+                    "command": "pipeline.run_until_blocker",
+                    "domain": "pipeline",
+                    "message": "MAX_STEPS_REACHED: Batch runner reached max_steps 7.",
+                    "data": {
+                        "session_id": "PSESS-COMMITTED",
+                        "session_href": "/pipeline/sessions/PSESS-COMMITTED",
+                        "session_status": "stopped",
+                        "stop_code": "MAX_STEPS_REACHED",
+                        "stop_reason": "Batch runner reached max_steps 7.",
+                        "close_status": {
+                            "outcome": "closed_with_local_commit",
+                            "commit_status": "pass",
+                            "commit_code": "LOCAL_COMMIT_CREATED",
+                            "commit_hash": "abc1234deadbeef",
+                        },
+                    },
+                }
+            )
+            + "\n",
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "pipeline.run_until_blocker",
+                    "confirm": "yes",
+                    "session_id": "PSESS-COMMITTED",
+                }
+            )
+
+        body = render_action_result(result)
+
+        self.assertIn('class="panel action-result action-result-pass"', body)
+        self.assertIn('<span class="badge pass">PASS</span>', body)
+        self.assertNotIn('<span class="badge warn">STOPPED</span>', body)
+        self.assertIn("abc1234deadbeef", body)
+
+    def test_pipeline_action_result_hides_recovered_close_warnings_from_warning_panel(self):
+        recovered_warning = {
+            "code": "WORKFLOW_NON_BLOCKING_STEP_FAILED",
+            "message": (
+                "Non-blocking workflow step reported a warning: "
+                "Check generated context output"
+            ),
+            "details": {
+                "step": "context_generated",
+                "command_name": "contextctl.check-generated",
+                "returncode": 1,
+            },
+        }
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "ok": True,
+                    "command": "pipeline.run_next",
+                    "domain": "pipeline",
+                    "message": "Close passed.",
+                    "warnings": [],
+                    "data": {
+                        "session_id": "PSESS-RECOVERED",
+                        "dispatched_phase": "close",
+                        "phase_status": "passed",
+                        "phase_result": {
+                            "phase": "close",
+                            "status": "passed",
+                            "reason": "Close passed.",
+                            "next_action": "Review completed session.",
+                            "artifacts": {
+                                "context_refresh": {"ok": True},
+                                "close_workflow": {
+                                    "warnings": [recovered_warning],
+                                },
+                                "recovered_close_warnings": [
+                                    {
+                                        "code": "CLOSE_RECOVERED_NON_BLOCKING_WARNING",
+                                        "recovered_by": "pipeline.close.context_refresh",
+                                        "source_command": "pipeline.review_close_policy",
+                                        "warning": recovered_warning,
+                                    }
+                                ],
+                            },
+                        },
+                    },
+                }
+            )
+            + "\n",
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "pipeline.run_next",
+                    "confirm": "yes",
+                    "session_id": "PSESS-RECOVERED",
+                }
+            )
+
+        body = render_action_result(result)
+
+        self.assertNotIn("<h3>Warnings</h3>", body)
+        self.assertIn("CLOSE_RECOVERED_NON_BLOCKING_WARNING", body)
+        self.assertIn("contextctl.check-generated", body)
+
+    def test_pipeline_action_result_keeps_unrecovered_close_warnings_visible(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "ok": True,
+                    "command": "pipeline.run_next",
+                    "domain": "pipeline",
+                    "message": "Close blocked.",
+                    "warnings": [
+                        {
+                            "code": "WORKFLOW_NON_BLOCKING_STEP_FAILED",
+                            "message": (
+                                "Non-blocking workflow step reported a warning: "
+                                "Check generated context output"
+                            ),
+                            "details": {
+                                "step": "context_generated",
+                                "command_name": "contextctl.check-generated",
+                                "returncode": 1,
+                            },
+                        }
+                    ],
+                    "data": {
+                        "session_id": "PSESS-UNRECOVERED",
+                        "dispatched_phase": "close",
+                        "phase_status": "blocked",
+                        "blocked_by": "CLOSE_CONTEXT_REFRESH_FAILED",
+                        "phase_result": {
+                            "phase": "close",
+                            "status": "blocked",
+                            "reason": "Close blocked.",
+                            "next_action": "Resolve context refresh.",
+                            "artifacts": {
+                                "blocked_by": "CLOSE_CONTEXT_REFRESH_FAILED",
+                                "context_refresh": {"ok": False},
+                            },
+                        },
+                    },
+                }
+            )
+            + "\n",
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "pipeline.run_next",
+                    "confirm": "yes",
+                    "session_id": "PSESS-UNRECOVERED",
+                }
+            )
+
+        body = render_action_result(result)
+
+        self.assertIn("<h3>Warnings</h3>", body)
+        self.assertIn("WORKFLOW_NON_BLOCKING_STEP_FAILED", body)
+        self.assertIn("Check generated context output", body)
+
     def test_action_error_panel_keeps_failed_workflow_step_visible(self):
         error = WebActionError(
             "WEB_ACTION_COMMAND_FAILED",

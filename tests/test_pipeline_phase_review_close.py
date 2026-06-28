@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest import mock
 
 from ai_project_ctl.core import workflows as workflow_module
+from ai_project_ctl.core.result import CommandMessage, CommandResult
 from ai_project_ctl.pipeline import policy_preset
 from ai_project_ctl.pipeline.close_phase import close_phase
 from ai_project_ctl.pipeline.codex_adapter import (
@@ -569,6 +570,119 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
                 "context build failed\n",
             )
 
+    def test_close_demotes_recovered_context_and_protected_warnings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_temp_project(root)
+            _prepare_auto_close_workflow(root)
+            session_id = _create_close_session(root)
+            _record_close_preflight_history(root, session_id)
+            workflow = _close_workflow_success_with_warnings(
+                _close_context_generated_warning(),
+                _close_protected_prompt_warning(),
+                _close_doctor_warning(),
+            )
+
+            with mock.patch(
+                "ai_project_ctl.pipeline.close_phase._run_close_workflow",
+                return_value=workflow,
+            ), mock.patch(
+                "ai_project_ctl.pipeline.close_phase._accept_linked_changes_after_close",
+                return_value=(_skipped_change_acceptance(), ()),
+            ):
+                close = close_phase(
+                    session_id,
+                    root=root,
+                    actor="tester",
+                    confirmed=True,
+                )
+
+            self.assertTrue(close.ok, close.errors)
+            visible_warning_codes = [warning.code for warning in close.warnings]
+            self.assertEqual(
+                visible_warning_codes,
+                ["WORKFLOW_NON_BLOCKING_STEP_FAILED"],
+            )
+            self.assertEqual(close.warnings[0].details["step"], "doctor")
+            phase_result = close.data["phase_result"]
+            artifacts = phase_result["artifacts"]
+            self.assertTrue(artifacts["context_refresh"]["ok"])
+            self.assertEqual(len(artifacts["close_workflow"]["warnings"]), 3)
+            recovered = artifacts["recovered_close_warnings"]
+            self.assertEqual(len(recovered), 2)
+            self.assertEqual(
+                [item["warning"]["details"]["command_name"] for item in recovered],
+                ["contextctl.check-generated", "protected.check"],
+            )
+
+    def test_close_keeps_close_warnings_visible_when_context_refresh_check_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_temp_project(root)
+            _prepare_auto_close_workflow(root)
+            session_id = _create_close_session(root)
+            _record_close_preflight_history(root, session_id)
+            workflow = _close_workflow_success_with_warnings(
+                _close_context_generated_warning(),
+                _close_protected_prompt_warning(),
+            )
+
+            def fail_context_check(
+                argv: tuple[str, ...],
+                *,
+                root: Path,
+            ) -> subprocess.CompletedProcess[str]:
+                if tuple(argv[-1:]) == ("check-generated",):
+                    return subprocess.CompletedProcess(
+                        args=list(argv),
+                        returncode=1,
+                        stdout="",
+                        stderr="context check still stale\n",
+                    )
+                return subprocess.CompletedProcess(
+                    args=list(argv),
+                    returncode=0,
+                    stdout="context build ok\n",
+                    stderr="",
+                )
+
+            with (
+                mock.patch(
+                    "ai_project_ctl.pipeline.close_phase._run_close_workflow",
+                    return_value=workflow,
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.close_phase._accept_linked_changes_after_close",
+                    return_value=(_skipped_change_acceptance(), ()),
+                ),
+                mock.patch(
+                    "ai_project_ctl.pipeline.close_phase._run_context_refresh_command",
+                    side_effect=fail_context_check,
+                ),
+            ):
+                close = close_phase(
+                    session_id,
+                    root=root,
+                    actor="tester",
+                    confirmed=True,
+                )
+
+            self.assertTrue(close.ok, close.errors)
+            phase_result = close.data["phase_result"]
+            self.assertEqual(phase_result["status"], "blocked")
+            artifacts = phase_result["artifacts"]
+            self.assertNotIn("recovered_close_warnings", artifacts)
+            self.assertFalse(artifacts["context_refresh"]["ok"])
+            self.assertEqual(
+                artifacts["context_refresh"]["data"]["failed_step"],
+                "context_check",
+            )
+            self.assertEqual(len(close.warnings), 2)
+            self.assertEqual(
+                [warning.details["command_name"] for warning in close.warnings],
+                ["contextctl.check-generated", "protected.check"],
+            )
+
     def test_close_local_commit_blocks_unsafe_machine_review_warn(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -1017,6 +1131,81 @@ def _machine_review_with_context_check_failure(
         task_id=TASK_ID,
         report_id="RPT-001",
         checks=tuple(checks),
+    )
+
+
+def _close_workflow_success_with_warnings(*warnings: CommandMessage) -> CommandResult:
+    result = CommandResult.success(
+        command="pipeline.review_close_policy",
+        domain="pipeline",
+        message="Task auto-close completed through fake workflow.",
+        data={
+            "decision": {},
+            "workflows": [],
+        },
+    )
+    result.warnings.extend(warnings)
+    return result
+
+
+def _skipped_change_acceptance() -> dict:
+    return {
+        "status": "skipped",
+        "reason": "No linked Evolution Changes were found for the closed task.",
+        "policy": {},
+        "linked_change_ids": [],
+        "missing_change_ids": [],
+        "outcomes": [],
+        "accepted_change_ids": [],
+    }
+
+
+def _close_context_generated_warning() -> CommandMessage:
+    return CommandMessage(
+        "WORKFLOW_NON_BLOCKING_STEP_FAILED",
+        "Non-blocking workflow step reported a warning: Check generated context output",
+        details={
+            "step": "context_generated",
+            "command_name": "contextctl.check-generated",
+            "returncode": 1,
+            "stdout": "context generated output is stale",
+            "stderr": "",
+        },
+    )
+
+
+def _close_protected_prompt_warning() -> CommandMessage:
+    return CommandMessage(
+        "WORKFLOW_NON_BLOCKING_STEP_FAILED",
+        "Non-blocking workflow step reported a warning: Check protected project files",
+        details={
+            "step": "protected",
+            "command_name": "protected.check",
+            "returncode": 1,
+            "stdout": json.dumps(
+                {
+                    "ok": False,
+                    "errors": [
+                        "CODEX_EXECUTION_CONTEXT_MISMATCH: Context Pack is stale."
+                    ],
+                }
+            ),
+            "stderr": "Protected-file check reported only stale prompt/context warnings.",
+        },
+    )
+
+
+def _close_doctor_warning() -> CommandMessage:
+    return CommandMessage(
+        "WORKFLOW_NON_BLOCKING_STEP_FAILED",
+        "Non-blocking workflow step reported a warning: Run project doctor",
+        details={
+            "step": "doctor",
+            "command_name": "project.doctor",
+            "returncode": 1,
+            "stdout": "doctor warning",
+            "stderr": "",
+        },
     )
 
 

@@ -917,6 +917,55 @@ def _status_session_summary(session: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _latest_close_status(session: Mapping[str, Any]) -> dict[str, Any]:
+    entry = _latest_close_phase(session)
+    if not entry:
+        return {}
+    artifacts = _mapping_or_empty(entry.get("artifacts"))
+    close_status = artifacts.get(CLOSE_STATUS_KEY)
+    if isinstance(close_status, Mapping):
+        data = dict(close_status)
+        data.setdefault("owner_next_action", str(entry.get("next_action") or ""))
+        return data
+    return _derive_close_status_from_artifacts(artifacts, entry)
+
+
+def successful_committed_close_status(session: Mapping[str, Any]) -> dict[str, Any]:
+    """Return close status when the latest close passed with a local commit."""
+
+    entry = _latest_close_phase(session)
+    if not entry or str(entry.get("status") or "") != "passed":
+        return {}
+
+    artifacts = _mapping_or_empty(entry.get("artifacts"))
+    close_status = _latest_close_status(session)
+    local_commit = _mapping_or_empty(artifacts.get("local_commit"))
+    commit_hash = str(
+        local_commit.get("commit_hash")
+        or close_status.get("commit_hash")
+        or artifacts.get("commit_hash")
+        or ""
+    ).strip()
+    if not commit_hash:
+        return {}
+
+    commit_status = str(
+        local_commit.get("status") or close_status.get("commit_status") or ""
+    ).lower()
+    close_outcome = str(
+        close_status.get("outcome") or artifacts.get("close_outcome") or ""
+    ).lower()
+    if commit_status != "pass" and close_outcome != "closed_with_local_commit":
+        return {}
+
+    data = dict(close_status)
+    data["commit_hash"] = commit_hash
+    if not data.get("commit_status"):
+        data["commit_status"] = commit_status
+    data.setdefault("owner_next_action", str(entry.get("next_action") or ""))
+    return data
+
+
+def _latest_close_phase(session: Mapping[str, Any]) -> Mapping[str, Any]:
     history = session.get("phase_history")
     if not isinstance(history, Sequence) or isinstance(history, (str, bytes)):
         return {}
@@ -925,15 +974,7 @@ def _latest_close_status(session: Mapping[str, Any]) -> dict[str, Any]:
             continue
         if str(entry.get("phase") or "") != "close":
             continue
-        artifacts = _mapping_or_empty(entry.get("artifacts"))
-        close_status = artifacts.get(CLOSE_STATUS_KEY)
-        if isinstance(close_status, Mapping):
-            data = dict(close_status)
-            data.setdefault("owner_next_action", str(entry.get("next_action") or ""))
-            return data
-        derived = _derive_close_status_from_artifacts(artifacts, entry)
-        if derived:
-            return derived
+        return entry
     return {}
 
 
