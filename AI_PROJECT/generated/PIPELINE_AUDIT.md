@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `824`
-State revision: `824`
-Current session: `PSESS-112`
+Events: `973`
+State revision: `973`
+Current session: `PSESS-131`
 
 ## Timeline
 
@@ -835,6 +835,155 @@ Current session: `PSESS-112`
 | `2026-06-27T20:32:52Z` | `step.result` | `pipeline.phase.verify` | `PSESS-112` | `` | `` | reports=RPT-087 |
 | `2026-06-27T20:32:54Z` | `step.result` | `pipeline.phase.review` | `PSESS-112` | `` | `` | reports=RPT-087 |
 | `2026-06-27T20:33:11Z` | `step.result` | `pipeline.phase.close` | `PSESS-112` | `` | `` | changes=CHG-078 \| reports=RPT-087 |
+| `2026-06-27T21:45:24Z` | `session.create` | `pipeline.session.create` | `PSESS-113` | `` | `` | PSESS-113 |
+| `2026-06-27T21:45:26Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-113` | `` | `` | PSESS-113 |
+| `2026-06-27T21:45:35Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-113` | `` | `` | PSESS-113 |
+| `2026-06-27T21:45:40Z` | `step.result` | `pipeline.phase.execute` | `PSESS-113` | `` | `` | PSESS-113 |
+| `2026-06-27T21:51:03Z` | `step.result` | `pipeline.phase.execute` | `PSESS-113` | `` | `` | reports=RPT-088 |
+| `2026-06-27T21:51:04Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-113` | `` | `` | reports=RPT-088 |
+| `2026-06-27T21:51:06Z` | `step.result` | `pipeline.phase.verify` | `PSESS-113` | `` | `` | reports=RPT-088 |
+| `2026-06-27T21:51:08Z` | `step.result` | `pipeline.phase.review` | `PSESS-113` | `` | `` | reports=RPT-088 |
+| `2026-06-27T21:51:26Z` | `step.result` | `pipeline.phase.close` | `PSESS-113` | `` | `` | reports=RPT-088 |
+| `2026-06-27T21:52:47Z` | `session.create` | `pipeline.session.create` | `PSESS-114` | `` | `` | PSESS-114 |
+| `2026-06-27T21:52:48Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-114` | `` | `` | PSESS-114 |
+| `2026-06-27T21:52:55Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-114` | `` | `` | PSESS-114 |
+| `2026-06-27T21:52:57Z` | `step.result` | `pipeline.phase.execute` | `PSESS-114` | `` | `` | PSESS-114 |
+| `2026-06-27T22:01:20Z` | `step.result` | `pipeline.phase.execute` | `PSESS-114` | `` | `` | reports=RPT-089 |
+| `2026-06-27T22:01:22Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-114` | `` | `` | reports=RPT-089 |
+| `2026-06-27T22:01:24Z` | `step.result` | `pipeline.phase.verify` | `PSESS-114` | `` | `` | reports=RPT-089 |
+| `2026-06-27T22:01:25Z` | `step.result` | `pipeline.phase.review` | `PSESS-114` | `` | `` | reports=RPT-089 |
+| `2026-06-27T22:01:43Z` | `step.result` | `pipeline.phase.close` | `PSESS-114` | `` | `` | reports=RPT-089 |
+| `2026-06-27T22:11:09Z` | `session.create` | `pipeline.session.create` | `PSESS-115` | `` | `` | PSESS-115 |
+| `2026-06-27T22:11:10Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-115` | `` | `` | PSESS-115 |
+| `2026-06-27T22:11:17Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-115` | `` | `` | PSESS-115 |
+| `2026-06-27T22:11:19Z` | `step.result` | `pipeline.phase.execute` | `PSESS-115` | `` | `` | PSESS-115 |
+| `2026-06-27T22:22:43Z` | `step.result` | `pipeline.phase.execute` | `PSESS-115` | `` | `` | reports=RPT-090 |
+| `2026-06-27T22:22:45Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-115` | `` | `` | reports=RPT-090 |
+| `2026-06-27T22:22:47Z` | `step.result` | `pipeline.phase.verify` | `PSESS-115` | `` | `` | reports=RPT-090 |
+| `2026-06-27T22:22:49Z` | `step.result` | `pipeline.phase.review` | `PSESS-115` | `` | `` | reports=RPT-090 |
+| `2026-06-27T22:23:06Z` | `step.result` | `pipeline.phase.close` | `PSESS-115` | `` | `` | reports=RPT-090 |
+| `2026-06-27T22:23:32Z` | `session.create` | `pipeline.session.create` | `PSESS-116` | `` | `` | PSESS-116 |
+| `2026-06-27T22:23:34Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-116` | `` | `` | PSESS-116 |
+| `2026-06-27T22:24:23Z` | `session.create` | `pipeline.session.create` | `PSESS-117` | `` | `` | PSESS-117 |
+| `2026-06-27T22:24:24Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-117` | `` | `` | PSESS-117 |
+| `2026-06-28T13:43:57Z` | `session.create` | `pipeline.session.create` | `PSESS-118` | `` | `` | PSESS-118 |
+| `2026-06-28T13:43:58Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-118` | `` | `` | PSESS-118 |
+| `2026-06-28T13:44:09Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-118` | `` | `` | changes=CHG-079 |
+| `2026-06-28T13:44:11Z` | `step.result` | `pipeline.phase.execute` | `PSESS-118` | `` | `` | PSESS-118 |
+| `2026-06-28T13:47:39Z` | `step.result` | `pipeline.phase.execute` | `PSESS-118` | `` | `` | reports=RPT-091 |
+| `2026-06-28T13:47:41Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-118` | `` | `` | reports=RPT-091 |
+| `2026-06-28T13:47:42Z` | `step.result` | `pipeline.phase.verify` | `PSESS-118` | `` | `` | reports=RPT-091 |
+| `2026-06-28T13:47:43Z` | `step.result` | `pipeline.phase.review` | `PSESS-118` | `` | `` | reports=RPT-091 |
+| `2026-06-28T13:48:00Z` | `step.result` | `pipeline.phase.close` | `PSESS-118` | `` | `` | changes=CHG-079 \| reports=RPT-091 |
+| `2026-06-28T13:49:58Z` | `session.create` | `pipeline.session.create` | `PSESS-119` | `` | `` | PSESS-119 |
+| `2026-06-28T13:49:59Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-119` | `` | `` | PSESS-119 |
+| `2026-06-28T14:13:41Z` | `session.create` | `pipeline.session.create` | `PSESS-120` | `` | `` | PSESS-120 |
+| `2026-06-28T14:13:43Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-120` | `` | `` | PSESS-120 |
+| `2026-06-28T14:13:50Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-120` | `` | `` | PSESS-120 |
+| `2026-06-28T14:13:52Z` | `step.result` | `pipeline.phase.execute` | `PSESS-120` | `` | `` | PSESS-120 |
+| `2026-06-28T14:20:44Z` | `step.result` | `pipeline.phase.execute` | `PSESS-120` | `` | `` | reports=RPT-092 |
+| `2026-06-28T14:20:46Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-120` | `` | `` | reports=RPT-092 |
+| `2026-06-28T14:20:48Z` | `step.result` | `pipeline.phase.verify` | `PSESS-120` | `` | `` | reports=RPT-092 |
+| `2026-06-28T14:20:50Z` | `step.result` | `pipeline.phase.review` | `PSESS-120` | `` | `` | reports=RPT-092 |
+| `2026-06-28T14:21:06Z` | `step.result` | `pipeline.phase.close` | `PSESS-120` | `` | `` | reports=RPT-092 |
+| `2026-06-28T14:25:29Z` | `session.create` | `pipeline.session.create` | `PSESS-121` | `` | `` | PSESS-121 |
+| `2026-06-28T14:25:30Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-121` | `` | `` | PSESS-121 |
+| `2026-06-28T14:25:37Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-121` | `` | `` | PSESS-121 |
+| `2026-06-28T14:25:39Z` | `step.result` | `pipeline.phase.execute` | `PSESS-121` | `` | `` | PSESS-121 |
+| `2026-06-28T14:38:44Z` | `step.result` | `pipeline.phase.execute` | `PSESS-121` | `` | `` | reports=RPT-093 |
+| `2026-06-28T14:38:45Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-121` | `` | `` | reports=RPT-093 |
+| `2026-06-28T14:38:47Z` | `step.result` | `pipeline.phase.verify` | `PSESS-121` | `` | `` | reports=RPT-093 |
+| `2026-06-28T14:38:49Z` | `step.result` | `pipeline.phase.review` | `PSESS-121` | `` | `` | reports=RPT-093 |
+| `2026-06-28T14:39:04Z` | `step.result` | `pipeline.phase.close` | `PSESS-121` | `` | `` | reports=RPT-093 |
+| `2026-06-28T14:39:26Z` | `session.create` | `pipeline.session.create` | `PSESS-122` | `` | `` | PSESS-122 |
+| `2026-06-28T14:39:27Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-122` | `` | `` | PSESS-122 |
+| `2026-06-28T14:39:34Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-122` | `` | `` | PSESS-122 |
+| `2026-06-28T14:39:36Z` | `step.result` | `pipeline.phase.execute` | `PSESS-122` | `` | `` | PSESS-122 |
+| `2026-06-28T14:53:27Z` | `step.result` | `pipeline.phase.execute` | `PSESS-122` | `` | `` | reports=RPT-094 |
+| `2026-06-28T14:53:29Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-122` | `` | `` | reports=RPT-094 |
+| `2026-06-28T14:53:31Z` | `step.result` | `pipeline.phase.verify` | `PSESS-122` | `` | `` | reports=RPT-094 |
+| `2026-06-28T14:53:32Z` | `step.result` | `pipeline.phase.review` | `PSESS-122` | `` | `` | reports=RPT-094 |
+| `2026-06-28T14:53:49Z` | `step.result` | `pipeline.phase.close` | `PSESS-122` | `` | `` | reports=RPT-094 |
+| `2026-06-28T15:05:38Z` | `session.create` | `pipeline.session.create` | `PSESS-123` | `` | `` | PSESS-123 |
+| `2026-06-28T15:05:39Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-123` | `` | `` | PSESS-123 |
+| `2026-06-28T15:05:46Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-123` | `` | `` | PSESS-123 |
+| `2026-06-28T15:05:48Z` | `step.result` | `pipeline.phase.execute` | `PSESS-123` | `` | `` | PSESS-123 |
+| `2026-06-28T15:15:53Z` | `step.result` | `pipeline.phase.execute` | `PSESS-123` | `` | `` | reports=RPT-095 |
+| `2026-06-28T15:15:54Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-123` | `` | `` | reports=RPT-095 |
+| `2026-06-28T15:15:56Z` | `step.result` | `pipeline.phase.verify` | `PSESS-123` | `` | `` | reports=RPT-095 |
+| `2026-06-28T15:15:58Z` | `step.result` | `pipeline.phase.review` | `PSESS-123` | `` | `` | reports=RPT-095 |
+| `2026-06-28T15:16:14Z` | `step.result` | `pipeline.phase.close` | `PSESS-123` | `` | `` | reports=RPT-095 |
+| `2026-06-28T15:18:13Z` | `session.create` | `pipeline.session.create` | `PSESS-124` | `` | `` | PSESS-124 |
+| `2026-06-28T15:18:15Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-124` | `` | `` | PSESS-124 |
+| `2026-06-28T15:18:22Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-124` | `` | `` | PSESS-124 |
+| `2026-06-28T15:18:24Z` | `step.result` | `pipeline.phase.execute` | `PSESS-124` | `` | `` | PSESS-124 |
+| `2026-06-28T15:29:29Z` | `step.result` | `pipeline.phase.execute` | `PSESS-124` | `` | `` | reports=RPT-096 |
+| `2026-06-28T15:29:30Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-124` | `` | `` | reports=RPT-096 |
+| `2026-06-28T15:29:32Z` | `step.result` | `pipeline.phase.verify` | `PSESS-124` | `` | `` | reports=RPT-096 |
+| `2026-06-28T15:29:34Z` | `step.result` | `pipeline.phase.review` | `PSESS-124` | `` | `` | reports=RPT-096 |
+| `2026-06-28T15:29:50Z` | `step.result` | `pipeline.phase.close` | `PSESS-124` | `` | `` | reports=RPT-096 |
+| `2026-06-28T15:37:53Z` | `session.create` | `pipeline.session.create` | `PSESS-125` | `` | `` | PSESS-125 |
+| `2026-06-28T15:37:54Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-125` | `` | `` | PSESS-125 |
+| `2026-06-28T15:38:06Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-125` | `` | `` | changes=CHG-080 |
+| `2026-06-28T15:38:08Z` | `step.result` | `pipeline.phase.execute` | `PSESS-125` | `` | `` | PSESS-125 |
+| `2026-06-28T15:47:50Z` | `step.result` | `pipeline.phase.execute` | `PSESS-125` | `` | `` | reports=RPT-097 |
+| `2026-06-28T15:47:52Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-125` | `` | `` | reports=RPT-097 |
+| `2026-06-28T15:47:54Z` | `step.result` | `pipeline.phase.verify` | `PSESS-125` | `` | `` | reports=RPT-097 |
+| `2026-06-28T15:47:55Z` | `step.result` | `pipeline.phase.review` | `PSESS-125` | `` | `` | reports=RPT-097 |
+| `2026-06-28T15:48:12Z` | `step.result` | `pipeline.phase.close` | `PSESS-125` | `` | `` | changes=CHG-080 \| reports=RPT-097 |
+| `2026-06-28T15:51:48Z` | `session.create` | `pipeline.session.create` | `PSESS-126` | `` | `` | PSESS-126 |
+| `2026-06-28T15:51:49Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-126` | `` | `` | PSESS-126 |
+| `2026-06-28T15:51:56Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-126` | `` | `` | PSESS-126 |
+| `2026-06-28T15:51:58Z` | `step.result` | `pipeline.phase.execute` | `PSESS-126` | `` | `` | PSESS-126 |
+| `2026-06-28T16:06:40Z` | `step.result` | `pipeline.phase.execute` | `PSESS-126` | `` | `` | reports=RPT-098 |
+| `2026-06-28T16:06:42Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-126` | `` | `` | reports=RPT-098 |
+| `2026-06-28T16:06:43Z` | `step.result` | `pipeline.phase.verify` | `PSESS-126` | `` | `` | reports=RPT-098 |
+| `2026-06-28T16:06:45Z` | `step.result` | `pipeline.phase.review` | `PSESS-126` | `` | `` | reports=RPT-098 |
+| `2026-06-28T16:07:01Z` | `step.result` | `pipeline.phase.close` | `PSESS-126` | `` | `` | reports=RPT-098 |
+| `2026-06-28T16:07:36Z` | `session.create` | `pipeline.session.create` | `PSESS-127` | `` | `` | PSESS-127 |
+| `2026-06-28T16:07:38Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-127` | `` | `` | PSESS-127 |
+| `2026-06-28T16:07:49Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-127` | `` | `` | changes=CHG-081 |
+| `2026-06-28T16:07:51Z` | `step.result` | `pipeline.phase.execute` | `PSESS-127` | `` | `` | PSESS-127 |
+| `2026-06-28T16:47:27Z` | `step.result` | `pipeline.phase.execute` | `PSESS-127` | `` | `` | reports=RPT-099 |
+| `2026-06-28T16:47:29Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-127` | `` | `` | reports=RPT-099 |
+| `2026-06-28T16:47:31Z` | `step.result` | `pipeline.phase.verify` | `PSESS-127` | `` | `` | reports=RPT-099 |
+| `2026-06-28T16:47:33Z` | `step.result` | `pipeline.phase.review` | `PSESS-127` | `` | `` | reports=RPT-099 |
+| `2026-06-28T16:47:51Z` | `step.result` | `pipeline.phase.close` | `PSESS-127` | `` | `` | changes=CHG-081 \| reports=RPT-099 |
+| `2026-06-28T17:30:42Z` | `session.create` | `pipeline.session.create` | `PSESS-128` | `` | `` | PSESS-128 |
+| `2026-06-28T17:30:44Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-128` | `` | `` | PSESS-128 |
+| `2026-06-28T17:30:58Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-128` | `` | `` | changes=CHG-082 |
+| `2026-06-28T17:31:01Z` | `step.result` | `pipeline.phase.execute` | `PSESS-128` | `` | `` | PSESS-128 |
+| `2026-06-28T17:33:44Z` | `step.result` | `pipeline.phase.execute` | `PSESS-128` | `` | `` | reports=RPT-101 |
+| `2026-06-28T17:33:46Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-128` | `` | `` | reports=RPT-101 |
+| `2026-06-28T17:33:48Z` | `step.result` | `pipeline.phase.verify` | `PSESS-128` | `` | `` | reports=RPT-101 |
+| `2026-06-28T17:33:51Z` | `step.result` | `pipeline.phase.review` | `PSESS-128` | `` | `` | reports=RPT-101 |
+| `2026-06-28T17:34:10Z` | `step.result` | `pipeline.phase.close` | `PSESS-128` | `` | `` | changes=CHG-082 \| reports=RPT-101 |
+| `2026-06-28T18:37:56Z` | `session.create` | `pipeline.session.create` | `PSESS-129` | `` | `` | PSESS-129 |
+| `2026-06-28T18:37:58Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-129` | `` | `` | PSESS-129 |
+| `2026-06-28T18:38:10Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-129` | `` | `` | changes=CHG-083 |
+| `2026-06-28T18:38:13Z` | `step.result` | `pipeline.phase.execute` | `PSESS-129` | `` | `` | PSESS-129 |
+| `2026-06-28T18:41:09Z` | `step.result` | `pipeline.phase.execute` | `PSESS-129` | `` | `` | reports=RPT-103 |
+| `2026-06-28T18:41:11Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-129` | `` | `` | reports=RPT-103 |
+| `2026-06-28T18:41:13Z` | `step.result` | `pipeline.phase.verify` | `PSESS-129` | `` | `` | reports=RPT-103 |
+| `2026-06-28T18:41:15Z` | `step.result` | `pipeline.phase.review` | `PSESS-129` | `` | `` | reports=RPT-103 |
+| `2026-06-28T18:41:33Z` | `step.result` | `pipeline.phase.close` | `PSESS-129` | `` | `` | changes=CHG-083 \| reports=RPT-103 |
+| `2026-06-28T18:53:02Z` | `session.create` | `pipeline.session.create` | `PSESS-130` | `` | `` | PSESS-130 |
+| `2026-06-28T18:53:04Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-130` | `` | `` | PSESS-130 |
+| `2026-06-28T18:53:17Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-130` | `` | `` | changes=CHG-084 |
+| `2026-06-28T18:53:20Z` | `step.result` | `pipeline.phase.execute` | `PSESS-130` | `` | `` | PSESS-130 |
+| `2026-06-28T18:56:30Z` | `step.result` | `pipeline.phase.execute` | `PSESS-130` | `` | `` | reports=RPT-104 |
+| `2026-06-28T18:56:32Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-130` | `` | `` | reports=RPT-104 |
+| `2026-06-28T18:56:34Z` | `step.result` | `pipeline.phase.verify` | `PSESS-130` | `` | `` | reports=RPT-104 |
+| `2026-06-28T18:56:36Z` | `step.result` | `pipeline.phase.review` | `PSESS-130` | `` | `` | reports=RPT-104 |
+| `2026-06-28T18:56:54Z` | `step.result` | `pipeline.phase.close` | `PSESS-130` | `` | `` | changes=CHG-084 \| reports=RPT-104 |
+| `2026-06-28T19:36:14Z` | `session.create` | `pipeline.session.create` | `PSESS-131` | `` | `` | PSESS-131 |
+| `2026-06-28T19:36:16Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-131` | `` | `` | PSESS-131 |
+| `2026-06-28T19:36:28Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-131` | `` | `` | changes=CHG-085 |
+| `2026-06-28T19:36:31Z` | `step.result` | `pipeline.phase.execute` | `PSESS-131` | `` | `` | PSESS-131 |
+| `2026-06-28T19:39:26Z` | `step.result` | `pipeline.phase.execute` | `PSESS-131` | `` | `` | reports=RPT-106 |
+| `2026-06-28T19:39:29Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-131` | `` | `` | reports=RPT-106 |
+| `2026-06-28T19:39:31Z` | `step.result` | `pipeline.phase.verify` | `PSESS-131` | `` | `` | reports=RPT-106 |
+| `2026-06-28T19:39:33Z` | `step.result` | `pipeline.phase.review` | `PSESS-131` | `` | `` | reports=RPT-106 |
 
 ## Event Type Coverage
 

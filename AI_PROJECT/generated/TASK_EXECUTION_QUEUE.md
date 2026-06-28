@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1646`
+Revision: `1742`
 
 ## Executable Now
 
@@ -481,4 +481,36 @@ _No tasks waiting only on dependencies._
 - `PIPEF-133 (TASK-214)` [done] `EPIC-009` priority `1` — Record commit review diagnostics
   - `status_not_executable`: status is done
 - `PIPEF-134 (TASK-215)` [done] `EPIC-009` priority `1` — Prevent stale context commit regression
+  - `status_not_executable`: status is done
+- `PIPEF-135 (TASK-240)` [done] `EPIC-009` priority `1` — Ignore nonblocking review warnings
+  - `status_not_executable`: status is done
+- `PIPEF-136 (TASK-241)` [done] `EPIC-009` priority `1` — Add nonblocking warning regression
+  - `status_not_executable`: status is done
+- `PIPEF-137 (TASK-242)` [done] `EPIC-009` priority `1` — Separate warning diagnostics
+  - `status_not_executable`: status is done
+- `PIPEF-138 (TASK-243)` [done] `EPIC-009` priority `1` — Add Web Run smoke artifact
+  - `status_not_executable`: status is done
+- `PIPEF-139 (TASK-244)` [done] `EPIC-009` priority `1` — Add pipeline git status snapshot helper
+  - `status_not_executable`: status is done
+- `PIPEF-140 (TASK-245)` [done] `EPIC-009` priority `1` — Record Web Run session file baseline
+  - `status_not_executable`: status is done
+- `PIPEF-141 (TASK-246)` [done] `EPIC-009` priority `1` — Capture Codex-created changed files
+  - `status_not_executable`: status is done
+- `PIPEF-142 (TASK-247)` [done] `EPIC-009` priority `1` — Approve session-owned control side effects for commit
+  - `status_not_executable`: status is done
+- `PIPEF-143 (TASK-248)` [done] `EPIC-009` priority `1` — Expose commit-blocked closed task state
+  - `status_not_executable`: status is done
+- `PIPEF-144 (TASK-249)` [done] `EPIC-009` priority `1` — Classify blocked Web Run results correctly
+  - `status_not_executable`: status is done
+- `PIPEF-145 (TASK-250)` [done] `EPIC-009` priority `1` — Make selected Web Run idempotent
+  - `status_not_executable`: status is done
+- `PIPEF-146 (TASK-251)` [done] `EPIC-009` priority `1` — Add Web Run local commit smoke test
+  - `status_not_executable`: status is done
+- `PIPEF-147 (TASK-252)` [done] `EPIC-009` priority `1` — Verify Web Run commit smoke path
+  - `status_not_executable`: status is done
+- `PIPEF-148 (TASK-253)` [done] `EPIC-009` priority `1` — Verify Web Run clean commit path
+  - `status_not_executable`: status is done
+- `PIPEF-149 (TASK-254)` [done] `EPIC-009` priority `1` — Verify Web Run clean commit path
+  - `status_not_executable`: status is done
+- `PIPEF-150 (TASK-255)` [done] `EPIC-009` priority `1` — Verify Web Run clean commit path 2
   - `status_not_executable`: status is done

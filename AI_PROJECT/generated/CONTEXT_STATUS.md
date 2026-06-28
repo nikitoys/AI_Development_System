@@ -1,15 +1,15 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/generated/CONTEXT_PACK.md -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-239 Replace Tasks metrics with action counts Replace non-actionable /tasks metrics with owner-actionable counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues. Counts like done and visible are useful for inventory, but the Owner Cockpit default should show work that needs attention. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Compute action queue counts for Needs Decision, Ready To Run, Current, Blocked, and Health Issues. Render these counts in the /tasks default Action Queue view. Keep inventory-style metrics available only in Full Inventory or diagnostic views if they already exist. Add regression coverage for the displayed action counts. Do not remove task inventory data from the system. Do not change task statuses or stored task counts. Do not edit protected project-control files manually. ai_project_ctl/web/read_model.py ai_project_ctl/web/server.py tests/test_web_control_center_read_model.py tests/test_web_control_center.py The default /tasks metrics show Needs Decision, Ready To Run, Current, Blocked, and Health Issues. The default /tasks metrics do not emphasize done count as a primary owner-action metric. Metric counts match the rendered action queue groups. Metrics remain usable when there is no current task. Tests cover the action-count metrics. Compare metric counts with the queue groups rendered below them.","schema_version":1,"task_id":"TASK-239"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-255 Verify Web Run clean commit path 2 Create a new deterministic smoke artifact to verify that Web Run reaches local commit from a clean worktree. This task validates Web Run local commit after committing all previous bootstrap and task-import state. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Create tmp/run-smoke/web-run-clean-commit-smoke-2.md. Add the exact marker WEB_RUN_CLEAN_COMMIT_2_OK. State that this file is only a smoke artifact for Web Run local commit validation. Keep the content deterministic and timestamp-free. Do not change behavior unrelated to this task. Do not refactor unrelated code. Do not edit protected project-control files manually. Do not change pipeline, Web UI, policy, task, evolution, context, or Codex control behavior. tmp/run-smoke/web-run-clean-commit-smoke-2.md tmp/run-smoke/web-run-clean-commit-smoke-2.md exists after execution. The file contains the exact marker WEB_RUN_CLEAN_COMMIT_2_OK. The file states that it is only a smoke artifact for Web Run local commit validation. The generated report evidence includes tmp/run-smoke/web-run-clean-commit-smoke-2.md as a changed file. Web Run reaches local commit without COMMIT_READINESS_FAILED. Confirm that this task starts from a clean worktree and creates a local commit.","schema_version":1,"task_id":"TASK-255"} -->
 
 # Context Status
 
 Context pack exists: `true`
 Mode: `task`
-Task ID: `TASK-239`
+Task ID: `TASK-255`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1646`
+Tasks revision: `1742`
 Indexed source documents: `10`
 Indexed chunks: `891`
 Selected chunks: `8`

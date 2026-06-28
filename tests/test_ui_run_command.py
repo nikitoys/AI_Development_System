@@ -10,6 +10,7 @@ from unittest import mock
 
 from ai_project_ctl.core.result import CommandResult
 from ai_project_ctl.pipeline.state import pipeline_state_path
+from ai_project_ctl.pipeline.ui_run import resolve_ui_run_selection
 from ai_project_ctl.ui_settings import ui_settings_path
 from scripts import aictl
 from tests.test_pipeline_batch import write_batch_project_state
@@ -36,10 +37,62 @@ def write_settings(root: Path, payload: dict) -> None:
 
 
 class UIRunCommandTests(unittest.TestCase):
+    def test_ui_run_selection_resolves_done_task_without_creating_session(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_batch_project_state(root, task_count=1)
+            tasks_path = root / "AI_PROJECT" / "state" / "tasks.json"
+            tasks_state = json.loads(tasks_path.read_text(encoding="utf-8"))
+            tasks_state["tasks"][0]["status"] = "done"
+            tasks_path.write_text(json.dumps(tasks_state), encoding="utf-8")
+
+            resolution = resolve_ui_run_selection(root, "APP-01")
+
+            self.assertEqual(resolution.outcome, "not_run")
+            self.assertEqual(resolution.task_id, "TASK-001")
+            self.assertEqual(resolution.task_status, "done")
+            self.assertEqual(resolution.session_id, "")
+            self.assertFalse(pipeline_state_path(root).exists())
+
+    def test_ui_run_selection_returns_existing_reusable_session(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_batch_project_state(root, task_count=1)
+            pipeline_path = pipeline_state_path(root)
+            pipeline_path.parent.mkdir(parents=True, exist_ok=True)
+            pipeline_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "revision": 1,
+                        "current_session_id": "PSESS-007",
+                        "sessions": [
+                            {
+                                "id": "PSESS-007",
+                                "status": "blocked",
+                                "selected_queue": {"task_refs": ["APP-01"]},
+                                "current_task_id": "TASK-001",
+                                "current_task_ref": "APP-01",
+                                "current_step": "run_next",
+                                "current_step_status": "blocked",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            resolution = resolve_ui_run_selection(root, "TASK-001")
+
+            self.assertEqual(resolution.outcome, "existing_session")
+            self.assertEqual(resolution.session_id, "PSESS-007")
+            self.assertEqual(resolution.session_status, "blocked")
+
     def test_ui_run_creates_single_task_session_and_requires_confirm(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write_batch_project_state(root, task_count=1)
+            write_settings(root, {"default_policy": "supervised"})
 
             completed = run_aictl(root, "--json", "ui", "run", "APP-01")
 
@@ -92,6 +145,8 @@ class UIRunCommandTests(unittest.TestCase):
                     "ui",
                     "run",
                     "APP-01",
+                    "--auto-close-note",
+                    "Owner approved auto-close for UI run.",
                     "--confirm",
                 ]
             )

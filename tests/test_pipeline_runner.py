@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from ai_project_ctl.core.result import CommandResult
+import ai_project_ctl.pipeline.runner as runner_module
 from ai_project_ctl.pipeline import (
     BatchPolicy,
     CodexAdapterMode,
@@ -767,6 +768,64 @@ def load_pipeline(root: Path):
 
 
 class PipelineRunnerTests(unittest.TestCase):
+    def test_run_next_dispatch_result_exposes_close_commit_blocked_status(self):
+        close_status = {
+            "outcome": "done_but_commit_blocked",
+            "task_closed": True,
+            "task_status": "done",
+            "commit_status": "blocked",
+            "commit_code": "COMMIT_READINESS_FAILED",
+            "commit_hash": "",
+            "commit_readiness_status": "blocked",
+            "commit_readiness_code": "COMMIT_MACHINE_REVIEW_NOT_PASS",
+            "owner_next_action": (
+                "Task is done, but local commit is blocked by commit readiness."
+            ),
+        }
+        phase_result = {
+            "phase": "close",
+            "status": "blocked",
+            "reason": (
+                "Close completed, but local commit was blocked: Machine Review "
+                "WARN is not accepted for local commit."
+            ),
+            "next_action": close_status["owner_next_action"],
+            "artifacts": {
+                "blocked_by": "COMMIT_READINESS_FAILED",
+                "close_status": close_status,
+                "local_commit": {
+                    "status": "blocked",
+                    "code": "COMMIT_READINESS_FAILED",
+                },
+            },
+            "changed_files": [],
+            "generated_files": [],
+            "events": [],
+        }
+        delegated = CommandResult.success(
+            command="pipeline.phase.close",
+            domain="pipeline",
+            message=phase_result["reason"],
+            data={"phase_result": phase_result},
+        )
+
+        result = runner_module._phase_dispatch_result(
+            delegated,
+            phase_name="close",
+            session={"id": "PSESS-001", "current_task_id": "TASK-001"},
+            effects=(delegated,),
+        )
+
+        self.assertTrue(result.ok)
+        self.assertEqual(result.data["stop_code"], "COMMIT_READINESS_FAILED")
+        self.assertEqual(result.data["close_status"], close_status)
+        self.assertEqual(result.data["close_outcome"], "done_but_commit_blocked")
+        self.assertEqual(result.data["commit_status"], "blocked")
+        self.assertEqual(
+            result.next_actions,
+            [close_status["owner_next_action"]],
+        )
+
     def test_dry_run_records_selected_task_and_stops_without_prepare(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -1589,13 +1589,14 @@ def pipeline_expanded_phase(
     session: Mapping[str, Any],
 ) -> str:
     evidence = pipeline_phase_evidence_panel(phase)
+    local_commit = pipeline_local_commit_panel(phase)
     logs = pipeline_phase_log_panel(phase, session)
     return (
         '<div class="pipeline-step-body">'
         '<div class="review-grid">'
         "{}{}{}{}{}{}{}{}"
         "</div>"
-        "{}{}"
+        "{}{}{}"
         "</div>"
     ).format(
         review_field("Phase", escape(str(phase.get("label") or phase.get("phase") or "Unknown Phase"))),
@@ -1607,6 +1608,7 @@ def pipeline_expanded_phase(
         review_field("Generated Files", escape(str(phase.get("generated_files_count") or 0))),
         review_field("Events", escape(str(phase.get("event_count") or 0))),
         evidence,
+        local_commit,
         logs,
     )
 
@@ -1670,6 +1672,128 @@ def pipeline_phase_evidence_panel(phase: Mapping[str, Any]) -> str:
     return '<h3>Execution Evidence</h3><div class="review-grid">{}</div>'.format(
         "".join(review_field(label, escape(value)) for label, value in fields)
     )
+
+
+def pipeline_local_commit_panel(phase: Mapping[str, Any]) -> str:
+    artifacts = pipeline_phase_artifacts(phase)
+    local_commit = _mapping(artifacts.get("local_commit"))
+    if not local_commit:
+        return ""
+
+    readiness = _mapping(local_commit.get("readiness"))
+    fields: list[tuple[str, str]] = []
+
+    def add_field(label: str, *values: Any) -> None:
+        text = first_nonempty_text(*values)
+        if text:
+            fields.append((label, text))
+
+    add_field("Commit Status", local_commit.get("status"))
+    add_field("Commit Code", local_commit.get("code"))
+    add_field("Commit Reason", local_commit.get("reason"))
+    add_field("Readiness Status", readiness.get("status"))
+    add_field("Readiness Code", readiness.get("code"))
+    add_field("Readiness Reason", readiness.get("reason"))
+    blocking_checks, advisory_checks = pipeline_local_commit_check_groups(readiness)
+    field_html = (
+        '<div class="review-grid">{}</div>'.format(
+            "".join(review_field(label, escape(value)) for label, value in fields)
+        )
+        if fields
+        else ""
+    )
+    return (
+        "<h3>Local Commit Diagnostics</h3>"
+        "{}{}{}"
+    ).format(
+        field_html,
+        pipeline_local_commit_check_table(
+            "Blocking Non-pass Checks",
+            blocking_checks,
+            "No blocking non-pass checks recorded.",
+        ),
+        pipeline_local_commit_check_table(
+            "Advisory Non-pass Checks",
+            advisory_checks,
+            "No advisory non-pass checks recorded.",
+        ),
+    )
+
+
+def pipeline_local_commit_check_groups(
+    readiness: Mapping[str, Any],
+) -> tuple[list[Mapping[str, Any]], list[Mapping[str, Any]]]:
+    blocking_checks = pipeline_local_commit_check_items(
+        readiness.get("blocking_non_pass_checks")
+    )
+    advisory_checks = pipeline_local_commit_check_items(
+        readiness.get("advisory_non_pass_checks")
+    )
+    if not blocking_checks and not advisory_checks:
+        blocking_checks = pipeline_local_commit_check_items(
+            readiness.get("machine_review_diagnostics")
+        )
+    return blocking_checks, advisory_checks
+
+
+def pipeline_local_commit_check_items(value: Any) -> list[Mapping[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, Mapping)]
+
+
+def pipeline_local_commit_check_table(
+    title: str,
+    checks: Sequence[Mapping[str, Any]],
+    empty_text: str,
+) -> str:
+    rows = []
+    for check in checks:
+        name = str(check.get("name") or "machine_check")
+        details = pipeline_local_commit_check_details(name, check)
+        rows.append(
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                escape(name),
+                status_badge(str(check.get("status") or "unknown")),
+                escape(check.get("code") or ""),
+                "<br>".join(escape(detail) for detail in details),
+            )
+        )
+    return (
+        '<section class="review-subsection">'
+        "<h4>{}</h4>"
+        "{}"
+        "</section>"
+    ).format(
+        escape(title),
+        table(("Check", "Status", "Code", "Details"), rows, empty_text),
+    )
+
+
+def pipeline_local_commit_check_details(
+    name: str,
+    check: Mapping[str, Any],
+) -> list[str]:
+    details = []
+    reason = str(check.get("reason") or "").strip()
+    if reason:
+        details.append("reason: {}".format(reason))
+    command = check.get("command")
+    if isinstance(command, Sequence) and not isinstance(command, (str, bytes)):
+        command_text = " ".join(str(part) for part in command if str(part).strip())
+    else:
+        command_text = str(command or "").strip()
+    if command_text:
+        details.append("command: {}".format(command_text))
+    stdout_summary = str(check.get("stdout_summary") or "").strip()
+    if stdout_summary:
+        details.append("{} stdout: {}".format(name, stdout_summary))
+    stderr_summary = str(check.get("stderr_summary") or "").strip()
+    if stderr_summary:
+        details.append("{} stderr: {}".format(name, stderr_summary))
+    if not details:
+        details.append("No detail recorded.")
+    return details
 
 
 def pipeline_phase_log_panel(
@@ -3291,12 +3415,7 @@ def incomplete_run_warning_panel(
         )
     confirmation_html = ""
     if include_confirmation:
-        confirmation_html = (
-            '<label class="checkline incomplete-run-confirm">'
-            '<input type="checkbox" name="{}" value="yes" required>'
-            "Confirm this partial Web run"
-            "</label>"
-        ).format(escape(INCOMPLETE_RUN_CONFIRM_FIELD))
+        confirmation_html = incomplete_run_confirmation_field(summary)
     return (
         '<div class="{}" role="alert" data-incomplete-run-warning>'
         "<strong>Incomplete Web Run</strong>"
@@ -3309,6 +3428,18 @@ def incomplete_run_warning_panel(
         missing_html,
         confirmation_html,
     )
+
+
+def incomplete_run_confirmation_field(summary: Mapping[str, Any]) -> str:
+    warning = _mapping(_mapping(summary).get("incomplete_run_warning"))
+    if not warning.get("enabled"):
+        return ""
+    return (
+        '<label class="checkline incomplete-run-confirm">'
+        '<input type="checkbox" name="{}" value="yes" required>'
+        "Confirm partial Web run"
+        "</label>"
+    ).format(escape(INCOMPLETE_RUN_CONFIRM_FIELD))
 
 
 def effective_policy_summary_rows(summary: Mapping[str, Any]) -> list[tuple[str, str]]:
@@ -4724,7 +4855,6 @@ def render_action_error(error: WebActionError) -> str:
 
 
 def action_result_panel(payload: Mapping[str, Any]) -> str:
-    ok = bool(payload.get("ok"))
     result = _mapping(payload.get("result"))
     summary = _mapping(payload.get("summary"))
     data = _mapping(result.get("data"))
@@ -4741,17 +4871,18 @@ def action_result_panel(payload: Mapping[str, Any]) -> str:
                 "details": _mapping(error_info.get("details")),
             },
         )
-    status_kind = "pass" if ok else "fail"
+    display = _action_result_display(payload, result, summary, error_info)
+    status_kind = display["kind"]
     sections = [
         '<section class="panel action-result action-result-{}">'.format(status_kind),
         '<div class="action-result-header">',
         "<div>",
         "<h2>{}</h2>".format(escape(payload.get("label") or payload.get("action") or "Action result")),
         '<p class="muted">{}</p>'.format(
-            escape(_result_message(result, error_info) or "Action completed.")
+            escape(display["message"])
         ),
         "</div>",
-        action_result_badge("PASS" if ok else "FAIL", status_kind),
+        action_result_badge(display["label"], status_kind),
         "</div>",
         '<div class="result-meta">',
         metric("Registered command", str(payload.get("command") or "unknown")),
@@ -4771,6 +4902,217 @@ def action_result_panel(payload: Mapping[str, Any]) -> str:
     sections.append(_technical_details(payload))
     sections.append("</section>")
     return "".join(sections)
+
+
+def _action_result_display(
+    payload: Mapping[str, Any],
+    result: Mapping[str, Any],
+    summary: Mapping[str, Any],
+    error_info: Mapping[str, Any],
+) -> dict[str, str]:
+    command_ok = bool(payload.get("ok"))
+    result_ok = result.get("ok")
+    ok = command_ok and (bool(result_ok) if isinstance(result_ok, bool) else True)
+    fields = _action_result_pipeline_fields(result, summary)
+    if ok:
+        kind, label = _pipeline_action_badge(fields)
+    else:
+        kind, label = "fail", "FAIL"
+    message = first_nonempty_text(
+        _result_message(result, error_info),
+        fields.get("stop_reason"),
+        fields.get("next_action"),
+        "Action completed." if kind == "pass" else "Action did not complete successfully.",
+    )
+    return {"kind": kind, "label": label, "message": message}
+
+
+def _pipeline_action_badge(fields: Mapping[str, str]) -> tuple[str, str]:
+    if not _has_pipeline_outcome_fields(fields):
+        return "pass", "PASS"
+
+    outcome = fields.get("outcome", "").lower()
+    session_status = fields.get("session_status", "").lower()
+    phase_status = fields.get("phase_status", "").lower()
+    stop_code = fields.get("stop_code", "").upper()
+    blocked_by = fields.get("blocked_by", "").upper()
+    commit_code = first_nonempty_text(
+        fields.get("commit_code"),
+        fields.get("commit_readiness_code"),
+    ).upper()
+    commit_status = first_nonempty_text(
+        fields.get("commit_status"),
+        fields.get("commit_readiness_status"),
+    ).lower()
+
+    if (
+        "COMMIT_READINESS_FAILED" in {stop_code, blocked_by, commit_code}
+        or commit_status == "blocked"
+    ):
+        return "warn", "COMMIT BLOCKED"
+    if "NO_EXECUTABLE_TASK" in {stop_code, blocked_by}:
+        return "warn", "NOT RUN"
+    if outcome == "completed" or session_status == "completed" or stop_code == "QUEUE_COMPLETE":
+        return "pass", "PASS"
+    if outcome == "failed" or session_status == "failed" or phase_status == "failed":
+        return "fail", "FAIL"
+    if (
+        outcome == "blocked"
+        or session_status == "blocked"
+        or phase_status == "blocked"
+        or blocked_by
+        or stop_code == "BLOCKED"
+    ):
+        return "warn", "BLOCKED"
+    if outcome == "stopped" or session_status == "stopped":
+        return "warn", "STOPPED"
+    if stop_code:
+        if stop_code.endswith("_FAILED"):
+            return "fail", "FAIL"
+        return "warn", "BLOCKED"
+    return "pass", "PASS"
+
+
+def _has_pipeline_outcome_fields(fields: Mapping[str, str]) -> bool:
+    return any(
+        fields.get(key)
+        for key in (
+            "outcome",
+            "session_status",
+            "phase_status",
+            "stop_code",
+            "blocked_by",
+            "commit_status",
+            "commit_code",
+            "commit_readiness_status",
+            "commit_readiness_code",
+        )
+    )
+
+
+def _action_result_pipeline_fields(
+    result: Mapping[str, Any],
+    summary: Mapping[str, Any],
+) -> dict[str, str]:
+    data = _mapping(result.get("data"))
+    run = _mapping(data.get("run"))
+    run_data = _mapping(run.get("data"))
+    preflight = _mapping(data.get("preflight"))
+    preflight_data = _mapping(preflight.get("data"))
+    phase_result = _first_mapping(
+        data.get("phase_result"),
+        run_data.get("phase_result"),
+    )
+    phase_artifacts = _mapping(phase_result.get("artifacts"))
+    session = _first_mapping(data.get("session"), data.get("created_session"))
+    local_commit = _first_mapping(
+        data.get("local_commit"),
+        run_data.get("local_commit"),
+        phase_artifacts.get("local_commit"),
+    )
+    close_status = _first_mapping(
+        data.get("close_status"),
+        run_data.get("close_status"),
+        phase_artifacts.get("close_status"),
+    )
+    readiness = _mapping(local_commit.get("readiness"))
+    latest_step = _last_mapping(data.get("step_results"))
+
+    return {
+        "outcome": first_nonempty_text(
+            data.get("outcome"),
+            run_data.get("outcome"),
+            preflight_data.get("outcome"),
+        ),
+        "session_status": first_nonempty_text(
+            data.get("session_status"),
+            run_data.get("session_status"),
+            preflight_data.get("session_status"),
+            session.get("status"),
+        ),
+        "phase_status": first_nonempty_text(
+            data.get("phase_status"),
+            data.get("current_phase_status"),
+            run_data.get("phase_status"),
+            run_data.get("current_phase_status"),
+            phase_result.get("status"),
+            latest_step.get("phase_status"),
+            session.get("current_phase_status"),
+        ),
+        "stop_code": first_nonempty_text(
+            data.get("stop_code"),
+            run_data.get("stop_code"),
+            phase_result.get("stop_code"),
+            latest_step.get("stop_code"),
+        ),
+        "stop_reason": first_nonempty_text(
+            data.get("stop_reason"),
+            run_data.get("stop_reason"),
+            phase_result.get("reason"),
+            latest_step.get("stop_reason"),
+            result.get("message"),
+        ),
+        "blocked_by": first_nonempty_text(
+            data.get("blocked_by"),
+            run_data.get("blocked_by"),
+            phase_result.get("blocked_by"),
+            phase_artifacts.get("blocked_by"),
+            latest_step.get("blocked_by"),
+            session.get("blocked_by"),
+        ),
+        "next_action": first_nonempty_text(
+            data.get("next_action"),
+            run_data.get("next_action"),
+            phase_result.get("next_action"),
+            latest_step.get("next_action"),
+            result.get("owner_action_required"),
+            summary.get("owner_action_required"),
+            *_string_items(result.get("next_actions")),
+            *_string_items(summary.get("next_actions")),
+        ),
+        "commit_status": first_nonempty_text(
+            data.get("commit_status"),
+            run_data.get("commit_status"),
+            close_status.get("commit_status"),
+            local_commit.get("status"),
+        ),
+        "commit_code": first_nonempty_text(
+            data.get("commit_code"),
+            run_data.get("commit_code"),
+            close_status.get("commit_code"),
+            local_commit.get("code"),
+        ),
+        "commit_readiness_status": first_nonempty_text(
+            data.get("commit_readiness_status"),
+            run_data.get("commit_readiness_status"),
+            close_status.get("commit_readiness_status"),
+            readiness.get("status"),
+        ),
+        "commit_readiness_code": first_nonempty_text(
+            data.get("commit_readiness_code"),
+            run_data.get("commit_readiness_code"),
+            close_status.get("commit_readiness_code"),
+            readiness.get("code"),
+        ),
+    }
+
+
+def _first_mapping(*values: Any) -> Mapping[str, Any]:
+    for value in values:
+        mapping = _mapping(value)
+        if mapping:
+            return mapping
+    return {}
+
+
+def _last_mapping(value: Any) -> Mapping[str, Any]:
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
+        return {}
+    for item in reversed(value):
+        mapping = _mapping(item)
+        if mapping:
+            return mapping
+    return {}
 
 
 def action_result_badge(label: str, kind: str) -> str:
@@ -4956,15 +5298,22 @@ def _pipeline_result_panel(data: Mapping[str, Any]) -> list[str]:
         return []
     sections = []
     facts = []
+    pipeline_fields = _action_result_pipeline_fields({"data": data}, {})
     for label, key in (
         ("Session", "session_id"),
+        ("Outcome", "outcome"),
+        ("Session Status", "session_status"),
+        ("Current Phase", "current_phase"),
+        ("Phase Status", "phase_status"),
         ("Stop Code", "stop_code"),
         ("Stop Reason", "stop_reason"),
+        ("Blocked By", "blocked_by"),
+        ("Next Action", "next_action"),
         ("Current Task", "current_task_id"),
         ("Current Step", "current_step"),
         ("Step Status", "current_step_status"),
     ):
-        value = str(data.get(key) or "").strip()
+        value = str(data.get(key) or pipeline_fields.get(key) or "").strip()
         if value:
             facts.append(
                 "<li><strong>{}</strong>: {}</li>".format(
@@ -7802,6 +8151,25 @@ def confirm_modal_script() -> str:
     var cancelButton = backdrop.querySelector("[data-confirm-modal-cancel]");
     var state = {form: null, submitter: null, previousFocus: null};
 
+    function markSubmitInProgress(form, submitter) {
+      if (!form || form.dataset.submitOnce !== "action") {
+        return true;
+      }
+      if (form.dataset.submitInProgress === "1") {
+        return false;
+      }
+      form.dataset.submitInProgress = "1";
+      var buttons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+      Array.prototype.forEach.call(buttons, function(button) {
+        button.disabled = true;
+      });
+      if (submitter && submitter.textContent) {
+        submitter.dataset.originalLabel = submitter.textContent;
+        submitter.textContent = "Submitting...";
+      }
+      return true;
+    }
+
     function namedControl(form, name) {
       var control = form.elements[name];
       if (!control) {
@@ -8104,6 +8472,9 @@ def confirm_modal_script() -> str:
           form.requestSubmit();
         }
       } else {
+        if (!markSubmitInProgress(form, submitter)) {
+          return;
+        }
         form.submit();
       }
     }
@@ -8125,6 +8496,13 @@ def confirm_modal_script() -> str:
         form.addEventListener("submit", function(event) {
           if (form.dataset.confirmModalApproved === "1") {
             delete form.dataset.confirmModalApproved;
+            if (!markSubmitInProgress(form, event.submitter || form._confirmSubmitter || null)) {
+              event.preventDefault();
+            }
+            return;
+          }
+          if (form.dataset.submitInProgress === "1") {
+            event.preventDefault();
             return;
           }
           event.preventDefault();
@@ -9659,15 +10037,94 @@ def task_action_queue_primary_control(
     category: str,
     filters: Mapping[str, Any] | None = None,
 ) -> str:
-    control = task_primary_action_control(
-        task,
-        data,
-        category=category,
-        filters=filters or {},
-    )
+    if category == "blocked":
+        control = task_detail_link(task, filters or {}, label="Open Details")
+    elif category == "ready_to_run":
+        control = task_ready_to_run_controls(task, data, filters or {})
+    else:
+        control = task_primary_action_control(
+            task,
+            data,
+            category=category,
+            filters=filters or {},
+        )
     if not control:
         return '<span class="pill">No primary action</span>'
     return '<div class="row-actions row-primary-actions">{}</div>'.format(control)
+
+
+def task_ready_to_run_controls(
+    task: Mapping[str, Any],
+    data: Mapping[str, Any],
+    filters: Mapping[str, Any],
+) -> str:
+    controls = []
+    run_control = task_ready_to_run_control(task, data)
+    controls.append(run_control or task_run_gated_control(task))
+    prepare_control = task_prepare_secondary_control(task)
+    if prepare_control:
+        controls.append(prepare_control)
+    if not controls:
+        controls.append(task_detail_link(task, filters, label="Open Details"))
+    return "".join(controls)
+
+
+def task_ready_to_run_control(task: Mapping[str, Any], data: Mapping[str, Any]) -> str:
+    if task_run_unavailable_reason(task):
+        return ""
+    return task_row_start_control(task, data)
+
+
+def task_run_gated_control(task: Mapping[str, Any]) -> str:
+    reason = task_run_unavailable_reason(task) or "Run is unavailable for this task."
+    return (
+        '<div class="row-action row-action-run row-action-gated">'
+        '<button type="button" disabled>Run</button>'
+        '<p class="muted">Run unavailable: {}</p>'
+        "</div>"
+    ).format(escape(reason))
+
+
+def task_prepare_secondary_control(task: Mapping[str, Any]) -> str:
+    status = str(task.get("status") or "")
+    if status not in TASK_ROW_RUN_STATUSES:
+        return ""
+    if entity_action_available(task, "task.prepare_for_codex") is False:
+        return ""
+    task_ref = str(task.get("ref") or task.get("id") or "")
+    if not task_ref:
+        return ""
+    return action_form(
+        "task.prepare_for_codex",
+        [hidden_field("task", task_ref)],
+        button_label="Prepare",
+    )
+
+
+def task_run_unavailable_reason(task: Mapping[str, Any]) -> str:
+    if not task_action_target(task):
+        return "task id is missing"
+    status = str(task.get("status") or "")
+    if status in TASK_ROW_INACTIVE_STATUSES:
+        return "task status is {}".format(status)
+    if task_has_structural_blocker(task):
+        return task_structural_blocker_reason(task) or "task has a blocker"
+    if status not in TASK_ROW_RUN_STATUSES:
+        return "task status is {}".format(status or "unknown")
+    if entity_action_available(task, "ui.run_selected_task") is False:
+        return task_action_unavailable_reason(task, "ui.run_selected_task")
+    return ""
+
+
+def task_action_unavailable_reason(task: Mapping[str, Any], action_id: str) -> str:
+    hints = _mapping(task.get("pipeline_hints"))
+    actions = hints.get("actions")
+    if not isinstance(actions, Sequence) or isinstance(actions, (str, bytes)):
+        return ""
+    for action in actions:
+        if isinstance(action, Mapping) and str(action.get("action") or "") == action_id:
+            return str(action.get("reason") or "")
+    return ""
 
 
 def task_primary_action_control(
@@ -10349,7 +10806,7 @@ def current_execution_bar(
     ).format(
         current_execution_bar_summary(current, selected_warning=selected_warning),
         current_execution_readiness(prompt, pack),
-        current_execution_quick_actions(current),
+        current_execution_quick_actions(current, data),
     )
 
 
@@ -10429,7 +10886,10 @@ def current_execution_signal(label: str, status: str, detail: str) -> str:
     )
 
 
-def current_execution_quick_actions(current: Mapping[str, Any]) -> str:
+def current_execution_quick_actions(
+    current: Mapping[str, Any],
+    data: Mapping[str, Any],
+) -> str:
     task_ref = str(current.get("ref") or current.get("id") or "")
     if not task_ref:
         return (
@@ -10437,15 +10897,36 @@ def current_execution_quick_actions(current: Mapping[str, Any]) -> str:
             '<a class="button-link secondary" href="/tasks">Open Tasks</a>'
             "</div>"
         )
+    current_control = current_execution_run_control(current, data)
     href, label = current_execution_primary_target(current, task_ref)
     return (
         '<div class="current-execution-actions">'
-        '<a class="button-link" href="{}">{}</a>'
+        "{}"
+        '<a class="button-link{}" href="{}">{}</a>'
         "</div>"
     ).format(
+        current_control,
+        " secondary" if current_control else "",
         escape(href),
         escape(label),
     )
+
+
+def current_execution_run_control(
+    current: Mapping[str, Any],
+    data: Mapping[str, Any],
+) -> str:
+    status = str(current.get("status") or "")
+    if status in TASK_ROW_RUN_STATUSES and not task_run_unavailable_reason(current):
+        return task_row_start_control(
+            current,
+            data,
+            summary_label="Run Current",
+            button_label="Run Current",
+        )
+    if status == "in_progress":
+        return task_row_continue_control(current, data)
+    return ""
 
 
 def current_execution_primary_target(
@@ -11000,27 +11481,30 @@ def task_row_run_control(task: Mapping[str, Any], data: Mapping[str, Any]) -> st
     return ""
 
 
-def task_row_start_control(task: Mapping[str, Any], data: Mapping[str, Any]) -> str:
-    task_ref = str(task.get("ref") or task.get("id") or "")
+def task_row_start_control(
+    task: Mapping[str, Any],
+    data: Mapping[str, Any],
+    *,
+    summary_label: str = "Run",
+    button_label: str = "Run",
+) -> str:
+    task_ref = task_action_target(task)
     if not task_ref:
         return ""
     policy_summary = dashboard_effective_policy_summary(data)
     return (
         '<details class="row-action row-action-run">'
-        "<summary>Run</summary>"
+        "<summary>{}</summary>"
         "{}{}"
         "</details>"
     ).format(
+        escape(summary_label),
         task_row_change_guidance(task),
         action_form(
             "ui.run_selected_task",
             [
                 hidden_field("task", task_ref),
-                incomplete_run_warning_panel(
-                    policy_summary,
-                    compact=True,
-                    include_confirmation=True,
-                ),
+                incomplete_run_confirmation_field(policy_summary),
                 textarea_field(
                     "auto_close_note",
                     "Auto-close Owner Note",
@@ -11028,7 +11512,7 @@ def task_row_start_control(task: Mapping[str, Any], data: Mapping[str, Any]) -> 
                     placeholder="Required only when the selected policy auto-closes tasks.",
                 ),
             ],
-            button_label="Run",
+            button_label=button_label,
             confirm_required_note_fields=(
                 ("auto_close_note",)
                 if policy_requires_auto_close_note(policy_summary)
@@ -11036,6 +11520,10 @@ def task_row_start_control(task: Mapping[str, Any], data: Mapping[str, Any]) -> 
             ),
         ),
     )
+
+
+def task_action_target(task: Mapping[str, Any]) -> str:
+    return str(task.get("id") or task.get("ref") or "")
 
 
 def task_row_continue_control(
@@ -11427,6 +11915,9 @@ def action_form(
 ) -> str:
     confirm_required_attr = " required" if confirm_required else ""
     enctype_attr = ' enctype="multipart/form-data"' if multipart else ""
+    submit_once_attr = (
+        ' data-submit-once="action"' if action_id == "ui.run_selected_task" else ""
+    )
     modal_attrs = (
         action_form_confirm_attrs(
             action_id,
@@ -11448,9 +11939,10 @@ def action_form(
             escape(button_label or action_id)
         ),
     ]
-    return '<form method="post" action="/actions"{}{}>{}</form>'.format(
+    return '<form method="post" action="/actions"{}{}{}>{}</form>'.format(
         enctype_attr,
         modal_attrs,
+        submit_once_attr,
         "".join(controls),
     )
 

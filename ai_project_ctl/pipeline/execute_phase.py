@@ -7,6 +7,7 @@ report collection, verification, review, close, or commit gates.
 
 from __future__ import annotations
 
+from dataclasses import replace
 import hashlib
 import inspect
 import json
@@ -16,22 +17,32 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Sequence
 
+from ai_project_ctl import task_reports as task_report_service
 from ai_project_ctl.core.events import utc_now
 from ai_project_ctl.core.result import CommandMessage, CommandResult
 
 from .codex_adapter import (
     CODE_MANUAL_HANDOFF,
     CODE_REPORT_MISSING,
+    CODE_REPORT_INVALID,
     CodexAdapterResult,
     OutputRunner,
     run_codex_adapter,
 )
+from .git_status import (
+    GitStatusError,
+    GitStatusSnapshot,
+    capture_git_status_snapshot,
+    dirty_paths_after_baseline,
+    filter_paths_by_allowed_files,
+)
 from .phase import PhaseResult
-from .policy import CodexExecutionMode, PipelinePolicy
+from .policy import CodexAdapterMode, CodexExecutionMode, PipelinePolicy
+from .report_builder import report_payload_with_captured_changed_files
 from .session import record_phase_result
-from .state import load_pipeline_state, pipeline_state_path
+from .state import load_pipeline_state, load_reference_state, pipeline_state_path
 from .token_budget import PASS as TOKEN_BUDGET_PASS
 from .token_budget import TokenBudgetGateResult, evaluate_token_budget
 
@@ -44,6 +55,15 @@ PROTECTED_CHECK_FAILED = "PROTECTED_GENERATED_FRESHNESS_FAILED"
 PROTECTED_CHECK_TIMEOUT_SEC = 300
 PROTECTED_CHECK_TEXT_LIMIT = 1200
 PROTECTED_CHECK_ITEMS_LIMIT = 8
+EXECUTE_FILE_DELTA_UNAVAILABLE = "EXECUTE_FILE_DELTA_UNAVAILABLE"
+EXECUTE_FILE_DELTA_CAPTURED = "EXECUTE_FILE_DELTA_CAPTURED"
+EXECUTE_FILE_DELTA_SKIPPED = "EXECUTE_FILE_DELTA_SKIPPED"
+IGNORED_EXECUTE_FILE_PREFIXES = ("AI_PROJECT/.locks/", "AI_PROJECT/logs/")
+GOVERNED_PROJECT_CONTROL_PREFIXES = (
+    "AI_PROJECT/state/",
+    "AI_PROJECT/events/",
+    "AI_PROJECT/generated/",
+)
 
 CodexAdapter = Callable[..., CodexAdapterResult]
 
@@ -225,6 +245,12 @@ def execute_phase(
     if not running_record.ok:
         return running_record
 
+    task = _task_by_id(load_reference_state(root_path).get("tasks"), task_id)
+    before_file_snapshot = _capture_execute_file_snapshot(
+        root_path,
+        policy=policy,
+        position="before",
+    )
     adapter = codex_adapter or run_codex_adapter
     adapter_result = _call_codex_adapter(
         adapter,
@@ -235,6 +261,19 @@ def execute_phase(
         runner=execution_runner,
         session_id=selected_session_id,
     )
+    execute_file_delta = _execute_file_delta_evidence(
+        root=root_path,
+        policy=policy,
+        task=task,
+        before=before_file_snapshot,
+    )
+    adapter_result = _adapter_result_with_enriched_report(
+        adapter_result,
+        root=root_path,
+        task=task,
+        task_id=task_id,
+        execute_file_delta=execute_file_delta,
+    )
     return _adapter_phase_result(
         adapter_result,
         session_id=selected_session_id,
@@ -242,6 +281,7 @@ def execute_phase(
         policy=policy,
         prepare_artifacts=prepare_artifacts,
         token_gate=token_gate,
+        execute_file_delta=execute_file_delta,
         root=root_path,
         actor=actor,
     )
@@ -354,6 +394,246 @@ def _callable_accepts_keyword(callback: Callable[..., Any], keyword: str) -> boo
     return False
 
 
+def _capture_execute_file_snapshot(
+    root: Path,
+    *,
+    policy: PipelinePolicy,
+    position: str,
+) -> tuple[GitStatusSnapshot | None, dict[str, Any]]:
+    if policy.codex.adapter_mode != CodexAdapterMode.LOCAL_COMMAND:
+        return (
+            None,
+            {
+                "ok": False,
+                "status": "skipped",
+                "code": EXECUTE_FILE_DELTA_SKIPPED,
+                "reason": "adapter_mode_is_not_local_command",
+                "position": position,
+                "entries": [],
+                "dirty_paths": [],
+            },
+        )
+    try:
+        snapshot = capture_git_status_snapshot(root=root)
+    except GitStatusError as exc:
+        return (
+            None,
+            {
+                "ok": False,
+                "status": "unavailable",
+                "code": EXECUTE_FILE_DELTA_UNAVAILABLE,
+                "reason": str(exc),
+                "position": position,
+                "entries": [],
+                "dirty_paths": [],
+            },
+        )
+    return (
+        snapshot,
+        {
+            "ok": True,
+            "status": "captured",
+            "code": EXECUTE_FILE_DELTA_CAPTURED,
+            "reason": "git_status_snapshot_captured",
+            "position": position,
+            **snapshot.to_dict(),
+        },
+    )
+
+
+def _execute_file_delta_evidence(
+    *,
+    root: Path,
+    policy: PipelinePolicy,
+    task: Mapping[str, Any],
+    before: tuple[GitStatusSnapshot | None, Mapping[str, Any]],
+) -> dict[str, Any]:
+    before_snapshot, before_evidence = before
+    after_snapshot, after_evidence = _capture_execute_file_snapshot(
+        root,
+        policy=policy,
+        position="after",
+    )
+    allowed_files = _task_allowed_files(task)
+    base = {
+        "capture_enabled": policy.codex.adapter_mode == CodexAdapterMode.LOCAL_COMMAND,
+        "adapter_mode": policy.codex.adapter_mode.value,
+        "before": dict(before_evidence),
+        "after": dict(after_evidence),
+        "allowed_files": list(allowed_files),
+        "allowed_patterns": [],
+        "changed_paths": [],
+        "allowed_changed_files": [],
+        "out_of_scope_changed_files": [],
+        "ignored_changed_files": [],
+        "governed_project_control_files": [],
+    }
+    if policy.codex.adapter_mode != CodexAdapterMode.LOCAL_COMMAND:
+        return {
+            **base,
+            "status": "skipped",
+            "code": EXECUTE_FILE_DELTA_SKIPPED,
+            "reason": "adapter_mode_is_not_local_command",
+        }
+    if before_snapshot is None or after_snapshot is None:
+        return {
+            **base,
+            "status": "unavailable",
+            "code": EXECUTE_FILE_DELTA_UNAVAILABLE,
+            "reason": "git_status_snapshot_unavailable",
+        }
+
+    changed_paths = dirty_paths_after_baseline(before_snapshot, after_snapshot)
+    runtime_ignored = [
+        path for path in changed_paths if _is_ignored_execute_file_path(path)
+    ]
+    runtime_ignored_set = set(runtime_ignored)
+    candidate_paths = [
+        path for path in changed_paths if path not in runtime_ignored_set
+    ]
+    filtered = filter_paths_by_allowed_files(
+        candidate_paths,
+        allowed_files,
+        root=root,
+    )
+    governed_unallowed = [
+        path
+        for path in filtered.out_of_scope_paths
+        if _is_governed_project_control_path(path)
+    ]
+    governed_unallowed_set = set(governed_unallowed)
+    out_of_scope = [
+        path
+        for path in filtered.out_of_scope_paths
+        if path not in governed_unallowed_set
+    ]
+    ignored = _unique_strings([*runtime_ignored, *governed_unallowed])
+    return {
+        **base,
+        "status": "captured",
+        "code": EXECUTE_FILE_DELTA_CAPTURED,
+        "reason": "git_status_delta_captured",
+        "allowed_patterns": list(filtered.allowed_patterns),
+        "changed_paths": list(changed_paths),
+        "allowed_changed_files": list(filtered.allowed_paths),
+        "out_of_scope_changed_files": list(out_of_scope),
+        "ignored_changed_files": ignored,
+        "governed_project_control_files": list(governed_unallowed),
+    }
+
+
+def _adapter_result_with_enriched_report(
+    adapter_result: CodexAdapterResult,
+    *,
+    root: Path,
+    task: Mapping[str, Any],
+    task_id: str,
+    execute_file_delta: Mapping[str, Any],
+) -> CodexAdapterResult:
+    changed_files = _string_sequence(execute_file_delta.get("allowed_changed_files"))
+    out_of_scope_files = _string_sequence(
+        execute_file_delta.get("out_of_scope_changed_files")
+    )
+    if not changed_files and not out_of_scope_files:
+        return adapter_result
+    report_id = adapter_result.report_id or adapter_result.after_report_id
+    if not report_id:
+        return adapter_result
+
+    refs = load_reference_state(root)
+    tasks_state = refs.get("tasks")
+    if not isinstance(tasks_state, Mapping):
+        return _report_enrichment_blocked(
+            adapter_result,
+            "TASKS_STATE_MISSING",
+            "tasks_state_unavailable",
+            execute_file_delta=execute_file_delta,
+        )
+    selected_task = task if task else _task_by_id(tasks_state, task_id)
+    if not selected_task:
+        return _report_enrichment_blocked(
+            adapter_result,
+            "TASK_STATE_MISSING",
+            "task_state_unavailable",
+            execute_file_delta=execute_file_delta,
+        )
+
+    record = _report_record_by_id(refs.get("task_reports"), report_id)
+    report = _report_from_record(record)
+    if not report:
+        return _report_enrichment_blocked(
+            adapter_result,
+            "REPORT_RECORD_MISSING",
+            "report_record_unavailable",
+            execute_file_delta=execute_file_delta,
+        )
+
+    payload = report_payload_with_captured_changed_files(
+        report,
+        changed_files=changed_files,
+        out_of_scope_files=out_of_scope_files,
+    )
+    if payload == report:
+        return adapter_result
+
+    try:
+        submission = task_report_service.submit_task_report(
+            root=root,
+            tasks_state=tasks_state,
+            task=selected_task,
+            report_payload=payload,
+            source_file="captured:execute-file-delta:{}".format(report_id),
+            actor="codex",
+            command="codex_adapter.report.enrich_execute_delta",
+        )
+    except task_report_service.TaskReportError as exc:
+        return _report_enrichment_blocked(
+            adapter_result,
+            "REPORT_ENRICHMENT_FAILED",
+            str(exc),
+            execute_file_delta=execute_file_delta,
+        )
+
+    builder_evidence = dict(adapter_result.report_builder_evidence)
+    builder_evidence["execute_file_delta"] = {
+        "source_report_id": report_id,
+        "enriched_report_id": submission.report_id,
+        "allowed_changed_files": list(changed_files),
+        "out_of_scope_changed_files": list(out_of_scope_files),
+    }
+    builder_evidence["built_report_id"] = submission.report_id
+    builder_evidence["changed_files_count"] = len(payload.get("changed_files") or [])
+    return replace(
+        adapter_result,
+        after_report_id=submission.report_id,
+        report_id=submission.report_id,
+        report_builder_evidence=builder_evidence,
+    )
+
+
+def _report_enrichment_blocked(
+    adapter_result: CodexAdapterResult,
+    code: str,
+    reason: str,
+    *,
+    execute_file_delta: Mapping[str, Any],
+) -> CodexAdapterResult:
+    builder_evidence = dict(adapter_result.report_builder_evidence)
+    builder_evidence["execute_file_delta"] = dict(execute_file_delta)
+    builder_evidence["report_enrichment_error"] = {
+        "code": code,
+        "reason": reason,
+    }
+    return replace(
+        adapter_result,
+        status="blocked",
+        code=CODE_REPORT_INVALID,
+        reason="execute_file_delta_report_enrichment_failed",
+        report_submission_error=reason,
+        report_builder_evidence=builder_evidence,
+    )
+
+
 def _adapter_phase_result(
     adapter_result: CodexAdapterResult,
     *,
@@ -362,6 +642,7 @@ def _adapter_phase_result(
     policy: PipelinePolicy,
     prepare_artifacts: Mapping[str, Any],
     token_gate: TokenBudgetGateResult,
+    execute_file_delta: Mapping[str, Any],
     root: Path,
     actor: str,
 ) -> CommandResult:
@@ -379,6 +660,7 @@ def _adapter_phase_result(
             policy=policy,
             prepare_artifacts=prepare_artifacts,
             token_gate=token_gate,
+            execute_file_delta=execute_file_delta,
         )
         phase = PhaseResult.blocked(
             PHASE_NAME,
@@ -419,6 +701,7 @@ def _adapter_phase_result(
         policy=policy,
         prepare_artifacts=prepare_artifacts,
         token_gate=token_gate,
+        execute_file_delta=execute_file_delta,
     )
     if adapter_result.status == "passed":
         phase = PhaseResult.passed(
@@ -489,6 +772,7 @@ def _adapter_artifacts(
     policy: PipelinePolicy,
     prepare_artifacts: Mapping[str, Any],
     token_gate: TokenBudgetGateResult,
+    execute_file_delta: Mapping[str, Any],
 ) -> dict[str, Any]:
     artifacts = {
         "session_id": session_id,
@@ -502,7 +786,11 @@ def _adapter_artifacts(
         "before_report_id": adapter_result.before_report_id,
         "after_report_id": adapter_result.after_report_id,
         "report_id": adapter_result.report_id,
-        "execute_evidence": _adapter_evidence(adapter_result),
+        "execute_file_delta": dict(execute_file_delta),
+        "execute_evidence": _adapter_evidence(
+            adapter_result,
+            execute_file_delta=execute_file_delta,
+        ),
         "runtime_logs": dict(adapter_result.runtime_logs),
         "adapter": adapter_data,
         "adapter_summary": {
@@ -525,12 +813,17 @@ def _adapter_artifacts(
             "after_report_id": adapter_result.after_report_id,
             "report_id": adapter_result.report_id,
             "report_ids": _adapter_report_ids(adapter_result),
+            "execute_file_delta": dict(execute_file_delta),
         },
     }
     return artifacts
 
 
-def _adapter_evidence(adapter_result: CodexAdapterResult) -> dict[str, Any]:
+def _adapter_evidence(
+    adapter_result: CodexAdapterResult,
+    *,
+    execute_file_delta: Mapping[str, Any],
+) -> dict[str, Any]:
     return {
         "status": adapter_result.status,
         "code": adapter_result.code,
@@ -552,6 +845,7 @@ def _adapter_evidence(adapter_result: CodexAdapterResult) -> dict[str, Any]:
         "before_report_id": adapter_result.before_report_id,
         "after_report_id": adapter_result.after_report_id,
         "report_id": adapter_result.report_id,
+        "execute_file_delta": dict(execute_file_delta),
     }
 
 
@@ -1071,6 +1365,62 @@ def _required_mapping(value: Any, name: str) -> Mapping[str, Any]:
 
 def _mapping(value: Any, *, default: Mapping[str, Any]) -> Mapping[str, Any]:
     return value if isinstance(value, Mapping) else default
+
+
+def _task_by_id(tasks_state: Any, task_id: str) -> Mapping[str, Any]:
+    if not isinstance(tasks_state, Mapping):
+        return {}
+    for task in tasks_state.get("tasks", []):
+        if isinstance(task, Mapping) and str(task.get("id") or "") == task_id:
+            return task
+    return {}
+
+
+def _task_allowed_files(task: Mapping[str, Any]) -> tuple[str, ...]:
+    values = task.get("allowed_files")
+    if not isinstance(values, Sequence) or isinstance(values, (str, bytes, bytearray)):
+        return ()
+    return tuple(_unique_strings(values))
+
+
+def _report_record_by_id(report_state: Any, report_id: str) -> Mapping[str, Any]:
+    if not isinstance(report_state, Mapping):
+        return {}
+    reports = report_state.get("reports")
+    if not isinstance(reports, list):
+        return {}
+    for record in reports:
+        if isinstance(record, Mapping) and str(record.get("id") or "") == report_id:
+            return record
+    return {}
+
+
+def _report_from_record(record: Mapping[str, Any]) -> Mapping[str, Any]:
+    report = record.get("report") if isinstance(record, Mapping) else None
+    return report if isinstance(report, Mapping) else {}
+
+
+def _is_ignored_execute_file_path(path: str) -> bool:
+    return str(path).startswith(IGNORED_EXECUTE_FILE_PREFIXES)
+
+
+def _is_governed_project_control_path(path: str) -> bool:
+    return str(path).startswith(GOVERNED_PROJECT_CONTROL_PREFIXES)
+
+
+def _string_sequence(value: Any) -> tuple[str, ...]:
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes, bytearray)):
+        return ()
+    return tuple(_unique_strings(value))
+
+
+def _unique_strings(values: Sequence[Any]) -> list[str]:
+    result: list[str] = []
+    for value in values:
+        text = str(value or "").strip()
+        if text and text not in result:
+            result.append(text)
+    return result
 
 
 def _artifact_path(root: Path, value: Any) -> Path:

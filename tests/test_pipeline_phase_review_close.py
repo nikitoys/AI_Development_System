@@ -22,6 +22,7 @@ from ai_project_ctl.pipeline.git_commit import (
     REQUIRED_MACHINE_CHECKS,
 )
 from ai_project_ctl.pipeline.machine_review import (
+    CODE_UNSAFE_TEST_COMMAND,
     MachineCheckEvidence,
     MachineReviewResult,
 )
@@ -32,6 +33,7 @@ from ai_project_ctl.pipeline.runner import run_next
 from ai_project_ctl.pipeline.session import (
     create_session,
     record_phase_result,
+    status_payload as pipeline_status_payload,
     validate_sessions,
 )
 from ai_project_ctl.pipeline.state import MAX_STORED_STRING_LENGTH, pipeline_state_path
@@ -336,7 +338,8 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
                     code="CODEX_REPORT_WARN",
                     reason="Report warning is policy-approved for commit readiness.",
                     blocking=True,
-                )
+                ),
+                _report_declared_test_warning(),
             )
             git_commands: list[list[str]] = []
 
@@ -374,6 +377,17 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
             self.assertEqual(local_commit["status"], "pass")
             self.assertEqual(local_commit["code"], CODE_COMMIT_CREATED)
             self.assertEqual(local_commit["readiness"]["status"], "pass")
+            close_status = artifacts["close_status"]
+            self.assertEqual(close_status["outcome"], "closed_with_local_commit")
+            self.assertTrue(close_status["task_closed"])
+            self.assertEqual(close_status["task_status"], "done")
+            self.assertEqual(close_status["commit_status"], "pass")
+            self.assertEqual(close_status["commit_code"], CODE_COMMIT_CREATED)
+            self.assertEqual(close_status["commit_hash"], "abc1234deadbeef")
+            self.assertNotIn(
+                "report_declared_test_1",
+                local_commit["readiness"]["reason"],
+            )
             self.assertEqual(
                 local_commit["readiness"]["code"],
                 COMMIT_READINESS_PASS,
@@ -392,6 +406,13 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
                     ["git", "rev-parse", "--verify", "HEAD"],
                 ],
             )
+            status = pipeline_status_payload(root=root)["current_session"]
+            self.assertEqual(
+                status["close_status"]["outcome"],
+                "closed_with_local_commit",
+            )
+            self.assertEqual(status["close_outcome"], "closed_with_local_commit")
+            self.assertEqual(status["commit_status"], "pass")
 
     def test_close_local_commit_refreshes_context_before_readiness(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -561,12 +582,13 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
             report_gate = _warning_report_gate()
             machine_review = _machine_review_with_warning(
                 MachineCheckEvidence(
-                    name="unapproved_commit_warning",
+                    name="codex_report_gate",
                     status="warn",
-                    code="UNAPPROVED_COMMIT_WARNING",
-                    reason="Blocking Machine Review warning is not policy-approved.",
+                    code="CODEX_REPORT_WARN",
+                    reason="Report warning is policy-approved for commit readiness.",
                     blocking=True,
-                )
+                ),
+                _report_declared_test_warning(blocking=True),
             )
             git_commands: list[list[str]] = []
 
@@ -599,7 +621,18 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
             self.assertTrue(close.ok, close.errors)
             phase_result = close.data["phase_result"]
             self.assertEqual(phase_result["status"], "blocked")
+            self.assertIn(
+                "Task is done, but local commit is blocked",
+                phase_result["next_action"],
+            )
             artifacts = phase_result["artifacts"]
+            self.assertEqual(artifacts["close_outcome"], "done_but_commit_blocked")
+            self.assertTrue(artifacts["task_closed"])
+            self.assertTrue(artifacts["commit_blocked"])
+            self.assertEqual(
+                artifacts["owner_next_action"],
+                phase_result["next_action"],
+            )
             local_commit = artifacts["local_commit"]
             self.assertEqual(local_commit["status"], "blocked")
             self.assertEqual(local_commit["code"], "COMMIT_READINESS_FAILED")
@@ -607,6 +640,33 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
                 local_commit["readiness"]["code"],
                 CODE_MACHINE_REVIEW_NOT_PASS,
             )
+            close_status = artifacts["close_status"]
+            self.assertEqual(close_status["outcome"], "done_but_commit_blocked")
+            self.assertTrue(close_status["task_closed"])
+            self.assertEqual(close_status["task_status"], "done")
+            self.assertEqual(close_status["commit_status"], "blocked")
+            self.assertEqual(close_status["commit_code"], "COMMIT_READINESS_FAILED")
+            self.assertEqual(
+                close_status["commit_readiness_code"],
+                CODE_MACHINE_REVIEW_NOT_PASS,
+            )
+            self.assertEqual(
+                close_status["owner_next_action"],
+                phase_result["next_action"],
+            )
+            self.assertIn(
+                "report_declared_test_1",
+                local_commit["readiness"]["reason"],
+            )
+            self.assertEqual(_task(root)["status"], "done")
+            status = pipeline_status_payload(root=root)["current_session"]
+            self.assertEqual(
+                status["close_status"]["outcome"],
+                "done_but_commit_blocked",
+            )
+            self.assertEqual(status["close_outcome"], "done_but_commit_blocked")
+            self.assertEqual(status["commit_status"], "blocked")
+            self.assertEqual(status["commit_code"], "COMMIT_READINESS_FAILED")
             self.assertEqual(git_commands, [])
 
     def test_close_local_commit_artifacts_include_context_check_generated_diagnostics(self):
@@ -889,8 +949,19 @@ def _warning_report_gate() -> ReportGateResult:
     )
 
 
+def _report_declared_test_warning(*, blocking: bool = False) -> MachineCheckEvidence:
+    return MachineCheckEvidence(
+        name="report_declared_test_1",
+        status="warn",
+        code=CODE_UNSAFE_TEST_COMMAND,
+        reason="test_command_skipped_as_unsafe",
+        blocking=blocking,
+    )
+
+
 def _machine_review_with_warning(
     warning: MachineCheckEvidence,
+    *extra_warnings: MachineCheckEvidence,
 ) -> MachineReviewResult:
     checks = [
         MachineCheckEvidence(
@@ -901,7 +972,7 @@ def _machine_review_with_warning(
         )
         for name in sorted(REQUIRED_MACHINE_CHECKS)
     ]
-    checks.append(warning)
+    checks.extend((warning, *extra_warnings))
     return MachineReviewResult(
         status="warn",
         code="MACHINE_REVIEW_WARN",

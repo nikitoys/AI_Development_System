@@ -37,7 +37,11 @@ from .report_gate import FAIL as REPORT_GATE_FAIL
 from .report_gate import evaluate_report_gate
 from .git_commit import PASS as COMMIT_PASS
 from .git_commit import run_local_commit
-from .session import record_phase_result, record_step_result
+from .session import (
+    ensure_file_evidence_baseline,
+    record_phase_result,
+    record_step_result,
+)
 from .state import (
     load_pipeline_state,
     load_reference_state,
@@ -80,6 +84,15 @@ def run_next(
             reason="Pipeline session is not runnable: {}".format(status),
         )
 
+    baseline = ensure_file_evidence_baseline(
+        selected_session_id,
+        root=root_path,
+        actor=actor,
+    )
+    if not baseline.ok:
+        return baseline
+    effects = [baseline] if baseline.changed_files or baseline.events else []
+
     phase_name = _next_required_phase(session)
     delegated = _dispatch_run_next_phase(
         phase_name,
@@ -97,11 +110,12 @@ def run_next(
         root=root_path,
         actor=actor,
     )
+    effects.append(delegated)
     return _phase_dispatch_result(
         delegated,
         phase_name=phase_name,
         session=session,
-        effects=(delegated,),
+        effects=effects,
     )
 
 
@@ -380,6 +394,11 @@ def _phase_dispatch_result(
         result.data["stop_code"] = stop_code
         result.data["stop_reason"] = reason
         result.owner_action_required = reason
+    close_status = _mapping_or_empty(artifacts.get("close_status"))
+    if close_status:
+        result.data["close_status"] = close_status
+        result.data["close_outcome"] = str(close_status.get("outcome") or "")
+        result.data["commit_status"] = str(close_status.get("commit_status") or "")
     if next_action:
         result.next_actions.append(next_action)
     _merge_effects(result, effects)

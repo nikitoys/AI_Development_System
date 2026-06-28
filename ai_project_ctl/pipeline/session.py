@@ -15,6 +15,7 @@ from ai_project_ctl.core.store import write_json_file, atomic_write_text
 from ai_project_ctl.core.validation import ValidationResult
 
 from .phase import PhaseResult
+from .git_status import GitStatusError, capture_git_status_snapshot
 from .policy import PipelinePolicy, QueuePolicy, QueueSelection, policy_preset
 from .audit import (
     build_pipeline_audit_payload,
@@ -43,6 +44,13 @@ from .state import (
 SESSION_ID_PREFIX = "PSESS-"
 LIVE_PHASE_STATUS = "running"
 CODE_AUTO_CLOSE_OWNER_NOTE_REQUIRED = "PIPELINE_AUTO_CLOSE_OWNER_NOTE_REQUIRED"
+FILE_EVIDENCE_KEY = "file_evidence"
+GIT_STATUS_BASELINE_KEY = "git_status_baseline"
+LATEST_GIT_STATUS_KEY = "latest_git_status"
+PRE_EXISTING_DIRTY_FILES_KEY = "pre_existing_dirty_files"
+SESSION_OWNED_CHANGED_FILES_KEY = "session_owned_changed_files"
+PHASE_DELTAS_KEY = "phase_deltas"
+CLOSE_STATUS_KEY = "close_status"
 
 
 class PipelineSessionError(CommandError):
@@ -75,6 +83,7 @@ def create_session(
 ) -> CommandResult:
     """Create one governed pipeline session."""
 
+    root_path = Path(root).resolve()
     selected_policy = policy or policy_preset(policy_name)
     if auto_create_missing_changes or owner_approve_required_changes or approval_note:
         evolution = selected_policy.evolution
@@ -130,6 +139,12 @@ def create_session(
             commit_ids=commit_ids,
             audit_event_id=event_id,
         )
+        _ensure_session_file_evidence_baseline(
+            session,
+            root=root_path,
+            now=now,
+            baseline=_capture_git_status_evidence(root=root_path, now=now),
+        )
         state.setdefault("sessions", []).append(session)
         state["current_session_id"] = session_id
         return {
@@ -142,10 +157,77 @@ def create_session(
         }
 
     return _mutate_pipeline_state(
-        root=root,
+        root=root_path,
         actor=actor,
         command="pipeline.session.create",
         entity_id="new",
+        mutate=mutate,
+    )
+
+
+def ensure_file_evidence_baseline(
+    session_id: str,
+    *,
+    root: str | Path = ".",
+    actor: str = "human_owner",
+) -> CommandResult:
+    """Ensure an existing session has a git status baseline before dispatch."""
+
+    _require_non_empty(session_id, "session_id")
+    root_path = Path(root).resolve()
+    state = load_pipeline_state(root_path)
+    session = _find_session_by_id(state, session_id)
+    if session is None:
+        return CommandResult.failure(
+            command="pipeline.session.git_baseline",
+            domain="pipeline",
+            message="Pipeline session not found.",
+            errors=[
+                CommandMessage(
+                    "PIPELINE_SESSION_NOT_FOUND",
+                    "pipeline session not found: {}".format(session_id),
+                    details={"session_id": session_id},
+                )
+            ],
+            revision_before=state.get("revision") if isinstance(state, Mapping) else None,
+            revision_after=state.get("revision") if isinstance(state, Mapping) else None,
+        )
+    if _has_git_status_baseline(session):
+        return CommandResult.success(
+            command="pipeline.session.git_baseline",
+            domain="pipeline",
+            message="OK: pipeline session git status baseline already recorded",
+            data={
+                "session_id": session_id,
+                "baseline_recorded": False,
+                "file_evidence": _file_evidence_status_payload(session),
+            },
+            revision_before=state.get("revision"),
+            revision_after=state.get("revision"),
+        )
+
+    def mutate(next_state: dict[str, Any], event_id: str, now: str) -> dict[str, Any]:
+        selected = _require_session(next_state, session_id)
+        _require_active_session(selected)
+        baseline = _capture_git_status_evidence(root=root_path, now=now)
+        _ensure_session_file_evidence_baseline(
+            selected,
+            root=root_path,
+            now=now,
+            baseline=baseline,
+        )
+        _touch_session(selected, now, event_id)
+        return {
+            "session_id": session_id,
+            "baseline_recorded": True,
+            "file_evidence": _file_evidence_status_payload(selected),
+        }
+
+    return _mutate_pipeline_state(
+        root=root_path,
+        actor=actor,
+        command="pipeline.session.git_baseline",
+        entity_id=session_id,
         mutate=mutate,
     )
 
@@ -331,6 +413,7 @@ def record_phase_result(
     """Append one phase result to a governed pipeline session."""
 
     _require_non_empty(session_id, "session_id")
+    root_path = Path(root).resolve()
     phase = _phase_result_dict(phase_result)
 
     def mutate(state: dict[str, Any], event_id: str, now: str) -> dict[str, Any]:
@@ -342,6 +425,17 @@ def record_phase_result(
         entry.setdefault("generated_files", [])
         entry.setdefault("events", [])
         entry["events"] = _unique_strings([*entry.get("events", []), event_id])
+        file_delta = _record_session_file_delta(
+            session,
+            root=root_path,
+            now=now,
+            event_id=event_id,
+            phase_entry=entry,
+        )
+        if file_delta:
+            artifacts = dict(entry.get("artifacts") or {})
+            artifacts["file_delta"] = file_delta
+            entry["artifacts"] = artifacts
 
         history = session.setdefault("phase_history", [])
         replaced_running_phase = _replace_latest_running_phase(history, entry)
@@ -387,7 +481,7 @@ def record_phase_result(
         return {"session_id": session_id, "phase_result": entry}
 
     return _mutate_pipeline_state(
-        root=root,
+        root=root_path,
         actor=actor,
         command=command,
         entity_id=session_id,
@@ -546,8 +640,8 @@ def status_payload(*, root: str | Path = ".") -> dict[str, Any]:
         "generated_audit_path": str(pipeline_audit_path(root)),
         "revision": state.get("revision", 0),
         "current_session_id": current_session_id,
-        "current_session": session_summary(current) if current else None,
-        "sessions": [session_summary(session) for session in sessions],
+        "current_session": _status_session_summary(current) if current else None,
+        "sessions": [_status_session_summary(session) for session in sessions],
     }
 
 
@@ -707,6 +801,245 @@ def _new_session(
         "started_at": "",
         "finished_at": "",
     }
+
+
+def _capture_git_status_evidence(*, root: Path, now: str) -> dict[str, Any]:
+    try:
+        snapshot = capture_git_status_snapshot(root=root)
+    except GitStatusError as exc:
+        return {
+            "captured_at": now,
+            "ok": False,
+            "error": str(exc),
+            "entries": [],
+            "dirty_paths": [],
+        }
+    entries = [
+        entry.to_dict()
+        for entry in snapshot.entries
+        if not _is_transient_file_evidence_path(entry.path)
+    ]
+    data = {
+        "entries": entries,
+        "dirty_paths": _unique_strings(entry["path"] for entry in entries),
+    }
+    data["captured_at"] = now
+    data["ok"] = True
+    data["error"] = ""
+    return data
+
+
+def _ensure_session_file_evidence_baseline(
+    session: dict[str, Any],
+    *,
+    root: Path,
+    now: str,
+    baseline: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    evidence = session.get(FILE_EVIDENCE_KEY)
+    if not isinstance(evidence, dict):
+        evidence = {}
+        session[FILE_EVIDENCE_KEY] = evidence
+
+    baseline_evidence = evidence.get(GIT_STATUS_BASELINE_KEY)
+    if not isinstance(baseline_evidence, Mapping):
+        baseline_evidence = dict(baseline or _capture_git_status_evidence(root=root, now=now))
+        evidence[GIT_STATUS_BASELINE_KEY] = baseline_evidence
+        evidence[LATEST_GIT_STATUS_KEY] = dict(baseline_evidence)
+
+    pre_existing = _dirty_paths_from_git_status_evidence(baseline_evidence)
+    evidence[PRE_EXISTING_DIRTY_FILES_KEY] = pre_existing
+    evidence.setdefault(SESSION_OWNED_CHANGED_FILES_KEY, [])
+    evidence.setdefault(PHASE_DELTAS_KEY, [])
+    return evidence
+
+
+def _record_session_file_delta(
+    session: dict[str, Any],
+    *,
+    root: Path,
+    now: str,
+    event_id: str,
+    phase_entry: Mapping[str, Any],
+) -> dict[str, Any]:
+    evidence = _ensure_session_file_evidence_baseline(session, root=root, now=now)
+    baseline = _mapping_or_empty(evidence.get(GIT_STATUS_BASELINE_KEY))
+    current = _capture_git_status_evidence(root=root, now=now)
+    pre_existing = _dirty_paths_from_git_status_evidence(baseline)
+    current_dirty = _dirty_paths_from_git_status_evidence(current)
+    pre_existing_set = set(pre_existing)
+    session_owned = _unique_strings(
+        path for path in current_dirty if path not in pre_existing_set
+    )
+
+    evidence[LATEST_GIT_STATUS_KEY] = current
+    evidence[PRE_EXISTING_DIRTY_FILES_KEY] = pre_existing
+    evidence[SESSION_OWNED_CHANGED_FILES_KEY] = session_owned
+    phase_delta = {
+        "phase": str(phase_entry.get("phase") or ""),
+        "status": str(phase_entry.get("status") or ""),
+        "captured_at": current.get("captured_at") or now,
+        "event_id": event_id,
+        "git_status": current,
+        PRE_EXISTING_DIRTY_FILES_KEY: pre_existing,
+        SESSION_OWNED_CHANGED_FILES_KEY: session_owned,
+    }
+    deltas = evidence.setdefault(PHASE_DELTAS_KEY, [])
+    if isinstance(deltas, list):
+        deltas.append(phase_delta)
+    else:
+        evidence[PHASE_DELTAS_KEY] = [phase_delta]
+
+    return {
+        "git_status_baseline": _compact_git_status_evidence(baseline),
+        "latest_git_status": _compact_git_status_evidence(current),
+        PRE_EXISTING_DIRTY_FILES_KEY: pre_existing,
+        SESSION_OWNED_CHANGED_FILES_KEY: session_owned,
+    }
+
+
+def _status_session_summary(session: Mapping[str, Any]) -> dict[str, Any]:
+    summary = session_summary(session)
+    close_status = _latest_close_status(session)
+    if close_status:
+        summary[CLOSE_STATUS_KEY] = close_status
+        summary["close_outcome"] = str(close_status.get("outcome") or "")
+        summary["commit_status"] = str(close_status.get("commit_status") or "")
+        summary["commit_code"] = str(close_status.get("commit_code") or "")
+    evidence = _file_evidence_status_payload(session)
+    if evidence:
+        summary[FILE_EVIDENCE_KEY] = evidence
+        summary[PRE_EXISTING_DIRTY_FILES_KEY] = evidence[PRE_EXISTING_DIRTY_FILES_KEY]
+        summary[SESSION_OWNED_CHANGED_FILES_KEY] = evidence[
+            SESSION_OWNED_CHANGED_FILES_KEY
+        ]
+    return summary
+
+
+def _latest_close_status(session: Mapping[str, Any]) -> dict[str, Any]:
+    history = session.get("phase_history")
+    if not isinstance(history, Sequence) or isinstance(history, (str, bytes)):
+        return {}
+    for entry in reversed(history):
+        if not isinstance(entry, Mapping):
+            continue
+        if str(entry.get("phase") or "") != "close":
+            continue
+        artifacts = _mapping_or_empty(entry.get("artifacts"))
+        close_status = artifacts.get(CLOSE_STATUS_KEY)
+        if isinstance(close_status, Mapping):
+            data = dict(close_status)
+            data.setdefault("owner_next_action", str(entry.get("next_action") or ""))
+            return data
+        derived = _derive_close_status_from_artifacts(artifacts, entry)
+        if derived:
+            return derived
+    return {}
+
+
+def _derive_close_status_from_artifacts(
+    artifacts: Mapping[str, Any],
+    entry: Mapping[str, Any],
+) -> dict[str, Any]:
+    local_commit = artifacts.get("local_commit")
+    if not isinstance(local_commit, Mapping):
+        return {}
+    readiness = _mapping_or_empty(local_commit.get("readiness"))
+    commit_status = str(local_commit.get("status") or "")
+    return {
+        "outcome": _close_outcome_for_commit_status(commit_status),
+        "task_closed": bool(artifacts.get("task_closed", True)),
+        "task_status": "done" if artifacts.get("task_closed", True) else "",
+        "commit_status": commit_status,
+        "commit_code": str(local_commit.get("code") or ""),
+        "commit_hash": str(local_commit.get("commit_hash") or ""),
+        "commit_readiness_status": str(readiness.get("status") or ""),
+        "commit_readiness_code": str(readiness.get("code") or ""),
+        "owner_next_action": str(
+            artifacts.get("owner_next_action") or entry.get("next_action") or ""
+        ),
+    }
+
+
+def _close_outcome_for_commit_status(commit_status: str) -> str:
+    if commit_status == "pass":
+        return "closed_with_local_commit"
+    if commit_status == "blocked":
+        return "done_but_commit_blocked"
+    if commit_status == "fail":
+        return "done_but_commit_failed"
+    if commit_status == "skipped":
+        return "done_without_local_commit"
+    return "done_commit_unknown"
+
+
+def _file_evidence_status_payload(session: Mapping[str, Any]) -> dict[str, Any]:
+    evidence = session.get(FILE_EVIDENCE_KEY)
+    if not isinstance(evidence, Mapping):
+        return {}
+    baseline = _mapping_or_empty(evidence.get(GIT_STATUS_BASELINE_KEY))
+    latest = _mapping_or_empty(evidence.get(LATEST_GIT_STATUS_KEY))
+    pre_existing = _unique_strings(
+        evidence.get(PRE_EXISTING_DIRTY_FILES_KEY)
+        or _dirty_paths_from_git_status_evidence(baseline)
+    )
+    session_owned = _unique_strings(evidence.get(SESSION_OWNED_CHANGED_FILES_KEY) or [])
+    phase_deltas = evidence.get(PHASE_DELTAS_KEY)
+    return {
+        "git_status_baseline": _compact_git_status_evidence(baseline),
+        "latest_git_status": _compact_git_status_evidence(latest),
+        PRE_EXISTING_DIRTY_FILES_KEY: pre_existing,
+        SESSION_OWNED_CHANGED_FILES_KEY: session_owned,
+        "phase_delta_count": len(phase_deltas) if isinstance(phase_deltas, list) else 0,
+    }
+
+
+def _compact_git_status_evidence(evidence: Mapping[str, Any]) -> dict[str, Any]:
+    if not isinstance(evidence, Mapping):
+        return {
+            "captured_at": "",
+            "ok": False,
+            "error": "",
+            "dirty_paths": [],
+        }
+    return {
+        "captured_at": str(evidence.get("captured_at") or ""),
+        "ok": bool(evidence.get("ok")),
+        "error": str(evidence.get("error") or ""),
+        "dirty_paths": _dirty_paths_from_git_status_evidence(evidence),
+    }
+
+
+def _dirty_paths_from_git_status_evidence(evidence: Mapping[str, Any]) -> list[str]:
+    if not isinstance(evidence, Mapping):
+        return []
+    return _unique_strings(evidence.get("dirty_paths") or [])
+
+
+def _has_git_status_baseline(session: Mapping[str, Any]) -> bool:
+    evidence = session.get(FILE_EVIDENCE_KEY)
+    return isinstance(evidence, Mapping) and isinstance(
+        evidence.get(GIT_STATUS_BASELINE_KEY),
+        Mapping,
+    )
+
+
+def _find_session_by_id(
+    state: Mapping[str, Any],
+    session_id: str,
+) -> Mapping[str, Any] | None:
+    for session in state.get("sessions", []):
+        if isinstance(session, Mapping) and session.get("id") == session_id:
+            return session
+    return None
+
+
+def _mapping_or_empty(value: Any) -> dict[str, Any]:
+    return dict(value) if isinstance(value, Mapping) else {}
+
+
+def _is_transient_file_evidence_path(path: str) -> bool:
+    return str(path).startswith("AI_PROJECT/.locks/")
 
 
 def _queue_snapshot(
