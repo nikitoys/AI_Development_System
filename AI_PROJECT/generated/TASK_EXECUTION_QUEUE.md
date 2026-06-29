@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1836`
+Revision: `1837`
 
 ## Executable Now
 
@@ -543,7 +543,7 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-167 (TASK-272)` [done] `EPIC-009` priority `1` — Verify clean worktree after Web Run
   - `status_not_executable`: status is done
-- `PIPEF-168 (TASK-273)` [in_progress] `EPIC-009` priority `1` — Add no-checkpoint Web Run regression
-  - `status_not_executable`: status is in_progress
+- `PIPEF-168 (TASK-273)` [blocked] `EPIC-009` priority `1` — Add no-checkpoint Web Run regression
+  - `status_not_executable`: status is blocked
 - `PIPEF-155 (TASK-260)` [done] `EPIC-009` priority `2` — Link dirty preflight to checkpoint UX
   - `status_not_executable`: status is done

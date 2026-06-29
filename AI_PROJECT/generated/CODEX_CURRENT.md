@@ -3,11 +3,11 @@
 
 # Current Codex Task
 
-Revision: `1836`
+Revision: `1837`
 
 Task: `PIPEF-168 (TASK-273)` — **Add no-checkpoint Web Run regression**
 Epic: `EPIC-009`
-Status: `in_progress`
+Status: `blocked`
 Verification: `strict`
 Ref: `PIPEF-168`
 UID: `tsk_efef4d0e0938`

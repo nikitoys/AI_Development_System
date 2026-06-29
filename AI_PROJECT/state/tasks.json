@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1836,
+  "revision": 1837,
   "current_task_id": "TASK-273",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-29T14:44:30Z",
+  "updated_at": "2026-06-29T16:10:42Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -17603,7 +17603,7 @@
       "id": "TASK-273",
       "epic_id": "EPIC-009",
       "title": "Add no-checkpoint Web Run regression",
-      "status": "in_progress",
+      "status": "blocked",
       "summary": "Add an end-to-end regression proving that a successful Web Run leaves a clean worktree and the next Web Run does not request a checkpoint commit.",
       "description": "The owner workflow should be able to run one task, receive a task commit, and start the next task without checkpointing pipeline bookkeeping files.",
       "priority": 1,
@@ -17649,7 +17649,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-29T13:42:10Z",
-      "updated_at": "2026-06-29T14:44:30Z",
+      "updated_at": "2026-06-29T16:10:42Z",
       "uid": "tsk_efef4d0e0938",
       "ref": "PIPEF-168",
       "legacy_id": "TASK-273",

@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1836`
+Revision: `1837`
 Current task: `TASK-273`
 
 ## Epic `EPIC-001`
@@ -4769,7 +4769,7 @@ Acceptance criteria:
 
 ### PIPEF-168 (TASK-273) — Add no-checkpoint Web Run regression ⭐
 
-Status: `in_progress`
+Status: `blocked`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_efef4d0e0938`, legacy `TASK-273`, aliases `TASK-273`, local `PIPEF` / `168`
