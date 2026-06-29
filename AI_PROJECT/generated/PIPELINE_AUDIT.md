@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `1067`
-State revision: `1067`
-Current session: `PSESS-141`
+Events: `1069`
+State revision: `1069`
+Current session: `none`
 
 ## Timeline
 
@@ -1078,6 +1078,8 @@ Current session: `PSESS-141`
 | `2026-06-29T13:20:18Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-141` | `` | `` | reports=RPT-124 |
 | `2026-06-29T13:20:21Z` | `step.result` | `pipeline.phase.verify` | `PSESS-141` | `` | `` | reports=RPT-124 |
 | `2026-06-29T13:20:24Z` | `step.result` | `pipeline.phase.review` | `PSESS-141` | `` | `` | reports=RPT-124 |
+| `2026-06-29T13:20:43Z` | `step.result` | `pipeline.phase.close` | `PSESS-141` | `` | `` | reports=RPT-124 \| commits=41891fcf34905691983ecfa1cf3f66164775ea76 |
+| `2026-06-29T13:20:46Z` | `completion` | `pipeline.session.complete` | `PSESS-141` | `` | `` | completed |
 
 ## Event Type Coverage
 
