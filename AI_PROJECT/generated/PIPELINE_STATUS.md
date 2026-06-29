@@ -3,23 +3,9 @@
 
 # Pipeline Status
 
-Revision: `1017`
-Current session: `PSESS-136`
+Revision: `1019`
+Current session: `none`
 Sessions: `136`
-
-## Current Session
-
-- ID: `PSESS-136`
-- Status: `running`
-- Policy: `supervised_executable_local_commit_1h_auto_change`
-- Current task: `TASK-259`
-- Current phase: `review`
-- Phase status: `skipped`
-- Blocked by: `none`
-- Next action: `Continue only through governed close or commit readiness; Machine Review evidence remains required.`
-- Current step: `execute`
-- Step status: `passed`
-- Stop reason: `none`
 
 ## Sessions
 
@@ -160,7 +146,7 @@ Sessions: `136`
 | `PSESS-133` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-257` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
 | `PSESS-134` | `failed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-258` | `execute` | `failed` | none | In local-command mode, Codex receives AI_PROJECT/generated/CODEX_PROMPT.md on stdin. Submit a structured execution report before downstream gates can pass: python scripts/aictl.py task report submit --task TASK-258 --file <REPORT.json> --confirm | `execute` | Codex execution adapter failed: local_command_nonzero_exit (status=failed, code=CODEX_ADAPTER_LOCAL_COMMAND_FAILED, returncode=1) |
 | `PSESS-135` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-258` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
-| `PSESS-136` | `running` | `supervised_executable_local_commit_1h_auto_change` | `TASK-259` | `review` | `skipped` | none | Continue only through governed close or commit readiness; Machine Review evidence remains required. | `execute` |  |
+| `PSESS-136` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-259` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit de22f6964cc3b51e511c90e54488f47aee360b4f was created. |
 
 ## Phase History
 
@@ -885,3 +871,4 @@ Sessions: `136`
 | `PSESS-136` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
 | `PSESS-136` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 5 | 0 | 1 |
 | `PSESS-136` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-136` | 7 | `close` | `passed` | Close completed and local commit was created. | Review the close artifacts and local commit hash, then select the next task. | 0 | 0 | 1 |
