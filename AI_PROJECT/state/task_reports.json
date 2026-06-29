@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 120,
+  "revision": 122,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-29T12:56:49Z",
+  "updated_at": "2026-06-29T13:09:42Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -8539,6 +8539,149 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-121",
+      "task_id": "TASK-263",
+      "task_ref": "PIPEF-158",
+      "submitted_at": "2026-06-29T13:09:42Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:a770a7d2faadace914b2970ceb5f79a6a5795008fa38bdd354881f5a8032299c",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-263",
+        "task_ref": "PIPEF-158",
+        "reported_task_id": "TASK-263",
+        "reported_task_ref": "PIPEF-158",
+        "implementation_summary": "Added a post-commit batch handoff git status gate that stops multi-task batches with POST_TASK_DIRTY_WORKTREE when dirty files remain before the next task, and covered clean and dirty handoff cases in tests.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 582.374015,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 582.374015,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The broader tests.test_pipeline_runner module has unrelated failures in existing run_next paths; a representative failing test reproduces in isolation.",
+          "Protected AI_PROJECT files were already dirty in the worktree and were not manually edited."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only ai_project_ctl/pipeline/batch.py and tests/test_pipeline_runner.py.",
+          "Focused handoff and git status tests passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 957,
+          "remaining_tokens": 31043,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-122",
+      "task_id": "TASK-263",
+      "task_ref": "PIPEF-158",
+      "submitted_at": "2026-06-29T13:09:42Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-121",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-263",
+        "task_ref": "PIPEF-158",
+        "reported_task_id": "TASK-263",
+        "reported_task_ref": "PIPEF-158",
+        "implementation_summary": "Added a post-commit batch handoff git status gate that stops multi-task batches with POST_TASK_DIRTY_WORKTREE when dirty files remain before the next task, and covered clean and dirty handoff cases in tests.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/batch.py",
+          "tests/test_pipeline_runner.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 582.374015,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 582.374015,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The broader tests.test_pipeline_runner module has unrelated failures in existing run_next paths; a representative failing test reproduces in isolation.",
+          "Protected AI_PROJECT files were already dirty in the worktree and were not manually edited."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only ai_project_ctl/pipeline/batch.py and tests/test_pipeline_runner.py.",
+          "Focused handoff and git status tests passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 957,
+          "remaining_tokens": 31043,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -8649,6 +8792,7 @@
     "TASK-259": "RPT-114",
     "TASK-260": "RPT-116",
     "TASK-261": "RPT-118",
-    "TASK-262": "RPT-120"
+    "TASK-262": "RPT-120",
+    "TASK-263": "RPT-122"
   }
 }

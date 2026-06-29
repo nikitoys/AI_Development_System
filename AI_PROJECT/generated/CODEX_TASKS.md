@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1795`
+Revision: `1800`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4590,7 +4590,7 @@ Acceptance criteria:
 
 ### PIPEF-158 (TASK-263) — Enforce clean batch handoff
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_852064edcb02`, legacy `TASK-263`, aliases `TASK-263`, local `PIPEF` / `158`

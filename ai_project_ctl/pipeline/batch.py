@@ -14,6 +14,7 @@ from typing import Any, Mapping, Sequence
 from ai_project_ctl.core.result import CommandMessage, CommandResult
 from ai_project_ctl.core.workflows import Runner
 
+from .git_status import GitStatusError, capture_git_status_snapshot
 from .policy import PipelinePolicy
 from .queue import QueuePlannerRequest, QueuePreview, QueuePreviewItem, preview_queue
 from .runner import run_next
@@ -24,6 +25,8 @@ from .state import load_pipeline_state, load_reference_state
 CONTINUE_CODES = {"TASK_AUTO_CLOSED", "LOCAL_COMMIT_CREATED"}
 CONTINUE_PHASE_STATUSES = {"passed", "skipped"}
 STOP_PHASE_STATUSES = {"blocked", "failed"}
+POST_TASK_DIRTY_WORKTREE = "POST_TASK_DIRTY_WORKTREE"
+POST_TASK_WORKTREE_STATUS_UNAVAILABLE = "POST_TASK_WORKTREE_STATUS_UNAVAILABLE"
 
 
 def run_until_blocker(
@@ -128,6 +131,27 @@ def run_until_blocker(
                         or "Review the completed pipeline session."
                     ),
                 )
+            if _latest_phase_name(session) == "close":
+                handoff_blocker = _post_task_worktree_handoff_blocker(
+                    root=root_path,
+                    runner=runner,
+                    completed_task_id=str(
+                        committed_close.get("task_id")
+                        or session.get("current_task_id")
+                        or ""
+                    ),
+                    commit_hash=str(committed_close.get("commit_hash") or ""),
+                )
+                if handoff_blocker:
+                    return _post_task_worktree_stop(
+                        selected_session_id,
+                        summary,
+                        effects,
+                        handoff_blocker,
+                        root=root_path,
+                        actor=actor,
+                        session=session,
+                    )
 
         if _attempt_count(session) >= policy.batch.max_steps:
             stopped = stop_session(
@@ -250,6 +274,35 @@ def run_until_blocker(
                 summary["completed_tasks"].append(selected_task)
             if selected_task and selected_task not in summary["changed_tasks"]:
                 summary["changed_tasks"].append(selected_task)
+            if (
+                stop_code == "LOCAL_COMMIT_CREATED"
+                and not _committed_close_finishes_selected_queue(
+                    summary,
+                    session,
+                    policy,
+                    root_path,
+                )
+            ):
+                handoff_blocker = _post_task_worktree_handoff_blocker(
+                    root=root_path,
+                    runner=runner,
+                    completed_task_id=selected_task,
+                    commit_hash=str(
+                        step.data.get("commit_hash")
+                        or summary.get("commit_hash")
+                        or ""
+                    ),
+                )
+                if handoff_blocker:
+                    return _post_task_worktree_stop(
+                        selected_session_id,
+                        summary,
+                        effects,
+                        handoff_blocker,
+                        root=root_path,
+                        actor=actor,
+                        session=session,
+                    )
             continue
 
         if stop_code == "CODEX_REVIEW_REQUEST_CHANGES" and selected_task:
@@ -448,6 +501,13 @@ def _phase_result(result: CommandResult) -> dict[str, Any]:
 
 def _phase_name(phase_result: Mapping[str, Any]) -> str:
     return str(phase_result.get("phase") or "")
+
+
+def _latest_phase_name(session: Mapping[str, Any]) -> str:
+    history = _phase_history(session)
+    if not history:
+        return ""
+    return str(history[-1].get("phase") or "")
 
 
 def _phase_status(
@@ -685,6 +745,83 @@ def _committed_close_completion_reason(close_status: Mapping[str, Any]) -> str:
     if commit_hash:
         return "Close passed and local commit {} was created.".format(commit_hash)
     return "Close passed and a local commit was created."
+
+
+def _post_task_worktree_handoff_blocker(
+    *,
+    root: Path,
+    runner: Runner | None,
+    completed_task_id: str,
+    commit_hash: str,
+) -> dict[str, Any]:
+    try:
+        snapshot = capture_git_status_snapshot(root=root, runner=runner)
+    except GitStatusError as exc:
+        return {
+            "code": POST_TASK_WORKTREE_STATUS_UNAVAILABLE,
+            "reason": (
+                "Post-task git status could not be captured after committed "
+                "task {}.".format(completed_task_id or "unknown")
+            ),
+            "task_id": completed_task_id,
+            "completed_task_id": completed_task_id,
+            "commit_hash": commit_hash,
+            "dirty_paths": [],
+            "error": str(exc),
+        }
+
+    dirty_paths = list(snapshot.dirty_paths)
+    if not dirty_paths:
+        return {}
+
+    return {
+        "code": POST_TASK_DIRTY_WORKTREE,
+        "reason": (
+            "Committed task {} left a dirty worktree after local commit."
+        ).format(completed_task_id or "unknown"),
+        "task_id": completed_task_id,
+        "completed_task_id": completed_task_id,
+        "commit_hash": commit_hash,
+        "dirty_paths": dirty_paths,
+        "git_status": snapshot.to_dict(),
+    }
+
+
+def _post_task_worktree_stop(
+    session_id: str,
+    summary: dict[str, Any],
+    effects: list[CommandResult],
+    blocker: Mapping[str, Any],
+    *,
+    root: Path,
+    actor: str,
+    session: Mapping[str, Any],
+) -> CommandResult:
+    summary["blockers"].append(dict(blocker))
+    summary["completed_task_id"] = blocker.get("completed_task_id") or ""
+    summary["dirty_paths"] = list(blocker.get("dirty_paths") or [])
+    summary["post_task_handoff"] = dict(blocker)
+    code = str(blocker.get("code") or POST_TASK_DIRTY_WORKTREE)
+    reason = str(blocker.get("reason") or "Post-task worktree handoff blocked.")
+    stopped = stop_session(
+        session_id,
+        "{}: {}".format(code, reason),
+        root=root,
+        actor=actor,
+        status="stopped",
+    )
+    effects.append(stopped)
+    _merge_effects_into_summary(summary, stopped)
+    stopped_session = _find_session(root, session_id) or dict(session)
+    return _success(
+        session_id,
+        code,
+        reason,
+        summary,
+        effects,
+        session=stopped_session,
+        owner_action_required="Inspect the post-task worktree before resuming the batch.",
+    )
 
 
 def _string_list(value: Any) -> list[str]:

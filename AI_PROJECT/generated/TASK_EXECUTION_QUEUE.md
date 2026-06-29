@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1795`
+Revision: `1800`
 
 ## Executable Now
 
@@ -17,7 +17,6 @@ Revision: `1795`
 - `PIPEF-126 (TASK-207)` [planned] `EPIC-009` priority `1` — Show effective policy summary
 - `PIPEF-127 (TASK-208)` [planned] `EPIC-009` priority `1` — Add Web run batch overrides
 - `PIPEF-128 (TASK-209)` [planned] `EPIC-009` priority `1` — Warn on incomplete Web run policy
-- `PIPEF-158 (TASK-263)` [planned] `EPIC-009` priority `1` — Enforce clean batch handoff
 - `PIPEF-159 (TASK-264)` [planned] `EPIC-009` priority `1` — Build UI batch queue helper
 - `PIPEF-160 (TASK-265)` [planned] `EPIC-009` priority `1` — Add Web batch run action
 - `PIPEF-161 (TASK-266)` [planned] `EPIC-009` priority `1` — Block dirty Web batch starts
@@ -532,6 +531,8 @@ _No tasks waiting only on dependencies._
 - `PIPEF-156 (TASK-261)` [done] `EPIC-009` priority `1` — Verify Web Run clean commit path 2
   - `status_not_executable`: status is done
 - `PIPEF-157 (TASK-262)` [done] `EPIC-009` priority `1` — Continue batch after task commit
+  - `status_not_executable`: status is done
+- `PIPEF-158 (TASK-263)` [done] `EPIC-009` priority `1` — Enforce clean batch handoff
   - `status_not_executable`: status is done
 - `PIPEF-155 (TASK-260)` [done] `EPIC-009` priority `2` — Link dirty preflight to checkpoint UX
   - `status_not_executable`: status is done
