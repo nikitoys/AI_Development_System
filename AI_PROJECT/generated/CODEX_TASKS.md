@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1776`
+Revision: `1777`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4552,3 +4552,20 @@ Acceptance criteria:
 - After checkpoint commit success, the result page points the owner back to running the same task.
 - No automatic Web Run is started after checkpoint commit.
 - Tests verify the dirty preflight to checkpoint commit UX path.
+
+### PIPEF-156 (TASK-261) — Verify Web Run clean commit path 2
+
+Status: `planned`
+Priority: `1`
+Verification: `light`
+Identity: uid `tsk_6bc6fb4a9e2a`, legacy `TASK-261`, aliases `TASK-261`, local `PIPEF` / `156`
+
+Create a new deterministic smoke artifact to verify that Web Run reaches local commit from a clean worktree.
+
+Acceptance criteria:
+
+- tmp/run-smoke/web-run-clean-commit-smoke-2.md exists after execution.
+- The file contains the exact marker WEB_RUN_CLEAN_COMMIT_2_OK.
+- The file states that it is only a smoke artifact for Web Run local commit validation.
+- The generated report evidence includes tmp/run-smoke/web-run-clean-commit-smoke-2.md as a changed file.
+- Web Run reaches local commit without COMMIT_READINESS_FAILED.
