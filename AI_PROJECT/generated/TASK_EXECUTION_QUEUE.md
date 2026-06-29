@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1816`
+Revision: `1819`
 
 ## Executable Now
 
@@ -539,7 +539,7 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-160 (TASK-265)` [done] `EPIC-009` priority `1` — Add Web batch run action
   - `status_not_executable`: status is done
-- `PIPEF-161 (TASK-266)` [in_progress] `EPIC-009` priority `1` — Block dirty Web batch starts
-  - `status_not_executable`: status is in_progress
+- `PIPEF-161 (TASK-266)` [done] `EPIC-009` priority `1` — Block dirty Web batch starts
+  - `status_not_executable`: status is done
 - `PIPEF-155 (TASK-260)` [done] `EPIC-009` priority `2` — Link dirty preflight to checkpoint UX
   - `status_not_executable`: status is done

@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `1816`
-Current task: `TASK-266`
+Revision: `1819`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -4641,9 +4641,9 @@ Acceptance criteria:
 - The selected-task ui.run_selected_task action remains unchanged for one-task runs.
 - Tests cover action registration, argument handling, session creation, and run_until_blocker delegation.
 
-### PIPEF-161 (TASK-266) — Block dirty Web batch starts ⭐
+### PIPEF-161 (TASK-266) — Block dirty Web batch starts
 
-Status: `in_progress`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_2377b93b98bc`, legacy `TASK-266`, aliases `TASK-266`, local `PIPEF` / `161`
