@@ -4901,6 +4901,7 @@ def action_result_panel(payload: Mapping[str, Any]) -> str:
             data.get("suggested_checkpoint_commands"),
         )
     )
+    sections.extend(_checkpoint_commit_panel(data))
     sections.extend(_ui_settings_result_panel(data))
     sections.extend(_message_panel("Warnings", "warn", _messages(result.get("warnings"))))
     sections.extend(_message_panel("Errors", "fail", visible_errors))
@@ -4964,8 +4965,15 @@ def _pipeline_action_badge(fields: Mapping[str, str]) -> tuple[str, str]:
     ):
         return "pass", "PASS"
     if {stop_code, blocked_by}.intersection(
-        {"NO_EXECUTABLE_TASK", "WORKTREE_DIRTY", "WORKTREE_STATUS_UNAVAILABLE"}
+        {
+            "NO_EXECUTABLE_TASK",
+            "WORKTREE_CLEAN",
+            "WORKTREE_DIRTY",
+            "WORKTREE_STATUS_UNAVAILABLE",
+        }
     ):
+        return "warn", "NOT RUN"
+    if outcome == "worktree_clean":
         return "warn", "NOT RUN"
     if outcome == "completed" or session_status == "completed" or stop_code == "QUEUE_COMPLETE":
         return "pass", "PASS"
@@ -5263,6 +5271,56 @@ def _file_list_panel(title: str, value: Any) -> list[str]:
         "<h3>{}</h3>".format(escape(title)),
         '<ul class="result-files">{}</ul>'.format(
             "".join("<li><code>{}</code></li>".format(escape(item)) for item in items)
+        ),
+        "</section>",
+    ]
+
+
+def _checkpoint_commit_panel(data: Mapping[str, Any]) -> list[str]:
+    commit_hash = str(data.get("commit_hash") or "").strip()
+    if commit_hash:
+        facts = [
+            ("Commit Hash", commit_hash),
+            ("Message", str(data.get("checkpoint_message") or "")),
+            ("Next Action", str(data.get("next_action") or "")),
+        ]
+        return [
+            '<section class="result-section">',
+            "<h3>Checkpoint Commit</h3>",
+            '<ul class="result-actions">{}</ul>'.format(
+                "".join(
+                    "<li><strong>{}</strong>: <code>{}</code></li>".format(
+                        escape(label),
+                        escape(value),
+                    )
+                    for label, value in facts
+                    if value
+                )
+            ),
+            "</section>",
+        ]
+
+    outcome = str(data.get("outcome") or "")
+    dirty_files = _string_items(data.get("dirty_files"))
+    task_ref = str(data.get("task_ref") or data.get("task_id") or "").strip()
+    if outcome != "worktree_dirty" or not dirty_files or not task_ref:
+        return []
+    dirty_preview = "".join(
+        "<li><code>{}</code></li>".format(escape(path)) for path in dirty_files
+    )
+    return [
+        '<section class="result-section checkpoint-commit-action">',
+        "<h3>Create Checkpoint Commit</h3>",
+        (
+            '<p class="callout">Confirm to stage and commit the dirty files listed '
+            "below before starting Web Run. Web Run will not start automatically.</p>"
+        ),
+        '<ul class="result-files">{}</ul>'.format(dirty_preview),
+        action_form(
+            "ui.checkpoint_commit",
+            [hidden_field("task", task_ref)],
+            button_label="Create Checkpoint Commit",
+            confirm_target="{} dirty file(s) for {}".format(len(dirty_files), task_ref),
         ),
         "</section>",
     ]
@@ -11946,7 +12004,9 @@ def action_form(
     confirm_required_attr = " required" if confirm_required else ""
     enctype_attr = ' enctype="multipart/form-data"' if multipart else ""
     submit_once_attr = (
-        ' data-submit-once="action"' if action_id == "ui.run_selected_task" else ""
+        ' data-submit-once="action"'
+        if action_id in {"ui.run_selected_task", "ui.checkpoint_commit"}
+        else ""
     )
     modal_attrs = (
         action_form_confirm_attrs(

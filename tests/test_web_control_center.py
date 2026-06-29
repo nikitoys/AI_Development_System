@@ -5515,9 +5515,9 @@ class WebControlCenterTests(unittest.TestCase):
                 {"status": "??", "path": "tmp/new-artifact.txt"},
             ],
         )
-        self.assertIn("git add --all", data["suggested_checkpoint_commands"])
+        self.assertIn("git add -A", data["suggested_checkpoint_commands"])
         self.assertIn(
-            "checkpoint before Web Run",
+            "Checkpoint before Web Run",
             " ".join(result.to_dict()["result"]["next_actions"]),
         )
         self.assertIn("worktree is dirty", payload["result"]["message"])
@@ -5527,7 +5527,10 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("Dirty Files", body)
         self.assertIn("ai_project_ctl/web/actions.py", body)
         self.assertIn("Suggested Checkpoint Commands", body)
-        self.assertIn("git add --all", body)
+        self.assertIn("git add -A", body)
+        self.assertIn("Create Checkpoint Commit", body)
+        self.assertIn('name="action" value="ui.checkpoint_commit"', body)
+        self.assertIn('name="task" value="APP-01"', body)
 
     def test_ui_run_selected_task_web_action_does_not_create_session_for_done_task(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -5846,6 +5849,129 @@ class WebControlCenterTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, "WEB_ACTION_CONFIRMATION_REQUIRED")
         create.assert_not_called()
+
+    def test_checkpoint_commit_action_requires_confirmation(self):
+        with patch("ai_project_ctl.web.actions.create_checkpoint_commit") as checkpoint:
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor("/tmp/project", actor="tester").execute(
+                    {
+                        "action": "ui.checkpoint_commit",
+                        "task": "TASK-001",
+                    }
+                )
+
+        self.assertEqual(raised.exception.code, "WEB_ACTION_CONFIRMATION_REQUIRED")
+        checkpoint.assert_not_called()
+
+    def test_checkpoint_commit_action_reports_not_run_for_clean_worktree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(
+                ["git", "init"],
+                cwd=root,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
+
+            result = WebActionExecutor(root, actor="tester").execute(
+                {
+                    "action": "ui.checkpoint_commit",
+                    "confirm": "yes",
+                    "task": "APP-01",
+                }
+            )
+
+        payload = result.to_dict()
+        data = payload["result"]["data"]
+        self.assertTrue(result.ok)
+        self.assertTrue(data["not_run"])
+        self.assertEqual(data["outcome"], "worktree_clean")
+        self.assertEqual(data["stop_code"], "WORKTREE_CLEAN")
+        self.assertEqual(data["commit_hash"], "")
+        self.assertEqual(data["dirty_files"], [])
+
+    def test_checkpoint_commit_action_commits_dirty_worktree_and_reports_hash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(
+                ["git", "init"],
+                cwd=root,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.email", "owner@example.invalid"],
+                cwd=root,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.name", "Human Owner"],
+                cwd=root,
+                check=True,
+            )
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "legacy_id": "TASK-001",
+                        "aliases": ["TASK-001"],
+                        "status": "ready",
+                        "title": "Ready task",
+                        "epic_id": "EPIC-001",
+                    }
+                ],
+                epics=[{"id": "EPIC-001", "status": "active"}],
+            )
+            (root / "dirty.txt").write_text("dirty\n", encoding="utf-8")
+
+            with patch("ai_project_ctl.web.actions.create_session") as create:
+                with patch("ai_project_ctl.web.actions.run_until_blocker") as run_until:
+                    result = WebActionExecutor(root, actor="tester").execute(
+                        {
+                            "action": "ui.checkpoint_commit",
+                            "confirm": "yes",
+                            "task": "APP-01",
+                        }
+                    )
+
+            status_after = subprocess.run(
+                ["git", "status", "--short", "--untracked-files=all"],
+                cwd=root,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
+            tasks_state = json.loads(
+                (root / "AI_PROJECT" / "state" / "tasks.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+
+        create.assert_not_called()
+        run_until.assert_not_called()
+        payload = result.to_dict()
+        data = payload["result"]["data"]
+        self.assertTrue(result.ok)
+        self.assertFalse(data["not_run"])
+        self.assertEqual(data["outcome"], "checkpoint_commit_created")
+        self.assertRegex(data["commit_hash"], r"^[0-9a-f]{40}$")
+        self.assertIn("dirty.txt", data["dirty_files"])
+        self.assertIn("Run selected task APP-01 again.", payload["result"]["next_actions"])
+        self.assertEqual(tasks_state["tasks"][0]["status"], "ready")
+        self.assertEqual(status_after.stdout, "")
+        command_vectors = [item["command"] for item in data["commands"]]
+        self.assertIn(["git", "add", "-A"], command_vectors)
+        self.assertIn(
+            ["git", "commit", "-m", "Checkpoint before Web Run: APP-01"],
+            command_vectors,
+        )
 
     def test_pipeline_run_action_requires_confirmation(self):
         with patch("ai_project_ctl.web.actions.subprocess.run") as run:

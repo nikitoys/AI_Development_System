@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1766`
+Revision: `1771`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4520,7 +4520,7 @@ Acceptance criteria:
 
 ### PIPEF-154 (TASK-259) — Add confirmed checkpoint commit action
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_34590799287f`, legacy `TASK-259`, aliases `TASK-259`, local `PIPEF` / `154`
