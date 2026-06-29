@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1824`
+Revision: `1829`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4733,7 +4733,7 @@ Acceptance criteria:
 
 ### PIPEF-166 (TASK-271) — Commit final pipeline close artifacts
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_148a36350b27`, legacy `TASK-271`, aliases `TASK-271`, local `PIPEF` / `166`

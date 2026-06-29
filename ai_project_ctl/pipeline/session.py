@@ -51,6 +51,14 @@ PRE_EXISTING_DIRTY_FILES_KEY = "pre_existing_dirty_files"
 SESSION_OWNED_CHANGED_FILES_KEY = "session_owned_changed_files"
 PHASE_DELTAS_KEY = "phase_deltas"
 CLOSE_STATUS_KEY = "close_status"
+PIPELINE_BOOKKEEPING_PATHS = frozenset(
+    {
+        "AI_PROJECT/state/pipeline_sessions.json",
+        "AI_PROJECT/events/pipeline-events.jsonl",
+        "AI_PROJECT/generated/PIPELINE_STATUS.md",
+        "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+    }
+)
 
 
 class PipelineSessionError(CommandError):
@@ -869,7 +877,10 @@ def _record_session_file_delta(
     current_dirty = _dirty_paths_from_git_status_evidence(current)
     pre_existing_set = set(pre_existing)
     session_owned = _unique_strings(
-        path for path in current_dirty if path not in pre_existing_set
+        [
+            *(path for path in current_dirty if path not in pre_existing_set),
+            *_explicit_session_owned_bookkeeping_paths(root, phase_entry),
+        ]
     )
 
     evidence[LATEST_GIT_STATUS_KEY] = current
@@ -1058,6 +1069,40 @@ def _dirty_paths_from_git_status_evidence(evidence: Mapping[str, Any]) -> list[s
     if not isinstance(evidence, Mapping):
         return []
     return _unique_strings(evidence.get("dirty_paths") or [])
+
+
+def _explicit_session_owned_bookkeeping_paths(
+    root: Path,
+    phase_entry: Mapping[str, Any],
+) -> list[str]:
+    declared_paths = [
+        *_sequence_strings(phase_entry.get("changed_files")),
+        *_sequence_strings(phase_entry.get("generated_files")),
+    ]
+    return [
+        normalized
+        for normalized in (_normalize_session_path(root, path) for path in declared_paths)
+        if normalized in PIPELINE_BOOKKEEPING_PATHS
+    ]
+
+
+def _sequence_strings(value: Any) -> list[str]:
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
+        return []
+    return _unique_strings(str(item) for item in value)
+
+
+def _normalize_session_path(root: Path, path: str | Path) -> str:
+    raw = Path(str(path))
+    if raw.is_absolute():
+        try:
+            return raw.resolve().relative_to(root.resolve()).as_posix()
+        except ValueError:
+            return raw.as_posix().lstrip("/")
+    text = raw.as_posix()
+    if text.startswith("./"):
+        text = text[2:]
+    return text.lstrip("/")
 
 
 def _has_git_status_baseline(session: Mapping[str, Any]) -> bool:

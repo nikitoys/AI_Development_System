@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 130,
+  "revision": 132,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-29T14:05:19Z",
+  "updated_at": "2026-06-29T14:26:32Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -9244,6 +9244,150 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-131",
+      "task_id": "TASK-271",
+      "task_ref": "PIPEF-166",
+      "submitted_at": "2026-06-29T14:26:32Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:9bb24322dd385ae3539f008e85f5b5a85ee17fb94c89de8a3d4eb09101af2110",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-271",
+        "task_ref": "PIPEF-166",
+        "reported_task_id": "TASK-271",
+        "reported_task_ref": "PIPEF-166",
+        "implementation_summary": "Recorded close-phase pipeline bookkeeping before local commit readiness, reloaded refreshed session evidence for commit approval, and tightened commit readiness so only trusted task artifacts, side effects, and current-session pipeline bookkeeping are eligible.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 1044.783515,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 1044.783515,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Pre-existing dirty AI_PROJECT protected/generated files remain in the worktree and were not manually edited."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused tests passed: python -m pytest tests/test_pipeline_git_commit.py tests/test_pipeline_phase_review_close.py.",
+          "Pipeline validate and pipeline check-generated passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1045,
+          "remaining_tokens": 30955,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-132",
+      "task_id": "TASK-271",
+      "task_ref": "PIPEF-166",
+      "submitted_at": "2026-06-29T14:26:32Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-131",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-271",
+        "task_ref": "PIPEF-166",
+        "reported_task_id": "TASK-271",
+        "reported_task_ref": "PIPEF-166",
+        "implementation_summary": "Recorded close-phase pipeline bookkeeping before local commit readiness, reloaded refreshed session evidence for commit approval, and tightened commit readiness so only trusted task artifacts, side effects, and current-session pipeline bookkeeping are eligible.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/close_phase.py",
+          "ai_project_ctl/pipeline/git_commit.py",
+          "ai_project_ctl/pipeline/session.py",
+          "tests/test_pipeline_git_commit.py",
+          "tests/test_pipeline_phase_review_close.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 1044.783515,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 1044.783515,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Pre-existing dirty AI_PROJECT protected/generated files remain in the worktree and were not manually edited."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused tests passed: python -m pytest tests/test_pipeline_git_commit.py tests/test_pipeline_phase_review_close.py.",
+          "Pipeline validate and pipeline check-generated passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1045,
+          "remaining_tokens": 30955,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -9359,6 +9503,7 @@
     "TASK-264": "RPT-124",
     "TASK-265": "RPT-126",
     "TASK-266": "RPT-128",
-    "TASK-270": "RPT-130"
+    "TASK-270": "RPT-130",
+    "TASK-271": "RPT-132"
   }
 }

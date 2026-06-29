@@ -48,6 +48,10 @@ CHANGED_FILE = "tests/test_pipeline_phase_review_close.py"
 CONTEXT_PACK_FILE = "AI_PROJECT/generated/CONTEXT_PACK.md"
 CONTEXT_STATUS_FILE = "AI_PROJECT/generated/CONTEXT_STATUS.md"
 CONTEXT_EVENT_FILE = "AI_PROJECT/events/context-events.jsonl"
+PIPELINE_STATE_FILE = "AI_PROJECT/state/pipeline_sessions.json"
+PIPELINE_EVENT_FILE = "AI_PROJECT/events/pipeline-events.jsonl"
+PIPELINE_STATUS_FILE = "AI_PROJECT/generated/PIPELINE_STATUS.md"
+PIPELINE_AUDIT_FILE = "AI_PROJECT/generated/PIPELINE_AUDIT.md"
 OWNER_APPROVAL_NOTE = "Owner approved auto-close for this temp session."
 
 
@@ -343,6 +347,25 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
                 _report_declared_test_warning(),
             )
             git_commands: list[list[str]] = []
+            git_status_stdout = (
+                " M {}\n"
+                " M {}\n"
+                " M {}\n"
+                " M {}\n"
+                " M {}\n"
+            ).format(
+                CHANGED_FILE,
+                PIPELINE_STATE_FILE,
+                PIPELINE_EVENT_FILE,
+                PIPELINE_STATUS_FILE,
+                PIPELINE_AUDIT_FILE,
+            )
+
+            def assert_close_bookkeeping_rendered() -> None:
+                status_text = (root / PIPELINE_STATUS_FILE).read_text(encoding="utf-8")
+                audit_text = (root / PIPELINE_AUDIT_FILE).read_text(encoding="utf-8")
+                self.assertIn("close", status_text)
+                self.assertIn("pipeline.phase.close", audit_text)
 
             with (
                 mock.patch.object(
@@ -360,7 +383,11 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
                 ),
                 mock.patch(
                     "ai_project_ctl.pipeline.git_commit.run_git_command",
-                    side_effect=_fake_git_command_runner(git_commands),
+                    side_effect=_fake_git_command_runner(
+                        git_commands,
+                        git_status_stdout=git_status_stdout,
+                        before_git_status=assert_close_bookkeeping_rendered,
+                    ),
                 ),
             ):
                 close = close_phase(
@@ -393,7 +420,35 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
                 local_commit["readiness"]["code"],
                 COMMIT_READINESS_PASS,
             )
+            self.assertEqual(
+                sorted(local_commit["readiness"]["approved_files"]),
+                sorted(
+                    [
+                        CHANGED_FILE,
+                        CONTEXT_EVENT_FILE,
+                        CONTEXT_PACK_FILE,
+                        CONTEXT_STATUS_FILE,
+                        PIPELINE_STATE_FILE,
+                        PIPELINE_EVENT_FILE,
+                        PIPELINE_STATUS_FILE,
+                        PIPELINE_AUDIT_FILE,
+                    ]
+                ),
+            )
             self.assertEqual(local_commit["commit_hash"], "abc1234deadbeef")
+            self.assertEqual(
+                git_commands[1],
+                [
+                    "git",
+                    "add",
+                    "--",
+                    PIPELINE_EVENT_FILE,
+                    PIPELINE_AUDIT_FILE,
+                    PIPELINE_STATUS_FILE,
+                    PIPELINE_STATE_FILE,
+                    CHANGED_FILE,
+                ],
+            )
             self.assertNotIn(
                 CODE_MACHINE_REVIEW_NOT_PASS,
                 json.dumps(artifacts, sort_keys=True),
@@ -402,7 +457,16 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
                 git_commands,
                 [
                     ["git", "status", "--short", "--untracked-files=all"],
-                    ["git", "add", "--", CHANGED_FILE],
+                    [
+                        "git",
+                        "add",
+                        "--",
+                        PIPELINE_EVENT_FILE,
+                        PIPELINE_AUDIT_FILE,
+                        PIPELINE_STATUS_FILE,
+                        PIPELINE_STATE_FILE,
+                        CHANGED_FILE,
+                    ],
                     ["git", "commit", "-m", local_commit["message"]],
                     ["git", "rev-parse", "--verify", "HEAD"],
                 ],
@@ -499,6 +563,10 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
                         CONTEXT_EVENT_FILE,
                         CONTEXT_PACK_FILE,
                         CONTEXT_STATUS_FILE,
+                        PIPELINE_STATE_FILE,
+                        PIPELINE_EVENT_FILE,
+                        PIPELINE_STATUS_FILE,
+                        PIPELINE_AUDIT_FILE,
                     ]
                 ),
             )
