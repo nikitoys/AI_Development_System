@@ -9,6 +9,7 @@ from unittest import mock
 
 from ai_project_ctl.core import workflows as workflow_module
 from ai_project_ctl.pipeline import policy_preset
+from ai_project_ctl.pipeline import git_commit as git_commit_module
 from ai_project_ctl.pipeline.batch import run_until_blocker
 from ai_project_ctl.pipeline.git_commit import REQUIRED_MACHINE_CHECKS
 from ai_project_ctl.pipeline.machine_review import (
@@ -58,11 +59,26 @@ class WebRunLocalCommitSmokeTests(unittest.TestCase):
         _write_temp_project(root)
         policy = _web_run_local_commit_policy()
         original_workflow_result = workflow_module.WorkflowExecutor._result
+        bookkeeping_after_commits = []
+
+        def record_bookkeeping_after_commit():
+            bookkeeping_after_commits.append(_pipeline_bookkeeping_snapshot(root))
+
+        original_run_git_command = git_commit_module.run_git_command
+
+        def recording_run_git_command(command, *args, **kwargs):
+            result = original_run_git_command(command, *args, **kwargs)
+            command_args = tuple(command)
+            if command_args[:2] == ("git", "commit") and result.ok:
+                record_bookkeeping_after_commit()
+            return result
+
+        pipeline_runner = _controlled_pipeline_runner(root)
 
         def run_selected_session(session_id, **kwargs):
             return run_until_blocker(
                 session_id,
-                runner=_controlled_pipeline_runner(root),
+                runner=pipeline_runner,
                 **kwargs,
             )
 
@@ -89,6 +105,10 @@ class WebRunLocalCommitSmokeTests(unittest.TestCase):
                 "_result",
                 _workflow_result_with_smoke_effects(original_workflow_result),
             ),
+            mock.patch(
+                "ai_project_ctl.pipeline.git_commit.run_git_command",
+                side_effect=recording_run_git_command,
+            ),
         ):
             result = WebActionExecutor(root, actor="tester").execute(
                 {
@@ -101,6 +121,13 @@ class WebRunLocalCommitSmokeTests(unittest.TestCase):
 
             session_count = len(_pipeline_state(root)["sessions"])
             first_status_lines = _git_status_lines(root)
+            first_bookkeeping_after_run = _pipeline_bookkeeping_snapshot(root)
+            first_commit_subject = _git(
+                root,
+                "log",
+                "--format=%s",
+                "-1",
+            ).stdout.strip()
 
             second = WebActionExecutor(root, actor="tester").execute(
                 {
@@ -112,6 +139,7 @@ class WebRunLocalCommitSmokeTests(unittest.TestCase):
             )
             second_session_count = len(_pipeline_state(root)["sessions"])
             second_status_lines = _git_status_lines(root)
+            second_bookkeeping_after_run = _pipeline_bookkeeping_snapshot(root)
 
         result_payload = result.to_dict()
         result_data = result_payload["result"]["data"]
@@ -130,12 +158,12 @@ class WebRunLocalCommitSmokeTests(unittest.TestCase):
         first_report = _latest_report_for_task(reports, TASK_ID)
         self.assertEqual(first_report["report"]["changed_files"], [ARTIFACT])
 
-        session = _pipeline_state(root)["sessions"][0]
-        close = _latest_phase(session, "close")
-        close_status = close["artifacts"]["close_status"]
-        local_commit = close["artifacts"]["local_commit"]
+        close_status = result_data["close_status"]
+        local_commit = _local_commit_from_result_data(result_data)
         readiness = local_commit["readiness"]
 
+        self.assertEqual(result_data["session_status"], "completed")
+        self.assertEqual(result_data["stop_code"], "QUEUE_COMPLETE")
         self.assertEqual(close_status["outcome"], "closed_with_local_commit")
         self.assertEqual(close_status["task_status"], "done")
         self.assertEqual(close_status["commit_status"], "pass")
@@ -152,15 +180,11 @@ class WebRunLocalCommitSmokeTests(unittest.TestCase):
         for path in PIPELINE_BOOKKEEPING_FILES:
             self.assertIn(path, local_commit["staged_files"])
             self.assertIn(path, readiness["approved_files"])
+        self.assertEqual(len(bookkeeping_after_commits), 2)
+        self.assertEqual(bookkeeping_after_commits[0], first_bookkeeping_after_run)
 
-        commit_subject = _git(
-            root,
-            "log",
-            "--format=%s",
-            "-1",
-        ).stdout.strip()
-        self.assertIn(TASK_ID, commit_subject)
-        self.assertIn("Web Run local commit smoke", commit_subject)
+        self.assertIn(TASK_ID, first_commit_subject)
+        self.assertIn("Web Run local commit smoke", first_commit_subject)
 
         _assert_clean_worktree(self, first_status_lines, "after first Web Run")
 
@@ -183,12 +207,23 @@ class WebRunLocalCommitSmokeTests(unittest.TestCase):
         self.assertNotIn('name="action" value="ui.checkpoint_commit"', second_body)
 
         second_session = _pipeline_state(root)["sessions"][1]
-        second_close = _latest_phase(second_session, "close")
-        second_local_commit = second_close["artifacts"]["local_commit"]
+        second_local_commit = _local_commit_from_result_data(second_data)
+        self.assertEqual(second_data["session_status"], "completed")
+        self.assertEqual(second_data["stop_code"], "QUEUE_COMPLETE")
         self.assertEqual(second_local_commit["status"], "pass")
         self.assertEqual(second_local_commit["code"], "LOCAL_COMMIT_CREATED")
         self.assertTrue(second_local_commit["commit_hash"])
         self.assertIn(SECOND_ARTIFACT, second_local_commit["staged_files"])
+        second_commit_subject = _git(
+            root,
+            "log",
+            "--format=%s",
+            "-1",
+        ).stdout.strip()
+        self.assertIn(SECOND_TASK_ID, second_commit_subject)
+        self.assertIn("Web Run second local commit smoke", second_commit_subject)
+        self.assertEqual(bookkeeping_after_commits[1], second_bookkeeping_after_run)
+        self.assertEqual(second_session["status"], "running")
         _assert_clean_worktree(self, second_status_lines, "after second Web Run")
 
 
@@ -580,6 +615,32 @@ def _tasks_state(root: Path) -> dict:
 
 def _pipeline_state(root: Path) -> dict:
     return json.loads(pipeline_state_path(root).read_text(encoding="utf-8"))
+
+
+def _pipeline_bookkeeping_snapshot(root: Path) -> dict[str, str]:
+    return {
+        path: (root / path).read_text(encoding="utf-8")
+        for path in PIPELINE_BOOKKEEPING_FILES
+    }
+
+
+def _local_commit_from_result_data(result_data: dict) -> dict:
+    for effect in result_data.get("side_effects", []):
+        data = effect.get("data") if isinstance(effect, dict) else {}
+        phase_result = data.get("phase_result") if isinstance(data, dict) else {}
+        artifacts = (
+            phase_result.get("artifacts")
+            if isinstance(phase_result, dict)
+            else {}
+        )
+        local_commit = (
+            artifacts.get("local_commit")
+            if isinstance(artifacts, dict)
+            else {}
+        )
+        if isinstance(local_commit, dict) and local_commit.get("commit_hash"):
+            return local_commit
+    raise AssertionError("missing local commit result data")
 
 
 def _latest_report(root: Path) -> dict:

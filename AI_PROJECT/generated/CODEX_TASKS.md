@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1850`
+Revision: `1855`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4787,7 +4787,7 @@ Acceptance criteria:
 
 ### PIPEF-169 (TASK-274) — Stop post-commit session completion writes
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_c97925641b62`, legacy `TASK-274`, aliases `TASK-274`, local `PIPEF` / `169`

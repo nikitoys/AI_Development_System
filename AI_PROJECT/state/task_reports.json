@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 136,
+  "revision": 138,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-29T15:00:57Z",
+  "updated_at": "2026-06-29T16:34:56Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -9673,6 +9673,151 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-137",
+      "task_id": "TASK-274",
+      "task_ref": "PIPEF-169",
+      "submitted_at": "2026-06-29T16:34:56Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:64ba14237ebc5f4f5fc701377aae307fea4d1e5ac6bc1313c720afadc54bd83b",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-274",
+        "task_ref": "PIPEF-169",
+        "reported_task_id": "TASK-274",
+        "reported_task_ref": "PIPEF-169",
+        "implementation_summary": "Prevented successful local-commit close completion from mutating pipeline session state, events, or generated pipeline files after LOCAL_COMMIT_CREATED while preserving persisted complete_session behavior for non-local queue completion.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 1300.296535,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 1300.296535,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "A broader tests.test_pipeline_runner run was attempted and failed in existing non-focused fixtures outside this task's committed-close completion path.",
+          "The worktree contains protected AI_PROJECT changes from the active pipeline session; they were not manually edited for this implementation."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only the four allowed files.",
+          "Focused runner and Web Run E2E checks pass."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1098,
+          "remaining_tokens": 30902,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-138",
+      "task_id": "TASK-274",
+      "task_ref": "PIPEF-169",
+      "submitted_at": "2026-06-29T16:34:56Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-137",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-274",
+        "task_ref": "PIPEF-169",
+        "reported_task_id": "TASK-274",
+        "reported_task_ref": "PIPEF-169",
+        "implementation_summary": "Prevented successful local-commit close completion from mutating pipeline session state, events, or generated pipeline files after LOCAL_COMMIT_CREATED while preserving persisted complete_session behavior for non-local queue completion.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/batch.py",
+          "ai_project_ctl/pipeline/session.py",
+          "tests/test_pipeline_runner.py",
+          "tests/test_web_run_local_commit_e2e.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 1300.296535,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 1300.296535,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "A broader tests.test_pipeline_runner run was attempted and failed in existing non-focused fixtures outside this task's committed-close completion path.",
+          "The worktree contains protected AI_PROJECT changes from the active pipeline session; they were not manually edited for this implementation."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only the four allowed files.",
+          "Focused runner and Web Run E2E checks pass."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1098,
+          "remaining_tokens": 30902,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -9791,6 +9936,7 @@
     "TASK-270": "RPT-130",
     "TASK-271": "RPT-132",
     "TASK-272": "RPT-134",
-    "TASK-273": "RPT-136"
+    "TASK-273": "RPT-136",
+    "TASK-274": "RPT-138"
   }
 }

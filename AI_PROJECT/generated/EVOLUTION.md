@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `2636`
-Changes: `87`
+Revision: `2663`
+Changes: `88`
 
 ## Summary
 
-- `accepted`: 65
+- `accepted`: 66
 - `approved`: 22
 
 ## Changes
@@ -5446,3 +5446,62 @@ Impact:
 Linked tasks:
 
 - TASK-273
+
+### CHG-088 — Stop post-commit session completion writes
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-169 requires an explicit Evolution Change Proposal before implementation: Prevent the committed Web Run close path from writing pipeline session state, events, or generated pipeline files after the local task commit exists.
+
+Proposal:
+
+Implement the bounded task scope: Trace the successful committed-close path from run_until_blocker through session completion after LOCAL_COMMIT_CREATED.; Change the committed-close completion path so completed session status can be returned without calling mutating session completion after the local commit.; Preserve normal persisted completion behavior for sessions that finish without a local commit and for blocked, failed, or stopped sessions.; Add focused coverage proving no tracked pipeline bookkeeping files are written after local commit creation.
+
+Rationale:
+
+The failing Web Run regression shows that pipeline.session.complete and related bookkeeping still dirty tracked files after LOCAL_COMMIT_CREATED.
+
+Approved by: `human_owner` at `2026-06-29T16:13:03Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-148)  
+
+Accepted by: `human_owner` at `2026-06-29T16:35:21Z`  
+Acceptance notes: Approve; linked Change accepted after task TASK-274 close succeeded.  
+
+Affected files:
+
+- ai_project_ctl/pipeline/batch.py
+- ai_project_ctl/pipeline/session.py
+- tests/test_pipeline_runner.py
+- tests/test_web_run_local_commit_e2e.py
+
+Risks:
+
+- Boundary risk: Do not remove local task commit creation.
+- Boundary risk: Do not weaken dirty worktree preflight or post-commit dirty checks.
+- Boundary risk: Do not change report, review, or close gate semantics unrelated to committed-close completion.
+- Boundary risk: Do not edit protected project-control files manually.
+- Verify that the fix removes post-commit writes rather than hiding dirty files from git status.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-274.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Trace the successful committed-close path from run_until_blocker through session completion after LOCAL_COMMIT_CREATED.
+- Change the committed-close completion path so completed session status can be returned without calling mutating session completion after the local commit.
+- Preserve normal persisted completion behavior for sessions that finish without a local commit and for blocked, failed, or stopped sessions.
+- Add focused coverage proving no tracked pipeline bookkeeping files are written after local commit creation.
+- After LOCAL_COMMIT_CREATED, the committed-close path does not append a new pipeline.session.complete event to AI_PROJECT/events/pipeline-events.jsonl.
+- After LOCAL_COMMIT_CREATED, the committed-close path does not mutate AI_PROJECT/state/pipeline_sessions.json.
+- After LOCAL_COMMIT_CREATED, the committed-close path does not render AI_PROJECT/generated/PIPELINE_STATUS.md or AI_PROJECT/generated/PIPELINE_AUDIT.md.
+
+Linked tasks:
+
+- TASK-274

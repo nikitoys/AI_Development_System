@@ -1601,6 +1601,216 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(latest["status"], "running")
             self.assertNotIn("MAX_STEPS_REACHED", latest.get("stop_reason", ""))
 
+    def test_run_until_blocker_returns_committed_close_complete_without_bookkeeping_writes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            _write_task_status(root, "done")
+            supervised = policy_preset("supervised_local_commit")
+            policy = replace(
+                supervised,
+                name="committed_close_no_post_commit_bookkeeping",
+                batch=BatchPolicy(max_steps=2, max_failures=1),
+            )
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
+            session_id = session.data["session_id"]
+            precommit = record_phase_result(
+                session_id,
+                {
+                    "phase": "close",
+                    "status": "running",
+                    "reason": "Close task state rendered before local commit readiness.",
+                    "next_action": "Create the local commit.",
+                    "artifacts": {
+                        "session_id": session_id,
+                        "task_id": "TASK-001",
+                        "task_ref": "APP-01",
+                    },
+                    "changed_files": [],
+                    "generated_files": [],
+                    "events": [],
+                },
+                root=root,
+                actor="tester",
+                task_id="TASK-001",
+                command="pipeline.phase.close",
+            )
+            self.assertTrue(precommit.ok)
+            before_bookkeeping = pipeline_bookkeeping_snapshot(root)
+            commit_hash = "abc1234deadbeef"
+            close_status = {
+                "outcome": "closed_with_local_commit",
+                "task_closed": True,
+                "task_status": "done",
+                "commit_status": "pass",
+                "commit_code": "LOCAL_COMMIT_CREATED",
+                "commit_hash": commit_hash,
+                "commit_readiness_status": "pass",
+                "commit_readiness_code": "COMMIT_READY",
+                "owner_next_action": "Review the completed pipeline session.",
+            }
+            final_close_phase = {
+                "phase": "close",
+                "status": "passed",
+                "reason": "Close completed and local commit was created.",
+                "next_action": close_status["owner_next_action"],
+                "artifacts": {
+                    "session_id": session_id,
+                    "task_id": "TASK-001",
+                    "task_ref": "APP-01",
+                    "close_status": close_status,
+                    "local_commit": {
+                        "status": "pass",
+                        "code": "LOCAL_COMMIT_CREATED",
+                        "commit_hash": commit_hash,
+                    },
+                },
+                "changed_files": [],
+                "generated_files": [],
+                "events": [],
+            }
+            step = CommandResult.success(
+                command="pipeline.run_next",
+                domain="pipeline",
+                message="Close completed and local commit was created.",
+                data={
+                    "session_id": session_id,
+                    "dispatched_phase": "close",
+                    "phase_status": "passed",
+                    "phase_result": final_close_phase,
+                    "selected_task": {"id": "TASK-001", "ref": "APP-01"},
+                    "side_effects": [],
+                },
+            )
+            git_calls = []
+
+            def clean_post_commit_status(argv):
+                args = list(argv)
+                if args == ["git", "status", "--short", "--untracked-files=all"]:
+                    git_calls.append(args)
+                    return completed(stdout="")
+                return completed('{"ok": true}\n')
+
+            with patch("ai_project_ctl.pipeline.batch.run_next", return_value=step):
+                result = run_until_blocker(
+                    session_id,
+                    root=root,
+                    actor="tester",
+                    confirmed=True,
+                    runner=clean_post_commit_status,
+                )
+            latest = load_pipeline(root)["sessions"][0]
+            event_commands = [
+                json.loads(line)["command"]
+                for line in pipeline_events_path(root).read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            ]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["session_status"], "completed")
+            self.assertEqual(result.data["stop_code"], "QUEUE_COMPLETE")
+            self.assertEqual(result.data["commit_hash"], commit_hash)
+            self.assertEqual(result.data["close_status"]["commit_hash"], commit_hash)
+            self.assertIn("TASK-001", result.data["completed_tasks"])
+            self.assertIn("TASK-001", result.data["changed_tasks"])
+            self.assertIn(commit_hash, result.data["commits"])
+            self.assertEqual(result.changed_files, [])
+            self.assertEqual(result.generated_files, [])
+            self.assertEqual(result.events, [])
+            self.assertEqual(pipeline_bookkeeping_snapshot(root), before_bookkeeping)
+            self.assertNotIn("pipeline.session.complete", event_commands)
+            self.assertEqual(latest["status"], "running")
+            self.assertEqual(latest["phase_history"][-1]["status"], "running")
+            self.assertEqual(
+                git_calls,
+                [["git", "status", "--short", "--untracked-files=all"]],
+            )
+
+    def test_run_until_blocker_persists_non_local_commit_queue_completion(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            _write_task_status(root, "done")
+            session = create_session(root=root, actor="tester", policy_name="supervised")
+            session_id = session.data["session_id"]
+            close_status = {
+                "outcome": "done_without_local_commit",
+                "task_closed": True,
+                "task_status": "done",
+                "commit_status": "skipped",
+                "commit_code": "LOCAL_COMMIT_DISABLED",
+                "commit_hash": "",
+                "commit_readiness_status": "",
+                "commit_readiness_code": "",
+                "owner_next_action": "Review the completed pipeline session.",
+            }
+            recorded = record_phase_result(
+                session_id,
+                PhaseResult.passed(
+                    "close",
+                    reason="Close completed without a local commit.",
+                    next_action=close_status["owner_next_action"],
+                    artifacts={
+                        "session_id": session_id,
+                        "task_id": "TASK-001",
+                        "task_ref": "APP-01",
+                        "close_status": close_status,
+                        "local_commit": {
+                            "status": "skipped",
+                            "code": "LOCAL_COMMIT_DISABLED",
+                            "commit_hash": "",
+                        },
+                    },
+                ),
+                root=root,
+                actor="tester",
+                task_id="TASK-001",
+                command="pipeline.phase.close",
+            )
+            self.assertTrue(recorded.ok)
+            before_bookkeeping = pipeline_bookkeeping_snapshot(root)
+
+            result = run_until_blocker(
+                session_id,
+                root=root,
+                actor="tester",
+                confirmed=True,
+            )
+            latest = load_pipeline(root)["sessions"][0]
+            event_commands = [
+                json.loads(line)["command"]
+                for line in pipeline_events_path(root).read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            ]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["session_status"], "completed")
+            self.assertEqual(result.data["stop_code"], "QUEUE_COMPLETE")
+            self.assertEqual(result.data["close_status"]["outcome"], "done_without_local_commit")
+            self.assertEqual(result.data["commit_hash"], "")
+            self.assertIn("TASK-001", result.data["completed_tasks"])
+            self.assertIn("TASK-001", result.data["changed_tasks"])
+            self.assertEqual(latest["status"], "completed")
+            self.assertIn("pipeline.session.complete", event_commands)
+            self.assertNotEqual(pipeline_bookkeeping_snapshot(root), before_bookkeeping)
+            self.assertTrue(
+                any(path.endswith("AI_PROJECT/state/pipeline_sessions.json") for path in result.changed_files)
+            )
+            self.assertTrue(
+                any(path.endswith("AI_PROJECT/events/pipeline-events.jsonl") for path in result.changed_files)
+            )
+            self.assertTrue(
+                any(path.endswith("AI_PROJECT/generated/PIPELINE_STATUS.md") for path in result.generated_files)
+            )
+            self.assertTrue(
+                any(path.endswith("AI_PROJECT/generated/PIPELINE_AUDIT.md") for path in result.generated_files)
+            )
+
     def test_run_until_blocker_stops_final_committed_close_with_dirty_worktree(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

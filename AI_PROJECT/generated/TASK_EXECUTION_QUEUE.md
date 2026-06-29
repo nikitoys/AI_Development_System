@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1850`
+Revision: `1855`
 
 ## Executable Now
 
@@ -17,7 +17,6 @@ Revision: `1850`
 - `PIPEF-126 (TASK-207)` [planned] `EPIC-009` priority `1` — Show effective policy summary
 - `PIPEF-127 (TASK-208)` [planned] `EPIC-009` priority `1` — Add Web run batch overrides
 - `PIPEF-128 (TASK-209)` [planned] `EPIC-009` priority `1` — Warn on incomplete Web run policy
-- `PIPEF-169 (TASK-274)` [planned] `EPIC-009` priority `1` — Stop post-commit session completion writes
 - `PIPEF-170 (TASK-275)` [planned] `EPIC-009` priority `1` — Make committed Web action result read-only
 - `PIPEF-171 (TASK-276)` [planned] `EPIC-009` priority `1` — Pass no-checkpoint Web Run regression
 - `PIPEF-162 (TASK-267)` [planned] `EPIC-009` priority `2` — Auto-size Web batch max steps
@@ -548,5 +547,7 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-168 (TASK-273)` [blocked] `EPIC-009` priority `1` — Add no-checkpoint Web Run regression
   - `status_not_executable`: status is blocked
+- `PIPEF-169 (TASK-274)` [done] `EPIC-009` priority `1` — Stop post-commit session completion writes
+  - `status_not_executable`: status is done
 - `PIPEF-155 (TASK-260)` [done] `EPIC-009` priority `2` — Link dirty preflight to checkpoint UX
   - `status_not_executable`: status is done

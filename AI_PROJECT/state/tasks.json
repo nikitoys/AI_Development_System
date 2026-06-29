@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1850,
+  "revision": 1855,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-29T16:11:50Z",
+  "updated_at": "2026-06-29T16:35:19Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -17663,7 +17663,7 @@
       "id": "TASK-274",
       "epic_id": "EPIC-009",
       "title": "Stop post-commit session completion writes",
-      "status": "planned",
+      "status": "done",
       "summary": "Prevent the committed Web Run close path from writing pipeline session state, events, or generated pipeline files after the local task commit exists.",
       "description": "The failing Web Run regression shows that pipeline.session.complete and related bookkeeping still dirty tracked files after LOCAL_COMMIT_CREATED.",
       "priority": 1,
@@ -17723,11 +17723,11 @@
           "created_at": "2026-06-29T16:11:47Z"
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-29T16:35:18Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-29T16:11:46Z",
-      "updated_at": "2026-06-29T16:11:47Z",
+      "updated_at": "2026-06-29T16:35:19Z",
       "uid": "tsk_c97925641b62",
       "ref": "PIPEF-169",
       "legacy_id": "TASK-274",

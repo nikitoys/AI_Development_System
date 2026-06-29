@@ -18,7 +18,12 @@ from .git_status import GitStatusError, GitStatusSnapshot, capture_git_status_sn
 from .policy import PipelinePolicy
 from .queue import QueuePlannerRequest, QueuePreview, QueuePreviewItem, preview_queue
 from .runner import run_next
-from .session import stop_session, successful_committed_close_status
+from .session import (
+    complete_session,
+    stop_session,
+    successful_close_status,
+    successful_committed_close_status,
+)
 from .state import load_pipeline_state, load_reference_state
 
 
@@ -101,73 +106,26 @@ def run_until_blocker(
                 owner_action_required="Review the completed pipeline session.",
             )
 
-        committed_close = successful_committed_close_status(session)
-        if committed_close:
-            _merge_committed_close_into_summary(summary, session, committed_close)
-            _merge_session_lists(summary, session, root_path)
-            if _committed_close_finishes_selected_queue(
+        close_status = successful_close_status(session)
+        if close_status:
+            committed_close = successful_committed_close_status(session)
+            if committed_close:
+                close_status = committed_close
+            finished = _finish_successful_close(
+                selected_session_id,
                 summary,
-                session,
-                policy,
-                root_path,
-            ):
-                final_blocker = _post_commit_worktree_final_blocker(
-                    root=root_path,
-                    runner=runner,
-                    completed_task_id=str(
-                        committed_close.get("task_id")
-                        or session.get("current_task_id")
-                        or ""
-                    ),
-                    commit_hash=str(committed_close.get("commit_hash") or ""),
-                )
-                if final_blocker:
-                    return _post_commit_worktree_stop(
-                        selected_session_id,
-                        summary,
-                        effects,
-                        final_blocker,
-                        root=root_path,
-                        actor=actor,
-                        session=session,
-                    )
-                completed_session = _committed_close_completion_view(
-                    session,
-                    committed_close,
-                )
-                return _success(
-                    selected_session_id,
-                    "QUEUE_COMPLETE",
-                    "Committed close completed the selected pipeline session.",
-                    summary,
-                    effects,
-                    session=completed_session,
-                    owner_action_required=(
-                        committed_close.get("owner_next_action")
-                        or "Review the completed pipeline session."
-                    ),
-                )
-            if _latest_phase_name(session) == "close":
-                handoff_blocker = _post_task_worktree_handoff_blocker(
-                    root=root_path,
-                    runner=runner,
-                    completed_task_id=str(
-                        committed_close.get("task_id")
-                        or session.get("current_task_id")
-                        or ""
-                    ),
-                    commit_hash=str(committed_close.get("commit_hash") or ""),
-                )
-                if handoff_blocker:
-                    return _post_worktree_stop(
-                        selected_session_id,
-                        summary,
-                        effects,
-                        handoff_blocker,
-                        root=root_path,
-                        actor=actor,
-                        session=session,
-                    )
+                effects,
+                close_status,
+                session=session,
+                policy=policy,
+                root=root_path,
+                actor=actor,
+                runner=runner,
+                check_handoff=_latest_phase_name(session) == "close",
+                stop_after_clean_handoff=False,
+            )
+            if finished is not None:
+                return finished
 
         if _attempt_count(session) >= policy.batch.max_steps:
             stopped = stop_session(
@@ -274,6 +232,24 @@ def run_until_blocker(
                 owner_action_required="Review the completed pipeline session.",
             )
 
+        step_close_status = _successful_close_status_from_step(step, session)
+        if step_close_status:
+            finished = _finish_successful_close(
+                selected_session_id,
+                summary,
+                effects,
+                step_close_status,
+                session=session,
+                policy=policy,
+                root=root_path,
+                actor=actor,
+                runner=runner,
+                check_handoff=True,
+                stop_after_clean_handoff=True,
+            )
+            if finished is not None:
+                return finished
+
         if phase_status in CONTINUE_PHASE_STATUSES:
             selected_task = _selected_task_id(step)
             if _phase_name(phase_result) == "close" and selected_task:
@@ -292,7 +268,7 @@ def run_until_blocker(
                 summary["changed_tasks"].append(selected_task)
             if (
                 stop_code == "LOCAL_COMMIT_CREATED"
-                and not _committed_close_finishes_selected_queue(
+                and not _close_finishes_selected_queue(
                     summary,
                     session,
                     policy,
@@ -638,7 +614,162 @@ def _accepted_change_ids(
     return accepted
 
 
-def _merge_committed_close_into_summary(
+def _finish_successful_close(
+    session_id: str,
+    summary: dict[str, Any],
+    effects: list[CommandResult],
+    close_status: Mapping[str, Any],
+    *,
+    session: Mapping[str, Any],
+    policy: PipelinePolicy,
+    root: Path,
+    actor: str,
+    runner: Runner | None,
+    check_handoff: bool,
+    stop_after_clean_handoff: bool,
+) -> CommandResult | None:
+    _merge_close_into_summary(summary, session, close_status)
+    _merge_session_lists(summary, session, root)
+
+    if _close_finishes_selected_queue(summary, session, policy, root):
+        if _close_has_successful_local_commit(close_status):
+            final_blocker = _post_commit_worktree_final_blocker(
+                root=root,
+                runner=runner,
+                completed_task_id=str(
+                    close_status.get("task_id") or session.get("current_task_id") or ""
+                ),
+                commit_hash=str(close_status.get("commit_hash") or ""),
+            )
+            if final_blocker:
+                return _post_commit_worktree_stop(
+                    session_id,
+                    summary,
+                    effects,
+                    final_blocker,
+                    root=root,
+                    actor=actor,
+                    session=session,
+                )
+            completed_session = _committed_close_completion_view(
+                session,
+                close_status,
+            )
+            return _success(
+                session_id,
+                "QUEUE_COMPLETE",
+                "Committed close completed the selected pipeline session.",
+                summary,
+                effects,
+                session=completed_session,
+                owner_action_required=(
+                    close_status.get("owner_next_action")
+                    or "Review the completed pipeline session."
+                ),
+            )
+
+        completed = complete_session(
+            session_id,
+            root=root,
+            actor=actor,
+            reason=_close_completion_reason(close_status),
+        )
+        effects.append(completed)
+        _merge_effects_into_summary(summary, completed)
+        if not completed.ok:
+            return _failure(
+                session_id,
+                summary,
+                effects,
+                "PIPELINE_SESSION_COMPLETE_FAILED",
+                "Pipeline session completion failed.",
+            )
+        completed_session = _find_session(root, session_id) or session
+        return _success(
+            session_id,
+            "QUEUE_COMPLETE",
+            "Selected queue completed.",
+            summary,
+            effects,
+            session=completed_session,
+            owner_action_required=(
+                close_status.get("owner_next_action")
+                or "Review the completed pipeline session."
+            ),
+        )
+
+    if not (_close_has_successful_local_commit(close_status) and check_handoff):
+        return None
+
+    handoff_blocker = _post_task_worktree_handoff_blocker(
+        root=root,
+        runner=runner,
+        completed_task_id=str(
+            close_status.get("task_id") or session.get("current_task_id") or ""
+        ),
+        commit_hash=str(close_status.get("commit_hash") or ""),
+    )
+    if handoff_blocker:
+        return _post_worktree_stop(
+            session_id,
+            summary,
+            effects,
+            handoff_blocker,
+            root=root,
+            actor=actor,
+            session=session,
+        )
+    if not stop_after_clean_handoff:
+        return None
+    return _success(
+        session_id,
+        "LOCAL_COMMIT_CREATED",
+        _committed_close_completion_reason(close_status),
+        summary,
+        effects,
+        session=session,
+        owner_action_required=(
+            close_status.get("owner_next_action")
+            or "Review the local commit before continuing the pipeline."
+        ),
+    )
+
+
+def _successful_close_status_from_step(
+    result: CommandResult,
+    session: Mapping[str, Any],
+) -> dict[str, Any]:
+    phase_result = _phase_result(result)
+    if _phase_name(phase_result) != "close":
+        return {}
+    if _phase_status(result, phase_result) != "passed":
+        return {}
+    artifacts = phase_result.get("artifacts")
+    if not isinstance(artifacts, Mapping):
+        return {}
+    close_status = artifacts.get("close_status")
+    if not isinstance(close_status, Mapping):
+        return {}
+
+    data = dict(close_status)
+    task_id = str(
+        artifacts.get("task_id")
+        or _selected_task_id(result)
+        or session.get("current_task_id")
+        or ""
+    )
+    if task_id:
+        data["task_id"] = task_id
+    local_commit = artifacts.get("local_commit")
+    if isinstance(local_commit, Mapping):
+        data.setdefault("commit_status", str(local_commit.get("status") or ""))
+        data.setdefault("commit_code", str(local_commit.get("code") or ""))
+        data.setdefault("commit_hash", str(local_commit.get("commit_hash") or ""))
+    data.setdefault("owner_next_action", str(phase_result.get("next_action") or ""))
+    return data
+
+
+def _merge_close_into_summary(
     summary: dict[str, Any],
     session: Mapping[str, Any],
     close_status: Mapping[str, Any],
@@ -660,7 +791,21 @@ def _merge_committed_close_into_summary(
     summary["commit_hash"] = commit_hash
 
 
-def _committed_close_finishes_selected_queue(
+def _close_has_successful_local_commit(close_status: Mapping[str, Any]) -> bool:
+    commit_hash = str(close_status.get("commit_hash") or "").strip()
+    if not commit_hash:
+        return False
+    commit_status = str(close_status.get("commit_status") or "").lower()
+    commit_code = str(close_status.get("commit_code") or "")
+    close_outcome = str(close_status.get("outcome") or "").lower()
+    return (
+        commit_status == "pass"
+        and commit_code == "LOCAL_COMMIT_CREATED"
+        and close_outcome == "closed_with_local_commit"
+    )
+
+
+def _close_finishes_selected_queue(
     summary: Mapping[str, Any],
     session: Mapping[str, Any],
     policy: PipelinePolicy,
@@ -761,6 +906,14 @@ def _committed_close_completion_reason(close_status: Mapping[str, Any]) -> str:
     if commit_hash:
         return "Close passed and local commit {} was created.".format(commit_hash)
     return "Close passed and a local commit was created."
+
+
+def _close_completion_reason(close_status: Mapping[str, Any]) -> str:
+    if _close_has_successful_local_commit(close_status):
+        return _committed_close_completion_reason(close_status)
+    if str(close_status.get("outcome") or "") == "done_without_local_commit":
+        return "Close passed without a local commit and selected queue completed."
+    return "Close passed and selected queue completed."
 
 
 def _committed_close_completion_view(
