@@ -32,9 +32,11 @@ from ai_project_ctl.ui_settings import (
     ui_settings_path,
 )
 from ai_project_ctl.web.actions import (
+    ACTIONS,
     WebActionError,
     WebActionExecutor,
     available_actions,
+    describe_web_action,
 )
 from ai_project_ctl.web.read_model import (
     PIPELINE_RUNTIME_LOG_TAIL_MAX_BYTES,
@@ -4617,6 +4619,41 @@ class WebControlCenterTests(unittest.TestCase):
             key_argument["choices"],
         )
 
+    def test_ui_run_task_batch_action_metadata_and_confirmation(self):
+        batch_action = next(
+            action
+            for action in available_actions()
+            if action["id"] == "ui.run_task_batch"
+        )
+        descriptor = describe_web_action(ACTIONS["ui.run_task_batch"])
+        argument_names = [argument["name"] for argument in batch_action["arguments"]]
+
+        self.assertEqual(batch_action["command"], "ui.run_task_batch")
+        self.assertEqual(descriptor["availability"], "implemented")
+        self.assertTrue(ACTIONS["ui.run_task_batch"].confirmation_required)
+        for expected in (
+            "task_ref",
+            "epic",
+            "status_filter",
+            "max_tasks",
+            "order_by",
+            "auto_close_note",
+        ):
+            self.assertIn(expected, argument_names)
+
+        with patch("ai_project_ctl.web.actions.create_session") as create:
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor("/tmp/project", actor="tester").execute(
+                    {
+                        "action": "ui.run_task_batch",
+                        "task_ref": "APP-01",
+                        "max_tasks": "2",
+                    }
+                )
+
+        self.assertEqual(raised.exception.code, "WEB_ACTION_CONFIRMATION_REQUIRED")
+        create.assert_not_called()
+
     def test_ui_settings_web_action_updates_internal_change_gate_bypass_values(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -5313,6 +5350,116 @@ class WebControlCenterTests(unittest.TestCase):
                 self.assertTrue(result.ok)
                 self.assertEqual(Path(argv[1]).name, "aictl.py")
                 self.assertEqual(argv[-len(expected_tail) :], expected_tail)
+
+    def test_ui_run_task_batch_web_action_creates_session_and_delegates(self):
+        note = "Owner approved auto-close for UI batch."
+        selected_policy = policy_preset("supervised_executable_local_commit")
+        session_result = CommandResult.success(
+            command="pipeline.session.create",
+            domain="pipeline",
+            message="Created pipeline session.",
+            data={"session_id": "PSESS-020", "session": {"id": "PSESS-020"}},
+        )
+        run_result = CommandResult.success(
+            command="pipeline.run_until_blocker",
+            domain="pipeline",
+            message="QUEUE_COMPLETE: Selected queue completed.",
+            data={
+                "session_id": "PSESS-020",
+                "stop_code": "QUEUE_COMPLETE",
+                "session_status": "completed",
+            },
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            resolved_root = root.resolve()
+            with patch(
+                "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
+                return_value=selected_policy,
+            ) as resolve_policy:
+                with patch(
+                    "ai_project_ctl.web.actions.create_session",
+                    return_value=session_result,
+                ) as create:
+                    with patch(
+                        "ai_project_ctl.web.actions.run_until_blocker",
+                        return_value=run_result,
+                    ) as run_until:
+                        with patch("ai_project_ctl.web.actions.subprocess.run") as run:
+                            result = WebActionExecutor(
+                                root,
+                                actor="tester",
+                            ).execute(
+                                {
+                                    "action": "ui.run_task_batch",
+                                    "confirm": "yes",
+                                    "task_ref": "APP-02\nAPP-01",
+                                    "epic": "EPIC-001",
+                                    "status_filter": "ready,in_progress",
+                                    "max_tasks": "2",
+                                    "order_by": "selected",
+                                    "auto_close_note": note,
+                                }
+                            )
+
+        resolve_policy.assert_called_once_with(root=resolved_root)
+        create.assert_called_once()
+        create_kwargs = create.call_args.kwargs
+        self.assertEqual(create_kwargs["actor"], "tester")
+        self.assertEqual(create_kwargs["policy_name"], selected_policy.name)
+        self.assertEqual(create_kwargs["auto_close_note"], note)
+        self.assertNotIn("task_refs", create_kwargs)
+        self.assertNotIn("max_tasks", create_kwargs)
+        self.assertNotIn("order_by", create_kwargs)
+        self.assertEqual(
+            create_kwargs["selected_queue"],
+            {
+                "selection": "ready_queue",
+                "task_refs": ["APP-02", "APP-01"],
+                "epic_ids": ["EPIC-001"],
+                "statuses": ["ready", "in_progress"],
+                "max_tasks": 2,
+                "order_by": "selected",
+                "include_blocked_tasks": selected_policy.queue.include_blocked_tasks,
+                "created_by_command": "ui.run_task_batch",
+                "ui_run_confirmed": True,
+                "allow_internal_change_gate_bypass": False,
+            },
+        )
+        run_until.assert_called_once_with(
+            "PSESS-020",
+            root=resolved_root,
+            actor="tester",
+            confirmed=True,
+        )
+        run.assert_not_called()
+
+        payload = result.to_dict()
+        data = payload["result"]["data"]
+        self.assertTrue(result.ok)
+        self.assertEqual(payload["command"], "ui.run_task_batch")
+        self.assertEqual(payload["registered_command"]["name"], "ui.run_task_batch")
+        self.assertEqual(data["session_id"], "PSESS-020")
+        self.assertEqual(data["session_href"], "/pipeline/sessions/PSESS-020")
+        self.assertEqual(data["redirect_target"], "/pipeline/sessions/PSESS-020")
+        self.assertEqual(data["policy"], selected_policy.name)
+        self.assertEqual(data["selected_policy"], selected_policy.name)
+        self.assertEqual(data["selected_queue"]["max_tasks"], 2)
+        self.assertEqual(
+            data["requested_queue_inputs"],
+            {
+                "task_ref": ["APP-02", "APP-01"],
+                "epic": ["EPIC-001"],
+                "status_filter": ["ready", "in_progress"],
+                "max_tasks": "2",
+                "order_by": "selected",
+                "auto_close_note": note,
+            },
+        )
+        self.assertEqual(data["created_session"]["id"], "PSESS-020")
+        self.assertIn("--max-tasks", payload["delegate"])
+        self.assertIn("2", payload["delegate"])
 
     def test_ui_run_selected_task_web_action_creates_single_task_session(self):
         selected_policy = policy_preset("supervised_executable_local_commit")

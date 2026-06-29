@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 124,
+  "revision": 126,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-29T13:20:15Z",
+  "updated_at": "2026-06-29T13:33:05Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -8823,6 +8823,143 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-125",
+      "task_id": "TASK-265",
+      "task_ref": "PIPEF-160",
+      "submitted_at": "2026-06-29T13:33:05Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:20e4ff38bc33a05d7580c87c5239be7a9e2fccbb5573ec5f963146dfb744144a",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-265",
+        "task_ref": "PIPEF-160",
+        "reported_task_id": "TASK-265",
+        "reported_task_ref": "PIPEF-160",
+        "implementation_summary": "Registered owner-confirmed ui.run_task_batch Web action, wired it to resolve the UI pipeline policy, build a batch selected_queue with the UI helper, create a pipeline session, run it via run_until_blocker, and return session/policy/requested queue data. Added Web tests for registration, confirmation, argument handling, session creation, and runner delegation.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 655.501882,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 655.501882,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [],
+        "blockers": [],
+        "notes": [
+          "Changed ai_project_ctl/web/actions.py and tests/test_web_control_center.py.",
+          "Verification passed: python -m pytest tests/test_web_control_center.py tests/test_ui_run_command.py completed with 157 passed in 32.55s; git diff --check passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 960,
+          "remaining_tokens": 31040,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-126",
+      "task_id": "TASK-265",
+      "task_ref": "PIPEF-160",
+      "submitted_at": "2026-06-29T13:33:05Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-125",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-265",
+        "task_ref": "PIPEF-160",
+        "reported_task_id": "TASK-265",
+        "reported_task_ref": "PIPEF-160",
+        "implementation_summary": "Registered owner-confirmed ui.run_task_batch Web action, wired it to resolve the UI pipeline policy, build a batch selected_queue with the UI helper, create a pipeline session, run it via run_until_blocker, and return session/policy/requested queue data. Added Web tests for registration, confirmation, argument handling, session creation, and runner delegation.",
+        "changed_files": [
+          "ai_project_ctl/web/actions.py",
+          "tests/test_web_control_center.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 655.501882,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 655.501882,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [],
+        "blockers": [],
+        "notes": [
+          "Changed ai_project_ctl/web/actions.py and tests/test_web_control_center.py.",
+          "Verification passed: python -m pytest tests/test_web_control_center.py tests/test_ui_run_command.py completed with 157 passed in 32.55s; git diff --check passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 960,
+          "remaining_tokens": 31040,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -8935,6 +9072,7 @@
     "TASK-261": "RPT-118",
     "TASK-262": "RPT-120",
     "TASK-263": "RPT-122",
-    "TASK-264": "RPT-124"
+    "TASK-264": "RPT-124",
+    "TASK-265": "RPT-126"
   }
 }

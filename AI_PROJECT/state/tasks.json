@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1805,
+  "revision": 1810,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-29T13:20:36Z",
+  "updated_at": "2026-06-29T13:33:26Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -17112,7 +17112,7 @@
       "id": "TASK-265",
       "epic_id": "EPIC-009",
       "title": "Add Web batch run action",
-      "status": "planned",
+      "status": "done",
       "summary": "Add an owner-confirmed Web action that creates and runs a multi-task pipeline session using the existing batch runner.",
       "description": "The new action should be a batch entrypoint over the existing pipeline, not a new execution engine.",
       "priority": 1,
@@ -17155,11 +17155,11 @@
         "This task should use the existing policy and session infrastructure."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-29T13:33:26Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-29T12:45:27Z",
-      "updated_at": "2026-06-29T12:45:27Z",
+      "updated_at": "2026-06-29T13:33:26Z",
       "uid": "tsk_6dcf7d772c59",
       "ref": "PIPEF-160",
       "legacy_id": "TASK-265",

@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1805`
+Revision: `1810`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4625,7 +4625,7 @@ Acceptance criteria:
 
 ### PIPEF-160 (TASK-265) — Add Web batch run action
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_6dcf7d772c59`, legacy `TASK-265`, aliases `TASK-265`, local `PIPEF` / `160`

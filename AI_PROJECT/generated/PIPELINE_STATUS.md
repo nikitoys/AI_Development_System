@@ -3,9 +3,23 @@
 
 # Pipeline Status
 
-Revision: `1069`
-Current session: `none`
-Sessions: `141`
+Revision: `1077`
+Current session: `PSESS-142`
+Sessions: `142`
+
+## Current Session
+
+- ID: `PSESS-142`
+- Status: `running`
+- Policy: `supervised_executable_local_commit_1h_auto_change`
+- Current task: `TASK-265`
+- Current phase: `review`
+- Phase status: `skipped`
+- Blocked by: `none`
+- Next action: `Continue only through governed close or commit readiness; Machine Review evidence remains required.`
+- Current step: `execute`
+- Step status: `passed`
+- Stop reason: `none`
 
 ## Sessions
 
@@ -152,6 +166,7 @@ Sessions: `141`
 | `PSESS-139` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-262` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit d75a5356b72d3448562ec7975105882cb00f79fa was created. |
 | `PSESS-140` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-263` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit 2b63e12ce7cc276e7857c4ed0d2bb5823308ec0f was created. |
 | `PSESS-141` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-264` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit 41891fcf34905691983ecfa1cf3f66164775ea76 was created. |
+| `PSESS-142` | `running` | `supervised_executable_local_commit_1h_auto_change` | `TASK-265` | `review` | `skipped` | none | Continue only through governed close or commit readiness; Machine Review evidence remains required. | `execute` |  |
 
 ## Phase History
 
@@ -912,3 +927,9 @@ Sessions: `141`
 | `PSESS-141` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 2 | 0 | 1 |
 | `PSESS-141` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
 | `PSESS-141` | 7 | `close` | `passed` | Close completed and local commit was created. | Review the close artifacts and local commit hash, then select the next task. | 0 | 0 | 1 |
+| `PSESS-142` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-142` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 c1dd9a71d3f31d210c26b2085520b74f0448826a0390ddfda3a935691663ba4c). | 0 | 0 | 1 |
+| `PSESS-142` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-142` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-142` | 5 | `verify` | `passed` | Report gate passed; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 2 | 0 | 1 |
+| `PSESS-142` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |

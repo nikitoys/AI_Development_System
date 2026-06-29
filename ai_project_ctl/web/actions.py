@@ -34,6 +34,7 @@ from ai_project_ctl.pipeline.ui_policy import (
 )
 from ai_project_ctl.pipeline.ui_run import (
     UIRunSelectionResolution,
+    build_ui_run_batch_queue,
     build_ui_run_selected_queue,
     resolve_ui_run_selection,
 )
@@ -225,6 +226,70 @@ LOCAL_ACTION_DESCRIPTORS: dict[str, dict[str, Any]] = {
             'git commit -m "Checkpoint before Web Run"',
         ],
         "availability": "implemented",
+    },
+    "ui.run_task_batch": {
+        "name": "ui.run_task_batch",
+        "domain": "ui",
+        "description": (
+            "Create and run an owner-confirmed multi-task pipeline session using "
+            "effective UI pipeline settings."
+        ),
+        "kind": "write",
+        "arguments": [
+            {
+                "name": "task_ref",
+                "description": "Optional task refs to seed the batch queue.",
+                "type": "string",
+                "required": False,
+                "repeatable": True,
+            },
+            {
+                "name": "epic",
+                "description": "Optional epic IDs to filter the batch queue.",
+                "type": "string",
+                "required": False,
+                "repeatable": True,
+            },
+            {
+                "name": "status_filter",
+                "description": "Optional task statuses to filter the batch queue.",
+                "type": "string",
+                "required": False,
+                "repeatable": True,
+            },
+            {
+                "name": "max_tasks",
+                "description": "Maximum tasks to select for the batch session.",
+                "type": "integer",
+                "required": False,
+                "repeatable": False,
+            },
+            {
+                "name": "order_by",
+                "description": "Queue ordering mode.",
+                "type": "string",
+                "required": False,
+                "repeatable": False,
+                "choices": sorted(PIPELINE_ORDER_OPTIONS),
+            },
+            {
+                "name": "auto_close_note",
+                "description": "Human Owner note required by auto-close policies.",
+                "type": "string",
+                "required": False,
+                "repeatable": False,
+            },
+        ],
+        "read_write": {
+            "mutates_state": True,
+            "writes_events": True,
+            "renders_generated": True,
+            "validates": True,
+        },
+        "legacy_command": [
+            "Web-only action; creates a UI batch session and delegates to pipeline.run_until_blocker."
+        ],
+        "availability": "implemented",
     }
 }
 
@@ -403,6 +468,8 @@ class WebActionExecutor:
         descriptor = describe_web_action(action)
         if action.action_id == "ui.run_selected_task":
             process = self._create_ui_selected_task_session(fields)
+        elif action.action_id == "ui.run_task_batch":
+            process = self._create_ui_task_batch_session(fields)
         elif action.action_id == "ui.checkpoint_commit":
             process = self._create_checkpoint_commit(fields)
         elif action.action_id == "ui.settings.set":
@@ -576,6 +643,90 @@ class WebActionExecutor:
         if auto_close_note:
             command.extend(["--auto-close-note", auto_close_note])
         command.append("--confirm")
+        return ActionProcessResult(
+            command=command,
+            returncode=0 if result.ok else 1,
+            stdout=json.dumps(
+                result.to_dict(),
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+            + "\n",
+            stderr="",
+        )
+
+    def _create_ui_task_batch_session(
+        self,
+        fields: Mapping[str, str],
+    ) -> ActionProcessResult:
+        auto_close_note = _field(fields, "auto_close_note")
+        requested_queue_inputs = _ui_task_batch_requested_inputs(fields)
+        try:
+            selected_policy = resolve_ui_pipeline_policy(root=self.root)
+            selected_queue = build_ui_run_batch_queue(
+                selected_policy,
+                task_refs=requested_queue_inputs["task_ref"],
+                epic_ids=requested_queue_inputs["epic"],
+                statuses=requested_queue_inputs["status_filter"],
+                max_tasks=requested_queue_inputs["max_tasks"] or None,
+                order_by=requested_queue_inputs["order_by"] or None,
+                confirmed=True,
+                allow_internal_change_gate_bypass=(
+                    ui_internal_change_gate_bypass_enabled(root=self.root)
+                ),
+            )
+            session_result = create_session(
+                root=self.root,
+                actor=self.actor,
+                policy=selected_policy,
+                policy_name=selected_policy.name,
+                auto_close_note=auto_close_note,
+                selected_queue=selected_queue,
+            )
+        except ValueError as exc:
+            raise WebActionError(
+                "WEB_INVALID_ACTION_ARGUMENT",
+                str(exc),
+                details={"action": "ui.run_task_batch"},
+            ) from exc
+        except CommandError as exc:
+            raise WebActionError(
+                exc.code,
+                exc.message,
+                path=exc.path,
+                details={"action": "ui.run_task_batch", **exc.details},
+            ) from exc
+
+        result = session_result
+        if session_result.ok:
+            session_id = str(session_result.data.get("session_id") or "")
+            result = run_until_blocker(
+                session_id,
+                root=self.root,
+                actor=self.actor,
+                confirmed=True,
+            )
+            _merge_command_result_effects(result, session_result)
+            result.data.setdefault("created_session", session_result.data.get("session"))
+
+        result.data.setdefault("policy", selected_policy.name)
+        result.data.setdefault("selected_policy", selected_policy.name)
+        result.data.setdefault("requested_queue_inputs", requested_queue_inputs)
+        result.data.setdefault("selected_queue", selected_queue)
+        session_id = str(
+            result.data.get("session_id")
+            or session_result.data.get("session_id")
+            or ""
+        )
+        if session_id:
+            result.data["session_id"] = session_id
+            target = "/pipeline/sessions/{}".format(session_id)
+            result.data["session_href"] = target
+            result.data["redirect_target"] = target
+            next_action = "Open pipeline session {}.".format(session_id)
+            if next_action not in result.next_actions:
+                result.next_actions.append(next_action)
+        command = _build_ui_run_task_batch(fields)
         return ActionProcessResult(
             command=command,
             returncode=0 if result.ok else 1,
@@ -978,6 +1129,39 @@ def _build_ui_run_selected_task(fields: Mapping[str, str]) -> list[str]:
     return args
 
 
+def _build_ui_run_task_batch(fields: Mapping[str, str]) -> list[str]:
+    args = ["ui.run_task_batch"]
+    for value in _split_values(fields, "task_ref"):
+        args.extend(["--task-ref", value])
+    for value in _split_values(fields, "epic"):
+        args.extend(["--epic", value])
+    for value in _split_values(fields, "status_filter"):
+        args.extend(["--status-filter", value])
+    max_tasks = _field(fields, "max_tasks")
+    if max_tasks:
+        if not max_tasks.isdigit() or int(max_tasks) < 1:
+            raise WebActionError(
+                "WEB_INVALID_ACTION_ARGUMENT",
+                "UI batch max_tasks must be a positive integer.",
+                details={"max_tasks": max_tasks},
+            )
+        args.extend(["--max-tasks", max_tasks])
+    order_by = _field(fields, "order_by")
+    if order_by:
+        if order_by not in PIPELINE_ORDER_OPTIONS:
+            raise WebActionError(
+                "WEB_INVALID_ACTION_ARGUMENT",
+                "UI batch order_by is not allowed: {}".format(order_by),
+                details={"order_by": order_by, "allowed": sorted(PIPELINE_ORDER_OPTIONS)},
+            )
+        args.extend(["--order-by", order_by])
+    auto_close_note = _field(fields, "auto_close_note")
+    if auto_close_note:
+        args.extend(["--auto-close-note", auto_close_note])
+    args.append("--confirm")
+    return args
+
+
 def _build_ui_checkpoint_commit(fields: Mapping[str, str]) -> list[str]:
     return ["ui", "checkpoint-commit", _task_ref(fields), "--confirm"]
 
@@ -1202,6 +1386,19 @@ def _split_values(fields: Mapping[str, str], name: str) -> list[str]:
             if text:
                 values.append(text)
     return values
+
+
+def _ui_task_batch_requested_inputs(fields: Mapping[str, str]) -> dict[str, Any]:
+    max_tasks = _field(fields, "max_tasks")
+    order_by = _field(fields, "order_by")
+    return {
+        "task_ref": _split_values(fields, "task_ref"),
+        "epic": _split_values(fields, "epic"),
+        "status_filter": _split_values(fields, "status_filter"),
+        "max_tasks": max_tasks,
+        "order_by": order_by,
+        "auto_close_note": _field(fields, "auto_close_note"),
+    }
 
 
 def _parse_json(text: str) -> Any | None:
@@ -1495,6 +1692,12 @@ ACTIONS: dict[str, WebAction] = {
         command_name="pipeline.run_until_blocker",
         label="Run selected task",
         builder=_build_ui_run_selected_task,
+    ),
+    "ui.run_task_batch": WebAction(
+        action_id="ui.run_task_batch",
+        command_name="ui.run_task_batch",
+        label="Run task batch",
+        builder=_build_ui_run_task_batch,
     ),
     "ui.checkpoint_commit": WebAction(
         action_id="ui.checkpoint_commit",
