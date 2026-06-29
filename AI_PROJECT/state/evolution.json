@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 2663,
+  "revision": 2691,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-29T16:35:21Z",
+  "updated_at": "2026-06-29T18:31:40Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -5186,6 +5186,62 @@
       "order": 88,
       "created_at": "2026-06-29T16:12:58Z",
       "updated_at": "2026-06-29T16:35:21Z"
+    },
+    {
+      "id": "CHG-089",
+      "title": "Make committed Web action result read-only",
+      "status": "accepted",
+      "change_type": "tooling",
+      "rationale": "The Web action should display completed status and commit evidence from the returned pipeline result rather than mutating pipeline status artifacts after completion.",
+      "problem": "Task PIPEF-170 requires an explicit Evolution Change Proposal before implementation: Ensure ui.run_selected_task builds its successful committed-close action result without triggering tracked pipeline render or refresh writes after the commit.",
+      "proposal": "Implement the bounded task scope: Trace ui.run_selected_task result handling after run_until_blocker returns a committed close result.; Avoid any post-commit calls that persist pipeline session completion, pipeline events, or generated pipeline status/audit files for committed-close success.; Build the owner-facing action result from in-memory session/result data when the local commit already exists.; Keep dirty-start preflight, checkpoint guidance, and blocked action results unchanged.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/pipeline/batch.py",
+        "tests/test_web_control_center.py",
+        "tests/test_web_run_local_commit_e2e.py"
+      ],
+      "risks": [
+        "Boundary risk: Do not redesign the Web Control Center UI layout.",
+        "Boundary risk: Do not change non-Web CLI pipeline session behavior unless required by the shared read-only completion helper.",
+        "Boundary risk: Do not auto-create checkpoint commits.",
+        "Boundary risk: Do not edit protected project-control files manually.",
+        "Verify that the Web layer consumes committed-close evidence read-only and does not call a mutating render just to build the response.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-275.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Trace ui.run_selected_task result handling after run_until_blocker returns a committed close result.",
+        "Avoid any post-commit calls that persist pipeline session completion, pipeline events, or generated pipeline status/audit files for committed-close success.",
+        "Build the owner-facing action result from in-memory session/result data when the local commit already exists.",
+        "Keep dirty-start preflight, checkpoint guidance, and blocked action results unchanged.",
+        "A successful ui.run_selected_task response still shows completed outcome, session id, task id, and local commit hash.",
+        "Rendering the Web action result after a committed close does not mutate pipeline_sessions.json, pipeline-events.jsonl, PIPELINE_STATUS.md, or PIPELINE_AUDIT.md.",
+        "Dirty-start WORKTREE_DIRTY responses and checkpoint_commit guidance remain unchanged."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-275"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-29T18:20:57Z",
+      "approval_notes": "Auto-approved by Human Owner for selected UI run (pipeline session PSESS-149)",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-29T18:31:40Z",
+      "acceptance_notes": "Approve; linked Change accepted after task TASK-275 close succeeded.",
+      "notes": [],
+      "priority": 1,
+      "order": 89,
+      "created_at": "2026-06-29T18:20:52Z",
+      "updated_at": "2026-06-29T18:31:40Z"
     }
   ]
 }

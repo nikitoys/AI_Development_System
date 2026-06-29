@@ -616,7 +616,9 @@ class WebActionExecutor:
                 confirmed=True,
             )
             _merge_command_result_effects(result, session_result)
-            result.data.setdefault("created_session", session_result.data.get("session"))
+            created_session = session_result.data.get("session")
+            result.data.setdefault("created_session", created_session)
+            _apply_committed_close_action_view(result, created_session)
 
         result.data.setdefault("task_ref", task_ref)
         result.data.setdefault("policy", selected_policy.name)
@@ -1620,6 +1622,74 @@ def _selected_task_label(task_ref: str, task_id: str = "") -> str:
     if selected_ref and selected_id and selected_ref != selected_id:
         return "{} ({})".format(selected_ref, selected_id)
     return selected_ref or selected_id or "selected task"
+
+
+def _apply_committed_close_action_view(
+    result: CommandResult,
+    created_session: Any,
+) -> None:
+    close_status = _mapping_or_empty(result.data.get("close_status"))
+    if not _is_successful_committed_close(close_status):
+        return
+
+    session = dict(_mapping_or_empty(result.data.get("session")))
+    if not session:
+        session = dict(_mapping_or_empty(created_session))
+    completed_task_id = str(
+        close_status.get("task_id")
+        or result.data.get("task_id")
+        or result.data.get("current_task_id")
+        or session.get("current_task_id")
+        or ""
+    ).strip()
+    commit_hash = str(close_status.get("commit_hash") or "").strip()
+
+    session["status"] = "completed"
+    session["stop_reason"] = _committed_close_action_reason(commit_hash)
+    if completed_task_id:
+        session["current_task_id"] = completed_task_id
+    if not session.get("current_step_status"):
+        session["current_step_status"] = "passed"
+
+    result.data["session"] = session
+    result.data["outcome"] = "completed"
+    result.data["session_status"] = "completed"
+    result.data.setdefault("stop_code", "QUEUE_COMPLETE")
+    result.data.setdefault("stop_reason", session["stop_reason"])
+    if completed_task_id:
+        result.data["task_id"] = completed_task_id
+        result.data.setdefault("current_task_id", completed_task_id)
+        _extend_unique(
+            result.data.setdefault("completed_tasks", []),
+            [completed_task_id],
+        )
+    result.data["close_outcome"] = str(close_status.get("outcome") or "")
+    result.data["commit_status"] = str(close_status.get("commit_status") or "")
+    result.data["commit_code"] = str(close_status.get("commit_code") or "")
+    result.data["commit_hash"] = commit_hash
+    _extend_unique(result.data.setdefault("commits", []), [commit_hash])
+
+
+def _mapping_or_empty(value: Any) -> Mapping[str, Any]:
+    return value if isinstance(value, Mapping) else {}
+
+
+def _is_successful_committed_close(close_status: Mapping[str, Any]) -> bool:
+    commit_hash = str(close_status.get("commit_hash") or "").strip()
+    if not commit_hash:
+        return False
+    return (
+        str(close_status.get("outcome") or "").lower()
+        == "closed_with_local_commit"
+        and str(close_status.get("commit_status") or "").lower() == "pass"
+        and str(close_status.get("commit_code") or "") == "LOCAL_COMMIT_CREATED"
+    )
+
+
+def _committed_close_action_reason(commit_hash: str) -> str:
+    if commit_hash:
+        return "Close passed and local commit {} was created.".format(commit_hash)
+    return "Close passed and a local commit was created."
 
 
 def _action_result_summary(

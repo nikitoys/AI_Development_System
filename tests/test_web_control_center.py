@@ -5822,6 +5822,135 @@ class WebControlCenterTests(unittest.TestCase):
             "/pipeline/sessions/PSESS-009",
         )
 
+    def test_ui_run_selected_task_committed_close_result_is_rendered_read_only(self):
+        selected_policy = policy_preset("supervised_executable_local_commit")
+        session_result = CommandResult.success(
+            command="pipeline.session.create",
+            domain="pipeline",
+            message="Created pipeline session.",
+            data={
+                "session_id": "PSESS-010",
+                "session": {
+                    "id": "PSESS-010",
+                    "status": "running",
+                    "current_task_id": "TASK-001",
+                    "current_step_status": "running",
+                },
+            },
+        )
+        run_result = CommandResult.success(
+            command="pipeline.run_until_blocker",
+            domain="pipeline",
+            message="QUEUE_COMPLETE: Close passed and local commit abc1234 was created.",
+            data={
+                "session_id": "PSESS-010",
+                "close_status": {
+                    "outcome": "closed_with_local_commit",
+                    "task_id": "TASK-001",
+                    "commit_status": "pass",
+                    "commit_code": "LOCAL_COMMIT_CREATED",
+                    "commit_hash": "abc1234",
+                },
+            },
+        )
+
+        tracked_pipeline_files = (
+            "AI_PROJECT/state/pipeline_sessions.json",
+            "AI_PROJECT/events/pipeline-events.jsonl",
+            "AI_PROJECT/generated/PIPELINE_STATUS.md",
+            "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "legacy_id": "TASK-001",
+                        "aliases": ["TASK-001"],
+                        "status": "ready",
+                        "title": "Ready task",
+                        "epic_id": "EPIC-001",
+                    }
+                ],
+                epics=[{"id": "EPIC-001", "status": "active"}],
+            )
+            tracked_pipeline_contents = {
+                "AI_PROJECT/state/pipeline_sessions.json": json.dumps(
+                    {
+                        "schema_version": 1,
+                        "revision": 1,
+                        "current_session_id": None,
+                        "sessions": [],
+                    },
+                    sort_keys=True,
+                )
+                + "\n",
+                "AI_PROJECT/events/pipeline-events.jsonl": "",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md": "sentinel status\n",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md": "sentinel audit\n",
+            }
+            for path, content in tracked_pipeline_contents.items():
+                target = root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(content, encoding="utf-8")
+            before = {
+                path: (root / path).read_text(encoding="utf-8")
+                for path in tracked_pipeline_files
+            }
+
+            with patch(
+                "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
+                return_value=selected_policy,
+            ), patch(
+                "ai_project_ctl.web.actions.capture_worktree_dirty_preflight",
+                return_value=WorktreeDirtyPreflight(checked=True, available=True),
+            ), patch(
+                "ai_project_ctl.web.actions.create_session",
+                return_value=session_result,
+            ), patch(
+                "ai_project_ctl.web.actions.run_until_blocker",
+                return_value=run_result,
+            ), patch("ai_project_ctl.web.actions.subprocess.run") as run:
+                result = WebActionExecutor(root, actor="tester").execute(
+                    {
+                        "action": "ui.run_selected_task",
+                        "confirm": "yes",
+                        "incomplete_run_confirm": "yes",
+                        "task": "APP-01",
+                    }
+                )
+                body = render_action_result(result)
+
+            after = {
+                path: (root / path).read_text(encoding="utf-8")
+                for path in tracked_pipeline_files
+            }
+
+        run.assert_not_called()
+        self.assertEqual(after, before)
+
+        payload = result.to_dict()
+        data = payload["result"]["data"]
+        self.assertTrue(result.ok)
+        self.assertEqual(data["outcome"], "completed")
+        self.assertEqual(data["session_id"], "PSESS-010")
+        self.assertEqual(data["session_status"], "completed")
+        self.assertEqual(data["task_id"], "TASK-001")
+        self.assertEqual(data["commit_hash"], "abc1234")
+        self.assertEqual(data["session"]["status"], "completed")
+        self.assertEqual(data["created_session"]["status"], "running")
+        self.assertIn("TASK-001", data["completed_tasks"])
+        self.assertIn("abc1234", data["commits"])
+
+        self.assertIn('<span class="badge pass">PASS</span>', body)
+        self.assertIn("PSESS-010", body)
+        self.assertIn("TASK-001", body)
+        self.assertIn("abc1234", body)
+
     def test_ui_run_selected_task_web_action_stops_for_dirty_worktree(self):
         dirty_preflight = WorktreeDirtyPreflight(
             checked=True,

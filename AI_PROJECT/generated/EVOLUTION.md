@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `2663`
-Changes: `88`
+Revision: `2691`
+Changes: `89`
 
 ## Summary
 
-- `accepted`: 66
+- `accepted`: 67
 - `approved`: 22
 
 ## Changes
@@ -5505,3 +5505,63 @@ Impact:
 Linked tasks:
 
 - TASK-274
+
+### CHG-089 — Make committed Web action result read-only
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-170 requires an explicit Evolution Change Proposal before implementation: Ensure ui.run_selected_task builds its successful committed-close action result without triggering tracked pipeline render or refresh writes after the commit.
+
+Proposal:
+
+Implement the bounded task scope: Trace ui.run_selected_task result handling after run_until_blocker returns a committed close result.; Avoid any post-commit calls that persist pipeline session completion, pipeline events, or generated pipeline status/audit files for committed-close success.; Build the owner-facing action result from in-memory session/result data when the local commit already exists.; Keep dirty-start preflight, checkpoint guidance, and blocked action results unchanged.
+
+Rationale:
+
+The Web action should display completed status and commit evidence from the returned pipeline result rather than mutating pipeline status artifacts after completion.
+
+Approved by: `human_owner` at `2026-06-29T18:20:57Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-149)  
+
+Accepted by: `human_owner` at `2026-06-29T18:31:40Z`  
+Acceptance notes: Approve; linked Change accepted after task TASK-275 close succeeded.  
+
+Affected files:
+
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/pipeline/batch.py
+- tests/test_web_control_center.py
+- tests/test_web_run_local_commit_e2e.py
+
+Risks:
+
+- Boundary risk: Do not redesign the Web Control Center UI layout.
+- Boundary risk: Do not change non-Web CLI pipeline session behavior unless required by the shared read-only completion helper.
+- Boundary risk: Do not auto-create checkpoint commits.
+- Boundary risk: Do not edit protected project-control files manually.
+- Verify that the Web layer consumes committed-close evidence read-only and does not call a mutating render just to build the response.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-275.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Trace ui.run_selected_task result handling after run_until_blocker returns a committed close result.
+- Avoid any post-commit calls that persist pipeline session completion, pipeline events, or generated pipeline status/audit files for committed-close success.
+- Build the owner-facing action result from in-memory session/result data when the local commit already exists.
+- Keep dirty-start preflight, checkpoint guidance, and blocked action results unchanged.
+- A successful ui.run_selected_task response still shows completed outcome, session id, task id, and local commit hash.
+- Rendering the Web action result after a committed close does not mutate pipeline_sessions.json, pipeline-events.jsonl, PIPELINE_STATUS.md, or PIPELINE_AUDIT.md.
+- Dirty-start WORKTREE_DIRTY responses and checkpoint_commit guidance remain unchanged.
+
+Linked tasks:
+
+- TASK-275

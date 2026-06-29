@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1855,
+  "revision": 1860,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-29T16:35:19Z",
+  "updated_at": "2026-06-29T18:31:39Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -17741,7 +17741,7 @@
       "id": "TASK-275",
       "epic_id": "EPIC-009",
       "title": "Make committed Web action result read-only",
-      "status": "planned",
+      "status": "done",
       "summary": "Ensure ui.run_selected_task builds its successful committed-close action result without triggering tracked pipeline render or refresh writes after the commit.",
       "description": "The Web action should display completed status and commit evidence from the returned pipeline result rather than mutating pipeline status artifacts after completion.",
       "priority": 1,
@@ -17801,11 +17801,11 @@
           "created_at": "2026-06-29T16:11:48Z"
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-29T18:31:39Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-29T16:11:47Z",
-      "updated_at": "2026-06-29T16:11:48Z",
+      "updated_at": "2026-06-29T18:31:39Z",
       "uid": "tsk_c232560700fe",
       "ref": "PIPEF-170",
       "legacy_id": "TASK-275",

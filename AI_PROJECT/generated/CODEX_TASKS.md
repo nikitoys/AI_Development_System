@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1855`
+Revision: `1860`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4805,7 +4805,7 @@ Acceptance criteria:
 
 ### PIPEF-170 (TASK-275) — Make committed Web action result read-only
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_c232560700fe`, legacy `TASK-275`, aliases `TASK-275`, local `PIPEF` / `170`

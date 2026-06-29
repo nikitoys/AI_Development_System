@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 138,
+  "revision": 140,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-29T16:34:56Z",
+  "updated_at": "2026-06-29T18:31:16Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -9818,6 +9818,145 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-139",
+      "task_id": "TASK-275",
+      "task_ref": "PIPEF-170",
+      "submitted_at": "2026-06-29T18:31:16Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:c055ef3cd0d50567f9b12d5010766c67f92a6b3ee0bad06dab5f6de8d6d406fc",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-275",
+        "task_ref": "PIPEF-170",
+        "reported_task_id": "TASK-275",
+        "reported_task_ref": "PIPEF-170",
+        "implementation_summary": "Updated the Web run-selected-task success path to normalize committed-close results from in-memory data and added focused regression coverage proving action rendering does not mutate tracked pipeline files.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 606.353952,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 606.353952,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree had pre-existing dirty protected AI_PROJECT files before this implementation; they were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused Web tests, local-commit e2e smoke, py_compile, and diff whitespace checks passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1062,
+          "remaining_tokens": 30938,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-140",
+      "task_id": "TASK-275",
+      "task_ref": "PIPEF-170",
+      "submitted_at": "2026-06-29T18:31:16Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-139",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-275",
+        "task_ref": "PIPEF-170",
+        "reported_task_id": "TASK-275",
+        "reported_task_ref": "PIPEF-170",
+        "implementation_summary": "Updated the Web run-selected-task success path to normalize committed-close results from in-memory data and added focused regression coverage proving action rendering does not mutate tracked pipeline files.",
+        "changed_files": [
+          "ai_project_ctl/web/actions.py",
+          "tests/test_web_control_center.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 606.353952,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 606.353952,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree had pre-existing dirty protected AI_PROJECT files before this implementation; they were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused Web tests, local-commit e2e smoke, py_compile, and diff whitespace checks passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1062,
+          "remaining_tokens": 30938,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -9937,6 +10076,7 @@
     "TASK-271": "RPT-132",
     "TASK-272": "RPT-134",
     "TASK-273": "RPT-136",
-    "TASK-274": "RPT-138"
+    "TASK-274": "RPT-138",
+    "TASK-275": "RPT-140"
   }
 }
