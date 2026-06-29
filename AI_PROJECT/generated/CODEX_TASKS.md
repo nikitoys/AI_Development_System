@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1771`
+Revision: `1776`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4538,7 +4538,7 @@ Acceptance criteria:
 
 ### PIPEF-155 (TASK-260) — Link dirty preflight to checkpoint UX
 
-Status: `planned`
+Status: `done`
 Priority: `2`
 Verification: `strict`
 Identity: uid `tsk_830b7b756514`, legacy `TASK-260`, aliases `TASK-260`, local `PIPEF` / `155`

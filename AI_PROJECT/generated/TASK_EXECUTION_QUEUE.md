@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1771`
+Revision: `1776`
 
 ## Executable Now
 
@@ -17,7 +17,6 @@ Revision: `1771`
 - `PIPEF-126 (TASK-207)` [planned] `EPIC-009` priority `1` — Show effective policy summary
 - `PIPEF-127 (TASK-208)` [planned] `EPIC-009` priority `1` — Add Web run batch overrides
 - `PIPEF-128 (TASK-209)` [planned] `EPIC-009` priority `1` — Warn on incomplete Web run policy
-- `PIPEF-155 (TASK-260)` [planned] `EPIC-009` priority `2` — Link dirty preflight to checkpoint UX
 
 ## Waiting For Dependencies
 
@@ -522,4 +521,6 @@ _No tasks waiting only on dependencies._
 - `PIPEF-153 (TASK-258)` [done] `EPIC-009` priority `1` — Add dirty worktree preflight for Web Run
   - `status_not_executable`: status is done
 - `PIPEF-154 (TASK-259)` [done] `EPIC-009` priority `1` — Add confirmed checkpoint commit action
+  - `status_not_executable`: status is done
+- `PIPEF-155 (TASK-260)` [done] `EPIC-009` priority `2` — Link dirty preflight to checkpoint UX
   - `status_not_executable`: status is done

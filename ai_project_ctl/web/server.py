@@ -5278,8 +5278,12 @@ def _file_list_panel(title: str, value: Any) -> list[str]:
 
 def _checkpoint_commit_panel(data: Mapping[str, Any]) -> list[str]:
     commit_hash = str(data.get("commit_hash") or "").strip()
+    task_ref = str(data.get("task_ref") or data.get("task_id") or "").strip()
+    task_id = str(data.get("task_id") or "").strip()
+    selected_task = _selected_task_label(data)
     if commit_hash:
         facts = [
+            ("Selected Task", selected_task),
             ("Commit Hash", commit_hash),
             ("Message", str(data.get("checkpoint_message") or "")),
             ("Next Action", str(data.get("next_action") or "")),
@@ -5302,28 +5306,49 @@ def _checkpoint_commit_panel(data: Mapping[str, Any]) -> list[str]:
 
     outcome = str(data.get("outcome") or "")
     dirty_files = _string_items(data.get("dirty_files"))
-    task_ref = str(data.get("task_ref") or data.get("task_id") or "").strip()
     if outcome != "worktree_dirty" or not dirty_files or not task_ref:
         return []
     dirty_preview = "".join(
         "<li><code>{}</code></li>".format(escape(path)) for path in dirty_files
     )
+    form_fields = [hidden_field("task", task_ref)]
+    if task_id:
+        form_fields.append(hidden_field("task_id", task_id))
     return [
         '<section class="result-section checkpoint-commit-action">',
         "<h3>Create Checkpoint Commit</h3>",
         (
-            '<p class="callout">Confirm to stage and commit the dirty files listed '
-            "below before starting Web Run. Web Run will not start automatically.</p>"
-        ),
+            '<p class="callout">Web Run must start from a clean worktree. Confirm '
+            "to stage and commit the dirty files listed below for selected task "
+            "{} before starting Web Run. Web Run will not start automatically.</p>"
+        ).format(escape(selected_task)),
+        (
+            '<p class="muted">After the checkpoint succeeds, run selected task '
+            "{} again.</p>"
+        ).format(escape(selected_task)),
         '<ul class="result-files">{}</ul>'.format(dirty_preview),
         action_form(
             "ui.checkpoint_commit",
-            [hidden_field("task", task_ref)],
+            form_fields,
             button_label="Create Checkpoint Commit",
-            confirm_target="{} dirty file(s) for {}".format(len(dirty_files), task_ref),
+            confirm_target="{} dirty file(s) for {}".format(
+                len(dirty_files),
+                selected_task,
+            ),
         ),
         "</section>",
     ]
+
+
+def _selected_task_label(data: Mapping[str, Any]) -> str:
+    selected = str(data.get("selected_task") or "").strip()
+    if selected:
+        return selected
+    task_ref = str(data.get("task_ref") or "").strip()
+    task_id = str(data.get("task_id") or "").strip()
+    if task_ref and task_id and task_ref != task_id:
+        return "{} ({})".format(task_ref, task_id)
+    return task_ref or task_id or "selected task"
 
 
 def _ui_settings_result_panel(data: Mapping[str, Any]) -> list[str]:

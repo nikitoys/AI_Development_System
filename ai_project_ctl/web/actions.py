@@ -593,6 +593,8 @@ class WebActionExecutor:
         fields: Mapping[str, str],
     ) -> ActionProcessResult:
         task_ref = _task_ref(fields)
+        task_id = _field(fields, "task_id")
+        selected_task = _selected_task_label(task_ref, task_id)
         checkpoint = create_checkpoint_commit(root=self.root, task_ref=task_ref)
         dirty_files = [item.path for item in checkpoint.dirty_files]
         if checkpoint.code == CODE_CHECKPOINT_CREATED:
@@ -603,6 +605,8 @@ class WebActionExecutor:
             outcome = "checkpoint_commit_failed"
         data: dict[str, Any] = {
             "task_ref": task_ref,
+            "task_id": task_id,
+            "selected_task": selected_task,
             "outcome": outcome,
             "not_run": checkpoint.code == CODE_CHECKPOINT_CLEAN,
             "status": checkpoint.status,
@@ -613,7 +617,7 @@ class WebActionExecutor:
             "git_status_entries": [item.to_dict() for item in checkpoint.dirty_files],
             "checkpoint_message": checkpoint.message,
             "commands": [command.to_dict() for command in checkpoint.commands],
-            "next_action": "Run selected task {} again.".format(task_ref),
+            "next_action": "Run selected task {} again.".format(selected_task),
         }
         if checkpoint.code == CODE_CHECKPOINT_CLEAN:
             data["stop_code"] = "WORKTREE_CLEAN"
@@ -1266,7 +1270,7 @@ def _ui_run_worktree_preflight_not_run_result(
     selection: UIRunSelectionResolution,
     preflight: WorktreeDirtyPreflight,
 ) -> CommandResult:
-    task_label = selection.task_id or selection.task_ref or "selected task"
+    task_label = _selected_task_label(selection.task_ref, selection.task_id)
     dirty_paths = list(preflight.dirty_paths)
     reason = preflight.reason
     if reason == "worktree_dirty":
@@ -1274,19 +1278,31 @@ def _ui_run_worktree_preflight_not_run_result(
             "NOT RUN: Web Run did not start for selected task {} because the "
             "worktree is dirty.".format(task_label)
         )
+        checkpoint_action = "Create checkpoint commit for selected task {}.".format(
+            task_label
+        )
+        rerun_action = (
+            "After checkpoint commit succeeds, run selected task {} again.".format(
+                task_label
+            )
+        )
         owner_action = (
-            "Create a manual checkpoint commit or clean the worktree, then rerun Web Run."
+            "Web Run must start from a clean worktree. {} Or clean the worktree, "
+            "then run selected task {} again.".format(checkpoint_action, task_label)
         )
     else:
         message = (
             "NOT RUN: Web Run did not start for selected task {} because git status "
             "could not be checked.".format(task_label)
         )
+        checkpoint_action = ""
+        rerun_action = ""
         owner_action = "Resolve git status errors, then rerun Web Run."
 
     data: dict[str, Any] = {
         "task_ref": selection.task_ref,
         "task_id": selection.task_id,
+        "selected_task": task_label,
         "task_status": selection.task_status,
         "outcome": reason,
         "reason": reason,
@@ -1301,6 +1317,9 @@ def _ui_run_worktree_preflight_not_run_result(
         "git_status_entries": [entry.to_dict() for entry in preflight.entries],
         "suggested_checkpoint_commands": list(MANUAL_CHECKPOINT_COMMANDS),
     }
+    if checkpoint_action:
+        data["checkpoint_action"] = "ui.checkpoint_commit"
+        data["next_action"] = "{} {}".format(checkpoint_action, rerun_action)
     if preflight.error:
         data["git_status_error"] = preflight.error
 
@@ -1311,8 +1330,18 @@ def _ui_run_worktree_preflight_not_run_result(
         data=data,
     )
     result.owner_action_required = owner_action
+    if checkpoint_action:
+        result.next_actions.extend([checkpoint_action, rerun_action])
     result.next_actions.extend(MANUAL_CHECKPOINT_COMMANDS)
     return result
+
+
+def _selected_task_label(task_ref: str, task_id: str = "") -> str:
+    selected_ref = str(task_ref or "").strip()
+    selected_id = str(task_id or "").strip()
+    if selected_ref and selected_id and selected_ref != selected_id:
+        return "{} ({})".format(selected_ref, selected_id)
+    return selected_ref or selected_id or "selected task"
 
 
 def _action_result_summary(

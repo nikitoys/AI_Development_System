@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 114,
+  "revision": 116,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-29T09:46:41Z",
+  "updated_at": "2026-06-29T10:20:31Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -8113,6 +8113,148 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-115",
+      "task_id": "TASK-260",
+      "task_ref": "PIPEF-155",
+      "submitted_at": "2026-06-29T10:20:31Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:9628009211bfcb3f33daa569acdbda320e193a075d579af5192e5c62ef2b7ca9",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-260",
+        "task_ref": "PIPEF-155",
+        "reported_task_id": "TASK-260",
+        "reported_task_ref": "PIPEF-155",
+        "implementation_summary": "Connected dirty Web Run preflight results to the owner-confirmed checkpoint commit action, preserved selected task ref/ID through the UX path, added clean-worktree and rerun guidance, and covered the flow with Web Control Center tests.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 501.124156,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 501.124156,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Pre-existing dirty protected AI_PROJECT state/generated/event files were present and left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "No automatic Web Run rerun is started after checkpoint commit.",
+          "Focused and full relevant test checks passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 947,
+          "remaining_tokens": 31053,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-116",
+      "task_id": "TASK-260",
+      "task_ref": "PIPEF-155",
+      "submitted_at": "2026-06-29T10:20:31Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-115",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-260",
+        "task_ref": "PIPEF-155",
+        "reported_task_id": "TASK-260",
+        "reported_task_ref": "PIPEF-155",
+        "implementation_summary": "Connected dirty Web Run preflight results to the owner-confirmed checkpoint commit action, preserved selected task ref/ID through the UX path, added clean-worktree and rerun guidance, and covered the flow with Web Control Center tests.",
+        "changed_files": [
+          "ai_project_ctl/web/actions.py",
+          "ai_project_ctl/web/server.py",
+          "tests/test_web_control_center.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 501.124156,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 501.124156,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Pre-existing dirty protected AI_PROJECT state/generated/event files were present and left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "No automatic Web Run rerun is started after checkpoint commit.",
+          "Focused and full relevant test checks passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 947,
+          "remaining_tokens": 31053,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -8220,6 +8362,7 @@
     "TASK-256": "RPT-108",
     "TASK-257": "RPT-110",
     "TASK-258": "RPT-112",
-    "TASK-259": "RPT-114"
+    "TASK-259": "RPT-114",
+    "TASK-260": "RPT-116"
   }
 }

@@ -5501,6 +5501,9 @@ class WebControlCenterTests(unittest.TestCase):
         data = payload["result"]["data"]
         self.assertTrue(result.ok)
         self.assertTrue(data["not_run"])
+        self.assertEqual(data["task_ref"], "APP-01")
+        self.assertEqual(data["task_id"], "TASK-001")
+        self.assertEqual(data["selected_task"], "APP-01 (TASK-001)")
         self.assertEqual(data["outcome"], "worktree_dirty")
         self.assertEqual(data["reason"], "worktree_dirty")
         self.assertEqual(data["stop_code"], "WORKTREE_DIRTY")
@@ -5517,6 +5520,22 @@ class WebControlCenterTests(unittest.TestCase):
         )
         self.assertIn("git add -A", data["suggested_checkpoint_commands"])
         self.assertIn(
+            "Web Run must start from a clean worktree",
+            payload["result"]["owner_action_required"],
+        )
+        self.assertIn(
+            "Create checkpoint commit for selected task APP-01 (TASK-001).",
+            payload["result"]["next_actions"],
+        )
+        self.assertIn(
+            "After checkpoint commit succeeds, run selected task APP-01 (TASK-001) again.",
+            payload["result"]["next_actions"],
+        )
+        self.assertIn(
+            "run selected task APP-01 (TASK-001) again",
+            data["next_action"],
+        )
+        self.assertIn(
             "Checkpoint before Web Run",
             " ".join(result.to_dict()["result"]["next_actions"]),
         )
@@ -5529,8 +5548,11 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("Suggested Checkpoint Commands", body)
         self.assertIn("git add -A", body)
         self.assertIn("Create Checkpoint Commit", body)
+        self.assertIn("Web Run must start from a clean worktree", body)
+        self.assertIn("APP-01 (TASK-001)", body)
         self.assertIn('name="action" value="ui.checkpoint_commit"', body)
         self.assertIn('name="task" value="APP-01"', body)
+        self.assertIn('name="task_id" value="TASK-001"', body)
 
     def test_ui_run_selected_task_web_action_does_not_create_session_for_done_task(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -5937,6 +5959,7 @@ class WebControlCenterTests(unittest.TestCase):
                             "action": "ui.checkpoint_commit",
                             "confirm": "yes",
                             "task": "APP-01",
+                            "task_id": "TASK-001",
                         }
                     )
 
@@ -5960,10 +5983,20 @@ class WebControlCenterTests(unittest.TestCase):
         data = payload["result"]["data"]
         self.assertTrue(result.ok)
         self.assertFalse(data["not_run"])
+        self.assertEqual(data["task_ref"], "APP-01")
+        self.assertEqual(data["task_id"], "TASK-001")
+        self.assertEqual(data["selected_task"], "APP-01 (TASK-001)")
         self.assertEqual(data["outcome"], "checkpoint_commit_created")
         self.assertRegex(data["commit_hash"], r"^[0-9a-f]{40}$")
         self.assertIn("dirty.txt", data["dirty_files"])
-        self.assertIn("Run selected task APP-01 again.", payload["result"]["next_actions"])
+        self.assertIn(
+            "Run selected task APP-01 (TASK-001) again.",
+            payload["result"]["next_actions"],
+        )
+        self.assertEqual(
+            data["next_action"],
+            "Run selected task APP-01 (TASK-001) again.",
+        )
         self.assertEqual(tasks_state["tasks"][0]["status"], "ready")
         self.assertEqual(status_after.stdout, "")
         command_vectors = [item["command"] for item in data["commands"]]
@@ -5972,6 +6005,10 @@ class WebControlCenterTests(unittest.TestCase):
             ["git", "commit", "-m", "Checkpoint before Web Run: APP-01"],
             command_vectors,
         )
+        body = render_action_result(result)
+        self.assertIn("Selected Task", body)
+        self.assertIn("APP-01 (TASK-001)", body)
+        self.assertIn("Run selected task APP-01 (TASK-001) again.", body)
 
     def test_pipeline_run_action_requires_confirmation(self):
         with patch("ai_project_ctl.web.actions.subprocess.run") as run:
