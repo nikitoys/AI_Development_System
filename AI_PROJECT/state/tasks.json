@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1782,
+  "revision": 1790,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-29T10:44:49Z",
+  "updated_at": "2026-06-29T12:45:31Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -16927,6 +16927,492 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 156
+    },
+    {
+      "id": "TASK-262",
+      "epic_id": "EPIC-009",
+      "title": "Continue batch after task commit",
+      "status": "planned",
+      "summary": "Allow the existing batch runner to continue to the next queued task after one task closes with a local commit.",
+      "description": "The batch runner should not complete the whole session after the first committed close when the selected queue still has executable tasks.",
+      "priority": 1,
+      "order": 157,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Update committed-close handling in the batch runner so it records the completed current task without always completing the whole session.",
+        "Continue running the existing selected queue when max_tasks allows more tasks and executable queued tasks remain.",
+        "Complete the session only when the selected queue is exhausted or the selected max_tasks limit is reached.",
+        "Preserve current single-task behavior where a one-task selected queue still completes after committed close."
+      ],
+      "out_of_scope": [
+        "Do not create a new pipeline engine.",
+        "Do not change Web UI forms in this task.",
+        "Do not change dirty worktree preflight behavior in this task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/batch.py",
+        "ai_project_ctl/pipeline/session.py",
+        "tests/test_pipeline_runner.py",
+        "tests/test_pipeline_phase_review_close.py"
+      ],
+      "acceptance_criteria": [
+        "A single-task session still completes after close creates a local commit.",
+        "A multi-task session does not complete after the first task commit when another queued task remains executable.",
+        "The batch summary records the first task in completed_tasks and changed_tasks after committed close.",
+        "The batch runner continues through run_next for the next queued task after the first committed close.",
+        "Existing blocker and failure behavior remains unchanged.",
+        "Focused tests cover both single-task and multi-task committed-close behavior."
+      ],
+      "review_instructions": [
+        "Verify that the change reuses the existing run_next pipeline instead of adding a parallel execution path."
+      ],
+      "notes": [
+        "This is the engine-continuation task and should be implemented before Web batch UI work."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-29T12:45:25Z",
+      "updated_at": "2026-06-29T12:45:25Z",
+      "uid": "tsk_8e16c65812a7",
+      "ref": "PIPEF-157",
+      "legacy_id": "TASK-262",
+      "aliases": [
+        "TASK-262"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 157
+    },
+    {
+      "id": "TASK-263",
+      "epic_id": "EPIC-009",
+      "title": "Enforce clean batch handoff",
+      "status": "planned",
+      "summary": "Stop a multi-task batch before the next task when the previous task did not leave a clean worktree after its local commit.",
+      "description": "Each task in a batch must hand off to the next task from a clean repository state.",
+      "priority": 1,
+      "order": 158,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Capture git status after each committed task close before starting another queued task.",
+        "Continue to the next task only when the post-task worktree is clean.",
+        "Stop the batch with POST_TASK_DIRTY_WORKTREE when dirty files remain after a committed close.",
+        "Include dirty file paths and the completed task id in the stop result."
+      ],
+      "out_of_scope": [
+        "Do not add Web UI batch controls in this task.",
+        "Do not ask the owner to manually commit between tasks.",
+        "Do not change local commit staging rules in this task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/batch.py",
+        "ai_project_ctl/pipeline/git_status.py",
+        "tests/test_pipeline_runner.py",
+        "tests/pipeline/test_git_status_snapshot.py"
+      ],
+      "acceptance_criteria": [
+        "After a committed task close with a clean worktree, the batch may continue to the next queued task.",
+        "After a committed task close with remaining dirty files, the batch stops before executing the next task.",
+        "The stop result uses a stable POST_TASK_DIRTY_WORKTREE code.",
+        "The stop result includes dirty file paths for owner diagnostics.",
+        "The stop result does not mark the remaining queued task as executed or changed.",
+        "Tests cover clean handoff and dirty handoff cases."
+      ],
+      "review_instructions": [
+        "Verify that a dirty handoff is treated as a pipeline safety stop, not as a request for a manual commit between tasks."
+      ],
+      "notes": [
+        "This task depends conceptually on committed-close continuation but has no same-import depends_on value by rule."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-29T12:45:26Z",
+      "updated_at": "2026-06-29T12:45:26Z",
+      "uid": "tsk_852064edcb02",
+      "ref": "PIPEF-158",
+      "legacy_id": "TASK-263",
+      "aliases": [
+        "TASK-263"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 158
+    },
+    {
+      "id": "TASK-264",
+      "epic_id": "EPIC-009",
+      "title": "Build UI batch queue helper",
+      "status": "planned",
+      "summary": "Add a Web UI queue builder that can create a selected queue for multiple tasks instead of one selected task.",
+      "description": "The existing selected-task UI queue builder remains single-task; this task adds a separate batch queue helper.",
+      "priority": 1,
+      "order": 159,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a new helper for UI-triggered batch queues without changing the existing selected-task helper.",
+        "Support task_refs, epic_ids, statuses, max_tasks, order_by, and internal change gate bypass metadata.",
+        "Validate max_tasks as a positive integer and preserve policy defaults when a field is omitted.",
+        "Return selected_queue metadata compatible with existing create_session and queue preview behavior."
+      ],
+      "out_of_scope": [
+        "Do not add the Web action in this task.",
+        "Do not change batch runner execution behavior in this task.",
+        "Do not change the existing build_ui_run_selected_queue contract.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/ui_run.py",
+        "tests/test_ui_run_command.py"
+      ],
+      "acceptance_criteria": [
+        "The new helper can build a queue with max_tasks greater than 1.",
+        "The new helper can include epic_ids and statuses without requiring a single selected task_ref.",
+        "The existing selected-task helper still returns max_tasks equal to 1.",
+        "The produced queue uses only fields already understood by pipeline session creation and queue preview.",
+        "Tests cover task_refs, epic/status selection, max_tasks, and order_by behavior."
+      ],
+      "review_instructions": [
+        "Verify that the helper is a queue builder only and does not execute pipeline phases."
+      ],
+      "notes": [
+        "This task prepares the queue contract needed by the Web batch action."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-29T12:45:27Z",
+      "updated_at": "2026-06-29T12:45:27Z",
+      "uid": "tsk_4ebaac010468",
+      "ref": "PIPEF-159",
+      "legacy_id": "TASK-264",
+      "aliases": [
+        "TASK-264"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 159
+    },
+    {
+      "id": "TASK-265",
+      "epic_id": "EPIC-009",
+      "title": "Add Web batch run action",
+      "status": "planned",
+      "summary": "Add an owner-confirmed Web action that creates and runs a multi-task pipeline session using the existing batch runner.",
+      "description": "The new action should be a batch entrypoint over the existing pipeline, not a new execution engine.",
+      "priority": 1,
+      "order": 160,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Register a ui.run_task_batch Web action with owner confirmation.",
+        "Accept task_ref, epic, status_filter, max_tasks, order_by, and auto_close_note fields.",
+        "Create a pipeline session using the new UI batch queue helper and the resolved UI pipeline policy.",
+        "Run the created session through the existing run_until_blocker batch runner."
+      ],
+      "out_of_scope": [
+        "Do not add visual form layout in this task.",
+        "Do not change the selected-task Run action behavior.",
+        "Do not implement dirty preflight in this task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/pipeline/ui_run.py",
+        "tests/test_web_control_center.py",
+        "tests/test_ui_run_command.py"
+      ],
+      "acceptance_criteria": [
+        "The ui.run_task_batch action is listed as an implemented confirmed Web action.",
+        "The action can create a session with max_tasks greater than 1.",
+        "The action delegates execution to the existing run_until_blocker function.",
+        "The action result includes session_id, session_href, selected policy, and requested queue inputs.",
+        "The selected-task ui.run_selected_task action remains unchanged for one-task runs.",
+        "Tests cover action registration, argument handling, session creation, and run_until_blocker delegation."
+      ],
+      "review_instructions": [
+        "Verify that the action does not duplicate batch runner logic and only wires the Web entrypoint."
+      ],
+      "notes": [
+        "This task should use the existing policy and session infrastructure."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-29T12:45:27Z",
+      "updated_at": "2026-06-29T12:45:27Z",
+      "uid": "tsk_6dcf7d772c59",
+      "ref": "PIPEF-160",
+      "legacy_id": "TASK-265",
+      "aliases": [
+        "TASK-265"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 160
+    },
+    {
+      "id": "TASK-266",
+      "epic_id": "EPIC-009",
+      "title": "Block dirty Web batch starts",
+      "status": "planned",
+      "summary": "Apply dirty worktree preflight to Web batch runs before any multi-task pipeline session is created or executed.",
+      "description": "A batch run must not start from a dirty worktree caused by task import or other owner-side changes.",
+      "priority": 1,
+      "order": 161,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Run dirty worktree preflight before ui.run_task_batch creates a normal pipeline session.",
+        "Return a not_run batch result when dirty files exist before batch start.",
+        "Include dirty file paths and checkpoint commit guidance in the batch action result.",
+        "Ensure dirty batch preflight does not run Codex, create a session, or transition tasks."
+      ],
+      "out_of_scope": [
+        "Do not change dirty handoff behavior after a task commit in this task.",
+        "Do not automatically create a checkpoint commit.",
+        "Do not change selected-task dirty preflight behavior.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/pipeline/git_status.py",
+        "tests/test_web_control_center.py",
+        "tests/test_ui_run_command.py"
+      ],
+      "acceptance_criteria": [
+        "A clean worktree allows ui.run_task_batch to create and run a batch session.",
+        "A dirty worktree returns not_run before session creation and before Codex execution.",
+        "The not_run result includes dirty file paths from git status.",
+        "The not_run result includes owner guidance to create a checkpoint commit or clean the worktree.",
+        "The existing ui.checkpoint_commit action remains usable after the dirty batch result.",
+        "Tests cover clean and dirty batch-start preflight behavior."
+      ],
+      "review_instructions": [
+        "Verify that dirty preflight is only a start guard and does not interfere with pipeline-owned changes during execution."
+      ],
+      "notes": [
+        "This task protects batch starts after task import or manual state changes."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-29T12:45:28Z",
+      "updated_at": "2026-06-29T12:45:28Z",
+      "uid": "tsk_2377b93b98bc",
+      "ref": "PIPEF-161",
+      "legacy_id": "TASK-266",
+      "aliases": [
+        "TASK-266"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 161
+    },
+    {
+      "id": "TASK-267",
+      "epic_id": "EPIC-009",
+      "title": "Auto-size Web batch max steps",
+      "status": "planned",
+      "summary": "Calculate a safe effective max_steps for Web batch runs so normal multi-task execution does not stop immediately after a successful close.",
+      "description": "The current one-task max_steps setting is too small for multiple task phases and can cause misleading MAX_STEPS_REACHED results.",
+      "priority": 2,
+      "order": 162,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Compute an effective batch max_steps for ui.run_task_batch from max_tasks and the pipeline phase count.",
+        "Apply a small reserve so a successful final close can complete the session cleanly.",
+        "Preserve explicit lower policy settings for non-Web and selected-task runs unless batch action overrides them intentionally.",
+        "Expose the effective max_steps used in the batch action result or session policy snapshot."
+      ],
+      "out_of_scope": [
+        "Do not change phase order in this task.",
+        "Do not change Codex execution timeout behavior.",
+        "Do not change selected-task Run max_steps handling unless required by shared helper safety.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/pipeline/policy.py",
+        "ai_project_ctl/pipeline/batch.py",
+        "tests/test_web_control_center.py",
+        "tests/test_pipeline_runner.py"
+      ],
+      "acceptance_criteria": [
+        "A Web batch run with max_tasks 2 receives enough max_steps to pass two full task phase cycles in tests.",
+        "A Web batch run with max_tasks 3 receives a larger effective max_steps than a one-task run.",
+        "The effective max_steps calculation uses the current RUN_NEXT_PHASE_SEQUENCE length.",
+        "The action result or policy snapshot makes the effective max_steps visible for diagnostics.",
+        "Existing selected-task and direct pipeline behavior are not unintentionally loosened.",
+        "Tests cover effective max_steps calculation and avoid false MAX_STEPS_REACHED after successful close."
+      ],
+      "review_instructions": [
+        "Verify that this task solves the batch sizing issue without hiding real infinite-loop or failure limits."
+      ],
+      "notes": [
+        "Use a conservative reserve rather than an unbounded max_steps value."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-29T12:45:29Z",
+      "updated_at": "2026-06-29T12:45:29Z",
+      "uid": "tsk_a45e9597f0ee",
+      "ref": "PIPEF-162",
+      "legacy_id": "TASK-267",
+      "aliases": [
+        "TASK-267"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 162
+    },
+    {
+      "id": "TASK-268",
+      "epic_id": "EPIC-009",
+      "title": "Add Web batch run form",
+      "status": "planned",
+      "summary": "Add an owner-facing Web form for starting multi-task batch runs from the Pipeline or Owner Cockpit UI.",
+      "description": "The form should make batch execution discoverable without replacing the existing single-task Run button.",
+      "priority": 2,
+      "order": 163,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Render a Run task batch section in the Web UI.",
+        "Add inputs for mode, epic, status filters, task refs, max_tasks, order_by, and auto_close_note.",
+        "Submit the form to the ui.run_task_batch action with confirmation.",
+        "Show dirty preflight and checkpoint commit guidance when the batch action returns not_run."
+      ],
+      "out_of_scope": [
+        "Do not change batch runner engine behavior in this task.",
+        "Do not redesign the whole Web Control Center layout.",
+        "Do not remove the existing single-task Run controls.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "The Web UI exposes a visible Run task batch form.",
+        "The form can submit max_tasks greater than 1 to ui.run_task_batch.",
+        "The form supports epic/status-based batch selection and explicit task refs.",
+        "The existing single-task Run UI remains available.",
+        "Dirty batch preflight results display checkpoint commit guidance in the action result.",
+        "Web rendering tests cover the presence and key fields of the batch form."
+      ],
+      "review_instructions": [
+        "Verify that the UX is usable for running next N ready tasks and ready tasks in a specific epic."
+      ],
+      "notes": [
+        "This task is UI wiring only; behavior should already exist in earlier tasks."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-29T12:45:30Z",
+      "updated_at": "2026-06-29T12:45:30Z",
+      "uid": "tsk_1206afbf5ae2",
+      "ref": "PIPEF-163",
+      "legacy_id": "TASK-268",
+      "aliases": [
+        "TASK-268"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 163
+    },
+    {
+      "id": "TASK-269",
+      "epic_id": "EPIC-009",
+      "title": "Render batch run summary",
+      "status": "planned",
+      "summary": "Show a concise owner-facing summary of tasks, commits, blockers, and dirty handoff state after a Web batch run.",
+      "description": "Owners need to understand which tasks completed, which commits were created, and where a batch stopped.",
+      "priority": 2,
+      "order": 164,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Render completed task ids and changed task ids from the batch result.",
+        "Render local commit hashes associated with completed tasks.",
+        "Render requested changes, blockers, and dirty handoff stops when present.",
+        "Keep raw technical details available without making the main result page noisy."
+      ],
+      "out_of_scope": [
+        "Do not change batch execution logic in this task.",
+        "Do not change commit creation logic.",
+        "Do not redesign unrelated action result sections.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/web/server.py",
+        "ai_project_ctl/web/actions.py",
+        "ai_project_ctl/pipeline/batch.py",
+        "tests/test_web_control_center.py",
+        "tests/test_pipeline_runner.py"
+      ],
+      "acceptance_criteria": [
+        "A successful batch result shows each completed task and its commit hash when available.",
+        "A partially stopped batch result shows the blocker code, blocker reason, and affected task id.",
+        "POST_TASK_DIRTY_WORKTREE results show dirty handoff files in an owner-readable section.",
+        "Technical JSON details remain available for debugging.",
+        "Existing single-task action result rendering remains compatible.",
+        "Tests cover completed batch, blocked batch, and dirty handoff summary rendering."
+      ],
+      "review_instructions": [
+        "Verify that the summary makes it clear whether the batch completed, stopped safely, or blocked."
+      ],
+      "notes": [
+        "This task finishes the owner-facing multi-task Web Run experience."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-29T12:45:31Z",
+      "updated_at": "2026-06-29T12:45:31Z",
+      "uid": "tsk_ca7ccafa2696",
+      "ref": "PIPEF-164",
+      "legacy_id": "TASK-269",
+      "aliases": [
+        "TASK-269"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 164
     }
   ]
 }

@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1782`
+Revision: `1790`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4569,3 +4569,146 @@ Acceptance criteria:
 - The file states that it is only a smoke artifact for Web Run local commit validation.
 - The generated report evidence includes tmp/run-smoke/web-run-clean-commit-smoke-2.md as a changed file.
 - Web Run reaches local commit without COMMIT_READINESS_FAILED.
+
+### PIPEF-157 (TASK-262) — Continue batch after task commit
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_8e16c65812a7`, legacy `TASK-262`, aliases `TASK-262`, local `PIPEF` / `157`
+
+Allow the existing batch runner to continue to the next queued task after one task closes with a local commit.
+
+Acceptance criteria:
+
+- A single-task session still completes after close creates a local commit.
+- A multi-task session does not complete after the first task commit when another queued task remains executable.
+- The batch summary records the first task in completed_tasks and changed_tasks after committed close.
+- The batch runner continues through run_next for the next queued task after the first committed close.
+- Existing blocker and failure behavior remains unchanged.
+- Focused tests cover both single-task and multi-task committed-close behavior.
+
+### PIPEF-158 (TASK-263) — Enforce clean batch handoff
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_852064edcb02`, legacy `TASK-263`, aliases `TASK-263`, local `PIPEF` / `158`
+
+Stop a multi-task batch before the next task when the previous task did not leave a clean worktree after its local commit.
+
+Acceptance criteria:
+
+- After a committed task close with a clean worktree, the batch may continue to the next queued task.
+- After a committed task close with remaining dirty files, the batch stops before executing the next task.
+- The stop result uses a stable POST_TASK_DIRTY_WORKTREE code.
+- The stop result includes dirty file paths for owner diagnostics.
+- The stop result does not mark the remaining queued task as executed or changed.
+- Tests cover clean handoff and dirty handoff cases.
+
+### PIPEF-159 (TASK-264) — Build UI batch queue helper
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_4ebaac010468`, legacy `TASK-264`, aliases `TASK-264`, local `PIPEF` / `159`
+
+Add a Web UI queue builder that can create a selected queue for multiple tasks instead of one selected task.
+
+Acceptance criteria:
+
+- The new helper can build a queue with max_tasks greater than 1.
+- The new helper can include epic_ids and statuses without requiring a single selected task_ref.
+- The existing selected-task helper still returns max_tasks equal to 1.
+- The produced queue uses only fields already understood by pipeline session creation and queue preview.
+- Tests cover task_refs, epic/status selection, max_tasks, and order_by behavior.
+
+### PIPEF-160 (TASK-265) — Add Web batch run action
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_6dcf7d772c59`, legacy `TASK-265`, aliases `TASK-265`, local `PIPEF` / `160`
+
+Add an owner-confirmed Web action that creates and runs a multi-task pipeline session using the existing batch runner.
+
+Acceptance criteria:
+
+- The ui.run_task_batch action is listed as an implemented confirmed Web action.
+- The action can create a session with max_tasks greater than 1.
+- The action delegates execution to the existing run_until_blocker function.
+- The action result includes session_id, session_href, selected policy, and requested queue inputs.
+- The selected-task ui.run_selected_task action remains unchanged for one-task runs.
+- Tests cover action registration, argument handling, session creation, and run_until_blocker delegation.
+
+### PIPEF-161 (TASK-266) — Block dirty Web batch starts
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_2377b93b98bc`, legacy `TASK-266`, aliases `TASK-266`, local `PIPEF` / `161`
+
+Apply dirty worktree preflight to Web batch runs before any multi-task pipeline session is created or executed.
+
+Acceptance criteria:
+
+- A clean worktree allows ui.run_task_batch to create and run a batch session.
+- A dirty worktree returns not_run before session creation and before Codex execution.
+- The not_run result includes dirty file paths from git status.
+- The not_run result includes owner guidance to create a checkpoint commit or clean the worktree.
+- The existing ui.checkpoint_commit action remains usable after the dirty batch result.
+- Tests cover clean and dirty batch-start preflight behavior.
+
+### PIPEF-162 (TASK-267) — Auto-size Web batch max steps
+
+Status: `planned`
+Priority: `2`
+Verification: `strict`
+Identity: uid `tsk_a45e9597f0ee`, legacy `TASK-267`, aliases `TASK-267`, local `PIPEF` / `162`
+
+Calculate a safe effective max_steps for Web batch runs so normal multi-task execution does not stop immediately after a successful close.
+
+Acceptance criteria:
+
+- A Web batch run with max_tasks 2 receives enough max_steps to pass two full task phase cycles in tests.
+- A Web batch run with max_tasks 3 receives a larger effective max_steps than a one-task run.
+- The effective max_steps calculation uses the current RUN_NEXT_PHASE_SEQUENCE length.
+- The action result or policy snapshot makes the effective max_steps visible for diagnostics.
+- Existing selected-task and direct pipeline behavior are not unintentionally loosened.
+- Tests cover effective max_steps calculation and avoid false MAX_STEPS_REACHED after successful close.
+
+### PIPEF-163 (TASK-268) — Add Web batch run form
+
+Status: `planned`
+Priority: `2`
+Verification: `standard`
+Identity: uid `tsk_1206afbf5ae2`, legacy `TASK-268`, aliases `TASK-268`, local `PIPEF` / `163`
+
+Add an owner-facing Web form for starting multi-task batch runs from the Pipeline or Owner Cockpit UI.
+
+Acceptance criteria:
+
+- The Web UI exposes a visible Run task batch form.
+- The form can submit max_tasks greater than 1 to ui.run_task_batch.
+- The form supports epic/status-based batch selection and explicit task refs.
+- The existing single-task Run UI remains available.
+- Dirty batch preflight results display checkpoint commit guidance in the action result.
+- Web rendering tests cover the presence and key fields of the batch form.
+
+### PIPEF-164 (TASK-269) — Render batch run summary
+
+Status: `planned`
+Priority: `2`
+Verification: `standard`
+Identity: uid `tsk_ca7ccafa2696`, legacy `TASK-269`, aliases `TASK-269`, local `PIPEF` / `164`
+
+Show a concise owner-facing summary of tasks, commits, blockers, and dirty handoff state after a Web batch run.
+
+Acceptance criteria:
+
+- A successful batch result shows each completed task and its commit hash when available.
+- A partially stopped batch result shows the blocker code, blocker reason, and affected task id.
+- POST_TASK_DIRTY_WORKTREE results show dirty handoff files in an owner-readable section.
+- Technical JSON details remain available for debugging.
+- Existing single-task action result rendering remains compatible.
+- Tests cover completed batch, blocked batch, and dirty handoff summary rendering.
