@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `1834`
-Current task: `none`
+Revision: `1836`
+Current task: `TASK-273`
 
 ## Epic `EPIC-001`
 
@@ -4767,9 +4767,9 @@ Acceptance criteria:
 - Dirty preflight behavior before a run remains unchanged.
 - Tests cover clean and dirty post-commit outcomes.
 
-### PIPEF-168 (TASK-273) — Add no-checkpoint Web Run regression
+### PIPEF-168 (TASK-273) — Add no-checkpoint Web Run regression ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_efef4d0e0938`, legacy `TASK-273`, aliases `TASK-273`, local `PIPEF` / `168`

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 134,
+  "revision": 136,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-29T14:43:03Z",
+  "updated_at": "2026-06-29T15:00:57Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -9531,6 +9531,148 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-135",
+      "task_id": "TASK-273",
+      "task_ref": "PIPEF-168",
+      "submitted_at": "2026-06-29T15:00:57Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:4c02fb8bb01724dee62e64988751e909e85b8b85e04768fe338cc07a776032cb",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-273",
+        "task_ref": "PIPEF-168",
+        "reported_task_id": "TASK-273",
+        "reported_task_ref": "PIPEF-168",
+        "implementation_summary": "Added an end-to-end Web Run local-commit regression with two sequential smoke tasks, clean-worktree assertions after the first run, and no-checkpoint assertions for the second run.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 977.337944,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 977.337944,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The focused pytest run fails because current production behavior leaves pipeline bookkeeping files dirty after the first local commit."
+        ],
+        "blockers": [
+          "Making the regression pass requires code changes outside the allowed files for this task."
+        ],
+        "notes": [
+          "Syntax verification passed for the changed test file."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 995,
+          "remaining_tokens": 31005,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-136",
+      "task_id": "TASK-273",
+      "task_ref": "PIPEF-168",
+      "submitted_at": "2026-06-29T15:00:57Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-135",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-273",
+        "task_ref": "PIPEF-168",
+        "reported_task_id": "TASK-273",
+        "reported_task_ref": "PIPEF-168",
+        "implementation_summary": "Added an end-to-end Web Run local-commit regression with two sequential smoke tasks, clean-worktree assertions after the first run, and no-checkpoint assertions for the second run.",
+        "changed_files": [
+          "tests/test_web_run_local_commit_e2e.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 977.337944,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 977.337944,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The focused pytest run fails because current production behavior leaves pipeline bookkeeping files dirty after the first local commit."
+        ],
+        "blockers": [
+          "Making the regression pass requires code changes outside the allowed files for this task."
+        ],
+        "notes": [
+          "Syntax verification passed for the changed test file."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 995,
+          "remaining_tokens": 31005,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -9648,6 +9790,7 @@
     "TASK-266": "RPT-128",
     "TASK-270": "RPT-130",
     "TASK-271": "RPT-132",
-    "TASK-272": "RPT-134"
+    "TASK-272": "RPT-134",
+    "TASK-273": "RPT-136"
   }
 }

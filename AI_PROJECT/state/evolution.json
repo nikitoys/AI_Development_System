@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 2613,
+  "revision": 2636,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-29T10:44:50Z",
+  "updated_at": "2026-06-29T14:44:28Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -5077,6 +5077,60 @@
       "order": 86,
       "created_at": "2026-06-29T10:41:22Z",
       "updated_at": "2026-06-29T10:44:50Z"
+    },
+    {
+      "id": "CHG-087",
+      "title": "Add no-checkpoint Web Run regression",
+      "status": "approved",
+      "change_type": "process",
+      "rationale": "The owner workflow should be able to run one task, receive a task commit, and start the next task without checkpointing pipeline bookkeeping files.",
+      "problem": "Task PIPEF-168 requires an explicit Evolution Change Proposal before implementation: Add an end-to-end regression proving that a successful Web Run leaves a clean worktree and the next Web Run does not request a checkpoint commit.",
+      "proposal": "Implement the bounded task scope: Create or extend a Web Run local-commit regression test with two sequential planned smoke tasks.; Assert the first Web Run creates a local commit and leaves git status clean.; Assert the second Web Run is not blocked by dirty pipeline bookkeeping from the first run.; Assert no checkpoint prompt is shown when the user made no changes between runs.",
+      "affected_areas": [],
+      "affected_files": [
+        "tests/test_web_run_local_commit_e2e.py",
+        "tests/test_web_control_center.py",
+        "tests/test_pipeline_runner.py"
+      ],
+      "risks": [
+        "Boundary risk: Do not implement multi-task batch UI in this task.",
+        "Boundary risk: Do not change checkpoint commit action behavior.",
+        "Boundary risk: Do not use network or real external Codex execution in tests.",
+        "Boundary risk: Do not edit protected project-control files manually.",
+        "Verify that the regression matches the owner workflow: run task, then run the next task without checkpoint commit.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-273.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Create or extend a Web Run local-commit regression test with two sequential planned smoke tasks.",
+        "Assert the first Web Run creates a local commit and leaves git status clean.",
+        "Assert the second Web Run is not blocked by dirty pipeline bookkeeping from the first run.",
+        "Assert no checkpoint prompt is shown when the user made no changes between runs.",
+        "The regression test creates a successful first Web Run with a local commit hash.",
+        "The regression test verifies git status is clean immediately after the first successful Web Run.",
+        "The regression test attempts a second Web Run without manual checkpointing."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-273"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-29T14:44:28Z",
+      "approval_notes": "Auto-approved by Human Owner for selected UI run (pipeline session PSESS-147)",
+      "accepted_by": "",
+      "accepted_at": "",
+      "acceptance_notes": "",
+      "notes": [],
+      "priority": 1,
+      "order": 87,
+      "created_at": "2026-06-29T14:44:24Z",
+      "updated_at": "2026-06-29T14:44:28Z"
     }
   ]
 }

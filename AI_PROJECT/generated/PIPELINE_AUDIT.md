@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `1119`
-State revision: `1119`
-Current session: `none`
+Events: `1126`
+State revision: `1126`
+Current session: `PSESS-147`
 
 ## Timeline
 
@@ -1130,6 +1130,13 @@ Current session: `none`
 | `2026-06-29T14:43:13Z` | `step.result` | `pipeline.phase.review` | `PSESS-146` | `` | `` | reports=RPT-134 |
 | `2026-06-29T14:43:33Z` | `step.result` | `pipeline.phase.close` | `PSESS-146` | `` | `` | reports=RPT-134 \| commits=71a24db77532fb0d95e1af8062e7b66bfb03f8cf |
 | `2026-06-29T14:43:36Z` | `completion` | `pipeline.session.complete` | `PSESS-146` | `` | `` | completed |
+| `2026-06-29T14:44:19Z` | `session.create` | `pipeline.session.create` | `PSESS-147` | `` | `` | PSESS-147 |
+| `2026-06-29T14:44:22Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-147` | `` | `` | PSESS-147 |
+| `2026-06-29T14:44:35Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-147` | `` | `` | changes=CHG-087 |
+| `2026-06-29T14:44:39Z` | `step.result` | `pipeline.phase.execute` | `PSESS-147` | `` | `` | PSESS-147 |
+| `2026-06-29T15:00:58Z` | `step.result` | `pipeline.phase.execute` | `PSESS-147` | `` | `` | reports=RPT-136 |
+| `2026-06-29T15:01:02Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-147` | `` | `` | reports=RPT-136 |
+| `2026-06-29T15:01:05Z` | `step.result` | `pipeline.phase.verify` | `PSESS-147` | `` | `` | reports=RPT-136 |
 
 ## Event Type Coverage
 
