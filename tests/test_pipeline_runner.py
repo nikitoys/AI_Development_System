@@ -1562,9 +1562,92 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(result.data["commit_hash"], commit_hash)
             self.assertEqual(result.data["close_status"]["commit_hash"], commit_hash)
             self.assertIn("TASK-001", result.data["completed_tasks"])
+            self.assertIn("TASK-001", result.data["changed_tasks"])
             self.assertIn(commit_hash, result.data["commits"])
             self.assertEqual(latest["status"], "completed")
             self.assertNotIn("MAX_STEPS_REACHED", latest.get("stop_reason", ""))
+
+    def test_run_until_blocker_continues_after_committed_close_with_next_task(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_multi_task_project_state(root, task_count=2)
+            _write_task_status(root, "done")
+            supervised = policy_preset("supervised_local_commit")
+            policy = replace(
+                supervised,
+                name="committed_close_continues_to_next_task",
+                batch=BatchPolicy(max_steps=2, max_failures=1),
+            )
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                task_refs=("APP-01", "APP-02"),
+                max_tasks=2,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
+            session_id = session.data["session_id"]
+            commit_hash = "abc1234deadbeef"
+            close_status = {
+                "outcome": "closed_with_local_commit",
+                "task_closed": True,
+                "task_status": "done",
+                "commit_status": "pass",
+                "commit_code": "LOCAL_COMMIT_CREATED",
+                "commit_hash": commit_hash,
+                "commit_readiness_status": "pass",
+                "commit_readiness_code": "COMMIT_READY",
+                "owner_next_action": "Continue with the selected queue.",
+            }
+            recorded = record_phase_result(
+                session_id,
+                PhaseResult.passed(
+                    "close",
+                    reason="Close completed and local commit was created.",
+                    next_action=close_status["owner_next_action"],
+                    artifacts={
+                        "session_id": session_id,
+                        "task_id": "TASK-001",
+                        "task_ref": "APP-01",
+                        "close_status": close_status,
+                        "local_commit": {
+                            "status": "pass",
+                            "code": "LOCAL_COMMIT_CREATED",
+                            "commit_hash": commit_hash,
+                        },
+                    },
+                ),
+                root=root,
+                actor="tester",
+                task_id="TASK-001",
+                command="pipeline.phase.close",
+            )
+            self.assertTrue(recorded.ok)
+
+            result = run_until_blocker(
+                session_id,
+                root=root,
+                actor="tester",
+                confirmed=True,
+            )
+            latest = load_pipeline(root)["sessions"][0]
+            queue_preview = latest["phase_history"][-1]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["session_status"], "stopped")
+            self.assertEqual(result.data["stop_code"], "MAX_STEPS_REACHED")
+            self.assertEqual(latest["status"], "stopped")
+            self.assertEqual(queue_preview["phase"], "queue_preview")
+            self.assertEqual(
+                queue_preview["artifacts"]["next_task"]["id"],
+                "TASK-002",
+            )
+            self.assertIn("TASK-001", result.data["completed_tasks"])
+            self.assertIn("TASK-001", result.data["changed_tasks"])
+            self.assertNotIn("TASK-002", result.data["completed_tasks"])
+            self.assertNotIn("TASK-002", result.data["changed_tasks"])
+            self.assertEqual(result.data["commit_hash"], commit_hash)
+            self.assertIn(commit_hash, result.data["commits"])
 
     def test_run_next_summary_keeps_recovered_close_warnings_technical_only(self):
         recovered_warning = CommandMessage(

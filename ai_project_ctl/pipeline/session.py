@@ -958,6 +958,9 @@ def successful_committed_close_status(session: Mapping[str, Any]) -> dict[str, A
         return {}
 
     data = dict(close_status)
+    task_id = str(artifacts.get("task_id") or session.get("current_task_id") or "")
+    if task_id:
+        data["task_id"] = task_id
     data["commit_hash"] = commit_hash
     if not data.get("commit_status"):
         data["commit_status"] = commit_status

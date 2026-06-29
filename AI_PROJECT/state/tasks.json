@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1790,
+  "revision": 1795,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-29T12:45:31Z",
+  "updated_at": "2026-06-29T12:57:10Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -16932,7 +16932,7 @@
       "id": "TASK-262",
       "epic_id": "EPIC-009",
       "title": "Continue batch after task commit",
-      "status": "planned",
+      "status": "done",
       "summary": "Allow the existing batch runner to continue to the next queued task after one task closes with a local commit.",
       "description": "The batch runner should not complete the whole session after the first committed close when the selected queue still has executable tasks.",
       "priority": 1,
@@ -16975,11 +16975,11 @@
         "This is the engine-continuation task and should be implemented before Web batch UI work."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-29T12:57:09Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-29T12:45:25Z",
-      "updated_at": "2026-06-29T12:45:25Z",
+      "updated_at": "2026-06-29T12:57:10Z",
       "uid": "tsk_8e16c65812a7",
       "ref": "PIPEF-157",
       "legacy_id": "TASK-262",

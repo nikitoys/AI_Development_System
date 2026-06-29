@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1790`
+Revision: `1795`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4572,7 +4572,7 @@ Acceptance criteria:
 
 ### PIPEF-157 (TASK-262) — Continue batch after task commit
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_8e16c65812a7`, legacy `TASK-262`, aliases `TASK-262`, local `PIPEF` / `157`

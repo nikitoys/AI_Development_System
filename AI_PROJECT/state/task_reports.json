@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 118,
+  "revision": 120,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-29T10:44:29Z",
+  "updated_at": "2026-06-29T12:56:49Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -8397,6 +8397,148 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-119",
+      "task_id": "TASK-262",
+      "task_ref": "PIPEF-157",
+      "submitted_at": "2026-06-29T12:56:49Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:2dd1ffdf085b1259e3eeb536a9b039600f93bbf5fbe65dafadfb61c9a6ff7f51",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-262",
+        "task_ref": "PIPEF-157",
+        "reported_task_id": "TASK-262",
+        "reported_task_ref": "PIPEF-157",
+        "implementation_summary": "Updated committed-close handling so the batch runner records the completed committed task, completes only when the selected queue is exhausted or max_tasks is reached, and otherwise continues through the existing run_next path. Added focused single-task and multi-task committed-close regression coverage.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 633.733815,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 633.733815,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The broader tests/test_pipeline_runner.py suite was attempted and failed outside this focused change path with run_next expectation failures such as missing stop_code or gate data after the first run_next call."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused committed-close tests and close local-commit tests passed.",
+          "Pre-existing dirty AI_PROJECT protected files were left untouched."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 998,
+          "remaining_tokens": 31002,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-120",
+      "task_id": "TASK-262",
+      "task_ref": "PIPEF-157",
+      "submitted_at": "2026-06-29T12:56:49Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-119",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-262",
+        "task_ref": "PIPEF-157",
+        "reported_task_id": "TASK-262",
+        "reported_task_ref": "PIPEF-157",
+        "implementation_summary": "Updated committed-close handling so the batch runner records the completed committed task, completes only when the selected queue is exhausted or max_tasks is reached, and otherwise continues through the existing run_next path. Added focused single-task and multi-task committed-close regression coverage.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/batch.py",
+          "ai_project_ctl/pipeline/session.py",
+          "tests/test_pipeline_runner.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 633.733815,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 633.733815,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The broader tests/test_pipeline_runner.py suite was attempted and failed outside this focused change path with run_next expectation failures such as missing stop_code or gate data after the first run_next call."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused committed-close tests and close local-commit tests passed.",
+          "Pre-existing dirty AI_PROJECT protected files were left untouched."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 998,
+          "remaining_tokens": 31002,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -8506,6 +8648,7 @@
     "TASK-258": "RPT-112",
     "TASK-259": "RPT-114",
     "TASK-260": "RPT-116",
-    "TASK-261": "RPT-118"
+    "TASK-261": "RPT-118",
+    "TASK-262": "RPT-120"
   }
 }

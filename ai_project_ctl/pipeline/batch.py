@@ -15,6 +15,7 @@ from ai_project_ctl.core.result import CommandMessage, CommandResult
 from ai_project_ctl.core.workflows import Runner
 
 from .policy import PipelinePolicy
+from .queue import QueuePlannerRequest, QueuePreview, QueuePreviewItem, preview_queue
 from .runner import run_next
 from .session import complete_session, stop_session, successful_committed_close_status
 from .state import load_pipeline_state, load_reference_state
@@ -98,28 +99,35 @@ def run_until_blocker(
         committed_close = successful_committed_close_status(session)
         if committed_close:
             _merge_committed_close_into_summary(summary, session, committed_close)
-            completed = complete_session(
-                selected_session_id,
-                root=root_path,
-                actor=actor,
-                reason=_committed_close_completion_reason(committed_close),
-            )
-            effects.append(completed)
-            _merge_effects_into_summary(summary, completed)
-            session = _find_session(root_path, selected_session_id) or session
             _merge_session_lists(summary, session, root_path)
-            return _success(
-                selected_session_id,
-                "QUEUE_COMPLETE",
-                "Committed close completed the selected pipeline session.",
+            if _committed_close_finishes_selected_queue(
                 summary,
-                effects,
-                session=session,
-                owner_action_required=(
-                    committed_close.get("owner_next_action")
-                    or "Review the completed pipeline session."
-                ),
-            )
+                session,
+                policy,
+                root_path,
+            ):
+                completed = complete_session(
+                    selected_session_id,
+                    root=root_path,
+                    actor=actor,
+                    reason=_committed_close_completion_reason(committed_close),
+                )
+                effects.append(completed)
+                _merge_effects_into_summary(summary, completed)
+                session = _find_session(root_path, selected_session_id) or session
+                _merge_session_lists(summary, session, root_path)
+                return _success(
+                    selected_session_id,
+                    "QUEUE_COMPLETE",
+                    "Committed close completed the selected pipeline session.",
+                    summary,
+                    effects,
+                    session=session,
+                    owner_action_required=(
+                        committed_close.get("owner_next_action")
+                        or "Review the completed pipeline session."
+                    ),
+                )
 
         if _attempt_count(session) >= policy.batch.max_steps:
             stopped = stop_session(
@@ -559,7 +567,7 @@ def _merge_committed_close_into_summary(
     session: Mapping[str, Any],
     close_status: Mapping[str, Any],
 ) -> None:
-    task_id = str(session.get("current_task_id") or "")
+    task_id = str(close_status.get("task_id") or session.get("current_task_id") or "")
     if task_id and task_id not in summary["completed_tasks"]:
         summary["completed_tasks"].append(task_id)
     if task_id and task_id not in summary["changed_tasks"]:
@@ -574,6 +582,102 @@ def _merge_committed_close_into_summary(
     summary["commit_status"] = str(close_status.get("commit_status") or "")
     summary["commit_code"] = str(close_status.get("commit_code") or "")
     summary["commit_hash"] = commit_hash
+
+
+def _committed_close_finishes_selected_queue(
+    summary: Mapping[str, Any],
+    session: Mapping[str, Any],
+    policy: PipelinePolicy,
+    root: Path,
+) -> bool:
+    max_tasks = _selected_max_tasks(session, policy)
+    completed_tasks = {
+        str(task_id)
+        for task_id in summary.get("completed_tasks", [])
+        if str(task_id)
+    }
+    if len(completed_tasks) >= max_tasks:
+        return True
+
+    queue_preview = _preview_committed_close_queue(session, policy, root)
+    if queue_preview is None:
+        return False
+
+    for item in queue_preview.items:
+        task_id = str(item.id or "")
+        if task_id in completed_tasks:
+            continue
+        if _queue_item_keeps_session_open(item):
+            return False
+    return True
+
+
+def _preview_committed_close_queue(
+    session: Mapping[str, Any],
+    policy: PipelinePolicy,
+    root: Path,
+) -> QueuePreview | None:
+    refs = load_reference_state(root)
+    tasks_state = refs.get("tasks")
+    if not isinstance(tasks_state, Mapping):
+        return None
+    plan = refs.get("plan")
+    selected_queue = (
+        session.get("selected_queue")
+        if isinstance(session.get("selected_queue"), Mapping)
+        else {}
+    )
+    try:
+        return preview_queue(
+            tasks_state,
+            plan if isinstance(plan, Mapping) else None,
+            policy=policy,
+            request=QueuePlannerRequest(
+                task_refs=tuple(_string_list(selected_queue.get("task_refs"))),
+                epic_ids=tuple(_string_list(selected_queue.get("epic_ids"))),
+                statuses=tuple(_string_list(selected_queue.get("statuses"))),
+                max_tasks=_optional_int(selected_queue.get("max_tasks")),
+                order_by=str(selected_queue.get("order_by") or "execution"),
+            ),
+        )
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def _queue_item_keeps_session_open(item: QueuePreviewItem) -> bool:
+    if item.executable or item.category in {"waiting", "blocked"}:
+        return True
+    reason_codes = {
+        str(reason.get("code") or "")
+        for reason in item.reasons
+        if isinstance(reason, Mapping)
+    }
+    if "policy_max_tasks_exceeded" in reason_codes:
+        return False
+    if (
+        "status_not_executable" in reason_codes
+        and str(item.status or "") in {"done", "deferred", "archived"}
+    ):
+        return False
+    return bool(item.id or reason_codes)
+
+
+def _selected_max_tasks(session: Mapping[str, Any], policy: PipelinePolicy) -> int:
+    selected_queue = (
+        session.get("selected_queue")
+        if isinstance(session.get("selected_queue"), Mapping)
+        else {}
+    )
+    return _optional_int(selected_queue.get("max_tasks")) or policy.queue.max_tasks
+
+
+def _optional_int(value: Any) -> int | None:
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _committed_close_completion_reason(close_status: Mapping[str, Any]) -> str:
