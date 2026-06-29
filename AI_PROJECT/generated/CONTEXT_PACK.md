@@ -1,6 +1,6 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/state/docs.json + AI_PROJECT/state/tasks.json -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-257 Demote recovered close workflow warnings Hide recovered close-time context/protected check warnings from owner-facing output when post-close context refresh succeeds. During close, contextctl.check-generated and protected.check can temporarily warn because task state changes make generated files stale before post-close refresh repairs them. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Identify non-blocking close workflow warnings from generated context and protected-file checks that are later repaired by post-close context_refresh. Keep recovered warning evidence in technical artifacts or debug details. Remove or demote recovered warnings from owner-facing Action Result and pipeline summary warnings. Ensure unrelated non-blocking warnings still remain visible to the owner. Add regression tests for recovered warnings and unrecovered warnings. Do not remove warning collection entirely. Do not suppress warnings when post-close context_refresh fails or is missing. Do not change task close state transitions. Do not edit protected project-control files manually. ai_project_ctl/pipeline/close_phase.py ai_project_ctl/pipeline/runner.py ai_project_ctl/web/server.py ai_project_ctl/web/read_model.py tests/test_pipeline_phase_review_close.py tests/test_pipeline_runner.py tests/test_web_control_center.py Recovered contextctl.check-generated warnings are not shown as owner-facing warnings when post-close context_refresh succeeds. Recovered protected.check stale context or prompt warnings are not shown as owner-facing warnings when post-close context_refresh succeeds. Technical evidence still records that the non-blocking checks warned during close. Warnings remain owner-facing when post-close context_refresh fails, is missing, or does not repair the stale generated files. Focused close-phase, runner, and Web Control Center tests pass. Check that warning demotion is conditional on successful post-close repair evidence. Confirm that no real blocking warning is hidden.","schema_version":1,"task_id":"TASK-257"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-258 Add dirty worktree preflight for Web Run Prevent Web Run from starting when the repository has uncommitted changes before the selected task is executed. The Web UI should stop before Codex or pipeline execution when a dirty worktree would make local commit readiness unsafe. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Check git status before ui.run_selected_task creates or starts a normal pipeline session. Return a not_run result with a clear owner-facing worktree_dirty reason when uncommitted changes exist. Include the dirty file list and suggested manual checkpoint commit commands in the action result. Ensure dirty preflight does not run Codex, transition the selected task, create an Evolution Change, or mutate task execution state. Do not implement checkpoint commit creation in this task. Do not change local commit readiness rules for already running sessions. Do not refactor unrelated Web UI or pipeline code. Do not edit protected project-control files manually. ai_project_ctl/web/actions.py ai_project_ctl/web/server.py ai_project_ctl/pipeline/git_status.py tests/test_web_control_center.py tests/test_ui_run_command.py A clean worktree still allows ui.run_selected_task to start the selected planned or ready task normally. A dirty worktree returns not_run before Codex execution, before task transition, and before Evolution Change creation. The action result clearly states that Web Run did not start because the worktree is dirty. The action result includes dirty file paths from git status --short --untracked-files=all. The action result includes manual checkpoint commit commands for the owner. Tests cover clean and dirty worktree branches for ui.run_selected_task. Verify that the dirty worktree path is a preflight stop and not a partial pipeline run.","schema_version":1,"task_id":"TASK-258"} -->
 
 # Context Pack
 
@@ -8,45 +8,43 @@ This generated Context Pack is derived output only. It is not source of truth.
 It does not expand task scope, allowed files, out-of-scope items, or acceptance criteria.
 
 Mode: `task`
-Task ID: `TASK-257`
+Task ID: `TASK-258`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1754`
+Tasks revision: `1766`
 
 ## Query
 
 ```text
-TASK-257 Demote recovered close workflow warnings Hide recovered close-time context/protected check warnings from owner-facing output when post-close context refresh succeeds. During close, contextctl.check-generated and protected.check can temporarily warn because task state changes make generated files stale before post-close refresh repairs them. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Identify non-blocking close workflow warnings from generated context and protected-file checks that are later repaired by post-close context_refresh. Keep recovered warning evidence in technical artifacts or debug details. Remove or demote recovered warnings from owner-facing Action Result and pipeline summary warnings. Ensure unrelated non-blocking warnings still remain visible to the owner. Add regression tests for recovered warnings and unrecovered warnings. Do not remove warning collection entirely. Do not suppress warnings when post-close context_refresh fails or is missing. Do not change task close state transitions. Do not edit protected project-control files manually. ai_project_ctl/pipeline/close_phase.py ai_project_ctl/pipeline/runner.py ai_project_ctl/web/server.py ai_project_ctl/web/read_model.py tests/test_pipeline_phase_review_close.py tests/test_pipeline_runner.py tests/test_web_control_center.py Recovered contextctl.check-generated warnings are not shown as owner-facing warnings when post-close context_refresh succeeds. Recovered protected.check stale context or prompt warnings are not shown as owner-facing warnings when post-close context_refresh succeeds. Technical evidence still records that the non-blocking checks warned during close. Warnings remain owner-facing when post-close context_refresh fails, is missing, or does not repair the stale generated files. Focused close-phase, runner, and Web Control Center tests pass. Check that warning demotion is conditional on successful post-close repair evidence. Confirm that no real blocking warning is hidden.
+TASK-258 Add dirty worktree preflight for Web Run Prevent Web Run from starting when the repository has uncommitted changes before the selected task is executed. The Web UI should stop before Codex or pipeline execution when a dirty worktree would make local commit readiness unsafe. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Check git status before ui.run_selected_task creates or starts a normal pipeline session. Return a not_run result with a clear owner-facing worktree_dirty reason when uncommitted changes exist. Include the dirty file list and suggested manual checkpoint commit commands in the action result. Ensure dirty preflight does not run Codex, transition the selected task, create an Evolution Change, or mutate task execution state. Do not implement checkpoint commit creation in this task. Do not change local commit readiness rules for already running sessions. Do not refactor unrelated Web UI or pipeline code. Do not edit protected project-control files manually. ai_project_ctl/web/actions.py ai_project_ctl/web/server.py ai_project_ctl/pipeline/git_status.py tests/test_web_control_center.py tests/test_ui_run_command.py A clean worktree still allows ui.run_selected_task to start the selected planned or ready task normally. A dirty worktree returns not_run before Codex execution, before task transition, and before Evolution Change creation. The action result clearly states that Web Run did not start because the worktree is dirty. The action result includes dirty file paths from git status --short --untracked-files=all. The action result includes manual checkpoint commit commands for the owner. Tests cover clean and dirty worktree branches for ui.run_selected_task. Verify that the dirty worktree path is a preflight stop and not a partial pipeline run.
 ```
 
 ## Task Boundary Snapshot
 
-Task: `TASK-257` - Demote recovered close workflow warnings
+Task: `TASK-258` - Add dirty worktree preflight for Web Run
 Status: `done`
 
 Scope:
-- Identify non-blocking close workflow warnings from generated context and protected-file checks that are later repaired by post-close context_refresh.
-- Keep recovered warning evidence in technical artifacts or debug details.
-- Remove or demote recovered warnings from owner-facing Action Result and pipeline summary warnings.
-- Ensure unrelated non-blocking warnings still remain visible to the owner.
-- Add regression tests for recovered warnings and unrecovered warnings.
+- Check git status before ui.run_selected_task creates or starts a normal pipeline session.
+- Return a not_run result with a clear owner-facing worktree_dirty reason when uncommitted changes exist.
+- Include the dirty file list and suggested manual checkpoint commit commands in the action result.
+- Ensure dirty preflight does not run Codex, transition the selected task, create an Evolution Change, or mutate task execution state.
 
 Allowed Files:
-- ai_project_ctl/pipeline/close_phase.py
-- ai_project_ctl/pipeline/runner.py
+- ai_project_ctl/web/actions.py
 - ai_project_ctl/web/server.py
-- ai_project_ctl/web/read_model.py
-- tests/test_pipeline_phase_review_close.py
-- tests/test_pipeline_runner.py
+- ai_project_ctl/pipeline/git_status.py
 - tests/test_web_control_center.py
+- tests/test_ui_run_command.py
 
 Acceptance Criteria:
-- Recovered contextctl.check-generated warnings are not shown as owner-facing warnings when post-close context_refresh succeeds.
-- Recovered protected.check stale context or prompt warnings are not shown as owner-facing warnings when post-close context_refresh succeeds.
-- Technical evidence still records that the non-blocking checks warned during close.
-- Warnings remain owner-facing when post-close context_refresh fails, is missing, or does not repair the stale generated files.
-- Focused close-phase, runner, and Web Control Center tests pass.
+- A clean worktree still allows ui.run_selected_task to start the selected planned or ready task normally.
+- A dirty worktree returns not_run before Codex execution, before task transition, and before Evolution Change creation.
+- The action result clearly states that Web Run did not start because the worktree is dirty.
+- The action result includes dirty file paths from git status --short --untracked-files=all.
+- The action result includes manual checkpoint commit commands for the owner.
+- Tests cover clean and dirty worktree branches for ui.run_selected_task.
 
 ## Index Summary
 
@@ -61,14 +59,14 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 | Score | Source | Heading | Lines | Content hash | Chunk hash | Reasons |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 152 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: to; metadata token match: md, to; content token match: acceptance, and, as, before, can, changes, check, checks |
-| 140 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 607-707 | `f5e4b5e551ae` | `6c704ec11dd6` | heading token match: prompt; metadata token match: control, md, project-control, prompt; content token match: acceptance, ai_project, and, by, change, checks, completed, context |
-| 130 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 834-870 | `f5e4b5e551ae` | `1ed18819b1db` | heading token match: context; metadata token match: context, control, md, project-control, prompt; content token match: acceptance, add, and, before, by, change, context, contextctl |
-| 125 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 65-119 | `f824429b0a39` | `5b78d4503548` | heading token match: control; metadata token match: control, md, project-control; content token match: acceptance, ai_project, and, are, as, by, check-generated, context |
-| 124 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: context, control, state; metadata token match: context, control, md, project-control, state; content token match: acceptance, ai_project, and, are, by, context, contextctl, control |
-| 124 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 911-943 | `f5e4b5e551ae` | `1d3f69b9e6a5` | heading token match: and, py, to; metadata token match: and, control, md, project-control, prompt, py, to; content token match: and, before, by, can, context, contextctl, does, for |
-| 121 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | metadata token match: md; content token match: acceptance, add, ai_project, and, as, before, by, change |
-| 111 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Scope | 21-64 | `f824429b0a39` | `9c998142f16f` | heading token match: control; metadata token match: control, md, project-control; content token match: add, ai_project_ctl, and, as, center, change, context, contextctl |
+| 153 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: create, to; metadata token match: create, md, to; content token match: a, acceptance, actions, and, before, changes, check, commands |
+| 144 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 607-707 | `f5e4b5e551ae` | `6c704ec11dd6` | metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, change, commands, completed, criteria |
+| 129 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | metadata token match: md; content token match: a, acceptance, actions, add, ai_project, allows, and, before |
+| 123 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 834-870 | `f5e4b5e551ae` | `1ed18819b1db` | heading token match: rules; metadata token match: md, project-control, rules; content token match: a, acceptance, add, and, before, change, clearly, codex |
+| 120 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 911-943 | `f5e4b5e551ae` | `1d3f69b9e6a5` | heading token match: and, py, to; metadata token match: and, md, project-control, py, to; content token match: a, an, and, before, clear, codex, does, execution |
+| 114 | `ai-system/project-control/04-command-catalog.md` | 18. Additional Command Domains > Pipeline Commands | 2294-2321 | `f824429b0a39` | `efe882b18c98` | heading token match: commands, pipeline; metadata token match: commands, md, pipeline, project-control; content token match: acceptance, ai_project, ai_project_ctl, and, change, codex, commands, create |
+| 108 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Scope | 21-64 | `f824429b0a39` | `9c998142f16f` | metadata token match: md, project-control; content token match: a, actions, add, ai_project_ctl, and, change, codex, evolution |
+| 106 | `ai-system/project-control/06-prompt-package-spec.md` | 7. Section Requirements > 7.14 Final Report Requirements | 434-474 | `f5e4b5e551ae` | `6effcae6ee95` | metadata token match: md, project-control; content token match: a, acceptance, action, an, and, codex, commands, completed |
 
 ## Selected Context
 
@@ -78,10 +76,10 @@ Title: Skills Layer Roadmap
 Status: `active`  Type: `guide`
 Heading: Skills Layer Roadmap > Recommended Skills To Create
 Lines: `80-92`
-Score: `152`
+Score: `153`
 Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
 Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
-Reasons: heading token match: to; metadata token match: md, to; content token match: acceptance, and, as, before, can, changes, check, checks
+Reasons: heading token match: create, to; metadata token match: create, md, to; content token match: a, acceptance, actions, and, before, changes, check, commands
 
 ```text
 ## Recommended Skills To Create
@@ -101,10 +99,10 @@ Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 12. Prompt Package Template
 Lines: `607-707`
-Score: `140`
+Score: `144`
 Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
 Chunk hash: `6c704ec11dd6768d6ef9c65207d80f3aa00e1bf0da58c3d765defabe8ff08815`
-Reasons: heading token match: prompt; metadata token match: control, md, project-control, prompt; content token match: acceptance, ai_project, and, by, change, checks, completed, context
+Reasons: metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, change, commands, completed, criteria
 
 ```text
 # 12. Prompt Package Template
@@ -177,16 +175,39 @@ Execution Rules:
 [...truncated by contextctl...]
 ```
 
-### 3. `ai-system/project-control/06-prompt-package-spec.md`
+### 3. `ai-system/skills/README.md`
+
+Title: Skills Layer Roadmap
+Status: `active`  Type: `guide`
+Heading: Skills Layer Roadmap > Existing Useful Skills
+Lines: `34-43`
+Score: `129`
+Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
+Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
+Reasons: metadata token match: md; content token match: a, acceptance, actions, add, ai_project, allows, and, before
+
+```text
+## Existing Useful Skills
+
+| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
+| --- | --- | --- | --- | --- | --- |
+| Project Control Gateway Skill | Route plan, task, documentation and evolution work through the controlled CLI gateway instead of manual state edits. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Inspect state through CLI, choose allowed commands, run validation and render commands, report unsupported operations. | Manually edit `AI_PROJECT/state/**`, `AI_PROJECT/events/**` or `AI_PROJECT/generated/**`; invent lifecycle states or commands; execute Initiative or Epic directly. |
+| Clarification Gate Skill | Teach Codex and subagents when to inspect first, proceed with safe assumptions, or stop for Human Owner blocker questions. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Classify blockers, group owner questions, identify safe defaults, preserve task and approval boundaries. | Use questions to avoid normal inspection; ask for approval after every small step; self-approve accepted, approved, active or done states. |
+| Documentation Navigation Skill | Route Codex and subagents to the minimal correct documentation and project-control read set before planning, editing, reviewing or executing AI_Development_System work.
+
+[...truncated by contextctl...]
+```
+
+### 4. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 14. Context Budget Rules > Context Pack Boundary
 Lines: `834-870`
-Score: `130`
+Score: `123`
 Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
 Chunk hash: `1ed18819b1db2849347b56648bdbea293730ca187154bd5be940636cfe902e79`
-Reasons: heading token match: context; metadata token match: context, control, md, project-control, prompt; content token match: acceptance, add, and, before, by, change, context, contextctl
+Reasons: heading token match: rules; metadata token match: md, project-control, rules; content token match: a, acceptance, add, and, before, change, clearly, codex
 
 ```text
 ## Context Pack Boundary
@@ -227,101 +248,16 @@ If validation fails, `codexctl.py` must fail clearly and must not include stale 
 ---
 ```
 
-### 4. `ai-system/project-control/04-command-catalog.md`
-
-Title: Project Control Command Catalog
-Status: `active`  Type: `reference`
-Heading: Project Control Command Catalog > Self-Hosted Command Boundary
-Lines: `65-119`
-Score: `125`
-Content hash: `f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6`
-Chunk hash: `5b78d45035483b51a58d0a7bed1cf1402fe3b2e6bc9a7ffcda911c0d12fcb6bc`
-Reasons: heading token match: control; metadata token match: control, md, project-control; content token match: acceptance, ai_project, and, are, as, by, check-generated, context
-
-```text
-## Self-Hosted Command Boundary
-
-AI_Development_System now uses root `/AI_PROJECT` as its own self-hosted Project Control Layer. All protected state, event and generated files in that directory must be changed only through approved CLI gateways.
-
-Current domain commands include:
-
-```bash
-python scripts/aictl.py ...
-python scripts/planctl.py ...
-python scripts/taskctl.py ...
-python scripts/codexctl.py ...
-python scripts/docctl.py ...
-python scripts/evolutionctl.py ...
-python scripts/contextctl.py ...
-```
-
-Current documentation-control commands include:
-
-```bash
-python scripts/docctl.py init
-python scripts/docctl.py scan --scope ai-system
-python scripts/docctl.py scan --scope root
-python scripts/docctl.py scan --scope skills
-python scripts/docctl.py scan --scope all
-python scripts/docctl.py doc register --path <path> --title <title> --type <type> --status <status>
-python scripts/docctl.py doc status <path> --to <status>
-python scripts/docctl.py doc mark-reviewed <path> --note <text>
-python scripts/docctl.py validate
-python scripts/docctl.py render
-python scripts/docctl.py check-generated
-python scripts/docctl.py audit --last 20
-```
-
-`docctl.py` owns `AI_PROJECT/state/docs.json`, `AI_PROJECT/events/doc-events.jsonl`, `AI_PROJECT/generated/DOCS_INDEX.md` and `AI_PROJECT/generated/DOCS_GAPS.md`.
-
-[...truncated by contextctl...]
-```
-
-### 5. `ai-system/project-control/03-state-model.md`
-
-Title: Project Control State Model
-Status: `active`  Type: `reference`
-Heading: Project Control State Model > Context Control State
-Lines: `104-125`
-Score: `124`
-Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
-Chunk hash: `0cd80bdf0d55e5284fa6355477f50005896398136bf33b7e1a181718f309f8b4`
-Reasons: heading token match: context, control, state; metadata token match: context, control, md, project-control, state; content token match: acceptance, ai_project, and, are, by, context, contextctl, control
-
-```text
-## Context Control State
-
-Context control uses the state/events/generated model without adding a new source-of-truth state file:
-
-```text
-AI_PROJECT/state/docs.json
-AI_PROJECT/state/tasks.json
-AI_PROJECT/events/context-events.jsonl
-AI_PROJECT/generated/CONTEXT_PACK.md
-AI_PROJECT/generated/CONTEXT_STATUS.md
-```
-
-`scripts/contextctl.py` builds a deterministic derived index in memory from registered documents in `docs.json` and optional Task context from `tasks.json`.
-
-The derived index and Context Pack are not source of truth. They must not expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task or source documents, the Task and source documents remain authoritative.
-
-By default, context control indexes registered active source documents only. It excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless the operator explicitly enables the relevant include flag.
-
-`CONTEXT_PACK.md` includes selected source paths, headings, line ranges, source content hashes, chunk hashes, deterministic keyword scores and selection reasons. `CONTEXT_STATUS.md` summarizes the current generated pack, selected paths and exclusion reasons. Both files are generated output and must be regenerated through `contextctl.py`.
-
----
-```
-
-### 6. `ai-system/project-control/06-prompt-package-spec.md`
+### 5. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 17. Relationship To taskctl.py And codexctl.py
 Lines: `911-943`
-Score: `124`
+Score: `120`
 Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
 Chunk hash: `1d3f69b9e6a541b647d67281fe6878bd0cffde8324082ef979a9a7ca2a729d9a`
-Reasons: heading token match: and, py, to; metadata token match: and, control, md, project-control, prompt, py, to; content token match: and, before, by, can, context, contextctl, does, for
+Reasons: heading token match: and, py, to; metadata token match: and, md, project-control, py, to; content token match: a, an, and, before, clear, codex, does, execution
 
 ```text
 # 17. Relationship To taskctl.py And codexctl.py
@@ -358,39 +294,57 @@ Before building the package, task state must be valid.
 ---
 ```
 
-### 7. `ai-system/skills/README.md`
+### 6. `ai-system/project-control/04-command-catalog.md`
 
-Title: Skills Layer Roadmap
-Status: `active`  Type: `guide`
-Heading: Skills Layer Roadmap > Existing Useful Skills
-Lines: `34-43`
-Score: `121`
-Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
-Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
-Reasons: metadata token match: md; content token match: acceptance, add, ai_project, and, as, before, by, change
+Title: Project Control Command Catalog
+Status: `active`  Type: `reference`
+Heading: 18. Additional Command Domains > Pipeline Commands
+Lines: `2294-2321`
+Score: `114`
+Content hash: `f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6`
+Chunk hash: `efe882b18c987d13ed38a60c38d0a9ba2dccd1c95061f72f79901f6f007ad46a`
+Reasons: heading token match: commands, pipeline; metadata token match: commands, md, pipeline, project-control; content token match: acceptance, ai_project, ai_project_ctl, and, change, codex, commands, create
 
 ```text
-## Existing Useful Skills
+## Pipeline Commands
 
-| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
-| --- | --- | --- | --- | --- | --- |
-| Project Control Gateway Skill | Route plan, task, documentation and evolution work through the controlled CLI gateway instead of manual state edits. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Inspect state through CLI, choose allowed commands, run validation and render commands, report unsupported operations. | Manually edit `AI_PROJECT/state/**`, `AI_PROJECT/events/**` or `AI_PROJECT/generated/**`; invent lifecycle states or commands; execute Initiative or Epic directly. |
-| Clarification Gate Skill | Teach Codex and subagents when to inspect first, proceed with safe assumptions, or stop for Human Owner blocker questions. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Classify blockers, group owner questions, identify safe defaults, preserve task and approval boundaries. | Use questions to avoid normal inspection; ask for approval after every small step; self-approve accepted, approved, active or done states. |
-| Documentation Navigation Skill | Route Codex and subagents to the minimal correct documentation and project-control read set before planning, editing, reviewing or executing AI_Development_System work.
-
-[...truncated by contextctl...]
+```text
+pipeline status
+pipeline validate
+pipeline render
+pipeline check-generated
+pipeline session create
+pipeline session start-step
+pipeline session step-result
+pipeline session stop
+pipeline session complete
+pipeline run-next
+pipeline run-until-blocker
 ```
 
-### 8. `ai-system/project-control/04-command-catalog.md`
+Current implementation entry point:
+
+```bash
+python scripts/aictl.py pipeline ...
+```
+
+Pipeline commands manage supervised pipeline sessions, selected queues, policy snapshots, gate outcomes, stop reasons, generated pipeline status and generated pipeline audit output. They must route through `aictl.py` and the `ai_project_ctl/pipeline/**` services. They must not manually edit `AI_PROJECT/state/pipeline_sessions.json`, `AI_PROJECT/events/pipeline-events.jsonl`, `AI_PROJECT/generated/PIPELINE_STATUS.md` or `AI_PROJECT/generated/PIPELINE_AUDIT.md`.
+
+`pipeline run-next` advances at most one guarded step. `pipeline run-until-blocker` composes `run-next`, requires `--confirm`, stops on the first blocker or queue completion and does not introduce background execution.
+
+Pipeline policies must not authorize push, merge, automatic Evolution Change approval, automatic Evolution Change acceptance, or Human Owner final acceptance. Local commits, when policy-enabled, are local-only and require passing report, machine review, Codex review and commit-readiness gates.
+```
+
+### 7. `ai-system/project-control/04-command-catalog.md`
 
 Title: Project Control Command Catalog
 Status: `active`  Type: `reference`
 Heading: Project Control Command Catalog > Scope
 Lines: `21-64`
-Score: `111`
+Score: `108`
 Content hash: `f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6`
 Chunk hash: `9c998142f16f19b020151b13a6a80db5dfffa618771f91cbdd39a8467a7ee582`
-Reasons: heading token match: control; metadata token match: control, md, project-control; content token match: add, ai_project_ctl, and, as, center, change, context, contextctl
+Reasons: metadata token match: md, project-control; content token match: a, actions, add, ai_project_ctl, and, change, codex, evolution
 
 ```text
 ## Scope
@@ -436,6 +390,60 @@ Unified projectctl.py
 ```
 
 These must not be invented through free-form AI actions. Add them only through approved system evolution and bounded Tasks.
+```
+
+### 8. `ai-system/project-control/06-prompt-package-spec.md`
+
+Title: Project Control Prompt Package Specification
+Status: `active`  Type: `reference`
+Heading: 7. Section Requirements > 7.14 Final Report Requirements
+Lines: `434-474`
+Score: `106`
+Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
+Chunk hash: `6effcae6ee956170dbc3f9127d2af67ea9fcf3027b9a669f88ec02f76a1e6410`
+Reasons: metadata token match: md, project-control; content token match: a, acceptance, action, an, and, codex, commands, completed
+
+```text
+## 7.14 Final Report Requirements
+
+Prompt Package should require Codex to report:
+
+```text id="5af40m"
+- changed files;
+- commands run;
+- validation result;
+- generated files updated;
+- acceptance criteria status;
+- unresolved risks;
+- owner action required.
+```
+
+For executable pipeline prompts, the human-readable report is not enough. The generated prompt must also require a final machine-readable execution summary block using this exact contract:
+
+````text
+CODEX_EXECUTION_SUMMARY_JSON:
+```json
+{
+  "implementation_summary": "Summarize the completed implementation.",
+  "notes": [],
+  "warnings": [],
+  "blockers": []
+}
+```
+````
+
+Rules:
+
+```text
+- the marker must appear on its own line;
+- it must be followed by one fenced `json` block;
+- the JSON value must be an object;
+- the object must contain exactly `implementation_summary`, `notes`, `warnings` and `blockers`;
+- no prose, bullets or other text may appear after the closing fence;
+- Codex must not emit a full TaskReport payload in this block.
+```
+
+The local pipeline adapter parses this block from Codex stdout. It uses the four Codex-authored fields as summary input and derives task identity, changed files, generated files, checks, owner decision status and token usage from trusted pipeline and task evidence.
 ```
 
 ## Excluded Source Summary

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 110,
+  "revision": 112,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-28T20:32:37Z",
+  "updated_at": "2026-06-29T08:11:40Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -7825,6 +7825,150 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-111",
+      "task_id": "TASK-258",
+      "task_ref": "PIPEF-153",
+      "submitted_at": "2026-06-29T08:11:40Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:2d360dddd8fd546b6da436d307c38280f5dfa62c24d6b93c625528e6be0e4e44",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-258",
+        "task_ref": "PIPEF-153",
+        "reported_task_id": "TASK-258",
+        "reported_task_ref": "PIPEF-153",
+        "implementation_summary": "Added a Web Run dirty-worktree preflight that checks git status before session creation, returns a not_run worktree_dirty result with dirty files and checkpoint commands, and renders that result as NOT RUN in the Web UI.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 635.17886,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 635.17886,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Pre-existing dirty AI_PROJECT protected/generated files were present in the worktree and were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused UI run and Web action/result rendering tests passed.",
+          "Dirty preflight is placed after reusable-session/done-task checks and before policy resolution, session creation, or pipeline execution."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1012,
+          "remaining_tokens": 30988,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-112",
+      "task_id": "TASK-258",
+      "task_ref": "PIPEF-153",
+      "submitted_at": "2026-06-29T08:11:40Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-111",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-258",
+        "task_ref": "PIPEF-153",
+        "reported_task_id": "TASK-258",
+        "reported_task_ref": "PIPEF-153",
+        "implementation_summary": "Added a Web Run dirty-worktree preflight that checks git status before session creation, returns a not_run worktree_dirty result with dirty files and checkpoint commands, and renders that result as NOT RUN in the Web UI.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/git_status.py",
+          "ai_project_ctl/web/actions.py",
+          "ai_project_ctl/web/server.py",
+          "tests/test_ui_run_command.py",
+          "tests/test_web_control_center.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 635.17886,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 635.17886,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Pre-existing dirty AI_PROJECT protected/generated files were present in the worktree and were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused UI run and Web action/result rendering tests passed.",
+          "Dirty preflight is placed after reusable-session/done-task checks and before policy resolution, session creation, or pipeline execution."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1012,
+          "remaining_tokens": 30988,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -7930,6 +8074,7 @@
     "TASK-254": "RPT-104",
     "TASK-255": "RPT-106",
     "TASK-256": "RPT-108",
-    "TASK-257": "RPT-110"
+    "TASK-257": "RPT-110",
+    "TASK-258": "RPT-112"
   }
 }

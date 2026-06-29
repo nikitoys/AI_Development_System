@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1757`
+Revision: `1766`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4502,7 +4502,7 @@ Acceptance criteria:
 
 ### PIPEF-153 (TASK-258) — Add dirty worktree preflight for Web Run
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_8b0e3a18a055`, legacy `TASK-258`, aliases `TASK-258`, local `PIPEF` / `153`

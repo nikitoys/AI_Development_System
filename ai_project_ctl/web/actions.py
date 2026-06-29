@@ -12,6 +12,10 @@ from typing import Any, Callable, Mapping, Sequence
 from ai_project_ctl.core.registry import command_describe
 from ai_project_ctl.core.result import CommandError, CommandResult
 from ai_project_ctl.pipeline.batch import run_until_blocker
+from ai_project_ctl.pipeline.git_status import (
+    WorktreeDirtyPreflight,
+    capture_worktree_dirty_preflight,
+)
 from ai_project_ctl.pipeline.policy_store import load_policy_preset
 from ai_project_ctl.pipeline.report_recovery import (
     ReportRecoveryError,
@@ -70,6 +74,11 @@ PIPELINE_SESSION_STATUSES = {
 PIPELINE_STOP_STATUSES = {"stopped", "blocked", "failed"}
 PIPELINE_ORDER_OPTIONS = {"execution", "owner", "selected"}
 INCOMPLETE_RUN_CONFIRM_FIELD = "incomplete_run_confirm"
+MANUAL_CHECKPOINT_COMMANDS = (
+    "git status --short --untracked-files=all",
+    "git add --all",
+    'git commit -m "checkpoint before Web Run"',
+)
 UI_SETTINGS_WEB_ALLOWED_KEYS = (
     "command_line",
     "default_policy",
@@ -406,6 +415,38 @@ class WebActionExecutor:
             selection = resolve_ui_run_selection(self.root, task_ref)
             if not selection.should_run:
                 result = _ui_run_selection_not_run_result(selection)
+                command = [
+                    self.python_executable,
+                    str(SCRIPTS_DIR / "aictl.py"),
+                    "--root",
+                    str(self.root),
+                    "--actor",
+                    self.actor,
+                    "--json",
+                    "ui",
+                    "run",
+                    task_ref,
+                ]
+                if auto_close_note:
+                    command.extend(["--auto-close-note", auto_close_note])
+                command.append("--confirm")
+                return ActionProcessResult(
+                    command=command,
+                    returncode=0,
+                    stdout=json.dumps(
+                        result.to_dict(),
+                        ensure_ascii=False,
+                        sort_keys=True,
+                    ),
+                    stderr="",
+                )
+
+            dirty_preflight = capture_worktree_dirty_preflight(root=self.root)
+            if dirty_preflight.should_block:
+                result = _ui_run_worktree_preflight_not_run_result(
+                    selection,
+                    dirty_preflight,
+                )
                 command = [
                     self.python_executable,
                     str(SCRIPTS_DIR / "aictl.py"),
@@ -1111,6 +1152,59 @@ def _ui_run_selection_not_run_result(
     result.owner_action_required = owner_action
     if session_id:
         result.next_actions.append("Open pipeline session {}.".format(session_id))
+    return result
+
+
+def _ui_run_worktree_preflight_not_run_result(
+    selection: UIRunSelectionResolution,
+    preflight: WorktreeDirtyPreflight,
+) -> CommandResult:
+    task_label = selection.task_id or selection.task_ref or "selected task"
+    dirty_paths = list(preflight.dirty_paths)
+    reason = preflight.reason
+    if reason == "worktree_dirty":
+        message = (
+            "NOT RUN: Web Run did not start for selected task {} because the "
+            "worktree is dirty.".format(task_label)
+        )
+        owner_action = (
+            "Create a manual checkpoint commit or clean the worktree, then rerun Web Run."
+        )
+    else:
+        message = (
+            "NOT RUN: Web Run did not start for selected task {} because git status "
+            "could not be checked.".format(task_label)
+        )
+        owner_action = "Resolve git status errors, then rerun Web Run."
+
+    data: dict[str, Any] = {
+        "task_ref": selection.task_ref,
+        "task_id": selection.task_id,
+        "task_status": selection.task_status,
+        "outcome": reason,
+        "reason": reason,
+        "not_run": True,
+        "stop_code": "WORKTREE_DIRTY"
+        if reason == "worktree_dirty"
+        else "WORKTREE_STATUS_UNAVAILABLE",
+        "blocked_by": "WORKTREE_DIRTY"
+        if reason == "worktree_dirty"
+        else "WORKTREE_STATUS_UNAVAILABLE",
+        "dirty_files": dirty_paths,
+        "git_status_entries": [entry.to_dict() for entry in preflight.entries],
+        "suggested_checkpoint_commands": list(MANUAL_CHECKPOINT_COMMANDS),
+    }
+    if preflight.error:
+        data["git_status_error"] = preflight.error
+
+    result = CommandResult.success(
+        command="ui.run",
+        domain="ui",
+        message=message,
+        data=data,
+    )
+    result.owner_action_required = owner_action
+    result.next_actions.extend(MANUAL_CHECKPOINT_COMMANDS)
     return result
 
 

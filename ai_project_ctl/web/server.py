@@ -4894,6 +4894,13 @@ def action_result_panel(payload: Mapping[str, Any]) -> str:
     sections.extend(_step_panel(_result_steps(data, summary)))
     sections.extend(_file_list_panel("Changed Files", result.get("changed_files")))
     sections.extend(_file_list_panel("Generated Files", result.get("generated_files")))
+    sections.extend(_file_list_panel("Dirty Files", data.get("dirty_files")))
+    sections.extend(
+        _file_list_panel(
+            "Suggested Checkpoint Commands",
+            data.get("suggested_checkpoint_commands"),
+        )
+    )
     sections.extend(_ui_settings_result_panel(data))
     sections.extend(_message_panel("Warnings", "warn", _messages(result.get("warnings"))))
     sections.extend(_message_panel("Errors", "fail", visible_errors))
@@ -4956,7 +4963,9 @@ def _pipeline_action_badge(fields: Mapping[str, str]) -> tuple[str, str]:
         commit_status == "pass" or close_outcome == "closed_with_local_commit"
     ):
         return "pass", "PASS"
-    if "NO_EXECUTABLE_TASK" in {stop_code, blocked_by}:
+    if {stop_code, blocked_by}.intersection(
+        {"NO_EXECUTABLE_TASK", "WORKTREE_DIRTY", "WORKTREE_STATUS_UNAVAILABLE"}
+    ):
         return "warn", "NOT RUN"
     if outcome == "completed" or session_status == "completed" or stop_code == "QUEUE_COMPLETE":
         return "pass", "PASS"

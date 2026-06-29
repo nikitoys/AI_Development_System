@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest import mock
 
 from ai_project_ctl.core.result import CommandResult
+from ai_project_ctl.pipeline.git_status import capture_worktree_dirty_preflight
 from ai_project_ctl.pipeline.state import pipeline_state_path
 from ai_project_ctl.pipeline.ui_run import resolve_ui_run_selection
 from ai_project_ctl.ui_settings import ui_settings_path
@@ -37,6 +38,44 @@ def write_settings(root: Path, payload: dict) -> None:
 
 
 class UIRunCommandTests(unittest.TestCase):
+    def test_worktree_dirty_preflight_reports_git_status_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(
+                ["git", "init"],
+                cwd=root,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
+            (root / "dirty.txt").write_text("dirty\n", encoding="utf-8")
+            (root / "nested").mkdir()
+            (root / "nested" / "new.txt").write_text("new\n", encoding="utf-8")
+
+            dirty = capture_worktree_dirty_preflight(root=root)
+
+            self.assertTrue(dirty.checked)
+            self.assertTrue(dirty.available)
+            self.assertEqual(dirty.reason, "worktree_dirty")
+            self.assertEqual(dirty.dirty_paths, ("dirty.txt", "nested/new.txt"))
+            self.assertCountEqual(
+                [entry.to_dict() for entry in dirty.entries],
+                [
+                    {"status": "??", "path": "dirty.txt"},
+                    {"status": "??", "path": "nested/new.txt"},
+                ],
+            )
+
+    def test_worktree_dirty_preflight_allows_non_git_test_roots(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            preflight = capture_worktree_dirty_preflight(root=Path(tmp))
+
+        self.assertFalse(preflight.checked)
+        self.assertFalse(preflight.available)
+        self.assertFalse(preflight.should_block)
+        self.assertEqual(preflight.reason, "worktree_clean")
+
     def test_ui_run_selection_resolves_done_task_without_creating_session(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
