@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1837`
+Revision: `1850`
 
 ## Executable Now
 
@@ -17,6 +17,9 @@ Revision: `1837`
 - `PIPEF-126 (TASK-207)` [planned] `EPIC-009` priority `1` — Show effective policy summary
 - `PIPEF-127 (TASK-208)` [planned] `EPIC-009` priority `1` — Add Web run batch overrides
 - `PIPEF-128 (TASK-209)` [planned] `EPIC-009` priority `1` — Warn on incomplete Web run policy
+- `PIPEF-169 (TASK-274)` [planned] `EPIC-009` priority `1` — Stop post-commit session completion writes
+- `PIPEF-170 (TASK-275)` [planned] `EPIC-009` priority `1` — Make committed Web action result read-only
+- `PIPEF-171 (TASK-276)` [planned] `EPIC-009` priority `1` — Pass no-checkpoint Web Run regression
 - `PIPEF-162 (TASK-267)` [planned] `EPIC-009` priority `2` — Auto-size Web batch max steps
 - `PIPEF-163 (TASK-268)` [planned] `EPIC-009` priority `2` — Add Web batch run form
 - `PIPEF-164 (TASK-269)` [planned] `EPIC-009` priority `2` — Render batch run summary

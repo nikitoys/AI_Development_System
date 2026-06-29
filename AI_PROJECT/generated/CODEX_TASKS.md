@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `1837`
-Current task: `TASK-273`
+Revision: `1850`
+Current task: `none`
 
 ## Epic `EPIC-001`
 
@@ -4767,7 +4767,7 @@ Acceptance criteria:
 - Dirty preflight behavior before a run remains unchanged.
 - Tests cover clean and dirty post-commit outcomes.
 
-### PIPEF-168 (TASK-273) — Add no-checkpoint Web Run regression ⭐
+### PIPEF-168 (TASK-273) — Add no-checkpoint Web Run regression
 
 Status: `blocked`
 Priority: `1`
@@ -4784,3 +4784,57 @@ Acceptance criteria:
 - The second Web Run does not return WORKTREE_DIRTY for pipeline bookkeeping files.
 - The test fails if pipeline-events.jsonl, pipeline_sessions.json, PIPELINE_STATUS.md, or PIPELINE_AUDIT.md remain dirty after the first run.
 - The test uses existing fake or stubbed execution paths and does not require real Codex network execution.
+
+### PIPEF-169 (TASK-274) — Stop post-commit session completion writes
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_c97925641b62`, legacy `TASK-274`, aliases `TASK-274`, local `PIPEF` / `169`
+
+Prevent the committed Web Run close path from writing pipeline session state, events, or generated pipeline files after the local task commit exists.
+
+Acceptance criteria:
+
+- After LOCAL_COMMIT_CREATED, the committed-close path does not append a new pipeline.session.complete event to AI_PROJECT/events/pipeline-events.jsonl.
+- After LOCAL_COMMIT_CREATED, the committed-close path does not mutate AI_PROJECT/state/pipeline_sessions.json.
+- After LOCAL_COMMIT_CREATED, the committed-close path does not render AI_PROJECT/generated/PIPELINE_STATUS.md or AI_PROJECT/generated/PIPELINE_AUDIT.md.
+- The returned batch result still reports completed status, completed task information, and the local commit hash for successful single-task Web Run sessions.
+- Non-local-commit queue completion behavior remains persisted and unchanged.
+- Focused tests cover committed-close completion and non-local-commit queue completion.
+
+### PIPEF-170 (TASK-275) — Make committed Web action result read-only
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_c232560700fe`, legacy `TASK-275`, aliases `TASK-275`, local `PIPEF` / `170`
+
+Ensure ui.run_selected_task builds its successful committed-close action result without triggering tracked pipeline render or refresh writes after the commit.
+
+Acceptance criteria:
+
+- A successful ui.run_selected_task response still shows completed outcome, session id, task id, and local commit hash.
+- Rendering the Web action result after a committed close does not mutate pipeline_sessions.json, pipeline-events.jsonl, PIPELINE_STATUS.md, or PIPELINE_AUDIT.md.
+- Dirty-start WORKTREE_DIRTY responses and checkpoint_commit guidance remain unchanged.
+- Blocked and failed pipeline action results still render their owner guidance correctly.
+- Focused Web tests cover committed-close action rendering without post-commit tracked writes.
+- No UI action path hides real dirty worktree state from safety checks.
+
+### PIPEF-171 (TASK-276) — Pass no-checkpoint Web Run regression
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_9bacee7b5249`, legacy `TASK-276`, aliases `TASK-276`, local `PIPEF` / `171`
+
+Make the existing no-checkpoint Web Run local-commit regression pass against the fixed committed-close Web action lifecycle.
+
+Acceptance criteria:
+
+- python -m py_compile tests/test_web_run_local_commit_e2e.py passes.
+- python -m pytest tests/test_web_run_local_commit_e2e.py -q passes.
+- The regression fails if AI_PROJECT/events/pipeline-events.jsonl remains dirty after the first Web Run.
+- The regression fails if AI_PROJECT/state/pipeline_sessions.json remains dirty after the first Web Run.
+- The regression fails if PIPELINE_STATUS.md or PIPELINE_AUDIT.md remain dirty after the first Web Run.
+- The regression verifies the second Web Run starts without WORKTREE_DIRTY or ui.checkpoint_commit guidance.
