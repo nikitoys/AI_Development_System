@@ -3,12 +3,12 @@
 
 # AI Development System Evolution
 
-Revision: `2691`
-Changes: `89`
+Revision: `2717`
+Changes: `90`
 
 ## Summary
 
-- `accepted`: 67
+- `accepted`: 68
 - `approved`: 22
 
 ## Changes
@@ -5565,3 +5565,61 @@ Impact:
 Linked tasks:
 
 - TASK-275
+
+### CHG-090 — Pass no-checkpoint Web Run regression
+
+Status: `accepted`  
+Type: `process`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-171 requires an explicit Evolution Change Proposal before implementation: Make the existing no-checkpoint Web Run local-commit regression pass against the fixed committed-close Web action lifecycle.
+
+Proposal:
+
+Implement the bounded task scope: Run the existing tests/test_web_run_local_commit_e2e.py regression and keep its clean-worktree assertion meaningful.; Adjust the regression only if needed to match the final intended committed-close lifecycle contract.; Assert the first Web Run creates a local commit and leaves git status clean after WebActionExecutor returns.; Assert the second Web Run does not return WORKTREE_DIRTY or checkpoint_commit guidance when no owner changes were made.
+
+Rationale:
+
+The regression should prove that one successful Web Run leaves a clean worktree and the next selected task starts without checkpoint_commit guidance.
+
+Approved by: `human_owner` at `2026-06-29T18:47:14Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-150)  
+
+Accepted by: `human_owner` at `2026-06-29T18:51:11Z`  
+Acceptance notes: Approve; linked Change accepted after task TASK-276 close succeeded.  
+
+Affected files:
+
+- tests/test_web_run_local_commit_e2e.py
+- tests/test_web_control_center.py
+- tests/test_pipeline_runner.py
+
+Risks:
+
+- Boundary risk: Do not loosen the regression by ignoring pipeline bookkeeping files.
+- Boundary risk: Do not change production pipeline behavior in this validation task unless a tiny test-support hook is unavoidable.
+- Boundary risk: Do not remove the second-run no-checkpoint assertion.
+- Boundary risk: Do not edit protected project-control files manually.
+- Verify that the test remains a real guard for clean worktree behavior and is not weakened to pass artificially.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-276.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Run the existing tests/test_web_run_local_commit_e2e.py regression and keep its clean-worktree assertion meaningful.
+- Adjust the regression only if needed to match the final intended committed-close lifecycle contract.
+- Assert the first Web Run creates a local commit and leaves git status clean after WebActionExecutor returns.
+- Assert the second Web Run does not return WORKTREE_DIRTY or checkpoint_commit guidance when no owner changes were made.
+- python -m py_compile tests/test_web_run_local_commit_e2e.py passes.
+- python -m pytest tests/test_web_run_local_commit_e2e.py -q passes.
+- The regression fails if AI_PROJECT/events/pipeline-events.jsonl remains dirty after the first Web Run.
+
+Linked tasks:
+
+- TASK-276

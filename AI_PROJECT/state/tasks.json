@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1860,
+  "revision": 1865,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-29T18:31:39Z",
+  "updated_at": "2026-06-29T18:51:10Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -17819,7 +17819,7 @@
       "id": "TASK-276",
       "epic_id": "EPIC-009",
       "title": "Pass no-checkpoint Web Run regression",
-      "status": "planned",
+      "status": "done",
       "summary": "Make the existing no-checkpoint Web Run local-commit regression pass against the fixed committed-close Web action lifecycle.",
       "description": "The regression should prove that one successful Web Run leaves a clean worktree and the next selected task starts without checkpoint_commit guidance.",
       "priority": 1,
@@ -17877,11 +17877,11 @@
           "created_at": "2026-06-29T16:11:50Z"
         }
       ],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-29T18:51:10Z",
+      "approval_notes": "Approve",
       "created_at": "2026-06-29T16:11:49Z",
-      "updated_at": "2026-06-29T16:11:50Z",
+      "updated_at": "2026-06-29T18:51:10Z",
       "uid": "tsk_9bacee7b5249",
       "ref": "PIPEF-171",
       "legacy_id": "TASK-276",

@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1860`
+Revision: `1865`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4823,7 +4823,7 @@ Acceptance criteria:
 
 ### PIPEF-171 (TASK-276) — Pass no-checkpoint Web Run regression
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_9bacee7b5249`, legacy `TASK-276`, aliases `TASK-276`, local `PIPEF` / `171`

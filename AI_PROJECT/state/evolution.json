@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 2691,
+  "revision": 2717,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-29T18:31:40Z",
+  "updated_at": "2026-06-29T18:51:11Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -5242,6 +5242,60 @@
       "order": 89,
       "created_at": "2026-06-29T18:20:52Z",
       "updated_at": "2026-06-29T18:31:40Z"
+    },
+    {
+      "id": "CHG-090",
+      "title": "Pass no-checkpoint Web Run regression",
+      "status": "accepted",
+      "change_type": "process",
+      "rationale": "The regression should prove that one successful Web Run leaves a clean worktree and the next selected task starts without checkpoint_commit guidance.",
+      "problem": "Task PIPEF-171 requires an explicit Evolution Change Proposal before implementation: Make the existing no-checkpoint Web Run local-commit regression pass against the fixed committed-close Web action lifecycle.",
+      "proposal": "Implement the bounded task scope: Run the existing tests/test_web_run_local_commit_e2e.py regression and keep its clean-worktree assertion meaningful.; Adjust the regression only if needed to match the final intended committed-close lifecycle contract.; Assert the first Web Run creates a local commit and leaves git status clean after WebActionExecutor returns.; Assert the second Web Run does not return WORKTREE_DIRTY or checkpoint_commit guidance when no owner changes were made.",
+      "affected_areas": [],
+      "affected_files": [
+        "tests/test_web_run_local_commit_e2e.py",
+        "tests/test_web_control_center.py",
+        "tests/test_pipeline_runner.py"
+      ],
+      "risks": [
+        "Boundary risk: Do not loosen the regression by ignoring pipeline bookkeeping files.",
+        "Boundary risk: Do not change production pipeline behavior in this validation task unless a tiny test-support hook is unavoidable.",
+        "Boundary risk: Do not remove the second-run no-checkpoint assertion.",
+        "Boundary risk: Do not edit protected project-control files manually.",
+        "Verify that the test remains a real guard for clean worktree behavior and is not weakened to pass artificially.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-276.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Run the existing tests/test_web_run_local_commit_e2e.py regression and keep its clean-worktree assertion meaningful.",
+        "Adjust the regression only if needed to match the final intended committed-close lifecycle contract.",
+        "Assert the first Web Run creates a local commit and leaves git status clean after WebActionExecutor returns.",
+        "Assert the second Web Run does not return WORKTREE_DIRTY or checkpoint_commit guidance when no owner changes were made.",
+        "python -m py_compile tests/test_web_run_local_commit_e2e.py passes.",
+        "python -m pytest tests/test_web_run_local_commit_e2e.py -q passes.",
+        "The regression fails if AI_PROJECT/events/pipeline-events.jsonl remains dirty after the first Web Run."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-276"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-29T18:47:14Z",
+      "approval_notes": "Auto-approved by Human Owner for selected UI run (pipeline session PSESS-150)",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-29T18:51:11Z",
+      "acceptance_notes": "Approve; linked Change accepted after task TASK-276 close succeeded.",
+      "notes": [],
+      "priority": 1,
+      "order": 90,
+      "created_at": "2026-06-29T18:47:09Z",
+      "updated_at": "2026-06-29T18:51:11Z"
     }
   ]
 }

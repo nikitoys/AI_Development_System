@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 140,
+  "revision": 141,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-29T18:31:16Z",
+  "updated_at": "2026-06-29T18:50:47Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -9957,6 +9957,75 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-141",
+      "task_id": "TASK-276",
+      "task_ref": "PIPEF-171",
+      "submitted_at": "2026-06-29T18:50:47Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:93bee2ce39b8b2a56d05c7fe94f3b7b2f49e0f5a31fcdfc036f44864b8fcfeaf",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-276",
+        "task_ref": "PIPEF-171",
+        "reported_task_id": "TASK-276",
+        "reported_task_ref": "PIPEF-171",
+        "implementation_summary": "Validated the existing no-checkpoint Web Run local-commit regression without code changes; the target compile and pytest checks pass.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 201.009227,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 201.009227,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The repository had pre-existing project-control/generated worktree modifications outside the allowed files before execution; they were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "No edits were needed in the allowed test files.",
+          "The regression keeps explicit clean-worktree assertions for pipeline bookkeeping files and verifies the second run has no WORKTREE_DIRTY or checkpoint_commit guidance."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1020,
+          "remaining_tokens": 30980,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -10077,6 +10146,7 @@
     "TASK-272": "RPT-134",
     "TASK-273": "RPT-136",
     "TASK-274": "RPT-138",
-    "TASK-275": "RPT-140"
+    "TASK-275": "RPT-140",
+    "TASK-276": "RPT-141"
   }
 }
