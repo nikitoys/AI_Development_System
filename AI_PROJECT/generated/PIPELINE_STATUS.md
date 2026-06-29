@@ -3,23 +3,9 @@
 
 # Pipeline Status
 
-Revision: `1047`
-Current session: `PSESS-139`
+Revision: `1049`
+Current session: `none`
 Sessions: `139`
-
-## Current Session
-
-- ID: `PSESS-139`
-- Status: `running`
-- Policy: `supervised_executable_local_commit_1h_auto_change`
-- Current task: `TASK-262`
-- Current phase: `review`
-- Phase status: `skipped`
-- Blocked by: `none`
-- Next action: `Continue only through governed close or commit readiness; Machine Review evidence remains required.`
-- Current step: `execute`
-- Step status: `passed`
-- Stop reason: `none`
 
 ## Sessions
 
@@ -163,7 +149,7 @@ Sessions: `139`
 | `PSESS-136` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-259` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit de22f6964cc3b51e511c90e54488f47aee360b4f was created. |
 | `PSESS-137` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-260` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit 5cc875fd50ba9f652d65f73acd55b3f332717e03 was created. |
 | `PSESS-138` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-261` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit bb4a324c2fbbc54a0769778ed6a3eee1822e8d2f was created. |
-| `PSESS-139` | `running` | `supervised_executable_local_commit_1h_auto_change` | `TASK-262` | `review` | `skipped` | none | Continue only through governed close or commit readiness; Machine Review evidence remains required. | `execute` |  |
+| `PSESS-139` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-262` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit d75a5356b72d3448562ec7975105882cb00f79fa was created. |
 
 ## Phase History
 
@@ -909,3 +895,4 @@ Sessions: `139`
 | `PSESS-139` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
 | `PSESS-139` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 3 | 0 | 1 |
 | `PSESS-139` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-139` | 7 | `close` | `passed` | Close completed and local commit was created. | Review the close artifacts and local commit hash, then select the next task. | 0 | 0 | 1 |
