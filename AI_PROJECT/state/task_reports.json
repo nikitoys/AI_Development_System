@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 122,
+  "revision": 124,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-29T13:09:42Z",
+  "updated_at": "2026-06-29T13:20:15Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -8682,6 +8682,147 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-123",
+      "task_id": "TASK-264",
+      "task_ref": "PIPEF-159",
+      "submitted_at": "2026-06-29T13:20:15Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:5a0f3333cd13778c1cda87fa767f75a3b101a226bdbc98eb8c8868273aa45d90",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-264",
+        "task_ref": "PIPEF-159",
+        "reported_task_id": "TASK-264",
+        "reported_task_ref": "PIPEF-159",
+        "implementation_summary": "Added a UI batch selected_queue helper supporting task_refs, epic_ids, statuses, max_tasks, order_by, and UI bypass metadata while preserving the existing single-task helper contract.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 515.199651,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 515.199651,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree shows dirty protected AI_PROJECT files outside the allowed task files; they were not edited manually as part of this implementation."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused compile and pytest checks passed.",
+          "Added session and queue-preview compatibility coverage for the new helper."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 936,
+          "remaining_tokens": 31064,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-124",
+      "task_id": "TASK-264",
+      "task_ref": "PIPEF-159",
+      "submitted_at": "2026-06-29T13:20:15Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-123",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-264",
+        "task_ref": "PIPEF-159",
+        "reported_task_id": "TASK-264",
+        "reported_task_ref": "PIPEF-159",
+        "implementation_summary": "Added a UI batch selected_queue helper supporting task_refs, epic_ids, statuses, max_tasks, order_by, and UI bypass metadata while preserving the existing single-task helper contract.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/ui_run.py",
+          "tests/test_ui_run_command.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 515.199651,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 515.199651,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree shows dirty protected AI_PROJECT files outside the allowed task files; they were not edited manually as part of this implementation."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused compile and pytest checks passed.",
+          "Added session and queue-preview compatibility coverage for the new helper."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 936,
+          "remaining_tokens": 31064,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -8793,6 +8934,7 @@
     "TASK-260": "RPT-116",
     "TASK-261": "RPT-118",
     "TASK-262": "RPT-120",
-    "TASK-263": "RPT-122"
+    "TASK-263": "RPT-122",
+    "TASK-264": "RPT-124"
   }
 }

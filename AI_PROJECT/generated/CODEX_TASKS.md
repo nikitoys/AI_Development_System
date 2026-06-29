@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1800`
+Revision: `1805`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4608,7 +4608,7 @@ Acceptance criteria:
 
 ### PIPEF-159 (TASK-264) — Build UI batch queue helper
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_4ebaac010468`, legacy `TASK-264`, aliases `TASK-264`, local `PIPEF` / `159`
