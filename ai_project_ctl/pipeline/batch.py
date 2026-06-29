@@ -18,7 +18,7 @@ from .git_status import GitStatusError, capture_git_status_snapshot
 from .policy import PipelinePolicy
 from .queue import QueuePlannerRequest, QueuePreview, QueuePreviewItem, preview_queue
 from .runner import run_next
-from .session import complete_session, stop_session, successful_committed_close_status
+from .session import stop_session, successful_committed_close_status
 from .state import load_pipeline_state, load_reference_state
 
 
@@ -109,23 +109,17 @@ def run_until_blocker(
                 policy,
                 root_path,
             ):
-                completed = complete_session(
-                    selected_session_id,
-                    root=root_path,
-                    actor=actor,
-                    reason=_committed_close_completion_reason(committed_close),
+                completed_session = _committed_close_completion_view(
+                    session,
+                    committed_close,
                 )
-                effects.append(completed)
-                _merge_effects_into_summary(summary, completed)
-                session = _find_session(root_path, selected_session_id) or session
-                _merge_session_lists(summary, session, root_path)
                 return _success(
                     selected_session_id,
                     "QUEUE_COMPLETE",
                     "Committed close completed the selected pipeline session.",
                     summary,
                     effects,
-                    session=session,
+                    session=completed_session,
                     owner_action_required=(
                         committed_close.get("owner_next_action")
                         or "Review the completed pipeline session."
@@ -745,6 +739,18 @@ def _committed_close_completion_reason(close_status: Mapping[str, Any]) -> str:
     if commit_hash:
         return "Close passed and local commit {} was created.".format(commit_hash)
     return "Close passed and a local commit was created."
+
+
+def _committed_close_completion_view(
+    session: Mapping[str, Any],
+    close_status: Mapping[str, Any],
+) -> dict[str, Any]:
+    completed = dict(session)
+    completed["status"] = "completed"
+    completed["stop_reason"] = _committed_close_completion_reason(close_status)
+    if not completed.get("current_step"):
+        completed["current_step_status"] = "passed"
+    return completed
 
 
 def _post_task_worktree_handoff_blocker(

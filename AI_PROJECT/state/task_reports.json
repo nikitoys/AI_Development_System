@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 128,
+  "revision": 130,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-29T13:44:18Z",
+  "updated_at": "2026-06-29T14:05:19Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -9101,6 +9101,149 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-129",
+      "task_id": "TASK-270",
+      "task_ref": "PIPEF-165",
+      "submitted_at": "2026-06-29T14:05:19Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:06e51bfbea97f43a841e6456dc7e5095940f03908b19b183a22e378437655435",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-270",
+        "task_ref": "PIPEF-165",
+        "reported_task_id": "TASK-270",
+        "reported_task_ref": "PIPEF-165",
+        "implementation_summary": "Updated successful committed-close handling to report a completed session without mutating pipeline state/events/generated files after the local commit, and added focused regression assertions for zero post-commit bookkeeping writes.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 515.760846,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 515.760846,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Protected AI_PROJECT files were already dirty before edits and were not manually modified.",
+          "Full tests/test_pipeline_runner.py currently has unrelated failing run_next tests, including a single-test reproduction outside the changed batch path."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only ai_project_ctl/pipeline/batch.py and tests/test_pipeline_runner.py.",
+          "Focused committed-close and local-commit close-phase checks passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1028,
+          "remaining_tokens": 30972,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-130",
+      "task_id": "TASK-270",
+      "task_ref": "PIPEF-165",
+      "submitted_at": "2026-06-29T14:05:19Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-129",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-270",
+        "task_ref": "PIPEF-165",
+        "reported_task_id": "TASK-270",
+        "reported_task_ref": "PIPEF-165",
+        "implementation_summary": "Updated successful committed-close handling to report a completed session without mutating pipeline state/events/generated files after the local commit, and added focused regression assertions for zero post-commit bookkeeping writes.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/batch.py",
+          "tests/test_pipeline_runner.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 515.760846,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 515.760846,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Protected AI_PROJECT files were already dirty before edits and were not manually modified.",
+          "Full tests/test_pipeline_runner.py currently has unrelated failing run_next tests, including a single-test reproduction outside the changed batch path."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only ai_project_ctl/pipeline/batch.py and tests/test_pipeline_runner.py.",
+          "Focused committed-close and local-commit close-phase checks passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1028,
+          "remaining_tokens": 30972,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -9215,6 +9358,7 @@
     "TASK-263": "RPT-122",
     "TASK-264": "RPT-124",
     "TASK-265": "RPT-126",
-    "TASK-266": "RPT-128"
+    "TASK-266": "RPT-128",
+    "TASK-270": "RPT-130"
   }
 }

@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1819`
+Revision: `1824`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4715,7 +4715,7 @@ Acceptance criteria:
 
 ### PIPEF-165 (TASK-270) — Eliminate post-commit pipeline writes
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_a4b07fdce4f4`, legacy `TASK-270`, aliases `TASK-270`, local `PIPEF` / `165`

@@ -35,12 +35,17 @@ from ai_project_ctl.pipeline.machine_review import (
     MachineCheckEvidence,
     MachineReviewResult,
 )
+from ai_project_ctl.pipeline.audit import pipeline_audit_path
 from ai_project_ctl.pipeline.phase import PhaseResult
 from ai_project_ctl.pipeline.report_gate import CODE_WARN as CODEX_REPORT_WARN
 from ai_project_ctl.pipeline.report_gate import ReportGateResult
 from ai_project_ctl.pipeline.runner import run_next
 from ai_project_ctl.pipeline.session import create_session, record_phase_result
-from ai_project_ctl.pipeline.state import pipeline_state_path
+from ai_project_ctl.pipeline.state import (
+    pipeline_events_path,
+    pipeline_state_path,
+    pipeline_status_path,
+)
 from ai_project_ctl.pipeline.verify_phase import (
     GIT_DIFF_GATES_POLICY_KEY,
     REPORT_WARNING_POLICY_KEY,
@@ -765,6 +770,16 @@ def record_close_ready_phase_history(
 
 def load_pipeline(root: Path):
     return json.loads(pipeline_state_path(root).read_text(encoding="utf-8"))
+
+
+def pipeline_bookkeeping_snapshot(root: Path) -> dict[str, str]:
+    paths = {
+        "state": pipeline_state_path(root),
+        "events": pipeline_events_path(root),
+        "status": pipeline_status_path(root),
+        "audit": pipeline_audit_path(root),
+    }
+    return {name: path.read_text(encoding="utf-8") for name, path in paths.items()}
 
 
 class PipelineRunnerTests(unittest.TestCase):
@@ -1546,6 +1561,7 @@ class PipelineRunnerTests(unittest.TestCase):
                 command="pipeline.phase.close",
             )
             self.assertTrue(recorded.ok)
+            before_bookkeeping = pipeline_bookkeeping_snapshot(root)
 
             result = run_until_blocker(
                 session_id,
@@ -1564,7 +1580,12 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertIn("TASK-001", result.data["completed_tasks"])
             self.assertIn("TASK-001", result.data["changed_tasks"])
             self.assertIn(commit_hash, result.data["commits"])
-            self.assertEqual(latest["status"], "completed")
+            self.assertEqual(result.data["side_effects"], [])
+            self.assertEqual(result.changed_files, [])
+            self.assertEqual(result.generated_files, [])
+            self.assertEqual(result.events, [])
+            self.assertEqual(pipeline_bookkeeping_snapshot(root), before_bookkeeping)
+            self.assertEqual(latest["status"], "running")
             self.assertNotIn("MAX_STEPS_REACHED", latest.get("stop_reason", ""))
 
     def test_run_until_blocker_continues_after_committed_close_with_next_task(self):
