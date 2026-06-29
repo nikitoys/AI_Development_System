@@ -3,23 +3,9 @@
 
 # Pipeline Status
 
-Revision: `1097`
-Current session: `PSESS-144`
+Revision: `1099`
+Current session: `none`
 Sessions: `144`
-
-## Current Session
-
-- ID: `PSESS-144`
-- Status: `running`
-- Policy: `supervised_executable_local_commit_1h_auto_change`
-- Current task: `TASK-270`
-- Current phase: `review`
-- Phase status: `skipped`
-- Blocked by: `none`
-- Next action: `Continue only through governed close or commit readiness; Machine Review evidence remains required.`
-- Current step: `execute`
-- Step status: `passed`
-- Stop reason: `none`
 
 ## Sessions
 
@@ -168,7 +154,7 @@ Sessions: `144`
 | `PSESS-141` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-264` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit 41891fcf34905691983ecfa1cf3f66164775ea76 was created. |
 | `PSESS-142` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-265` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit 75eeee12c69eda60e5995e47348e662018770690 was created. |
 | `PSESS-143` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-266` | `close` | `blocked` | CLOSE_WORKFLOW_BLOCKED | Resolve the close workflow blocker, then rerun pipeline close. | `execute` | Close workflow blocked: Review close workflow failed: task.submit_for_review |
-| `PSESS-144` | `running` | `supervised_executable_local_commit_1h_auto_change` | `TASK-270` | `review` | `skipped` | none | Continue only through governed close or commit readiness; Machine Review evidence remains required. | `execute` |  |
+| `PSESS-144` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-270` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit 8a594957c6afb823ea168c4c774cf7ae59c7f0ba was created. |
 
 ## Phase History
 
@@ -950,3 +936,4 @@ Sessions: `144`
 | `PSESS-144` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
 | `PSESS-144` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 2 | 0 | 1 |
 | `PSESS-144` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-144` | 7 | `close` | `passed` | Close completed and local commit was created. | Review the close artifacts and local commit hash, then select the next task. | 0 | 0 | 1 |
