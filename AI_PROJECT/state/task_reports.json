@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 132,
+  "revision": 134,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-29T14:26:32Z",
+  "updated_at": "2026-06-29T14:43:03Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -9388,6 +9388,149 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-133",
+      "task_id": "TASK-272",
+      "task_ref": "PIPEF-167",
+      "submitted_at": "2026-06-29T14:43:03Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:6370e88b90a8a5ed36c1dd712bd30ae56c510b507593a40f8376dc29f9395517",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-272",
+        "task_ref": "PIPEF-167",
+        "reported_task_id": "TASK-272",
+        "reported_task_ref": "PIPEF-167",
+        "implementation_summary": "Added a tracked post-commit dirty-worktree invariant for successful local-commit Web Runs, returning POST_COMMIT_DIRTY_WORKTREE with dirty file diagnostics and preventing next-task continuation while preserving clean completed runs.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 726.516405,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 726.516405,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The broader combined module run failed in existing unrelated tests/test_pipeline_runner.py cases; focused changed-behavior tests and the full Web Control Center module passed."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused post-commit, inter-task handoff, and Web action regression tests passed.",
+          "Protected AI_PROJECT files were already dirty at task start and were not edited manually."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 974,
+          "remaining_tokens": 31026,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-134",
+      "task_id": "TASK-272",
+      "task_ref": "PIPEF-167",
+      "submitted_at": "2026-06-29T14:43:03Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-133",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-272",
+        "task_ref": "PIPEF-167",
+        "reported_task_id": "TASK-272",
+        "reported_task_ref": "PIPEF-167",
+        "implementation_summary": "Added a tracked post-commit dirty-worktree invariant for successful local-commit Web Runs, returning POST_COMMIT_DIRTY_WORKTREE with dirty file diagnostics and preventing next-task continuation while preserving clean completed runs.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/batch.py",
+          "ai_project_ctl/pipeline/git_status.py",
+          "tests/test_pipeline_runner.py",
+          "tests/test_web_control_center.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 726.516405,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 726.516405,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The broader combined module run failed in existing unrelated tests/test_pipeline_runner.py cases; focused changed-behavior tests and the full Web Control Center module passed."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused post-commit, inter-task handoff, and Web action regression tests passed.",
+          "Protected AI_PROJECT files were already dirty at task start and were not edited manually."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 974,
+          "remaining_tokens": 31026,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -9504,6 +9647,7 @@
     "TASK-265": "RPT-126",
     "TASK-266": "RPT-128",
     "TASK-270": "RPT-130",
-    "TASK-271": "RPT-132"
+    "TASK-271": "RPT-132",
+    "TASK-272": "RPT-134"
   }
 }

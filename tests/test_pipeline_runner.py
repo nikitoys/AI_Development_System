@@ -1562,12 +1562,21 @@ class PipelineRunnerTests(unittest.TestCase):
             )
             self.assertTrue(recorded.ok)
             before_bookkeeping = pipeline_bookkeeping_snapshot(root)
+            git_calls = []
+
+            def clean_post_commit_status(argv):
+                args = list(argv)
+                if args == ["git", "status", "--short", "--untracked-files=all"]:
+                    git_calls.append(args)
+                    return completed(stdout="")
+                return completed('{"ok": true}\n')
 
             result = run_until_blocker(
                 session_id,
                 root=root,
                 actor="tester",
                 confirmed=True,
+                runner=clean_post_commit_status,
             )
             latest = load_pipeline(root)["sessions"][0]
 
@@ -1585,8 +1594,127 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(result.generated_files, [])
             self.assertEqual(result.events, [])
             self.assertEqual(pipeline_bookkeeping_snapshot(root), before_bookkeeping)
+            self.assertEqual(
+                git_calls,
+                [["git", "status", "--short", "--untracked-files=all"]],
+            )
             self.assertEqual(latest["status"], "running")
             self.assertNotIn("MAX_STEPS_REACHED", latest.get("stop_reason", ""))
+
+    def test_run_until_blocker_stops_final_committed_close_with_dirty_worktree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            supervised = policy_preset("supervised_local_commit")
+            policy = replace(
+                supervised,
+                name="committed_close_final_dirty_worktree",
+                batch=BatchPolicy(max_steps=1, max_failures=1),
+            )
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=policy,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
+            session_id = session.data["session_id"]
+            commit_hash = "abc1234deadbeef"
+            close_status = {
+                "outcome": "closed_with_local_commit",
+                "task_closed": True,
+                "task_status": "done",
+                "commit_status": "pass",
+                "commit_code": "LOCAL_COMMIT_CREATED",
+                "commit_hash": commit_hash,
+                "commit_readiness_status": "pass",
+                "commit_readiness_code": "COMMIT_READY",
+                "owner_next_action": "Review the completed pipeline session.",
+            }
+            recorded = record_phase_result(
+                session_id,
+                PhaseResult.passed(
+                    "close",
+                    reason="Close completed and local commit was created.",
+                    next_action=close_status["owner_next_action"],
+                    artifacts={
+                        "session_id": session_id,
+                        "task_id": "TASK-001",
+                        "task_ref": "APP-01",
+                        "close_status": close_status,
+                        "local_commit": {
+                            "status": "pass",
+                            "code": "LOCAL_COMMIT_CREATED",
+                            "commit_hash": commit_hash,
+                        },
+                    },
+                ),
+                root=root,
+                actor="tester",
+                task_id="TASK-001",
+                command="pipeline.phase.close",
+            )
+            self.assertTrue(recorded.ok)
+            git_calls = []
+
+            def dirty_post_commit_status(argv):
+                args = list(argv)
+                if args == ["git", "status", "--short", "--untracked-files=all"]:
+                    git_calls.append(args)
+                    return completed(
+                        stdout=(
+                            " M AI_PROJECT/state/pipeline_sessions.json\n"
+                            " M AI_PROJECT/generated/PIPELINE_STATUS.md\n"
+                            "?? scratch.txt\n"
+                        )
+                    )
+                return completed('{"ok": true}\n')
+
+            result = run_until_blocker(
+                session_id,
+                root=root,
+                actor="tester",
+                confirmed=True,
+                runner=dirty_post_commit_status,
+            )
+            latest = load_pipeline(root)["sessions"][0]
+
+            self.assertTrue(result.ok)
+            self.assertEqual(result.data["session_status"], "stopped")
+            self.assertEqual(result.data["stop_code"], "POST_COMMIT_DIRTY_WORKTREE")
+            self.assertEqual(result.data["blocked_by"], "POST_COMMIT_DIRTY_WORKTREE")
+            self.assertEqual(result.data["completed_task_id"], "TASK-001")
+            self.assertEqual(
+                result.data["dirty_paths"],
+                [
+                    "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                    "AI_PROJECT/state/pipeline_sessions.json",
+                ],
+            )
+            self.assertEqual(result.data["dirty_files"], result.data["dirty_paths"])
+            self.assertEqual(
+                result.data["post_commit_worktree"]["git_status"][
+                    "tracked_dirty_paths"
+                ],
+                result.data["dirty_paths"],
+            )
+            self.assertIn(
+                "scratch.txt",
+                result.data["post_commit_worktree"]["git_status"]["dirty_paths"],
+            )
+            self.assertNotIn("scratch.txt", result.data["dirty_paths"])
+            self.assertEqual(latest["status"], "stopped")
+            self.assertIn("POST_COMMIT_DIRTY_WORKTREE", latest["stop_reason"])
+            self.assertIn("TASK-001", result.data["completed_tasks"])
+            self.assertIn("TASK-001", result.data["changed_tasks"])
+            self.assertEqual(result.data["commit_status"], "blocked")
+            self.assertEqual(result.data["commit_code"], "POST_COMMIT_DIRTY_WORKTREE")
+            self.assertEqual(result.data["close_status"]["commit_status"], "pass")
+            self.assertEqual(result.data["commit_hash"], commit_hash)
+            self.assertIn(commit_hash, result.data["commits"])
+            self.assertEqual(
+                git_calls,
+                [["git", "status", "--short", "--untracked-files=all"]],
+            )
 
     def test_run_until_blocker_continues_after_committed_close_with_next_task(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1759,18 +1887,27 @@ class PipelineRunnerTests(unittest.TestCase):
 
             self.assertTrue(result.ok)
             self.assertEqual(result.data["session_status"], "stopped")
-            self.assertEqual(result.data["stop_code"], "POST_TASK_DIRTY_WORKTREE")
+            self.assertEqual(result.data["stop_code"], "POST_COMMIT_DIRTY_WORKTREE")
+            self.assertEqual(result.data["blocked_by"], "POST_COMMIT_DIRTY_WORKTREE")
             self.assertEqual(result.data["completed_task_id"], "TASK-001")
-            self.assertEqual(result.data["dirty_paths"], ["README.md", "scratch.txt"])
+            self.assertEqual(result.data["dirty_paths"], ["README.md"])
+            self.assertEqual(result.data["dirty_files"], ["README.md"])
             self.assertEqual(
-                result.data["post_task_handoff"]["dirty_paths"],
-                ["README.md", "scratch.txt"],
+                result.data["post_commit_worktree"]["dirty_paths"],
+                ["README.md"],
+            )
+            self.assertIn(
+                "scratch.txt",
+                result.data["post_commit_worktree"]["git_status"]["dirty_paths"],
             )
             self.assertEqual(result.data["blockers"][0]["completed_task_id"], "TASK-001")
             self.assertEqual(latest["status"], "stopped")
             self.assertEqual(latest["phase_history"][-1]["phase"], "close")
             self.assertIn("TASK-001", result.data["completed_tasks"])
             self.assertIn("TASK-001", result.data["changed_tasks"])
+            self.assertEqual(result.data["commit_status"], "blocked")
+            self.assertEqual(result.data["commit_code"], "POST_COMMIT_DIRTY_WORKTREE")
+            self.assertEqual(result.data["close_status"]["commit_status"], "pass")
             self.assertNotIn("TASK-002", result.data["completed_tasks"])
             self.assertNotIn("TASK-002", result.data["changed_tasks"])
             self.assertEqual(

@@ -40,10 +40,17 @@ class GitStatusSnapshot:
     def dirty_paths(self) -> tuple[str, ...]:
         return _sorted_unique(entry.path for entry in self.entries)
 
+    @property
+    def tracked_dirty_paths(self) -> tuple[str, ...]:
+        return _sorted_unique(
+            entry.path for entry in self.entries if entry.status != "??"
+        )
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "entries": [entry.to_dict() for entry in self.entries],
             "dirty_paths": list(self.dirty_paths),
+            "tracked_dirty_paths": list(self.tracked_dirty_paths),
         }
 
 

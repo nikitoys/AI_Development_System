@@ -5466,6 +5466,110 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn("--max-tasks", payload["delegate"])
         self.assertIn("2", payload["delegate"])
 
+    def test_ui_run_task_batch_web_action_surfaces_post_commit_dirty_worktree(self):
+        selected_policy = policy_preset("supervised_executable_local_commit")
+        session_result = CommandResult.success(
+            command="pipeline.session.create",
+            domain="pipeline",
+            message="Created pipeline session.",
+            data={"session_id": "PSESS-021", "session": {"id": "PSESS-021"}},
+        )
+        run_result = CommandResult.success(
+            command="pipeline.run_until_blocker",
+            domain="pipeline",
+            message=(
+                "POST_COMMIT_DIRTY_WORKTREE: Committed task TASK-001 left tracked "
+                "files dirty after local commit."
+            ),
+            data={
+                "session_id": "PSESS-021",
+                "stop_code": "POST_COMMIT_DIRTY_WORKTREE",
+                "blocked_by": "POST_COMMIT_DIRTY_WORKTREE",
+                "session_status": "stopped",
+                "completed_task_id": "TASK-001",
+                "commit_hash": "abc1234deadbeef",
+                "commit_status": "blocked",
+                "commit_code": "POST_COMMIT_DIRTY_WORKTREE",
+                "dirty_paths": [
+                    "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                    "AI_PROJECT/state/pipeline_sessions.json",
+                ],
+                "dirty_files": [
+                    "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                    "AI_PROJECT/state/pipeline_sessions.json",
+                ],
+                "post_commit_worktree": {
+                    "dirty_paths": [
+                        "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                        "AI_PROJECT/state/pipeline_sessions.json",
+                    ]
+                },
+            },
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "legacy_id": "TASK-001",
+                        "aliases": ["TASK-001"],
+                        "status": "ready",
+                        "title": "Ready task",
+                        "epic_id": "EPIC-001",
+                    }
+                ],
+                epics=[{"id": "EPIC-001", "status": "active"}],
+            )
+
+            with patch(
+                "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
+                return_value=selected_policy,
+            ), patch(
+                "ai_project_ctl.web.actions.capture_worktree_dirty_preflight",
+                return_value=WorktreeDirtyPreflight(checked=True, available=True),
+            ), patch(
+                "ai_project_ctl.web.actions.create_session",
+                return_value=session_result,
+            ), patch(
+                "ai_project_ctl.web.actions.run_until_blocker",
+                return_value=run_result,
+            ):
+                result = WebActionExecutor(root, actor="tester").execute(
+                    {
+                        "action": "ui.run_task_batch",
+                        "confirm": "yes",
+                        "task_ref": "APP-01",
+                        "status_filter": "ready",
+                        "max_tasks": "1",
+                        "order_by": "selected",
+                    }
+                )
+
+        payload = result.to_dict()
+        data = payload["result"]["data"]
+        self.assertTrue(result.ok)
+        self.assertEqual(data["stop_code"], "POST_COMMIT_DIRTY_WORKTREE")
+        self.assertEqual(data["blocked_by"], "POST_COMMIT_DIRTY_WORKTREE")
+        self.assertEqual(
+            data["dirty_files"],
+            [
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/state/pipeline_sessions.json",
+            ],
+        )
+
+        body = render_action_result(result)
+        self.assertIn("POST_COMMIT_DIRTY_WORKTREE", body)
+        self.assertIn('<span class="badge warn">COMMIT BLOCKED</span>', body)
+        self.assertNotIn('<span class="badge pass">PASS</span>', body)
+        self.assertIn("Dirty Files", body)
+        self.assertIn("AI_PROJECT/generated/PIPELINE_STATUS.md", body)
+        self.assertIn("AI_PROJECT/state/pipeline_sessions.json", body)
+
     def test_ui_run_task_batch_web_action_stops_for_dirty_worktree(self):
         dirty_preflight = WorktreeDirtyPreflight(
             checked=True,

@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1829`
+Revision: `1834`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4751,7 +4751,7 @@ Acceptance criteria:
 
 ### PIPEF-167 (TASK-272) — Verify clean worktree after Web Run
 
-Status: `planned`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_0ae5f7fd850a`, legacy `TASK-272`, aliases `TASK-272`, local `PIPEF` / `167`

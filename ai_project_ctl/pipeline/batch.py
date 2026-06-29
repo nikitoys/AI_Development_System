@@ -14,7 +14,7 @@ from typing import Any, Mapping, Sequence
 from ai_project_ctl.core.result import CommandMessage, CommandResult
 from ai_project_ctl.core.workflows import Runner
 
-from .git_status import GitStatusError, capture_git_status_snapshot
+from .git_status import GitStatusError, GitStatusSnapshot, capture_git_status_snapshot
 from .policy import PipelinePolicy
 from .queue import QueuePlannerRequest, QueuePreview, QueuePreviewItem, preview_queue
 from .runner import run_next
@@ -27,6 +27,8 @@ CONTINUE_PHASE_STATUSES = {"passed", "skipped"}
 STOP_PHASE_STATUSES = {"blocked", "failed"}
 POST_TASK_DIRTY_WORKTREE = "POST_TASK_DIRTY_WORKTREE"
 POST_TASK_WORKTREE_STATUS_UNAVAILABLE = "POST_TASK_WORKTREE_STATUS_UNAVAILABLE"
+POST_COMMIT_DIRTY_WORKTREE = "POST_COMMIT_DIRTY_WORKTREE"
+POST_COMMIT_WORKTREE_STATUS_UNAVAILABLE = "POST_COMMIT_WORKTREE_STATUS_UNAVAILABLE"
 
 
 def run_until_blocker(
@@ -109,6 +111,26 @@ def run_until_blocker(
                 policy,
                 root_path,
             ):
+                final_blocker = _post_commit_worktree_final_blocker(
+                    root=root_path,
+                    runner=runner,
+                    completed_task_id=str(
+                        committed_close.get("task_id")
+                        or session.get("current_task_id")
+                        or ""
+                    ),
+                    commit_hash=str(committed_close.get("commit_hash") or ""),
+                )
+                if final_blocker:
+                    return _post_commit_worktree_stop(
+                        selected_session_id,
+                        summary,
+                        effects,
+                        final_blocker,
+                        root=root_path,
+                        actor=actor,
+                        session=session,
+                    )
                 completed_session = _committed_close_completion_view(
                     session,
                     committed_close,
@@ -137,7 +159,7 @@ def run_until_blocker(
                     commit_hash=str(committed_close.get("commit_hash") or ""),
                 )
                 if handoff_blocker:
-                    return _post_task_worktree_stop(
+                    return _post_worktree_stop(
                         selected_session_id,
                         summary,
                         effects,
@@ -288,7 +310,7 @@ def run_until_blocker(
                     ),
                 )
                 if handoff_blocker:
-                    return _post_task_worktree_stop(
+                    return _post_worktree_stop(
                         selected_session_id,
                         summary,
                         effects,
@@ -776,6 +798,14 @@ def _post_task_worktree_handoff_blocker(
             "error": str(exc),
         }
 
+    post_commit_blocker = _post_commit_dirty_worktree_blocker(
+        snapshot=snapshot,
+        completed_task_id=completed_task_id,
+        commit_hash=commit_hash,
+    )
+    if post_commit_blocker:
+        return post_commit_blocker
+
     dirty_paths = list(snapshot.dirty_paths)
     if not dirty_paths:
         return {}
@@ -791,6 +821,139 @@ def _post_task_worktree_handoff_blocker(
         "dirty_paths": dirty_paths,
         "git_status": snapshot.to_dict(),
     }
+
+
+def _post_commit_dirty_worktree_blocker(
+    *,
+    snapshot: GitStatusSnapshot,
+    completed_task_id: str,
+    commit_hash: str,
+) -> dict[str, Any]:
+    dirty_paths = list(snapshot.tracked_dirty_paths)
+    if not dirty_paths:
+        return {}
+
+    return {
+        "code": POST_COMMIT_DIRTY_WORKTREE,
+        "reason": (
+            "Committed task {} left tracked files dirty after local commit."
+        ).format(completed_task_id or "unknown"),
+        "task_id": completed_task_id,
+        "completed_task_id": completed_task_id,
+        "commit_hash": commit_hash,
+        "dirty_paths": dirty_paths,
+        "dirty_files": dirty_paths,
+        "git_status": snapshot.to_dict(),
+    }
+
+
+def _post_commit_worktree_final_blocker(
+    *,
+    root: Path,
+    runner: Runner | None,
+    completed_task_id: str,
+    commit_hash: str,
+) -> dict[str, Any]:
+    try:
+        snapshot = capture_git_status_snapshot(root=root, runner=runner)
+    except GitStatusError as exc:
+        return {
+            "code": POST_COMMIT_WORKTREE_STATUS_UNAVAILABLE,
+            "reason": (
+                "Post-commit git status could not be captured after committed "
+                "task {}.".format(completed_task_id or "unknown")
+            ),
+            "task_id": completed_task_id,
+            "completed_task_id": completed_task_id,
+            "commit_hash": commit_hash,
+            "dirty_paths": [],
+            "dirty_files": [],
+            "error": str(exc),
+        }
+
+    return _post_commit_dirty_worktree_blocker(
+        snapshot=snapshot,
+        completed_task_id=completed_task_id,
+        commit_hash=commit_hash,
+    )
+
+
+def _post_worktree_stop(
+    session_id: str,
+    summary: dict[str, Any],
+    effects: list[CommandResult],
+    blocker: Mapping[str, Any],
+    *,
+    root: Path,
+    actor: str,
+    session: Mapping[str, Any],
+) -> CommandResult:
+    code = str(blocker.get("code") or "")
+    if code in {POST_COMMIT_DIRTY_WORKTREE, POST_COMMIT_WORKTREE_STATUS_UNAVAILABLE}:
+        return _post_commit_worktree_stop(
+            session_id,
+            summary,
+            effects,
+            blocker,
+            root=root,
+            actor=actor,
+            session=session,
+        )
+    return _post_task_worktree_stop(
+        session_id,
+        summary,
+        effects,
+        blocker,
+        root=root,
+        actor=actor,
+        session=session,
+    )
+
+
+def _post_commit_worktree_stop(
+    session_id: str,
+    summary: dict[str, Any],
+    effects: list[CommandResult],
+    blocker: Mapping[str, Any],
+    *,
+    root: Path,
+    actor: str,
+    session: Mapping[str, Any],
+) -> CommandResult:
+    summary["blockers"].append(dict(blocker))
+    summary["blocked_by"] = str(blocker.get("code") or POST_COMMIT_DIRTY_WORKTREE)
+    summary["completed_task_id"] = blocker.get("completed_task_id") or ""
+    summary["dirty_paths"] = list(blocker.get("dirty_paths") or [])
+    summary["dirty_files"] = list(blocker.get("dirty_files") or [])
+    summary["post_commit_worktree"] = dict(blocker)
+    code = str(blocker.get("code") or POST_COMMIT_DIRTY_WORKTREE)
+    reason = str(blocker.get("reason") or "Post-commit worktree invariant failed.")
+    summary["commit_status"] = "blocked"
+    summary["commit_code"] = code
+    summary["post_commit_status"] = "blocked"
+    summary["post_commit_code"] = code
+    stopped = stop_session(
+        session_id,
+        "{}: {}".format(code, reason),
+        root=root,
+        actor=actor,
+        status="stopped",
+    )
+    effects.append(stopped)
+    _merge_effects_into_summary(summary, stopped)
+    stopped_session = _find_session(root, session_id) or dict(session)
+    return _success(
+        session_id,
+        code,
+        reason,
+        summary,
+        effects,
+        session=stopped_session,
+        owner_action_required=(
+            "Inspect and commit or clean the post-commit dirty tracked files before "
+            "treating the Web Run as complete."
+        ),
+    )
 
 
 def _post_task_worktree_stop(
