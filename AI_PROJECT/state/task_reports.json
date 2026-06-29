@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 126,
+  "revision": 128,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-29T13:33:05Z",
+  "updated_at": "2026-06-29T13:44:18Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -8960,6 +8960,147 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-127",
+      "task_id": "TASK-266",
+      "task_ref": "PIPEF-161",
+      "submitted_at": "2026-06-29T13:44:18Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:e19aff91578fd6e6f234c1c8fd33468406f57a2ba2858fe89d8c8b6f7699a3ea",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-266",
+        "task_ref": "PIPEF-161",
+        "reported_task_id": "TASK-266",
+        "reported_task_ref": "PIPEF-161",
+        "implementation_summary": "Added Web batch dirty-worktree preflight before batch session creation/execution and covered clean and dirty batch-start behavior with focused tests.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 472.989771,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 472.989771,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree had pre-existing protected AI_PROJECT state/event/generated changes before this task; they were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only ai_project_ctl/web/actions.py and tests/test_web_control_center.py.",
+          "Dirty batch results include dirty file paths, git status entries, owner checkpoint-or-clean guidance, and ui.checkpoint_commit support."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 956,
+          "remaining_tokens": 31044,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-128",
+      "task_id": "TASK-266",
+      "task_ref": "PIPEF-161",
+      "submitted_at": "2026-06-29T13:44:18Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-127",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-266",
+        "task_ref": "PIPEF-161",
+        "reported_task_id": "TASK-266",
+        "reported_task_ref": "PIPEF-161",
+        "implementation_summary": "Added Web batch dirty-worktree preflight before batch session creation/execution and covered clean and dirty batch-start behavior with focused tests.",
+        "changed_files": [
+          "ai_project_ctl/web/actions.py",
+          "tests/test_web_control_center.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 472.989771,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 472.989771,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree had pre-existing protected AI_PROJECT state/event/generated changes before this task; they were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only ai_project_ctl/web/actions.py and tests/test_web_control_center.py.",
+          "Dirty batch results include dirty file paths, git status entries, owner checkpoint-or-clean guidance, and ui.checkpoint_commit support."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 956,
+          "remaining_tokens": 31044,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -9073,6 +9214,7 @@
     "TASK-262": "RPT-120",
     "TASK-263": "RPT-122",
     "TASK-264": "RPT-124",
-    "TASK-265": "RPT-126"
+    "TASK-265": "RPT-126",
+    "TASK-266": "RPT-128"
   }
 }

@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1810`
+Revision: `1816`
 
 ## Executable Now
 
@@ -17,7 +17,10 @@ Revision: `1810`
 - `PIPEF-126 (TASK-207)` [planned] `EPIC-009` priority `1` — Show effective policy summary
 - `PIPEF-127 (TASK-208)` [planned] `EPIC-009` priority `1` — Add Web run batch overrides
 - `PIPEF-128 (TASK-209)` [planned] `EPIC-009` priority `1` — Warn on incomplete Web run policy
-- `PIPEF-161 (TASK-266)` [planned] `EPIC-009` priority `1` — Block dirty Web batch starts
+- `PIPEF-165 (TASK-270)` [planned] `EPIC-009` priority `1` — Eliminate post-commit pipeline writes
+- `PIPEF-166 (TASK-271)` [planned] `EPIC-009` priority `1` — Commit final pipeline close artifacts
+- `PIPEF-167 (TASK-272)` [planned] `EPIC-009` priority `1` — Verify clean worktree after Web Run
+- `PIPEF-168 (TASK-273)` [planned] `EPIC-009` priority `1` — Add no-checkpoint Web Run regression
 - `PIPEF-162 (TASK-267)` [planned] `EPIC-009` priority `2` — Auto-size Web batch max steps
 - `PIPEF-163 (TASK-268)` [planned] `EPIC-009` priority `2` — Add Web batch run form
 - `PIPEF-164 (TASK-269)` [planned] `EPIC-009` priority `2` — Render batch run summary
@@ -536,5 +539,7 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-160 (TASK-265)` [done] `EPIC-009` priority `1` — Add Web batch run action
   - `status_not_executable`: status is done
+- `PIPEF-161 (TASK-266)` [in_progress] `EPIC-009` priority `1` — Block dirty Web batch starts
+  - `status_not_executable`: status is in_progress
 - `PIPEF-155 (TASK-260)` [done] `EPIC-009` priority `2` — Link dirty preflight to checkpoint UX
   - `status_not_executable`: status is done

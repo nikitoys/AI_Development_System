@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1810,
-  "current_task_id": null,
+  "revision": 1816,
+  "current_task_id": "TASK-266",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-29T13:33:26Z",
+  "updated_at": "2026-06-29T13:42:10Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -17173,7 +17173,7 @@
       "id": "TASK-266",
       "epic_id": "EPIC-009",
       "title": "Block dirty Web batch starts",
-      "status": "planned",
+      "status": "in_progress",
       "summary": "Apply dirty worktree preflight to Web batch runs before any multi-task pipeline session is created or executed.",
       "description": "A batch run must not start from a dirty worktree caused by task import or other owner-side changes.",
       "priority": 1,
@@ -17220,7 +17220,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-29T12:45:28Z",
-      "updated_at": "2026-06-29T12:45:28Z",
+      "updated_at": "2026-06-29T13:36:16Z",
       "uid": "tsk_2377b93b98bc",
       "ref": "PIPEF-161",
       "legacy_id": "TASK-266",
@@ -17413,6 +17413,251 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 164
+    },
+    {
+      "id": "TASK-270",
+      "epic_id": "EPIC-009",
+      "title": "Eliminate post-commit pipeline writes",
+      "status": "planned",
+      "summary": "Prevent successful Web Run completion from writing tracked pipeline state or generated files after the local task commit has already been created.",
+      "description": "A successful close must not leave pipeline bookkeeping files dirty after local commit; completion bookkeeping must be committed or made non-mutating after commit.",
+      "priority": 1,
+      "order": 165,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Inspect the committed-close path in the batch runner and identify tracked writes that happen after local_commit.commit_hash is created.",
+        "Change successful committed-close handling so it does not mutate tracked AI_PROJECT pipeline files after the task local commit.",
+        "Preserve existing single-task Web Run completion semantics and owner-facing session completion result.",
+        "Add focused tests proving the committed-close success path does not perform post-commit tracked writes."
+      ],
+      "out_of_scope": [
+        "Do not remove local task commit creation.",
+        "Do not weaken dirty worktree preflight.",
+        "Do not implement multi-task batch UI in this task.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/batch.py",
+        "ai_project_ctl/pipeline/session.py",
+        "tests/test_pipeline_runner.py",
+        "tests/test_pipeline_phase_review_close.py"
+      ],
+      "acceptance_criteria": [
+        "After a successful committed close, the batch runner does not write AI_PROJECT/state/pipeline_sessions.json after local commit creation.",
+        "After a successful committed close, the batch runner does not render PIPELINE_STATUS.md or PIPELINE_AUDIT.md after local commit creation.",
+        "Single-task Web Run still reports a completed session when local_commit.commit_hash exists.",
+        "The result still includes the local commit hash and completed task information.",
+        "Existing blocked, failed, and max_steps behavior remains unchanged.",
+        "Focused tests cover the no-post-commit-tracked-writes behavior."
+      ],
+      "review_instructions": [
+        "Verify that this fixes the source of dirty pipeline bookkeeping after a successful task commit instead of bypassing dirty preflight."
+      ],
+      "notes": [
+        "Run this before any Web multi-task batch work; current dirty checkpoint prompts are caused by tracked pipeline bookkeeping left after a successful run."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-29T13:42:07Z",
+      "updated_at": "2026-06-29T13:42:07Z",
+      "uid": "tsk_a4b07fdce4f4",
+      "ref": "PIPEF-165",
+      "legacy_id": "TASK-270",
+      "aliases": [
+        "TASK-270"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 165
+    },
+    {
+      "id": "TASK-271",
+      "epic_id": "EPIC-009",
+      "title": "Commit final pipeline close artifacts",
+      "status": "planned",
+      "summary": "Ensure final close-phase pipeline state, events, and generated status artifacts are written before local commit readiness is evaluated.",
+      "description": "Files such as pipeline_sessions.json, pipeline-events.jsonl, PIPELINE_STATUS.md, and PIPELINE_AUDIT.md must be part of the task commit when they are produced by the closing session.",
+      "priority": 1,
+      "order": 166,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Move or trigger final pipeline status and audit rendering before local commit readiness in the successful close path.",
+        "Ensure close-phase side effects include session-owned pipeline state, pipeline events, and generated pipeline status files.",
+        "Approve only current-session pipeline bookkeeping files for local commit readiness.",
+        "Keep pre-existing unrelated dirty files blocked by commit readiness."
+      ],
+      "out_of_scope": [
+        "Do not approve arbitrary dirty files.",
+        "Do not change report gate semantics.",
+        "Do not change checkpoint commit behavior.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/close_phase.py",
+        "ai_project_ctl/pipeline/git_commit.py",
+        "ai_project_ctl/pipeline/session.py",
+        "tests/test_pipeline_git_commit.py",
+        "tests/test_pipeline_phase_review_close.py"
+      ],
+      "acceptance_criteria": [
+        "Session-owned AI_PROJECT/state/pipeline_sessions.json changes created during close are eligible for the local task commit.",
+        "Session-owned AI_PROJECT/events/pipeline-events.jsonl changes created during close are eligible for the local task commit.",
+        "Session-owned AI_PROJECT/generated/PIPELINE_STATUS.md and AI_PROJECT/generated/PIPELINE_AUDIT.md changes created during close are eligible for the local task commit.",
+        "Pre-existing dirty pipeline files from before the session still block unless explicitly owned by the current session.",
+        "The local commit stages only approved task files and current-session governed bookkeeping files.",
+        "Focused tests cover approved final pipeline artifacts and unrelated dirty blockers."
+      ],
+      "review_instructions": [
+        "Verify that commit readiness stays safe and does not become git add -A for arbitrary files."
+      ],
+      "notes": [
+        "This task should make the local task commit contain the final pipeline bookkeeping instead of requiring a follow-up checkpoint commit."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-29T13:42:08Z",
+      "updated_at": "2026-06-29T13:42:08Z",
+      "uid": "tsk_148a36350b27",
+      "ref": "PIPEF-166",
+      "legacy_id": "TASK-271",
+      "aliases": [
+        "TASK-271"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 166
+    },
+    {
+      "id": "TASK-272",
+      "epic_id": "EPIC-009",
+      "title": "Verify clean worktree after Web Run",
+      "status": "planned",
+      "summary": "Add a post-success clean-worktree invariant so successful Web Run results fail loudly if tracked files remain dirty after local commit.",
+      "description": "The pipeline should expose a stable diagnostic when a successful task commit still leaves dirty tracked files.",
+      "priority": 1,
+      "order": 167,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Capture git status after a successful local task commit and final session completion.",
+        "Return a stable POST_COMMIT_DIRTY_WORKTREE diagnostic if dirty files remain after a supposedly successful Web Run.",
+        "Include dirty file paths in the diagnostic for owner and test visibility.",
+        "Keep genuinely successful clean runs classified as completed."
+      ],
+      "out_of_scope": [
+        "Do not auto-create a checkpoint commit in this task.",
+        "Do not disable dirty worktree preflight.",
+        "Do not change Codex execution or report parsing.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/batch.py",
+        "ai_project_ctl/pipeline/git_status.py",
+        "ai_project_ctl/web/actions.py",
+        "tests/test_pipeline_runner.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "A successful Web Run with clean post-commit git status remains completed.",
+        "A successful close that leaves dirty tracked files returns POST_COMMIT_DIRTY_WORKTREE instead of silently appearing clean.",
+        "The diagnostic includes dirty paths such as pipeline_sessions.json or PIPELINE_STATUS.md when present.",
+        "The next task is not started when the post-commit clean invariant fails.",
+        "Dirty preflight behavior before a run remains unchanged.",
+        "Tests cover clean and dirty post-commit outcomes."
+      ],
+      "review_instructions": [
+        "Verify that this invariant protects future multi-task runs from starting the next task on hidden dirty state."
+      ],
+      "notes": [
+        "This task is a guardrail; it should not be used as a replacement for committing final pipeline artifacts correctly."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-29T13:42:09Z",
+      "updated_at": "2026-06-29T13:42:09Z",
+      "uid": "tsk_0ae5f7fd850a",
+      "ref": "PIPEF-167",
+      "legacy_id": "TASK-272",
+      "aliases": [
+        "TASK-272"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 167
+    },
+    {
+      "id": "TASK-273",
+      "epic_id": "EPIC-009",
+      "title": "Add no-checkpoint Web Run regression",
+      "status": "planned",
+      "summary": "Add an end-to-end regression proving that a successful Web Run leaves a clean worktree and the next Web Run does not request a checkpoint commit.",
+      "description": "The owner workflow should be able to run one task, receive a task commit, and start the next task without checkpointing pipeline bookkeeping files.",
+      "priority": 1,
+      "order": 168,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create or extend a Web Run local-commit regression test with two sequential planned smoke tasks.",
+        "Assert the first Web Run creates a local commit and leaves git status clean.",
+        "Assert the second Web Run is not blocked by dirty pipeline bookkeeping from the first run.",
+        "Assert no checkpoint prompt is shown when the user made no changes between runs."
+      ],
+      "out_of_scope": [
+        "Do not implement multi-task batch UI in this task.",
+        "Do not change checkpoint commit action behavior.",
+        "Do not use network or real external Codex execution in tests.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "tests/test_web_run_local_commit_e2e.py",
+        "tests/test_web_control_center.py",
+        "tests/test_pipeline_runner.py"
+      ],
+      "acceptance_criteria": [
+        "The regression test creates a successful first Web Run with a local commit hash.",
+        "The regression test verifies git status is clean immediately after the first successful Web Run.",
+        "The regression test attempts a second Web Run without manual checkpointing.",
+        "The second Web Run does not return WORKTREE_DIRTY for pipeline bookkeeping files.",
+        "The test fails if pipeline-events.jsonl, pipeline_sessions.json, PIPELINE_STATUS.md, or PIPELINE_AUDIT.md remain dirty after the first run.",
+        "The test uses existing fake or stubbed execution paths and does not require real Codex network execution."
+      ],
+      "review_instructions": [
+        "Verify that the regression matches the owner workflow: run task, then run the next task without checkpoint commit."
+      ],
+      "notes": [
+        "This test should prove the fix that prevents checkpoint prompts after every successful task."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-29T13:42:10Z",
+      "updated_at": "2026-06-29T13:42:10Z",
+      "uid": "tsk_efef4d0e0938",
+      "ref": "PIPEF-168",
+      "legacy_id": "TASK-273",
+      "aliases": [
+        "TASK-273"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 168
     }
   ]
 }

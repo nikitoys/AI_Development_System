@@ -5379,31 +5379,36 @@ class WebControlCenterTests(unittest.TestCase):
                 return_value=selected_policy,
             ) as resolve_policy:
                 with patch(
-                    "ai_project_ctl.web.actions.create_session",
-                    return_value=session_result,
-                ) as create:
+                    "ai_project_ctl.web.actions.capture_worktree_dirty_preflight",
+                    return_value=WorktreeDirtyPreflight(checked=True, available=True),
+                ) as preflight:
                     with patch(
-                        "ai_project_ctl.web.actions.run_until_blocker",
-                        return_value=run_result,
-                    ) as run_until:
-                        with patch("ai_project_ctl.web.actions.subprocess.run") as run:
-                            result = WebActionExecutor(
-                                root,
-                                actor="tester",
-                            ).execute(
-                                {
-                                    "action": "ui.run_task_batch",
-                                    "confirm": "yes",
-                                    "task_ref": "APP-02\nAPP-01",
-                                    "epic": "EPIC-001",
-                                    "status_filter": "ready,in_progress",
-                                    "max_tasks": "2",
-                                    "order_by": "selected",
-                                    "auto_close_note": note,
-                                }
-                            )
+                        "ai_project_ctl.web.actions.create_session",
+                        return_value=session_result,
+                    ) as create:
+                        with patch(
+                            "ai_project_ctl.web.actions.run_until_blocker",
+                            return_value=run_result,
+                        ) as run_until:
+                            with patch("ai_project_ctl.web.actions.subprocess.run") as run:
+                                result = WebActionExecutor(
+                                    root,
+                                    actor="tester",
+                                ).execute(
+                                    {
+                                        "action": "ui.run_task_batch",
+                                        "confirm": "yes",
+                                        "task_ref": "APP-02\nAPP-01",
+                                        "epic": "EPIC-001",
+                                        "status_filter": "ready,in_progress",
+                                        "max_tasks": "2",
+                                        "order_by": "selected",
+                                        "auto_close_note": note,
+                                    }
+                                )
 
         resolve_policy.assert_called_once_with(root=resolved_root)
+        preflight.assert_called_once_with(root=resolved_root)
         create.assert_called_once()
         create_kwargs = create.call_args.kwargs
         self.assertEqual(create_kwargs["actor"], "tester")
@@ -5460,6 +5465,143 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(data["created_session"]["id"], "PSESS-020")
         self.assertIn("--max-tasks", payload["delegate"])
         self.assertIn("2", payload["delegate"])
+
+    def test_ui_run_task_batch_web_action_stops_for_dirty_worktree(self):
+        dirty_preflight = WorktreeDirtyPreflight(
+            checked=True,
+            available=True,
+            entries=(
+                GitStatusEntry("M", "AI_PROJECT/state/tasks.json"),
+                GitStatusEntry("??", "tmp/import.json"),
+            ),
+            dirty_paths=(
+                "AI_PROJECT/state/tasks.json",
+                "tmp/import.json",
+            ),
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "legacy_id": "TASK-001",
+                        "aliases": ["TASK-001"],
+                        "status": "ready",
+                        "title": "Ready task",
+                        "epic_id": "EPIC-001",
+                    },
+                    {
+                        "id": "TASK-002",
+                        "ref": "APP-02",
+                        "legacy_id": "TASK-002",
+                        "aliases": ["TASK-002"],
+                        "status": "ready",
+                        "title": "Second ready task",
+                        "epic_id": "EPIC-001",
+                    },
+                ],
+                epics=[{"id": "EPIC-001", "status": "active"}],
+            )
+
+            with patch(
+                "ai_project_ctl.web.actions.capture_worktree_dirty_preflight",
+                return_value=dirty_preflight,
+            ) as preflight:
+                with patch(
+                    "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
+                ) as resolve_policy:
+                    with patch("ai_project_ctl.web.actions.create_session") as create:
+                        with patch(
+                            "ai_project_ctl.web.actions.run_until_blocker",
+                        ) as run_until:
+                            result = WebActionExecutor(root, actor="tester").execute(
+                                {
+                                    "action": "ui.run_task_batch",
+                                    "confirm": "yes",
+                                    "task_ref": "APP-01\nAPP-02",
+                                    "epic": "EPIC-001",
+                                    "status_filter": "ready",
+                                    "max_tasks": "2",
+                                    "order_by": "selected",
+                                }
+                            )
+
+            pipeline_path = root / "AI_PROJECT" / "state" / "pipeline_sessions.json"
+            tasks_state = json.loads(
+                (root / "AI_PROJECT" / "state" / "tasks.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+
+        preflight.assert_called_once_with(root=root.resolve())
+        resolve_policy.assert_not_called()
+        create.assert_not_called()
+        run_until.assert_not_called()
+        self.assertFalse(pipeline_path.exists())
+        self.assertEqual(
+            [task["status"] for task in tasks_state["tasks"]],
+            ["ready", "ready"],
+        )
+
+        payload = result.to_dict()
+        data = payload["result"]["data"]
+        self.assertTrue(result.ok)
+        self.assertEqual(payload["command"], "ui.run_task_batch")
+        self.assertTrue(data["not_run"])
+        self.assertTrue(data["batch_run"])
+        self.assertEqual(data["outcome"], "worktree_dirty")
+        self.assertEqual(data["reason"], "worktree_dirty")
+        self.assertEqual(data["stop_code"], "WORKTREE_DIRTY")
+        self.assertEqual(
+            data["dirty_files"],
+            ["AI_PROJECT/state/tasks.json", "tmp/import.json"],
+        )
+        self.assertEqual(
+            data["git_status_entries"],
+            [
+                {"status": "M", "path": "AI_PROJECT/state/tasks.json"},
+                {"status": "??", "path": "tmp/import.json"},
+            ],
+        )
+        self.assertEqual(
+            data["requested_queue_inputs"],
+            {
+                "task_ref": ["APP-01", "APP-02"],
+                "epic": ["EPIC-001"],
+                "status_filter": ["ready"],
+                "max_tasks": "2",
+                "order_by": "selected",
+                "auto_close_note": "",
+            },
+        )
+        self.assertEqual(data["checkpoint_action"], "ui.checkpoint_commit")
+        self.assertIn("git status --short", data["suggested_checkpoint_commands"][0])
+        self.assertIn(
+            "checkpoint commit or clean the worktree",
+            payload["result"]["owner_action_required"],
+        )
+        self.assertIn(
+            "Create checkpoint commit before task batch.",
+            payload["result"]["next_actions"],
+        )
+        self.assertIn(
+            "After checkpoint commit succeeds, run task batch again.",
+            payload["result"]["next_actions"],
+        )
+        self.assertIn("worktree is dirty", payload["result"]["message"])
+
+        body = render_action_result(result)
+        self.assertIn('<span class="badge warn">NOT RUN</span>', body)
+        self.assertIn("Dirty Files", body)
+        self.assertIn("AI_PROJECT/state/tasks.json", body)
+        self.assertIn("Suggested Checkpoint Commands", body)
+        self.assertIn("Create Checkpoint Commit", body)
+        self.assertIn('name="action" value="ui.checkpoint_commit"', body)
+        self.assertIn('name="task" value="task batch"', body)
 
     def test_ui_run_selected_task_web_action_creates_single_task_session(self):
         selected_policy = policy_preset("supervised_executable_local_commit")

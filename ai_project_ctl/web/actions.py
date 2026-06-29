@@ -660,7 +660,25 @@ class WebActionExecutor:
         fields: Mapping[str, str],
     ) -> ActionProcessResult:
         auto_close_note = _field(fields, "auto_close_note")
+        command = _build_ui_run_task_batch(fields)
         requested_queue_inputs = _ui_task_batch_requested_inputs(fields)
+        dirty_preflight = capture_worktree_dirty_preflight(root=self.root)
+        if dirty_preflight.should_block:
+            result = _ui_run_batch_worktree_preflight_not_run_result(
+                requested_queue_inputs,
+                dirty_preflight,
+            )
+            return ActionProcessResult(
+                command=command,
+                returncode=0,
+                stdout=json.dumps(
+                    result.to_dict(),
+                    ensure_ascii=False,
+                    sort_keys=True,
+                )
+                + "\n",
+                stderr="",
+            )
         try:
             selected_policy = resolve_ui_pipeline_policy(root=self.root)
             selected_queue = build_ui_run_batch_queue(
@@ -726,7 +744,6 @@ class WebActionExecutor:
             next_action = "Open pipeline session {}.".format(session_id)
             if next_action not in result.next_actions:
                 result.next_actions.append(next_action)
-        command = _build_ui_run_task_batch(fields)
         return ActionProcessResult(
             command=command,
             returncode=0 if result.ok else 1,
@@ -1522,6 +1539,70 @@ def _ui_run_worktree_preflight_not_run_result(
 
     result = CommandResult.success(
         command="ui.run",
+        domain="ui",
+        message=message,
+        data=data,
+    )
+    result.owner_action_required = owner_action
+    if checkpoint_action:
+        result.next_actions.extend([checkpoint_action, rerun_action])
+    result.next_actions.extend(MANUAL_CHECKPOINT_COMMANDS)
+    return result
+
+
+def _ui_run_batch_worktree_preflight_not_run_result(
+    requested_queue_inputs: Mapping[str, Any],
+    preflight: WorktreeDirtyPreflight,
+) -> CommandResult:
+    dirty_paths = list(preflight.dirty_paths)
+    reason = preflight.reason
+    batch_label = "task batch"
+    if reason == "worktree_dirty":
+        message = (
+            "NOT RUN: Web Run did not start for task batch because the worktree is "
+            "dirty."
+        )
+        checkpoint_action = "Create checkpoint commit before task batch."
+        rerun_action = "After checkpoint commit succeeds, run task batch again."
+        owner_action = (
+            "Web batch runs must start from a clean worktree. Create a checkpoint "
+            "commit or clean the worktree, then run task batch again."
+        )
+    else:
+        message = (
+            "NOT RUN: Web Run did not start for task batch because git status could "
+            "not be checked."
+        )
+        checkpoint_action = ""
+        rerun_action = ""
+        owner_action = "Resolve git status errors, then rerun task batch."
+
+    data: dict[str, Any] = {
+        "task_ref": batch_label,
+        "selected_task": batch_label,
+        "batch_run": True,
+        "requested_queue_inputs": dict(requested_queue_inputs),
+        "outcome": reason,
+        "reason": reason,
+        "not_run": True,
+        "stop_code": "WORKTREE_DIRTY"
+        if reason == "worktree_dirty"
+        else "WORKTREE_STATUS_UNAVAILABLE",
+        "blocked_by": "WORKTREE_DIRTY"
+        if reason == "worktree_dirty"
+        else "WORKTREE_STATUS_UNAVAILABLE",
+        "dirty_files": dirty_paths,
+        "git_status_entries": [entry.to_dict() for entry in preflight.entries],
+        "suggested_checkpoint_commands": list(MANUAL_CHECKPOINT_COMMANDS),
+    }
+    if checkpoint_action:
+        data["checkpoint_action"] = "ui.checkpoint_commit"
+        data["next_action"] = "{} {}".format(checkpoint_action, rerun_action)
+    if preflight.error:
+        data["git_status_error"] = preflight.error
+
+    result = CommandResult.success(
+        command="ui.run_task_batch",
         domain="ui",
         message=message,
         data=data,
