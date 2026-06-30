@@ -12,6 +12,15 @@ from typing import Any, Callable, Mapping, Sequence
 from ai_project_ctl.core.registry import command_describe
 from ai_project_ctl.core.result import CommandError, CommandResult
 from ai_project_ctl.pipeline.batch import run_until_blocker
+from ai_project_ctl.pipeline.git_commit import (
+    CODE_CHECKPOINT_CLEAN,
+    CODE_CHECKPOINT_CREATED,
+    create_checkpoint_commit,
+)
+from ai_project_ctl.pipeline.git_status import (
+    WorktreeDirtyPreflight,
+    capture_worktree_dirty_preflight,
+)
 from ai_project_ctl.pipeline.policy_store import load_policy_preset
 from ai_project_ctl.pipeline.report_recovery import (
     ReportRecoveryError,
@@ -70,6 +79,11 @@ PIPELINE_SESSION_STATUSES = {
 PIPELINE_STOP_STATUSES = {"stopped", "blocked", "failed"}
 PIPELINE_ORDER_OPTIONS = {"execution", "owner", "selected"}
 INCOMPLETE_RUN_CONFIRM_FIELD = "incomplete_run_confirm"
+MANUAL_CHECKPOINT_COMMANDS = (
+    "git status --short --untracked-files=all",
+    "git add -A",
+    'git commit -m "Checkpoint before Web Run"',
+)
 UI_SETTINGS_WEB_ALLOWED_KEYS = (
     "command_line",
     "default_policy",
@@ -175,6 +189,40 @@ LOCAL_ACTION_DESCRIPTORS: dict[str, dict[str, Any]] = {
         },
         "legacy_command": [
             "Web-only recovery action; submits through ai_project_ctl.task_reports."
+        ],
+        "availability": "implemented",
+    },
+    "ui.checkpoint_commit": {
+        "name": "ui.checkpoint_commit",
+        "domain": "ui",
+        "description": "Create an owner-confirmed checkpoint git commit before Web Run.",
+        "kind": "write",
+        "arguments": [
+            {
+                "name": "task",
+                "description": "Selected task ref to run again after the checkpoint.",
+                "type": "string",
+                "required": False,
+                "repeatable": False,
+            },
+            {
+                "name": "task_id",
+                "description": "Selected task ID to run again after the checkpoint.",
+                "type": "string",
+                "required": False,
+                "repeatable": False,
+            },
+        ],
+        "read_write": {
+            "mutates_state": True,
+            "writes_events": False,
+            "renders_generated": False,
+            "validates": False,
+        },
+        "legacy_command": [
+            "git status --short --untracked-files=all",
+            "git add -A",
+            'git commit -m "Checkpoint before Web Run"',
         ],
         "availability": "implemented",
     }
@@ -355,6 +403,8 @@ class WebActionExecutor:
         descriptor = describe_web_action(action)
         if action.action_id == "ui.run_selected_task":
             process = self._create_ui_selected_task_session(fields)
+        elif action.action_id == "ui.checkpoint_commit":
+            process = self._create_checkpoint_commit(fields)
         elif action.action_id == "ui.settings.set":
             process = self._update_ui_setting(fields)
         elif action.action_id == "ui.settings.apply":
@@ -406,6 +456,38 @@ class WebActionExecutor:
             selection = resolve_ui_run_selection(self.root, task_ref)
             if not selection.should_run:
                 result = _ui_run_selection_not_run_result(selection)
+                command = [
+                    self.python_executable,
+                    str(SCRIPTS_DIR / "aictl.py"),
+                    "--root",
+                    str(self.root),
+                    "--actor",
+                    self.actor,
+                    "--json",
+                    "ui",
+                    "run",
+                    task_ref,
+                ]
+                if auto_close_note:
+                    command.extend(["--auto-close-note", auto_close_note])
+                command.append("--confirm")
+                return ActionProcessResult(
+                    command=command,
+                    returncode=0,
+                    stdout=json.dumps(
+                        result.to_dict(),
+                        ensure_ascii=False,
+                        sort_keys=True,
+                    ),
+                    stderr="",
+                )
+
+            dirty_preflight = capture_worktree_dirty_preflight(root=self.root)
+            if dirty_preflight.should_block:
+                result = _ui_run_worktree_preflight_not_run_result(
+                    selection,
+                    dirty_preflight,
+                )
                 command = [
                     self.python_executable,
                     str(SCRIPTS_DIR / "aictl.py"),
@@ -502,6 +584,68 @@ class WebActionExecutor:
                 ensure_ascii=False,
                 sort_keys=True,
             )
+            + "\n",
+            stderr="",
+        )
+
+    def _create_checkpoint_commit(
+        self,
+        fields: Mapping[str, str],
+    ) -> ActionProcessResult:
+        task_ref = _task_ref(fields)
+        checkpoint = create_checkpoint_commit(root=self.root, task_ref=task_ref)
+        dirty_files = [item.path for item in checkpoint.dirty_files]
+        if checkpoint.code == CODE_CHECKPOINT_CREATED:
+            outcome = "checkpoint_commit_created"
+        elif checkpoint.code == CODE_CHECKPOINT_CLEAN:
+            outcome = "worktree_clean"
+        else:
+            outcome = "checkpoint_commit_failed"
+        data: dict[str, Any] = {
+            "task_ref": task_ref,
+            "outcome": outcome,
+            "not_run": checkpoint.code == CODE_CHECKPOINT_CLEAN,
+            "status": checkpoint.status,
+            "code": checkpoint.code,
+            "reason": checkpoint.reason,
+            "commit_hash": checkpoint.commit_hash,
+            "dirty_files": dirty_files,
+            "git_status_entries": [item.to_dict() for item in checkpoint.dirty_files],
+            "checkpoint_message": checkpoint.message,
+            "commands": [command.to_dict() for command in checkpoint.commands],
+            "next_action": "Run selected task {} again.".format(task_ref),
+        }
+        if checkpoint.code == CODE_CHECKPOINT_CLEAN:
+            data["stop_code"] = "WORKTREE_CLEAN"
+        if checkpoint.code == CODE_CHECKPOINT_CREATED:
+            message = "Created checkpoint commit {} before Web Run.".format(
+                checkpoint.commit_hash
+            )
+        elif checkpoint.code == CODE_CHECKPOINT_CLEAN:
+            message = "NOT RUN: worktree is already clean; no checkpoint commit was created."
+        else:
+            message = checkpoint.reason
+
+        if checkpoint.ok:
+            result = CommandResult.success(
+                command="ui.checkpoint_commit",
+                domain="ui",
+                message=message,
+                data=data,
+            )
+            result.next_actions.append(data["next_action"])
+        else:
+            result = CommandResult.failure(
+                command="ui.checkpoint_commit",
+                domain="ui",
+                message=message,
+            )
+            result.data.update(data)
+        command = ["ui.checkpoint_commit", task_ref]
+        return ActionProcessResult(
+            command=command,
+            returncode=0 if result.ok else 1,
+            stdout=json.dumps(result.to_dict(), ensure_ascii=False, sort_keys=True)
             + "\n",
             stderr="",
         )
@@ -830,6 +974,10 @@ def _build_ui_run_selected_task(fields: Mapping[str, str]) -> list[str]:
     return args
 
 
+def _build_ui_checkpoint_commit(fields: Mapping[str, str]) -> list[str]:
+    return ["ui", "checkpoint-commit", _task_ref(fields), "--confirm"]
+
+
 def _build_ui_settings_set(fields: Mapping[str, str]) -> list[str]:
     return [
         "ui",
@@ -1114,6 +1262,59 @@ def _ui_run_selection_not_run_result(
     return result
 
 
+def _ui_run_worktree_preflight_not_run_result(
+    selection: UIRunSelectionResolution,
+    preflight: WorktreeDirtyPreflight,
+) -> CommandResult:
+    task_label = selection.task_id or selection.task_ref or "selected task"
+    dirty_paths = list(preflight.dirty_paths)
+    reason = preflight.reason
+    if reason == "worktree_dirty":
+        message = (
+            "NOT RUN: Web Run did not start for selected task {} because the "
+            "worktree is dirty.".format(task_label)
+        )
+        owner_action = (
+            "Create a manual checkpoint commit or clean the worktree, then rerun Web Run."
+        )
+    else:
+        message = (
+            "NOT RUN: Web Run did not start for selected task {} because git status "
+            "could not be checked.".format(task_label)
+        )
+        owner_action = "Resolve git status errors, then rerun Web Run."
+
+    data: dict[str, Any] = {
+        "task_ref": selection.task_ref,
+        "task_id": selection.task_id,
+        "task_status": selection.task_status,
+        "outcome": reason,
+        "reason": reason,
+        "not_run": True,
+        "stop_code": "WORKTREE_DIRTY"
+        if reason == "worktree_dirty"
+        else "WORKTREE_STATUS_UNAVAILABLE",
+        "blocked_by": "WORKTREE_DIRTY"
+        if reason == "worktree_dirty"
+        else "WORKTREE_STATUS_UNAVAILABLE",
+        "dirty_files": dirty_paths,
+        "git_status_entries": [entry.to_dict() for entry in preflight.entries],
+        "suggested_checkpoint_commands": list(MANUAL_CHECKPOINT_COMMANDS),
+    }
+    if preflight.error:
+        data["git_status_error"] = preflight.error
+
+    result = CommandResult.success(
+        command="ui.run",
+        domain="ui",
+        message=message,
+        data=data,
+    )
+    result.owner_action_required = owner_action
+    result.next_actions.extend(MANUAL_CHECKPOINT_COMMANDS)
+    return result
+
+
 def _action_result_summary(
     action: WebAction,
     ok: bool,
@@ -1265,6 +1466,12 @@ ACTIONS: dict[str, WebAction] = {
         command_name="pipeline.run_until_blocker",
         label="Run selected task",
         builder=_build_ui_run_selected_task,
+    ),
+    "ui.checkpoint_commit": WebAction(
+        action_id="ui.checkpoint_commit",
+        command_name="ui.checkpoint_commit",
+        label="Create checkpoint commit",
+        builder=_build_ui_checkpoint_commit,
     ),
     "ui.settings.set": WebAction(
         action_id="ui.settings.set",

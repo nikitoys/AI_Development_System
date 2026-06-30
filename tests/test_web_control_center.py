@@ -15,6 +15,7 @@ from unittest.mock import patch
 from ai_project_ctl.core.registry import command_describe
 from ai_project_ctl.core.result import CommandResult
 from ai_project_ctl.core.validation import ValidationError
+from ai_project_ctl.pipeline.git_status import GitStatusEntry, WorktreeDirtyPreflight
 from ai_project_ctl.pipeline.policy import policy_preset
 from ai_project_ctl.pipeline.policy_store import (
     pipeline_policy_store_path,
@@ -5332,29 +5333,57 @@ class WebControlCenterTests(unittest.TestCase):
             },
         )
 
-        with patch(
-            "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
-            return_value=selected_policy,
-        ) as resolve_policy:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "legacy_id": "TASK-001",
+                        "aliases": ["TASK-001"],
+                        "status": "ready",
+                        "title": "Ready task",
+                        "epic_id": "EPIC-001",
+                    }
+                ],
+                epics=[{"id": "EPIC-001", "status": "active"}],
+            )
+            resolved_root = root.resolve()
             with patch(
-                "ai_project_ctl.web.actions.create_session",
-                return_value=session_result,
-            ) as create:
+                "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
+                return_value=selected_policy,
+            ) as resolve_policy:
                 with patch(
-                    "ai_project_ctl.web.actions.run_until_blocker",
-                    return_value=run_result,
-                ) as run_until:
-                    with patch("ai_project_ctl.web.actions.subprocess.run") as run:
-                        result = WebActionExecutor("/tmp/project", actor="tester").execute(
-                            {
-                                "action": "ui.run_selected_task",
-                                "confirm": "yes",
-                                "incomplete_run_confirm": "yes",
-                                "task": "TASK-001",
-                            }
-                        )
+                    "ai_project_ctl.web.actions.capture_worktree_dirty_preflight",
+                    return_value=WorktreeDirtyPreflight(checked=True, available=True),
+                ) as preflight:
+                    with patch(
+                        "ai_project_ctl.web.actions.create_session",
+                        return_value=session_result,
+                    ) as create:
+                        with patch(
+                            "ai_project_ctl.web.actions.run_until_blocker",
+                            return_value=run_result,
+                        ) as run_until:
+                            with patch(
+                                "ai_project_ctl.web.actions.subprocess.run"
+                            ) as run:
+                                result = WebActionExecutor(
+                                    root,
+                                    actor="tester",
+                                ).execute(
+                                    {
+                                        "action": "ui.run_selected_task",
+                                        "confirm": "yes",
+                                        "incomplete_run_confirm": "yes",
+                                        "task": "APP-01",
+                                    }
+                                )
 
-        resolve_policy.assert_called_once_with(root=Path("/tmp/project"))
+        preflight.assert_called_once_with(root=resolved_root)
+        resolve_policy.assert_called_once_with(root=resolved_root)
         create.assert_called_once()
         create_kwargs = create.call_args.kwargs
         self.assertEqual(create_kwargs["actor"], "tester")
@@ -5367,7 +5396,7 @@ class WebControlCenterTests(unittest.TestCase):
             create_kwargs["selected_queue"],
             {
                 "selection": "ready_queue",
-                "task_refs": ["TASK-001"],
+                "task_refs": ["APP-01"],
                 "epic_ids": [],
                 "statuses": [],
                 "max_tasks": 1,
@@ -5380,7 +5409,7 @@ class WebControlCenterTests(unittest.TestCase):
         )
         run_until.assert_called_once_with(
             "PSESS-009",
-            root=Path("/tmp/project"),
+            root=resolved_root,
             actor="tester",
             confirmed=True,
         )
@@ -5399,6 +5428,109 @@ class WebControlCenterTests(unittest.TestCase):
             payload["result"]["data"]["redirect_target"],
             "/pipeline/sessions/PSESS-009",
         )
+
+    def test_ui_run_selected_task_web_action_stops_for_dirty_worktree(self):
+        dirty_preflight = WorktreeDirtyPreflight(
+            checked=True,
+            available=True,
+            entries=(
+                GitStatusEntry("M", "ai_project_ctl/web/actions.py"),
+                GitStatusEntry("??", "tmp/new-artifact.txt"),
+            ),
+            dirty_paths=(
+                "ai_project_ctl/web/actions.py",
+                "tmp/new-artifact.txt",
+            ),
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "legacy_id": "TASK-001",
+                        "aliases": ["TASK-001"],
+                        "status": "ready",
+                        "title": "Ready task",
+                        "epic_id": "EPIC-001",
+                    }
+                ],
+                epics=[{"id": "EPIC-001", "status": "active"}],
+            )
+
+            with patch(
+                "ai_project_ctl.web.actions.capture_worktree_dirty_preflight",
+                return_value=dirty_preflight,
+            ) as preflight:
+                with patch(
+                    "ai_project_ctl.web.actions.resolve_ui_pipeline_policy",
+                ) as resolve_policy:
+                    with patch(
+                        "ai_project_ctl.web.actions.create_session",
+                    ) as create:
+                        with patch(
+                            "ai_project_ctl.web.actions.run_until_blocker",
+                        ) as run_until:
+                            result = WebActionExecutor(root, actor="tester").execute(
+                                {
+                                    "action": "ui.run_selected_task",
+                                    "confirm": "yes",
+                                    "incomplete_run_confirm": "yes",
+                                    "task": "APP-01",
+                                }
+                            )
+
+            pipeline_path = root / "AI_PROJECT" / "state" / "pipeline_sessions.json"
+            tasks_state = json.loads(
+                (root / "AI_PROJECT" / "state" / "tasks.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+
+        preflight.assert_called_once_with(root=root.resolve())
+        resolve_policy.assert_not_called()
+        create.assert_not_called()
+        run_until.assert_not_called()
+        self.assertFalse(pipeline_path.exists())
+        self.assertEqual(tasks_state["tasks"][0]["status"], "ready")
+
+        payload = result.to_dict()
+        data = payload["result"]["data"]
+        self.assertTrue(result.ok)
+        self.assertTrue(data["not_run"])
+        self.assertEqual(data["outcome"], "worktree_dirty")
+        self.assertEqual(data["reason"], "worktree_dirty")
+        self.assertEqual(data["stop_code"], "WORKTREE_DIRTY")
+        self.assertEqual(
+            data["dirty_files"],
+            ["ai_project_ctl/web/actions.py", "tmp/new-artifact.txt"],
+        )
+        self.assertEqual(
+            data["git_status_entries"],
+            [
+                {"status": "M", "path": "ai_project_ctl/web/actions.py"},
+                {"status": "??", "path": "tmp/new-artifact.txt"},
+            ],
+        )
+        self.assertIn("git add -A", data["suggested_checkpoint_commands"])
+        self.assertIn(
+            "Checkpoint before Web Run",
+            " ".join(result.to_dict()["result"]["next_actions"]),
+        )
+        self.assertIn("worktree is dirty", payload["result"]["message"])
+
+        body = render_action_result(result)
+        self.assertIn('<span class="badge warn">NOT RUN</span>', body)
+        self.assertIn("Dirty Files", body)
+        self.assertIn("ai_project_ctl/web/actions.py", body)
+        self.assertIn("Suggested Checkpoint Commands", body)
+        self.assertIn("git add -A", body)
+        self.assertIn("Create Checkpoint Commit", body)
+        self.assertIn('name="action" value="ui.checkpoint_commit"', body)
+        self.assertIn('name="task" value="APP-01"', body)
 
     def test_ui_run_selected_task_web_action_does_not_create_session_for_done_task(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -5717,6 +5849,129 @@ class WebControlCenterTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, "WEB_ACTION_CONFIRMATION_REQUIRED")
         create.assert_not_called()
+
+    def test_checkpoint_commit_action_requires_confirmation(self):
+        with patch("ai_project_ctl.web.actions.create_checkpoint_commit") as checkpoint:
+            with self.assertRaises(WebActionError) as raised:
+                WebActionExecutor("/tmp/project", actor="tester").execute(
+                    {
+                        "action": "ui.checkpoint_commit",
+                        "task": "TASK-001",
+                    }
+                )
+
+        self.assertEqual(raised.exception.code, "WEB_ACTION_CONFIRMATION_REQUIRED")
+        checkpoint.assert_not_called()
+
+    def test_checkpoint_commit_action_reports_not_run_for_clean_worktree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(
+                ["git", "init"],
+                cwd=root,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
+
+            result = WebActionExecutor(root, actor="tester").execute(
+                {
+                    "action": "ui.checkpoint_commit",
+                    "confirm": "yes",
+                    "task": "APP-01",
+                }
+            )
+
+        payload = result.to_dict()
+        data = payload["result"]["data"]
+        self.assertTrue(result.ok)
+        self.assertTrue(data["not_run"])
+        self.assertEqual(data["outcome"], "worktree_clean")
+        self.assertEqual(data["stop_code"], "WORKTREE_CLEAN")
+        self.assertEqual(data["commit_hash"], "")
+        self.assertEqual(data["dirty_files"], [])
+
+    def test_checkpoint_commit_action_commits_dirty_worktree_and_reports_hash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(
+                ["git", "init"],
+                cwd=root,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.email", "owner@example.invalid"],
+                cwd=root,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.name", "Human Owner"],
+                cwd=root,
+                check=True,
+            )
+            write_web_state(
+                root,
+                tasks=[
+                    {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                        "legacy_id": "TASK-001",
+                        "aliases": ["TASK-001"],
+                        "status": "ready",
+                        "title": "Ready task",
+                        "epic_id": "EPIC-001",
+                    }
+                ],
+                epics=[{"id": "EPIC-001", "status": "active"}],
+            )
+            (root / "dirty.txt").write_text("dirty\n", encoding="utf-8")
+
+            with patch("ai_project_ctl.web.actions.create_session") as create:
+                with patch("ai_project_ctl.web.actions.run_until_blocker") as run_until:
+                    result = WebActionExecutor(root, actor="tester").execute(
+                        {
+                            "action": "ui.checkpoint_commit",
+                            "confirm": "yes",
+                            "task": "APP-01",
+                        }
+                    )
+
+            status_after = subprocess.run(
+                ["git", "status", "--short", "--untracked-files=all"],
+                cwd=root,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
+            tasks_state = json.loads(
+                (root / "AI_PROJECT" / "state" / "tasks.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+
+        create.assert_not_called()
+        run_until.assert_not_called()
+        payload = result.to_dict()
+        data = payload["result"]["data"]
+        self.assertTrue(result.ok)
+        self.assertFalse(data["not_run"])
+        self.assertEqual(data["outcome"], "checkpoint_commit_created")
+        self.assertRegex(data["commit_hash"], r"^[0-9a-f]{40}$")
+        self.assertIn("dirty.txt", data["dirty_files"])
+        self.assertIn("Run selected task APP-01 again.", payload["result"]["next_actions"])
+        self.assertEqual(tasks_state["tasks"][0]["status"], "ready")
+        self.assertEqual(status_after.stdout, "")
+        command_vectors = [item["command"] for item in data["commands"]]
+        self.assertIn(["git", "add", "-A"], command_vectors)
+        self.assertIn(
+            ["git", "commit", "-m", "Checkpoint before Web Run: APP-01"],
+            command_vectors,
+        )
 
     def test_pipeline_run_action_requires_confirmation(self):
         with patch("ai_project_ctl.web.actions.subprocess.run") as run:
@@ -6056,6 +6311,181 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertIn('class="panel action-result action-result-pass"', body)
         self.assertIn('<span class="badge pass">PASS</span>', body)
         self.assertIn("QUEUE_COMPLETE", body)
+
+    def test_pipeline_action_result_panel_treats_committed_close_as_pass(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "ok": True,
+                    "command": "pipeline.run_until_blocker",
+                    "domain": "pipeline",
+                    "message": "MAX_STEPS_REACHED: Batch runner reached max_steps 7.",
+                    "data": {
+                        "session_id": "PSESS-COMMITTED",
+                        "session_href": "/pipeline/sessions/PSESS-COMMITTED",
+                        "session_status": "stopped",
+                        "stop_code": "MAX_STEPS_REACHED",
+                        "stop_reason": "Batch runner reached max_steps 7.",
+                        "close_status": {
+                            "outcome": "closed_with_local_commit",
+                            "commit_status": "pass",
+                            "commit_code": "LOCAL_COMMIT_CREATED",
+                            "commit_hash": "abc1234deadbeef",
+                        },
+                    },
+                }
+            )
+            + "\n",
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "pipeline.run_until_blocker",
+                    "confirm": "yes",
+                    "session_id": "PSESS-COMMITTED",
+                }
+            )
+
+        body = render_action_result(result)
+
+        self.assertIn('class="panel action-result action-result-pass"', body)
+        self.assertIn('<span class="badge pass">PASS</span>', body)
+        self.assertNotIn('<span class="badge warn">STOPPED</span>', body)
+        self.assertIn("abc1234deadbeef", body)
+
+    def test_pipeline_action_result_hides_recovered_close_warnings_from_warning_panel(self):
+        recovered_warning = {
+            "code": "WORKFLOW_NON_BLOCKING_STEP_FAILED",
+            "message": (
+                "Non-blocking workflow step reported a warning: "
+                "Check generated context output"
+            ),
+            "details": {
+                "step": "context_generated",
+                "command_name": "contextctl.check-generated",
+                "returncode": 1,
+            },
+        }
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "ok": True,
+                    "command": "pipeline.run_next",
+                    "domain": "pipeline",
+                    "message": "Close passed.",
+                    "warnings": [],
+                    "data": {
+                        "session_id": "PSESS-RECOVERED",
+                        "dispatched_phase": "close",
+                        "phase_status": "passed",
+                        "phase_result": {
+                            "phase": "close",
+                            "status": "passed",
+                            "reason": "Close passed.",
+                            "next_action": "Review completed session.",
+                            "artifacts": {
+                                "context_refresh": {"ok": True},
+                                "close_workflow": {
+                                    "warnings": [recovered_warning],
+                                },
+                                "recovered_close_warnings": [
+                                    {
+                                        "code": "CLOSE_RECOVERED_NON_BLOCKING_WARNING",
+                                        "recovered_by": "pipeline.close.context_refresh",
+                                        "source_command": "pipeline.review_close_policy",
+                                        "warning": recovered_warning,
+                                    }
+                                ],
+                            },
+                        },
+                    },
+                }
+            )
+            + "\n",
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "pipeline.run_next",
+                    "confirm": "yes",
+                    "session_id": "PSESS-RECOVERED",
+                }
+            )
+
+        body = render_action_result(result)
+
+        self.assertNotIn("<h3>Warnings</h3>", body)
+        self.assertIn("CLOSE_RECOVERED_NON_BLOCKING_WARNING", body)
+        self.assertIn("contextctl.check-generated", body)
+
+    def test_pipeline_action_result_keeps_unrecovered_close_warnings_visible(self):
+        completed_process = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "ok": True,
+                    "command": "pipeline.run_next",
+                    "domain": "pipeline",
+                    "message": "Close blocked.",
+                    "warnings": [
+                        {
+                            "code": "WORKFLOW_NON_BLOCKING_STEP_FAILED",
+                            "message": (
+                                "Non-blocking workflow step reported a warning: "
+                                "Check generated context output"
+                            ),
+                            "details": {
+                                "step": "context_generated",
+                                "command_name": "contextctl.check-generated",
+                                "returncode": 1,
+                            },
+                        }
+                    ],
+                    "data": {
+                        "session_id": "PSESS-UNRECOVERED",
+                        "dispatched_phase": "close",
+                        "phase_status": "blocked",
+                        "blocked_by": "CLOSE_CONTEXT_REFRESH_FAILED",
+                        "phase_result": {
+                            "phase": "close",
+                            "status": "blocked",
+                            "reason": "Close blocked.",
+                            "next_action": "Resolve context refresh.",
+                            "artifacts": {
+                                "blocked_by": "CLOSE_CONTEXT_REFRESH_FAILED",
+                                "context_refresh": {"ok": False},
+                            },
+                        },
+                    },
+                }
+            )
+            + "\n",
+            stderr="",
+        )
+
+        with patch("ai_project_ctl.web.actions.subprocess.run", return_value=completed_process):
+            result = WebActionExecutor("/tmp/project", actor="tester").execute(
+                {
+                    "action": "pipeline.run_next",
+                    "confirm": "yes",
+                    "session_id": "PSESS-UNRECOVERED",
+                }
+            )
+
+        body = render_action_result(result)
+
+        self.assertIn("<h3>Warnings</h3>", body)
+        self.assertIn("WORKFLOW_NON_BLOCKING_STEP_FAILED", body)
+        self.assertIn("Check generated context output", body)
 
     def test_action_error_panel_keeps_failed_workflow_step_visible(self):
         error = WebActionError(

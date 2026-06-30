@@ -16,7 +16,7 @@ from ai_project_ctl.core.workflows import Runner
 
 from .policy import PipelinePolicy
 from .runner import run_next
-from .session import stop_session
+from .session import complete_session, stop_session, successful_committed_close_status
 from .state import load_pipeline_state, load_reference_state
 
 
@@ -93,6 +93,32 @@ def run_until_blocker(
                 effects,
                 session=session,
                 owner_action_required="Review the completed pipeline session.",
+            )
+
+        committed_close = successful_committed_close_status(session)
+        if committed_close:
+            _merge_committed_close_into_summary(summary, session, committed_close)
+            completed = complete_session(
+                selected_session_id,
+                root=root_path,
+                actor=actor,
+                reason=_committed_close_completion_reason(committed_close),
+            )
+            effects.append(completed)
+            _merge_effects_into_summary(summary, completed)
+            session = _find_session(root_path, selected_session_id) or session
+            _merge_session_lists(summary, session, root_path)
+            return _success(
+                selected_session_id,
+                "QUEUE_COMPLETE",
+                "Committed close completed the selected pipeline session.",
+                summary,
+                effects,
+                session=session,
+                owner_action_required=(
+                    committed_close.get("owner_next_action")
+                    or "Review the completed pipeline session."
+                ),
             )
 
         if _attempt_count(session) >= policy.batch.max_steps:
@@ -526,6 +552,35 @@ def _accepted_change_ids(
         ):
             accepted.append(change_id)
     return accepted
+
+
+def _merge_committed_close_into_summary(
+    summary: dict[str, Any],
+    session: Mapping[str, Any],
+    close_status: Mapping[str, Any],
+) -> None:
+    task_id = str(session.get("current_task_id") or "")
+    if task_id and task_id not in summary["completed_tasks"]:
+        summary["completed_tasks"].append(task_id)
+    if task_id and task_id not in summary["changed_tasks"]:
+        summary["changed_tasks"].append(task_id)
+
+    commit_hash = str(close_status.get("commit_hash") or "").strip()
+    if commit_hash:
+        _extend_unique(summary["commits"], [commit_hash])
+
+    summary["close_status"] = dict(close_status)
+    summary["close_outcome"] = str(close_status.get("outcome") or "")
+    summary["commit_status"] = str(close_status.get("commit_status") or "")
+    summary["commit_code"] = str(close_status.get("commit_code") or "")
+    summary["commit_hash"] = commit_hash
+
+
+def _committed_close_completion_reason(close_status: Mapping[str, Any]) -> str:
+    commit_hash = str(close_status.get("commit_hash") or "").strip()
+    if commit_hash:
+        return "Close passed and local commit {} was created.".format(commit_hash)
+    return "Close passed and a local commit was created."
 
 
 def _string_list(value: Any) -> list[str]:

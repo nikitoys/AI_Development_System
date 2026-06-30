@@ -13,6 +13,8 @@ from ai_project_ctl.pipeline.codex_review import (
     CodexReviewResult,
 )
 from ai_project_ctl.pipeline.git_commit import (
+    CODE_CHECKPOINT_CLEAN,
+    CODE_CHECKPOINT_CREATED,
     CODE_MACHINE_REVIEW_NOT_PASS,
     CODE_READY,
     CODE_REPORT_NOT_PASS,
@@ -20,6 +22,7 @@ from ai_project_ctl.pipeline.git_commit import (
     CODE_UNRELATED_FILES,
     MACHINE_DIAGNOSTIC_SUMMARY_LIMIT,
     REQUIRED_MACHINE_CHECKS,
+    create_checkpoint_commit,
     evaluate_commit_readiness,
     run_git_command,
 )
@@ -806,6 +809,68 @@ class PipelineGitCommitTests(unittest.TestCase):
                     self.assertEqual(result.code, "COMMIT_FORBIDDEN_GIT_COMMAND")
 
         self.assertEqual(calls, [])
+
+    def test_checkpoint_commit_reports_not_run_for_clean_worktree(self):
+        calls = []
+
+        def runner(argv):
+            calls.append(tuple(argv))
+            if tuple(argv) == ("git", "status", "--short", "--untracked-files=all"):
+                return completed(stdout="")
+            raise AssertionError("unexpected git command: {}".format(argv))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            result = create_checkpoint_commit(
+                root=Path(tmp),
+                task_ref="APP-01",
+                runner=runner,
+            )
+
+        self.assertTrue(result.ok)
+        self.assertEqual(result.status, "not_run")
+        self.assertEqual(result.code, CODE_CHECKPOINT_CLEAN)
+        self.assertEqual(result.commit_hash, "")
+        self.assertEqual(calls, [("git", "status", "--short", "--untracked-files=all")])
+
+    def test_checkpoint_commit_stages_all_changes_and_reports_hash(self):
+        calls = []
+
+        def runner(argv):
+            command = tuple(argv)
+            calls.append(command)
+            if command == ("git", "status", "--short", "--untracked-files=all"):
+                return completed(stdout=" M tracked.txt\n?? new.txt\n")
+            if command == ("git", "add", "-A"):
+                return completed()
+            if command == ("git", "commit", "-m", "Checkpoint before Web Run: APP-01"):
+                return completed(stdout="[main abc1234] checkpoint\n")
+            if command == ("git", "rev-parse", "--verify", "HEAD"):
+                return completed(stdout="abc1234deadbeef\n")
+            raise AssertionError("unexpected git command: {}".format(argv))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            result = create_checkpoint_commit(
+                root=Path(tmp),
+                task_ref="APP-01",
+                runner=runner,
+            )
+
+        self.assertTrue(result.ok)
+        self.assertEqual(result.code, CODE_CHECKPOINT_CREATED)
+        self.assertEqual(result.commit_hash, "abc1234deadbeef")
+        self.assertEqual(
+            [item.path for item in result.dirty_files],
+            ["tracked.txt", "new.txt"],
+        )
+        self.assertEqual(
+            calls,
+            [
+                ("git", "status", "--short", "--untracked-files=all"),
+                ("git", "add", "-A"),
+                ("git", "commit", "-m", "Checkpoint before Web Run: APP-01"),
+                ("git", "rev-parse", "--verify", "HEAD"),
+            ],
+        )
 
     def test_git_add_requires_explicit_paths_after_separator(self):
         with tempfile.TemporaryDirectory() as tmp:

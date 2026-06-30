@@ -62,6 +62,18 @@ CLOSE_OUTCOME_DONE_COMMIT_BLOCKED = "done_but_commit_blocked"
 CLOSE_OUTCOME_DONE_COMMIT_FAILED = "done_but_commit_failed"
 CLOSE_OUTCOME_DONE_WITHOUT_COMMIT = "done_without_local_commit"
 CLOSE_OUTCOME_DONE_COMMIT_UNKNOWN = "done_commit_unknown"
+RECOVERED_CLOSE_WARNINGS_KEY = "recovered_close_warnings"
+RECOVERED_CLOSE_WARNING_CODE = "CLOSE_RECOVERED_NON_BLOCKING_WARNING"
+WORKFLOW_NON_BLOCKING_WARNING_CODE = "WORKFLOW_NON_BLOCKING_STEP_FAILED"
+RECOVERABLE_PROTECTED_WARNING_FRAGMENTS = (
+    "MISSING_GENERATED_PROMPT:",
+    "ORPHAN_GENERATED_PROMPT:",
+    "OUTDATED_GENERATED_FILE: AI_PROJECT/generated/CODEX_PROMPT.md",
+    "CODEX_PROMPT_RENDER_FAILED: STALE_CONTEXT_PACK:",
+    "CODEX_EXECUTION_CONTEXT_MISMATCH:",
+    "AI_PROJECT/generated/CONTEXT_PACK.md",
+    "AI_PROJECT/generated/CONTEXT_STATUS.md",
+)
 SCRIPTS_DIR = Path(__file__).resolve().parents[2] / "scripts"
 
 
@@ -300,7 +312,11 @@ def close_phase(
                 generated_files=_side_effect_generated_files(side_effects),
                 events=_side_effect_events(side_effects),
             )
-        elif _commit_policy_enabled(session):
+        if context_refresh.ok:
+            recovered_warnings = _recovered_close_warnings(side_effects)
+            if recovered_warnings:
+                phase_artifacts[RECOVERED_CLOSE_WARNINGS_KEY] = recovered_warnings
+        if context_refresh.ok and _commit_policy_enabled(session):
             local_commit = _run_local_commit_after_close(
                 session=session,
                 session_id=selected_session_id,
@@ -377,7 +393,13 @@ def close_phase(
         root=root_path,
         actor=actor,
     )
-    _merge_command_effects(result, tuple(side_effects))
+    _merge_command_effects(
+        result,
+        tuple(side_effects),
+        demote_recovered_warnings=bool(
+            _mapping(phase_artifacts.get("context_refresh")).get("ok")
+        ),
+    )
     return result
 
 
@@ -1814,16 +1836,65 @@ def _bound_close_phase_artifacts(phase: PhaseResult) -> PhaseResult:
 def _merge_command_effects(
     target: CommandResult,
     results: tuple[CommandResult, ...],
+    *,
+    demote_recovered_warnings: bool = False,
 ) -> None:
     for result in results:
         _extend_unique(target.changed_files, result.changed_files)
         _extend_unique(target.generated_files, result.generated_files)
         _extend_unique(target.events, result.events)
-        target.warnings.extend(result.warnings)
+        for warning in result.warnings:
+            if demote_recovered_warnings and _is_recovered_close_warning(warning):
+                continue
+            target.warnings.append(warning)
         target.errors.extend(result.errors)
         _extend_unique(target.next_actions, result.next_actions)
         if result.owner_action_required:
             target.owner_action_required = result.owner_action_required
+
+
+def _recovered_close_warnings(results: list[CommandResult]) -> list[dict[str, Any]]:
+    recovered: list[dict[str, Any]] = []
+    for result in results:
+        for warning in result.warnings:
+            if not _is_recovered_close_warning(warning):
+                continue
+            recovered.append(
+                {
+                    "code": RECOVERED_CLOSE_WARNING_CODE,
+                    "recovered_by": CONTEXT_REFRESH_COMMAND,
+                    "source_command": result.command,
+                    "warning": warning.to_dict(),
+                }
+            )
+    return recovered
+
+
+def _is_recovered_close_warning(warning: CommandMessage) -> bool:
+    if warning.code != WORKFLOW_NON_BLOCKING_WARNING_CODE:
+        return False
+    details = _mapping(warning.details)
+    command_name = str(details.get("command_name") or "")
+    step = str(details.get("step") or "")
+    if command_name == "contextctl.check-generated" and step in {
+        "context_check",
+        "context_generated",
+    }:
+        return True
+    if command_name != "protected.check" or step != "protected":
+        return False
+    details_text = _warning_details_text(details)
+    return any(
+        fragment in details_text for fragment in RECOVERABLE_PROTECTED_WARNING_FRAGMENTS
+    )
+
+
+def _warning_details_text(value: Any) -> str:
+    if isinstance(value, Mapping):
+        return "\n".join(_warning_details_text(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return "\n".join(_warning_details_text(item) for item in value)
+    return str(value or "")
 
 
 def _extend_unique(target: list[str], values: list[str]) -> None:

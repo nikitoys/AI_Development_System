@@ -49,6 +49,11 @@ CODE_UNRELATED_FILES = "COMMIT_UNRELATED_FILES"
 CODE_FORBIDDEN_GIT_COMMAND = "COMMIT_FORBIDDEN_GIT_COMMAND"
 CODE_GIT_COMMAND_FAILED = "COMMIT_GIT_COMMAND_FAILED"
 CODE_COMMIT_CREATED = "LOCAL_COMMIT_CREATED"
+CODE_CHECKPOINT_CREATED = "CHECKPOINT_COMMIT_CREATED"
+CODE_CHECKPOINT_CLEAN = "CHECKPOINT_WORKTREE_CLEAN"
+CODE_CHECKPOINT_STATUS_FAILED = "CHECKPOINT_GIT_STATUS_FAILED"
+CODE_CHECKPOINT_FAILED = "CHECKPOINT_COMMIT_FAILED"
+NOT_RUN = "not_run"
 
 FORBIDDEN_GIT_SUBCOMMANDS = {
     "push",
@@ -188,6 +193,36 @@ class LocalCommitResult:
             "staged_files": list(self.staged_files),
             "message": self.message,
             "readiness": self.readiness.to_dict() if self.readiness else None,
+            "commands": [command.to_dict() for command in self.commands],
+        }
+
+
+@dataclass(frozen=True)
+class CheckpointCommitResult:
+    """Outcome of an owner-confirmed checkpoint commit before Web Run."""
+
+    status: str
+    code: str
+    reason: str
+    task_ref: str = ""
+    commit_hash: str = ""
+    dirty_files: tuple[GitStatusFile, ...] = ()
+    message: str = ""
+    commands: tuple[GitCommandResult, ...] = ()
+
+    @property
+    def ok(self) -> bool:
+        return self.status in {PASS, NOT_RUN}
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "code": self.code,
+            "reason": self.reason,
+            "task_ref": self.task_ref,
+            "commit_hash": self.commit_hash,
+            "dirty_files": [item.to_dict() for item in self.dirty_files],
+            "message": self.message,
             "commands": [command.to_dict() for command in self.commands],
         }
 
@@ -404,6 +439,115 @@ def evaluate_commit_readiness(
     )
 
 
+def create_checkpoint_commit(
+    *,
+    root: str | Path,
+    task_ref: str = "",
+    message: str | None = None,
+    runner: GitRunner | None = None,
+) -> CheckpointCommitResult:
+    """Create an owner-confirmed checkpoint commit from the current worktree."""
+
+    root_path = Path(root).resolve()
+    commit_message = message or _checkpoint_commit_message(task_ref)
+    commands: list[GitCommandResult] = []
+
+    git_status = _run_checkpoint_git_command(
+        ("git", "status", "--short", "--untracked-files=all"),
+        root=root_path,
+        runner=runner,
+    )
+    commands.append(git_status)
+    if not git_status.ok:
+        return CheckpointCommitResult(
+            status=FAIL,
+            code=CODE_CHECKPOINT_STATUS_FAILED,
+            reason="Git status check failed before checkpoint commit.",
+            task_ref=task_ref,
+            message=commit_message,
+            commands=tuple(commands),
+        )
+
+    dirty_files = tuple(_parse_git_status(git_status.stdout))
+    if not dirty_files:
+        return CheckpointCommitResult(
+            status=NOT_RUN,
+            code=CODE_CHECKPOINT_CLEAN,
+            reason="Worktree is already clean; checkpoint commit was not created.",
+            task_ref=task_ref,
+            message=commit_message,
+            commands=tuple(commands),
+        )
+
+    add = _run_checkpoint_git_command(
+        ("git", "add", "-A"),
+        root=root_path,
+        runner=runner,
+    )
+    commands.append(add)
+    if not add.ok:
+        return _checkpoint_commit_failure(
+            task_ref,
+            "Failed to stage all current changes for checkpoint commit.",
+            dirty_files,
+            commit_message,
+            commands,
+        )
+
+    commit = _run_checkpoint_git_command(
+        ("git", "commit", "-m", commit_message),
+        root=root_path,
+        runner=runner,
+    )
+    commands.append(commit)
+    if not commit.ok:
+        return _checkpoint_commit_failure(
+            task_ref,
+            "Checkpoint git commit failed.",
+            dirty_files,
+            commit_message,
+            commands,
+        )
+
+    rev_parse = _run_checkpoint_git_command(
+        ("git", "rev-parse", "--verify", "HEAD"),
+        root=root_path,
+        runner=runner,
+    )
+    commands.append(rev_parse)
+    if not rev_parse.ok:
+        return _checkpoint_commit_failure(
+            task_ref,
+            "Checkpoint commit hash could not be read.",
+            dirty_files,
+            commit_message,
+            commands,
+        )
+
+    commit_hash = (
+        rev_parse.stdout.strip().splitlines()[0] if rev_parse.stdout.strip() else ""
+    )
+    if not commit_hash:
+        return _checkpoint_commit_failure(
+            task_ref,
+            "Checkpoint commit hash was empty.",
+            dirty_files,
+            commit_message,
+            commands,
+        )
+
+    return CheckpointCommitResult(
+        status=PASS,
+        code=CODE_CHECKPOINT_CREATED,
+        reason="Checkpoint commit created before Web Run.",
+        task_ref=task_ref,
+        commit_hash=commit_hash,
+        dirty_files=dirty_files,
+        message=commit_message,
+        commands=tuple(commands),
+    )
+
+
 def run_local_commit(
     *,
     root: str | Path,
@@ -530,6 +674,103 @@ def run_git_command(
         returncode=returncode,
         stdout=str(completed.stdout or ""),
         stderr=str(completed.stderr or ""),
+    )
+
+
+def _run_checkpoint_git_command(
+    argv: Sequence[str],
+    *,
+    root: str | Path,
+    runner: GitRunner | None = None,
+    timeout_sec: int = 300,
+) -> GitCommandResult:
+    """Run the narrow git command set needed for owner checkpoint commits."""
+
+    command = tuple(str(part) for part in argv if str(part).strip())
+    validation_error = _checkpoint_git_command_error(command)
+    if validation_error:
+        return GitCommandResult(
+            ok=False,
+            code=CODE_FORBIDDEN_GIT_COMMAND,
+            reason=validation_error,
+            command=command,
+        )
+
+    root_path = Path(root).resolve()
+    try:
+        if runner is not None:
+            completed = runner(command)
+        else:
+            completed = subprocess.run(
+                list(command),
+                cwd=root_path,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=timeout_sec,
+                check=False,
+            )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return GitCommandResult(
+            ok=False,
+            code=CODE_GIT_COMMAND_FAILED,
+            reason=str(exc),
+            command=command,
+        )
+
+    returncode = int(completed.returncode)
+    ok = returncode == 0
+    return GitCommandResult(
+        ok=ok,
+        code=CODE_READY if ok else CODE_GIT_COMMAND_FAILED,
+        reason="command_succeeded" if ok else "command_failed",
+        command=command,
+        returncode=returncode,
+        stdout=str(completed.stdout or ""),
+        stderr=str(completed.stderr or ""),
+    )
+
+
+def _checkpoint_git_command_error(command: Sequence[str]) -> str:
+    if len(command) < 2 or command[0] != "git":
+        return "Only git subcommands through the git executable are allowed."
+    subcommand = command[1]
+    if subcommand in FORBIDDEN_GIT_SUBCOMMANDS:
+        return "Forbidden git subcommand: {}".format(subcommand)
+    if subcommand == "status":
+        if tuple(command[2:]) == ("--short", "--untracked-files=all"):
+            return ""
+        return "Only read-only git status --short --untracked-files=all is allowed."
+    if subcommand == "add":
+        if tuple(command[2:]) == ("-A",):
+            return ""
+        return "Checkpoint commit staging must use git add -A."
+    if subcommand == "commit":
+        if len(command) == 4 and command[2] == "-m" and str(command[3]).strip():
+            return ""
+        return "git commit must use exactly one explicit -m message."
+    if subcommand == "rev-parse":
+        if tuple(command[2:]) == ("--verify", "HEAD"):
+            return ""
+        return "Only git rev-parse --verify HEAD is allowed."
+    return "Unsupported git subcommand: {}".format(subcommand)
+
+
+def _checkpoint_commit_failure(
+    task_ref: str,
+    reason: str,
+    dirty_files: Sequence[GitStatusFile],
+    message: str,
+    commands: Sequence[GitCommandResult],
+) -> CheckpointCommitResult:
+    return CheckpointCommitResult(
+        status=FAIL,
+        code=CODE_CHECKPOINT_FAILED,
+        reason=reason,
+        task_ref=task_ref,
+        dirty_files=tuple(dirty_files),
+        message=message,
+        commands=tuple(commands),
     )
 
 
@@ -962,6 +1203,16 @@ def _git_command_error(command: Sequence[str]) -> str:
             return ""
         return "Only git rev-parse --verify HEAD is allowed."
     return "Unsupported git subcommand: {}".format(subcommand)
+
+
+def _checkpoint_commit_message(task_ref: str) -> str:
+    task_text = " ".join(str(task_ref or "").split())
+    subject = "Checkpoint before Web Run"
+    if task_text:
+        subject = "{}: {}".format(subject, task_text)
+    if len(subject) > 72:
+        subject = subject[:69].rstrip() + "..."
+    return subject
 
 
 def _task_by_id(tasks_state: Any, task_id: str) -> Mapping[str, Any]:

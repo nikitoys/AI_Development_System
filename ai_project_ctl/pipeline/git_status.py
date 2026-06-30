@@ -63,6 +63,39 @@ class GitStatusAllowedFiles:
         }
 
 
+@dataclass(frozen=True)
+class WorktreeDirtyPreflight:
+    """Preflight result for blocking new runs on a dirty git worktree."""
+
+    checked: bool
+    available: bool
+    entries: tuple[GitStatusEntry, ...] = ()
+    dirty_paths: tuple[str, ...] = ()
+    error: str = ""
+
+    @property
+    def should_block(self) -> bool:
+        return bool(self.dirty_paths) or (self.checked and not self.available)
+
+    @property
+    def reason(self) -> str:
+        if self.dirty_paths:
+            return "worktree_dirty"
+        if self.checked and not self.available:
+            return "worktree_status_unavailable"
+        return "worktree_clean"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "checked": self.checked,
+            "available": self.available,
+            "entries": [entry.to_dict() for entry in self.entries],
+            "dirty_paths": list(self.dirty_paths),
+            "reason": self.reason,
+            "error": self.error,
+        }
+
+
 def capture_git_status_snapshot(
     *,
     root: str | Path,
@@ -93,6 +126,37 @@ def capture_git_status_snapshot(
         reason = str(completed.stderr or "").strip() or "git status failed"
         raise GitStatusError(reason)
     return parse_git_status_snapshot(str(completed.stdout or ""), root=root_path)
+
+
+def capture_worktree_dirty_preflight(
+    *,
+    root: str | Path,
+    runner: GitRunner | None = None,
+    timeout_sec: int = DEFAULT_TIMEOUT_SEC,
+) -> WorktreeDirtyPreflight:
+    """Capture dirty worktree state for pre-run safety checks."""
+
+    root_path = Path(root).resolve()
+    if runner is None and not _looks_like_git_worktree(root_path):
+        return WorktreeDirtyPreflight(checked=False, available=False)
+    try:
+        snapshot = capture_git_status_snapshot(
+            root=root_path,
+            runner=runner,
+            timeout_sec=timeout_sec,
+        )
+    except GitStatusError as exc:
+        return WorktreeDirtyPreflight(
+            checked=True,
+            available=False,
+            error=str(exc),
+        )
+    return WorktreeDirtyPreflight(
+        checked=True,
+        available=True,
+        entries=snapshot.entries,
+        dirty_paths=snapshot.dirty_paths,
+    )
 
 
 def parse_git_status_snapshot(stdout: str, *, root: str | Path) -> GitStatusSnapshot:
@@ -198,6 +262,14 @@ def _matches_allowed_file(path: str, patterns: Sequence[str]) -> bool:
     return False
 
 
+def _looks_like_git_worktree(root: Path) -> bool:
+    current = root
+    for candidate in (current, *current.parents):
+        if (candidate / ".git").exists():
+            return True
+    return False
+
+
 def _sorted_unique(values: Iterable[str]) -> tuple[str, ...]:
     return tuple(sorted({str(value) for value in values if str(value).strip()}))
 
@@ -210,7 +282,9 @@ __all__ = [
     "GitStatusEntry",
     "GitStatusError",
     "GitStatusSnapshot",
+    "WorktreeDirtyPreflight",
     "capture_git_status_snapshot",
+    "capture_worktree_dirty_preflight",
     "dirty_paths_after_baseline",
     "filter_paths_by_allowed_files",
     "normalize_git_status_path",
