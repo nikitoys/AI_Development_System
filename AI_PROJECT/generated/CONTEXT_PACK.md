@@ -12,7 +12,7 @@ Task ID: `TASK-280`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1910`
+Tasks revision: `1911`
 
 ## Query
 

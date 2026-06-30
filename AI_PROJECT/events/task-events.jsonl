@@ -1963,3 +1963,4 @@
 {"event_id":"EVT-486D8076B993","timestamp":"2026-06-30T20:30:04Z","actor":"human_owner","command":"task.transition","entity_type":"task","entity_id":"TASK-280","revision_before":1907,"revision_after":1908,"payload":{"to":"in_review"}}
 {"event_id":"EVT-FB82F68D6F96","timestamp":"2026-06-30T20:30:09Z","actor":"human_owner","command":"task.approve","entity_type":"task","entity_id":"TASK-280","revision_before":1908,"revision_after":1909,"payload":{"by":"human_owner","notes":"Approve"}}
 {"event_id":"EVT-C64E38CB3ED2","timestamp":"2026-06-30T20:30:10Z","actor":"human_owner","command":"task.transition","entity_type":"task","entity_id":"TASK-280","revision_before":1909,"revision_after":1910,"payload":{"to":"done"}}
+{"event_id":"EVT-5293DDBAD889","timestamp":"2026-06-30T20:40:10Z","actor":"human_owner","command":"current.clear","entity_type":"current_task","entity_id":"none","revision_before":1910,"revision_after":1911,"payload":{"previous":null}}
