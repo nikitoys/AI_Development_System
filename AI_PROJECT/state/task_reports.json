@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 156,
+  "revision": 158,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-30T20:54:53Z",
+  "updated_at": "2026-06-30T21:36:14Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -11051,6 +11051,148 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-157",
+      "task_id": "TASK-282",
+      "task_ref": "PIPEF-177",
+      "submitted_at": "2026-06-30T21:36:14Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:0e3532201ca4ff2ec93ba5f0e90d6e6b96f4525588622568af76641aa272a396",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-282",
+        "task_ref": "PIPEF-177",
+        "reported_task_id": "TASK-282",
+        "reported_task_ref": "PIPEF-177",
+        "implementation_summary": "Updated tests/test_pipeline_runner.py to match the current run-next phase-result model and refreshed stale assertions around queue selection, blockers, close behavior, local commit readiness, and batch stopping.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 1030.80651,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 1030.80651,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Pre-existing AI_PROJECT protected-file changes were present in the worktree and were not edited manually."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only tests/test_pipeline_runner.py.",
+          "python -m pytest tests/test_pipeline_runner.py -q passed with 51 tests.",
+          "git diff --check -- tests/test_pipeline_runner.py passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 896,
+          "remaining_tokens": 31104,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-158",
+      "task_id": "TASK-282",
+      "task_ref": "PIPEF-177",
+      "submitted_at": "2026-06-30T21:36:14Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-157",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-282",
+        "task_ref": "PIPEF-177",
+        "reported_task_id": "TASK-282",
+        "reported_task_ref": "PIPEF-177",
+        "implementation_summary": "Updated tests/test_pipeline_runner.py to match the current run-next phase-result model and refreshed stale assertions around queue selection, blockers, close behavior, local commit readiness, and batch stopping.",
+        "changed_files": [
+          "tests/test_pipeline_runner.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 1030.80651,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 1030.80651,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Pre-existing AI_PROJECT protected-file changes were present in the worktree and were not edited manually."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed only tests/test_pipeline_runner.py.",
+          "python -m pytest tests/test_pipeline_runner.py -q passed with 51 tests.",
+          "git diff --check -- tests/test_pipeline_runner.py passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 896,
+          "remaining_tokens": 31104,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -11177,6 +11319,7 @@
     "TASK-278": "RPT-150",
     "TASK-279": "RPT-152",
     "TASK-280": "RPT-154",
-    "TASK-281": "RPT-156"
+    "TASK-281": "RPT-156",
+    "TASK-282": "RPT-158"
   }
 }

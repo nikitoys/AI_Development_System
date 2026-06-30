@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1919`
+Revision: `1924`
 
 ## Executable Now
 
@@ -17,7 +17,6 @@ Revision: `1919`
 - `PIPEF-126 (TASK-207)` [planned] `EPIC-009` priority `1` — Show effective policy summary
 - `PIPEF-127 (TASK-208)` [planned] `EPIC-009` priority `1` — Add Web run batch overrides
 - `PIPEF-128 (TASK-209)` [planned] `EPIC-009` priority `1` — Warn on incomplete Web run policy
-- `PIPEF-177 (TASK-282)` [ready] `EPIC-009` priority `1` — Update pipeline runner expectations
 - `PIPEF-178 (TASK-283)` [planned] `EPIC-009` priority `1` — Add recovery close regression
 - `PIPEF-162 (TASK-267)` [planned] `EPIC-009` priority `2` — Auto-size Web batch max steps
 - `PIPEF-163 (TASK-268)` [planned] `EPIC-009` priority `2` — Add Web batch run form
@@ -562,6 +561,8 @@ _No tasks waiting only on dependencies._
 - `PIPEF-175 (TASK-280)` [done] `EPIC-009` priority `1` — Accept confirmed recovery report chain
   - `status_not_executable`: status is done
 - `PIPEF-176 (TASK-281)` [done] `EPIC-009` priority `1` — Add governed report recovery command
+  - `status_not_executable`: status is done
+- `PIPEF-177 (TASK-282)` [done] `EPIC-009` priority `1` — Update pipeline runner expectations
   - `status_not_executable`: status is done
 - `PIPEF-155 (TASK-260)` [done] `EPIC-009` priority `2` — Link dirty preflight to checkpoint UX
   - `status_not_executable`: status is done

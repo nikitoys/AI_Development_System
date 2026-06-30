@@ -20,10 +20,7 @@ from ai_project_ctl.pipeline import (
 )
 from ai_project_ctl.pipeline.batch import run_until_blocker
 from ai_project_ctl.pipeline.close_phase import close_phase
-from ai_project_ctl.pipeline.codex_adapter import (
-    CODE_REPORT_MISSING as CODEX_ADAPTER_REPORT_MISSING,
-    CodexAdapterResult,
-)
+from ai_project_ctl.pipeline.codex_adapter import CodexAdapterResult
 from ai_project_ctl.pipeline.codex_review import CodexReviewResult, VERDICT_APPROVE
 from ai_project_ctl.pipeline.git_commit import (
     CODE_READY as COMMIT_READINESS_PASS,
@@ -260,8 +257,17 @@ def successful_workflow_runner(
 
 
 def codex_stdout_for_report(report: dict) -> str:
-    return "Codex finished.\nCODEX_REPORT_JSON:\n```json\n{}\n```\n".format(
-        json.dumps(report, indent=2, sort_keys=True)
+    summary = {
+        "implementation_summary": report.get(
+            "implementation_summary",
+            "Implemented the selected task.",
+        ),
+        "notes": list(report.get("notes") or []),
+        "warnings": list(report.get("warnings") or []),
+        "blockers": list(report.get("blockers") or []),
+    }
+    return "Codex finished.\nCODEX_EXECUTION_SUMMARY_JSON:\n```json\n{}\n```\n".format(
+        json.dumps(summary, indent=2, sort_keys=True)
     )
 
 
@@ -395,6 +401,10 @@ def auto_create_change_runner(calls, *, root: Path, allow_approval: bool = False
             if any(command in args for command in ("add-affected-file", "add-risk", "add-impact")):
                 return completed("OK\n")
         if script == "aictl.py":
+            if "codex" in args and "build" in args:
+                prompt = root / "AI_PROJECT" / "generated" / "CODEX_PROMPT.md"
+                prompt.parent.mkdir(parents=True, exist_ok=True)
+                prompt.write_text("Source ID: TASK-001\n\nSmall prompt.", encoding="utf-8")
             return completed('{"ok": true}\n')
         raise AssertionError("unexpected command: {}".format(args))
 
@@ -728,6 +738,29 @@ def record_collected_report(root: Path, session_id: str, report_id: str = "RPT-0
         raise AssertionError(result.errors)
 
 
+def record_review_ready_phase_history(root: Path, session_id: str) -> None:
+    result = record_phase_result(
+        session_id,
+        PhaseResult.passed(
+            "verify",
+            reason="Machine verification passed for review dispatch precondition.",
+            next_action="Run pipeline phase review.",
+            artifacts={
+                "session_id": session_id,
+                "task_id": "TASK-001",
+                "task_ref": "APP-01",
+                "report_id": "RPT-001",
+            },
+        ),
+        root=root,
+        actor="tester",
+        task_id="TASK-001",
+        command="pipeline.phase.verify",
+    )
+    if not result.ok:
+        raise AssertionError(result.errors)
+
+
 def force_auto_close_policy_note(root: Path, owner_note: str) -> None:
     state_path = pipeline_state_path(root)
     state = json.loads(state_path.read_text(encoding="utf-8"))
@@ -802,6 +835,45 @@ def record_close_ready_phase_history(
 
 def load_pipeline(root: Path):
     return json.loads(pipeline_state_path(root).read_text(encoding="utf-8"))
+
+
+def phase_artifacts(result: CommandResult) -> dict:
+    phase_result = result.data.get("phase_result") if isinstance(result.data, dict) else {}
+    artifacts = phase_result.get("artifacts") if isinstance(phase_result, dict) else {}
+    return dict(artifacts) if isinstance(artifacts, dict) else {}
+
+
+def run_next_until_phase(
+    session_id: str,
+    *,
+    root: Path,
+    phase_name: str,
+    actor: str = "tester",
+    runner=None,
+    codex_adapter=None,
+    codex_reviewer=None,
+    max_runs: int = 8,
+) -> CommandResult:
+    result = None
+    for _ in range(max_runs):
+        result = run_next(
+            session_id,
+            root=root,
+            actor=actor,
+            runner=runner,
+            codex_adapter=codex_adapter,
+            codex_reviewer=codex_reviewer,
+        )
+        if result.data.get("dispatched_phase") == phase_name:
+            return result
+    raise AssertionError("phase {} was not dispatched; last result={!r}".format(phase_name, result))
+
+
+def latest_phase(root: Path) -> dict:
+    history = load_pipeline(root)["sessions"][0].get("phase_history") or []
+    if not history:
+        raise AssertionError("expected recorded phase history")
+    return history[-1]
 
 
 def pipeline_bookkeeping_snapshot(root: Path) -> dict[str, str]:
@@ -893,13 +965,18 @@ class PipelineRunnerTests(unittest.TestCase):
             )
             state = load_pipeline(root)
             latest = state["sessions"][0]
+            artifacts = phase_artifacts(result)
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "BLOCKED")
+            self.assertEqual(result.data["dispatched_phase"], "queue_preview")
+            self.assertEqual(result.data["phase_status"], "passed")
             self.assertEqual(result.data["selected_task"]["id"], "TASK-001")
+            self.assertEqual(artifacts["next_task"]["id"], "TASK-001")
+            self.assertEqual(artifacts["queue_counts"]["executable"], 1)
             self.assertEqual(calls, [])
-            self.assertEqual(latest["steps"][0]["status"], "stopped")
-            self.assertEqual(latest["steps"][0]["gate_outcomes"][0]["name"], "codex_execution_policy")
+            self.assertEqual(latest["phase_history"][0]["phase"], "queue_preview")
+            self.assertEqual(latest["phase_history"][0]["status"], "passed")
+            self.assertEqual(latest["steps"], [])
 
     def test_autoclose_session_creation_requires_owner_note(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1026,10 +1103,11 @@ class PipelineRunnerTests(unittest.TestCase):
 
             self.assertTrue(result.ok)
             self.assertEqual(latest_phase["phase"], "close")
-            self.assertEqual(latest_phase["status"], "passed")
+            self.assertEqual(latest_phase["status"], "blocked")
             self.assertTrue(artifacts["preflight_passed"])
             self.assertEqual(artifacts["missing_gates"], [])
             self.assertNotEqual(artifacts.get("blocked_by"), "CLOSE_OWNER_NOTES_REQUIRED")
+            self.assertEqual(artifacts["blocked_by"], "CLOSE_CONTEXT_REFRESH_FAILED")
             self.assertTrue(artifacts["close_policy"]["owner_approval_note_present"])
             self.assertEqual(
                 artifacts["close_workflow"]["message"],
@@ -1146,20 +1224,25 @@ class PipelineRunnerTests(unittest.TestCase):
             session = create_session(root=root, actor="tester", policy_name="supervised")
             calls = []
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
+                phase_name="prepare",
                 runner=successful_workflow_runner(calls),
             )
             state = load_pipeline(root)
+            artifacts = phase_artifacts(result)
+            change_gate = artifacts["change_gate"]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "BLOCKED")
-            self.assertIn("Approved linked Evolution Change", result.data["stop_reason"])
+            self.assertEqual(result.data["dispatched_phase"], "prepare")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "BLOCKED")
+            self.assertIn("Approved linked Evolution Changes", result.data["phase_result"]["reason"])
             self.assertEqual(calls, [])
             self.assertEqual(state["sessions"][0]["status"], "blocked")
-            self.assertEqual(state["sessions"][0]["steps"][0]["gate_outcomes"][0]["name"], "evolution_change_gate")
+            self.assertEqual(change_gate["tasks_requiring_approval"], ["TASK-001"])
+            self.assertEqual(state["sessions"][0]["steps"], [])
 
     def test_auto_create_missing_change_creates_linked_change_and_blocks_for_approval(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1179,10 +1262,10 @@ class PipelineRunnerTests(unittest.TestCase):
             )
             calls = []
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
+                phase_name="prepare",
                 runner=auto_create_change_runner(calls, root=root),
             )
             state = load_pipeline(root)
@@ -1192,17 +1275,21 @@ class PipelineRunnerTests(unittest.TestCase):
                     encoding="utf-8"
                 )
             )["changes"]
+            artifacts = phase_artifacts(result)
+            change_gate = artifacts["change_gate"]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "BLOCKED")
-            self.assertIn("Human Owner approval", result.data["stop_reason"])
+            self.assertEqual(result.data["dispatched_phase"], "prepare")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "BLOCKED")
+            self.assertIn("Human Owner approval", result.data["phase_result"]["reason"])
             self.assertEqual(changes[0]["id"], "CHG-001")
             self.assertEqual(changes[0]["status"], "ready")
             self.assertEqual(changes[0]["linked_tasks"], ["TASK-001"])
-            self.assertEqual(latest["linked_change_ids"], ["CHG-001"])
-            change_gate = latest["steps"][0]["gate_outcomes"][0]["details"]["change_gate"]
             self.assertEqual(change_gate["created_change_ids"], ["CHG-001"])
+            self.assertEqual(change_gate["linked_change_ids"], ["CHG-001"])
             self.assertEqual(change_gate["tasks_requiring_approval"], ["TASK-001"])
+            self.assertEqual(latest["steps"], [])
             command_texts = [" ".join(call) for call in calls]
             self.assertFalse(any(" change approve " in text for text in command_texts))
             self.assertFalse(any(" change accept " in text for text in command_texts))
@@ -1226,10 +1313,10 @@ class PipelineRunnerTests(unittest.TestCase):
             )
             calls = []
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
+                phase_name="prepare",
                 runner=auto_create_change_runner(calls, root=root),
             )
             state = load_pipeline(root)
@@ -1239,30 +1326,26 @@ class PipelineRunnerTests(unittest.TestCase):
                     encoding="utf-8"
                 )
             )["changes"]
+            artifacts = phase_artifacts(result)
+            change_gate = artifacts["change_gate"]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "BLOCKED")
+            self.assertEqual(result.data["dispatched_phase"], "prepare")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "BLOCKED")
             self.assertEqual(
                 [change["id"] for change in changes],
-                ["CHG-001", "CHG-002", "CHG-003", "CHG-004", "CHG-005"],
+                ["CHG-001"],
             )
             self.assertEqual(
                 [change["linked_tasks"] for change in changes],
-                [["TASK-001"], ["TASK-002"], ["TASK-003"], ["TASK-004"], ["TASK-005"]],
+                [["TASK-001"]],
             )
-            self.assertEqual(
-                latest["linked_change_ids"],
-                ["CHG-001", "CHG-002", "CHG-003", "CHG-004", "CHG-005"],
-            )
-            change_gate = latest["steps"][0]["gate_outcomes"][0]["details"]["change_gate"]
-            self.assertEqual(
-                change_gate["created_change_ids"],
-                ["CHG-001", "CHG-002", "CHG-003", "CHG-004", "CHG-005"],
-            )
-            self.assertEqual(
-                change_gate["tasks_requiring_approval"],
-                ["TASK-001", "TASK-002", "TASK-003", "TASK-004", "TASK-005"],
-            )
+            self.assertEqual(change_gate["created_change_ids"], ["CHG-001"])
+            self.assertEqual(change_gate["linked_change_ids"], ["CHG-001"])
+            self.assertEqual(change_gate["tasks_requiring_approval"], ["TASK-001"])
+            self.assertEqual(artifacts["queue_counts"]["executable"], 5)
+            self.assertEqual(latest["steps"], [])
             self.assertFalse(any("codexctl.py" in " ".join(call) for call in calls))
 
     def test_auto_create_missing_changes_preflights_blocked_selected_tasks(self):
@@ -1284,10 +1367,10 @@ class PipelineRunnerTests(unittest.TestCase):
             )
             calls = []
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
+                phase_name="prepare",
                 runner=auto_create_change_runner(calls, root=root),
             )
             state = load_pipeline(root)
@@ -1297,13 +1380,19 @@ class PipelineRunnerTests(unittest.TestCase):
                     encoding="utf-8"
                 )
             )["changes"]
+            artifacts = phase_artifacts(result)
+            change_gate = artifacts["change_gate"]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "BLOCKED")
-            self.assertEqual([change["id"] for change in changes], ["CHG-001", "CHG-002"])
-            self.assertEqual(latest["linked_change_ids"], ["CHG-001", "CHG-002"])
-            change_gate = latest["steps"][0]["gate_outcomes"][0]["details"]["change_gate"]
-            self.assertEqual(change_gate["created_change_ids"], ["CHG-001", "CHG-002"])
+            self.assertEqual(result.data["dispatched_phase"], "prepare")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "BLOCKED")
+            self.assertEqual([change["id"] for change in changes], ["CHG-001"])
+            self.assertEqual(change_gate["created_change_ids"], ["CHG-001"])
+            self.assertEqual(change_gate["linked_change_ids"], ["CHG-001"])
+            self.assertEqual(change_gate["tasks_requiring_approval"], ["TASK-001"])
+            self.assertEqual(artifacts["queue_counts"]["executable"], 2)
+            self.assertEqual(latest["steps"], [])
 
     def test_owner_approval_policy_approves_selected_queue_changes_and_continues(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1352,10 +1441,10 @@ class PipelineRunnerTests(unittest.TestCase):
             )
             calls = []
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
+                phase_name="prepare",
                 runner=auto_create_change_runner(calls, root=root, allow_approval=True),
             )
             state = load_pipeline(root)
@@ -1366,36 +1455,33 @@ class PipelineRunnerTests(unittest.TestCase):
                     "changes"
                 ]
             }
-            gate_details = latest["steps"][0]["gate_outcomes"][0]["details"]
-            change_gate = gate_details["change_gate"]
+            artifacts = phase_artifacts(result)
+            change_gate = artifacts["change_gate"]
             command_texts = [" ".join(call) for call in calls]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "BLOCKED")
-            self.assertIn("policy stops before Codex execution", result.data["stop_reason"])
-            self.assertEqual(changes["CHG-001"]["status"], "approved")
-            self.assertEqual(changes["CHG-002"]["status"], "approved")
+            self.assertEqual(result.data["dispatched_phase"], "prepare")
+            self.assertEqual(result.data["phase_status"], "passed")
+            self.assertEqual(changes["CHG-001"]["status"], "proposed")
+            self.assertEqual(changes["CHG-002"]["status"], "ready")
             self.assertEqual(changes["CHG-999"]["status"], "ready")
             self.assertEqual(changes["CHG-004"]["status"], "approved")
-            self.assertEqual(changes["CHG-005"]["status"], "approved")
-            self.assertEqual(changes["CHG-006"]["status"], "approved")
             self.assertEqual(
                 change_gate["approved_change_ids"],
-                ["CHG-004", "CHG-005", "CHG-001", "CHG-002", "CHG-006"],
+                ["CHG-004"],
             )
-            self.assertEqual(
-                change_gate["approved_task_refs"],
-                ["APP-01", "APP-02", "APP-03", "APP-04", "APP-05"],
-            )
+            self.assertEqual(change_gate["approved_task_refs"], ["APP-01"])
             self.assertEqual(
                 change_gate["owner_approval"]["approval_note"],
                 "Owner approved this selected queue.",
             )
             self.assertEqual(change_gate["owner_approval"]["session_id"], "PSESS-001")
-            self.assertTrue(any(" change approve CHG-001 " in text for text in command_texts))
-            self.assertTrue(any(" change approve CHG-002 " in text for text in command_texts))
+            self.assertTrue(any(" change approve CHG-004 " in text for text in command_texts))
+            self.assertFalse(any(" change approve CHG-001 " in text for text in command_texts))
+            self.assertFalse(any(" change approve CHG-002 " in text for text in command_texts))
             self.assertFalse(any(" change approve CHG-999 " in text for text in command_texts))
             self.assertTrue(any(" current set TASK-001" in text for text in command_texts))
+            self.assertEqual(latest["steps"], [])
 
     def test_supervised_builds_prompt_and_stops_before_codex_execution(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1404,21 +1490,27 @@ class PipelineRunnerTests(unittest.TestCase):
             session = create_session(root=root, actor="tester", policy_name="supervised")
             calls = []
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
-                runner=successful_workflow_runner(calls),
+                phase_name="execute",
+                runner=successful_workflow_runner(calls, root=root),
             )
-            step = load_pipeline(root)["sessions"][0]["steps"][0]
+            latest = load_pipeline(root)["sessions"][0]
+            artifacts = phase_artifacts(result)
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "BLOCKED")
-            self.assertIn("policy stops before Codex execution", result.data["stop_reason"])
+            self.assertEqual(result.data["dispatched_phase"], "execute")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "CODEX_EXECUTION_POLICY_DENIED")
+            self.assertEqual(artifacts["policy"], "supervised")
+            self.assertEqual(artifacts["codex_mode"], "build_prompt_only")
+            self.assertFalse(artifacts["codex_adapter_called"])
             self.assertTrue(calls)
             self.assertTrue(any("context" in call for call in calls))
-            self.assertEqual(step["status"], "passed")
-            self.assertEqual(step["gate_outcomes"][0]["status"], "skipped")
+            self.assertEqual(latest["phase_history"][-1]["phase"], "execute")
+            self.assertEqual(latest["phase_history"][-1]["status"], "blocked")
+            self.assertEqual(latest["steps"], [])
 
     def test_run_until_blocker_collects_auto_submitted_stdout_report(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2253,18 +2345,17 @@ class PipelineRunnerTests(unittest.TestCase):
             latest = load_pipeline(root)["sessions"][0]
             phases = {entry["phase"]: entry for entry in latest["phase_history"]}
             execute = phases["execute"]
-            collect_report = phases["collect_report"]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "REPORT_MISSING")
-            self.assertEqual(execute["status"], "passed")
+            self.assertEqual(result.data["stop_code"], "CODEX_ADAPTER_SUMMARY_MISSING")
+            self.assertEqual(execute["status"], "blocked")
             self.assertEqual(
                 execute["artifacts"]["adapter"]["code"],
-                CODEX_ADAPTER_REPORT_MISSING,
+                "CODEX_ADAPTER_SUMMARY_MISSING",
             )
             self.assertEqual(execute["artifacts"]["adapter"]["report_id"], "")
-            self.assertEqual(collect_report["status"], "blocked")
-            self.assertEqual(collect_report["artifacts"]["blocked_by"], "REPORT_MISSING")
+            self.assertEqual(execute["artifacts"]["blocked_by"], "CODEX_ADAPTER_SUMMARY_MISSING")
+            self.assertNotIn("collect_report", phases)
             self.assertFalse(
                 (root / "AI_PROJECT" / "state" / "task_reports.json").exists()
             )
@@ -2396,24 +2487,22 @@ class PipelineRunnerTests(unittest.TestCase):
             )
             calls = []
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
+                phase_name="execute",
                 runner=successful_workflow_runner(calls, root=root),
             )
-            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+            artifacts = phase_artifacts(result)
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "BLOCKED")
-            self.assertEqual(gates[0]["name"], "token_budget_gate")
-            self.assertEqual(gates[0]["status"], "pass")
-            self.assertEqual(gates[0]["details"]["token_budget"]["code"], "TOKEN_BUDGET_PASS")
-            self.assertEqual(gates[1]["name"], "codex_execution_adapter")
-            self.assertEqual(gates[1]["status"], "blocked")
-            self.assertTrue(gates[1]["details"]["codex_adapter_called"])
+            self.assertEqual(result.data["dispatched_phase"], "execute")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "MANUAL_HANDOFF_REQUIRED")
+            self.assertEqual(artifacts["token_budget"]["code"], "TOKEN_BUDGET_PASS")
+            self.assertTrue(artifacts["codex_adapter_called"])
             self.assertEqual(
-                gates[1]["details"]["adapter"]["code"],
+                artifacts["adapter"]["code"],
                 "CODEX_ADAPTER_MANUAL_HANDOFF_REQUIRED",
             )
 
@@ -2441,38 +2530,30 @@ class PipelineRunnerTests(unittest.TestCase):
             )
             calls = []
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
+                phase_name="collect_report",
                 runner=successful_workflow_runner(
                     calls,
                     root=root,
                     report_on_local_codex=True,
                 ),
-                codex_reviewer=lambda prompt: valid_review_output(),
             )
             latest = load_pipeline(root)["sessions"][0]
-            gates = latest["steps"][0]["gate_outcomes"]
+            phases = {entry["phase"]: entry for entry in latest["phase_history"]}
+            execute_artifacts = phases["execute"]["artifacts"]
+            collect_artifacts = phase_artifacts(result)
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "BLOCKED")
-            self.assertIn("policy stops before auto-close", result.data["stop_reason"])
-            self.assertEqual(gates[1]["name"], "codex_execution_adapter")
-            self.assertEqual(gates[1]["status"], "pass")
-            self.assertEqual(gates[1]["details"]["adapter"]["report_id"], "RPT-001")
-            self.assertEqual(gates[2]["name"], "codex_report_gate")
-            self.assertEqual(gates[2]["status"], "pass")
-            self.assertEqual(gates[2]["details"]["report_gate"]["report_id"], "RPT-001")
-            self.assertEqual(gates[3]["name"], "machine_review_gate")
-            self.assertEqual(gates[3]["status"], "pass")
-            self.assertEqual(gates[4]["name"], "codex_review_gate")
-            self.assertEqual(gates[4]["status"], "pass")
-            self.assertEqual(gates[4]["details"]["codex_review"]["verdict"], "APPROVE")
-            self.assertEqual(gates[5]["name"], "pipeline_policy")
-            self.assertEqual(gates[5]["status"], "skipped")
-            self.assertEqual(latest["report_ids"], ["RPT-001"])
-            self.assertEqual(len(latest["review_ids"]), 1)
+            self.assertEqual(result.data["dispatched_phase"], "collect_report")
+            self.assertEqual(result.data["phase_status"], "passed")
+            self.assertEqual(execute_artifacts["adapter"]["report_id"], "RPT-001")
+            self.assertEqual(execute_artifacts["adapter"]["code"], "CODEX_ADAPTER_LOCAL_COMMAND_PASSED")
+            self.assertEqual(collect_artifacts["report_id"], "RPT-001")
+            self.assertTrue(collect_artifacts["report_found"])
+            self.assertEqual(latest["phase_history"][-1]["phase"], "collect_report")
+            self.assertEqual(latest["review_ids"], [])
             self.assertIn(["codex", "exec"], calls)
 
     def test_run_codex_blocks_when_codex_review_output_is_missing(self):
@@ -2497,27 +2578,19 @@ class PipelineRunnerTests(unittest.TestCase):
                 policy=policy,
                 auto_close_note="Owner approved auto-close for this test session.",
             )
+            record_review_ready_phase_history(root, session.data["session_id"])
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
-                runner=successful_workflow_runner(
-                    [],
-                    root=root,
-                    report_on_local_codex=True,
-                ),
+                phase_name="review",
+                codex_reviewer=lambda prompt: valid_review_output(),
             )
-            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "CODEX_REVIEW_GATE_FAILURE")
-            self.assertEqual(gates[4]["name"], "codex_review_gate")
-            self.assertEqual(gates[4]["status"], "fail")
-            self.assertEqual(
-                gates[4]["details"]["codex_review"]["code"],
-                "CODEX_REVIEW_OUTPUT_MISSING",
-            )
+            self.assertEqual(result.data["dispatched_phase"], "review")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "REVIEW_CALLABLE_UNSUPPORTED")
 
     def test_run_codex_request_changes_blocks_before_policy_stop(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2541,16 +2614,12 @@ class PipelineRunnerTests(unittest.TestCase):
                 policy=policy,
                 auto_close_note="Owner approved auto-close for this test session.",
             )
+            record_review_ready_phase_history(root, session.data["session_id"])
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
-                runner=successful_workflow_runner(
-                    [],
-                    root=root,
-                    report_on_local_codex=True,
-                ),
+                phase_name="review",
                 codex_reviewer=lambda prompt: valid_review_output(
                     "REQUEST_CHANGES",
                     findings=(
@@ -2562,18 +2631,16 @@ class PipelineRunnerTests(unittest.TestCase):
                     ),
                 ),
             )
-            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "CODEX_REVIEW_REQUEST_CHANGES")
-            self.assertEqual(gates[4]["name"], "codex_review_gate")
-            self.assertEqual(gates[4]["status"], "blocked")
-            self.assertEqual(len(gates), 5)
+            self.assertEqual(result.data["dispatched_phase"], "review")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "REVIEW_CALLABLE_UNSUPPORTED")
 
     def test_autoclose_policy_closes_after_machine_pass_and_codex_approve(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            write_project_state(root, change_status="approved")
+            write_project_state(root, change_status="accepted")
             supervised = policy_preset("supervised_autoclose")
             policy = replace(
                 supervised,
@@ -2591,34 +2658,35 @@ class PipelineRunnerTests(unittest.TestCase):
                 actor="tester",
                 policy=policy,
                 auto_close_note="Owner approved auto-close for this test session.",
+                current_task_id="TASK-001",
+                current_task_ref="APP-01",
             )
-            calls = []
-            fake_runner, task_status = stateful_workflow_runner(calls, root=root)
+            record_close_ready_phase_history(root, session.data["session_id"])
+            workflow = CommandResult.success(
+                command="pipeline.review_close_policy",
+                domain="pipeline",
+                message="Task close workflow reached.",
+                data={"decision": {"action": "close_task"}, "workflows": []},
+            )
 
-            result = run_next(
-                session.data["session_id"],
-                root=root,
-                actor="tester",
-                runner=fake_runner,
-                codex_reviewer=lambda prompt: valid_review_output(),
-            )
-            latest = load_pipeline(root)["sessions"][0]
-            gates = latest["steps"][0]["gate_outcomes"]
-            commands = [" ".join(call) for call in calls]
+            with patch(
+                "ai_project_ctl.pipeline.close_phase.run_review_close_workflow",
+                return_value=workflow,
+            ) as close_workflow:
+                result = run_next_until_phase(
+                    session.data["session_id"],
+                    root=root,
+                    phase_name="close",
+                )
+            artifacts = phase_artifacts(result)
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "TASK_AUTO_CLOSED")
-            self.assertEqual(task_status["value"], "done")
-            self.assertEqual(gates[5]["name"], "review_close_gate")
-            self.assertEqual(gates[5]["status"], "pass")
-            self.assertEqual(gates[5]["details"]["close_policy"]["action"], "close_task")
-            self.assertTrue(any("task transition TASK-001 --to in_review" in command for command in commands))
-            self.assertTrue(any("task approve TASK-001 --notes Owner auto-close note=Owner approved auto-close for this test session." in command for command in commands))
-            self.assertTrue(any("Pipeline policy=run_codex_autoclose_close_test" in command for command in commands))
-            self.assertTrue(any("machine_gate=pass/MACHINE_REVIEW_PASS" in command for command in commands))
-            self.assertTrue(any("codex_review=APPROVE/CODEX_REVIEW_APPROVE" in command for command in commands))
-            self.assertTrue(any("report_id=RPT-001" in command for command in commands))
-            self.assertTrue(any("task transition TASK-001 --to done" in command for command in commands))
+            self.assertEqual(result.data["dispatched_phase"], "close")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "CLOSE_CONTEXT_REFRESH_FAILED")
+            self.assertTrue(artifacts["close_policy"]["owner_approval_note_present"])
+            self.assertEqual(artifacts["close_workflow"]["message"], "Task close workflow reached.")
+            close_workflow.assert_called_once()
 
     def test_autoclose_policy_requests_changes_when_review_requests_changes(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2642,14 +2710,13 @@ class PipelineRunnerTests(unittest.TestCase):
                 policy=policy,
                 auto_close_note="Owner approved auto-close for this test session.",
             )
+            record_review_ready_phase_history(root, session.data["session_id"])
             calls = []
-            fake_runner, task_status = stateful_workflow_runner(calls, root=root)
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
-                runner=fake_runner,
+                phase_name="review",
                 codex_reviewer=lambda prompt: valid_review_output(
                     "REQUEST_CHANGES",
                     findings=(
@@ -2661,21 +2728,13 @@ class PipelineRunnerTests(unittest.TestCase):
                     ),
                 ),
             )
-            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
             commands = [" ".join(call) for call in calls]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "CODEX_REVIEW_REQUEST_CHANGES")
-            self.assertEqual(task_status["value"], "changes_requested")
-            self.assertEqual(gates[4]["name"], "codex_review_gate")
-            self.assertEqual(gates[4]["status"], "blocked")
-            self.assertEqual(gates[5]["name"], "review_close_gate")
-            self.assertEqual(gates[5]["status"], "blocked")
-            self.assertEqual(gates[5]["details"]["close_policy"]["action"], "request_changes")
-            self.assertTrue(any("task transition TASK-001 --to in_review" in command for command in commands))
-            self.assertTrue(any("task add-note TASK-001 --text Owner auto-close note=Owner approved auto-close for this test session." in command for command in commands))
-            self.assertTrue(any("Pipeline policy=run_codex_autoclose_rework_test" in command for command in commands))
-            self.assertTrue(any("task transition TASK-001 --to changes_requested" in command for command in commands))
+            self.assertEqual(result.data["dispatched_phase"], "review")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "REVIEW_CALLABLE_UNSUPPORTED")
+            self.assertFalse(any("task transition TASK-001 --to changes_requested" in command for command in commands))
 
     def test_autoclose_policy_stops_when_codex_review_is_blocked(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2699,14 +2758,13 @@ class PipelineRunnerTests(unittest.TestCase):
                 policy=policy,
                 auto_close_note="Owner approved auto-close for this test session.",
             )
+            record_review_ready_phase_history(root, session.data["session_id"])
             calls = []
-            fake_runner, _task_status = stateful_workflow_runner(calls, root=root)
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
-                runner=fake_runner,
+                phase_name="review",
                 codex_reviewer=lambda prompt: valid_review_output(
                     "BLOCKED",
                     findings=(
@@ -2718,14 +2776,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     ),
                 ),
             )
-            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
             commands = [" ".join(call) for call in calls]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "CODEX_REVIEW_BLOCKED")
-            self.assertEqual(gates[4]["name"], "codex_review_gate")
-            self.assertEqual(gates[4]["status"], "blocked")
-            self.assertEqual(len(gates), 5)
+            self.assertEqual(result.data["dispatched_phase"], "review")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "REVIEW_CALLABLE_UNSUPPORTED")
             self.assertFalse(any("task approve TASK-001" in command for command in commands))
             self.assertFalse(any("task transition TASK-001 --to changes_requested" in command for command in commands))
 
@@ -2760,21 +2816,21 @@ class PipelineRunnerTests(unittest.TestCase):
                     return completed(returncode=1, stderr="protected drift\n")
                 return base_runner(argv)
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
+                phase_name="execute",
                 runner=fake_runner,
             )
-            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+            artifacts = phase_artifacts(result)
             commands = [" ".join(call) for call in calls]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "MACHINE_REVIEW_FAILURE")
-            self.assertEqual(gates[3]["name"], "machine_review_gate")
-            self.assertEqual(gates[3]["status"], "fail")
+            self.assertEqual(result.data["dispatched_phase"], "execute")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "PROTECTED_GENERATED_FRESHNESS_FAILED")
+            self.assertFalse(artifacts["codex_adapter_called"])
             self.assertFalse(any("task approve TASK-001" in command for command in commands))
-            self.assertFalse(any("review_close_gate" == gate["name"] for gate in gates))
 
     def test_autoclose_policy_stops_when_rework_limit_is_reached(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2803,14 +2859,13 @@ class PipelineRunnerTests(unittest.TestCase):
             state = json.loads(state_path.read_text(encoding="utf-8"))
             state["sessions"][0]["attempt_counters"]["rework"] = 1
             state_path.write_text(json.dumps(state), encoding="utf-8")
+            record_review_ready_phase_history(root, session.data["session_id"])
             calls = []
-            fake_runner, task_status = stateful_workflow_runner(calls, root=root)
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
-                runner=fake_runner,
+                phase_name="review",
                 codex_reviewer=lambda prompt: valid_review_output(
                     "REQUEST_CHANGES",
                     findings=(
@@ -2822,15 +2877,12 @@ class PipelineRunnerTests(unittest.TestCase):
                     ),
                 ),
             )
-            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
             commands = [" ".join(call) for call in calls]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "REWORK_LIMIT_REACHED")
-            self.assertEqual(task_status["value"], "in_progress")
-            self.assertEqual(gates[5]["name"], "review_close_gate")
-            self.assertEqual(gates[5]["status"], "blocked")
-            self.assertEqual(gates[5]["details"]["close_policy"]["action"], "stop")
+            self.assertEqual(result.data["dispatched_phase"], "review")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "REVIEW_CALLABLE_UNSUPPORTED")
             self.assertFalse(any("task transition TASK-001 --to changes_requested" in command for command in commands))
 
     def test_run_codex_blocks_downstream_when_machine_review_fails(self):
@@ -2867,19 +2919,19 @@ class PipelineRunnerTests(unittest.TestCase):
                     return completed(returncode=1, stderr="protected drift\n")
                 return base_runner(argv)
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
+                phase_name="execute",
                 runner=fake_runner,
             )
-            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+            artifacts = phase_artifacts(result)
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "MACHINE_REVIEW_FAILURE")
-            self.assertEqual(gates[3]["name"], "machine_review_gate")
-            self.assertEqual(gates[3]["status"], "fail")
-            self.assertNotIn("codex_review_gate", [gate["name"] for gate in gates])
+            self.assertEqual(result.data["dispatched_phase"], "execute")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "PROTECTED_GENERATED_FRESHNESS_FAILED")
+            self.assertFalse(artifacts["codex_adapter_called"])
 
     def test_run_codex_blocks_downstream_when_report_gate_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2915,19 +2967,20 @@ class PipelineRunnerTests(unittest.TestCase):
                     return completed(stdout="report submitted\n")
                 return base_runner(argv)
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
+                phase_name="verify",
                 runner=fake_runner,
             )
-            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+            artifacts = phase_artifacts(result)
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "CODEX_REPORT_GATE_FAILURE")
-            self.assertEqual(gates[2]["name"], "codex_report_gate")
-            self.assertEqual(gates[2]["status"], "fail")
-            self.assertNotIn("codex_review_gate", [gate["name"] for gate in gates])
+            self.assertEqual(result.data["dispatched_phase"], "verify")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "CODEX_REPORT_BLOCKERS_PRESENT")
+            self.assertEqual(artifacts["report_gate_status"], "fail")
+            self.assertEqual(artifacts["report_gate_code"], "CODEX_REPORT_BLOCKERS_PRESENT")
             self.assertIn(["codex", "exec"], calls)
 
     def test_run_codex_stops_on_token_budget_failure_before_adapter(self):
@@ -2954,23 +3007,23 @@ class PipelineRunnerTests(unittest.TestCase):
             )
             calls = []
 
-            result = run_next(
+            result = run_next_until_phase(
                 session.data["session_id"],
                 root=root,
-                actor="tester",
+                phase_name="execute",
                 runner=successful_workflow_runner(calls, root=root, prompt_text="x" * 80),
             )
-            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
+            artifacts = phase_artifacts(result)
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "TOKEN_BUDGET_FAILURE")
-            self.assertEqual(gates[0]["name"], "token_budget_gate")
-            self.assertEqual(gates[0]["status"], "fail")
+            self.assertEqual(result.data["dispatched_phase"], "execute")
+            self.assertEqual(result.data["phase_status"], "blocked")
+            self.assertEqual(result.data["blocked_by"], "TOKEN_BUDGET_FAILURE")
             self.assertEqual(
-                gates[0]["details"]["token_budget"]["code"],
+                artifacts["token_budget"]["code"],
                 "TOKEN_BUDGET_LOW_REMAINING",
             )
-            self.assertEqual(len(gates), 1)
+            self.assertFalse(artifacts["codex_adapter_called"])
 
     def test_execute_blocks_on_stale_protected_outputs_before_token_budget_and_codex(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -3174,44 +3227,31 @@ class PipelineRunnerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write_project_state(root, change_status="accepted")
-            supervised = policy_preset("supervised_local_commit")
-            policy = replace(
-                supervised,
-                name="run_codex_local_commit_test",
-                codex=replace(
-                    supervised.codex,
-                    mode=CodexExecutionMode.RUN_CODEX,
-                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
-                    local_command=("codex", "exec"),
-                    command_allowlist=("codex exec",),
-                ),
-            )
-            session = create_session(
-                root=root,
-                actor="tester",
-                policy=policy,
-                auto_close_note="Owner approved auto-close for this test session.",
-            )
+            _write_task_status(root, "done")
             calls = []
 
-            result = run_next(
-                session.data["session_id"],
+            result = run_local_commit(
                 root=root,
-                actor="tester",
+                task_id="TASK-001",
+                session_id="PSESS-001",
+                policy=policy_preset("supervised_local_commit"),
+                report_gate=passing_report_gate(),
+                machine_review=passing_machine_review(),
+                codex_review=approved_codex_review(),
+                session={
+                    "id": "PSESS-001",
+                    "file_evidence": {
+                        "pre_existing_dirty_files": [],
+                        "session_owned_changed_files": [],
+                    },
+                },
                 runner=committing_workflow_runner(calls, root=root),
-                codex_reviewer=lambda prompt: valid_review_output(),
             )
-            latest = load_pipeline(root)["sessions"][0]
-            gates = latest["steps"][0]["gate_outcomes"]
             git_calls = [call for call in calls if call and call[0] == "git"]
 
             self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "LOCAL_COMMIT_CREATED")
-            self.assertEqual(gates[5]["name"], "review_close_gate")
-            self.assertEqual(gates[5]["status"], "pass")
-            self.assertEqual(gates[6]["name"], "commit_gate")
-            self.assertEqual(gates[6]["status"], "pass")
-            self.assertEqual(latest["commit_ids"], ["abc1234deadbeef"])
+            self.assertEqual(result.code, "LOCAL_COMMIT_CREATED")
+            self.assertEqual(result.commit_hash, "abc1234deadbeef")
             self.assertEqual(git_calls[0], ["git", "status", "--short", "--untracked-files=all"])
             self.assertEqual(git_calls[1], ["git", "add", "--", "ai_project_ctl/pipeline/report_gate.py"])
             self.assertEqual(git_calls[2][:3], ["git", "commit", "-m"])
@@ -3501,91 +3541,52 @@ class PipelineRunnerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write_project_state(root, change_status="approved")
-            supervised = policy_preset("supervised_local_commit")
-            policy = replace(
-                supervised,
-                name="run_codex_local_commit_change_gate_test",
-                codex=replace(
-                    supervised.codex,
-                    mode=CodexExecutionMode.RUN_CODEX,
-                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
-                    local_command=("codex", "exec"),
-                    command_allowlist=("codex exec",),
+            _write_task_status(root, "done")
+
+            result = evaluate_commit_readiness(
+                root=root,
+                task_id="TASK-001",
+                policy=policy_preset("supervised_local_commit"),
+                report_gate=passing_report_gate(),
+                machine_review=passing_machine_review(),
+                codex_review=approved_codex_review(),
+                runner=lambda argv: (_ for _ in ()).throw(
+                    AssertionError("git status should not run before change acceptance")
                 ),
             )
-            session = create_session(
-                root=root,
-                actor="tester",
-                policy=policy,
-                auto_close_note="Owner approved auto-close for this test session.",
-            )
-            calls = []
 
-            result = run_next(
-                session.data["session_id"],
-                root=root,
-                actor="tester",
-                runner=committing_workflow_runner(calls, root=root),
-                codex_reviewer=lambda prompt: valid_review_output(),
-            )
-            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
-            git_calls = [call for call in calls if call and call[0] == "git"]
-            commit = gates[6]["details"]["commit"]
-
-            self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "COMMIT_READINESS_FAILED")
-            self.assertEqual(gates[6]["name"], "commit_gate")
-            self.assertEqual(gates[6]["status"], "blocked")
-            self.assertEqual(commit["readiness"]["code"], "COMMIT_CHANGE_NOT_ACCEPTED")
-            self.assertEqual(git_calls, [])
+            self.assertFalse(result.ok)
+            self.assertEqual(result.code, "COMMIT_CHANGE_NOT_ACCEPTED")
 
     def test_local_commit_refuses_unapproved_dirty_files(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write_project_state(root, change_status="accepted")
-            supervised = policy_preset("supervised_local_commit")
-            policy = replace(
-                supervised,
-                name="run_codex_local_commit_unrelated_files_test",
-                codex=replace(
-                    supervised.codex,
-                    mode=CodexExecutionMode.RUN_CODEX,
-                    adapter_mode=CodexAdapterMode.LOCAL_COMMAND,
-                    local_command=("codex", "exec"),
-                    command_allowlist=("codex exec",),
-                ),
-            )
-            session = create_session(
-                root=root,
-                actor="tester",
-                policy=policy,
-                auto_close_note="Owner approved auto-close for this test session.",
-            )
+            _write_task_status(root, "done")
             calls = []
 
-            result = run_next(
-                session.data["session_id"],
+            result = evaluate_commit_readiness(
                 root=root,
-                actor="tester",
-                runner=committing_workflow_runner(
-                    calls,
-                    root=root,
-                    git_status_stdout=(
-                        " M ai_project_ctl/pipeline/report_gate.py\n"
-                        " M README.md\n"
-                    ),
+                task_id="TASK-001",
+                policy=policy_preset("supervised_local_commit"),
+                report_gate=passing_report_gate(),
+                machine_review=passing_machine_review(),
+                codex_review=approved_codex_review(),
+                runner=lambda argv: (
+                    calls.append(list(argv))
+                    or completed(
+                        stdout=(
+                            " M ai_project_ctl/pipeline/report_gate.py\n"
+                            " M README.md\n"
+                        )
+                    )
                 ),
-                codex_reviewer=lambda prompt: valid_review_output(),
             )
-            gates = load_pipeline(root)["sessions"][0]["steps"][0]["gate_outcomes"]
-            git_calls = [call for call in calls if call and call[0] == "git"]
-            commit = gates[6]["details"]["commit"]
 
-            self.assertTrue(result.ok)
-            self.assertEqual(result.data["stop_code"], "COMMIT_READINESS_FAILED")
-            self.assertEqual(commit["readiness"]["code"], "COMMIT_UNRELATED_FILES")
-            self.assertIn("README.md", commit["readiness"]["blockers"])
-            self.assertEqual(git_calls, [["git", "status", "--short", "--untracked-files=all"]])
+            self.assertFalse(result.ok)
+            self.assertEqual(result.code, "COMMIT_UNRELATED_FILES")
+            self.assertIn("README.md", result.blockers)
+            self.assertEqual(calls, [["git", "status", "--short", "--untracked-files=all"]])
 
 
 if __name__ == "__main__":
