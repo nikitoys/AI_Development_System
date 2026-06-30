@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1878,
-  "current_task_id": null,
+  "revision": 1880,
+  "current_task_id": "TASK-277",
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-30T18:27:41Z",
+  "updated_at": "2026-06-30T18:28:19Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -17895,7 +17895,7 @@
       "id": "TASK-277",
       "epic_id": "EPIC-009",
       "title": "Allow governed close side effects in local commit readiness",
-      "status": "planned",
+      "status": "in_progress",
       "summary": "Update local commit readiness so current-session governed close side effects can be committed without allowing unrelated AI_PROJECT dirty files.",
       "description": "Fix the PSESS-151 class of failures where task gates pass but local commit blocks with COMMIT_UNRELATED_FILES because governed close side effects are not included in approved evidence.",
       "priority": 1,
@@ -17948,7 +17948,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-30T18:27:41Z",
-      "updated_at": "2026-06-30T18:27:41Z",
+      "updated_at": "2026-06-30T18:28:19Z",
       "uid": "tsk_8163c89f10e7",
       "ref": "PIPEF-172",
       "legacy_id": "TASK-277",

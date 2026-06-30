@@ -3,8 +3,8 @@
 
 # Project Tasks
 
-Revision: `1878`
-Current task: `none`
+Revision: `1880`
+Current task: `TASK-277`
 
 ## Epic `EPIC-001`
 
@@ -4839,9 +4839,9 @@ Acceptance criteria:
 - The regression fails if PIPELINE_STATUS.md or PIPELINE_AUDIT.md remain dirty after the first Web Run.
 - The regression verifies the second Web Run starts without WORKTREE_DIRTY or ui.checkpoint_commit guidance.
 
-### PIPEF-172 (TASK-277) — Allow governed close side effects in local commit readiness
+### PIPEF-172 (TASK-277) — Allow governed close side effects in local commit readiness ⭐
 
-Status: `planned`
+Status: `in_progress`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_8163c89f10e7`, legacy `TASK-277`, aliases `TASK-277`, local `PIPEF` / `172`

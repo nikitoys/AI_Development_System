@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 144,
+  "revision": 148,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-30T18:13:46Z",
+  "updated_at": "2026-06-30T18:52:46Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -10201,6 +10201,289 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-145",
+      "task_id": "TASK-277",
+      "task_ref": "PIPEF-172",
+      "submitted_at": "2026-06-30T18:39:34Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:2116dbefb079426755eba02cc274f352e31e17bdf2119738f7bd7d54064dff31",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-277",
+        "task_ref": "PIPEF-172",
+        "reported_task_id": "TASK-277",
+        "reported_task_ref": "PIPEF-172",
+        "implementation_summary": "Updated local commit readiness to approve governed side-effect paths only when they are declared by report or side-effect evidence and owned by the current session, while keeping pre-existing governed files blocked and preserving target artifact evidence requirements. Added positive and negative regressions plus E2E assertions for governed side-effect staging.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 664.269719,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 664.269719,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree had pre-existing dirty AI_PROJECT/** files before source edits; they were not modified manually."
+        ],
+        "blockers": [
+          "python -m pytest tests/test_pipeline_runner.py -q fails on pre-existing phase-runner expectation mismatches unrelated to commit readiness; many tests expect old run-next stop_code/steps behavior while current run_next returns queue_preview phase results."
+        ],
+        "notes": [
+          "Focused new commit-readiness regressions passed.",
+          "tests/test_web_run_local_commit_e2e.py passed with strengthened side-effect assertions."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1152,
+          "remaining_tokens": 30848,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-146",
+      "task_id": "TASK-277",
+      "task_ref": "PIPEF-172",
+      "submitted_at": "2026-06-30T18:39:34Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-145",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-277",
+        "task_ref": "PIPEF-172",
+        "reported_task_id": "TASK-277",
+        "reported_task_ref": "PIPEF-172",
+        "implementation_summary": "Updated local commit readiness to approve governed side-effect paths only when they are declared by report or side-effect evidence and owned by the current session, while keeping pre-existing governed files blocked and preserving target artifact evidence requirements. Added positive and negative regressions plus E2E assertions for governed side-effect staging.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/git_commit.py",
+          "tests/test_pipeline_runner.py",
+          "tests/test_web_run_local_commit_e2e.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 664.269719,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 664.269719,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree had pre-existing dirty AI_PROJECT/** files before source edits; they were not modified manually."
+        ],
+        "blockers": [
+          "python -m pytest tests/test_pipeline_runner.py -q fails on pre-existing phase-runner expectation mismatches unrelated to commit readiness; many tests expect old run-next stop_code/steps behavior while current run_next returns queue_preview phase results."
+        ],
+        "notes": [
+          "Focused new commit-readiness regressions passed.",
+          "tests/test_web_run_local_commit_e2e.py passed with strengthened side-effect assertions."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1152,
+          "remaining_tokens": 30848,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-147",
+      "task_id": "TASK-277",
+      "task_ref": "PIPEF-172",
+      "submitted_at": "2026-06-30T18:45:57Z",
+      "submitted_by": "human_owner",
+      "source_file": "/tmp/task-277-recovered-report.json",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-277",
+        "task_ref": "PIPEF-172",
+        "reported_task_id": "TASK-277",
+        "reported_task_ref": "",
+        "implementation_summary": "Implemented local commit readiness support for current-session governed close side effects while keeping pre-existing and unrelated governed files blocked.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/git_commit.py",
+          "tests/test_pipeline_runner.py",
+          "tests/test_web_run_local_commit_e2e.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "focused_commit_readiness_regressions",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Codex reported the focused commit-readiness regression tests passed: 4 passed."
+          },
+          {
+            "name": "web_run_local_commit_e2e",
+            "command": "python -m pytest tests/test_web_run_local_commit_e2e.py -q",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "diff_check",
+            "command": "git diff --check -- ai_project_ctl/pipeline/git_commit.py tests/test_pipeline_runner.py tests/test_web_run_local_commit_e2e.py",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "pipeline_runner_full_suite",
+            "command": "python -m pytest tests/test_pipeline_runner.py -q",
+            "result": "warn",
+            "duration_sec": null,
+            "blocking": false,
+            "details": "Full file still has pre-existing phase-runner expectation failures unrelated to this commit-readiness fix."
+          }
+        ],
+        "warnings": [
+          "python -m pytest tests/test_pipeline_runner.py -q still has pre-existing phase-runner expectation failures unrelated to this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Owner recovery report for PSESS-152 after triaging RPT-146 blocker as unrelated to the bounded commit-readiness fix.",
+          "A separate task should fix stale tests/test_pipeline_runner.py expectations."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {}
+      }
+    },
+    {
+      "id": "RPT-148",
+      "task_id": "TASK-277",
+      "task_ref": "PIPEF-172",
+      "submitted_at": "2026-06-30T18:52:46Z",
+      "submitted_by": "human_owner",
+      "source_file": "/tmp/task-277-recovered-report-v2.json",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-277",
+        "task_ref": "PIPEF-172",
+        "reported_task_id": "TASK-277",
+        "reported_task_ref": "",
+        "implementation_summary": "Implemented local commit readiness support for current-session governed close side effects while keeping pre-existing and unrelated governed files blocked.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/git_commit.py",
+          "tests/test_pipeline_runner.py",
+          "tests/test_web_run_local_commit_e2e.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "focused_commit_readiness_regressions",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Codex reported the focused commit-readiness regression tests passed: 4 passed."
+          },
+          {
+            "name": "web_run_local_commit_e2e",
+            "command": "python -m pytest tests/test_web_run_local_commit_e2e.py -q",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "diff_check",
+            "command": "git diff --check -- ai_project_ctl/pipeline/git_commit.py tests/test_pipeline_runner.py tests/test_web_run_local_commit_e2e.py",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": ""
+          },
+          {
+            "name": "pipeline_runner_full_suite",
+            "command": "python -m pytest tests/test_pipeline_runner.py -q",
+            "result": "warn",
+            "duration_sec": null,
+            "blocking": false,
+            "details": "Full file still has pre-existing phase-runner expectation failures unrelated to this commit-readiness fix."
+          }
+        ],
+        "warnings": [
+          "python -m pytest tests/test_pipeline_runner.py -q still has pre-existing phase-runner expectation failures unrelated to this task."
+        ],
+        "blockers": [],
+        "notes": [
+          "Owner recovery report for PSESS-152 after triaging RPT-146 blocker as unrelated to the bounded commit-readiness fix.",
+          "A separate task should fix stale tests/test_pipeline_runner.py expectations."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "context_tokens": 6812,
+          "prompt_tokens": 1152,
+          "token_count_estimated": true,
+          "token_count_strategy": "byte_length_div_4_owner_recovery_estimate"
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -10322,6 +10605,7 @@
     "TASK-273": "RPT-144",
     "TASK-274": "RPT-138",
     "TASK-275": "RPT-140",
-    "TASK-276": "RPT-141"
+    "TASK-276": "RPT-141",
+    "TASK-277": "RPT-148"
   }
 }

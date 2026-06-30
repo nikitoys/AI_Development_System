@@ -49,6 +49,11 @@ WEB_RUN_GOVERNED_SIDE_EFFECT_GENERATED_FILES = (
     "AI_PROJECT/generated/CODEX_TASKS.md",
     "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
 )
+WEB_RUN_CONTEXT_SIDE_EFFECT_FILES = (
+    "AI_PROJECT/events/context-events.jsonl",
+    "AI_PROJECT/generated/CONTEXT_PACK.md",
+    "AI_PROJECT/generated/CONTEXT_STATUS.md",
+)
 
 
 class WebRunLocalCommitSmokeTests(unittest.TestCase):
@@ -180,6 +185,13 @@ class WebRunLocalCommitSmokeTests(unittest.TestCase):
         self.assertIn("AI_PROJECT/state/pipeline_sessions.json", readiness["approved_files"])
         self.assertIn("AI_PROJECT/events/pipeline-events.jsonl", readiness["approved_files"])
         for path in PIPELINE_BOOKKEEPING_FILES:
+            self.assertIn(path, local_commit["staged_files"])
+            self.assertIn(path, readiness["approved_files"])
+        for path in (
+            *WEB_RUN_GOVERNED_SIDE_EFFECT_CHANGED_FILES,
+            *WEB_RUN_GOVERNED_SIDE_EFFECT_GENERATED_FILES,
+            *WEB_RUN_CONTEXT_SIDE_EFFECT_FILES,
+        ):
             self.assertIn(path, local_commit["staged_files"])
             self.assertIn(path, readiness["approved_files"])
         self.assertEqual(len(bookkeeping_after_commits), 2)

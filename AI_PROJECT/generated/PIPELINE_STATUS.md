@@ -3,9 +3,23 @@
 
 # Pipeline Status
 
-Revision: `1171`
-Current session: `none`
-Sessions: `151`
+Revision: `1187`
+Current session: `PSESS-152`
+Sessions: `152`
+
+## Current Session
+
+- ID: `PSESS-152`
+- Status: `blocked`
+- Policy: `supervised_executable_local_commit_1h_auto_change`
+- Current task: `TASK-277`
+- Current phase: `close`
+- Phase status: `blocked`
+- Blocked by: `CLOSE_PREFLIGHT_INCOMPLETE`
+- Next action: `Resolve required phase evidence for: close; then rerun pipeline close --confirm.`
+- Current step: `execute`
+- Step status: `passed`
+- Stop reason: `Close preflight blocked: required phase evidence is incomplete.`
 
 ## Sessions
 
@@ -162,6 +176,7 @@ Sessions: `151`
 | `PSESS-149` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-275` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
 | `PSESS-150` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-276` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
 | `PSESS-151` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-273` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Recovered by manual local commit 71daee6 after COMMIT_READINESS_FAILED on governed close side effects |
+| `PSESS-152` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-277` | `close` | `blocked` | CLOSE_PREFLIGHT_INCOMPLETE | Resolve required phase evidence for: close; then rerun pipeline close --confirm. | `execute` | Close preflight blocked: required phase evidence is incomplete. |
 
 ## Phase History
 
@@ -994,3 +1009,17 @@ Sessions: `151`
 | `PSESS-151` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 1 | 0 | 1 |
 | `PSESS-151` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
 | `PSESS-151` | 7 | `close` | `blocked` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | 0 | 0 | 3 |
+| `PSESS-152` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-152` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 4b37bdbfd008ebd839d635823e7cfa62679e5753a86f4a624727314100007643). | 0 | 0 | 1 |
+| `PSESS-152` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-152` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-152` | 5 | `verify` | `blocked` | Report gate failed: Report contains blocker(s): python -m pytest tests/test_pipeline_runner.py -q fails on pre-existing phase-runner expectation mismatches unrelated to commit readiness; many tests expect old run-next stop_code/steps behavior while current run_next returns queue_preview phase results. | Fix the structured report or task output, then rerun verify. | 3 | 0 | 1 |
+| `PSESS-152` | 6 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=recovery_override). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-152` | 7 | `verify` | `blocked` | Report gate failed: report.token_usage missing required field(s): context_tokens, prompt_tokens, token_count_estimated, token_count_strategy | Fix the structured report or task output, then rerun verify. | 3 | 0 | 1 |
+| `PSESS-152` | 8 | `verify` | `blocked` | Report gate failed: report.token_usage missing required field(s): context_tokens, prompt_tokens, token_count_estimated, token_count_strategy | Fix the structured report or task output, then rerun verify. | 3 | 0 | 1 |
+| `PSESS-152` | 9 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=recovery_override). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-152` | 10 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 3 | 0 | 1 |
+| `PSESS-152` | 11 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-152` | 12 | `close` | `blocked` | Close preflight blocked: required phase evidence is incomplete. | Resolve required phase evidence for: close; then rerun pipeline close --confirm. | 0 | 0 | 1 |
+| `PSESS-152` | 13 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-152` | 14 | `close` | `blocked` | Close preflight blocked: required phase evidence is incomplete. | Resolve required phase evidence for: close; then rerun pipeline close --confirm. | 0 | 0 | 1 |

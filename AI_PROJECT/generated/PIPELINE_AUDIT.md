@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `1171`
-State revision: `1171`
-Current session: `none`
+Events: `1187`
+State revision: `1187`
+Current session: `PSESS-152`
 
 ## Timeline
 
@@ -1182,6 +1182,22 @@ Current session: `none`
 | `2026-06-30T18:14:13Z` | `step.result` | `pipeline.phase.close` | `PSESS-151` | `` | `` | changes=CHG-087 \| reports=RPT-144 |
 | `2026-06-30T18:14:21Z` | `step.result` | `pipeline.phase.close` | `PSESS-151` | `` | `` | changes=CHG-087 \| reports=RPT-144 |
 | `2026-06-30T18:20:47Z` | `completion` | `pipeline.session.complete` | `PSESS-151` | `` | `` | completed |
+| `2026-06-30T18:28:05Z` | `session.create` | `pipeline.session.create` | `PSESS-152` | `` | `` | PSESS-152 |
+| `2026-06-30T18:28:08Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-152` | `` | `` | PSESS-152 |
+| `2026-06-30T18:28:25Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-152` | `` | `` | changes=CHG-091 |
+| `2026-06-30T18:28:28Z` | `step.result` | `pipeline.phase.execute` | `PSESS-152` | `` | `` | PSESS-152 |
+| `2026-06-30T18:39:35Z` | `step.result` | `pipeline.phase.execute` | `PSESS-152` | `` | `` | reports=RPT-146 |
+| `2026-06-30T18:39:39Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-152` | `` | `` | reports=RPT-146 |
+| `2026-06-30T18:39:42Z` | `step.result` | `pipeline.phase.verify` | `PSESS-152` | `` | `` | reports=RPT-146 |
+| `2026-06-30T18:46:08Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-152` | `` | `` | reports=RPT-147 |
+| `2026-06-30T18:46:11Z` | `step.result` | `pipeline.phase.verify` | `PSESS-152` | `` | `` | reports=RPT-147 |
+| `2026-06-30T18:46:14Z` | `step.result` | `pipeline.phase.verify` | `PSESS-152` | `` | `` | reports=RPT-147 |
+| `2026-06-30T18:52:53Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-152` | `` | `` | reports=RPT-148 |
+| `2026-06-30T18:52:56Z` | `step.result` | `pipeline.phase.verify` | `PSESS-152` | `` | `` | reports=RPT-148 |
+| `2026-06-30T18:52:59Z` | `step.result` | `pipeline.phase.review` | `PSESS-152` | `` | `` | reports=RPT-148 |
+| `2026-06-30T18:53:03Z` | `step.result` | `pipeline.phase.close` | `PSESS-152` | `` | `` | reports=RPT-146,RPT-148 |
+| `2026-06-30T18:57:29Z` | `step.result` | `pipeline.phase.review` | `PSESS-152` | `` | `` | reports=RPT-148 |
+| `2026-06-30T18:57:32Z` | `step.result` | `pipeline.phase.close` | `PSESS-152` | `` | `` | reports=RPT-146,RPT-148 |
 
 ## Event Type Coverage
 

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 2720,
+  "revision": 2748,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-30T18:14:11Z",
+  "updated_at": "2026-06-30T18:28:17Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -5296,6 +5296,65 @@
       "order": 90,
       "created_at": "2026-06-29T18:47:09Z",
       "updated_at": "2026-06-29T18:51:11Z"
+    },
+    {
+      "id": "CHG-091",
+      "title": "Allow governed close side effects in local commit readiness",
+      "status": "approved",
+      "change_type": "tooling",
+      "rationale": "Fix the PSESS-151 class of failures where task gates pass but local commit blocks with COMMIT_UNRELATED_FILES because governed close side effects are not included in approved evidence.",
+      "problem": "Task PIPEF-172 requires an explicit Evolution Change Proposal before implementation: Update local commit readiness so current-session governed close side effects can be committed without allowing unrelated AI_PROJECT dirty files.",
+      "proposal": "Implement the bounded task scope: Extend commit readiness approved-file collection to recognize governed side effects owned by the current pipeline session.; Keep pre-existing dirty governed files and non-session-owned AI_PROJECT files blocked as unrelated.; Preserve the existing requirement for non-governed target task artifact evidence before committing governed session side effects.; Add a regression that covers a successful local commit with task artifact changes plus session-owned task/report/codex/context/evolution/pipeline side effects.; Add or keep a negative regression proving unrelated governed dirty files still fail with COMMIT_UNRELATED_FILES.",
+      "affected_areas": [],
+      "affected_files": [
+        "ai_project_ctl/pipeline/git_commit.py",
+        "ai_project_ctl/pipeline/close_phase.py",
+        "ai_project_ctl/pipeline/session.py",
+        "tests/test_pipeline_runner.py",
+        "tests/test_web_run_local_commit_e2e.py",
+        "tests/test_web_control_center.py"
+      ],
+      "risks": [
+        "Boundary risk: Do not allow blanket commits of all AI_PROJECT/** paths.",
+        "Boundary risk: Do not bypass commit readiness, report gate, machine review, or task done requirements.",
+        "Boundary risk: Do not edit protected project-control files manually.",
+        "Boundary risk: Do not change behavior unrelated to local commit readiness.",
+        "Review that approved governed paths are derived from current-session evidence or explicit side effects, not from a broad AI_PROJECT/** allowlist.",
+        "Check both positive and negative tests for COMMIT_UNRELATED_FILES behavior.",
+        "Generated Change Proposal fields may need Human Owner review before approval.",
+        "Workflow must delegate all protected project-control mutations to evolutionctl.py."
+      ],
+      "impact": [
+        "Creates an Evolution Change Proposal linked to task TASK-277.",
+        "Keeps Change approval as a separate explicit Human Owner action.",
+        "Extend commit readiness approved-file collection to recognize governed side effects owned by the current pipeline session.",
+        "Keep pre-existing dirty governed files and non-session-owned AI_PROJECT files blocked as unrelated.",
+        "Preserve the existing requirement for non-governed target task artifact evidence before committing governed session side effects.",
+        "Add a regression that covers a successful local commit with task artifact changes plus session-owned task/report/codex/context/evolution/pipeline side effects.",
+        "Add or keep a negative regression proving unrelated governed dirty files still fail with COMMIT_UNRELATED_FILES.",
+        "Commit readiness passes for a clean-baseline pipeline session that has target task artifact evidence and current-session governed close side effects.",
+        "Local commit creation stages only approved target artifact files and current-session governed side-effect files.",
+        "Pre-existing dirty governed files that are not owned by the current session still block with COMMIT_UNRELATED_FILES."
+      ],
+      "migration_required": false,
+      "backward_compatibility": "unknown",
+      "linked_tasks": [
+        "TASK-277"
+      ],
+      "implementation_waived": false,
+      "implementation_waiver_reason": "",
+      "superseded_by": "",
+      "owner_approved_by": "human_owner",
+      "owner_approved_at": "2026-06-30T18:28:17Z",
+      "approval_notes": "Auto-approved by Human Owner for selected UI run (pipeline session PSESS-152)",
+      "accepted_by": "",
+      "accepted_at": "",
+      "acceptance_notes": "",
+      "notes": [],
+      "priority": 1,
+      "order": 91,
+      "created_at": "2026-06-30T18:28:11Z",
+      "updated_at": "2026-06-30T18:28:17Z"
     }
   ]
 }

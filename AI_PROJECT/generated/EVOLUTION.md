@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `2720`
-Changes: `90`
+Revision: `2748`
+Changes: `91`
 
 ## Summary
 
 - `accepted`: 69
-- `approved`: 21
+- `approved`: 22
 
 ## Changes
 
@@ -5626,3 +5626,63 @@ Impact:
 Linked tasks:
 
 - TASK-276
+
+### CHG-091 — Allow governed close side effects in local commit readiness
+
+Status: `approved`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-172 requires an explicit Evolution Change Proposal before implementation: Update local commit readiness so current-session governed close side effects can be committed without allowing unrelated AI_PROJECT dirty files.
+
+Proposal:
+
+Implement the bounded task scope: Extend commit readiness approved-file collection to recognize governed side effects owned by the current pipeline session.; Keep pre-existing dirty governed files and non-session-owned AI_PROJECT files blocked as unrelated.; Preserve the existing requirement for non-governed target task artifact evidence before committing governed session side effects.; Add a regression that covers a successful local commit with task artifact changes plus session-owned task/report/codex/context/evolution/pipeline side effects.; Add or keep a negative regression proving unrelated governed dirty files still fail with COMMIT_UNRELATED_FILES.
+
+Rationale:
+
+Fix the PSESS-151 class of failures where task gates pass but local commit blocks with COMMIT_UNRELATED_FILES because governed close side effects are not included in approved evidence.
+
+Approved by: `human_owner` at `2026-06-30T18:28:17Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-152)  
+
+Affected files:
+
+- ai_project_ctl/pipeline/git_commit.py
+- ai_project_ctl/pipeline/close_phase.py
+- ai_project_ctl/pipeline/session.py
+- tests/test_pipeline_runner.py
+- tests/test_web_run_local_commit_e2e.py
+- tests/test_web_control_center.py
+
+Risks:
+
+- Boundary risk: Do not allow blanket commits of all AI_PROJECT/** paths.
+- Boundary risk: Do not bypass commit readiness, report gate, machine review, or task done requirements.
+- Boundary risk: Do not edit protected project-control files manually.
+- Boundary risk: Do not change behavior unrelated to local commit readiness.
+- Review that approved governed paths are derived from current-session evidence or explicit side effects, not from a broad AI_PROJECT/** allowlist.
+- Check both positive and negative tests for COMMIT_UNRELATED_FILES behavior.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-277.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Extend commit readiness approved-file collection to recognize governed side effects owned by the current pipeline session.
+- Keep pre-existing dirty governed files and non-session-owned AI_PROJECT files blocked as unrelated.
+- Preserve the existing requirement for non-governed target task artifact evidence before committing governed session side effects.
+- Add a regression that covers a successful local commit with task artifact changes plus session-owned task/report/codex/context/evolution/pipeline side effects.
+- Add or keep a negative regression proving unrelated governed dirty files still fail with COMMIT_UNRELATED_FILES.
+- Commit readiness passes for a clean-baseline pipeline session that has target task artifact evidence and current-session governed close side effects.
+- Local commit creation stages only approved target artifact files and current-session governed side-effect files.
+- Pre-existing dirty governed files that are not owned by the current session still block with COMMIT_UNRELATED_FILES.
+
+Linked tasks:
+
+- TASK-277

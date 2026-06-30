@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1878`
+Revision: `1880`
 
 ## Executable Now
 
@@ -17,7 +17,6 @@ Revision: `1878`
 - `PIPEF-126 (TASK-207)` [planned] `EPIC-009` priority `1` — Show effective policy summary
 - `PIPEF-127 (TASK-208)` [planned] `EPIC-009` priority `1` — Add Web run batch overrides
 - `PIPEF-128 (TASK-209)` [planned] `EPIC-009` priority `1` — Warn on incomplete Web run policy
-- `PIPEF-172 (TASK-277)` [planned] `EPIC-009` priority `1` — Allow governed close side effects in local commit readiness
 - `PIPEF-162 (TASK-267)` [planned] `EPIC-009` priority `2` — Auto-size Web batch max steps
 - `PIPEF-163 (TASK-268)` [planned] `EPIC-009` priority `2` — Add Web batch run form
 - `PIPEF-164 (TASK-269)` [planned] `EPIC-009` priority `2` — Render batch run summary
@@ -552,5 +551,7 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-171 (TASK-276)` [done] `EPIC-009` priority `1` — Pass no-checkpoint Web Run regression
   - `status_not_executable`: status is done
+- `PIPEF-172 (TASK-277)` [in_progress] `EPIC-009` priority `1` — Allow governed close side effects in local commit readiness
+  - `status_not_executable`: status is in_progress
 - `PIPEF-155 (TASK-260)` [done] `EPIC-009` priority `2` — Link dirty preflight to checkpoint UX
   - `status_not_executable`: status is done

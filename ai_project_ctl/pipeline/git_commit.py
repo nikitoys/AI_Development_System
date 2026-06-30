@@ -1080,11 +1080,13 @@ def _approved_files(
 ) -> set[str]:
     pre_existing = _session_pre_existing_dirty_files(root, session)
     session_owned = _session_owned_governed_control_files(root, session)
+    require_session_ownership = isinstance(session, Mapping)
     approved = _approved_paths(
         root,
         (*report_gate.changed_files, *report_gate.generated_files),
         pre_existing=pre_existing,
         session_owned=session_owned,
+        require_session_ownership=require_session_ownership,
     )
     approved.update(
         _approved_side_effect_files(
@@ -1092,9 +1094,14 @@ def _approved_files(
             side_effects,
             pre_existing=pre_existing,
             session_owned=session_owned,
+            require_session_ownership=require_session_ownership,
         )
     )
-    approved.update(session_owned)
+    approved.update(
+        path
+        for path in session_owned
+        if path not in pre_existing and _is_pipeline_session_bookkeeping_file(path)
+    )
     return approved
 
 
@@ -1104,6 +1111,7 @@ def _approved_side_effect_files(
     *,
     pre_existing: set[str],
     session_owned: set[str],
+    require_session_ownership: bool,
 ) -> set[str]:
     approved: set[str] = set()
     for effect in side_effects:
@@ -1113,6 +1121,7 @@ def _approved_side_effect_files(
                 (*effect.changed_files, *effect.generated_files),
                 pre_existing=pre_existing,
                 session_owned=session_owned,
+                require_session_ownership=require_session_ownership,
             )
         )
     return approved
@@ -1124,6 +1133,7 @@ def _approved_paths(
     *,
     pre_existing: set[str],
     session_owned: set[str],
+    require_session_ownership: bool,
 ) -> set[str]:
     approved: set[str] = set()
     for path in paths:
@@ -1132,9 +1142,28 @@ def _approved_paths(
         normalized = _normalize_path(root, path)
         if not _is_governed_project_control_file(normalized):
             approved.add(normalized)
-        elif normalized not in pre_existing or normalized in session_owned:
+        elif _governed_path_is_approved(
+            normalized,
+            pre_existing=pre_existing,
+            session_owned=session_owned,
+            require_session_ownership=require_session_ownership,
+        ):
             approved.add(normalized)
     return approved
+
+
+def _governed_path_is_approved(
+    path: str,
+    *,
+    pre_existing: set[str],
+    session_owned: set[str],
+    require_session_ownership: bool,
+) -> bool:
+    if path in pre_existing:
+        return False
+    if require_session_ownership and path not in session_owned:
+        return False
+    return True
 
 
 def _session_owned_governed_control_files(
@@ -1146,7 +1175,7 @@ def _session_owned_governed_control_files(
     return {
         normalized
         for normalized in (_normalize_path(root, path) for path in owned_files)
-        if _is_pipeline_session_bookkeeping_file(normalized)
+        if _is_governed_project_control_file(normalized)
     }
 
 

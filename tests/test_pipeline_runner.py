@@ -30,6 +30,7 @@ from ai_project_ctl.pipeline.git_commit import (
     CODE_REPORT_NOT_PASS as COMMIT_REPORT_NOT_PASS,
     REQUIRED_MACHINE_CHECKS,
     evaluate_commit_readiness,
+    run_local_commit,
 )
 from ai_project_ctl.pipeline.machine_review import (
     MachineCheckEvidence,
@@ -608,6 +609,37 @@ def blocking_report_gate(status: str) -> ReportGateResult:
         task_id="TASK-001",
         changed_files=("ai_project_ctl/pipeline/report_gate.py",),
     )
+
+
+def passing_report_gate(
+    *,
+    changed_files=("ai_project_ctl/pipeline/report_gate.py",),
+    generated_files=(),
+) -> ReportGateResult:
+    return ReportGateResult(
+        status="pass",
+        code="CODEX_REPORT_PASS",
+        reason="Report gate passed.",
+        report_id="RPT-001",
+        task_id="TASK-001",
+        changed_files=tuple(changed_files),
+        generated_files=tuple(generated_files),
+    )
+
+
+def governed_side_effect(
+    *,
+    changed_files=(),
+    generated_files=(),
+) -> CommandResult:
+    result = CommandResult.success(
+        command="test.governed_side_effect",
+        domain="test",
+        message="governed side effect",
+    )
+    result.changed_files.extend(str(path) for path in changed_files)
+    result.generated_files.extend(str(path) for path in generated_files)
+    return result
 
 
 def passing_machine_review() -> MachineReviewResult:
@@ -3284,6 +3316,186 @@ class PipelineRunnerTests(unittest.TestCase):
                     self.assertFalse(result.ok)
                     self.assertEqual(result.code, COMMIT_REPORT_NOT_PASS)
                     self.assertIn("Report gate {} should block".format(status), result.reason)
+
+    def test_local_commit_stages_current_session_governed_side_effects(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            _write_task_status(root, "done")
+            artifact = "ai_project_ctl/pipeline/report_gate.py"
+            governed_changed = (
+                "AI_PROJECT/state/tasks.json",
+                "AI_PROJECT/events/task-events.jsonl",
+                "AI_PROJECT/state/task_reports.json",
+                "AI_PROJECT/events/task-report-events.jsonl",
+                "AI_PROJECT/state/current_execution.json",
+                "AI_PROJECT/events/codex-events.jsonl",
+                "AI_PROJECT/events/context-events.jsonl",
+                "AI_PROJECT/state/evolution.json",
+                "AI_PROJECT/events/evolution-events.jsonl",
+                "AI_PROJECT/state/pipeline_sessions.json",
+                "AI_PROJECT/events/pipeline-events.jsonl",
+            )
+            governed_generated = (
+                "AI_PROJECT/generated/CODEX_CURRENT.md",
+                "AI_PROJECT/generated/CODEX_STATUS.md",
+                "AI_PROJECT/generated/CODEX_TASKS.md",
+                "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+                "AI_PROJECT/generated/CONTEXT_PACK.md",
+                "AI_PROJECT/generated/CONTEXT_STATUS.md",
+                "AI_PROJECT/generated/EVOLUTION.md",
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+            )
+            approved_paths = (artifact, *governed_changed, *governed_generated)
+            calls = []
+
+            def git_runner(argv):
+                args = list(argv)
+                calls.append(args)
+                if args == ["git", "status", "--short", "--untracked-files=all"]:
+                    return completed(
+                        stdout="".join(" M {}\n".format(path) for path in approved_paths)
+                    )
+                if args[:3] == ["git", "add", "--"]:
+                    return completed(stdout="")
+                if args[:3] == ["git", "commit", "-m"]:
+                    return completed(stdout="[main abc1234] pipeline commit\n")
+                if args == ["git", "rev-parse", "--verify", "HEAD"]:
+                    return completed(stdout="abc1234deadbeef\n")
+                return completed(returncode=1, stderr="unexpected git command\n")
+
+            result = run_local_commit(
+                root=root,
+                task_id="TASK-001",
+                session_id="PSESS-001",
+                policy=policy_preset("supervised_local_commit"),
+                report_gate=passing_report_gate(changed_files=(artifact,)),
+                machine_review=passing_machine_review(),
+                codex_review=approved_codex_review(),
+                side_effects=(
+                    governed_side_effect(
+                        changed_files=governed_changed,
+                        generated_files=governed_generated,
+                    ),
+                ),
+                session={
+                    "id": "PSESS-001",
+                    "file_evidence": {
+                        "pre_existing_dirty_files": [],
+                        "session_owned_changed_files": [
+                            *governed_changed,
+                            *governed_generated,
+                        ],
+                    },
+                },
+                runner=git_runner,
+            )
+
+            expected_staged = tuple(sorted(approved_paths))
+            self.assertTrue(result.ok)
+            self.assertEqual(result.code, "LOCAL_COMMIT_CREATED")
+            self.assertEqual(result.staged_files, expected_staged)
+            self.assertEqual(result.readiness.approved_files, expected_staged)
+            self.assertEqual(calls[1], ["git", "add", "--", *expected_staged])
+
+    def test_commit_readiness_blocks_pre_existing_governed_side_effect_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            _write_task_status(root, "done")
+            artifact = "ai_project_ctl/pipeline/report_gate.py"
+            governed = "AI_PROJECT/state/tasks.json"
+
+            result = evaluate_commit_readiness(
+                root=root,
+                task_id="TASK-001",
+                policy=policy_preset("supervised_local_commit"),
+                report_gate=passing_report_gate(changed_files=(artifact,)),
+                machine_review=passing_machine_review(),
+                codex_review=approved_codex_review(),
+                side_effects=(governed_side_effect(changed_files=(governed,)),),
+                session={
+                    "id": "PSESS-001",
+                    "file_evidence": {
+                        "pre_existing_dirty_files": [governed],
+                        "session_owned_changed_files": [],
+                    },
+                },
+                runner=lambda argv: completed(
+                    stdout=" M {}\n M {}\n".format(artifact, governed)
+                ),
+            )
+
+            self.assertFalse(result.ok)
+            self.assertEqual(result.code, "COMMIT_UNRELATED_FILES")
+            self.assertIn(governed, result.blockers)
+
+    def test_commit_readiness_blocks_non_session_owned_ai_project_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            _write_task_status(root, "done")
+            artifact = "ai_project_ctl/pipeline/report_gate.py"
+            owned = "AI_PROJECT/state/tasks.json"
+            unrelated = "AI_PROJECT/generated/DOCS_INDEX.md"
+
+            result = evaluate_commit_readiness(
+                root=root,
+                task_id="TASK-001",
+                policy=policy_preset("supervised_local_commit"),
+                report_gate=passing_report_gate(changed_files=(artifact,)),
+                machine_review=passing_machine_review(),
+                codex_review=approved_codex_review(),
+                side_effects=(governed_side_effect(changed_files=(owned,)),),
+                session={
+                    "id": "PSESS-001",
+                    "file_evidence": {
+                        "pre_existing_dirty_files": [],
+                        "session_owned_changed_files": [owned],
+                    },
+                },
+                runner=lambda argv: completed(
+                    stdout=" M {}\n M {}\n M {}\n".format(
+                        artifact,
+                        owned,
+                        unrelated,
+                    )
+                ),
+            )
+
+            self.assertFalse(result.ok)
+            self.assertEqual(result.code, "COMMIT_UNRELATED_FILES")
+            self.assertIn(unrelated, result.blockers)
+
+    def test_commit_readiness_blocks_governed_only_session_side_effects(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_project_state(root, change_status="accepted")
+            _write_task_status(root, "done")
+            governed = "AI_PROJECT/state/tasks.json"
+
+            result = evaluate_commit_readiness(
+                root=root,
+                task_id="TASK-001",
+                policy=policy_preset("supervised_local_commit"),
+                report_gate=passing_report_gate(changed_files=()),
+                machine_review=passing_machine_review(),
+                codex_review=approved_codex_review(),
+                side_effects=(governed_side_effect(changed_files=(governed,)),),
+                session={
+                    "id": "PSESS-001",
+                    "file_evidence": {
+                        "pre_existing_dirty_files": [],
+                        "session_owned_changed_files": [governed],
+                    },
+                },
+                runner=lambda argv: completed(stdout=" M {}\n".format(governed)),
+            )
+
+            self.assertFalse(result.ok)
+            self.assertEqual(result.code, "COMMIT_UNRELATED_FILES")
+            self.assertEqual(result.blockers, ("target_task_artifact_missing",))
 
     def test_local_commit_blocks_until_linked_change_is_accepted(self):
         with tempfile.TemporaryDirectory() as tmp:
