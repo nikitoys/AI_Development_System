@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1897,
+  "revision": 1898,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-30T20:01:43Z",
+  "updated_at": "2026-06-30T20:01:58Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -18019,7 +18019,7 @@
       "id": "TASK-279",
       "epic_id": "EPIC-009",
       "title": "Record recovery report binding",
-      "status": "planned",
+      "status": "ready",
       "summary": "When collect-report uses an owner-confirmed recovery override, record explicit metadata that the recovery report replaces the execute-phase report for the same session and task.",
       "description": "Make recovery_override machine-readable so later phases can distinguish intentional owner recovery from accidental report drift.",
       "priority": 1,
@@ -18062,7 +18062,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-30T19:35:30Z",
-      "updated_at": "2026-06-30T19:35:30Z",
+      "updated_at": "2026-06-30T20:01:58Z",
       "uid": "tsk_cfad980fa985",
       "ref": "PIPEF-174",
       "legacy_id": "TASK-279",

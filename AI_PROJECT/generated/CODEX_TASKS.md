@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1897`
+Revision: `1898`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4877,7 +4877,7 @@ Acceptance criteria:
 
 ### PIPEF-174 (TASK-279) — Record recovery report binding
 
-Status: `planned`
+Status: `ready`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_cfad980fa985`, legacy `TASK-279`, aliases `TASK-279`, local `PIPEF` / `174`

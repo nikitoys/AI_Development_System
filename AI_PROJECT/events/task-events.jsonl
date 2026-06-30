@@ -1950,3 +1950,4 @@
 {"event_id":"EVT-0CF183A15E1A","timestamp":"2026-06-30T19:52:50Z","actor":"human_owner","command":"task.approve","entity_type":"task","entity_id":"TASK-278","revision_before":1894,"revision_after":1895,"payload":{"by":"human_owner","notes":"Approve"}}
 {"event_id":"EVT-BC136386BBD5","timestamp":"2026-06-30T19:52:50Z","actor":"human_owner","command":"task.transition","entity_type":"task","entity_id":"TASK-278","revision_before":1895,"revision_after":1896,"payload":{"to":"done"}}
 {"event_id":"EVT-5520415CB3E1","timestamp":"2026-06-30T20:01:43Z","actor":"human_owner","command":"current.clear","entity_type":"current_task","entity_id":"none","revision_before":1896,"revision_after":1897,"payload":{"previous":null}}
+{"event_id":"EVT-60A56EE19152","timestamp":"2026-06-30T20:01:58Z","actor":"human_owner","command":"task.transition","entity_type":"task","entity_id":"TASK-279","revision_before":1897,"revision_after":1898,"payload":{"to":"ready"}}
