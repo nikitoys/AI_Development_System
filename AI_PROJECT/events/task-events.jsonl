@@ -1990,3 +1990,4 @@
 {"event_id":"EVT-B27B4901D990","timestamp":"2026-06-30T22:19:53Z","actor":"human_owner","command":"task.transition","entity_type":"task","entity_id":"TASK-267","revision_before":1934,"revision_after":1935,"payload":{"to":"in_review"}}
 {"event_id":"EVT-9FF8C902F17D","timestamp":"2026-06-30T22:19:58Z","actor":"human_owner","command":"task.approve","entity_type":"task","entity_id":"TASK-267","revision_before":1935,"revision_after":1936,"payload":{"by":"human_owner","notes":"Approve"}}
 {"event_id":"EVT-EB27CFBFA391","timestamp":"2026-06-30T22:19:58Z","actor":"human_owner","command":"task.transition","entity_type":"task","entity_id":"TASK-267","revision_before":1936,"revision_after":1937,"payload":{"to":"done"}}
+{"event_id":"EVT-6FF1259F9CF6","timestamp":"2026-06-30T23:03:48Z","actor":"human_owner","command":"current.clear","entity_type":"current_task","entity_id":"none","revision_before":1937,"revision_after":1938,"payload":{"previous":null}}
