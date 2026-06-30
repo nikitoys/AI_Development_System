@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `1189`
-State revision: `1189`
-Current session: `PSESS-152`
+Events: `1199`
+State revision: `1199`
+Current session: `PSESS-153`
 
 ## Timeline
 
@@ -1200,6 +1200,16 @@ Current session: `PSESS-152`
 | `2026-06-30T18:57:32Z` | `step.result` | `pipeline.phase.close` | `PSESS-152` | `` | `` | reports=RPT-146,RPT-148 |
 | `2026-06-30T19:36:57Z` | `stop` | `pipeline.session.stop` | `PSESS-152` | `` | `` | failed \| Superseded after manual recovery commit; follow-up tasks will fix recovery close flow |
 | `2026-06-30T19:42:25Z` | `stop` | `pipeline.session.stop` | `PSESS-152` | `` | `` | failed \| Superseded by manual recovery; follow-up tasks will fix recovery close flow |
+| `2026-06-30T19:43:19Z` | `session.create` | `pipeline.session.create` | `PSESS-153` | `` | `` | PSESS-153 |
+| `2026-06-30T19:43:23Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-153` | `` | `` | PSESS-153 |
+| `2026-06-30T19:43:32Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-153` | `` | `` | PSESS-153 |
+| `2026-06-30T19:43:35Z` | `step.result` | `pipeline.phase.execute` | `PSESS-153` | `` | `` | PSESS-153 |
+| `2026-06-30T19:52:28Z` | `step.result` | `pipeline.phase.execute` | `PSESS-153` | `` | `` | reports=RPT-150 |
+| `2026-06-30T19:52:32Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-153` | `` | `` | reports=RPT-150 |
+| `2026-06-30T19:52:35Z` | `step.result` | `pipeline.phase.verify` | `PSESS-153` | `` | `` | reports=RPT-150 |
+| `2026-06-30T19:52:38Z` | `step.result` | `pipeline.phase.review` | `PSESS-153` | `` | `` | reports=RPT-150 |
+| `2026-06-30T19:52:53Z` | `step.result` | `pipeline.phase.close` | `PSESS-153` | `` | `` | reports=RPT-150 |
+| `2026-06-30T19:53:00Z` | `step.result` | `pipeline.phase.close` | `PSESS-153` | `` | `` | reports=RPT-150 |
 
 ## Event Type Coverage
 

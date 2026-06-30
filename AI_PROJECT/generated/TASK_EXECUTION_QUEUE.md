@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1891`
+Revision: `1896`
 
 ## Executable Now
 
@@ -17,7 +17,6 @@ Revision: `1891`
 - `PIPEF-126 (TASK-207)` [planned] `EPIC-009` priority `1` — Show effective policy summary
 - `PIPEF-127 (TASK-208)` [planned] `EPIC-009` priority `1` — Add Web run batch overrides
 - `PIPEF-128 (TASK-209)` [planned] `EPIC-009` priority `1` — Warn on incomplete Web run policy
-- `PIPEF-173 (TASK-278)` [ready] `EPIC-009` priority `1` — Show close preflight gate details
 - `PIPEF-174 (TASK-279)` [planned] `EPIC-009` priority `1` — Record recovery report binding
 - `PIPEF-175 (TASK-280)` [planned] `EPIC-009` priority `1` — Accept confirmed recovery report chain
 - `PIPEF-176 (TASK-281)` [planned] `EPIC-009` priority `1` — Add governed report recovery command
@@ -558,6 +557,8 @@ _No tasks waiting only on dependencies._
 - `PIPEF-171 (TASK-276)` [done] `EPIC-009` priority `1` — Pass no-checkpoint Web Run regression
   - `status_not_executable`: status is done
 - `PIPEF-172 (TASK-277)` [done] `EPIC-009` priority `1` — Allow governed close side effects in local commit readiness
+  - `status_not_executable`: status is done
+- `PIPEF-173 (TASK-278)` [done] `EPIC-009` priority `1` — Show close preflight gate details
   - `status_not_executable`: status is done
 - `PIPEF-155 (TASK-260)` [done] `EPIC-009` priority `2` — Link dirty preflight to checkpoint UX
   - `status_not_executable`: status is done

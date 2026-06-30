@@ -255,6 +255,99 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
                 True,
             )
 
+    def test_close_preflight_block_reports_missing_gate_codes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_temp_project(root)
+            session_id = _create_close_session(root)
+
+            close = close_phase(
+                session_id,
+                root=root,
+                actor="tester",
+                confirmed=True,
+            )
+
+            self.assertTrue(close.ok, close.errors)
+            phase_result = close.data["phase_result"]
+            self.assertEqual(phase_result["status"], "blocked")
+            self.assertIn(
+                "execute:PHASE_EVIDENCE_MISSING",
+                phase_result["reason"],
+            )
+            self.assertIn(
+                "review:PHASE_EVIDENCE_MISSING",
+                phase_result["next_action"],
+            )
+            artifacts = phase_result["artifacts"]
+            self.assertEqual(artifacts["blocked_by"], "CLOSE_PREFLIGHT_INCOMPLETE")
+            self.assertIn(
+                "execute:PHASE_EVIDENCE_MISSING",
+                artifacts["missing_gate_codes"],
+            )
+            self.assertIn(
+                "review:PHASE_EVIDENCE_MISSING",
+                artifacts["missing_gate_summary"],
+            )
+            self.assertEqual(
+                close.data["missing_gate_codes"],
+                artifacts["missing_gate_codes"],
+            )
+            self.assertEqual(
+                close.data["missing_gate_summary"],
+                artifacts["missing_gate_summary"],
+            )
+
+    def test_close_preflight_report_mismatch_reports_observed_report_ids(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_temp_project(root)
+            session_id = _create_close_session(root)
+            expected_report_ids = {
+                "execute": "RPT-EXECUTE",
+                "collect_report": "RPT-COLLECT",
+                "verify": "RPT-VERIFY",
+                "review": "RPT-REVIEW",
+            }
+            _record_close_preflight_history(
+                root,
+                session_id,
+                report_ids=expected_report_ids,
+            )
+
+            close = close_phase(
+                session_id,
+                root=root,
+                actor="tester",
+                confirmed=True,
+            )
+
+            self.assertTrue(close.ok, close.errors)
+            phase_result = close.data["phase_result"]
+            self.assertEqual(phase_result["status"], "blocked")
+            artifacts = phase_result["artifacts"]
+            self.assertEqual(artifacts["blocked_by"], "CLOSE_PREFLIGHT_INCOMPLETE")
+            self.assertEqual(
+                artifacts["missing_gate_codes"],
+                ["close:REPORT_EVIDENCE_MISMATCH"],
+            )
+            self.assertEqual(
+                artifacts["report_consistency"]["report_phase_ids"],
+                expected_report_ids,
+            )
+            self.assertEqual(
+                close.data["report_consistency"]["report_phase_ids"],
+                expected_report_ids,
+            )
+            gate = artifacts["missing_gates"][0]
+            self.assertEqual(gate["code"], "REPORT_EVIDENCE_MISMATCH")
+            self.assertEqual(gate["report_phase_ids"], expected_report_ids)
+            for phase_name, report_id in expected_report_ids.items():
+                evidence = "{}={}".format(phase_name, report_id)
+                self.assertIn(evidence, artifacts["missing_gate_summary"][0])
+                self.assertIn(evidence, phase_result["reason"])
+                self.assertIn(evidence, phase_result["next_action"])
+
     def test_close_retry_recovers_already_done_task_with_matching_approval(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -1044,8 +1137,14 @@ def _create_close_session(root: Path, *, policy=None) -> str:
     return str(session.data["session_id"])
 
 
-def _record_close_preflight_history(root: Path, session_id: str) -> None:
+def _record_close_preflight_history(
+    root: Path,
+    session_id: str,
+    *,
+    report_ids: dict[str, str] | None = None,
+) -> None:
     report_id = "RPT-001"
+    report_ids = dict(report_ids or {})
     for phase_name in ("prepare", "execute", "collect_report", "verify"):
         _record_phase(
             root,
@@ -1053,7 +1152,10 @@ def _record_close_preflight_history(root: Path, session_id: str) -> None:
             PhaseResult.passed(
                 phase_name,
                 reason="{} fixture passed.".format(phase_name),
-                artifacts={"task_id": TASK_ID, "report_id": report_id},
+                artifacts={
+                    "task_id": TASK_ID,
+                    "report_id": report_ids.get(phase_name, report_id),
+                },
             ),
         )
     _record_phase(
@@ -1064,7 +1166,7 @@ def _record_close_preflight_history(root: Path, session_id: str) -> None:
             reason="Review fixture approved.",
             artifacts={
                 "task_id": TASK_ID,
-                "report_id": report_id,
+                "report_id": report_ids.get("review", report_id),
                 "review_id": "CREV-001",
                 "review_status": "pass",
                 "review_code": "CODEX_REVIEW_APPROVE",

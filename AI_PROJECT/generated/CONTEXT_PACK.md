@@ -1,6 +1,6 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/state/docs.json + AI_PROJECT/state/tasks.json -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-277 Allow governed close side effects in local commit readiness Update local commit readiness so current-session governed close side effects can be committed without allowing unrelated AI_PROJECT dirty files. Fix the PSESS-151 class of failures where task gates pass but local commit blocks with COMMIT_UNRELATED_FILES because governed close side effects are not included in approved evidence. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Extend commit readiness approved-file collection to recognize governed side effects owned by the current pipeline session. Keep pre-existing dirty governed files and non-session-owned AI_PROJECT files blocked as unrelated. Preserve the existing requirement for non-governed target task artifact evidence before committing governed session side effects. Add a regression that covers a successful local commit with task artifact changes plus session-owned task/report/codex/context/evolution/pipeline side effects. Add or keep a negative regression proving unrelated governed dirty files still fail with COMMIT_UNRELATED_FILES. Do not allow blanket commits of all AI_PROJECT/** paths. Do not bypass commit readiness, report gate, machine review, or task done requirements. Do not edit protected project-control files manually. Do not change behavior unrelated to local commit readiness. ai_project_ctl/pipeline/git_commit.py ai_project_ctl/pipeline/close_phase.py ai_project_ctl/pipeline/session.py tests/test_pipeline_runner.py tests/test_web_run_local_commit_e2e.py tests/test_web_control_center.py Commit readiness passes for a clean-baseline pipeline session that has target task artifact evidence and current-session governed close side effects. Local commit creation stages only approved target artifact files and current-session governed side-effect files. Pre-existing dirty governed files that are not owned by the current session still block with COMMIT_UNRELATED_FILES. Arbitrary AI_PROJECT/** files that are not approved by report, side effects, or current-session evidence still block with COMMIT_UNRELATED_FILES. Commit readiness still blocks governed-only changes when the selected task has no non-governed target artifact evidence. python -m pytest tests/test_pipeline_runner.py -q passes. python -m pytest tests/test_web_run_local_commit_e2e.py -q passes. Review that approved governed paths are derived from current-session evidence or explicit side effects, not from a broad AI_PROJECT/** allowlist. Check both positive and negative tests for COMMIT_UNRELATED_FILES behavior.","schema_version":1,"task_id":"TASK-277"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-278 Show close preflight gate details Make pipeline close failures expose the exact missing gate codes and report-id evidence instead of only the generic CLOSE_PREFLIGHT_INCOMPLETE message. Improve close preflight diagnostics so owner can immediately see whether the blocker is missing review evidence, task mismatch, report mismatch, or policy mismatch. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Update close preflight blocked output to include compact missing_gates details in the phase reason, next_action, or result data. Include observed report ids per phase when the blocker is REPORT_EVIDENCE_MISMATCH. Keep existing strict close preflight gating behavior unchanged. Add or update focused tests for close preflight diagnostics. Do not relax close preflight gate rules. Do not implement report recovery acceptance in this task. Do not edit protected project-control files manually. ai_project_ctl/pipeline/close_phase.py tests/test_pipeline_phase_review_close.py A close blocked by missing phase evidence reports the specific missing gate code(s) in a user-visible result path. A close blocked by report id mismatch reports observed report ids for execute, collect_report, verify, and review when available. Existing close preflight pass and fail behavior remains unchanged except for clearer diagnostics. Focused close preflight tests pass. No protected project-control state or generated files are edited manually. Review that the change improves diagnostics only and does not weaken close safety.","schema_version":1,"task_id":"TASK-278"} -->
 
 # Context Pack
 
@@ -8,46 +8,39 @@ This generated Context Pack is derived output only. It is not source of truth.
 It does not expand task scope, allowed files, out-of-scope items, or acceptance criteria.
 
 Mode: `task`
-Task ID: `TASK-277`
+Task ID: `TASK-278`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1891`
+Tasks revision: `1896`
 
 ## Query
 
 ```text
-TASK-277 Allow governed close side effects in local commit readiness Update local commit readiness so current-session governed close side effects can be committed without allowing unrelated AI_PROJECT dirty files. Fix the PSESS-151 class of failures where task gates pass but local commit blocks with COMMIT_UNRELATED_FILES because governed close side effects are not included in approved evidence. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Extend commit readiness approved-file collection to recognize governed side effects owned by the current pipeline session. Keep pre-existing dirty governed files and non-session-owned AI_PROJECT files blocked as unrelated. Preserve the existing requirement for non-governed target task artifact evidence before committing governed session side effects. Add a regression that covers a successful local commit with task artifact changes plus session-owned task/report/codex/context/evolution/pipeline side effects. Add or keep a negative regression proving unrelated governed dirty files still fail with COMMIT_UNRELATED_FILES. Do not allow blanket commits of all AI_PROJECT/** paths. Do not bypass commit readiness, report gate, machine review, or task done requirements. Do not edit protected project-control files manually. Do not change behavior unrelated to local commit readiness. ai_project_ctl/pipeline/git_commit.py ai_project_ctl/pipeline/close_phase.py ai_project_ctl/pipeline/session.py tests/test_pipeline_runner.py tests/test_web_run_local_commit_e2e.py tests/test_web_control_center.py Commit readiness passes for a clean-baseline pipeline session that has target task artifact evidence and current-session governed close side effects. Local commit creation stages only approved target artifact files and current-session governed side-effect files. Pre-existing dirty governed files that are not owned by the current session still block with COMMIT_UNRELATED_FILES. Arbitrary AI_PROJECT/** files that are not approved by report, side effects, or current-session evidence still block with COMMIT_UNRELATED_FILES. Commit readiness still blocks governed-only changes when the selected task has no non-governed target artifact evidence. python -m pytest tests/test_pipeline_runner.py -q passes. python -m pytest tests/test_web_run_local_commit_e2e.py -q passes. Review that approved governed paths are derived from current-session evidence or explicit side effects, not from a broad AI_PROJECT/** allowlist. Check both positive and negative tests for COMMIT_UNRELATED_FILES behavior.
+TASK-278 Show close preflight gate details Make pipeline close failures expose the exact missing gate codes and report-id evidence instead of only the generic CLOSE_PREFLIGHT_INCOMPLETE message. Improve close preflight diagnostics so owner can immediately see whether the blocker is missing review evidence, task mismatch, report mismatch, or policy mismatch. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Update close preflight blocked output to include compact missing_gates details in the phase reason, next_action, or result data. Include observed report ids per phase when the blocker is REPORT_EVIDENCE_MISMATCH. Keep existing strict close preflight gating behavior unchanged. Add or update focused tests for close preflight diagnostics. Do not relax close preflight gate rules. Do not implement report recovery acceptance in this task. Do not edit protected project-control files manually. ai_project_ctl/pipeline/close_phase.py tests/test_pipeline_phase_review_close.py A close blocked by missing phase evidence reports the specific missing gate code(s) in a user-visible result path. A close blocked by report id mismatch reports observed report ids for execute, collect_report, verify, and review when available. Existing close preflight pass and fail behavior remains unchanged except for clearer diagnostics. Focused close preflight tests pass. No protected project-control state or generated files are edited manually. Review that the change improves diagnostics only and does not weaken close safety.
 ```
 
 ## Task Boundary Snapshot
 
-Task: `TASK-277` - Allow governed close side effects in local commit readiness
+Task: `TASK-278` - Show close preflight gate details
 Status: `done`
 
 Scope:
-- Extend commit readiness approved-file collection to recognize governed side effects owned by the current pipeline session.
-- Keep pre-existing dirty governed files and non-session-owned AI_PROJECT files blocked as unrelated.
-- Preserve the existing requirement for non-governed target task artifact evidence before committing governed session side effects.
-- Add a regression that covers a successful local commit with task artifact changes plus session-owned task/report/codex/context/evolution/pipeline side effects.
-- Add or keep a negative regression proving unrelated governed dirty files still fail with COMMIT_UNRELATED_FILES.
+- Update close preflight blocked output to include compact missing_gates details in the phase reason, next_action, or result data.
+- Include observed report ids per phase when the blocker is REPORT_EVIDENCE_MISMATCH.
+- Keep existing strict close preflight gating behavior unchanged.
+- Add or update focused tests for close preflight diagnostics.
 
 Allowed Files:
-- ai_project_ctl/pipeline/git_commit.py
 - ai_project_ctl/pipeline/close_phase.py
-- ai_project_ctl/pipeline/session.py
-- tests/test_pipeline_runner.py
-- tests/test_web_run_local_commit_e2e.py
-- tests/test_web_control_center.py
+- tests/test_pipeline_phase_review_close.py
 
 Acceptance Criteria:
-- Commit readiness passes for a clean-baseline pipeline session that has target task artifact evidence and current-session governed close side effects.
-- Local commit creation stages only approved target artifact files and current-session governed side-effect files.
-- Pre-existing dirty governed files that are not owned by the current session still block with COMMIT_UNRELATED_FILES.
-- Arbitrary AI_PROJECT/** files that are not approved by report, side effects, or current-session evidence still block with COMMIT_UNRELATED_FILES.
-- Commit readiness still blocks governed-only changes when the selected task has no non-governed target artifact evidence.
-- python -m pytest tests/test_pipeline_runner.py -q passes.
-- python -m pytest tests/test_web_run_local_commit_e2e.py -q passes.
+- A close blocked by missing phase evidence reports the specific missing gate code(s) in a user-visible result path.
+- A close blocked by report id mismatch reports observed report ids for execute, collect_report, verify, and review when available.
+- Existing close preflight pass and fail behavior remains unchanged except for clearer diagnostics.
+- Focused close preflight tests pass.
+- No protected project-control state or generated files are edited manually.
 
 ## Index Summary
 
@@ -62,73 +55,27 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 | Score | Source | Heading | Lines | Content hash | Chunk hash | Reasons |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 156 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: to; metadata token match: md, to; content token match: a, acceptance, and, approved, as, be, before, bypass |
-| 152 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | heading token match: existing; metadata token match: existing, md; content token match: a, acceptance, add, ai_project, allow, and, approved, as |
-| 148 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 607-707 | `f5e4b5e551ae` | `6c704ec11dd6` | metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, be, block, by, change |
-| 124 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 911-943 | `f5e4b5e551ae` | `1d3f69b9e6a5` | heading token match: and, py, to; metadata token match: and, md, project-control, py, to; content token match: a, and, be, before, but, by, bypass, can |
-| 123 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 834-870 | `f5e4b5e551ae` | `1ed18819b1db` | heading token match: context; metadata token match: context, md, project-control; content token match: a, acceptance, add, and, before, but, by, change |
-| 118 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 65-119 | `f824429b0a39` | `5b78d4503548` | metadata token match: md, project-control; content token match: a, acceptance, ai_project, all, and, approved, are, as |
-| 117 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: context; metadata token match: context, md, project-control; content token match: a, acceptance, ai_project, and, are, be, both, by |
-| 115 | `ai-system/project-control/04-command-catalog.md` | 18. Additional Command Domains > Pipeline Commands | 2294-2321 | `f824429b0a39` | `efe882b18c98` | heading token match: pipeline; metadata token match: md, pipeline, project-control; content token match: acceptance, ai_project, ai_project_ctl, and, are, change, codex, commits |
+| 134 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 607-707 | `f5e4b5e551ae` | `6c704ec11dd6` | metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, by, change, completed, criteria |
+| 124 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | heading token match: existing; metadata token match: existing, md; content token match: a, acceptance, add, ai_project, and, behavior, blocker, by |
+| 115 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 834-870 | `f5e4b5e551ae` | `1ed18819b1db` | heading token match: rules; metadata token match: md, project-control, rules; content token match: a, acceptance, add, and, by, change, criteria, fail |
+| 114 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: to; metadata token match: md, to; content token match: a, acceptance, and, can, criteria, edit, evidence, files |
+| 100 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 911-943 | `f5e4b5e551ae` | `1d3f69b9e6a5` | heading token match: and, py, to; metadata token match: and, md, project-control, py, to; content token match: a, and, by, can, does, existing, for, generated |
+| 99 | `ai-system/project-control/06-prompt-package-spec.md` | 7. Section Requirements > 7.14 Final Report Requirements | 434-474 | `f5e4b5e551ae` | `6effcae6ee95` | heading token match: report; metadata token match: md, project-control, report; content token match: a, acceptance, and, by, completed, criteria, evidence, exact |
+| 94 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 65-119 | `f824429b0a39` | `5b78d4503548` | metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, are, by, criteria, does |
+| 91 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: state; metadata token match: md, project-control, state; content token match: a, acceptance, ai_project, and, are, by, criteria, files |
 
 ## Selected Context
 
-### 1. `ai-system/skills/README.md`
-
-Title: Skills Layer Roadmap
-Status: `active`  Type: `guide`
-Heading: Skills Layer Roadmap > Recommended Skills To Create
-Lines: `80-92`
-Score: `156`
-Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
-Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
-Reasons: heading token match: to; metadata token match: md, to; content token match: a, acceptance, and, approved, as, be, before, bypass
-
-```text
-## Recommended Skills To Create
-
-| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
-| --- | --- | --- | --- | --- | --- |
-| Documentation Control Skill | Guide documentation registration, status changes, generated indexes and documentation validation. | `docctl.py` | P0 | Register documents, set draft/review status, render/check generated docs, explain documentation lifecycle. | Mark documents active without Human Owner approval; manually edit `docs.json`, doc events or generated doc indexes. |
-| Protected Files Skill | Keep agents inside the protected-files boundary and detect unsafe project-control edits. | `check-protected-project-files.py`, `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Explain protected paths, run protected-files checks, route repairs through CLIs. | Edit protected state/events/generated files manually; use ad hoc scripts to mutate protected files; hide drift. |
-| Review Gate Skill | Guide review intake before a Task can be accepted or closed. | `taskctl.py`; future review control CLI if approved | P1 | Check scope, allowed files, acceptance criteria, validation output and review status; recommend APPROVED, REWORK, REJECTED or DEFERRED. | Self-approve work; mark a Task done without the required approval path; ignore Critical or Major findings. |
-
-[...truncated by contextctl...]
-```
-
-### 2. `ai-system/skills/README.md`
-
-Title: Skills Layer Roadmap
-Status: `active`  Type: `guide`
-Heading: Skills Layer Roadmap > Existing Useful Skills
-Lines: `34-43`
-Score: `152`
-Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
-Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
-Reasons: heading token match: existing; metadata token match: existing, md; content token match: a, acceptance, add, ai_project, allow, and, approved, as
-
-```text
-## Existing Useful Skills
-
-| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
-| --- | --- | --- | --- | --- | --- |
-| Project Control Gateway Skill | Route plan, task, documentation and evolution work through the controlled CLI gateway instead of manual state edits. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Inspect state through CLI, choose allowed commands, run validation and render commands, report unsupported operations. | Manually edit `AI_PROJECT/state/**`, `AI_PROJECT/events/**` or `AI_PROJECT/generated/**`; invent lifecycle states or commands; execute Initiative or Epic directly. |
-| Clarification Gate Skill | Teach Codex and subagents when to inspect first, proceed with safe assumptions, or stop for Human Owner blocker questions. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Classify blockers, group owner questions, identify safe defaults, preserve task and approval boundaries. | Use questions to avoid normal inspection; ask for approval after every small step; self-approve accepted, approved, active or done states. |
-| Documentation Navigation Skill | Route Codex and subagents to the minimal correct documentation and project-control read set before planning, editing, reviewing or executing AI_Development_System work.
-
-[...truncated by contextctl...]
-```
-
-### 3. `ai-system/project-control/06-prompt-package-spec.md`
+### 1. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 12. Prompt Package Template
 Lines: `607-707`
-Score: `148`
+Score: `134`
 Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
 Chunk hash: `6c704ec11dd6768d6ef9c65207d80f3aa00e1bf0da58c3d765defabe8ff08815`
-Reasons: metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, be, block, by, change
+Reasons: metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, by, change, completed, criteria
 
 ```text
 # 12. Prompt Package Template
@@ -201,62 +148,39 @@ Execution Rules:
 [...truncated by contextctl...]
 ```
 
-### 4. `ai-system/project-control/06-prompt-package-spec.md`
+### 2. `ai-system/skills/README.md`
 
-Title: Project Control Prompt Package Specification
-Status: `active`  Type: `reference`
-Heading: 17. Relationship To taskctl.py And codexctl.py
-Lines: `911-943`
+Title: Skills Layer Roadmap
+Status: `active`  Type: `guide`
+Heading: Skills Layer Roadmap > Existing Useful Skills
+Lines: `34-43`
 Score: `124`
-Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
-Chunk hash: `1d3f69b9e6a541b647d67281fe6878bd0cffde8324082ef979a9a7ca2a729d9a`
-Reasons: heading token match: and, py, to; metadata token match: and, md, project-control, py, to; content token match: a, and, be, before, but, by, bypass, can
+Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
+Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
+Reasons: heading token match: existing; metadata token match: existing, md; content token match: a, acceptance, add, ai_project, and, behavior, blocker, by
 
 ```text
-# 17. Relationship To taskctl.py And codexctl.py
+## Existing Useful Skills
 
-Task prompt output can be built by `taskctl.py`.
+| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
+| --- | --- | --- | --- | --- | --- |
+| Project Control Gateway Skill | Route plan, task, documentation and evolution work through the controlled CLI gateway instead of manual state edits. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Inspect state through CLI, choose allowed commands, run validation and render commands, report unsupported operations. | Manually edit `AI_PROJECT/state/**`, `AI_PROJECT/events/**` or `AI_PROJECT/generated/**`; invent lifecycle states or commands; execute Initiative or Epic directly. |
+| Clarification Gate Skill | Teach Codex and subagents when to inspect first, proceed with safe assumptions, or stop for Human Owner blocker questions. | `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Classify blockers, group owner questions, identify safe defaults, preserve task and approval boundaries. | Use questions to avoid normal inspection; ask for approval after every small step; self-approve accepted, approved, active or done states. |
+| Documentation Navigation Skill | Route Codex and subagents to the minimal correct documentation and project-control read set before planning, editing, reviewing or executing AI_Development_System work.
 
-`taskctl.py` owns:
-
-```text id="d2esmn"
-Task state
-Current Task
-Task generated Markdown
-Codex Prompt Package
-Task audit events
+[...truncated by contextctl...]
 ```
 
-`codexctl.py` owns:
-
-```text
-Current Codex execution state
-CODEX_STATUS.md
-Codex prompt build and clear audit events
-Optional read-only Context Pack inclusion in CODEX_PROMPT.md
-```
-
-Prompt Package build must not bypass task validation.
-
-Before building the package, task state must be valid.
-
-`contextctl.py` may read Task state to derive a search query for a Context Pack, but it does not mutate Task state and does not make retrieved context executable scope.
-
-`codexctl.py` may validate and include an existing Context Pack, but it must not build the index or refresh Context Pack content itself.
-
----
-```
-
-### 5. `ai-system/project-control/06-prompt-package-spec.md`
+### 3. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 14. Context Budget Rules > Context Pack Boundary
 Lines: `834-870`
-Score: `123`
+Score: `115`
 Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
 Chunk hash: `1ed18819b1db2849347b56648bdbea293730ca187154bd5be940636cfe902e79`
-Reasons: heading token match: context; metadata token match: context, md, project-control; content token match: a, acceptance, add, and, before, but, by, change
+Reasons: heading token match: rules; metadata token match: md, project-control, rules; content token match: a, acceptance, add, and, by, change, criteria, fail
 
 ```text
 ## Context Pack Boundary
@@ -297,16 +221,139 @@ If validation fails, `codexctl.py` must fail clearly and must not include stale 
 ---
 ```
 
-### 6. `ai-system/project-control/04-command-catalog.md`
+### 4. `ai-system/skills/README.md`
+
+Title: Skills Layer Roadmap
+Status: `active`  Type: `guide`
+Heading: Skills Layer Roadmap > Recommended Skills To Create
+Lines: `80-92`
+Score: `114`
+Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
+Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
+Reasons: heading token match: to; metadata token match: md, to; content token match: a, acceptance, and, can, criteria, edit, evidence, files
+
+```text
+## Recommended Skills To Create
+
+| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
+| --- | --- | --- | --- | --- | --- |
+| Documentation Control Skill | Guide documentation registration, status changes, generated indexes and documentation validation. | `docctl.py` | P0 | Register documents, set draft/review status, render/check generated docs, explain documentation lifecycle. | Mark documents active without Human Owner approval; manually edit `docs.json`, doc events or generated doc indexes. |
+| Protected Files Skill | Keep agents inside the protected-files boundary and detect unsafe project-control edits. | `check-protected-project-files.py`, `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Explain protected paths, run protected-files checks, route repairs through CLIs. | Edit protected state/events/generated files manually; use ad hoc scripts to mutate protected files; hide drift. |
+| Review Gate Skill | Guide review intake before a Task can be accepted or closed. | `taskctl.py`; future review control CLI if approved | P1 | Check scope, allowed files, acceptance criteria, validation output and review status; recommend APPROVED, REWORK, REJECTED or DEFERRED. | Self-approve work; mark a Task done without the required approval path; ignore Critical or Major findings. |
+
+[...truncated by contextctl...]
+```
+
+### 5. `ai-system/project-control/06-prompt-package-spec.md`
+
+Title: Project Control Prompt Package Specification
+Status: `active`  Type: `reference`
+Heading: 17. Relationship To taskctl.py And codexctl.py
+Lines: `911-943`
+Score: `100`
+Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
+Chunk hash: `1d3f69b9e6a541b647d67281fe6878bd0cffde8324082ef979a9a7ca2a729d9a`
+Reasons: heading token match: and, py, to; metadata token match: and, md, project-control, py, to; content token match: a, and, by, can, does, existing, for, generated
+
+```text
+# 17. Relationship To taskctl.py And codexctl.py
+
+Task prompt output can be built by `taskctl.py`.
+
+`taskctl.py` owns:
+
+```text id="d2esmn"
+Task state
+Current Task
+Task generated Markdown
+Codex Prompt Package
+Task audit events
+```
+
+`codexctl.py` owns:
+
+```text
+Current Codex execution state
+CODEX_STATUS.md
+Codex prompt build and clear audit events
+Optional read-only Context Pack inclusion in CODEX_PROMPT.md
+```
+
+Prompt Package build must not bypass task validation.
+
+Before building the package, task state must be valid.
+
+`contextctl.py` may read Task state to derive a search query for a Context Pack, but it does not mutate Task state and does not make retrieved context executable scope.
+
+`codexctl.py` may validate and include an existing Context Pack, but it must not build the index or refresh Context Pack content itself.
+
+---
+```
+
+### 6. `ai-system/project-control/06-prompt-package-spec.md`
+
+Title: Project Control Prompt Package Specification
+Status: `active`  Type: `reference`
+Heading: 7. Section Requirements > 7.14 Final Report Requirements
+Lines: `434-474`
+Score: `99`
+Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
+Chunk hash: `6effcae6ee956170dbc3f9127d2af67ea9fcf3027b9a669f88ec02f76a1e6410`
+Reasons: heading token match: report; metadata token match: md, project-control, report; content token match: a, acceptance, and, by, completed, criteria, evidence, exact
+
+```text
+## 7.14 Final Report Requirements
+
+Prompt Package should require Codex to report:
+
+```text id="5af40m"
+- changed files;
+- commands run;
+- validation result;
+- generated files updated;
+- acceptance criteria status;
+- unresolved risks;
+- owner action required.
+```
+
+For executable pipeline prompts, the human-readable report is not enough. The generated prompt must also require a final machine-readable execution summary block using this exact contract:
+
+````text
+CODEX_EXECUTION_SUMMARY_JSON:
+```json
+{
+  "implementation_summary": "Summarize the completed implementation.",
+  "notes": [],
+  "warnings": [],
+  "blockers": []
+}
+```
+````
+
+Rules:
+
+```text
+- the marker must appear on its own line;
+- it must be followed by one fenced `json` block;
+- the JSON value must be an object;
+- the object must contain exactly `implementation_summary`, `notes`, `warnings` and `blockers`;
+- no prose, bullets or other text may appear after the closing fence;
+- Codex must not emit a full TaskReport payload in this block.
+```
+
+The local pipeline adapter parses this block from Codex stdout. It uses the four Codex-authored fields as summary input and derives task identity, changed files, generated files, checks, owner decision status and token usage from trusted pipeline and task evidence.
+```
+
+### 7. `ai-system/project-control/04-command-catalog.md`
 
 Title: Project Control Command Catalog
 Status: `active`  Type: `reference`
 Heading: Project Control Command Catalog > Self-Hosted Command Boundary
 Lines: `65-119`
-Score: `118`
+Score: `94`
 Content hash: `f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6`
 Chunk hash: `5b78d45035483b51a58d0a7bed1cf1402fe3b2e6bc9a7ffcda911c0d12fcb6bc`
-Reasons: metadata token match: md, project-control; content token match: a, acceptance, ai_project, all, and, approved, are, as
+Reasons: metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, are, by, criteria, does
 
 ```text
 ## Self-Hosted Command Boundary
@@ -347,16 +394,16 @@ python scripts/docctl.py audit --last 20
 [...truncated by contextctl...]
 ```
 
-### 7. `ai-system/project-control/03-state-model.md`
+### 8. `ai-system/project-control/03-state-model.md`
 
 Title: Project Control State Model
 Status: `active`  Type: `reference`
 Heading: Project Control State Model > Context Control State
 Lines: `104-125`
-Score: `117`
+Score: `91`
 Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
 Chunk hash: `0cd80bdf0d55e5284fa6355477f50005896398136bf33b7e1a181718f309f8b4`
-Reasons: heading token match: context; metadata token match: context, md, project-control; content token match: a, acceptance, ai_project, and, are, be, both, by
+Reasons: heading token match: state; metadata token match: md, project-control, state; content token match: a, acceptance, ai_project, and, are, by, criteria, files
 
 ```text
 ## Context Control State
@@ -380,47 +427,6 @@ By default, context control indexes registered active source documents only. It 
 `CONTEXT_PACK.md` includes selected source paths, headings, line ranges, source content hashes, chunk hashes, deterministic keyword scores and selection reasons. `CONTEXT_STATUS.md` summarizes the current generated pack, selected paths and exclusion reasons. Both files are generated output and must be regenerated through `contextctl.py`.
 
 ---
-```
-
-### 8. `ai-system/project-control/04-command-catalog.md`
-
-Title: Project Control Command Catalog
-Status: `active`  Type: `reference`
-Heading: 18. Additional Command Domains > Pipeline Commands
-Lines: `2294-2321`
-Score: `115`
-Content hash: `f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6`
-Chunk hash: `efe882b18c987d13ed38a60c38d0a9ba2dccd1c95061f72f79901f6f007ad46a`
-Reasons: heading token match: pipeline; metadata token match: md, pipeline, project-control; content token match: acceptance, ai_project, ai_project_ctl, and, are, change, codex, commits
-
-```text
-## Pipeline Commands
-
-```text
-pipeline status
-pipeline validate
-pipeline render
-pipeline check-generated
-pipeline session create
-pipeline session start-step
-pipeline session step-result
-pipeline session stop
-pipeline session complete
-pipeline run-next
-pipeline run-until-blocker
-```
-
-Current implementation entry point:
-
-```bash
-python scripts/aictl.py pipeline ...
-```
-
-Pipeline commands manage supervised pipeline sessions, selected queues, policy snapshots, gate outcomes, stop reasons, generated pipeline status and generated pipeline audit output. They must route through `aictl.py` and the `ai_project_ctl/pipeline/**` services. They must not manually edit `AI_PROJECT/state/pipeline_sessions.json`, `AI_PROJECT/events/pipeline-events.jsonl`, `AI_PROJECT/generated/PIPELINE_STATUS.md` or `AI_PROJECT/generated/PIPELINE_AUDIT.md`.
-
-`pipeline run-next` advances at most one guarded step. `pipeline run-until-blocker` composes `run-next`, requires `--confirm`, stops on the first blocker or queue completion and does not introduce background execution.
-
-Pipeline policies must not authorize push, merge, automatic Evolution Change approval, automatic Evolution Change acceptance, or Human Owner final acceptance. Local commits, when policy-enabled, are local-only and require passing report, machine review, Codex review and commit-readiness gates.
 ```
 
 ## Excluded Source Summary

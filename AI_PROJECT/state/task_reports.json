@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 148,
+  "revision": 150,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-30T18:52:46Z",
+  "updated_at": "2026-06-30T19:52:27Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -10484,6 +10484,149 @@
           "token_count_strategy": "byte_length_div_4_owner_recovery_estimate"
         }
       }
+    },
+    {
+      "id": "RPT-149",
+      "task_id": "TASK-278",
+      "task_ref": "PIPEF-173",
+      "submitted_at": "2026-06-30T19:52:27Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:2e84a0a053ee6be3038fe012eed0182da7b9b9cc2fe8352392821cd3674233a2",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-278",
+        "task_ref": "PIPEF-173",
+        "reported_task_id": "TASK-278",
+        "reported_task_ref": "PIPEF-173",
+        "implementation_summary": "Close preflight blocked results now expose compact missing gate code summaries and report-id evidence, with focused tests covering missing phase evidence and report evidence mismatch diagnostics.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 530.132964,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 530.132964,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Full tests/test_pipeline_phase_review_close.py run with PYTHONPATH=. failed two non-preflight local-commit/context-refresh tests.",
+          "Plain pytest invocation without PYTHONPATH=. failed to import ai_project_ctl."
+        ],
+        "blockers": [],
+        "notes": [
+          "Edited only ai_project_ctl/pipeline/close_phase.py and tests/test_pipeline_phase_review_close.py.",
+          "Focused preflight diagnostics and the existing happy close-preflight path passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 941,
+          "remaining_tokens": 31059,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-150",
+      "task_id": "TASK-278",
+      "task_ref": "PIPEF-173",
+      "submitted_at": "2026-06-30T19:52:27Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-149",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-278",
+        "task_ref": "PIPEF-173",
+        "reported_task_id": "TASK-278",
+        "reported_task_ref": "PIPEF-173",
+        "implementation_summary": "Close preflight blocked results now expose compact missing gate code summaries and report-id evidence, with focused tests covering missing phase evidence and report evidence mismatch diagnostics.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/close_phase.py",
+          "tests/test_pipeline_phase_review_close.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 530.132964,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 530.132964,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Full tests/test_pipeline_phase_review_close.py run with PYTHONPATH=. failed two non-preflight local-commit/context-refresh tests.",
+          "Plain pytest invocation without PYTHONPATH=. failed to import ai_project_ctl."
+        ],
+        "blockers": [],
+        "notes": [
+          "Edited only ai_project_ctl/pipeline/close_phase.py and tests/test_pipeline_phase_review_close.py.",
+          "Focused preflight diagnostics and the existing happy close-preflight path passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 941,
+          "remaining_tokens": 31059,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -10606,6 +10749,7 @@
     "TASK-274": "RPT-138",
     "TASK-275": "RPT-140",
     "TASK-276": "RPT-141",
-    "TASK-277": "RPT-148"
+    "TASK-277": "RPT-148",
+    "TASK-278": "RPT-150"
   }
 }

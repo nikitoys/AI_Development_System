@@ -53,6 +53,7 @@ CONTEXT_REFRESH_OUTPUT_LIMIT = 1200
 REQUIRED_PASSED_PHASES = ("prepare", "execute", "collect_report", "verify")
 REVIEW_PHASE_NAME = "review"
 REQUIRED_PHASE_ORDER = (*REQUIRED_PASSED_PHASES, REVIEW_PHASE_NAME)
+REPORT_EVIDENCE_PHASES = ("execute", "collect_report", "verify", REVIEW_PHASE_NAME)
 CHANGE_ACCEPTABLE_STATUSES = {"approved", "in_review"}
 CHANGE_ALREADY_ACCEPTED_STATUS = "accepted"
 CODEX_CLEAR_STEP_ID = "codex_clear"
@@ -126,9 +127,13 @@ def close_phase(
 
     evidence = _preflight_evidence(session, task_id)
     if evidence["missing_gates"]:
+        gate_summary = evidence["missing_gate_summary"]
         phase = PhaseResult.blocked(
             PHASE_NAME,
-            reason="Close preflight blocked: required phase evidence is incomplete.",
+            reason=(
+                "Close preflight blocked: required phase evidence is incomplete "
+                "({})."
+            ).format("; ".join(gate_summary)),
             next_action=_blocked_next_action(evidence["missing_gates"]),
             artifacts={
                 "blocked_by": "CLOSE_PREFLIGHT_INCOMPLETE",
@@ -1421,12 +1426,15 @@ def _preflight_evidence(
 
     report_consistency = _report_consistency(statuses)
     missing.extend(report_consistency["missing_gates"])
+    missing_gate_summary = _missing_gate_summary(missing)
 
     return {
         "preflight_passed": not missing,
         "required_phases": list(REQUIRED_PHASE_ORDER),
         "codex_review_required": not codex_review_disabled,
         "missing_gates": missing,
+        "missing_gate_codes": _missing_gate_codes(missing),
+        "missing_gate_summary": missing_gate_summary,
         "phase_statuses": statuses,
         "report_consistency": report_consistency["details"],
     }
@@ -1759,6 +1767,11 @@ def _report_consistency(
         for name, summary in statuses.items()
         if str(summary.get("report_id") or "")
     }
+    report_phase_ids = {
+        name: observed[name]
+        for name in REPORT_EVIDENCE_PHASES
+        if observed.get(name)
+    }
     report_ids = sorted(set(observed.values()))
     if len(report_ids) <= 1:
         return {
@@ -1767,6 +1780,7 @@ def _report_consistency(
                 "status": "passed",
                 "report_id": report_ids[0] if report_ids else "",
                 "observed_report_ids": observed,
+                "report_phase_ids": report_phase_ids,
             },
         }
     return {
@@ -1776,12 +1790,14 @@ def _report_consistency(
                 "REPORT_EVIDENCE_MISMATCH",
                 "Required phases reference different report ids.",
                 observed_report_ids=observed,
+                report_phase_ids=report_phase_ids,
             )
         ],
         "details": {
             "status": "blocked",
             "report_id": "",
             "observed_report_ids": observed,
+            "report_phase_ids": report_phase_ids,
         },
     }
 
@@ -1815,17 +1831,70 @@ def _missing_gate(
     return result
 
 
+def _missing_gate_codes(missing_gates: list[Mapping[str, Any]]) -> list[str]:
+    return [
+        _missing_gate_code(gate)
+        for gate in missing_gates
+        if _missing_gate_code(gate)
+    ]
+
+
+def _missing_gate_code(gate: Mapping[str, Any]) -> str:
+    phase = str(gate.get("phase") or "").strip()
+    code = str(gate.get("code") or "").strip()
+    if phase and code:
+        return "{}:{}".format(phase, code)
+    return code or phase
+
+
+def _missing_gate_summary(missing_gates: list[Mapping[str, Any]]) -> list[str]:
+    return [
+        _missing_gate_summary_item(gate)
+        for gate in missing_gates
+        if _missing_gate_summary_item(gate)
+    ]
+
+
+def _missing_gate_summary_item(gate: Mapping[str, Any]) -> str:
+    item = _missing_gate_code(gate)
+    if not item:
+        return ""
+    if str(gate.get("code") or "") != "REPORT_EVIDENCE_MISMATCH":
+        return item
+    report_ids = _mapping(gate.get("report_phase_ids")) or _mapping(
+        gate.get("observed_report_ids")
+    )
+    if not report_ids:
+        return item
+    evidence = [
+        "{}={}".format(phase, report_ids[phase])
+        for phase in REPORT_EVIDENCE_PHASES
+        if report_ids.get(phase)
+    ]
+    if not evidence:
+        evidence = [
+            "{}={}".format(phase, report_id)
+            for phase, report_id in report_ids.items()
+            if report_id
+        ]
+    if not evidence:
+        return item
+    return "{} [{}]".format(item, ", ".join(evidence))
+
+
 def _blocked_next_action(missing_gates: list[Mapping[str, Any]]) -> str:
     phase_order = []
     for gate in missing_gates:
         phase = str(gate.get("phase") or "")
         if phase and phase not in phase_order:
             phase_order.append(phase)
+    gate_summary = _missing_gate_summary(missing_gates)
     if not phase_order:
         return "Resolve close preflight blockers, then rerun pipeline close --confirm."
     return (
-        "Resolve required phase evidence for: {}; then rerun pipeline close --confirm."
-    ).format(", ".join(phase_order))
+        "Resolve required phase evidence for: {} (missing gates: {}); then rerun "
+        "pipeline close --confirm."
+    ).format(", ".join(phase_order), "; ".join(gate_summary))
 
 
 def _resolve_session(root: Path, session_id: str) -> CommandResult:
@@ -1886,6 +1955,15 @@ def _phase_command(
         result.data["task_id"] = str(artifacts.get("task_id") or task_id)
         result.data["preflight_passed"] = bool(artifacts.get("preflight_passed"))
         result.data["missing_gates"] = list(artifacts.get("missing_gates") or [])
+        result.data["missing_gate_codes"] = list(
+            artifacts.get("missing_gate_codes") or []
+        )
+        result.data["missing_gate_summary"] = list(
+            artifacts.get("missing_gate_summary") or []
+        )
+        report_consistency = artifacts.get("report_consistency")
+        if isinstance(report_consistency, Mapping):
+            result.data["report_consistency"] = dict(report_consistency)
         local_commit = artifacts.get("local_commit")
         if isinstance(local_commit, Mapping):
             result.data["local_commit"] = dict(local_commit)
