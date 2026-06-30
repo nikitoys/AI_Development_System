@@ -9,7 +9,7 @@ Mode: `task`
 Task ID: `TASK-279`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1903`
+Tasks revision: `1904`
 Indexed source documents: `10`
 Indexed chunks: `891`
 Selected chunks: `8`
