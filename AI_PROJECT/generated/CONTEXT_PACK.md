@@ -1,6 +1,6 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/state/docs.json + AI_PROJECT/state/tasks.json -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-282 Update pipeline runner expectations Bring tests/test_pipeline_runner.py in line with the current run-next phase-result model so stale expectations do not produce unrelated blocker noise. The full pipeline runner test file currently contains old stop_code and steps expectations that do not match current phase dispatch behavior. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Identify stale assertions in tests/test_pipeline_runner.py that expect the old run-next result shape. Update those assertions to the current phase_result, phase_status, and queue behavior. Preserve meaningful coverage for blockers, close, local commit, and batch stopping behavior. Run the focused pipeline runner test file. Do not change production pipeline behavior in this task. Do not delete coverage just to make tests pass. Do not edit protected project-control files manually. tests/test_pipeline_runner.py tests/test_pipeline_runner.py no longer fails because of stale run-next stop_code or step-shape expectations. Updated tests assert the current phase_result and phase_status behavior. Tests for real blockers and failures remain meaningful. python -m pytest tests/test_pipeline_runner.py -q passes. No production code files are edited. Review for accidental weakening of tests; updated assertions should match current behavior, not ignore it.","schema_version":1,"task_id":"TASK-282"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-283 Add recovery close regression Add an end-to-end regression covering owner recovery report submission followed by collect-report, verify, skipped review, close, and local commit readiness. The regression should prove that a task can close cleanly after owner-confirmed report recovery without manual recovery commits. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Create a focused regression scenario where execute records an original report and owner recovery records a replacement report. Verify collect-report, verify, review, and close can complete through the recovery path. Assert accidental report mismatch without recovery metadata still blocks close. Assert the final working tree behavior remains clean after local commit when commit policy is enabled. Do not implement production recovery behavior in this task unless the regression requires only minimal test fixtures. Do not broaden the regression into unrelated Web UI behavior. Do not edit protected project-control files manually. tests/test_pipeline_recovery_close.py tests/test_pipeline_runner.py The regression covers old execute report id plus new owner recovery report id for the same task. The positive recovery scenario reaches close without CLOSE_PREFLIGHT_INCOMPLETE. The negative accidental mismatch scenario still blocks with REPORT_EVIDENCE_MISMATCH. The regression verifies skipped-review-by-policy evidence remains valid. The focused recovery close tests pass. Check that the test would have caught the PSESS-152 recovery-close failure.","schema_version":1,"task_id":"TASK-283"} -->
 
 # Context Pack
 
@@ -8,38 +8,39 @@ This generated Context Pack is derived output only. It is not source of truth.
 It does not expand task scope, allowed files, out-of-scope items, or acceptance criteria.
 
 Mode: `task`
-Task ID: `TASK-282`
+Task ID: `TASK-283`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1926`
+Tasks revision: `1931`
 
 ## Query
 
 ```text
-TASK-282 Update pipeline runner expectations Bring tests/test_pipeline_runner.py in line with the current run-next phase-result model so stale expectations do not produce unrelated blocker noise. The full pipeline runner test file currently contains old stop_code and steps expectations that do not match current phase dispatch behavior. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Identify stale assertions in tests/test_pipeline_runner.py that expect the old run-next result shape. Update those assertions to the current phase_result, phase_status, and queue behavior. Preserve meaningful coverage for blockers, close, local commit, and batch stopping behavior. Run the focused pipeline runner test file. Do not change production pipeline behavior in this task. Do not delete coverage just to make tests pass. Do not edit protected project-control files manually. tests/test_pipeline_runner.py tests/test_pipeline_runner.py no longer fails because of stale run-next stop_code or step-shape expectations. Updated tests assert the current phase_result and phase_status behavior. Tests for real blockers and failures remain meaningful. python -m pytest tests/test_pipeline_runner.py -q passes. No production code files are edited. Review for accidental weakening of tests; updated assertions should match current behavior, not ignore it.
+TASK-283 Add recovery close regression Add an end-to-end regression covering owner recovery report submission followed by collect-report, verify, skipped review, close, and local commit readiness. The regression should prove that a task can close cleanly after owner-confirmed report recovery without manual recovery commits. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Create a focused regression scenario where execute records an original report and owner recovery records a replacement report. Verify collect-report, verify, review, and close can complete through the recovery path. Assert accidental report mismatch without recovery metadata still blocks close. Assert the final working tree behavior remains clean after local commit when commit policy is enabled. Do not implement production recovery behavior in this task unless the regression requires only minimal test fixtures. Do not broaden the regression into unrelated Web UI behavior. Do not edit protected project-control files manually. tests/test_pipeline_recovery_close.py tests/test_pipeline_runner.py The regression covers old execute report id plus new owner recovery report id for the same task. The positive recovery scenario reaches close without CLOSE_PREFLIGHT_INCOMPLETE. The negative accidental mismatch scenario still blocks with REPORT_EVIDENCE_MISMATCH. The regression verifies skipped-review-by-policy evidence remains valid. The focused recovery close tests pass. Check that the test would have caught the PSESS-152 recovery-close failure.
 ```
 
 ## Task Boundary Snapshot
 
-Task: `TASK-282` - Update pipeline runner expectations
+Task: `TASK-283` - Add recovery close regression
 Status: `done`
 
 Scope:
-- Identify stale assertions in tests/test_pipeline_runner.py that expect the old run-next result shape.
-- Update those assertions to the current phase_result, phase_status, and queue behavior.
-- Preserve meaningful coverage for blockers, close, local commit, and batch stopping behavior.
-- Run the focused pipeline runner test file.
+- Create a focused regression scenario where execute records an original report and owner recovery records a replacement report.
+- Verify collect-report, verify, review, and close can complete through the recovery path.
+- Assert accidental report mismatch without recovery metadata still blocks close.
+- Assert the final working tree behavior remains clean after local commit when commit policy is enabled.
 
 Allowed Files:
+- tests/test_pipeline_recovery_close.py
 - tests/test_pipeline_runner.py
 
 Acceptance Criteria:
-- tests/test_pipeline_runner.py no longer fails because of stale run-next stop_code or step-shape expectations.
-- Updated tests assert the current phase_result and phase_status behavior.
-- Tests for real blockers and failures remain meaningful.
-- python -m pytest tests/test_pipeline_runner.py -q passes.
-- No production code files are edited.
+- The regression covers old execute report id plus new owner recovery report id for the same task.
+- The positive recovery scenario reaches close without CLOSE_PREFLIGHT_INCOMPLETE.
+- The negative accidental mismatch scenario still blocks with REPORT_EVIDENCE_MISMATCH.
+- The regression verifies skipped-review-by-policy evidence remains valid.
+- The focused recovery close tests pass.
 
 ## Index Summary
 
@@ -54,27 +55,104 @@ Default exclusion policy: generated, inactive, archived, deprecated, template, a
 
 | Score | Source | Heading | Lines | Content hash | Chunk hash | Reasons |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 112 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 607-707 | `f5e4b5e551ae` | `6c704ec11dd6` | metadata token match: md, project-control; content token match: acceptance, ai_project, and, blockers, change, completed, criteria, current |
-| 103 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | metadata token match: md; content token match: acceptance, ai_project, and, behavior, blocker, blockers, change, edit |
-| 90 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 911-943 | `f5e4b5e551ae` | `1d3f69b9e6a5` | heading token match: and, py, to; metadata token match: and, md, project-control, py, to; content token match: and, current, for, generated, in, it, make, md |
-| 86 | `ai-system/project-control/04-command-catalog.md` | Project Control Command Catalog > Self-Hosted Command Boundary | 65-119 | `f824429b0a39` | `5b78d4503548` | metadata token match: md, project-control; content token match: acceptance, ai_project, and, are, criteria, current, files, generated |
-| 86 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: to; metadata token match: md, to; content token match: acceptance, and, commit, criteria, dispatch, edit, files, for |
-| 85 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | heading token match: model; metadata token match: md, model, project-control; content token match: acceptance, ai_project, and, are, criteria, current, file, files |
-| 84 | `ai-system/project-control/06-prompt-package-spec.md` | 7. Section Requirements > 7.14 Final Report Requirements | 434-474 | `f5e4b5e551ae` | `6effcae6ee95` | metadata token match: md, project-control; content token match: acceptance, and, blockers, completed, criteria, files, for, full |
-| 84 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 834-870 | `f5e4b5e551ae` | `1ed18819b1db` | metadata token match: md, project-control; content token match: acceptance, and, change, criteria, current, fails, files, full |
+| 111 | `ai-system/skills/README.md` | Skills Layer Roadmap > Recommended Skills To Create | 80-92 | `dbf637225bec` | `eef80c572381` | heading token match: create, to; metadata token match: create, md, to; content token match: a, acceptance, and, can, check, commit, create, criteria |
+| 104 | `ai-system/project-control/06-prompt-package-spec.md` | 7. Section Requirements > 7.14 Final Report Requirements | 434-474 | `f5e4b5e551ae` | `6effcae6ee95` | heading token match: final, report; metadata token match: final, md, project-control, report; content token match: a, acceptance, after, an, and, by, completed, criteria |
+| 102 | `ai-system/project-control/06-prompt-package-spec.md` | 12. Prompt Package Template | 607-707 | `f5e4b5e551ae` | `6c704ec11dd6` | metadata token match: md, project-control; content token match: a, acceptance, after, ai_project, and, by, completed, criteria |
+| 89 | `ai-system/skills/README.md` | Skills Layer Roadmap > Existing Useful Skills | 34-43 | `dbf637225bec` | `758bde12e28c` | metadata token match: md; content token match: a, acceptance, add, after, ai_project, and, behavior, by |
+| 86 | `ai-system/project-control/06-prompt-package-spec.md` | 14. Context Budget Rules > Context Pack Boundary | 834-870 | `f5e4b5e551ae` | `1ed18819b1db` | metadata token match: md, project-control; content token match: a, acceptance, add, and, by, criteria, files, generated |
+| 86 | `ai-system/project-control/06-prompt-package-spec.md` | 17. Relationship To taskctl.py And codexctl.py | 911-943 | `f5e4b5e551ae` | `1d3f69b9e6a5` | heading token match: and, py, to; metadata token match: and, md, project-control, py, to; content token match: a, an, and, by, can, for, generated, id |
+| 79 | `ai-system/project-control/07-validation-and-tests.md` | 20. Acceptance Criteria For Validation Layer | 1368-1386 | `61710bd7deee` | `9ed7e5fda92c` | heading token match: acceptance, criteria, for; metadata token match: acceptance, and, criteria, for, md, project-control, tests; content token match: a, acceptance, and, by, can, criteria, do, for |
+| 74 | `ai-system/project-control/03-state-model.md` | Project Control State Model > Context Control State | 104-125 | `9e818e514763` | `0cd80bdf0d55` | metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, by, criteria, files, generated |
 
 ## Selected Context
 
-### 1. `ai-system/project-control/06-prompt-package-spec.md`
+### 1. `ai-system/skills/README.md`
+
+Title: Skills Layer Roadmap
+Status: `active`  Type: `guide`
+Heading: Skills Layer Roadmap > Recommended Skills To Create
+Lines: `80-92`
+Score: `111`
+Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
+Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
+Reasons: heading token match: create, to; metadata token match: create, md, to; content token match: a, acceptance, and, can, check, commit, create, criteria
+
+```text
+## Recommended Skills To Create
+
+| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
+| --- | --- | --- | --- | --- | --- |
+| Documentation Control Skill | Guide documentation registration, status changes, generated indexes and documentation validation. | `docctl.py` | P0 | Register documents, set draft/review status, render/check generated docs, explain documentation lifecycle. | Mark documents active without Human Owner approval; manually edit `docs.json`, doc events or generated doc indexes. |
+| Protected Files Skill | Keep agents inside the protected-files boundary and detect unsafe project-control edits. | `check-protected-project-files.py`, `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Explain protected paths, run protected-files checks, route repairs through CLIs. | Edit protected state/events/generated files manually; use ad hoc scripts to mutate protected files; hide drift. |
+| Review Gate Skill | Guide review intake before a Task can be accepted or closed. | `taskctl.py`; future review control CLI if approved | P1 | Check scope, allowed files, acceptance criteria, validation output and review status; recommend APPROVED, REWORK, REJECTED or DEFERRED. | Self-approve work; mark a Task done without the required approval path; ignore Critical or Major findings. |
+
+[...truncated by contextctl...]
+```
+
+### 2. `ai-system/project-control/06-prompt-package-spec.md`
+
+Title: Project Control Prompt Package Specification
+Status: `active`  Type: `reference`
+Heading: 7. Section Requirements > 7.14 Final Report Requirements
+Lines: `434-474`
+Score: `104`
+Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
+Chunk hash: `6effcae6ee956170dbc3f9127d2af67ea9fcf3027b9a669f88ec02f76a1e6410`
+Reasons: heading token match: final, report; metadata token match: final, md, project-control, report; content token match: a, acceptance, after, an, and, by, completed, criteria
+
+```text
+## 7.14 Final Report Requirements
+
+Prompt Package should require Codex to report:
+
+```text id="5af40m"
+- changed files;
+- commands run;
+- validation result;
+- generated files updated;
+- acceptance criteria status;
+- unresolved risks;
+- owner action required.
+```
+
+For executable pipeline prompts, the human-readable report is not enough. The generated prompt must also require a final machine-readable execution summary block using this exact contract:
+
+````text
+CODEX_EXECUTION_SUMMARY_JSON:
+```json
+{
+  "implementation_summary": "Summarize the completed implementation.",
+  "notes": [],
+  "warnings": [],
+  "blockers": []
+}
+```
+````
+
+Rules:
+
+```text
+- the marker must appear on its own line;
+- it must be followed by one fenced `json` block;
+- the JSON value must be an object;
+- the object must contain exactly `implementation_summary`, `notes`, `warnings` and `blockers`;
+- no prose, bullets or other text may appear after the closing fence;
+- Codex must not emit a full TaskReport payload in this block.
+```
+
+The local pipeline adapter parses this block from Codex stdout. It uses the four Codex-authored fields as summary input and derives task identity, changed files, generated files, checks, owner decision status and token usage from trusted pipeline and task evidence.
+```
+
+### 3. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 12. Prompt Package Template
 Lines: `607-707`
-Score: `112`
+Score: `102`
 Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
 Chunk hash: `6c704ec11dd6768d6ef9c65207d80f3aa00e1bf0da58c3d765defabe8ff08815`
-Reasons: metadata token match: md, project-control; content token match: acceptance, ai_project, and, blockers, change, completed, criteria, current
+Reasons: metadata token match: md, project-control; content token match: a, acceptance, after, ai_project, and, by, completed, criteria
 
 ```text
 # 12. Prompt Package Template
@@ -147,16 +225,16 @@ Execution Rules:
 [...truncated by contextctl...]
 ```
 
-### 2. `ai-system/skills/README.md`
+### 4. `ai-system/skills/README.md`
 
 Title: Skills Layer Roadmap
 Status: `active`  Type: `guide`
 Heading: Skills Layer Roadmap > Existing Useful Skills
 Lines: `34-43`
-Score: `103`
+Score: `89`
 Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
 Chunk hash: `758bde12e28c5003117d6958a636e205773bec7f8a29c54b5cb4e41ac103355a`
-Reasons: metadata token match: md; content token match: acceptance, ai_project, and, behavior, blocker, blockers, change, edit
+Reasons: metadata token match: md; content token match: a, acceptance, add, after, ai_project, and, behavior, by
 
 ```text
 ## Existing Useful Skills
@@ -170,224 +248,16 @@ Reasons: metadata token match: md; content token match: acceptance, ai_project, 
 [...truncated by contextctl...]
 ```
 
-### 3. `ai-system/project-control/06-prompt-package-spec.md`
-
-Title: Project Control Prompt Package Specification
-Status: `active`  Type: `reference`
-Heading: 17. Relationship To taskctl.py And codexctl.py
-Lines: `911-943`
-Score: `90`
-Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
-Chunk hash: `1d3f69b9e6a541b647d67281fe6878bd0cffde8324082ef979a9a7ca2a729d9a`
-Reasons: heading token match: and, py, to; metadata token match: and, md, project-control, py, to; content token match: and, current, for, generated, in, it, make, md
-
-```text
-# 17. Relationship To taskctl.py And codexctl.py
-
-Task prompt output can be built by `taskctl.py`.
-
-`taskctl.py` owns:
-
-```text id="d2esmn"
-Task state
-Current Task
-Task generated Markdown
-Codex Prompt Package
-Task audit events
-```
-
-`codexctl.py` owns:
-
-```text
-Current Codex execution state
-CODEX_STATUS.md
-Codex prompt build and clear audit events
-Optional read-only Context Pack inclusion in CODEX_PROMPT.md
-```
-
-Prompt Package build must not bypass task validation.
-
-Before building the package, task state must be valid.
-
-`contextctl.py` may read Task state to derive a search query for a Context Pack, but it does not mutate Task state and does not make retrieved context executable scope.
-
-`codexctl.py` may validate and include an existing Context Pack, but it must not build the index or refresh Context Pack content itself.
-
----
-```
-
-### 4. `ai-system/project-control/04-command-catalog.md`
-
-Title: Project Control Command Catalog
-Status: `active`  Type: `reference`
-Heading: Project Control Command Catalog > Self-Hosted Command Boundary
-Lines: `65-119`
-Score: `86`
-Content hash: `f824429b0a394aec9bfe9157302c1059a181374f040adbfb8136d2673f7fb1b6`
-Chunk hash: `5b78d45035483b51a58d0a7bed1cf1402fe3b2e6bc9a7ffcda911c0d12fcb6bc`
-Reasons: metadata token match: md, project-control; content token match: acceptance, ai_project, and, are, criteria, current, files, generated
-
-```text
-## Self-Hosted Command Boundary
-
-AI_Development_System now uses root `/AI_PROJECT` as its own self-hosted Project Control Layer. All protected state, event and generated files in that directory must be changed only through approved CLI gateways.
-
-Current domain commands include:
-
-```bash
-python scripts/aictl.py ...
-python scripts/planctl.py ...
-python scripts/taskctl.py ...
-python scripts/codexctl.py ...
-python scripts/docctl.py ...
-python scripts/evolutionctl.py ...
-python scripts/contextctl.py ...
-```
-
-Current documentation-control commands include:
-
-```bash
-python scripts/docctl.py init
-python scripts/docctl.py scan --scope ai-system
-python scripts/docctl.py scan --scope root
-python scripts/docctl.py scan --scope skills
-python scripts/docctl.py scan --scope all
-python scripts/docctl.py doc register --path <path> --title <title> --type <type> --status <status>
-python scripts/docctl.py doc status <path> --to <status>
-python scripts/docctl.py doc mark-reviewed <path> --note <text>
-python scripts/docctl.py validate
-python scripts/docctl.py render
-python scripts/docctl.py check-generated
-python scripts/docctl.py audit --last 20
-```
-
-`docctl.py` owns `AI_PROJECT/state/docs.json`, `AI_PROJECT/events/doc-events.jsonl`, `AI_PROJECT/generated/DOCS_INDEX.md` and `AI_PROJECT/generated/DOCS_GAPS.md`.
-
-[...truncated by contextctl...]
-```
-
-### 5. `ai-system/skills/README.md`
-
-Title: Skills Layer Roadmap
-Status: `active`  Type: `guide`
-Heading: Skills Layer Roadmap > Recommended Skills To Create
-Lines: `80-92`
-Score: `86`
-Content hash: `dbf637225bec85ce3cc9b8456c3714c12e4590eb0c7f3402506c05fa751795f6`
-Chunk hash: `eef80c572381162a83f631b204ebabb9a4355ca6f9f2cabf4415075c34d8b797`
-Reasons: heading token match: to; metadata token match: md, to; content token match: acceptance, and, commit, criteria, dispatch, edit, files, for
-
-```text
-## Recommended Skills To Create
-
-| Skill | Purpose | Related CLI | Priority | Allowed Actions | Forbidden Actions |
-| --- | --- | --- | --- | --- | --- |
-| Documentation Control Skill | Guide documentation registration, status changes, generated indexes and documentation validation. | `docctl.py` | P0 | Register documents, set draft/review status, render/check generated docs, explain documentation lifecycle. | Mark documents active without Human Owner approval; manually edit `docs.json`, doc events or generated doc indexes. |
-| Protected Files Skill | Keep agents inside the protected-files boundary and detect unsafe project-control edits. | `check-protected-project-files.py`, `planctl.py`, `taskctl.py`, `docctl.py`, `evolutionctl.py` | P0 | Explain protected paths, run protected-files checks, route repairs through CLIs. | Edit protected state/events/generated files manually; use ad hoc scripts to mutate protected files; hide drift. |
-| Review Gate Skill | Guide review intake before a Task can be accepted or closed. | `taskctl.py`; future review control CLI if approved | P1 | Check scope, allowed files, acceptance criteria, validation output and review status; recommend APPROVED, REWORK, REJECTED or DEFERRED. | Self-approve work; mark a Task done without the required approval path; ignore Critical or Major findings. |
-
-[...truncated by contextctl...]
-```
-
-### 6. `ai-system/project-control/03-state-model.md`
-
-Title: Project Control State Model
-Status: `active`  Type: `reference`
-Heading: Project Control State Model > Context Control State
-Lines: `104-125`
-Score: `85`
-Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
-Chunk hash: `0cd80bdf0d55e5284fa6355477f50005896398136bf33b7e1a181718f309f8b4`
-Reasons: heading token match: model; metadata token match: md, model, project-control; content token match: acceptance, ai_project, and, are, criteria, current, file, files
-
-```text
-## Context Control State
-
-Context control uses the state/events/generated model without adding a new source-of-truth state file:
-
-```text
-AI_PROJECT/state/docs.json
-AI_PROJECT/state/tasks.json
-AI_PROJECT/events/context-events.jsonl
-AI_PROJECT/generated/CONTEXT_PACK.md
-AI_PROJECT/generated/CONTEXT_STATUS.md
-```
-
-`scripts/contextctl.py` builds a deterministic derived index in memory from registered documents in `docs.json` and optional Task context from `tasks.json`.
-
-The derived index and Context Pack are not source of truth. They must not expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task or source documents, the Task and source documents remain authoritative.
-
-By default, context control indexes registered active source documents only. It excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless the operator explicitly enables the relevant include flag.
-
-`CONTEXT_PACK.md` includes selected source paths, headings, line ranges, source content hashes, chunk hashes, deterministic keyword scores and selection reasons. `CONTEXT_STATUS.md` summarizes the current generated pack, selected paths and exclusion reasons. Both files are generated output and must be regenerated through `contextctl.py`.
-
----
-```
-
-### 7. `ai-system/project-control/06-prompt-package-spec.md`
-
-Title: Project Control Prompt Package Specification
-Status: `active`  Type: `reference`
-Heading: 7. Section Requirements > 7.14 Final Report Requirements
-Lines: `434-474`
-Score: `84`
-Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
-Chunk hash: `6effcae6ee956170dbc3f9127d2af67ea9fcf3027b9a669f88ec02f76a1e6410`
-Reasons: metadata token match: md, project-control; content token match: acceptance, and, blockers, completed, criteria, files, for, full
-
-```text
-## 7.14 Final Report Requirements
-
-Prompt Package should require Codex to report:
-
-```text id="5af40m"
-- changed files;
-- commands run;
-- validation result;
-- generated files updated;
-- acceptance criteria status;
-- unresolved risks;
-- owner action required.
-```
-
-For executable pipeline prompts, the human-readable report is not enough. The generated prompt must also require a final machine-readable execution summary block using this exact contract:
-
-````text
-CODEX_EXECUTION_SUMMARY_JSON:
-```json
-{
-  "implementation_summary": "Summarize the completed implementation.",
-  "notes": [],
-  "warnings": [],
-  "blockers": []
-}
-```
-````
-
-Rules:
-
-```text
-- the marker must appear on its own line;
-- it must be followed by one fenced `json` block;
-- the JSON value must be an object;
-- the object must contain exactly `implementation_summary`, `notes`, `warnings` and `blockers`;
-- no prose, bullets or other text may appear after the closing fence;
-- Codex must not emit a full TaskReport payload in this block.
-```
-
-The local pipeline adapter parses this block from Codex stdout. It uses the four Codex-authored fields as summary input and derives task identity, changed files, generated files, checks, owner decision status and token usage from trusted pipeline and task evidence.
-```
-
-### 8. `ai-system/project-control/06-prompt-package-spec.md`
+### 5. `ai-system/project-control/06-prompt-package-spec.md`
 
 Title: Project Control Prompt Package Specification
 Status: `active`  Type: `reference`
 Heading: 14. Context Budget Rules > Context Pack Boundary
 Lines: `834-870`
-Score: `84`
+Score: `86`
 Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
 Chunk hash: `1ed18819b1db2849347b56648bdbea293730ca187154bd5be940636cfe902e79`
-Reasons: metadata token match: md, project-control; content token match: acceptance, and, change, criteria, current, fails, files, full
+Reasons: metadata token match: md, project-control; content token match: a, acceptance, add, and, by, criteria, files, generated
 
 ```text
 ## Context Pack Boundary
@@ -424,6 +294,119 @@ Before `codexctl.py` includes a Context Pack in `CODEX_PROMPT.md`, it must valid
 ```
 
 If validation fails, `codexctl.py` must fail clearly and must not include stale or invalid retrieved context in the prompt package.
+
+---
+```
+
+### 6. `ai-system/project-control/06-prompt-package-spec.md`
+
+Title: Project Control Prompt Package Specification
+Status: `active`  Type: `reference`
+Heading: 17. Relationship To taskctl.py And codexctl.py
+Lines: `911-943`
+Score: `86`
+Content hash: `f5e4b5e551ae157f409a448b3b0eff79c213d02ca5b7b93fa9817d668776bb3f`
+Chunk hash: `1d3f69b9e6a541b647d67281fe6878bd0cffde8324082ef979a9a7ca2a729d9a`
+Reasons: heading token match: and, py, to; metadata token match: and, md, project-control, py, to; content token match: a, an, and, by, can, for, generated, id
+
+```text
+# 17. Relationship To taskctl.py And codexctl.py
+
+Task prompt output can be built by `taskctl.py`.
+
+`taskctl.py` owns:
+
+```text id="d2esmn"
+Task state
+Current Task
+Task generated Markdown
+Codex Prompt Package
+Task audit events
+```
+
+`codexctl.py` owns:
+
+```text
+Current Codex execution state
+CODEX_STATUS.md
+Codex prompt build and clear audit events
+Optional read-only Context Pack inclusion in CODEX_PROMPT.md
+```
+
+Prompt Package build must not bypass task validation.
+
+Before building the package, task state must be valid.
+
+`contextctl.py` may read Task state to derive a search query for a Context Pack, but it does not mutate Task state and does not make retrieved context executable scope.
+
+`codexctl.py` may validate and include an existing Context Pack, but it must not build the index or refresh Context Pack content itself.
+
+---
+```
+
+### 7. `ai-system/project-control/07-validation-and-tests.md`
+
+Title: Project Control Validation and Tests
+Status: `active`  Type: `process`
+Heading: 20. Acceptance Criteria For Validation Layer
+Lines: `1368-1386`
+Score: `79`
+Content hash: `61710bd7deeed5b710aa500acaf478c77f7ad43ffcd3943c0245da65015ff2c9`
+Chunk hash: `9ed7e5fda92cce9da485202d3c05867d3fcf000f7ab294fcf2397088db94d3cf`
+Reasons: heading token match: acceptance, criteria, for; metadata token match: acceptance, and, criteria, for, md, project-control, tests; content token match: a, acceptance, and, by, can, criteria, do, for
+
+```text
+# 20. Acceptance Criteria For Validation Layer
+
+Validation and tests are acceptable when:
+
+```text id="xnp5jd"
+- happy path passes in a temp root;
+- invalid lifecycle transitions fail;
+- missing parent references fail;
+- generated task drift is detected;
+- prompt build requires selected or explicit Task;
+- audit events are written for successful mutations;
+- failed commands do not write success events;
+- task validation checks plan references by default;
+- generated Markdown can be regenerated;
+- smoke test can run locally and in CI.
+```
+
+---
+```
+
+### 8. `ai-system/project-control/03-state-model.md`
+
+Title: Project Control State Model
+Status: `active`  Type: `reference`
+Heading: Project Control State Model > Context Control State
+Lines: `104-125`
+Score: `74`
+Content hash: `9e818e514763e69aa2f56bb5d9ca080d47b7330db3aa016982c5d3ee0bc2be81`
+Chunk hash: `0cd80bdf0d55e5284fa6355477f50005896398136bf33b7e1a181718f309f8b4`
+Reasons: metadata token match: md, project-control; content token match: a, acceptance, ai_project, and, by, criteria, files, generated
+
+```text
+## Context Control State
+
+Context control uses the state/events/generated model without adding a new source-of-truth state file:
+
+```text
+AI_PROJECT/state/docs.json
+AI_PROJECT/state/tasks.json
+AI_PROJECT/events/context-events.jsonl
+AI_PROJECT/generated/CONTEXT_PACK.md
+AI_PROJECT/generated/CONTEXT_STATUS.md
+```
+
+`scripts/contextctl.py` builds a deterministic derived index in memory from registered documents in `docs.json` and optional Task context from `tasks.json`.
+
+The derived index and Context Pack are not source of truth. They must not expand Task scope, allowed files, out-of-scope items or acceptance criteria. If retrieved context conflicts with the Task or source documents, the Task and source documents remain authoritative.
+
+By default, context control indexes registered active source documents only. It excludes generated files, inactive documents, archived documents, deprecated documents, templates and examples unless the operator explicitly enables the relevant include flag.
+
+`CONTEXT_PACK.md` includes selected source paths, headings, line ranges, source content hashes, chunk hashes, deterministic keyword scores and selection reasons. `CONTEXT_STATUS.md` summarizes the current generated pack, selected paths and exclusion reasons. Both files are generated output and must be regenerated through `contextctl.py`.
 
 ---
 ```

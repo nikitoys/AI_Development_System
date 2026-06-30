@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 158,
+  "revision": 160,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-30T21:36:14Z",
+  "updated_at": "2026-06-30T22:01:22Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -11193,6 +11193,146 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-159",
+      "task_id": "TASK-283",
+      "task_ref": "PIPEF-178",
+      "submitted_at": "2026-06-30T22:01:22Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:8c8f1befcd64696b18a8c3c0b747a81de2f1dceaa4ce6797b633fb772d2b40ad",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-283",
+        "task_ref": "PIPEF-178",
+        "reported_task_id": "TASK-283",
+        "reported_task_ref": "PIPEF-178",
+        "implementation_summary": "Added focused regression coverage for owner-confirmed recovery report replacement through collect-report, verify, skipped review, close, mismatch blocking, and clean local-commit completion behavior.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 828.701024,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 828.701024,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The workspace already had unrelated AI_PROJECT project-control changes; they were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused unittest passed: python -m unittest tests.test_pipeline_recovery_close.",
+          "tests/test_pipeline_runner.py was not modified."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 959,
+          "remaining_tokens": 31041,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-160",
+      "task_id": "TASK-283",
+      "task_ref": "PIPEF-178",
+      "submitted_at": "2026-06-30T22:01:22Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-159",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-283",
+        "task_ref": "PIPEF-178",
+        "reported_task_id": "TASK-283",
+        "reported_task_ref": "PIPEF-178",
+        "implementation_summary": "Added focused regression coverage for owner-confirmed recovery report replacement through collect-report, verify, skipped review, close, mismatch blocking, and clean local-commit completion behavior.",
+        "changed_files": [
+          "tests/test_pipeline_recovery_close.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 828.701024,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 828.701024,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The workspace already had unrelated AI_PROJECT project-control changes; they were left untouched."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused unittest passed: python -m unittest tests.test_pipeline_recovery_close.",
+          "tests/test_pipeline_runner.py was not modified."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 959,
+          "remaining_tokens": 31041,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -11320,6 +11460,7 @@
     "TASK-279": "RPT-152",
     "TASK-280": "RPT-154",
     "TASK-281": "RPT-156",
-    "TASK-282": "RPT-158"
+    "TASK-282": "RPT-158",
+    "TASK-283": "RPT-160"
   }
 }

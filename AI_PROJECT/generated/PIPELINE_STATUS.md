@@ -3,9 +3,9 @@
 
 # Pipeline Status
 
-Revision: `1241`
+Revision: `1251`
 Current session: `none`
-Sessions: `157`
+Sessions: `158`
 
 ## Sessions
 
@@ -168,6 +168,7 @@ Sessions: `157`
 | `PSESS-155` | `completed` | `supervised_executable_autoclose` | `TASK-280` | `close` | `passed` | none | Review the close workflow evidence and select the next task when ready. | `execute` | Close passed without a local commit and selected queue completed. |
 | `PSESS-156` | `completed` | `supervised_executable_autoclose` | `TASK-281` | `close` | `passed` | none | Review the close workflow evidence and select the next task when ready. | `execute` | Close passed without a local commit and selected queue completed. |
 | `PSESS-157` | `completed` | `supervised_executable_autoclose` | `TASK-282` | `close` | `passed` | none | Review the close workflow evidence and select the next task when ready. | `execute` | Close passed without a local commit and selected queue completed. |
+| `PSESS-158` | `completed` | `supervised_executable_autoclose` | `TASK-283` | `close` | `passed` | none | Review the close workflow evidence and select the next task when ready. | `execute` | Close passed without a local commit and selected queue completed. |
 
 ## Phase History
 
@@ -1049,3 +1050,10 @@ Sessions: `157`
 | `PSESS-157` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 1 | 0 | 1 |
 | `PSESS-157` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
 | `PSESS-157` | 7 | `close` | `passed` | Close completed: the governed task close workflow marked the task done and linked Evolution Change acceptance was skipped. | Review the close workflow evidence and select the next task when ready. | 0 | 0 | 1 |
+| `PSESS-158` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-158` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 c50af02c1cf3728527d0f6445ba669ae7259cbc0220e9bf37eddae358edd7495). | 0 | 0 | 1 |
+| `PSESS-158` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-158` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-158` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 1 | 0 | 1 |
+| `PSESS-158` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-158` | 7 | `close` | `passed` | Close completed: the governed task close workflow marked the task done and linked Evolution Change acceptance was skipped. | Review the close workflow evidence and select the next task when ready. | 0 | 0 | 1 |
