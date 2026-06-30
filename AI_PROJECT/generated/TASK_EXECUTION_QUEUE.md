@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1904`
+Revision: `1905`
 
 ## Executable Now
 
@@ -17,7 +17,7 @@ Revision: `1904`
 - `PIPEF-126 (TASK-207)` [planned] `EPIC-009` priority `1` — Show effective policy summary
 - `PIPEF-127 (TASK-208)` [planned] `EPIC-009` priority `1` — Add Web run batch overrides
 - `PIPEF-128 (TASK-209)` [planned] `EPIC-009` priority `1` — Warn on incomplete Web run policy
-- `PIPEF-175 (TASK-280)` [planned] `EPIC-009` priority `1` — Accept confirmed recovery report chain
+- `PIPEF-175 (TASK-280)` [ready] `EPIC-009` priority `1` — Accept confirmed recovery report chain
 - `PIPEF-176 (TASK-281)` [planned] `EPIC-009` priority `1` — Add governed report recovery command
 - `PIPEF-177 (TASK-282)` [planned] `EPIC-009` priority `1` — Update pipeline runner expectations
 - `PIPEF-178 (TASK-283)` [planned] `EPIC-009` priority `1` — Add recovery close regression

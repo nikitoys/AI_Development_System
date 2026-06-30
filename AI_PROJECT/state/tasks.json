@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1904,
+  "revision": 1905,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-30T20:14:04Z",
+  "updated_at": "2026-06-30T20:14:08Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -18076,7 +18076,7 @@
       "id": "TASK-280",
       "epic_id": "EPIC-009",
       "title": "Accept confirmed recovery report chain",
-      "status": "planned",
+      "status": "ready",
       "summary": "Allow close preflight to accept a verified owner-confirmed recovery report chain that intentionally replaces the original execute report for the same task.",
       "description": "Close should still block accidental report drift, but should allow explicit recovery metadata produced by collect-report recovery override.",
       "priority": 1,
@@ -18119,7 +18119,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-30T19:35:30Z",
-      "updated_at": "2026-06-30T19:35:30Z",
+      "updated_at": "2026-06-30T20:14:08Z",
       "uid": "tsk_ef38939d15f7",
       "ref": "PIPEF-175",
       "legacy_id": "TASK-280",
