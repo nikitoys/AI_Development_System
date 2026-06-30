@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1911`
+Revision: `1912`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4911,7 +4911,7 @@ Acceptance criteria:
 
 ### PIPEF-176 (TASK-281) — Add governed report recovery command
 
-Status: `planned`
+Status: `ready`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_812da6ac51d7`, legacy `TASK-281`, aliases `TASK-281`, local `PIPEF` / `176`

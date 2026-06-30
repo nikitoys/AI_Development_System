@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1911,
+  "revision": 1912,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-30T20:40:10Z",
+  "updated_at": "2026-06-30T20:40:19Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -18133,7 +18133,7 @@
       "id": "TASK-281",
       "epic_id": "EPIC-009",
       "title": "Add governed report recovery command",
-      "status": "planned",
+      "status": "ready",
       "summary": "Provide a governed CLI recovery command that creates a valid owner-confirmed recovery report without requiring manual JSON editing.",
       "description": "The command should support report-gate blocker recovery for the current session and produce report fields that pass schema and token-usage validation.",
       "priority": 1,
@@ -18177,7 +18177,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-30T19:35:31Z",
-      "updated_at": "2026-06-30T19:35:31Z",
+      "updated_at": "2026-06-30T20:40:19Z",
       "uid": "tsk_812da6ac51d7",
       "ref": "PIPEF-176",
       "legacy_id": "TASK-281",
