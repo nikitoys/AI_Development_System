@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 from ai_project_ctl.core.paths import ProjectPaths
 from ai_project_ctl.core.store import read_json_file
@@ -15,6 +15,8 @@ from .state import load_pipeline_state, session_summary
 
 UI_RUN_NOT_RUN_TASK_STATUSES = {"done", "deferred", "archived"}
 UI_RUN_REUSABLE_SESSION_STATUSES = {"planned", "running", "stopped", "blocked"}
+UI_RUN_BATCH_COMMAND = "ui.run_task_batch"
+UI_RUN_QUEUE_ORDER_OPTIONS = {"execution", "owner", "selected"}
 
 
 @dataclass(frozen=True)
@@ -72,6 +74,40 @@ def build_ui_run_selected_queue(
     }
 
 
+def build_ui_run_batch_queue(
+    policy: PipelinePolicy,
+    *,
+    task_refs: Sequence[str] | str = (),
+    epic_ids: Sequence[str] | str = (),
+    statuses: Sequence[str] | str = (),
+    max_tasks: int | str | None = None,
+    order_by: str | None = None,
+    confirmed: bool,
+    allow_internal_change_gate_bypass: bool,
+) -> dict[str, Any]:
+    """Build selected_queue metadata for a UI-triggered batch run."""
+
+    selected_order = str(order_by or "execution").strip() or "execution"
+    if selected_order not in UI_RUN_QUEUE_ORDER_OPTIONS:
+        raise ValueError("Unknown queue order_by: {}".format(selected_order))
+
+    selection = getattr(policy.queue.selection, "value", policy.queue.selection)
+    return {
+        "selection": str(selection),
+        "task_refs": _string_list(task_refs),
+        "epic_ids": _string_list(epic_ids),
+        "statuses": _string_list(statuses),
+        "max_tasks": _positive_int_or_policy_default(max_tasks, policy.queue.max_tasks),
+        "order_by": selected_order,
+        "include_blocked_tasks": policy.queue.include_blocked_tasks,
+        "created_by_command": UI_RUN_BATCH_COMMAND,
+        "ui_run_confirmed": bool(confirmed),
+        "allow_internal_change_gate_bypass": bool(
+            allow_internal_change_gate_bypass
+        ),
+    }
+
+
 def resolve_ui_run_selection(
     root: str | Path,
     task_ref: str,
@@ -117,6 +153,27 @@ def resolve_ui_run_selection(
         task_id=task_id,
         task_status=task_status,
     )
+
+
+def _string_list(values: Sequence[str] | str) -> list[str]:
+    if isinstance(values, str):
+        values = (values,)
+    return [str(value).strip() for value in values if str(value).strip()]
+
+
+def _positive_int_or_policy_default(value: int | str | None, default: int) -> int:
+    selected = default if value is None else value
+    if isinstance(selected, bool):
+        raise ValueError("Queue max_tasks must be a positive integer.")
+    if isinstance(selected, int):
+        if selected >= 1:
+            return selected
+        raise ValueError("Queue max_tasks must be a positive integer.")
+    if isinstance(selected, str):
+        normalized = selected.strip()
+        if normalized.isdigit() and int(normalized) >= 1:
+            return int(normalized)
+    raise ValueError("Queue max_tasks must be a positive integer.")
 
 
 def _resolve_task(root: str | Path, task_ref: str) -> Mapping[str, Any] | None:

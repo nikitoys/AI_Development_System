@@ -51,6 +51,14 @@ PRE_EXISTING_DIRTY_FILES_KEY = "pre_existing_dirty_files"
 SESSION_OWNED_CHANGED_FILES_KEY = "session_owned_changed_files"
 PHASE_DELTAS_KEY = "phase_deltas"
 CLOSE_STATUS_KEY = "close_status"
+PIPELINE_BOOKKEEPING_PATHS = frozenset(
+    {
+        "AI_PROJECT/state/pipeline_sessions.json",
+        "AI_PROJECT/events/pipeline-events.jsonl",
+        "AI_PROJECT/generated/PIPELINE_STATUS.md",
+        "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+    }
+)
 
 
 class PipelineSessionError(CommandError):
@@ -415,6 +423,14 @@ def record_phase_result(
     _require_non_empty(session_id, "session_id")
     root_path = Path(root).resolve()
     phase = _phase_result_dict(phase_result)
+    committed_close_result = _committed_close_phase_result_without_mutation(
+        session_id,
+        phase,
+        root=root_path,
+        command=command,
+    )
+    if committed_close_result is not None:
+        return committed_close_result
 
     def mutate(state: dict[str, Any], event_id: str, now: str) -> dict[str, Any]:
         session = _require_session(state, session_id)
@@ -487,6 +503,50 @@ def record_phase_result(
         entity_id=session_id,
         mutate=mutate,
     )
+
+
+def _committed_close_phase_result_without_mutation(
+    session_id: str,
+    phase: Mapping[str, Any],
+    *,
+    root: Path,
+    command: str,
+) -> CommandResult | None:
+    if not _is_successful_local_commit_close_phase(phase):
+        return None
+
+    state = load_pipeline_state(root)
+    session = _find_session_by_id(state, session_id)
+    if session is None:
+        return None
+    latest = _latest_close_phase(session)
+    if str(latest.get("status") or "") != LIVE_PHASE_STATUS:
+        return None
+
+    refs = load_reference_state(root)
+    validation = _validate_pipeline_state_for_session_service(
+        state,
+        tasks_state=refs["tasks"],
+        evolution_state=refs["evolution"],
+        task_reports_state=refs["task_reports"],
+    )
+    revision = int(state.get("revision", 0))
+    if not validation.ok:
+        return _validation_failure(command, validation, revision)
+
+    result = CommandResult.success(
+        command=command,
+        domain="pipeline",
+        message=(
+            "OK: committed local close result returned without post-commit "
+            "pipeline session mutation"
+        ),
+        data={"session_id": session_id, "phase_result": copy.deepcopy(dict(phase))},
+        revision_before=revision,
+        revision_after=revision,
+    )
+    result.warnings.extend(validation.warning_messages())
+    return result
 
 
 def stop_session(
@@ -869,7 +929,10 @@ def _record_session_file_delta(
     current_dirty = _dirty_paths_from_git_status_evidence(current)
     pre_existing_set = set(pre_existing)
     session_owned = _unique_strings(
-        path for path in current_dirty if path not in pre_existing_set
+        [
+            *(path for path in current_dirty if path not in pre_existing_set),
+            *_explicit_session_owned_bookkeeping_paths(root, phase_entry),
+        ]
     )
 
     evidence[LATEST_GIT_STATUS_KEY] = current
@@ -929,6 +992,25 @@ def _latest_close_status(session: Mapping[str, Any]) -> dict[str, Any]:
     return _derive_close_status_from_artifacts(artifacts, entry)
 
 
+def successful_close_status(session: Mapping[str, Any]) -> dict[str, Any]:
+    """Return close status when the latest close phase passed."""
+
+    entry = _latest_close_phase(session)
+    if not entry or str(entry.get("status") or "") != "passed":
+        return {}
+
+    artifacts = _mapping_or_empty(entry.get("artifacts"))
+    close_status = _latest_close_status(session)
+    if not close_status:
+        return {}
+    data = dict(close_status)
+    task_id = str(artifacts.get("task_id") or session.get("current_task_id") or "")
+    if task_id:
+        data["task_id"] = task_id
+    data.setdefault("owner_next_action", str(entry.get("next_action") or ""))
+    return data
+
+
 def successful_committed_close_status(session: Mapping[str, Any]) -> dict[str, Any]:
     """Return close status when the latest close passed with a local commit."""
 
@@ -937,7 +1019,7 @@ def successful_committed_close_status(session: Mapping[str, Any]) -> dict[str, A
         return {}
 
     artifacts = _mapping_or_empty(entry.get("artifacts"))
-    close_status = _latest_close_status(session)
+    close_status = successful_close_status(session)
     local_commit = _mapping_or_empty(artifacts.get("local_commit"))
     commit_hash = str(
         local_commit.get("commit_hash")
@@ -963,6 +1045,38 @@ def successful_committed_close_status(session: Mapping[str, Any]) -> dict[str, A
         data["commit_status"] = commit_status
     data.setdefault("owner_next_action", str(entry.get("next_action") or ""))
     return data
+
+
+def _is_successful_local_commit_close_phase(phase: Mapping[str, Any]) -> bool:
+    if str(phase.get("phase") or "") != "close":
+        return False
+    if str(phase.get("status") or "") != "passed":
+        return False
+    artifacts = _mapping_or_empty(phase.get("artifacts"))
+    local_commit = _mapping_or_empty(artifacts.get("local_commit"))
+    close_status = _mapping_or_empty(artifacts.get(CLOSE_STATUS_KEY))
+    commit_hash = str(
+        local_commit.get("commit_hash")
+        or close_status.get("commit_hash")
+        or artifacts.get("commit_hash")
+        or ""
+    ).strip()
+    if not commit_hash:
+        return False
+    commit_status = str(
+        local_commit.get("status") or close_status.get("commit_status") or ""
+    ).lower()
+    commit_code = str(
+        local_commit.get("code") or close_status.get("commit_code") or ""
+    )
+    close_outcome = str(
+        close_status.get("outcome") or artifacts.get("close_outcome") or ""
+    ).lower()
+    return (
+        commit_status == "pass"
+        and commit_code == "LOCAL_COMMIT_CREATED"
+        and close_outcome == "closed_with_local_commit"
+    )
 
 
 def _latest_close_phase(session: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -1055,6 +1169,40 @@ def _dirty_paths_from_git_status_evidence(evidence: Mapping[str, Any]) -> list[s
     if not isinstance(evidence, Mapping):
         return []
     return _unique_strings(evidence.get("dirty_paths") or [])
+
+
+def _explicit_session_owned_bookkeeping_paths(
+    root: Path,
+    phase_entry: Mapping[str, Any],
+) -> list[str]:
+    declared_paths = [
+        *_sequence_strings(phase_entry.get("changed_files")),
+        *_sequence_strings(phase_entry.get("generated_files")),
+    ]
+    return [
+        normalized
+        for normalized in (_normalize_session_path(root, path) for path in declared_paths)
+        if normalized in PIPELINE_BOOKKEEPING_PATHS
+    ]
+
+
+def _sequence_strings(value: Any) -> list[str]:
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
+        return []
+    return _unique_strings(str(item) for item in value)
+
+
+def _normalize_session_path(root: Path, path: str | Path) -> str:
+    raw = Path(str(path))
+    if raw.is_absolute():
+        try:
+            return raw.resolve().relative_to(root.resolve()).as_posix()
+        except ValueError:
+            return raw.as_posix().lstrip("/")
+    text = raw.as_posix()
+    if text.startswith("./"):
+        text = text[2:]
+    return text.lstrip("/")
 
 
 def _has_git_status_baseline(session: Mapping[str, Any]) -> bool:

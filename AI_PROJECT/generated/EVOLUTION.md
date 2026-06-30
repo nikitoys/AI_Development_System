@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `2589`
-Changes: `85`
+Revision: `2717`
+Changes: `90`
 
 ## Summary
 
-- `accepted`: 64
-- `approved`: 21
+- `accepted`: 68
+- `approved`: 22
 
 ## Changes
 
@@ -5335,3 +5335,291 @@ Impact:
 Linked tasks:
 
 - TASK-255
+
+### CHG-086 — Verify Web Run clean commit path 2
+
+Status: `accepted`  
+Type: `process`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-156 requires an explicit Evolution Change Proposal before implementation: Create a new deterministic smoke artifact to verify that Web Run reaches local commit from a clean worktree.
+
+Proposal:
+
+Implement the bounded task scope: Create tmp/run-smoke/web-run-clean-commit-smoke-2.md.; Add the exact marker WEB_RUN_CLEAN_COMMIT_2_OK.; State that this file is only a smoke artifact for Web Run local commit validation.; Keep the content deterministic and timestamp-free.
+
+Rationale:
+
+This task validates Web Run local commit after committing all previous bootstrap and task-import state.
+
+Approved by: `human_owner` at `2026-06-29T10:41:26Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-138)  
+
+Accepted by: `human_owner` at `2026-06-29T10:44:50Z`  
+Acceptance notes: Approve; linked Change accepted after task TASK-261 close succeeded.  
+
+Affected files:
+
+- tmp/run-smoke/web-run-clean-commit-smoke-2.md
+
+Risks:
+
+- Boundary risk: Do not change behavior unrelated to this task.
+- Boundary risk: Do not refactor unrelated code.
+- Boundary risk: Do not edit protected project-control files manually.
+- Boundary risk: Do not change pipeline, Web UI, policy, task, evolution, context, or Codex control behavior.
+- Confirm that this task starts from a clean worktree and creates a local commit.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-261.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Create tmp/run-smoke/web-run-clean-commit-smoke-2.md.
+- Add the exact marker WEB_RUN_CLEAN_COMMIT_2_OK.
+- State that this file is only a smoke artifact for Web Run local commit validation.
+- Keep the content deterministic and timestamp-free.
+- tmp/run-smoke/web-run-clean-commit-smoke-2.md exists after execution.
+- The file contains the exact marker WEB_RUN_CLEAN_COMMIT_2_OK.
+- The file states that it is only a smoke artifact for Web Run local commit validation.
+
+Linked tasks:
+
+- TASK-261
+
+### CHG-087 — Add no-checkpoint Web Run regression
+
+Status: `approved`  
+Type: `process`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-168 requires an explicit Evolution Change Proposal before implementation: Add an end-to-end regression proving that a successful Web Run leaves a clean worktree and the next Web Run does not request a checkpoint commit.
+
+Proposal:
+
+Implement the bounded task scope: Create or extend a Web Run local-commit regression test with two sequential planned smoke tasks.; Assert the first Web Run creates a local commit and leaves git status clean.; Assert the second Web Run is not blocked by dirty pipeline bookkeeping from the first run.; Assert no checkpoint prompt is shown when the user made no changes between runs.
+
+Rationale:
+
+The owner workflow should be able to run one task, receive a task commit, and start the next task without checkpointing pipeline bookkeeping files.
+
+Approved by: `human_owner` at `2026-06-29T14:44:28Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-147)  
+
+Affected files:
+
+- tests/test_web_run_local_commit_e2e.py
+- tests/test_web_control_center.py
+- tests/test_pipeline_runner.py
+
+Risks:
+
+- Boundary risk: Do not implement multi-task batch UI in this task.
+- Boundary risk: Do not change checkpoint commit action behavior.
+- Boundary risk: Do not use network or real external Codex execution in tests.
+- Boundary risk: Do not edit protected project-control files manually.
+- Verify that the regression matches the owner workflow: run task, then run the next task without checkpoint commit.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-273.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Create or extend a Web Run local-commit regression test with two sequential planned smoke tasks.
+- Assert the first Web Run creates a local commit and leaves git status clean.
+- Assert the second Web Run is not blocked by dirty pipeline bookkeeping from the first run.
+- Assert no checkpoint prompt is shown when the user made no changes between runs.
+- The regression test creates a successful first Web Run with a local commit hash.
+- The regression test verifies git status is clean immediately after the first successful Web Run.
+- The regression test attempts a second Web Run without manual checkpointing.
+
+Linked tasks:
+
+- TASK-273
+
+### CHG-088 — Stop post-commit session completion writes
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-169 requires an explicit Evolution Change Proposal before implementation: Prevent the committed Web Run close path from writing pipeline session state, events, or generated pipeline files after the local task commit exists.
+
+Proposal:
+
+Implement the bounded task scope: Trace the successful committed-close path from run_until_blocker through session completion after LOCAL_COMMIT_CREATED.; Change the committed-close completion path so completed session status can be returned without calling mutating session completion after the local commit.; Preserve normal persisted completion behavior for sessions that finish without a local commit and for blocked, failed, or stopped sessions.; Add focused coverage proving no tracked pipeline bookkeeping files are written after local commit creation.
+
+Rationale:
+
+The failing Web Run regression shows that pipeline.session.complete and related bookkeeping still dirty tracked files after LOCAL_COMMIT_CREATED.
+
+Approved by: `human_owner` at `2026-06-29T16:13:03Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-148)  
+
+Accepted by: `human_owner` at `2026-06-29T16:35:21Z`  
+Acceptance notes: Approve; linked Change accepted after task TASK-274 close succeeded.  
+
+Affected files:
+
+- ai_project_ctl/pipeline/batch.py
+- ai_project_ctl/pipeline/session.py
+- tests/test_pipeline_runner.py
+- tests/test_web_run_local_commit_e2e.py
+
+Risks:
+
+- Boundary risk: Do not remove local task commit creation.
+- Boundary risk: Do not weaken dirty worktree preflight or post-commit dirty checks.
+- Boundary risk: Do not change report, review, or close gate semantics unrelated to committed-close completion.
+- Boundary risk: Do not edit protected project-control files manually.
+- Verify that the fix removes post-commit writes rather than hiding dirty files from git status.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-274.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Trace the successful committed-close path from run_until_blocker through session completion after LOCAL_COMMIT_CREATED.
+- Change the committed-close completion path so completed session status can be returned without calling mutating session completion after the local commit.
+- Preserve normal persisted completion behavior for sessions that finish without a local commit and for blocked, failed, or stopped sessions.
+- Add focused coverage proving no tracked pipeline bookkeeping files are written after local commit creation.
+- After LOCAL_COMMIT_CREATED, the committed-close path does not append a new pipeline.session.complete event to AI_PROJECT/events/pipeline-events.jsonl.
+- After LOCAL_COMMIT_CREATED, the committed-close path does not mutate AI_PROJECT/state/pipeline_sessions.json.
+- After LOCAL_COMMIT_CREATED, the committed-close path does not render AI_PROJECT/generated/PIPELINE_STATUS.md or AI_PROJECT/generated/PIPELINE_AUDIT.md.
+
+Linked tasks:
+
+- TASK-274
+
+### CHG-089 — Make committed Web action result read-only
+
+Status: `accepted`  
+Type: `tooling`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-170 requires an explicit Evolution Change Proposal before implementation: Ensure ui.run_selected_task builds its successful committed-close action result without triggering tracked pipeline render or refresh writes after the commit.
+
+Proposal:
+
+Implement the bounded task scope: Trace ui.run_selected_task result handling after run_until_blocker returns a committed close result.; Avoid any post-commit calls that persist pipeline session completion, pipeline events, or generated pipeline status/audit files for committed-close success.; Build the owner-facing action result from in-memory session/result data when the local commit already exists.; Keep dirty-start preflight, checkpoint guidance, and blocked action results unchanged.
+
+Rationale:
+
+The Web action should display completed status and commit evidence from the returned pipeline result rather than mutating pipeline status artifacts after completion.
+
+Approved by: `human_owner` at `2026-06-29T18:20:57Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-149)  
+
+Accepted by: `human_owner` at `2026-06-29T18:31:40Z`  
+Acceptance notes: Approve; linked Change accepted after task TASK-275 close succeeded.  
+
+Affected files:
+
+- ai_project_ctl/web/actions.py
+- ai_project_ctl/web/server.py
+- ai_project_ctl/pipeline/batch.py
+- tests/test_web_control_center.py
+- tests/test_web_run_local_commit_e2e.py
+
+Risks:
+
+- Boundary risk: Do not redesign the Web Control Center UI layout.
+- Boundary risk: Do not change non-Web CLI pipeline session behavior unless required by the shared read-only completion helper.
+- Boundary risk: Do not auto-create checkpoint commits.
+- Boundary risk: Do not edit protected project-control files manually.
+- Verify that the Web layer consumes committed-close evidence read-only and does not call a mutating render just to build the response.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-275.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Trace ui.run_selected_task result handling after run_until_blocker returns a committed close result.
+- Avoid any post-commit calls that persist pipeline session completion, pipeline events, or generated pipeline status/audit files for committed-close success.
+- Build the owner-facing action result from in-memory session/result data when the local commit already exists.
+- Keep dirty-start preflight, checkpoint guidance, and blocked action results unchanged.
+- A successful ui.run_selected_task response still shows completed outcome, session id, task id, and local commit hash.
+- Rendering the Web action result after a committed close does not mutate pipeline_sessions.json, pipeline-events.jsonl, PIPELINE_STATUS.md, or PIPELINE_AUDIT.md.
+- Dirty-start WORKTREE_DIRTY responses and checkpoint_commit guidance remain unchanged.
+
+Linked tasks:
+
+- TASK-275
+
+### CHG-090 — Pass no-checkpoint Web Run regression
+
+Status: `accepted`  
+Type: `process`  
+Priority: `1`  
+Backward compatibility: `unknown`  
+Migration required: `false`  
+
+Problem:
+
+Task PIPEF-171 requires an explicit Evolution Change Proposal before implementation: Make the existing no-checkpoint Web Run local-commit regression pass against the fixed committed-close Web action lifecycle.
+
+Proposal:
+
+Implement the bounded task scope: Run the existing tests/test_web_run_local_commit_e2e.py regression and keep its clean-worktree assertion meaningful.; Adjust the regression only if needed to match the final intended committed-close lifecycle contract.; Assert the first Web Run creates a local commit and leaves git status clean after WebActionExecutor returns.; Assert the second Web Run does not return WORKTREE_DIRTY or checkpoint_commit guidance when no owner changes were made.
+
+Rationale:
+
+The regression should prove that one successful Web Run leaves a clean worktree and the next selected task starts without checkpoint_commit guidance.
+
+Approved by: `human_owner` at `2026-06-29T18:47:14Z`  
+Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-150)  
+
+Accepted by: `human_owner` at `2026-06-29T18:51:11Z`  
+Acceptance notes: Approve; linked Change accepted after task TASK-276 close succeeded.  
+
+Affected files:
+
+- tests/test_web_run_local_commit_e2e.py
+- tests/test_web_control_center.py
+- tests/test_pipeline_runner.py
+
+Risks:
+
+- Boundary risk: Do not loosen the regression by ignoring pipeline bookkeeping files.
+- Boundary risk: Do not change production pipeline behavior in this validation task unless a tiny test-support hook is unavoidable.
+- Boundary risk: Do not remove the second-run no-checkpoint assertion.
+- Boundary risk: Do not edit protected project-control files manually.
+- Verify that the test remains a real guard for clean worktree behavior and is not weakened to pass artificially.
+- Generated Change Proposal fields may need Human Owner review before approval.
+- Workflow must delegate all protected project-control mutations to evolutionctl.py.
+
+Impact:
+
+- Creates an Evolution Change Proposal linked to task TASK-276.
+- Keeps Change approval as a separate explicit Human Owner action.
+- Run the existing tests/test_web_run_local_commit_e2e.py regression and keep its clean-worktree assertion meaningful.
+- Adjust the regression only if needed to match the final intended committed-close lifecycle contract.
+- Assert the first Web Run creates a local commit and leaves git status clean after WebActionExecutor returns.
+- Assert the second Web Run does not return WORKTREE_DIRTY or checkpoint_commit guidance when no owner changes were made.
+- python -m py_compile tests/test_web_run_local_commit_e2e.py passes.
+- python -m pytest tests/test_web_run_local_commit_e2e.py -q passes.
+- The regression fails if AI_PROJECT/events/pipeline-events.jsonl remains dirty after the first Web Run.
+
+Linked tasks:
+
+- TASK-276

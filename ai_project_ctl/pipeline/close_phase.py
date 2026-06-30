@@ -65,6 +65,12 @@ CLOSE_OUTCOME_DONE_COMMIT_UNKNOWN = "done_commit_unknown"
 RECOVERED_CLOSE_WARNINGS_KEY = "recovered_close_warnings"
 RECOVERED_CLOSE_WARNING_CODE = "CLOSE_RECOVERED_NON_BLOCKING_WARNING"
 WORKFLOW_NON_BLOCKING_WARNING_CODE = "WORKFLOW_NON_BLOCKING_STEP_FAILED"
+PIPELINE_CLOSE_BOOKKEEPING_FILES = (
+    "AI_PROJECT/state/pipeline_sessions.json",
+    "AI_PROJECT/events/pipeline-events.jsonl",
+    "AI_PROJECT/generated/PIPELINE_STATUS.md",
+    "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+)
 RECOVERABLE_PROTECTED_WARNING_FRAGMENTS = (
     "MISSING_GENERATED_PROMPT:",
     "ORPHAN_GENERATED_PROMPT:",
@@ -317,8 +323,29 @@ def close_phase(
             if recovered_warnings:
                 phase_artifacts[RECOVERED_CLOSE_WARNINGS_KEY] = recovered_warnings
         if context_refresh.ok and _commit_policy_enabled(session):
+            next_action = _close_success_next_action(change_acceptance, local_commit)
+            phase_artifacts.update(
+                _close_status_artifacts(local_commit, owner_next_action=next_action)
+            )
+            precommit_close = _record_precommit_close_phase(
+                session_id=selected_session_id,
+                task_id=task_id,
+                root=root_path,
+                actor=actor,
+                artifacts=phase_artifacts,
+                reason=(
+                    "Close task state rendered before local commit readiness."
+                ),
+                next_action=next_action,
+                side_effects=tuple(side_effects),
+            )
+            if not precommit_close.ok:
+                _merge_command_effects(precommit_close, tuple(side_effects))
+                return precommit_close
+            side_effects.append(precommit_close)
+            refreshed_session = _reload_session(root_path, selected_session_id) or session
             local_commit = _run_local_commit_after_close(
-                session=session,
+                session=refreshed_session,
                 session_id=selected_session_id,
                 task_id=task_id,
                 root=root_path,
@@ -980,6 +1007,59 @@ def _run_local_commit_after_close(
         side_effects=side_effects,
         session=session,
     )
+
+
+def _record_precommit_close_phase(
+    *,
+    session_id: str,
+    task_id: str,
+    root: Path,
+    actor: str,
+    artifacts: Mapping[str, Any],
+    reason: str,
+    next_action: str,
+    side_effects: tuple[CommandResult, ...],
+) -> CommandResult:
+    phase_payload = {
+        "phase": PHASE_NAME,
+        "status": "running",
+        "reason": reason,
+        "next_action": next_action,
+        "artifacts": bound_pipeline_artifact(dict(artifacts)),
+        "changed_files": _unique_strings(
+            [
+                *_side_effect_changed_files(list(side_effects)),
+                *PIPELINE_CLOSE_BOOKKEEPING_FILES,
+            ]
+        ),
+        "generated_files": _unique_strings(
+            [
+                *_side_effect_generated_files(list(side_effects)),
+                "AI_PROJECT/generated/PIPELINE_STATUS.md",
+                "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+            ]
+        ),
+        "events": _side_effect_events(list(side_effects)),
+    }
+    result = record_phase_result(
+        session_id,
+        phase_payload,
+        root=root,
+        actor=actor,
+        task_id=task_id,
+        command=COMMAND_NAME,
+    )
+    if result.ok:
+        result.message = reason
+    return result
+
+
+def _reload_session(root: Path, session_id: str) -> Mapping[str, Any] | None:
+    state = load_pipeline_state(root)
+    for session in state.get("sessions", []):
+        if isinstance(session, Mapping) and str(session.get("id") or "") == session_id:
+            return dict(session)
+    return None
 
 
 def _pipeline_policy(

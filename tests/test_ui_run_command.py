@@ -5,13 +5,21 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest import mock
 
 from ai_project_ctl.core.result import CommandResult
 from ai_project_ctl.pipeline.git_status import capture_worktree_dirty_preflight
+from ai_project_ctl.pipeline.policy import QueuePolicy, QueueSelection, policy_preset
+from ai_project_ctl.pipeline.queue_phase import preview_queue_phase
+from ai_project_ctl.pipeline.session import create_session
 from ai_project_ctl.pipeline.state import pipeline_state_path
-from ai_project_ctl.pipeline.ui_run import resolve_ui_run_selection
+from ai_project_ctl.pipeline.ui_run import (
+    build_ui_run_batch_queue,
+    build_ui_run_selected_queue,
+    resolve_ui_run_selection,
+)
 from ai_project_ctl.ui_settings import ui_settings_path
 from scripts import aictl
 from tests.test_pipeline_batch import write_batch_project_state
@@ -38,6 +46,129 @@ def write_settings(root: Path, payload: dict) -> None:
 
 
 class UIRunCommandTests(unittest.TestCase):
+    def test_ui_run_batch_queue_builds_multiple_task_refs(self):
+        queue = build_ui_run_batch_queue(
+            policy_preset("supervised"),
+            task_refs=("APP-01", "APP-02"),
+            max_tasks=2,
+            order_by="selected",
+            confirmed=True,
+            allow_internal_change_gate_bypass=True,
+        )
+
+        self.assertEqual(
+            queue,
+            {
+                "selection": "ready_queue",
+                "task_refs": ["APP-01", "APP-02"],
+                "epic_ids": [],
+                "statuses": [],
+                "max_tasks": 2,
+                "order_by": "selected",
+                "include_blocked_tasks": False,
+                "created_by_command": "ui.run_task_batch",
+                "ui_run_confirmed": True,
+                "allow_internal_change_gate_bypass": True,
+            },
+        )
+
+    def test_ui_run_batch_queue_builds_epic_status_selection(self):
+        queue = build_ui_run_batch_queue(
+            policy_preset("supervised"),
+            epic_ids=("EPIC-009",),
+            statuses=("ready", "in_progress"),
+            max_tasks="3",
+            confirmed=False,
+            allow_internal_change_gate_bypass=False,
+        )
+
+        self.assertEqual(queue["task_refs"], [])
+        self.assertEqual(queue["epic_ids"], ["EPIC-009"])
+        self.assertEqual(queue["statuses"], ["ready", "in_progress"])
+        self.assertEqual(queue["max_tasks"], 3)
+        self.assertEqual(queue["order_by"], "execution")
+        self.assertFalse(queue["ui_run_confirmed"])
+        self.assertFalse(queue["allow_internal_change_gate_bypass"])
+
+    def test_ui_run_batch_queue_is_session_and_preview_compatible(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_batch_project_state(root, task_count=2)
+            queue = build_ui_run_batch_queue(
+                policy_preset("supervised"),
+                task_refs=("APP-02", "APP-01"),
+                max_tasks=2,
+                order_by="selected",
+                confirmed=True,
+                allow_internal_change_gate_bypass=False,
+            )
+
+            created = create_session(
+                root=root,
+                actor="tester",
+                policy_name="supervised",
+                selected_queue=queue,
+            )
+            preview = preview_queue_phase(root=root)
+
+            self.assertTrue(created.ok, created.errors)
+            self.assertTrue(preview.ok, preview.errors)
+            state = json.loads(pipeline_state_path(root).read_text(encoding="utf-8"))
+            self.assertEqual(state["sessions"][0]["selected_queue"]["max_tasks"], 2)
+            executable_refs = [
+                item["ref"]
+                for item in preview.data["queue_preview"]["executable"]
+            ]
+            self.assertEqual(executable_refs, ["APP-02", "APP-01"])
+
+    def test_ui_run_batch_queue_preserves_policy_defaults_when_omitted(self):
+        policy = replace(
+            policy_preset("supervised"),
+            queue=QueuePolicy(
+                selection=QueueSelection.MANUAL,
+                max_tasks=4,
+                include_blocked_tasks=True,
+            ),
+        )
+
+        queue = build_ui_run_batch_queue(
+            policy,
+            statuses=("ready",),
+            confirmed=True,
+            allow_internal_change_gate_bypass=False,
+        )
+
+        self.assertEqual(queue["selection"], "manual")
+        self.assertEqual(queue["max_tasks"], 4)
+        self.assertEqual(queue["include_blocked_tasks"], True)
+        self.assertEqual(queue["order_by"], "execution")
+
+    def test_ui_run_batch_queue_rejects_non_positive_max_tasks(self):
+        invalid_values = (0, -1, "0", "abc", True)
+
+        for invalid in invalid_values:
+            with self.subTest(max_tasks=invalid):
+                with self.assertRaises(ValueError):
+                    build_ui_run_batch_queue(
+                        policy_preset("supervised"),
+                        task_refs=("APP-01",),
+                        max_tasks=invalid,
+                        confirmed=True,
+                        allow_internal_change_gate_bypass=False,
+                    )
+
+    def test_ui_run_selected_queue_remains_single_task(self):
+        queue = build_ui_run_selected_queue(
+            policy_preset("supervised"),
+            "APP-01",
+            confirmed=True,
+            allow_internal_change_gate_bypass=True,
+        )
+
+        self.assertEqual(queue["task_refs"], ["APP-01"])
+        self.assertEqual(queue["max_tasks"], 1)
+        self.assertEqual(queue["order_by"], "selected")
+
     def test_worktree_dirty_preflight_reports_git_status_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

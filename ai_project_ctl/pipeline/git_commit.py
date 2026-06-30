@@ -81,6 +81,14 @@ GOVERNED_PROJECT_CONTROL_PREFIXES = (
     "AI_PROJECT/events/",
     "AI_PROJECT/generated/",
 )
+PIPELINE_SESSION_BOOKKEEPING_FILES = frozenset(
+    {
+        "AI_PROJECT/state/pipeline_sessions.json",
+        "AI_PROJECT/events/pipeline-events.jsonl",
+        "AI_PROJECT/generated/PIPELINE_STATUS.md",
+        "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+    }
+)
 
 GitRunner = Callable[[Sequence[str]], subprocess.CompletedProcess[str]]
 
@@ -1070,17 +1078,62 @@ def _approved_files(
     *,
     session: Mapping[str, Any] | None = None,
 ) -> set[str]:
-    approved = {
-        _normalize_path(root, path)
-        for path in (*report_gate.changed_files, *report_gate.generated_files)
-        if str(path).strip()
-    }
+    pre_existing = _session_pre_existing_dirty_files(root, session)
+    session_owned = _session_owned_governed_control_files(root, session)
+    approved = _approved_paths(
+        root,
+        (*report_gate.changed_files, *report_gate.generated_files),
+        pre_existing=pre_existing,
+        session_owned=session_owned,
+    )
+    approved.update(
+        _approved_side_effect_files(
+            root,
+            side_effects,
+            pre_existing=pre_existing,
+            session_owned=session_owned,
+        )
+    )
+    approved.update(session_owned)
+    return approved
+
+
+def _approved_side_effect_files(
+    root: Path,
+    side_effects: Sequence[CommandResult],
+    *,
+    pre_existing: set[str],
+    session_owned: set[str],
+) -> set[str]:
+    approved: set[str] = set()
     for effect in side_effects:
-        for path in (*effect.changed_files, *effect.generated_files):
-            if str(path).strip():
-                approved.add(_normalize_path(root, path))
-    approved.update(_session_owned_governed_control_files(root, session))
-    approved.difference_update(_session_pre_existing_dirty_files(root, session))
+        approved.update(
+            _approved_paths(
+                root,
+                (*effect.changed_files, *effect.generated_files),
+                pre_existing=pre_existing,
+                session_owned=session_owned,
+            )
+        )
+    return approved
+
+
+def _approved_paths(
+    root: Path,
+    paths: Sequence[str],
+    *,
+    pre_existing: set[str],
+    session_owned: set[str],
+) -> set[str]:
+    approved: set[str] = set()
+    for path in paths:
+        if not str(path).strip():
+            continue
+        normalized = _normalize_path(root, path)
+        if not _is_governed_project_control_file(normalized):
+            approved.add(normalized)
+        elif normalized not in pre_existing or normalized in session_owned:
+            approved.add(normalized)
     return approved
 
 
@@ -1090,14 +1143,10 @@ def _session_owned_governed_control_files(
 ) -> set[str]:
     evidence = _session_file_evidence(session)
     owned_files = _string_values(evidence.get(SESSION_OWNED_CHANGED_FILES_KEY))
-    pre_existing = {
-        _normalize_path(root, path)
-        for path in _string_values(evidence.get(PRE_EXISTING_DIRTY_FILES_KEY))
-    }
     return {
         normalized
         for normalized in (_normalize_path(root, path) for path in owned_files)
-        if normalized not in pre_existing and _is_governed_project_control_file(normalized)
+        if _is_pipeline_session_bookkeeping_file(normalized)
     }
 
 
@@ -1141,6 +1190,10 @@ def _target_task_artifact_evidence(
 
 def _is_governed_project_control_file(path: str) -> bool:
     return any(path.startswith(prefix) for prefix in GOVERNED_PROJECT_CONTROL_PREFIXES)
+
+
+def _is_pipeline_session_bookkeeping_file(path: str) -> bool:
+    return path in PIPELINE_SESSION_BOOKKEEPING_FILES
 
 
 def _session_by_id(

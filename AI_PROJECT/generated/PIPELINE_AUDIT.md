@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `1019`
-State revision: `1019`
-Current session: `none`
+Events: `1159`
+State revision: `1159`
+Current session: `PSESS-147`
 
 ## Timeline
 
@@ -1030,6 +1030,146 @@ Current session: `none`
 | `2026-06-29T09:46:49Z` | `step.result` | `pipeline.phase.review` | `PSESS-136` | `` | `` | reports=RPT-114 |
 | `2026-06-29T09:47:09Z` | `step.result` | `pipeline.phase.close` | `PSESS-136` | `` | `` | reports=RPT-114 \| commits=de22f6964cc3b51e511c90e54488f47aee360b4f |
 | `2026-06-29T09:47:11Z` | `completion` | `pipeline.session.complete` | `PSESS-136` | `` | `` | completed |
+| `2026-06-29T10:11:55Z` | `session.create` | `pipeline.session.create` | `PSESS-137` | `` | `` | PSESS-137 |
+| `2026-06-29T10:11:57Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-137` | `` | `` | PSESS-137 |
+| `2026-06-29T10:12:06Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-137` | `` | `` | PSESS-137 |
+| `2026-06-29T10:12:09Z` | `step.result` | `pipeline.phase.execute` | `PSESS-137` | `` | `` | PSESS-137 |
+| `2026-06-29T10:20:32Z` | `step.result` | `pipeline.phase.execute` | `PSESS-137` | `` | `` | reports=RPT-116 |
+| `2026-06-29T10:20:35Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-137` | `` | `` | reports=RPT-116 |
+| `2026-06-29T10:20:37Z` | `step.result` | `pipeline.phase.verify` | `PSESS-137` | `` | `` | reports=RPT-116 |
+| `2026-06-29T10:20:40Z` | `step.result` | `pipeline.phase.review` | `PSESS-137` | `` | `` | reports=RPT-116 |
+| `2026-06-29T10:21:00Z` | `step.result` | `pipeline.phase.close` | `PSESS-137` | `` | `` | reports=RPT-116 \| commits=5cc875fd50ba9f652d65f73acd55b3f332717e03 |
+| `2026-06-29T10:21:02Z` | `completion` | `pipeline.session.complete` | `PSESS-137` | `` | `` | completed |
+| `2026-06-29T10:41:17Z` | `session.create` | `pipeline.session.create` | `PSESS-138` | `` | `` | PSESS-138 |
+| `2026-06-29T10:41:20Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-138` | `` | `` | PSESS-138 |
+| `2026-06-29T10:41:33Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-138` | `` | `` | changes=CHG-086 |
+| `2026-06-29T10:41:36Z` | `step.result` | `pipeline.phase.execute` | `PSESS-138` | `` | `` | PSESS-138 |
+| `2026-06-29T10:44:29Z` | `step.result` | `pipeline.phase.execute` | `PSESS-138` | `` | `` | reports=RPT-118 |
+| `2026-06-29T10:44:32Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-138` | `` | `` | reports=RPT-118 |
+| `2026-06-29T10:44:35Z` | `step.result` | `pipeline.phase.verify` | `PSESS-138` | `` | `` | reports=RPT-118 |
+| `2026-06-29T10:44:37Z` | `step.result` | `pipeline.phase.review` | `PSESS-138` | `` | `` | reports=RPT-118 |
+| `2026-06-29T10:44:57Z` | `step.result` | `pipeline.phase.close` | `PSESS-138` | `` | `` | changes=CHG-086 \| reports=RPT-118 \| commits=bb4a324c2fbbc54a0769778ed6a3eee1822e8d2f |
+| `2026-06-29T10:44:59Z` | `completion` | `pipeline.session.complete` | `PSESS-138` | `` | `` | completed |
+| `2026-06-29T12:45:59Z` | `session.create` | `pipeline.session.create` | `PSESS-139` | `` | `` | PSESS-139 |
+| `2026-06-29T12:46:02Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-139` | `` | `` | PSESS-139 |
+| `2026-06-29T12:46:11Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-139` | `` | `` | PSESS-139 |
+| `2026-06-29T12:46:14Z` | `step.result` | `pipeline.phase.execute` | `PSESS-139` | `` | `` | PSESS-139 |
+| `2026-06-29T12:56:50Z` | `step.result` | `pipeline.phase.execute` | `PSESS-139` | `` | `` | reports=RPT-120 |
+| `2026-06-29T12:56:53Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-139` | `` | `` | reports=RPT-120 |
+| `2026-06-29T12:56:55Z` | `step.result` | `pipeline.phase.verify` | `PSESS-139` | `` | `` | reports=RPT-120 |
+| `2026-06-29T12:56:58Z` | `step.result` | `pipeline.phase.review` | `PSESS-139` | `` | `` | reports=RPT-120 |
+| `2026-06-29T12:57:17Z` | `step.result` | `pipeline.phase.close` | `PSESS-139` | `` | `` | reports=RPT-120 \| commits=d75a5356b72d3448562ec7975105882cb00f79fa |
+| `2026-06-29T12:57:20Z` | `completion` | `pipeline.session.complete` | `PSESS-139` | `` | `` | completed |
+| `2026-06-29T12:59:45Z` | `session.create` | `pipeline.session.create` | `PSESS-140` | `` | `` | PSESS-140 |
+| `2026-06-29T12:59:48Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-140` | `` | `` | PSESS-140 |
+| `2026-06-29T12:59:56Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-140` | `` | `` | PSESS-140 |
+| `2026-06-29T12:59:59Z` | `step.result` | `pipeline.phase.execute` | `PSESS-140` | `` | `` | PSESS-140 |
+| `2026-06-29T13:09:43Z` | `step.result` | `pipeline.phase.execute` | `PSESS-140` | `` | `` | reports=RPT-122 |
+| `2026-06-29T13:09:46Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-140` | `` | `` | reports=RPT-122 |
+| `2026-06-29T13:09:49Z` | `step.result` | `pipeline.phase.verify` | `PSESS-140` | `` | `` | reports=RPT-122 |
+| `2026-06-29T13:09:51Z` | `step.result` | `pipeline.phase.review` | `PSESS-140` | `` | `` | reports=RPT-122 |
+| `2026-06-29T13:10:12Z` | `step.result` | `pipeline.phase.close` | `PSESS-140` | `` | `` | reports=RPT-122 \| commits=2b63e12ce7cc276e7857c4ed0d2bb5823308ec0f |
+| `2026-06-29T13:10:14Z` | `completion` | `pipeline.session.complete` | `PSESS-140` | `` | `` | completed |
+| `2026-06-29T13:11:25Z` | `session.create` | `pipeline.session.create` | `PSESS-141` | `` | `` | PSESS-141 |
+| `2026-06-29T13:11:27Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-141` | `` | `` | PSESS-141 |
+| `2026-06-29T13:11:35Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-141` | `` | `` | PSESS-141 |
+| `2026-06-29T13:11:39Z` | `step.result` | `pipeline.phase.execute` | `PSESS-141` | `` | `` | PSESS-141 |
+| `2026-06-29T13:20:16Z` | `step.result` | `pipeline.phase.execute` | `PSESS-141` | `` | `` | reports=RPT-124 |
+| `2026-06-29T13:20:18Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-141` | `` | `` | reports=RPT-124 |
+| `2026-06-29T13:20:21Z` | `step.result` | `pipeline.phase.verify` | `PSESS-141` | `` | `` | reports=RPT-124 |
+| `2026-06-29T13:20:24Z` | `step.result` | `pipeline.phase.review` | `PSESS-141` | `` | `` | reports=RPT-124 |
+| `2026-06-29T13:20:43Z` | `step.result` | `pipeline.phase.close` | `PSESS-141` | `` | `` | reports=RPT-124 \| commits=41891fcf34905691983ecfa1cf3f66164775ea76 |
+| `2026-06-29T13:20:46Z` | `completion` | `pipeline.session.complete` | `PSESS-141` | `` | `` | completed |
+| `2026-06-29T13:21:54Z` | `session.create` | `pipeline.session.create` | `PSESS-142` | `` | `` | PSESS-142 |
+| `2026-06-29T13:21:57Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-142` | `` | `` | PSESS-142 |
+| `2026-06-29T13:22:05Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-142` | `` | `` | PSESS-142 |
+| `2026-06-29T13:22:08Z` | `step.result` | `pipeline.phase.execute` | `PSESS-142` | `` | `` | PSESS-142 |
+| `2026-06-29T13:33:06Z` | `step.result` | `pipeline.phase.execute` | `PSESS-142` | `` | `` | reports=RPT-126 |
+| `2026-06-29T13:33:08Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-142` | `` | `` | reports=RPT-126 |
+| `2026-06-29T13:33:11Z` | `step.result` | `pipeline.phase.verify` | `PSESS-142` | `` | `` | reports=RPT-126 |
+| `2026-06-29T13:33:14Z` | `step.result` | `pipeline.phase.review` | `PSESS-142` | `` | `` | reports=RPT-126 |
+| `2026-06-29T13:33:34Z` | `step.result` | `pipeline.phase.close` | `PSESS-142` | `` | `` | reports=RPT-126 \| commits=75eeee12c69eda60e5995e47348e662018770690 |
+| `2026-06-29T13:33:37Z` | `completion` | `pipeline.session.complete` | `PSESS-142` | `` | `` | completed |
+| `2026-06-29T13:36:10Z` | `session.create` | `pipeline.session.create` | `PSESS-143` | `` | `` | PSESS-143 |
+| `2026-06-29T13:36:13Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-143` | `` | `` | PSESS-143 |
+| `2026-06-29T13:36:21Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-143` | `` | `` | PSESS-143 |
+| `2026-06-29T13:36:24Z` | `step.result` | `pipeline.phase.execute` | `PSESS-143` | `` | `` | PSESS-143 |
+| `2026-06-29T13:44:19Z` | `step.result` | `pipeline.phase.execute` | `PSESS-143` | `` | `` | reports=RPT-128 |
+| `2026-06-29T13:44:22Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-143` | `` | `` | reports=RPT-128 |
+| `2026-06-29T13:44:25Z` | `step.result` | `pipeline.phase.verify` | `PSESS-143` | `` | `` | reports=RPT-128 |
+| `2026-06-29T13:44:28Z` | `step.result` | `pipeline.phase.review` | `PSESS-143` | `` | `` | reports=RPT-128 |
+| `2026-06-29T13:44:32Z` | `step.result` | `pipeline.phase.close` | `PSESS-143` | `` | `` | reports=RPT-128 |
+| `2026-06-29T13:48:20Z` | `step.result` | `pipeline.phase.close` | `PSESS-143` | `` | `` | reports=RPT-128 |
+| `2026-06-29T13:56:27Z` | `session.create` | `pipeline.session.create` | `PSESS-144` | `` | `` | PSESS-144 |
+| `2026-06-29T13:56:30Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-144` | `` | `` | PSESS-144 |
+| `2026-06-29T13:56:38Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-144` | `` | `` | PSESS-144 |
+| `2026-06-29T13:56:42Z` | `step.result` | `pipeline.phase.execute` | `PSESS-144` | `` | `` | PSESS-144 |
+| `2026-06-29T14:05:20Z` | `step.result` | `pipeline.phase.execute` | `PSESS-144` | `` | `` | reports=RPT-130 |
+| `2026-06-29T14:05:22Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-144` | `` | `` | reports=RPT-130 |
+| `2026-06-29T14:05:25Z` | `step.result` | `pipeline.phase.verify` | `PSESS-144` | `` | `` | reports=RPT-130 |
+| `2026-06-29T14:05:27Z` | `step.result` | `pipeline.phase.review` | `PSESS-144` | `` | `` | reports=RPT-130 |
+| `2026-06-29T14:05:48Z` | `step.result` | `pipeline.phase.close` | `PSESS-144` | `` | `` | reports=RPT-130 \| commits=8a594957c6afb823ea168c4c774cf7ae59c7f0ba |
+| `2026-06-29T14:05:50Z` | `completion` | `pipeline.session.complete` | `PSESS-144` | `` | `` | completed |
+| `2026-06-29T14:08:52Z` | `session.create` | `pipeline.session.create` | `PSESS-145` | `` | `` | PSESS-145 |
+| `2026-06-29T14:08:54Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-145` | `` | `` | PSESS-145 |
+| `2026-06-29T14:09:03Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-145` | `` | `` | PSESS-145 |
+| `2026-06-29T14:09:06Z` | `step.result` | `pipeline.phase.execute` | `PSESS-145` | `` | `` | PSESS-145 |
+| `2026-06-29T14:26:33Z` | `step.result` | `pipeline.phase.execute` | `PSESS-145` | `` | `` | reports=RPT-132 |
+| `2026-06-29T14:26:36Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-145` | `` | `` | reports=RPT-132 |
+| `2026-06-29T14:26:38Z` | `step.result` | `pipeline.phase.verify` | `PSESS-145` | `` | `` | reports=RPT-132 |
+| `2026-06-29T14:26:41Z` | `step.result` | `pipeline.phase.review` | `PSESS-145` | `` | `` | reports=RPT-132 |
+| `2026-06-29T14:27:02Z` | `step.result` | `pipeline.phase.close` | `PSESS-145` | `` | `` | reports=RPT-132 \| commits=c2d5503991804320e16cd17e0c8f03d03eecd7b9 |
+| `2026-06-29T14:27:04Z` | `completion` | `pipeline.session.complete` | `PSESS-145` | `` | `` | completed |
+| `2026-06-29T14:30:41Z` | `session.create` | `pipeline.session.create` | `PSESS-146` | `` | `` | PSESS-146 |
+| `2026-06-29T14:30:43Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-146` | `` | `` | PSESS-146 |
+| `2026-06-29T14:30:52Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-146` | `` | `` | PSESS-146 |
+| `2026-06-29T14:30:55Z` | `step.result` | `pipeline.phase.execute` | `PSESS-146` | `` | `` | PSESS-146 |
+| `2026-06-29T14:43:04Z` | `step.result` | `pipeline.phase.execute` | `PSESS-146` | `` | `` | reports=RPT-134 |
+| `2026-06-29T14:43:07Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-146` | `` | `` | reports=RPT-134 |
+| `2026-06-29T14:43:10Z` | `step.result` | `pipeline.phase.verify` | `PSESS-146` | `` | `` | reports=RPT-134 |
+| `2026-06-29T14:43:13Z` | `step.result` | `pipeline.phase.review` | `PSESS-146` | `` | `` | reports=RPT-134 |
+| `2026-06-29T14:43:33Z` | `step.result` | `pipeline.phase.close` | `PSESS-146` | `` | `` | reports=RPT-134 \| commits=71a24db77532fb0d95e1af8062e7b66bfb03f8cf |
+| `2026-06-29T14:43:36Z` | `completion` | `pipeline.session.complete` | `PSESS-146` | `` | `` | completed |
+| `2026-06-29T14:44:19Z` | `session.create` | `pipeline.session.create` | `PSESS-147` | `` | `` | PSESS-147 |
+| `2026-06-29T14:44:22Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-147` | `` | `` | PSESS-147 |
+| `2026-06-29T14:44:35Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-147` | `` | `` | changes=CHG-087 |
+| `2026-06-29T14:44:39Z` | `step.result` | `pipeline.phase.execute` | `PSESS-147` | `` | `` | PSESS-147 |
+| `2026-06-29T15:00:58Z` | `step.result` | `pipeline.phase.execute` | `PSESS-147` | `` | `` | reports=RPT-136 |
+| `2026-06-29T15:01:02Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-147` | `` | `` | reports=RPT-136 |
+| `2026-06-29T15:01:05Z` | `step.result` | `pipeline.phase.verify` | `PSESS-147` | `` | `` | reports=RPT-136 |
+| `2026-06-29T16:12:53Z` | `session.create` | `pipeline.session.create` | `PSESS-148` | `` | `` | PSESS-148 |
+| `2026-06-29T16:12:56Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-148` | `` | `` | PSESS-148 |
+| `2026-06-29T16:13:10Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-148` | `` | `` | changes=CHG-088 |
+| `2026-06-29T16:13:14Z` | `step.result` | `pipeline.phase.execute` | `PSESS-148` | `` | `` | PSESS-148 |
+| `2026-06-29T16:34:57Z` | `step.result` | `pipeline.phase.execute` | `PSESS-148` | `` | `` | reports=RPT-138 |
+| `2026-06-29T16:35:00Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-148` | `` | `` | reports=RPT-138 |
+| `2026-06-29T16:35:03Z` | `step.result` | `pipeline.phase.verify` | `PSESS-148` | `` | `` | reports=RPT-138 |
+| `2026-06-29T16:35:06Z` | `step.result` | `pipeline.phase.review` | `PSESS-148` | `` | `` | reports=RPT-138 |
+| `2026-06-29T16:35:23Z` | `step.result` | `pipeline.phase.close` | `PSESS-148` | `` | `` | changes=CHG-088 \| reports=RPT-138 |
+| `2026-06-29T16:35:30Z` | `step.result` | `pipeline.phase.close` | `PSESS-148` | `` | `` | changes=CHG-088 \| reports=RPT-138 |
+| `2026-06-29T18:20:47Z` | `session.create` | `pipeline.session.create` | `PSESS-149` | `` | `` | PSESS-149 |
+| `2026-06-29T18:20:50Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-149` | `` | `` | PSESS-149 |
+| `2026-06-29T18:21:05Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-149` | `` | `` | changes=CHG-089 |
+| `2026-06-29T18:21:08Z` | `step.result` | `pipeline.phase.execute` | `PSESS-149` | `` | `` | PSESS-149 |
+| `2026-06-29T18:31:17Z` | `step.result` | `pipeline.phase.execute` | `PSESS-149` | `` | `` | reports=RPT-140 |
+| `2026-06-29T18:31:20Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-149` | `` | `` | reports=RPT-140 |
+| `2026-06-29T18:31:23Z` | `step.result` | `pipeline.phase.verify` | `PSESS-149` | `` | `` | reports=RPT-140 |
+| `2026-06-29T18:31:26Z` | `step.result` | `pipeline.phase.review` | `PSESS-149` | `` | `` | reports=RPT-140 |
+| `2026-06-29T18:31:43Z` | `step.result` | `pipeline.phase.close` | `PSESS-149` | `` | `` | changes=CHG-089 \| reports=RPT-140 |
+| `2026-06-29T18:31:50Z` | `step.result` | `pipeline.phase.close` | `PSESS-149` | `` | `` | changes=CHG-089 \| reports=RPT-140 |
+| `2026-06-29T18:47:04Z` | `session.create` | `pipeline.session.create` | `PSESS-150` | `` | `` | PSESS-150 |
+| `2026-06-29T18:47:07Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-150` | `` | `` | PSESS-150 |
+| `2026-06-29T18:47:21Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-150` | `` | `` | changes=CHG-090 |
+| `2026-06-29T18:47:25Z` | `step.result` | `pipeline.phase.execute` | `PSESS-150` | `` | `` | PSESS-150 |
+| `2026-06-29T18:50:48Z` | `step.result` | `pipeline.phase.execute` | `PSESS-150` | `` | `` | reports=RPT-141 |
+| `2026-06-29T18:50:52Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-150` | `` | `` | reports=RPT-141 |
+| `2026-06-29T18:50:55Z` | `step.result` | `pipeline.phase.verify` | `PSESS-150` | `` | `` | reports=RPT-141 |
+| `2026-06-29T18:50:58Z` | `step.result` | `pipeline.phase.review` | `PSESS-150` | `` | `` | reports=RPT-141 |
+| `2026-06-29T18:51:14Z` | `step.result` | `pipeline.phase.close` | `PSESS-150` | `` | `` | changes=CHG-090 \| reports=RPT-141 |
+| `2026-06-29T18:51:21Z` | `step.result` | `pipeline.phase.close` | `PSESS-150` | `` | `` | changes=CHG-090 \| reports=RPT-141 |
+| `2026-06-30T17:50:52Z` | `step.result` | `pipeline.phase.verify` | `PSESS-147` | `` | `` | reports=RPT-136 |
+| `2026-06-30T17:55:17Z` | `step.result` | `pipeline.phase.verify` | `PSESS-147` | `` | `` | reports=RPT-136 |
+| `2026-06-30T17:56:24Z` | `step.result` | `pipeline.phase.verify` | `PSESS-147` | `` | `` | reports=RPT-142,RPT-136 |
 
 ## Event Type Coverage
 

@@ -9,6 +9,7 @@ from unittest import mock
 
 from ai_project_ctl.core import workflows as workflow_module
 from ai_project_ctl.pipeline import policy_preset
+from ai_project_ctl.pipeline import git_commit as git_commit_module
 from ai_project_ctl.pipeline.batch import run_until_blocker
 from ai_project_ctl.pipeline.git_commit import REQUIRED_MACHINE_CHECKS
 from ai_project_ctl.pipeline.machine_review import (
@@ -24,22 +25,60 @@ from ai_project_ctl.web.server import render_action_result
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = REPO_ROOT / "scripts"
 TASK_ID = "TASK-001"
+SECOND_TASK_ID = "TASK-002"
 ARTIFACT = "tests/web_run_artifact.txt"
+SECOND_ARTIFACT = "tests/web_run_second_artifact.txt"
 AUTO_CLOSE_NOTE = "Owner approved auto-close for Web Run smoke."
+PIPELINE_BOOKKEEPING_FILES = (
+    "AI_PROJECT/events/pipeline-events.jsonl",
+    "AI_PROJECT/state/pipeline_sessions.json",
+    "AI_PROJECT/generated/PIPELINE_STATUS.md",
+    "AI_PROJECT/generated/PIPELINE_AUDIT.md",
+)
+WEB_RUN_GOVERNED_SIDE_EFFECT_CHANGED_FILES = (
+    "AI_PROJECT/events/codex-events.jsonl",
+    "AI_PROJECT/events/task-events.jsonl",
+    "AI_PROJECT/events/task-report-events.jsonl",
+    "AI_PROJECT/state/current_execution.json",
+    "AI_PROJECT/state/task_reports.json",
+    "AI_PROJECT/state/tasks.json",
+)
+WEB_RUN_GOVERNED_SIDE_EFFECT_GENERATED_FILES = (
+    "AI_PROJECT/generated/CODEX_CURRENT.md",
+    "AI_PROJECT/generated/CODEX_STATUS.md",
+    "AI_PROJECT/generated/CODEX_TASKS.md",
+    "AI_PROJECT/generated/TASK_EXECUTION_QUEUE.md",
+)
 
 
 class WebRunLocalCommitSmokeTests(unittest.TestCase):
-    def test_selected_web_run_closes_task_and_creates_local_commit(self):
+    def test_successful_web_run_leaves_clean_worktree_before_next_run(self):
         tmpdir = tempfile.TemporaryDirectory()
         self.addCleanup(tmpdir.cleanup)
         root = Path(tmpdir.name)
         _write_temp_project(root)
         policy = _web_run_local_commit_policy()
+        original_workflow_result = workflow_module.WorkflowExecutor._result
+        bookkeeping_after_commits = []
+
+        def record_bookkeeping_after_commit():
+            bookkeeping_after_commits.append(_pipeline_bookkeeping_snapshot(root))
+
+        original_run_git_command = git_commit_module.run_git_command
+
+        def recording_run_git_command(command, *args, **kwargs):
+            result = original_run_git_command(command, *args, **kwargs)
+            command_args = tuple(command)
+            if command_args[:2] == ("git", "commit") and result.ok:
+                record_bookkeeping_after_commit()
+            return result
+
+        pipeline_runner = _controlled_pipeline_runner(root)
 
         def run_selected_session(session_id, **kwargs):
             return run_until_blocker(
                 session_id,
-                runner=_controlled_pipeline_runner(root),
+                runner=pipeline_runner,
                 **kwargs,
             )
 
@@ -61,6 +100,15 @@ class WebRunLocalCommitSmokeTests(unittest.TestCase):
                 "_run_subprocess",
                 _workflow_subprocess_for_smoke,
             ),
+            mock.patch.object(
+                workflow_module.WorkflowExecutor,
+                "_result",
+                _workflow_result_with_smoke_effects(original_workflow_result),
+            ),
+            mock.patch(
+                "ai_project_ctl.pipeline.git_commit.run_git_command",
+                side_effect=recording_run_git_command,
+            ),
         ):
             result = WebActionExecutor(root, actor="tester").execute(
                 {
@@ -72,38 +120,50 @@ class WebRunLocalCommitSmokeTests(unittest.TestCase):
             )
 
             session_count = len(_pipeline_state(root)["sessions"])
-            repeat = WebActionExecutor(root, actor="tester").execute(
+            first_status_lines = _git_status_lines(root)
+            first_bookkeeping_after_run = _pipeline_bookkeeping_snapshot(root)
+            first_commit_subject = _git(
+                root,
+                "log",
+                "--format=%s",
+                "-1",
+            ).stdout.strip()
+
+            second = WebActionExecutor(root, actor="tester").execute(
                 {
                     "action": "ui.run_selected_task",
                     "confirm": "yes",
-                    "task": TASK_ID,
+                    "task": SECOND_TASK_ID,
                     "auto_close_note": AUTO_CLOSE_NOTE,
                 }
             )
+            second_session_count = len(_pipeline_state(root)["sessions"])
+            second_status_lines = _git_status_lines(root)
+            second_bookkeeping_after_run = _pipeline_bookkeeping_snapshot(root)
 
         result_payload = result.to_dict()
         result_data = result_payload["result"]["data"]
         result_body = render_action_result(result)
         self.assertTrue(result.ok)
-        self.assertEqual(result_data["stop_code"], "NO_EXECUTABLE_TASK")
-        self.assertIn("NO_EXECUTABLE_TASK", result_body)
-        self.assertIn('class="panel action-result action-result-warn"', result_body)
-        self.assertIn('<span class="badge warn">NOT RUN</span>', result_body)
-        self.assertNotIn('class="panel action-result action-result-pass"', result_body)
+        self.assertNotEqual(result_data.get("stop_code"), "WORKTREE_DIRTY")
+        self.assertNotEqual(result_data.get("blocked_by"), "WORKTREE_DIRTY")
+        self.assertNotIn("checkpoint_action", result_data)
+        self.assertNotIn("WORKTREE_DIRTY", result_body)
+        self.assertNotIn('name="action" value="ui.checkpoint_commit"', result_body)
 
         tasks = _tasks_state(root)
         self.assertEqual(tasks["tasks"][0]["status"], "done")
 
-        report = _latest_report(root)
-        self.assertEqual(report["task_id"], TASK_ID)
-        self.assertEqual(report["report"]["changed_files"], [ARTIFACT])
+        reports = _reports_state(root)["reports"]
+        first_report = _latest_report_for_task(reports, TASK_ID)
+        self.assertEqual(first_report["report"]["changed_files"], [ARTIFACT])
 
-        session = _pipeline_state(root)["sessions"][0]
-        close = _latest_phase(session, "close")
-        close_status = close["artifacts"]["close_status"]
-        local_commit = close["artifacts"]["local_commit"]
+        close_status = result_data["close_status"]
+        local_commit = _local_commit_from_result_data(result_data)
         readiness = local_commit["readiness"]
 
+        self.assertEqual(result_data["session_status"], "completed")
+        self.assertEqual(result_data["stop_code"], "QUEUE_COMPLETE")
         self.assertEqual(close_status["outcome"], "closed_with_local_commit")
         self.assertEqual(close_status["task_status"], "done")
         self.assertEqual(close_status["commit_status"], "pass")
@@ -117,24 +177,54 @@ class WebRunLocalCommitSmokeTests(unittest.TestCase):
         self.assertIn(ARTIFACT, readiness["approved_files"])
         self.assertIn("AI_PROJECT/state/pipeline_sessions.json", readiness["approved_files"])
         self.assertIn("AI_PROJECT/events/pipeline-events.jsonl", readiness["approved_files"])
+        for path in PIPELINE_BOOKKEEPING_FILES:
+            self.assertIn(path, local_commit["staged_files"])
+            self.assertIn(path, readiness["approved_files"])
+        self.assertEqual(len(bookkeeping_after_commits), 2)
+        self.assertEqual(bookkeeping_after_commits[0], first_bookkeeping_after_run)
 
-        commit_subject = _git(
+        self.assertIn(TASK_ID, first_commit_subject)
+        self.assertIn("Web Run local commit smoke", first_commit_subject)
+
+        _assert_clean_worktree(self, first_status_lines, "after first Web Run")
+
+        second_payload = second.to_dict()
+        second_data = second_payload["result"]["data"]
+        second_body = render_action_result(second)
+        tasks = _tasks_state(root)
+        reports = _reports_state(root)["reports"]
+        second_report = _latest_report_for_task(reports, SECOND_TASK_ID)
+
+        self.assertEqual(tasks["tasks"][1]["status"], "done")
+        self.assertEqual(second_report["report"]["changed_files"], [SECOND_ARTIFACT])
+        self.assertTrue(second.ok)
+        self.assertEqual(second_session_count, session_count + 1)
+        self.assertNotEqual(second_data.get("stop_code"), "WORKTREE_DIRTY")
+        self.assertNotEqual(second_data.get("blocked_by"), "WORKTREE_DIRTY")
+        self.assertNotIn("checkpoint_action", second_data)
+        self.assertNotIn("Create checkpoint commit", second_payload["result"]["message"])
+        self.assertNotIn("Create Checkpoint Commit", second_body)
+        self.assertNotIn('name="action" value="ui.checkpoint_commit"', second_body)
+
+        second_session = _pipeline_state(root)["sessions"][1]
+        second_local_commit = _local_commit_from_result_data(second_data)
+        self.assertEqual(second_data["session_status"], "completed")
+        self.assertEqual(second_data["stop_code"], "QUEUE_COMPLETE")
+        self.assertEqual(second_local_commit["status"], "pass")
+        self.assertEqual(second_local_commit["code"], "LOCAL_COMMIT_CREATED")
+        self.assertTrue(second_local_commit["commit_hash"])
+        self.assertIn(SECOND_ARTIFACT, second_local_commit["staged_files"])
+        second_commit_subject = _git(
             root,
             "log",
             "--format=%s",
             "-1",
         ).stdout.strip()
-        self.assertIn(TASK_ID, commit_subject)
-        self.assertIn("Web Run local commit smoke", commit_subject)
-
-        repeat_data = repeat.to_dict()["result"]["data"]
-        self.assertEqual(len(_pipeline_state(root)["sessions"]), session_count)
-        self.assertEqual(repeat_data["outcome"], "not_run")
-        self.assertEqual(repeat_data["task_status"], "done")
-        self.assertEqual(repeat_data["session_id"], session["id"])
-        repeat_body = render_action_result(repeat)
-        self.assertIn('class="panel action-result action-result-warn"', repeat_body)
-        self.assertNotIn('class="panel action-result action-result-pass"', repeat_body)
+        self.assertIn(SECOND_TASK_ID, second_commit_subject)
+        self.assertIn("Web Run second local commit smoke", second_commit_subject)
+        self.assertEqual(bookkeeping_after_commits[1], second_bookkeeping_after_run)
+        self.assertEqual(second_session["status"], "running")
+        _assert_clean_worktree(self, second_status_lines, "after second Web Run")
 
 
 def _write_temp_project(root: Path) -> None:
@@ -152,33 +242,17 @@ def _write_temp_project(root: Path) -> None:
     )
     _write_docs_fixture(root)
     _run_script(root, "taskctl.py", "init")
-    _run_script(
+    _create_smoke_task(
         root,
-        "taskctl.py",
-        "task",
-        "create",
-        "--epic",
-        "EPIC-001",
-        "--title",
-        "Web Run local commit smoke",
-        "--status",
-        "ready",
-        "--summary",
-        "Exercise selected Web Run through artifact, close, and local commit.",
-        "--description",
-        "Temporary smoke fixture.",
-        "--scope",
-        "Create one allowed artifact file.",
-        "--out-of-scope",
-        "Do not use external Codex.",
-        "--allowed-file",
-        ARTIFACT,
-        "--acceptance",
-        "Allowed artifact reaches report gate and local commit readiness.",
-        "--review-instruction",
-        "Check report changed_files and close commit artifacts.",
-        "--verification-mode",
-        "strict",
+        title="Web Run local commit smoke",
+        summary="Exercise selected Web Run through artifact, close, and local commit.",
+        artifact=ARTIFACT,
+    )
+    _create_smoke_task(
+        root,
+        title="Web Run second local commit smoke",
+        summary="Exercise a second Web Run after the first local commit.",
+        artifact=SECOND_ARTIFACT,
     )
     _write_preaccepted_change(root)
     for script in ("planctl.py", "taskctl.py", "docctl.py"):
@@ -198,6 +272,37 @@ def _write_temp_project(root: Path) -> None:
         "commit",
         "-m",
         "baseline",
+    )
+
+
+def _create_smoke_task(root: Path, *, title: str, summary: str, artifact: str) -> None:
+    _run_script(
+        root,
+        "taskctl.py",
+        "task",
+        "create",
+        "--epic",
+        "EPIC-001",
+        "--title",
+        title,
+        "--status",
+        "ready",
+        "--summary",
+        summary,
+        "--description",
+        "Temporary smoke fixture.",
+        "--scope",
+        "Create one allowed artifact file.",
+        "--out-of-scope",
+        "Do not use external Codex.",
+        "--allowed-file",
+        artifact,
+        "--acceptance",
+        "Allowed artifact reaches report gate and local commit readiness.",
+        "--review-instruction",
+        "Check report changed_files and close commit artifacts.",
+        "--verification-mode",
+        "strict",
     )
 
 
@@ -271,7 +376,25 @@ def _write_preaccepted_change(root: Path) -> None:
         "--text",
         ARTIFACT,
     )
+    _run_script(
+        root,
+        "evolutionctl.py",
+        "change",
+        "add-affected-file",
+        "CHG-001",
+        "--text",
+        SECOND_ARTIFACT,
+    )
     _run_script(root, "evolutionctl.py", "change", "link-task", "CHG-001", "--task", TASK_ID)
+    _run_script(
+        root,
+        "evolutionctl.py",
+        "change",
+        "link-task",
+        "CHG-001",
+        "--task",
+        SECOND_TASK_ID,
+    )
     _run_script(root, "evolutionctl.py", "change", "transition", "CHG-001", "--to", "ready")
     _run_script(root, "evolutionctl.py", "change", "approve", "CHG-001", "--notes", "Approved.")
     _run_script(root, "evolutionctl.py", "change", "transition", "CHG-001", "--to", "in_progress")
@@ -306,6 +429,14 @@ def _web_run_local_commit_policy():
 def _controlled_pipeline_runner(root: Path):
     def run(argv, prompt_text=None, **_kwargs):
         args = list(argv)
+        if args and args[0] == "git":
+            return subprocess.run(
+                args,
+                cwd=root,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
         if tuple(args[-2:]) in {
             ("project", "doctor"),
             ("project", "protected-check"),
@@ -317,11 +448,17 @@ def _controlled_pipeline_runner(root: Path):
                 stderr="",
             )
         if args == ["codex", "exec"]:
-            path = root / ARTIFACT
+            task_id, artifact = _task_artifact_from_prompt(prompt_text or "")
+            path = root / artifact
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text("artifact created by fake codex\n", encoding="utf-8")
+            path.write_text(
+                "artifact created by fake codex for {}\n".format(task_id),
+                encoding="utf-8",
+            )
             summary = {
-                "implementation_summary": "Created allowed artifact.",
+                "implementation_summary": "Created allowed artifact for {}.".format(
+                    task_id
+                ),
                 "notes": [],
                 "warnings": [],
                 "blockers": [],
@@ -351,6 +488,37 @@ def _controlled_pipeline_runner(root: Path):
     return run
 
 
+def _task_artifact_from_prompt(prompt_text: str) -> tuple[str, str]:
+    if SECOND_TASK_ID in prompt_text:
+        return SECOND_TASK_ID, SECOND_ARTIFACT
+    return TASK_ID, ARTIFACT
+
+
+def _workflow_result_with_smoke_effects(original):
+    def wrapped(executor, descriptor, **kwargs):
+        result = original(executor, descriptor, **kwargs)
+        if descriptor.name == "task.close_reviewed":
+            _extend_unique(
+                result.changed_files,
+                WEB_RUN_GOVERNED_SIDE_EFFECT_CHANGED_FILES,
+            )
+            _extend_unique(
+                result.generated_files,
+                WEB_RUN_GOVERNED_SIDE_EFFECT_GENERATED_FILES,
+            )
+            _extend_unique(
+                result.events,
+                (
+                    "AI_PROJECT/events/codex-events.jsonl",
+                    "AI_PROJECT/events/task-events.jsonl",
+                    "AI_PROJECT/events/task-report-events.jsonl",
+                ),
+            )
+        return result
+
+    return wrapped
+
+
 def _workflow_subprocess_for_smoke(_executor, argv):
     args = list(argv)
     script = Path(args[1]).name if len(args) > 1 else ""
@@ -374,7 +542,10 @@ def _workflow_subprocess_for_smoke(_executor, argv):
         return subprocess.CompletedProcess(
             args=args,
             returncode=0,
-            stdout=json.dumps({"ok": True, "errors": [], "warnings": [], "findings": []}) + "\n",
+            stdout=json.dumps(
+                {"ok": True, "errors": [], "warnings": [], "findings": []}
+            )
+            + "\n",
             stderr="",
         )
     return subprocess.run(
@@ -446,11 +617,47 @@ def _pipeline_state(root: Path) -> dict:
     return json.loads(pipeline_state_path(root).read_text(encoding="utf-8"))
 
 
+def _pipeline_bookkeeping_snapshot(root: Path) -> dict[str, str]:
+    return {
+        path: (root / path).read_text(encoding="utf-8")
+        for path in PIPELINE_BOOKKEEPING_FILES
+    }
+
+
+def _local_commit_from_result_data(result_data: dict) -> dict:
+    for effect in result_data.get("side_effects", []):
+        data = effect.get("data") if isinstance(effect, dict) else {}
+        phase_result = data.get("phase_result") if isinstance(data, dict) else {}
+        artifacts = (
+            phase_result.get("artifacts")
+            if isinstance(phase_result, dict)
+            else {}
+        )
+        local_commit = (
+            artifacts.get("local_commit")
+            if isinstance(artifacts, dict)
+            else {}
+        )
+        if isinstance(local_commit, dict) and local_commit.get("commit_hash"):
+            return local_commit
+    raise AssertionError("missing local commit result data")
+
+
 def _latest_report(root: Path) -> dict:
-    state = json.loads(
+    return _reports_state(root)["reports"][-1]
+
+
+def _latest_report_for_task(reports: list[dict], task_id: str) -> dict:
+    for item in reversed(reports):
+        if item.get("task_id") == task_id:
+            return item
+    raise AssertionError("missing report for task: {}".format(task_id))
+
+
+def _reports_state(root: Path) -> dict:
+    return json.loads(
         (root / "AI_PROJECT" / "state" / "task_reports.json").read_text(encoding="utf-8")
     )
-    return state["reports"][-1]
 
 
 def _latest_phase(session: dict, phase: str) -> dict:
@@ -458,6 +665,43 @@ def _latest_phase(session: dict, phase: str) -> dict:
         if item.get("phase") == phase:
             return item
     raise AssertionError("missing phase: {}".format(phase))
+
+
+def _git_status_lines(root: Path) -> list[str]:
+    return [
+        line.strip()
+        for line in _git(
+            root,
+            "status",
+            "--short",
+            "--untracked-files=all",
+        ).stdout.splitlines()
+        if line.strip()
+    ]
+
+
+def _git_status_paths(status_lines: list[str]) -> list[str]:
+    return [line[3:].strip() if len(line) > 3 else line for line in status_lines]
+
+
+def _assert_clean_worktree(
+    test_case: unittest.TestCase,
+    status_lines: list[str],
+    label: str,
+) -> None:
+    dirty_paths = _git_status_paths(status_lines)
+    for path in PIPELINE_BOOKKEEPING_FILES:
+        test_case.assertNotIn(path, dirty_paths, "{} left {} dirty".format(label, path))
+    test_case.assertEqual(status_lines, [], "{} left dirty files: {}".format(label, status_lines))
+
+
+def _extend_unique(target: list[str], values) -> None:
+    seen = set(target)
+    for value in values:
+        text = str(value)
+        if text and text not in seen:
+            target.append(text)
+            seen.add(text)
 
 
 if __name__ == "__main__":

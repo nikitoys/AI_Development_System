@@ -54,6 +54,10 @@ CHANGED_FILE = "ai_project_ctl/pipeline/git_commit.py"
 CONTROL_STATE_FILE = "AI_PROJECT/state/tasks.json"
 CONTROL_EVENT_FILE = "AI_PROJECT/events/task-events.jsonl"
 CONTROL_GENERATED_FILE = "AI_PROJECT/generated/CODEX_TASKS.md"
+PIPELINE_STATE_FILE = "AI_PROJECT/state/pipeline_sessions.json"
+PIPELINE_EVENT_FILE = "AI_PROJECT/events/pipeline-events.jsonl"
+PIPELINE_STATUS_FILE = "AI_PROJECT/generated/PIPELINE_STATUS.md"
+PIPELINE_AUDIT_FILE = "AI_PROJECT/generated/PIPELINE_AUDIT.md"
 UNRELATED_FILE = "tests/unrelated_dirty_file.py"
 
 
@@ -265,7 +269,7 @@ class PipelineGitCommitTests(unittest.TestCase):
         self.assertTrue(result.ok)
         self.assertEqual(result.code, CODE_READY)
 
-    def test_commit_readiness_accepts_session_owned_governed_control_files(self):
+    def test_commit_readiness_accepts_session_owned_pipeline_bookkeeping_files(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _write_task_state(root)
@@ -279,16 +283,18 @@ class PipelineGitCommitTests(unittest.TestCase):
                 codex_review=_codex_review(),
                 session=_session_file_evidence(
                     session_owned=(
-                        CONTROL_STATE_FILE,
-                        CONTROL_EVENT_FILE,
-                        CONTROL_GENERATED_FILE,
+                        PIPELINE_STATE_FILE,
+                        PIPELINE_EVENT_FILE,
+                        PIPELINE_STATUS_FILE,
+                        PIPELINE_AUDIT_FILE,
                     )
                 ),
                 runner=_git_status_for_paths(
                     CHANGED_FILE,
-                    CONTROL_STATE_FILE,
-                    CONTROL_EVENT_FILE,
-                    CONTROL_GENERATED_FILE,
+                    PIPELINE_STATE_FILE,
+                    PIPELINE_EVENT_FILE,
+                    PIPELINE_STATUS_FILE,
+                    PIPELINE_AUDIT_FILE,
                 ),
             )
 
@@ -299,12 +305,59 @@ class PipelineGitCommitTests(unittest.TestCase):
             sorted(
                 [
                     CHANGED_FILE,
-                    CONTROL_STATE_FILE,
-                    CONTROL_EVENT_FILE,
-                    CONTROL_GENERATED_FILE,
+                    PIPELINE_STATE_FILE,
+                    PIPELINE_EVENT_FILE,
+                    PIPELINE_STATUS_FILE,
+                    PIPELINE_AUDIT_FILE,
                 ]
             ),
         )
+
+    def test_commit_readiness_accepts_explicitly_owned_pre_existing_pipeline_bookkeeping(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_task_state(root)
+
+            result = evaluate_commit_readiness(
+                root=root,
+                task_id=TASK_ID,
+                policy=_policy(),
+                report_gate=_report_gate(),
+                machine_review=_machine_review(),
+                codex_review=_codex_review(),
+                session=_session_file_evidence(
+                    pre_existing=(PIPELINE_STATE_FILE,),
+                    session_owned=(PIPELINE_STATE_FILE,),
+                ),
+                runner=_git_status_for_paths(CHANGED_FILE, PIPELINE_STATE_FILE),
+            )
+
+        self.assertTrue(result.ok)
+        self.assertEqual(result.code, CODE_READY)
+        self.assertIn(PIPELINE_STATE_FILE, result.approved_files)
+
+    def test_commit_readiness_blocks_report_declared_pre_existing_pipeline_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_task_state(root)
+
+            result = evaluate_commit_readiness(
+                root=root,
+                task_id=TASK_ID,
+                policy=_policy(),
+                report_gate=_report_gate(
+                    changed_files=(CHANGED_FILE, PIPELINE_STATE_FILE),
+                ),
+                machine_review=_machine_review(),
+                codex_review=_codex_review(),
+                session=_session_file_evidence(pre_existing=(PIPELINE_STATE_FILE,)),
+                runner=_git_status_for_paths(CHANGED_FILE, PIPELINE_STATE_FILE),
+            )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.code, CODE_UNRELATED_FILES)
+        self.assertEqual(result.blockers, (PIPELINE_STATE_FILE,))
+        self.assertNotIn(PIPELINE_STATE_FILE, result.approved_files)
 
     def test_commit_readiness_blocks_pre_existing_control_file(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -340,7 +393,7 @@ class PipelineGitCommitTests(unittest.TestCase):
         self.assertNotIn(CONTROL_STATE_FILE, result.approved_files)
         self.assertIn(CONTROL_EVENT_FILE, result.approved_files)
 
-    def test_commit_readiness_blocks_unrelated_code_with_session_owned_control_files(self):
+    def test_commit_readiness_blocks_unrelated_code_with_session_owned_pipeline_files(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _write_task_state(root)
@@ -352,10 +405,10 @@ class PipelineGitCommitTests(unittest.TestCase):
                 report_gate=_report_gate(),
                 machine_review=_machine_review(),
                 codex_review=_codex_review(),
-                session=_session_file_evidence(session_owned=(CONTROL_STATE_FILE,)),
+                session=_session_file_evidence(session_owned=(PIPELINE_STATE_FILE,)),
                 runner=_git_status_for_paths(
                     CHANGED_FILE,
-                    CONTROL_STATE_FILE,
+                    PIPELINE_STATE_FILE,
                     UNRELATED_FILE,
                 ),
             )
@@ -363,9 +416,9 @@ class PipelineGitCommitTests(unittest.TestCase):
         self.assertFalse(result.ok)
         self.assertEqual(result.code, CODE_UNRELATED_FILES)
         self.assertEqual(result.blockers, (UNRELATED_FILE,))
-        self.assertIn(CONTROL_STATE_FILE, result.approved_files)
+        self.assertIn(PIPELINE_STATE_FILE, result.approved_files)
 
-    def test_commit_readiness_requires_report_task_artifact_with_session_control_files(self):
+    def test_commit_readiness_requires_report_task_artifact_with_session_pipeline_files(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _write_task_state(root)
@@ -377,8 +430,8 @@ class PipelineGitCommitTests(unittest.TestCase):
                 report_gate=_report_gate(changed_files=()),
                 machine_review=_machine_review(),
                 codex_review=_codex_review(),
-                session=_session_file_evidence(session_owned=(CONTROL_STATE_FILE,)),
-                runner=_git_status_for_paths(CONTROL_STATE_FILE),
+                session=_session_file_evidence(session_owned=(PIPELINE_STATE_FILE,)),
+                runner=_git_status_for_paths(PIPELINE_STATE_FILE),
             )
 
         self.assertFalse(result.ok)

@@ -34,6 +34,7 @@ from ai_project_ctl.pipeline.ui_policy import (
 )
 from ai_project_ctl.pipeline.ui_run import (
     UIRunSelectionResolution,
+    build_ui_run_batch_queue,
     build_ui_run_selected_queue,
     resolve_ui_run_selection,
 )
@@ -225,6 +226,70 @@ LOCAL_ACTION_DESCRIPTORS: dict[str, dict[str, Any]] = {
             'git commit -m "Checkpoint before Web Run"',
         ],
         "availability": "implemented",
+    },
+    "ui.run_task_batch": {
+        "name": "ui.run_task_batch",
+        "domain": "ui",
+        "description": (
+            "Create and run an owner-confirmed multi-task pipeline session using "
+            "effective UI pipeline settings."
+        ),
+        "kind": "write",
+        "arguments": [
+            {
+                "name": "task_ref",
+                "description": "Optional task refs to seed the batch queue.",
+                "type": "string",
+                "required": False,
+                "repeatable": True,
+            },
+            {
+                "name": "epic",
+                "description": "Optional epic IDs to filter the batch queue.",
+                "type": "string",
+                "required": False,
+                "repeatable": True,
+            },
+            {
+                "name": "status_filter",
+                "description": "Optional task statuses to filter the batch queue.",
+                "type": "string",
+                "required": False,
+                "repeatable": True,
+            },
+            {
+                "name": "max_tasks",
+                "description": "Maximum tasks to select for the batch session.",
+                "type": "integer",
+                "required": False,
+                "repeatable": False,
+            },
+            {
+                "name": "order_by",
+                "description": "Queue ordering mode.",
+                "type": "string",
+                "required": False,
+                "repeatable": False,
+                "choices": sorted(PIPELINE_ORDER_OPTIONS),
+            },
+            {
+                "name": "auto_close_note",
+                "description": "Human Owner note required by auto-close policies.",
+                "type": "string",
+                "required": False,
+                "repeatable": False,
+            },
+        ],
+        "read_write": {
+            "mutates_state": True,
+            "writes_events": True,
+            "renders_generated": True,
+            "validates": True,
+        },
+        "legacy_command": [
+            "Web-only action; creates a UI batch session and delegates to pipeline.run_until_blocker."
+        ],
+        "availability": "implemented",
     }
 }
 
@@ -403,6 +468,8 @@ class WebActionExecutor:
         descriptor = describe_web_action(action)
         if action.action_id == "ui.run_selected_task":
             process = self._create_ui_selected_task_session(fields)
+        elif action.action_id == "ui.run_task_batch":
+            process = self._create_ui_task_batch_session(fields)
         elif action.action_id == "ui.checkpoint_commit":
             process = self._create_checkpoint_commit(fields)
         elif action.action_id == "ui.settings.set":
@@ -549,7 +616,9 @@ class WebActionExecutor:
                 confirmed=True,
             )
             _merge_command_result_effects(result, session_result)
-            result.data.setdefault("created_session", session_result.data.get("session"))
+            created_session = session_result.data.get("session")
+            result.data.setdefault("created_session", created_session)
+            _apply_committed_close_action_view(result, created_session)
 
         result.data.setdefault("task_ref", task_ref)
         result.data.setdefault("policy", selected_policy.name)
@@ -588,11 +657,114 @@ class WebActionExecutor:
             stderr="",
         )
 
+    def _create_ui_task_batch_session(
+        self,
+        fields: Mapping[str, str],
+    ) -> ActionProcessResult:
+        auto_close_note = _field(fields, "auto_close_note")
+        command = _build_ui_run_task_batch(fields)
+        requested_queue_inputs = _ui_task_batch_requested_inputs(fields)
+        dirty_preflight = capture_worktree_dirty_preflight(root=self.root)
+        if dirty_preflight.should_block:
+            result = _ui_run_batch_worktree_preflight_not_run_result(
+                requested_queue_inputs,
+                dirty_preflight,
+            )
+            return ActionProcessResult(
+                command=command,
+                returncode=0,
+                stdout=json.dumps(
+                    result.to_dict(),
+                    ensure_ascii=False,
+                    sort_keys=True,
+                )
+                + "\n",
+                stderr="",
+            )
+        try:
+            selected_policy = resolve_ui_pipeline_policy(root=self.root)
+            selected_queue = build_ui_run_batch_queue(
+                selected_policy,
+                task_refs=requested_queue_inputs["task_ref"],
+                epic_ids=requested_queue_inputs["epic"],
+                statuses=requested_queue_inputs["status_filter"],
+                max_tasks=requested_queue_inputs["max_tasks"] or None,
+                order_by=requested_queue_inputs["order_by"] or None,
+                confirmed=True,
+                allow_internal_change_gate_bypass=(
+                    ui_internal_change_gate_bypass_enabled(root=self.root)
+                ),
+            )
+            session_result = create_session(
+                root=self.root,
+                actor=self.actor,
+                policy=selected_policy,
+                policy_name=selected_policy.name,
+                auto_close_note=auto_close_note,
+                selected_queue=selected_queue,
+            )
+        except ValueError as exc:
+            raise WebActionError(
+                "WEB_INVALID_ACTION_ARGUMENT",
+                str(exc),
+                details={"action": "ui.run_task_batch"},
+            ) from exc
+        except CommandError as exc:
+            raise WebActionError(
+                exc.code,
+                exc.message,
+                path=exc.path,
+                details={"action": "ui.run_task_batch", **exc.details},
+            ) from exc
+
+        result = session_result
+        if session_result.ok:
+            session_id = str(session_result.data.get("session_id") or "")
+            result = run_until_blocker(
+                session_id,
+                root=self.root,
+                actor=self.actor,
+                confirmed=True,
+            )
+            _merge_command_result_effects(result, session_result)
+            result.data.setdefault("created_session", session_result.data.get("session"))
+
+        result.data.setdefault("policy", selected_policy.name)
+        result.data.setdefault("selected_policy", selected_policy.name)
+        result.data.setdefault("requested_queue_inputs", requested_queue_inputs)
+        result.data.setdefault("selected_queue", selected_queue)
+        session_id = str(
+            result.data.get("session_id")
+            or session_result.data.get("session_id")
+            or ""
+        )
+        if session_id:
+            result.data["session_id"] = session_id
+            target = "/pipeline/sessions/{}".format(session_id)
+            result.data["session_href"] = target
+            result.data["redirect_target"] = target
+            next_action = "Open pipeline session {}.".format(session_id)
+            if next_action not in result.next_actions:
+                result.next_actions.append(next_action)
+        return ActionProcessResult(
+            command=command,
+            returncode=0 if result.ok else 1,
+            stdout=json.dumps(
+                result.to_dict(),
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+            + "\n",
+            stderr="",
+        )
+
     def _create_checkpoint_commit(
         self,
         fields: Mapping[str, str],
     ) -> ActionProcessResult:
         task_ref = _task_ref(fields)
+        task_id = _field(fields, "task_id")
+        selected_task = _selected_task_label(task_ref, task_id)
         checkpoint = create_checkpoint_commit(root=self.root, task_ref=task_ref)
         dirty_files = [item.path for item in checkpoint.dirty_files]
         if checkpoint.code == CODE_CHECKPOINT_CREATED:
@@ -603,6 +775,8 @@ class WebActionExecutor:
             outcome = "checkpoint_commit_failed"
         data: dict[str, Any] = {
             "task_ref": task_ref,
+            "task_id": task_id,
+            "selected_task": selected_task,
             "outcome": outcome,
             "not_run": checkpoint.code == CODE_CHECKPOINT_CLEAN,
             "status": checkpoint.status,
@@ -613,7 +787,7 @@ class WebActionExecutor:
             "git_status_entries": [item.to_dict() for item in checkpoint.dirty_files],
             "checkpoint_message": checkpoint.message,
             "commands": [command.to_dict() for command in checkpoint.commands],
-            "next_action": "Run selected task {} again.".format(task_ref),
+            "next_action": "Run selected task {} again.".format(selected_task),
         }
         if checkpoint.code == CODE_CHECKPOINT_CLEAN:
             data["stop_code"] = "WORKTREE_CLEAN"
@@ -974,6 +1148,39 @@ def _build_ui_run_selected_task(fields: Mapping[str, str]) -> list[str]:
     return args
 
 
+def _build_ui_run_task_batch(fields: Mapping[str, str]) -> list[str]:
+    args = ["ui.run_task_batch"]
+    for value in _split_values(fields, "task_ref"):
+        args.extend(["--task-ref", value])
+    for value in _split_values(fields, "epic"):
+        args.extend(["--epic", value])
+    for value in _split_values(fields, "status_filter"):
+        args.extend(["--status-filter", value])
+    max_tasks = _field(fields, "max_tasks")
+    if max_tasks:
+        if not max_tasks.isdigit() or int(max_tasks) < 1:
+            raise WebActionError(
+                "WEB_INVALID_ACTION_ARGUMENT",
+                "UI batch max_tasks must be a positive integer.",
+                details={"max_tasks": max_tasks},
+            )
+        args.extend(["--max-tasks", max_tasks])
+    order_by = _field(fields, "order_by")
+    if order_by:
+        if order_by not in PIPELINE_ORDER_OPTIONS:
+            raise WebActionError(
+                "WEB_INVALID_ACTION_ARGUMENT",
+                "UI batch order_by is not allowed: {}".format(order_by),
+                details={"order_by": order_by, "allowed": sorted(PIPELINE_ORDER_OPTIONS)},
+            )
+        args.extend(["--order-by", order_by])
+    auto_close_note = _field(fields, "auto_close_note")
+    if auto_close_note:
+        args.extend(["--auto-close-note", auto_close_note])
+    args.append("--confirm")
+    return args
+
+
 def _build_ui_checkpoint_commit(fields: Mapping[str, str]) -> list[str]:
     return ["ui", "checkpoint-commit", _task_ref(fields), "--confirm"]
 
@@ -1200,6 +1407,19 @@ def _split_values(fields: Mapping[str, str], name: str) -> list[str]:
     return values
 
 
+def _ui_task_batch_requested_inputs(fields: Mapping[str, str]) -> dict[str, Any]:
+    max_tasks = _field(fields, "max_tasks")
+    order_by = _field(fields, "order_by")
+    return {
+        "task_ref": _split_values(fields, "task_ref"),
+        "epic": _split_values(fields, "epic"),
+        "status_filter": _split_values(fields, "status_filter"),
+        "max_tasks": max_tasks,
+        "order_by": order_by,
+        "auto_close_note": _field(fields, "auto_close_note"),
+    }
+
+
 def _parse_json(text: str) -> Any | None:
     stripped = text.strip()
     if not stripped:
@@ -1266,7 +1486,7 @@ def _ui_run_worktree_preflight_not_run_result(
     selection: UIRunSelectionResolution,
     preflight: WorktreeDirtyPreflight,
 ) -> CommandResult:
-    task_label = selection.task_id or selection.task_ref or "selected task"
+    task_label = _selected_task_label(selection.task_ref, selection.task_id)
     dirty_paths = list(preflight.dirty_paths)
     reason = preflight.reason
     if reason == "worktree_dirty":
@@ -1274,19 +1494,31 @@ def _ui_run_worktree_preflight_not_run_result(
             "NOT RUN: Web Run did not start for selected task {} because the "
             "worktree is dirty.".format(task_label)
         )
+        checkpoint_action = "Create checkpoint commit for selected task {}.".format(
+            task_label
+        )
+        rerun_action = (
+            "After checkpoint commit succeeds, run selected task {} again.".format(
+                task_label
+            )
+        )
         owner_action = (
-            "Create a manual checkpoint commit or clean the worktree, then rerun Web Run."
+            "Web Run must start from a clean worktree. {} Or clean the worktree, "
+            "then run selected task {} again.".format(checkpoint_action, task_label)
         )
     else:
         message = (
             "NOT RUN: Web Run did not start for selected task {} because git status "
             "could not be checked.".format(task_label)
         )
+        checkpoint_action = ""
+        rerun_action = ""
         owner_action = "Resolve git status errors, then rerun Web Run."
 
     data: dict[str, Any] = {
         "task_ref": selection.task_ref,
         "task_id": selection.task_id,
+        "selected_task": task_label,
         "task_status": selection.task_status,
         "outcome": reason,
         "reason": reason,
@@ -1301,6 +1533,9 @@ def _ui_run_worktree_preflight_not_run_result(
         "git_status_entries": [entry.to_dict() for entry in preflight.entries],
         "suggested_checkpoint_commands": list(MANUAL_CHECKPOINT_COMMANDS),
     }
+    if checkpoint_action:
+        data["checkpoint_action"] = "ui.checkpoint_commit"
+        data["next_action"] = "{} {}".format(checkpoint_action, rerun_action)
     if preflight.error:
         data["git_status_error"] = preflight.error
 
@@ -1311,8 +1546,150 @@ def _ui_run_worktree_preflight_not_run_result(
         data=data,
     )
     result.owner_action_required = owner_action
+    if checkpoint_action:
+        result.next_actions.extend([checkpoint_action, rerun_action])
     result.next_actions.extend(MANUAL_CHECKPOINT_COMMANDS)
     return result
+
+
+def _ui_run_batch_worktree_preflight_not_run_result(
+    requested_queue_inputs: Mapping[str, Any],
+    preflight: WorktreeDirtyPreflight,
+) -> CommandResult:
+    dirty_paths = list(preflight.dirty_paths)
+    reason = preflight.reason
+    batch_label = "task batch"
+    if reason == "worktree_dirty":
+        message = (
+            "NOT RUN: Web Run did not start for task batch because the worktree is "
+            "dirty."
+        )
+        checkpoint_action = "Create checkpoint commit before task batch."
+        rerun_action = "After checkpoint commit succeeds, run task batch again."
+        owner_action = (
+            "Web batch runs must start from a clean worktree. Create a checkpoint "
+            "commit or clean the worktree, then run task batch again."
+        )
+    else:
+        message = (
+            "NOT RUN: Web Run did not start for task batch because git status could "
+            "not be checked."
+        )
+        checkpoint_action = ""
+        rerun_action = ""
+        owner_action = "Resolve git status errors, then rerun task batch."
+
+    data: dict[str, Any] = {
+        "task_ref": batch_label,
+        "selected_task": batch_label,
+        "batch_run": True,
+        "requested_queue_inputs": dict(requested_queue_inputs),
+        "outcome": reason,
+        "reason": reason,
+        "not_run": True,
+        "stop_code": "WORKTREE_DIRTY"
+        if reason == "worktree_dirty"
+        else "WORKTREE_STATUS_UNAVAILABLE",
+        "blocked_by": "WORKTREE_DIRTY"
+        if reason == "worktree_dirty"
+        else "WORKTREE_STATUS_UNAVAILABLE",
+        "dirty_files": dirty_paths,
+        "git_status_entries": [entry.to_dict() for entry in preflight.entries],
+        "suggested_checkpoint_commands": list(MANUAL_CHECKPOINT_COMMANDS),
+    }
+    if checkpoint_action:
+        data["checkpoint_action"] = "ui.checkpoint_commit"
+        data["next_action"] = "{} {}".format(checkpoint_action, rerun_action)
+    if preflight.error:
+        data["git_status_error"] = preflight.error
+
+    result = CommandResult.success(
+        command="ui.run_task_batch",
+        domain="ui",
+        message=message,
+        data=data,
+    )
+    result.owner_action_required = owner_action
+    if checkpoint_action:
+        result.next_actions.extend([checkpoint_action, rerun_action])
+    result.next_actions.extend(MANUAL_CHECKPOINT_COMMANDS)
+    return result
+
+
+def _selected_task_label(task_ref: str, task_id: str = "") -> str:
+    selected_ref = str(task_ref or "").strip()
+    selected_id = str(task_id or "").strip()
+    if selected_ref and selected_id and selected_ref != selected_id:
+        return "{} ({})".format(selected_ref, selected_id)
+    return selected_ref or selected_id or "selected task"
+
+
+def _apply_committed_close_action_view(
+    result: CommandResult,
+    created_session: Any,
+) -> None:
+    close_status = _mapping_or_empty(result.data.get("close_status"))
+    if not _is_successful_committed_close(close_status):
+        return
+
+    session = dict(_mapping_or_empty(result.data.get("session")))
+    if not session:
+        session = dict(_mapping_or_empty(created_session))
+    completed_task_id = str(
+        close_status.get("task_id")
+        or result.data.get("task_id")
+        or result.data.get("current_task_id")
+        or session.get("current_task_id")
+        or ""
+    ).strip()
+    commit_hash = str(close_status.get("commit_hash") or "").strip()
+
+    session["status"] = "completed"
+    session["stop_reason"] = _committed_close_action_reason(commit_hash)
+    if completed_task_id:
+        session["current_task_id"] = completed_task_id
+    if not session.get("current_step_status"):
+        session["current_step_status"] = "passed"
+
+    result.data["session"] = session
+    result.data["outcome"] = "completed"
+    result.data["session_status"] = "completed"
+    result.data.setdefault("stop_code", "QUEUE_COMPLETE")
+    result.data.setdefault("stop_reason", session["stop_reason"])
+    if completed_task_id:
+        result.data["task_id"] = completed_task_id
+        result.data.setdefault("current_task_id", completed_task_id)
+        _extend_unique(
+            result.data.setdefault("completed_tasks", []),
+            [completed_task_id],
+        )
+    result.data["close_outcome"] = str(close_status.get("outcome") or "")
+    result.data["commit_status"] = str(close_status.get("commit_status") or "")
+    result.data["commit_code"] = str(close_status.get("commit_code") or "")
+    result.data["commit_hash"] = commit_hash
+    _extend_unique(result.data.setdefault("commits", []), [commit_hash])
+
+
+def _mapping_or_empty(value: Any) -> Mapping[str, Any]:
+    return value if isinstance(value, Mapping) else {}
+
+
+def _is_successful_committed_close(close_status: Mapping[str, Any]) -> bool:
+    commit_hash = str(close_status.get("commit_hash") or "").strip()
+    if not commit_hash:
+        return False
+    return (
+        str(close_status.get("outcome") or "").lower()
+        == "closed_with_local_commit"
+        and str(close_status.get("commit_status") or "").lower() == "pass"
+        and str(close_status.get("commit_code") or "") == "LOCAL_COMMIT_CREATED"
+    )
+
+
+def _committed_close_action_reason(commit_hash: str) -> str:
+    if commit_hash:
+        return "Close passed and local commit {} was created.".format(commit_hash)
+    return "Close passed and a local commit was created."
 
 
 def _action_result_summary(
@@ -1466,6 +1843,12 @@ ACTIONS: dict[str, WebAction] = {
         command_name="pipeline.run_until_blocker",
         label="Run selected task",
         builder=_build_ui_run_selected_task,
+    ),
+    "ui.run_task_batch": WebAction(
+        action_id="ui.run_task_batch",
+        command_name="ui.run_task_batch",
+        label="Run task batch",
+        builder=_build_ui_run_task_batch,
     ),
     "ui.checkpoint_commit": WebAction(
         action_id="ui.checkpoint_commit",
