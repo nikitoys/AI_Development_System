@@ -21,6 +21,7 @@ from ai_project_ctl.pipeline.git_status import (
     WorktreeDirtyPreflight,
     capture_worktree_dirty_preflight,
 )
+from ai_project_ctl.pipeline.policy import with_effective_batch_max_steps
 from ai_project_ctl.pipeline.policy_store import load_policy_preset
 from ai_project_ctl.pipeline.report_recovery import (
     ReportRecoveryError,
@@ -695,11 +696,16 @@ class WebActionExecutor:
                     ui_internal_change_gate_bypass_enabled(root=self.root)
                 ),
             )
+            effective_policy, effective_max_steps = with_effective_batch_max_steps(
+                selected_policy,
+                max_tasks=int(selected_queue["max_tasks"]),
+                phase_count=len(RUN_NEXT_PHASE_SEQUENCE),
+            )
             session_result = create_session(
                 root=self.root,
                 actor=self.actor,
-                policy=selected_policy,
-                policy_name=selected_policy.name,
+                policy=effective_policy,
+                policy_name=effective_policy.name,
                 auto_close_note=auto_close_note,
                 selected_queue=selected_queue,
             )
@@ -731,6 +737,7 @@ class WebActionExecutor:
 
         result.data.setdefault("policy", selected_policy.name)
         result.data.setdefault("selected_policy", selected_policy.name)
+        result.data.setdefault("effective_batch_max_steps", effective_max_steps)
         result.data.setdefault("requested_queue_inputs", requested_queue_inputs)
         result.data.setdefault("selected_queue", selected_queue)
         session_id = str(

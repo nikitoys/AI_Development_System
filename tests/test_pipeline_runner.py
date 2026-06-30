@@ -35,6 +35,10 @@ from ai_project_ctl.pipeline.machine_review import (
 )
 from ai_project_ctl.pipeline.audit import pipeline_audit_path
 from ai_project_ctl.pipeline.phase import PhaseResult
+from ai_project_ctl.pipeline.policy import (
+    effective_batch_max_steps,
+    with_effective_batch_max_steps,
+)
 from ai_project_ctl.pipeline.report_gate import CODE_WARN as CODEX_REPORT_WARN
 from ai_project_ctl.pipeline.report_gate import ReportGateResult
 from ai_project_ctl.pipeline.runner import run_next
@@ -887,6 +891,123 @@ def pipeline_bookkeeping_snapshot(root: Path) -> dict[str, str]:
 
 
 class PipelineRunnerTests(unittest.TestCase):
+    def test_effective_batch_max_steps_uses_phase_count_and_task_limit(self):
+        phase_count = len(runner_module.RUN_NEXT_PHASE_SEQUENCE)
+        one_task_steps = effective_batch_max_steps(
+            5,
+            max_tasks=1,
+            phase_count=phase_count,
+        )
+        three_task_steps = effective_batch_max_steps(
+            5,
+            max_tasks=3,
+            phase_count=phase_count,
+        )
+
+        self.assertEqual(one_task_steps, phase_count + 1)
+        self.assertEqual(three_task_steps, (3 * phase_count) + 1)
+        self.assertGreater(three_task_steps, one_task_steps)
+
+    def test_web_batch_effective_policy_preserves_higher_configured_limit(self):
+        phase_count = len(runner_module.RUN_NEXT_PHASE_SEQUENCE)
+        policy = replace(
+            policy_preset("supervised"),
+            batch=BatchPolicy(max_steps=30, max_failures=1),
+        )
+
+        effective, details = with_effective_batch_max_steps(
+            policy,
+            max_tasks=2,
+            phase_count=phase_count,
+        )
+
+        self.assertIs(effective, policy)
+        self.assertEqual(effective.batch.max_steps, 30)
+        self.assertEqual(details["configured_max_steps"], 30)
+        self.assertEqual(details["effective_max_steps"], 30)
+        self.assertFalse(details["raised"])
+
+    def test_web_batch_effective_max_steps_continues_after_successful_close(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_multi_task_project_state(root, task_count=2)
+            _write_task_status(root, "done")
+            base_policy = policy_preset("supervised_autoclose")
+            effective_policy, details = with_effective_batch_max_steps(
+                base_policy,
+                max_tasks=2,
+                phase_count=len(runner_module.RUN_NEXT_PHASE_SEQUENCE),
+            )
+            session = create_session(
+                root=root,
+                actor="tester",
+                policy=effective_policy,
+                task_refs=("APP-01", "APP-02"),
+                max_tasks=2,
+                auto_close_note="Owner approved auto-close for this test session.",
+            )
+            session_id = session.data["session_id"]
+            close_status = {
+                "outcome": "done_without_local_commit",
+                "task_closed": True,
+                "task_status": "done",
+                "owner_next_action": "Continue with the selected queue.",
+            }
+            phase_artifacts = {
+                "session_id": session_id,
+                "task_id": "TASK-001",
+                "task_ref": "APP-01",
+                "report_id": "RPT-001",
+            }
+            for phase_name in runner_module.RUN_NEXT_PHASE_SEQUENCE:
+                artifacts = dict(phase_artifacts)
+                if phase_name == "queue_preview":
+                    artifacts["next_task"] = {
+                        "id": "TASK-001",
+                        "ref": "APP-01",
+                    }
+                if phase_name == "close":
+                    artifacts["close_status"] = close_status
+                recorded = record_phase_result(
+                    session_id,
+                    PhaseResult.passed(
+                        phase_name,
+                        reason="{} completed for max step regression.".format(
+                            phase_name
+                        ),
+                        next_action="Continue pipeline.",
+                        artifacts=artifacts,
+                    ),
+                    root=root,
+                    actor="tester",
+                    task_id="TASK-001",
+                    command="pipeline.phase.{}".format(phase_name),
+                )
+                self.assertTrue(recorded.ok)
+
+            result = run_until_blocker(
+                session_id,
+                root=root,
+                actor="tester",
+                confirmed=True,
+            )
+            latest = load_pipeline(root)["sessions"][0]
+            phases_after_close = [
+                entry["phase"]
+                for entry in latest["phase_history"][
+                    len(runner_module.RUN_NEXT_PHASE_SEQUENCE) :
+                ]
+            ]
+
+        self.assertTrue(result.ok)
+        self.assertNotEqual(result.data["stop_code"], "MAX_STEPS_REACHED")
+        self.assertEqual(
+            result.data["limits"]["max_steps"],
+            details["effective_max_steps"],
+        )
+        self.assertIn("queue_preview", phases_after_close)
+        self.assertIn("prepare", phases_after_close)
+
     def test_run_next_dispatch_result_exposes_close_commit_blocked_status(self):
         close_status = {
             "outcome": "done_but_commit_blocked",

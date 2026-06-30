@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1932`
+Revision: `1937`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4661,7 +4661,7 @@ Acceptance criteria:
 
 ### PIPEF-162 (TASK-267) — Auto-size Web batch max steps
 
-Status: `planned`
+Status: `done`
 Priority: `2`
 Verification: `strict`
 Identity: uid `tsk_a45e9597f0ee`, legacy `TASK-267`, aliases `TASK-267`, local `PIPEF` / `162`

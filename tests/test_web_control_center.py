@@ -21,6 +21,7 @@ from ai_project_ctl.pipeline.policy_store import (
     pipeline_policy_store_path,
     save_policy_preset,
 )
+from ai_project_ctl.pipeline.runner import RUN_NEXT_PHASE_SEQUENCE
 from ai_project_ctl.ui_settings import (
     ALLOW_REPORT_WARNINGS_SETTING,
     ALLOW_RELAXED_GIT_DIFF_VERIFICATION_SETTING,
@@ -5411,8 +5412,13 @@ class WebControlCenterTests(unittest.TestCase):
         preflight.assert_called_once_with(root=resolved_root)
         create.assert_called_once()
         create_kwargs = create.call_args.kwargs
+        effective_policy = create_kwargs["policy"]
+        expected_max_steps = (2 * len(RUN_NEXT_PHASE_SEQUENCE)) + 1
         self.assertEqual(create_kwargs["actor"], "tester")
-        self.assertEqual(create_kwargs["policy_name"], selected_policy.name)
+        self.assertEqual(create_kwargs["policy_name"], effective_policy.name)
+        self.assertEqual(effective_policy.name, selected_policy.name)
+        self.assertEqual(effective_policy.batch.max_steps, expected_max_steps)
+        self.assertEqual(selected_policy.batch.max_steps, 5)
         self.assertEqual(create_kwargs["auto_close_note"], note)
         self.assertNotIn("task_refs", create_kwargs)
         self.assertNotIn("max_tasks", create_kwargs)
@@ -5451,6 +5457,17 @@ class WebControlCenterTests(unittest.TestCase):
         self.assertEqual(data["policy"], selected_policy.name)
         self.assertEqual(data["selected_policy"], selected_policy.name)
         self.assertEqual(data["selected_queue"]["max_tasks"], 2)
+        self.assertEqual(
+            data["effective_batch_max_steps"],
+            {
+                "configured_max_steps": 5,
+                "effective_max_steps": expected_max_steps,
+                "max_tasks": 2,
+                "phase_count": len(RUN_NEXT_PHASE_SEQUENCE),
+                "reserve_steps": 1,
+                "raised": True,
+            },
+        )
         self.assertEqual(
             data["requested_queue_inputs"],
             {

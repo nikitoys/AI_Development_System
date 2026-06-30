@@ -323,6 +323,61 @@ class BatchPolicy:
         )
 
 
+BATCH_MAX_STEPS_FINAL_CLOSE_RESERVE = 1
+
+
+def effective_batch_max_steps(
+    configured_max_steps: int,
+    *,
+    max_tasks: int,
+    phase_count: int,
+    reserve_steps: int = BATCH_MAX_STEPS_FINAL_CLOSE_RESERVE,
+) -> int:
+    """Return the Web batch step budget needed for full task phase cycles."""
+
+    configured = max(1, int(configured_max_steps))
+    task_limit = max(1, int(max_tasks))
+    phases_per_task = max(1, int(phase_count))
+    reserve = max(0, int(reserve_steps))
+    required = (task_limit * phases_per_task) + reserve
+    return max(configured, required)
+
+
+def with_effective_batch_max_steps(
+    policy: "PipelinePolicy",
+    *,
+    max_tasks: int,
+    phase_count: int,
+    reserve_steps: int = BATCH_MAX_STEPS_FINAL_CLOSE_RESERVE,
+) -> tuple["PipelinePolicy", dict[str, Any]]:
+    """Return a policy snapshot with batch.max_steps raised when needed."""
+
+    original_max_steps = int(policy.batch.max_steps)
+    effective_max_steps = effective_batch_max_steps(
+        original_max_steps,
+        max_tasks=max_tasks,
+        phase_count=phase_count,
+        reserve_steps=reserve_steps,
+    )
+    details = {
+        "configured_max_steps": original_max_steps,
+        "effective_max_steps": effective_max_steps,
+        "max_tasks": max(1, int(max_tasks)),
+        "phase_count": max(1, int(phase_count)),
+        "reserve_steps": max(0, int(reserve_steps)),
+        "raised": effective_max_steps != original_max_steps,
+    }
+    if effective_max_steps == original_max_steps:
+        return policy, details
+    return (
+        replace(
+            policy,
+            batch=replace(policy.batch, max_steps=effective_max_steps),
+        ),
+        details,
+    )
+
+
 @dataclass(frozen=True)
 class TaskClosurePolicy:
     auto_close_task: bool = False

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 160,
+  "revision": 162,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-30T22:01:22Z",
+  "updated_at": "2026-06-30T22:19:34Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -11333,6 +11333,149 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-161",
+      "task_id": "TASK-267",
+      "task_ref": "PIPEF-162",
+      "submitted_at": "2026-06-30T22:19:34Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:5b7d0a4bfab13e0a5bc47a10af9ea2865303e4aaf04c74cd9d863871d5590a99",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-267",
+        "task_ref": "PIPEF-162",
+        "reported_task_id": "TASK-267",
+        "reported_task_ref": "PIPEF-162",
+        "implementation_summary": "Added effective Web batch max_steps calculation from max_tasks and RUN_NEXT_PHASE_SEQUENCE length with a one-step close reserve, applied it only to ui.run_task_batch policy snapshots, and exposed diagnostics in the action result.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 640.045178,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 640.045178,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree had pre-existing modified AI_PROJECT state/events/generated files before this task; they were not edited."
+        ],
+        "blockers": [],
+        "notes": [
+          "Selected-task and direct pipeline max_steps behavior remains unchanged.",
+          "Full affected unittest modules passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1022,
+          "remaining_tokens": 30978,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-162",
+      "task_id": "TASK-267",
+      "task_ref": "PIPEF-162",
+      "submitted_at": "2026-06-30T22:19:34Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-161",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-267",
+        "task_ref": "PIPEF-162",
+        "reported_task_id": "TASK-267",
+        "reported_task_ref": "PIPEF-162",
+        "implementation_summary": "Added effective Web batch max_steps calculation from max_tasks and RUN_NEXT_PHASE_SEQUENCE length with a one-step close reserve, applied it only to ui.run_task_batch policy snapshots, and exposed diagnostics in the action result.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/policy.py",
+          "ai_project_ctl/web/actions.py",
+          "tests/test_pipeline_runner.py",
+          "tests/test_web_control_center.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 640.045178,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 640.045178,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The worktree had pre-existing modified AI_PROJECT state/events/generated files before this task; they were not edited."
+        ],
+        "blockers": [],
+        "notes": [
+          "Selected-task and direct pipeline max_steps behavior remains unchanged.",
+          "Full affected unittest modules passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 1022,
+          "remaining_tokens": 30978,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -11461,6 +11604,7 @@
     "TASK-280": "RPT-154",
     "TASK-281": "RPT-156",
     "TASK-282": "RPT-158",
-    "TASK-283": "RPT-160"
+    "TASK-283": "RPT-160",
+    "TASK-267": "RPT-162"
   }
 }
