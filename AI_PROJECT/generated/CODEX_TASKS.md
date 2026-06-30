@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1905`
+Revision: `1910`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4894,7 +4894,7 @@ Acceptance criteria:
 
 ### PIPEF-175 (TASK-280) — Accept confirmed recovery report chain
 
-Status: `ready`
+Status: `done`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_ef38939d15f7`, legacy `TASK-280`, aliases `TASK-280`, local `PIPEF` / `175`

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "revision": 619,
+  "revision": 621,
   "status": "blocked",
   "code": "CODEX_NO_PROMPT_PACKAGE",
   "source_type": "",
@@ -12,6 +12,6 @@
   "blocked_reason": "No executable Codex prompt package is currently selected.",
   "details": [],
   "created_at": "2026-06-16T15:22:41Z",
-  "updated_at": "2026-06-30T20:11:16Z",
-  "cleared_at": "2026-06-30T20:11:16Z"
+  "updated_at": "2026-06-30T20:30:10Z",
+  "cleared_at": "2026-06-30T20:30:10Z"
 }

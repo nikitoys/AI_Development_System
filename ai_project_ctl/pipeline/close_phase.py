@@ -1424,7 +1424,12 @@ def _preflight_evidence(
                 )
             )
 
-    report_consistency = _report_consistency(statuses)
+    report_consistency = _report_consistency(
+        statuses,
+        phases=phases,
+        session=session,
+        task_id=task_id,
+    )
     missing.extend(report_consistency["missing_gates"])
     missing_gate_summary = _missing_gate_summary(missing)
 
@@ -1761,6 +1766,10 @@ def _review_skip_matches_policy(artifacts: Mapping[str, Any]) -> bool:
 
 def _report_consistency(
     statuses: Mapping[str, Mapping[str, Any]],
+    *,
+    phases: Mapping[str, Mapping[str, Any] | None],
+    session: Mapping[str, Any],
+    task_id: str,
 ) -> dict[str, Any]:
     observed = {
         name: str(summary.get("report_id") or "")
@@ -1772,7 +1781,7 @@ def _report_consistency(
         for name in REPORT_EVIDENCE_PHASES
         if observed.get(name)
     }
-    report_ids = sorted(set(observed.values()))
+    report_ids = sorted(set(report_phase_ids.values()))
     if len(report_ids) <= 1:
         return {
             "missing_gates": [],
@@ -1783,6 +1792,23 @@ def _report_consistency(
                 "report_phase_ids": report_phase_ids,
             },
         }
+    recovery_replacement = _recovery_report_replacement(
+        phases,
+        report_phase_ids,
+        session=session,
+        task_id=task_id,
+    )
+    if recovery_replacement.get("status") == "accepted":
+        return {
+            "missing_gates": [],
+            "details": {
+                "status": "passed",
+                "report_id": str(recovery_replacement["recovery_report_id"]),
+                "observed_report_ids": observed,
+                "report_phase_ids": report_phase_ids,
+                "recovery_replacement": recovery_replacement,
+            },
+        }
     return {
         "missing_gates": [
             _missing_gate(
@@ -1791,6 +1817,7 @@ def _report_consistency(
                 "Required phases reference different report ids.",
                 observed_report_ids=observed,
                 report_phase_ids=report_phase_ids,
+                recovery_replacement=recovery_replacement,
             )
         ],
         "details": {
@@ -1798,8 +1825,85 @@ def _report_consistency(
             "report_id": "",
             "observed_report_ids": observed,
             "report_phase_ids": report_phase_ids,
+            "recovery_replacement": recovery_replacement,
         },
     }
+
+
+def _recovery_report_replacement(
+    phases: Mapping[str, Mapping[str, Any] | None],
+    report_phase_ids: Mapping[str, str],
+    *,
+    session: Mapping[str, Any],
+    task_id: str,
+) -> dict[str, Any]:
+    collect_artifacts = _mapping(
+        _mapping(phases.get("collect_report")).get("artifacts")
+    )
+    recovery = _mapping(collect_artifacts.get("recovery"))
+    if not recovery:
+        return {"status": "missing", "reason": "collect_report_recovery_missing"}
+
+    expected_session_id = str(session.get("id") or "").strip()
+    recovery_session_id = str(recovery.get("session_id") or "").strip()
+    recovery_task_id = str(recovery.get("task_id") or "").strip()
+    recovery_basis = str(recovery.get("recovery_basis") or "").strip()
+    recovery_report_id = str(recovery.get("recovery_report_id") or "").strip()
+    replaced_execute_report_id = str(
+        recovery.get("replaced_execute_report_id") or ""
+    ).strip()
+    expected_phase_ids = {
+        "execute": replaced_execute_report_id,
+        "collect_report": recovery_report_id,
+        "verify": recovery_report_id,
+        REVIEW_PHASE_NAME: recovery_report_id,
+    }
+    details: dict[str, Any] = {
+        "status": "invalid",
+        "session_id": recovery_session_id,
+        "task_id": recovery_task_id,
+        "owner_confirmed": recovery.get("owner_confirmed"),
+        "recovery_basis": recovery_basis,
+        "recovery_report_id": recovery_report_id,
+        "replaced_execute_report_id": replaced_execute_report_id,
+        "expected_phase_ids": expected_phase_ids,
+    }
+    problems = []
+    if not expected_session_id or recovery_session_id != expected_session_id:
+        problems.append("session_id_mismatch")
+    if recovery_task_id != task_id:
+        problems.append("task_id_mismatch")
+    if recovery.get("owner_confirmed") is not True:
+        problems.append("owner_confirmation_missing")
+    if recovery_basis != "recovery_override":
+        problems.append("recovery_basis_mismatch")
+    if not recovery_report_id:
+        problems.append("recovery_report_id_missing")
+    if not replaced_execute_report_id:
+        problems.append("replaced_execute_report_id_missing")
+    if recovery_report_id and recovery_report_id == replaced_execute_report_id:
+        problems.append("replacement_report_id_not_changed")
+
+    phase_mismatches = [
+        {
+            "phase": phase_name,
+            "expected_report_id": expected_report_id,
+            "observed_report_id": str(report_phase_ids.get(phase_name) or ""),
+        }
+        for phase_name, expected_report_id in expected_phase_ids.items()
+        if not expected_report_id
+        or str(report_phase_ids.get(phase_name) or "") != expected_report_id
+    ]
+    if phase_mismatches:
+        problems.append("phase_report_ids_mismatch")
+        details["phase_mismatches"] = phase_mismatches
+
+    if problems:
+        details["problems"] = problems
+        return details
+
+    details["status"] = "accepted"
+    return details
 
 
 def _task_mismatch(

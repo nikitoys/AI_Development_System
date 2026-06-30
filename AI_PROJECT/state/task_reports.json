@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 152,
+  "revision": 154,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-30T20:10:53Z",
+  "updated_at": "2026-06-30T20:29:46Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -10768,6 +10768,147 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-153",
+      "task_id": "TASK-280",
+      "task_ref": "PIPEF-175",
+      "submitted_at": "2026-06-30T20:29:46Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:0a0b6a98986dfe3367235d757282ca1a6e48fbdd45fbd9ba2dfff3b204676e32",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-280",
+        "task_ref": "PIPEF-175",
+        "reported_task_id": "TASK-280",
+        "reported_task_ref": "PIPEF-175",
+        "implementation_summary": "Updated close preflight report consistency to accept a verified owner-confirmed recovery replacement chain for the same session and task, while preserving REPORT_EVIDENCE_MISMATCH for accidental drift and invalid recovery metadata. Added focused close preflight tests for accepted recovery, invalid session/task recovery metadata, accidental mismatch, and disabled-review skip evidence enforcement.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 798.69407,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 798.69407,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "A broader full-file pytest run for tests/test_pipeline_phase_review_close.py failed in two local-commit/context-refresh tests: test_close_local_commit_allows_policy_approved_machine_review_warn and test_close_local_commit_refreshes_context_before_readiness. The focused recovery/preflight subset passed."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed files: ai_project_ctl/pipeline/close_phase.py; tests/test_pipeline_phase_review_close.py.",
+          "Focused close-preflight tests, syntax check, and diff whitespace check passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 965,
+          "remaining_tokens": 31035,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-154",
+      "task_id": "TASK-280",
+      "task_ref": "PIPEF-175",
+      "submitted_at": "2026-06-30T20:29:46Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-153",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-280",
+        "task_ref": "PIPEF-175",
+        "reported_task_id": "TASK-280",
+        "reported_task_ref": "PIPEF-175",
+        "implementation_summary": "Updated close preflight report consistency to accept a verified owner-confirmed recovery replacement chain for the same session and task, while preserving REPORT_EVIDENCE_MISMATCH for accidental drift and invalid recovery metadata. Added focused close preflight tests for accepted recovery, invalid session/task recovery metadata, accidental mismatch, and disabled-review skip evidence enforcement.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/close_phase.py",
+          "tests/test_pipeline_phase_review_close.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 798.69407,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 798.69407,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "A broader full-file pytest run for tests/test_pipeline_phase_review_close.py failed in two local-commit/context-refresh tests: test_close_local_commit_allows_policy_approved_machine_review_warn and test_close_local_commit_refreshes_context_before_readiness. The focused recovery/preflight subset passed."
+        ],
+        "blockers": [],
+        "notes": [
+          "Changed files: ai_project_ctl/pipeline/close_phase.py; tests/test_pipeline_phase_review_close.py.",
+          "Focused close-preflight tests, syntax check, and diff whitespace check passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 965,
+          "remaining_tokens": 31035,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -10892,6 +11033,7 @@
     "TASK-276": "RPT-141",
     "TASK-277": "RPT-148",
     "TASK-278": "RPT-150",
-    "TASK-279": "RPT-152"
+    "TASK-279": "RPT-152",
+    "TASK-280": "RPT-154"
   }
 }

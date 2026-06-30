@@ -3,9 +3,9 @@
 
 # Pipeline Status
 
-Revision: `1211`
+Revision: `1221`
 Current session: `none`
-Sessions: `154`
+Sessions: `155`
 
 ## Sessions
 
@@ -165,6 +165,7 @@ Sessions: `154`
 | `PSESS-152` | `failed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-277` | `close` | `blocked` | CLOSE_PREFLIGHT_INCOMPLETE | Resolve required phase evidence for: close; then rerun pipeline close --confirm. | `execute` | Superseded by manual recovery; follow-up tasks will fix recovery close flow |
 | `PSESS-153` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-278` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Recovered by manual commit after COMMIT_READINESS_FAILED; TASK-278 is done |
 | `PSESS-154` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-279` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Recovered by manual commit after COMMIT_READINESS_FAILED; TASK-279 is done |
+| `PSESS-155` | `completed` | `supervised_executable_autoclose` | `TASK-280` | `close` | `passed` | none | Review the close workflow evidence and select the next task when ready. | `execute` | Close passed without a local commit and selected queue completed. |
 
 ## Phase History
 
@@ -1025,3 +1026,10 @@ Sessions: `154`
 | `PSESS-154` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 2 | 0 | 1 |
 | `PSESS-154` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
 | `PSESS-154` | 7 | `close` | `blocked` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | 0 | 0 | 3 |
+| `PSESS-155` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
+| `PSESS-155` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 6e15df5b1d14cd178eac51d5db0ab2affda5d2eed590349cbc3f9315e7382881). | 0 | 0 | 1 |
+| `PSESS-155` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
+| `PSESS-155` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
+| `PSESS-155` | 5 | `verify` | `passed` | Report gate warning(s) are allowed by policy; git diff, protected-files, and allowed-files gates were skipped by policy. | Run pipeline phase review. | 2 | 0 | 1 |
+| `PSESS-155` | 6 | `review` | `skipped` | Semantic Codex Review skipped by pipeline policy. | Continue only through governed close or commit readiness; Machine Review evidence remains required. | 0 | 0 | 1 |
+| `PSESS-155` | 7 | `close` | `passed` | Close completed: the governed task close workflow marked the task done and linked Evolution Change acceptance was skipped. | Review the close workflow evidence and select the next task when ready. | 0 | 0 | 1 |

@@ -348,6 +348,139 @@ class PipelinePhaseReviewCloseTests(unittest.TestCase):
                 self.assertIn(evidence, phase_result["reason"])
                 self.assertIn(evidence, phase_result["next_action"])
 
+    def test_close_preflight_accepts_owner_confirmed_recovery_replacement(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_temp_project(root)
+            session_id = _create_close_session(root)
+            _record_close_preflight_history(
+                root,
+                session_id,
+                report_ids=_recovery_report_ids(),
+                collect_recovery=_recovery_metadata(session_id),
+            )
+
+            with mock.patch(
+                "ai_project_ctl.pipeline.close_phase._run_close_workflow",
+                return_value=_close_workflow_success_with_warnings(),
+            ), mock.patch(
+                "ai_project_ctl.pipeline.close_phase._accept_linked_changes_after_close",
+                return_value=(_skipped_change_acceptance(), ()),
+            ):
+                close = close_phase(
+                    session_id,
+                    root=root,
+                    actor="tester",
+                    confirmed=True,
+                )
+
+            self.assertTrue(close.ok, close.errors)
+            phase_result = close.data["phase_result"]
+            self.assertEqual(phase_result["status"], "passed")
+            artifacts = phase_result["artifacts"]
+            self.assertTrue(artifacts["preflight_passed"])
+            self.assertEqual(artifacts["missing_gate_codes"], [])
+            self.assertEqual(
+                artifacts["report_consistency"]["report_phase_ids"],
+                _recovery_report_ids(),
+            )
+            self.assertEqual(
+                artifacts["report_consistency"]["recovery_replacement"]["status"],
+                "accepted",
+            )
+            self.assertEqual(
+                artifacts["report_consistency"]["report_id"],
+                "RPT-RECOVERY",
+            )
+
+    def test_close_preflight_blocks_recovery_replacement_for_wrong_session_or_task(self):
+        for field_name, field_value in (
+            ("session_id", "PSESS-999"),
+            ("task_id", "TASK-999"),
+        ):
+            with self.subTest(field_name=field_name):
+                with tempfile.TemporaryDirectory() as tmp:
+                    root = Path(tmp)
+                    _write_temp_project(root)
+                    session_id = _create_close_session(root)
+                    recovery = _recovery_metadata(session_id)
+                    recovery[field_name] = field_value
+                    _record_close_preflight_history(
+                        root,
+                        session_id,
+                        report_ids=_recovery_report_ids(),
+                        collect_recovery=recovery,
+                    )
+
+                    with mock.patch(
+                        "ai_project_ctl.pipeline.close_phase._run_close_workflow",
+                        side_effect=AssertionError(
+                            "invalid recovery must not reach close workflow"
+                        ),
+                    ):
+                        close = close_phase(
+                            session_id,
+                            root=root,
+                            actor="tester",
+                            confirmed=True,
+                        )
+
+                    self.assertTrue(close.ok, close.errors)
+                    phase_result = close.data["phase_result"]
+                    self.assertEqual(phase_result["status"], "blocked")
+                    artifacts = phase_result["artifacts"]
+                    self.assertEqual(
+                        artifacts["missing_gate_codes"],
+                        ["close:REPORT_EVIDENCE_MISMATCH"],
+                    )
+                    replacement = artifacts["report_consistency"][
+                        "recovery_replacement"
+                    ]
+                    self.assertEqual(replacement["status"], "invalid")
+                    expected_problem = "{}_mismatch".format(field_name)
+                    self.assertIn(expected_problem, replacement["problems"])
+
+    def test_close_preflight_recovery_keeps_review_skip_policy_enforced(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_temp_project(root)
+            policy = _codex_review_disabled_policy()
+            session_id = _create_close_session(root, policy=policy)
+            _record_close_preflight_history(
+                root,
+                session_id,
+                report_ids=_recovery_report_ids(),
+                collect_recovery=_recovery_metadata(session_id),
+                review_skipped_by_policy=True,
+                review_skip_policy_valid=False,
+            )
+
+            with mock.patch(
+                "ai_project_ctl.pipeline.close_phase._run_close_workflow",
+                side_effect=AssertionError(
+                    "invalid review skip evidence must not reach close workflow"
+                ),
+            ):
+                close = close_phase(
+                    session_id,
+                    root=root,
+                    actor="tester",
+                    confirmed=True,
+                )
+
+            self.assertTrue(close.ok, close.errors)
+            phase_result = close.data["phase_result"]
+            self.assertEqual(phase_result["status"], "blocked")
+            artifacts = phase_result["artifacts"]
+            self.assertIn(
+                "review:REVIEW_SKIP_POLICY_MISMATCH",
+                artifacts["missing_gate_codes"],
+            )
+            self.assertNotIn(
+                "close:REPORT_EVIDENCE_MISMATCH",
+                artifacts["missing_gate_codes"],
+            )
+
     def test_close_retry_recovers_already_done_task_with_matching_approval(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -1142,36 +1275,99 @@ def _record_close_preflight_history(
     session_id: str,
     *,
     report_ids: dict[str, str] | None = None,
+    collect_recovery: dict[str, object] | None = None,
+    review_skipped_by_policy: bool = False,
+    review_skip_policy_valid: bool = True,
 ) -> None:
     report_id = "RPT-001"
     report_ids = dict(report_ids or {})
     for phase_name in ("prepare", "execute", "collect_report", "verify"):
+        artifacts = {
+            "task_id": TASK_ID,
+            "report_id": report_ids.get(phase_name, report_id),
+        }
+        if phase_name == "collect_report" and collect_recovery is not None:
+            artifacts["recovery"] = dict(collect_recovery)
         _record_phase(
             root,
             session_id,
             PhaseResult.passed(
                 phase_name,
                 reason="{} fixture passed.".format(phase_name),
-                artifacts={
-                    "task_id": TASK_ID,
-                    "report_id": report_ids.get(phase_name, report_id),
-                },
+                artifacts=artifacts,
             ),
         )
+    review_artifacts = {
+        "task_id": TASK_ID,
+        "report_id": report_ids.get("review", report_id),
+        "review_id": "CREV-001",
+        "review_status": "pass",
+        "review_code": "CODEX_REVIEW_APPROVE",
+        "verdict": "APPROVE",
+    }
+    if review_skipped_by_policy:
+        review_artifacts = {
+            "task_id": TASK_ID,
+            "report_id": report_ids.get("review", report_id),
+            "codex_review_required": False,
+            "policy_require_codex_review": (
+                False if review_skip_policy_valid else True
+            ),
+            "skip_reason": "disabled_by_policy",
+            "review_status": "skipped",
+            "review_code": "CODEX_REVIEW_SKIPPED_BY_POLICY",
+            "verdict": "SKIPPED",
+            "review_prompt_built": False,
+            "review_prompt_returned": False,
+        }
+    review_phase = (
+        PhaseResult.skipped(
+            "review",
+            reason="Review fixture skipped by policy.",
+            artifacts=review_artifacts,
+        )
+        if review_skipped_by_policy
+        else PhaseResult.passed(
+            "review",
+            reason="Review fixture approved.",
+            artifacts=review_artifacts,
+        )
+    )
     _record_phase(
         root,
         session_id,
-        PhaseResult.passed(
-            "review",
-            reason="Review fixture approved.",
-            artifacts={
-                "task_id": TASK_ID,
-                "report_id": report_ids.get("review", report_id),
-                "review_id": "CREV-001",
-                "review_status": "pass",
-                "review_code": "CODEX_REVIEW_APPROVE",
-                "verdict": "APPROVE",
-            },
+        review_phase,
+    )
+
+
+def _recovery_report_ids() -> dict[str, str]:
+    return {
+        "execute": "RPT-EXECUTE",
+        "collect_report": "RPT-RECOVERY",
+        "verify": "RPT-RECOVERY",
+        "review": "RPT-RECOVERY",
+    }
+
+
+def _recovery_metadata(session_id: str) -> dict[str, object]:
+    return {
+        "session_id": session_id,
+        "task_id": TASK_ID,
+        "owner_confirmed": True,
+        "recovery_basis": "recovery_override",
+        "recovery_report_id": "RPT-RECOVERY",
+        "replaced_execute_report_id": "RPT-EXECUTE",
+    }
+
+
+def _codex_review_disabled_policy():
+    policy = policy_preset("supervised_executable_autoclose")
+    return replace(
+        policy,
+        review=replace(
+            policy.review,
+            require_codex_review=False,
+            required_codex_decision=type(policy.review.required_codex_decision).NONE,
         ),
     )
 
