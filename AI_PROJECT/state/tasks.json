@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1938,
+  "revision": 1946,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-30T23:03:48Z",
+  "updated_at": "2026-06-30T23:58:03Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -18299,6 +18299,473 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 178
+    },
+    {
+      "id": "TASK-284",
+      "epic_id": "EPIC-009",
+      "title": "Add Commit Plan model",
+      "status": "planned",
+      "summary": "Add a Commit Plan data model that classifies dirty files before local commit readiness is evaluated.",
+      "description": "Create the explicit commit-plan contract that replaces implicit approved-files guessing.",
+      "priority": 1,
+      "order": 179,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create commit plan data structures for file status, category, source, decision, and reason.",
+        "Define categories for task artifacts, session-owned governed side effects, pre-existing dirty files, unknown dirty files, and transient files.",
+        "Add serialization helpers so commit plans can be embedded in phase artifacts and command results.",
+        "Add focused unit tests for model serialization and category decisions."
+      ],
+      "out_of_scope": [
+        "Do not integrate commit planning into local commit execution yet.",
+        "Do not change close phase behavior.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/commit_plan.py",
+        "ai_project_ctl/pipeline/__init__.py",
+        "tests/test_commit_plan.py"
+      ],
+      "acceptance_criteria": [
+        "Commit Plan objects serialize to stable JSON-compatible dictionaries.",
+        "Each dirty file can be represented with path, git status, category, source, decision, and reason.",
+        "The model includes explicit include and block decisions.",
+        "Unit tests cover all supported file categories.",
+        "No existing local commit behavior changes in this task."
+      ],
+      "review_instructions": [
+        "Check that the model is a pure data/classification layer and does not run git commands."
+      ],
+      "notes": [
+        "This task creates the contract used by later local commit tasks."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-30T23:57:57Z",
+      "updated_at": "2026-06-30T23:57:57Z",
+      "uid": "tsk_d0dc7795fb92",
+      "ref": "PIPEF-179",
+      "legacy_id": "TASK-284",
+      "aliases": [
+        "TASK-284"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 179
+    },
+    {
+      "id": "TASK-285",
+      "epic_id": "EPIC-009",
+      "title": "Build Commit Plan from evidence",
+      "status": "planned",
+      "summary": "Build Commit Plans from git status, Codex report file evidence, and pipeline session file evidence.",
+      "description": "Use session baseline and session-owned file evidence as the source of truth for governed project-control side effects.",
+      "priority": 1,
+      "order": 180,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a commit plan builder that reads current git status and classifies every dirty file.",
+        "Include non-governed task artifacts only when declared by the Codex report changed_files or generated_files.",
+        "Include governed AI_PROJECT/state, AI_PROJECT/events, and AI_PROJECT/generated files only when they are session-owned and not pre-existing.",
+        "Block pre-existing dirty files and unknown dirty files with explicit reasons."
+      ],
+      "out_of_scope": [
+        "Do not create git commits in this task.",
+        "Do not change close phase execution.",
+        "Do not loosen safety for files outside the active session."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/commit_plan.py",
+        "ai_project_ctl/pipeline/git_status.py",
+        "tests/test_commit_plan.py"
+      ],
+      "acceptance_criteria": [
+        "A clean baseline plus session-owned governed files produces include decisions for those governed files.",
+        "Codex report changed_files produce include decisions for matching non-governed files.",
+        "Pre-existing dirty files produce block decisions even if they are governed files.",
+        "Dirty files absent from report evidence and session-owned evidence produce block decisions.",
+        "Tests cover mixed include and block plans in one worktree."
+      ],
+      "review_instructions": [
+        "Verify that session-owned evidence is required for governed AI_PROJECT files."
+      ],
+      "notes": [
+        "This task should not add another hard-coded allowlist of generated project-control files."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-30T23:57:58Z",
+      "updated_at": "2026-06-30T23:57:58Z",
+      "uid": "tsk_97771aa90acb",
+      "ref": "PIPEF-180",
+      "legacy_id": "TASK-285",
+      "aliases": [
+        "TASK-285"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 180
+    },
+    {
+      "id": "TASK-286",
+      "epic_id": "EPIC-009",
+      "title": "Use Commit Plan for readiness",
+      "status": "planned",
+      "summary": "Replace local commit approved-file guessing with Commit Plan decisions in commit readiness.",
+      "description": "Commit readiness should become a consumer of Commit Plan rather than maintaining a separate approved-files algorithm.",
+      "priority": 1,
+      "order": 181,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Wire Commit Plan creation into evaluate_commit_readiness.",
+        "Block local commit when Commit Plan has blocked files and expose those files in readiness blockers.",
+        "Pass readiness when all dirty files are included by the Commit Plan and existing gate checks pass.",
+        "Stage only Commit Plan included files when creating the local commit."
+      ],
+      "out_of_scope": [
+        "Do not alter report gate, machine review, or Codex review acceptance rules.",
+        "Do not change task auto-close behavior.",
+        "Do not add broad git add -A behavior to guarded local commit."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/git_commit.py",
+        "ai_project_ctl/pipeline/commit_plan.py",
+        "tests/test_commit_plan.py",
+        "tests/test_pipeline_runner.py"
+      ],
+      "acceptance_criteria": [
+        "COMMIT_UNRELATED_FILES reports concrete Commit Plan blocked files.",
+        "Guarded local commit stages only Commit Plan included files.",
+        "Existing report, machine review, Codex review, task status, and Change acceptance blockers still work.",
+        "Session-owned governed files no longer require a hard-coded pipeline bookkeeping allowlist.",
+        "Unit tests prove readiness pass and readiness block paths."
+      ],
+      "review_instructions": [
+        "Check that safety gates still run before commit plan approval is accepted."
+      ],
+      "notes": [
+        "The old approved_files output may remain as diagnostics, but Commit Plan decisions should be authoritative."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-30T23:57:59Z",
+      "updated_at": "2026-06-30T23:57:59Z",
+      "uid": "tsk_7ccbadb2ba61",
+      "ref": "PIPEF-181",
+      "legacy_id": "TASK-286",
+      "aliases": [
+        "TASK-286"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 181
+    },
+    {
+      "id": "TASK-287",
+      "epic_id": "EPIC-009",
+      "title": "Separate close from commit apply",
+      "status": "planned",
+      "summary": "Separate task close completion from local commit application so successful commits do not mutate tracked state afterward.",
+      "description": "Close should produce a commit-pending state and local commit should be applied without post-commit project-control mutations.",
+      "priority": 1,
+      "order": 182,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Make close phase produce explicit commit-pending or done-without-commit outcome before local commit is applied.",
+        "Ensure successful local commit does not write new tracked pipeline state after git commit.",
+        "Preserve current close preflight, auto-close, context refresh, and linked Change behavior.",
+        "Keep completed-with-local-commit status derivable from git commit trailers or returned command result."
+      ],
+      "out_of_scope": [
+        "Do not change the lifecycle rules for task status transitions.",
+        "Do not remove manual recovery workflows.",
+        "Do not push, merge, reset, restore, clean, or rebase."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/close_phase.py",
+        "ai_project_ctl/pipeline/session.py",
+        "ai_project_ctl/pipeline/git_commit.py",
+        "tests/test_pipeline_runner.py"
+      ],
+      "acceptance_criteria": [
+        "A successful local commit leaves git status clean in tests.",
+        "Close artifacts expose commit pending, committed, blocked, or skipped outcome consistently.",
+        "No tracked state file is mutated after a successful git commit.",
+        "Existing autoclose-without-local-commit behavior remains unchanged.",
+        "Blocked local commit still leaves enough diagnostics for manual recovery."
+      ],
+      "review_instructions": [
+        "Pay special attention to post-commit writes to AI_PROJECT/state and AI_PROJECT/generated."
+      ],
+      "notes": [
+        "Commit hash should be discoverable from git history rather than requiring a post-commit state mutation."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-30T23:58:00Z",
+      "updated_at": "2026-06-30T23:58:00Z",
+      "uid": "tsk_cee38605cc2a",
+      "ref": "PIPEF-182",
+      "legacy_id": "TASK-287",
+      "aliases": [
+        "TASK-287"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 182
+    },
+    {
+      "id": "TASK-288",
+      "epic_id": "EPIC-009",
+      "title": "Expose Commit Plan diagnostics",
+      "status": "planned",
+      "summary": "Expose Commit Plan included and blocked file diagnostics in CLI and Web Control Center results.",
+      "description": "Owners should see why each dirty file is included or blocked instead of only seeing COMMIT_UNRELATED_FILES.",
+      "priority": 1,
+      "order": 183,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add Commit Plan details to local commit readiness artifacts and pipeline close artifacts.",
+        "Expose included_files and blocked_files in JSON CLI output.",
+        "Render Commit Plan diagnostics on pipeline session and action result pages.",
+        "Keep large diagnostic payloads bounded so pages remain readable."
+      ],
+      "out_of_scope": [
+        "Do not change commit safety decisions in this task.",
+        "Do not add destructive git actions to the UI.",
+        "Do not edit protected project-control files manually."
+      ],
+      "allowed_files": [
+        "scripts/aictl.py",
+        "ai_project_ctl/pipeline/git_commit.py",
+        "ai_project_ctl/pipeline/session.py",
+        "ai_project_ctl/web/actions.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "CLI JSON includes Commit Plan status, included files, blocked files, categories, and reasons.",
+        "Web session page shows Commit Plan diagnostics for blocked local commit.",
+        "Web action result does not hide the concrete blocked file list behind a generic warning.",
+        "Diagnostics are bounded or summarized when too large.",
+        "Existing Web Control Center tests continue to pass."
+      ],
+      "review_instructions": [
+        "Verify that diagnostics are owner-readable and not just raw internal JSON."
+      ],
+      "notes": [
+        "The UI should make COMMIT_UNRELATED_FILES actionable."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-30T23:58:00Z",
+      "updated_at": "2026-06-30T23:58:00Z",
+      "uid": "tsk_76d0d3748aa1",
+      "ref": "PIPEF-183",
+      "legacy_id": "TASK-288",
+      "aliases": [
+        "TASK-288"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 183
+    },
+    {
+      "id": "TASK-289",
+      "epic_id": "EPIC-009",
+      "title": "Add commit safety regressions",
+      "status": "planned",
+      "summary": "Add negative regression tests proving Commit Plan still blocks pre-existing and unknown dirty files.",
+      "description": "Safety tests must prove that the new mechanism is not a broad allow-all for dirty worktrees.",
+      "priority": 1,
+      "order": 184,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Add a regression where a dirty file exists before session baseline and local commit is blocked.",
+        "Add a regression where an unknown non-report file appears during the session and local commit is blocked.",
+        "Add a regression where an AI_PROJECT governed file is dirty but not session-owned and local commit is blocked.",
+        "Assert blocked file diagnostics include category, source, and reason."
+      ],
+      "out_of_scope": [
+        "Do not implement new commit behavior in this task.",
+        "Do not weaken existing review gates.",
+        "Do not depend on external services."
+      ],
+      "allowed_files": [
+        "tests/test_commit_plan.py",
+        "tests/test_pipeline_runner.py",
+        "ai_project_ctl/pipeline/commit_plan.py"
+      ],
+      "acceptance_criteria": [
+        "Pre-existing dirty file test blocks local commit.",
+        "Unknown dirty file test blocks local commit.",
+        "Outside-session governed file test blocks local commit.",
+        "Each blocked test asserts concrete Commit Plan diagnostics.",
+        "Tests fail against the old approved-files guessing behavior."
+      ],
+      "review_instructions": [
+        "Confirm the tests protect against accidentally allowing unrelated dirty files."
+      ],
+      "notes": [
+        "These tests define the safety boundary of the new mechanism."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-30T23:58:01Z",
+      "updated_at": "2026-06-30T23:58:01Z",
+      "uid": "tsk_c194fd904cd1",
+      "ref": "PIPEF-184",
+      "legacy_id": "TASK-289",
+      "aliases": [
+        "TASK-289"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 184
+    },
+    {
+      "id": "TASK-290",
+      "epic_id": "EPIC-009",
+      "title": "Add full Web Run commit regression",
+      "status": "planned",
+      "summary": "Add a full Web Run regression that proves local commit succeeds with task files and session-owned project-control side effects.",
+      "description": "Reproduce the PSESS-159 class of failure in tests and prove the Commit Plan mechanism closes it.",
+      "priority": 1,
+      "order": 185,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Create an end-to-end local commit test with a clean baseline and Web Run session.",
+        "Simulate prepare, execute, collect-report, verify, review, close, context refresh, and local commit side effects.",
+        "Assert Commit Plan includes task artifacts and all session-owned governed AI_PROJECT side effects.",
+        "Assert local commit is created and final git status is clean."
+      ],
+      "out_of_scope": [
+        "Do not require network access or real Codex execution.",
+        "Do not test push or merge behavior.",
+        "Do not depend on owner-specific local repository state."
+      ],
+      "allowed_files": [
+        "tests/test_web_run_local_commit_e2e.py",
+        "tests/test_pipeline_runner.py",
+        "tests/test_commit_plan.py"
+      ],
+      "acceptance_criteria": [
+        "The regression fails if session-owned AI_PROJECT files are not included by Commit Plan.",
+        "The regression asserts LOCAL_COMMIT_CREATED.",
+        "The regression asserts no COMMIT_UNRELATED_FILES for session-owned governed files.",
+        "The regression asserts git status is clean after local commit.",
+        "The commit message contains Task, Pipeline-Session, and Commit-Plan trailers."
+      ],
+      "review_instructions": [
+        "Verify the test covers the same class of failure as PSESS-159."
+      ],
+      "notes": [
+        "This is the main proof that the architectural fix works."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-30T23:58:02Z",
+      "updated_at": "2026-06-30T23:58:02Z",
+      "uid": "tsk_c5aa1f50f00a",
+      "ref": "PIPEF-185",
+      "legacy_id": "TASK-290",
+      "aliases": [
+        "TASK-290"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 185
+    },
+    {
+      "id": "TASK-291",
+      "epic_id": "EPIC-009",
+      "title": "Document Commit Plan workflow",
+      "status": "planned",
+      "summary": "Document the Commit Plan local commit workflow, safety categories, and owner verification steps.",
+      "description": "Update project-control docs so future work uses the explicit commit-plan model instead of approved-files guessing.",
+      "priority": 1,
+      "order": 186,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "standard",
+      "scope": [
+        "Document Commit Plan concepts, file categories, include and block decisions.",
+        "Document the expected local commit flow from close to commit apply.",
+        "Add owner verification commands for successful and blocked local commit cases.",
+        "Document why post-commit tracked state mutation is forbidden."
+      ],
+      "out_of_scope": [
+        "Do not change code behavior in this task.",
+        "Do not rewrite unrelated project-control documentation.",
+        "Do not edit generated AI_PROJECT documentation manually."
+      ],
+      "allowed_files": [
+        "ai-system/project-control/pipeline-runner.md",
+        "ai-system/project-control/10-owner-quickstart.md"
+      ],
+      "acceptance_criteria": [
+        "Documentation explains Commit Plan as the source of truth for local commit file decisions.",
+        "Documentation lists the supported file categories and safety decisions.",
+        "Documentation includes commands to verify clean git status and commit trailers.",
+        "Documentation warns that local commit policy remains unsafe without Commit Plan diagnostics.",
+        "Documentation does not instruct owners to edit generated AI_PROJECT files manually."
+      ],
+      "review_instructions": [
+        "Check that docs are operational and owner-facing, not only architectural."
+      ],
+      "notes": [
+        "Run project-control docs render/check commands after documentation changes if available."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-30T23:58:03Z",
+      "updated_at": "2026-06-30T23:58:03Z",
+      "uid": "tsk_6ea6ea2be75a",
+      "ref": "PIPEF-186",
+      "legacy_id": "TASK-291",
+      "aliases": [
+        "TASK-291"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 186
     }
   ]
 }

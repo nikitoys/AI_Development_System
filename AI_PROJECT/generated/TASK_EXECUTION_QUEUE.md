@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1938`
+Revision: `1946`
 
 ## Executable Now
 
@@ -17,6 +17,14 @@ Revision: `1938`
 - `PIPEF-126 (TASK-207)` [planned] `EPIC-009` priority `1` — Show effective policy summary
 - `PIPEF-127 (TASK-208)` [planned] `EPIC-009` priority `1` — Add Web run batch overrides
 - `PIPEF-128 (TASK-209)` [planned] `EPIC-009` priority `1` — Warn on incomplete Web run policy
+- `PIPEF-179 (TASK-284)` [planned] `EPIC-009` priority `1` — Add Commit Plan model
+- `PIPEF-180 (TASK-285)` [planned] `EPIC-009` priority `1` — Build Commit Plan from evidence
+- `PIPEF-181 (TASK-286)` [planned] `EPIC-009` priority `1` — Use Commit Plan for readiness
+- `PIPEF-182 (TASK-287)` [planned] `EPIC-009` priority `1` — Separate close from commit apply
+- `PIPEF-183 (TASK-288)` [planned] `EPIC-009` priority `1` — Expose Commit Plan diagnostics
+- `PIPEF-184 (TASK-289)` [planned] `EPIC-009` priority `1` — Add commit safety regressions
+- `PIPEF-185 (TASK-290)` [planned] `EPIC-009` priority `1` — Add full Web Run commit regression
+- `PIPEF-186 (TASK-291)` [planned] `EPIC-009` priority `1` — Document Commit Plan workflow
 - `PIPEF-163 (TASK-268)` [planned] `EPIC-009` priority `2` — Add Web batch run form
 - `PIPEF-164 (TASK-269)` [planned] `EPIC-009` priority `2` — Render batch run summary
 

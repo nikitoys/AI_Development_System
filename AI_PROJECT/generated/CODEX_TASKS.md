@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1938`
+Revision: `1946`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4959,3 +4959,139 @@ Acceptance criteria:
 - The negative accidental mismatch scenario still blocks with REPORT_EVIDENCE_MISMATCH.
 - The regression verifies skipped-review-by-policy evidence remains valid.
 - The focused recovery close tests pass.
+
+### PIPEF-179 (TASK-284) — Add Commit Plan model
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_d0dc7795fb92`, legacy `TASK-284`, aliases `TASK-284`, local `PIPEF` / `179`
+
+Add a Commit Plan data model that classifies dirty files before local commit readiness is evaluated.
+
+Acceptance criteria:
+
+- Commit Plan objects serialize to stable JSON-compatible dictionaries.
+- Each dirty file can be represented with path, git status, category, source, decision, and reason.
+- The model includes explicit include and block decisions.
+- Unit tests cover all supported file categories.
+- No existing local commit behavior changes in this task.
+
+### PIPEF-180 (TASK-285) — Build Commit Plan from evidence
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_97771aa90acb`, legacy `TASK-285`, aliases `TASK-285`, local `PIPEF` / `180`
+
+Build Commit Plans from git status, Codex report file evidence, and pipeline session file evidence.
+
+Acceptance criteria:
+
+- A clean baseline plus session-owned governed files produces include decisions for those governed files.
+- Codex report changed_files produce include decisions for matching non-governed files.
+- Pre-existing dirty files produce block decisions even if they are governed files.
+- Dirty files absent from report evidence and session-owned evidence produce block decisions.
+- Tests cover mixed include and block plans in one worktree.
+
+### PIPEF-181 (TASK-286) — Use Commit Plan for readiness
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_7ccbadb2ba61`, legacy `TASK-286`, aliases `TASK-286`, local `PIPEF` / `181`
+
+Replace local commit approved-file guessing with Commit Plan decisions in commit readiness.
+
+Acceptance criteria:
+
+- COMMIT_UNRELATED_FILES reports concrete Commit Plan blocked files.
+- Guarded local commit stages only Commit Plan included files.
+- Existing report, machine review, Codex review, task status, and Change acceptance blockers still work.
+- Session-owned governed files no longer require a hard-coded pipeline bookkeeping allowlist.
+- Unit tests prove readiness pass and readiness block paths.
+
+### PIPEF-182 (TASK-287) — Separate close from commit apply
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_cee38605cc2a`, legacy `TASK-287`, aliases `TASK-287`, local `PIPEF` / `182`
+
+Separate task close completion from local commit application so successful commits do not mutate tracked state afterward.
+
+Acceptance criteria:
+
+- A successful local commit leaves git status clean in tests.
+- Close artifacts expose commit pending, committed, blocked, or skipped outcome consistently.
+- No tracked state file is mutated after a successful git commit.
+- Existing autoclose-without-local-commit behavior remains unchanged.
+- Blocked local commit still leaves enough diagnostics for manual recovery.
+
+### PIPEF-183 (TASK-288) — Expose Commit Plan diagnostics
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_76d0d3748aa1`, legacy `TASK-288`, aliases `TASK-288`, local `PIPEF` / `183`
+
+Expose Commit Plan included and blocked file diagnostics in CLI and Web Control Center results.
+
+Acceptance criteria:
+
+- CLI JSON includes Commit Plan status, included files, blocked files, categories, and reasons.
+- Web session page shows Commit Plan diagnostics for blocked local commit.
+- Web action result does not hide the concrete blocked file list behind a generic warning.
+- Diagnostics are bounded or summarized when too large.
+- Existing Web Control Center tests continue to pass.
+
+### PIPEF-184 (TASK-289) — Add commit safety regressions
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_c194fd904cd1`, legacy `TASK-289`, aliases `TASK-289`, local `PIPEF` / `184`
+
+Add negative regression tests proving Commit Plan still blocks pre-existing and unknown dirty files.
+
+Acceptance criteria:
+
+- Pre-existing dirty file test blocks local commit.
+- Unknown dirty file test blocks local commit.
+- Outside-session governed file test blocks local commit.
+- Each blocked test asserts concrete Commit Plan diagnostics.
+- Tests fail against the old approved-files guessing behavior.
+
+### PIPEF-185 (TASK-290) — Add full Web Run commit regression
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_c5aa1f50f00a`, legacy `TASK-290`, aliases `TASK-290`, local `PIPEF` / `185`
+
+Add a full Web Run regression that proves local commit succeeds with task files and session-owned project-control side effects.
+
+Acceptance criteria:
+
+- The regression fails if session-owned AI_PROJECT files are not included by Commit Plan.
+- The regression asserts LOCAL_COMMIT_CREATED.
+- The regression asserts no COMMIT_UNRELATED_FILES for session-owned governed files.
+- The regression asserts git status is clean after local commit.
+- The commit message contains Task, Pipeline-Session, and Commit-Plan trailers.
+
+### PIPEF-186 (TASK-291) — Document Commit Plan workflow
+
+Status: `planned`
+Priority: `1`
+Verification: `standard`
+Identity: uid `tsk_6ea6ea2be75a`, legacy `TASK-291`, aliases `TASK-291`, local `PIPEF` / `186`
+
+Document the Commit Plan local commit workflow, safety categories, and owner verification steps.
+
+Acceptance criteria:
+
+- Documentation explains Commit Plan as the source of truth for local commit file decisions.
+- Documentation lists the supported file categories and safety decisions.
+- Documentation includes commands to verify clean git status and commit trailers.
+- Documentation warns that local commit policy remains unsafe without Commit Plan diagnostics.
+- Documentation does not instruct owners to edit generated AI_PROJECT files manually.
