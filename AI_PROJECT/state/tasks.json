@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1918,
+  "revision": 1919,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-30T21:18:20Z",
+  "updated_at": "2026-06-30T21:18:29Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -18191,7 +18191,7 @@
       "id": "TASK-282",
       "epic_id": "EPIC-009",
       "title": "Update pipeline runner expectations",
-      "status": "planned",
+      "status": "ready",
       "summary": "Bring tests/test_pipeline_runner.py in line with the current run-next phase-result model so stale expectations do not produce unrelated blocker noise.",
       "description": "The full pipeline runner test file currently contains old stop_code and steps expectations that do not match current phase dispatch behavior.",
       "priority": 1,
@@ -18233,7 +18233,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-30T19:35:32Z",
-      "updated_at": "2026-06-30T19:35:32Z",
+      "updated_at": "2026-06-30T21:18:29Z",
       "uid": "tsk_e01d6f2a50f4",
       "ref": "PIPEF-177",
       "legacy_id": "TASK-282",

@@ -1971,3 +1971,4 @@
 {"event_id":"EVT-F212F4EEEB8A","timestamp":"2026-06-30T20:55:17Z","actor":"human_owner","command":"task.approve","entity_type":"task","entity_id":"TASK-281","revision_before":1915,"revision_after":1916,"payload":{"by":"human_owner","notes":"Approve"}}
 {"event_id":"EVT-636F4F1F673B","timestamp":"2026-06-30T20:55:17Z","actor":"human_owner","command":"task.transition","entity_type":"task","entity_id":"TASK-281","revision_before":1916,"revision_after":1917,"payload":{"to":"done"}}
 {"event_id":"EVT-3DE834F42C73","timestamp":"2026-06-30T21:18:20Z","actor":"human_owner","command":"current.clear","entity_type":"current_task","entity_id":"none","revision_before":1917,"revision_after":1918,"payload":{"previous":null}}
+{"event_id":"EVT-F91930DF0F60","timestamp":"2026-06-30T21:18:29Z","actor":"human_owner","command":"task.transition","entity_type":"task","entity_id":"TASK-282","revision_before":1918,"revision_after":1919,"payload":{"to":"ready"}}

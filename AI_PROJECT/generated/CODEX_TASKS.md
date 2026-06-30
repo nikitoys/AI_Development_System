@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1918`
+Revision: `1919`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4928,7 +4928,7 @@ Acceptance criteria:
 
 ### PIPEF-177 (TASK-282) — Update pipeline runner expectations
 
-Status: `planned`
+Status: `ready`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_e01d6f2a50f4`, legacy `TASK-282`, aliases `TASK-282`, local `PIPEF` / `177`
