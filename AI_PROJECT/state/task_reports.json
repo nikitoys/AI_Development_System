@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 154,
+  "revision": 156,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-30T20:29:46Z",
+  "updated_at": "2026-06-30T20:54:53Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -10909,6 +10909,148 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-155",
+      "task_id": "TASK-281",
+      "task_ref": "PIPEF-176",
+      "submitted_at": "2026-06-30T20:54:53Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:025c44564ea1f71b0946e177dc2fd705f5d2693e597f71efa06f8cb7ee5ce46a",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-281",
+        "task_ref": "PIPEF-176",
+        "reported_task_id": "TASK-281",
+        "reported_task_ref": "PIPEF-176",
+        "implementation_summary": "Added an owner-confirmed report-gate recovery command that submits a valid replacement report with estimated token usage, explicit owner recovery evidence, ambiguity checks, and aictl next actions.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 838.225666,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 838.225666,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "A broader adjacent tests.test_aictl run failed in an unrelated pipeline run-next expectation: expected BLOCKED, got NO_EXECUTABLE_TASK."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused report recovery, report phase, report gate, compile, help, and whitespace checks passed.",
+          "Existing protected AI_PROJECT worktree changes were left untouched."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 951,
+          "remaining_tokens": 31049,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-156",
+      "task_id": "TASK-281",
+      "task_ref": "PIPEF-176",
+      "submitted_at": "2026-06-30T20:54:53Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-155",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-281",
+        "task_ref": "PIPEF-176",
+        "reported_task_id": "TASK-281",
+        "reported_task_ref": "PIPEF-176",
+        "implementation_summary": "Added an owner-confirmed report-gate recovery command that submits a valid replacement report with estimated token usage, explicit owner recovery evidence, ambiguity checks, and aictl next actions.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/report_recovery.py",
+          "scripts/aictl.py",
+          "tests/test_pipeline_report_recovery.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 838.225666,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 838.225666,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "A broader adjacent tests.test_aictl run failed in an unrelated pipeline run-next expectation: expected BLOCKED, got NO_EXECUTABLE_TASK."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused report recovery, report phase, report gate, compile, help, and whitespace checks passed.",
+          "Existing protected AI_PROJECT worktree changes were left untouched."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 951,
+          "remaining_tokens": 31049,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -11034,6 +11176,7 @@
     "TASK-277": "RPT-148",
     "TASK-278": "RPT-150",
     "TASK-279": "RPT-152",
-    "TASK-280": "RPT-154"
+    "TASK-280": "RPT-154",
+    "TASK-281": "RPT-156"
   }
 }

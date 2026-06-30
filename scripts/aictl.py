@@ -78,6 +78,10 @@ from ai_project_ctl.pipeline.execute_phase import execute_phase  # noqa: E402
 from ai_project_ctl.pipeline.prepare_phase import prepare_phase  # noqa: E402
 from ai_project_ctl.pipeline.queue_phase import preview_queue_phase  # noqa: E402
 from ai_project_ctl.pipeline.report_phase import collect_report_phase  # noqa: E402
+from ai_project_ctl.pipeline.report_recovery import (  # noqa: E402
+    ReportRecoveryError,
+    submit_report_gate_recovery_report,
+)
 from ai_project_ctl.pipeline.report_template import build_report_template  # noqa: E402
 from ai_project_ctl.pipeline.review_phase import review_phase  # noqa: E402
 from ai_project_ctl.pipeline.phase import pipeline_ci_exit_code  # noqa: E402
@@ -1060,6 +1064,12 @@ def _emit_command_result(result: CommandResult, args: argparse.Namespace) -> int
         print("Session: {}".format(result.data["session_id"]))
     for error in result.errors:
         print("ERROR: {}: {}".format(error.code, error.message), file=sys.stderr)
+    if result.owner_action_required:
+        print("Owner action required: {}".format(result.owner_action_required))
+    if result.next_actions:
+        print("Next actions:")
+        for action in result.next_actions:
+            print("  - {}".format(action))
     return _command_exit_code(result, args)
 
 
@@ -1512,6 +1522,31 @@ def cmd_pipeline_report_template(args: argparse.Namespace) -> int:
     template = build_report_template(args.task or "", root=args.root)
     print(json.dumps(template, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
+
+
+def cmd_pipeline_report_recover(args: argparse.Namespace) -> int:
+    try:
+        result = submit_report_gate_recovery_report(
+            args.session_id,
+            root=args.root,
+            actor=args.actor,
+            expected_task_id=args.expected_task_id or "",
+            expected_task_ref=args.expected_task_ref or "",
+            recovery_reason=args.reason or "",
+            warning_texts=_tuple_or_empty(args.warning),
+            owner_confirmed=args.confirm,
+        )
+    except ReportRecoveryError as exc:
+        raise FacadeError(
+            "PIPELINE_REPORT_RECOVERY_FAILED",
+            str(exc),
+            details={
+                "session_id": args.session_id,
+                "expected_task_id": args.expected_task_id or "",
+                "expected_task_ref": args.expected_task_ref or "",
+            },
+        ) from exc
+    return _emit_command_result(result, args)
 
 
 def cmd_pipeline_policy_list(args: argparse.Namespace) -> int:
@@ -2563,6 +2598,33 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(
         func=cmd_pipeline_report_template,
         facade_command="pipeline.report.template",
+    )
+
+    p = report_sub.add_parser(
+        "recover",
+        help="Submit an owner-confirmed recovery report for a report-gate blocker",
+    )
+    p.add_argument("session_id")
+    p.add_argument("--expected-task-id", required=True)
+    p.add_argument("--expected-task-ref", required=True)
+    p.add_argument(
+        "--reason",
+        required=True,
+        help="Owner-provided recovery reason recorded in the replacement report",
+    )
+    p.add_argument(
+        "--warning",
+        action="append",
+        help="Owner-confirmed nonblocking warning text; repeat for multiple warnings",
+    )
+    p.add_argument(
+        "--confirm",
+        action="store_true",
+        help="Confirm the owner reviewed the blocked report-gate evidence",
+    )
+    p.set_defaults(
+        func=cmd_pipeline_report_recover,
+        facade_command="pipeline.report.recover",
     )
 
     p = pipeline_sub.add_parser(

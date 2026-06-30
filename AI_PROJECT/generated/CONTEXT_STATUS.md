@@ -1,15 +1,15 @@
 <!-- GENERATED FILE. DO NOT EDIT MANUALLY. -->
 <!-- Source: AI_PROJECT/generated/CONTEXT_PACK.md -->
-<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-280 Accept confirmed recovery report chain Allow close preflight to accept a verified owner-confirmed recovery report chain that intentionally replaces the original execute report for the same task. Close should still block accidental report drift, but should allow explicit recovery metadata produced by collect-report recovery override. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Update close report consistency logic to recognize explicit recovery report replacement metadata. Allow execute to reference the original report while collect_report, verify, and review reference the recovery report only when recovery metadata is valid. Keep accidental report-id drift blocked with REPORT_EVIDENCE_MISMATCH. Add focused close preflight tests for accepted recovery and rejected accidental mismatch. Do not add a report recovery command in this task. Do not relax task identity checks or review-policy checks. Do not edit protected project-control files manually. ai_project_ctl/pipeline/close_phase.py tests/test_pipeline_phase_review_close.py Close preflight passes when collect_report records owner-confirmed recovery metadata replacing the execute report for the same task. Close preflight still blocks when report ids differ without valid recovery metadata. Close preflight still blocks when recovery metadata references a different session or task. Close preflight still enforces review skipped-by-policy evidence when Codex Review is disabled. Focused close recovery tests pass. Verify that only explicit owner-confirmed recovery paths are accepted.","schema_version":1,"task_id":"TASK-280"} -->
+<!-- Context: {"explicit_query":false,"filters":{"include_archived":false,"include_deprecated":false,"include_examples":false,"include_generated":false,"include_inactive":false,"include_templates":false},"limit":8,"mode":"task","query":"TASK-281 Add governed report recovery command Provide a governed CLI recovery command that creates a valid owner-confirmed recovery report without requiring manual JSON editing. The command should support report-gate blocker recovery for the current session and produce report fields that pass schema and token-usage validation. AI_PROJECT/generated/CODEX_CURRENT.md Task completed according to acceptance criteria Extend report recovery support beyond REPORT_MISSING to owner-confirmed report-gate blocker triage. Generate required token_usage fields automatically using an explicit estimated strategy. Allow owner-provided recovery reason and nonblocking warning text without silently hiding task-scope blockers. Expose the recovery command through scripts/aictl.py with clear next actions. Do not automatically mark failed in-scope checks as warnings without explicit owner recovery input. Do not change report gate validation rules. Do not edit protected project-control files manually. ai_project_ctl/pipeline/report_recovery.py scripts/aictl.py tests/test_pipeline_report_recovery.py A blocked report-gate session can produce an owner-confirmed recovery report through CLI without hand-written JSON. The generated recovery report includes required token_usage fields and passes report schema validation. The command records enough evidence for collect-report to identify the recovery report. The command refuses recovery when the selected session or task identity is ambiguous. Focused report recovery tests pass. Confirm that the command requires explicit owner intent and does not mask real task blockers.","schema_version":1,"task_id":"TASK-281"} -->
 
 # Context Status
 
 Context pack exists: `true`
 Mode: `task`
-Task ID: `TASK-280`
+Task ID: `TASK-281`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1912`
+Tasks revision: `1917`
 Indexed source documents: `10`
 Indexed chunks: `891`
 Selected chunks: `8`
@@ -19,7 +19,6 @@ Excluded registered sources: `135`
 
 - ai-system/project-control/04-command-catalog.md
 - ai-system/project-control/06-prompt-package-spec.md
-- ai-system/project-control/07-validation-and-tests.md
 - ai-system/skills/README.md
 
 ## Exclusion Reasons
