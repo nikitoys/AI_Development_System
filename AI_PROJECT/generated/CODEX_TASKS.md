@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1925`
+Revision: `1926`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4945,7 +4945,7 @@ Acceptance criteria:
 
 ### PIPEF-178 (TASK-283) — Add recovery close regression
 
-Status: `planned`
+Status: `ready`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_197d49c7601a`, legacy `TASK-283`, aliases `TASK-283`, local `PIPEF` / `178`

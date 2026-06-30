@@ -1978,3 +1978,4 @@
 {"event_id":"EVT-620B69AAB6F5","timestamp":"2026-06-30T21:36:37Z","actor":"human_owner","command":"task.approve","entity_type":"task","entity_id":"TASK-282","revision_before":1922,"revision_after":1923,"payload":{"by":"human_owner","notes":"Approve"}}
 {"event_id":"EVT-9FFF276875BE","timestamp":"2026-06-30T21:36:38Z","actor":"human_owner","command":"task.transition","entity_type":"task","entity_id":"TASK-282","revision_before":1923,"revision_after":1924,"payload":{"to":"done"}}
 {"event_id":"EVT-C0F558415F5D","timestamp":"2026-06-30T21:46:53Z","actor":"human_owner","command":"current.clear","entity_type":"current_task","entity_id":"none","revision_before":1924,"revision_after":1925,"payload":{"previous":null}}
+{"event_id":"EVT-9B945A4252B5","timestamp":"2026-06-30T21:46:58Z","actor":"human_owner","command":"task.transition","entity_type":"task","entity_id":"TASK-283","revision_before":1925,"revision_after":1926,"payload":{"to":"ready"}}
