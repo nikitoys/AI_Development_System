@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `1199`
-State revision: `1199`
-Current session: `PSESS-153`
+Events: `1200`
+State revision: `1200`
+Current session: `none`
 
 ## Timeline
 
@@ -1210,6 +1210,7 @@ Current session: `PSESS-153`
 | `2026-06-30T19:52:38Z` | `step.result` | `pipeline.phase.review` | `PSESS-153` | `` | `` | reports=RPT-150 |
 | `2026-06-30T19:52:53Z` | `step.result` | `pipeline.phase.close` | `PSESS-153` | `` | `` | reports=RPT-150 |
 | `2026-06-30T19:53:00Z` | `step.result` | `pipeline.phase.close` | `PSESS-153` | `` | `` | reports=RPT-150 |
+| `2026-06-30T20:01:41Z` | `completion` | `pipeline.session.complete` | `PSESS-153` | `` | `` | completed |
 
 ## Event Type Coverage
 
