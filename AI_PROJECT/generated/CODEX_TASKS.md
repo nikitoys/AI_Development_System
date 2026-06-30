@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1877`
+Revision: `1878`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4838,3 +4838,22 @@ Acceptance criteria:
 - The regression fails if AI_PROJECT/state/pipeline_sessions.json remains dirty after the first Web Run.
 - The regression fails if PIPELINE_STATUS.md or PIPELINE_AUDIT.md remain dirty after the first Web Run.
 - The regression verifies the second Web Run starts without WORKTREE_DIRTY or ui.checkpoint_commit guidance.
+
+### PIPEF-172 (TASK-277) — Allow governed close side effects in local commit readiness
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_8163c89f10e7`, legacy `TASK-277`, aliases `TASK-277`, local `PIPEF` / `172`
+
+Update local commit readiness so current-session governed close side effects can be committed without allowing unrelated AI_PROJECT dirty files.
+
+Acceptance criteria:
+
+- Commit readiness passes for a clean-baseline pipeline session that has target task artifact evidence and current-session governed close side effects.
+- Local commit creation stages only approved target artifact files and current-session governed side-effect files.
+- Pre-existing dirty governed files that are not owned by the current session still block with COMMIT_UNRELATED_FILES.
+- Arbitrary AI_PROJECT/** files that are not approved by report, side effects, or current-session evidence still block with COMMIT_UNRELATED_FILES.
+- Commit readiness still blocks governed-only changes when the selected task has no non-governed target artifact evidence.
+- python -m pytest tests/test_pipeline_runner.py -q passes.
+- python -m pytest tests/test_web_run_local_commit_e2e.py -q passes.

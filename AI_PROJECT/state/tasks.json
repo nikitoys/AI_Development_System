@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1877,
+  "revision": 1878,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-30T18:14:09Z",
+  "updated_at": "2026-06-30T18:27:41Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -17890,6 +17890,73 @@
       ],
       "epic_key": "PIPEF",
       "local_seq": 171
+    },
+    {
+      "id": "TASK-277",
+      "epic_id": "EPIC-009",
+      "title": "Allow governed close side effects in local commit readiness",
+      "status": "planned",
+      "summary": "Update local commit readiness so current-session governed close side effects can be committed without allowing unrelated AI_PROJECT dirty files.",
+      "description": "Fix the PSESS-151 class of failures where task gates pass but local commit blocks with COMMIT_UNRELATED_FILES because governed close side effects are not included in approved evidence.",
+      "priority": 1,
+      "order": 172,
+      "active_role": "Codex Executor",
+      "active_stage": "Task Execution",
+      "active_document": "AI_PROJECT/generated/CODEX_CURRENT.md",
+      "expected_result": "Task completed according to acceptance criteria",
+      "verification_mode": "strict",
+      "scope": [
+        "Extend commit readiness approved-file collection to recognize governed side effects owned by the current pipeline session.",
+        "Keep pre-existing dirty governed files and non-session-owned AI_PROJECT files blocked as unrelated.",
+        "Preserve the existing requirement for non-governed target task artifact evidence before committing governed session side effects.",
+        "Add a regression that covers a successful local commit with task artifact changes plus session-owned task/report/codex/context/evolution/pipeline side effects.",
+        "Add or keep a negative regression proving unrelated governed dirty files still fail with COMMIT_UNRELATED_FILES."
+      ],
+      "out_of_scope": [
+        "Do not allow blanket commits of all AI_PROJECT/** paths.",
+        "Do not bypass commit readiness, report gate, machine review, or task done requirements.",
+        "Do not edit protected project-control files manually.",
+        "Do not change behavior unrelated to local commit readiness."
+      ],
+      "allowed_files": [
+        "ai_project_ctl/pipeline/git_commit.py",
+        "ai_project_ctl/pipeline/close_phase.py",
+        "ai_project_ctl/pipeline/session.py",
+        "tests/test_pipeline_runner.py",
+        "tests/test_web_run_local_commit_e2e.py",
+        "tests/test_web_control_center.py"
+      ],
+      "acceptance_criteria": [
+        "Commit readiness passes for a clean-baseline pipeline session that has target task artifact evidence and current-session governed close side effects.",
+        "Local commit creation stages only approved target artifact files and current-session governed side-effect files.",
+        "Pre-existing dirty governed files that are not owned by the current session still block with COMMIT_UNRELATED_FILES.",
+        "Arbitrary AI_PROJECT/** files that are not approved by report, side effects, or current-session evidence still block with COMMIT_UNRELATED_FILES.",
+        "Commit readiness still blocks governed-only changes when the selected task has no non-governed target artifact evidence.",
+        "python -m pytest tests/test_pipeline_runner.py -q passes.",
+        "python -m pytest tests/test_web_run_local_commit_e2e.py -q passes."
+      ],
+      "review_instructions": [
+        "Review that approved governed paths are derived from current-session evidence or explicit side effects, not from a broad AI_PROJECT/** allowlist.",
+        "Check both positive and negative tests for COMMIT_UNRELATED_FILES behavior."
+      ],
+      "notes": [
+        "Observed evidence: PSESS-151 reached close with TASK-273 gates passed, then blocked on COMMIT_READINESS_FAILED / COMMIT_UNRELATED_FILES.",
+        "Current git_commit.py only treats the four pipeline bookkeeping files as session-owned governed files, which misses task, report, codex, context, and evolution close side effects."
+      ],
+      "depends_on": [],
+      "approved_by": "",
+      "approved_at": "",
+      "approval_notes": "",
+      "created_at": "2026-06-30T18:27:41Z",
+      "updated_at": "2026-06-30T18:27:41Z",
+      "uid": "tsk_8163c89f10e7",
+      "ref": "PIPEF-172",
+      "legacy_id": "TASK-277",
+      "aliases": [
+        "TASK-277"
+      ],
+      "epic_key": "PIPEF",
+      "local_seq": 172
     }
   ]
 }
