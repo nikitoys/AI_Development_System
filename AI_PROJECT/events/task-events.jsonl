@@ -1984,3 +1984,4 @@
 {"event_id":"EVT-4F62B556CFD2","timestamp":"2026-06-30T22:01:41Z","actor":"human_owner","command":"task.transition","entity_type":"task","entity_id":"TASK-283","revision_before":1928,"revision_after":1929,"payload":{"to":"in_review"}}
 {"event_id":"EVT-9DAC8A6300C6","timestamp":"2026-06-30T22:01:46Z","actor":"human_owner","command":"task.approve","entity_type":"task","entity_id":"TASK-283","revision_before":1929,"revision_after":1930,"payload":{"by":"human_owner","notes":"Approve"}}
 {"event_id":"EVT-383DD21FF647","timestamp":"2026-06-30T22:01:46Z","actor":"human_owner","command":"task.transition","entity_type":"task","entity_id":"TASK-283","revision_before":1930,"revision_after":1931,"payload":{"to":"done"}}
+{"event_id":"EVT-6F64477D95F7","timestamp":"2026-06-30T22:07:02Z","actor":"human_owner","command":"current.clear","entity_type":"current_task","entity_id":"none","revision_before":1931,"revision_after":1932,"payload":{"previous":null}}
