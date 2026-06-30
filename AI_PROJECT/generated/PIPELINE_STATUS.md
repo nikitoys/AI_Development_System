@@ -3,7 +3,7 @@
 
 # Pipeline Status
 
-Revision: `1188`
+Revision: `1189`
 Current session: `PSESS-152`
 Sessions: `152`
 
@@ -19,7 +19,7 @@ Sessions: `152`
 - Next action: `Resolve required phase evidence for: close; then rerun pipeline close --confirm.`
 - Current step: `execute`
 - Step status: `stopped`
-- Stop reason: `Superseded after manual recovery commit; follow-up tasks will fix recovery close flow`
+- Stop reason: `Superseded by manual recovery; follow-up tasks will fix recovery close flow`
 
 ## Sessions
 
@@ -176,7 +176,7 @@ Sessions: `152`
 | `PSESS-149` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-275` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
 | `PSESS-150` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-276` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
 | `PSESS-151` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-273` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Recovered by manual local commit 71daee6 after COMMIT_READINESS_FAILED on governed close side effects |
-| `PSESS-152` | `failed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-277` | `close` | `blocked` | CLOSE_PREFLIGHT_INCOMPLETE | Resolve required phase evidence for: close; then rerun pipeline close --confirm. | `execute` | Superseded after manual recovery commit; follow-up tasks will fix recovery close flow |
+| `PSESS-152` | `failed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-277` | `close` | `blocked` | CLOSE_PREFLIGHT_INCOMPLETE | Resolve required phase evidence for: close; then rerun pipeline close --confirm. | `execute` | Superseded by manual recovery; follow-up tasks will fix recovery close flow |
 
 ## Phase History
 

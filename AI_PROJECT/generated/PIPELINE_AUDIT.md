@@ -3,8 +3,8 @@
 
 # Pipeline Audit
 
-Events: `1188`
-State revision: `1188`
+Events: `1189`
+State revision: `1189`
 Current session: `PSESS-152`
 
 ## Timeline
@@ -1199,6 +1199,7 @@ Current session: `PSESS-152`
 | `2026-06-30T18:57:29Z` | `step.result` | `pipeline.phase.review` | `PSESS-152` | `` | `` | reports=RPT-148 |
 | `2026-06-30T18:57:32Z` | `step.result` | `pipeline.phase.close` | `PSESS-152` | `` | `` | reports=RPT-146,RPT-148 |
 | `2026-06-30T19:36:57Z` | `stop` | `pipeline.session.stop` | `PSESS-152` | `` | `` | failed \| Superseded after manual recovery commit; follow-up tasks will fix recovery close flow |
+| `2026-06-30T19:42:25Z` | `stop` | `pipeline.session.stop` | `PSESS-152` | `` | `` | failed \| Superseded by manual recovery; follow-up tasks will fix recovery close flow |
 
 ## Event Type Coverage
 

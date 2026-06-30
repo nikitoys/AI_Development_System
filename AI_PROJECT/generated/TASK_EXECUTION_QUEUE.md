@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1886`
+Revision: `1890`
 
 ## Executable Now
 
@@ -557,7 +557,7 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-171 (TASK-276)` [done] `EPIC-009` priority `1` — Pass no-checkpoint Web Run regression
   - `status_not_executable`: status is done
-- `PIPEF-172 (TASK-277)` [in_progress] `EPIC-009` priority `1` — Allow governed close side effects in local commit readiness
-  - `status_not_executable`: status is in_progress
+- `PIPEF-172 (TASK-277)` [done] `EPIC-009` priority `1` — Allow governed close side effects in local commit readiness
+  - `status_not_executable`: status is done
 - `PIPEF-155 (TASK-260)` [done] `EPIC-009` priority `2` — Link dirty preflight to checkpoint UX
   - `status_not_executable`: status is done

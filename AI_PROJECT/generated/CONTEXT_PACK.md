@@ -12,7 +12,7 @@ Task ID: `TASK-277`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1886`
+Tasks revision: `1890`
 
 ## Query
 
@@ -23,7 +23,7 @@ TASK-277 Allow governed close side effects in local commit readiness Update loca
 ## Task Boundary Snapshot
 
 Task: `TASK-277` - Allow governed close side effects in local commit readiness
-Status: `in_progress`
+Status: `done`
 
 Scope:
 - Extend commit readiness approved-file collection to recognize governed side effects owned by the current pipeline session.
