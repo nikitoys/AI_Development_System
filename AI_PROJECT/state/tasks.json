@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1890,
+  "revision": 1891,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-30T19:42:39Z",
+  "updated_at": "2026-06-30T19:42:55Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -17962,7 +17962,7 @@
       "id": "TASK-278",
       "epic_id": "EPIC-009",
       "title": "Show close preflight gate details",
-      "status": "planned",
+      "status": "ready",
       "summary": "Make pipeline close failures expose the exact missing gate codes and report-id evidence instead of only the generic CLOSE_PREFLIGHT_INCOMPLETE message.",
       "description": "Improve close preflight diagnostics so owner can immediately see whether the blocker is missing review evidence, task mismatch, report mismatch, or policy mismatch.",
       "priority": 1,
@@ -18005,7 +18005,7 @@
       "approved_at": "",
       "approval_notes": "",
       "created_at": "2026-06-30T19:35:29Z",
-      "updated_at": "2026-06-30T19:35:29Z",
+      "updated_at": "2026-06-30T19:42:55Z",
       "uid": "tsk_246ab52b65d7",
       "ref": "PIPEF-173",
       "legacy_id": "TASK-278",

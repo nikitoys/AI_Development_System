@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1890`
+Revision: `1891`
 Current task: `none`
 
 ## Epic `EPIC-001`
@@ -4860,7 +4860,7 @@ Acceptance criteria:
 
 ### PIPEF-173 (TASK-278) — Show close preflight gate details
 
-Status: `planned`
+Status: `ready`
 Priority: `1`
 Verification: `strict`
 Identity: uid `tsk_246ab52b65d7`, legacy `TASK-278`, aliases `TASK-278`, local `PIPEF` / `173`
