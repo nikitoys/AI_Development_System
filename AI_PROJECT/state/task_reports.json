@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 150,
+  "revision": 152,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-30T19:52:27Z",
+  "updated_at": "2026-06-30T20:10:53Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -10627,6 +10627,147 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-151",
+      "task_id": "TASK-279",
+      "task_ref": "PIPEF-174",
+      "submitted_at": "2026-06-30T20:10:53Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:0a70e3cd9bc4fb8060ba488506fe1b46ff4e14496d52c54c4896975ce1a26cce",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-279",
+        "task_ref": "PIPEF-174",
+        "reported_task_id": "TASK-279",
+        "reported_task_ref": "PIPEF-174",
+        "implementation_summary": "Added additive collect-report recovery metadata for owner-confirmed existing-report recovery overrides and focused tests for normal, stale, and recovery override behavior.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 498.368392,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 498.368392,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The broader prepare/execute/report test file still has one unrelated execute-phase adapter failure outside the touched collect-report path."
+        ],
+        "blockers": [],
+        "notes": [
+          "Normal collect-report artifacts remain unchanged unless a distinct execute-phase report is replaced through the recovery override.",
+          "Focused collect-report verification passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 949,
+          "remaining_tokens": 31051,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-152",
+      "task_id": "TASK-279",
+      "task_ref": "PIPEF-174",
+      "submitted_at": "2026-06-30T20:10:53Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-151",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-279",
+        "task_ref": "PIPEF-174",
+        "reported_task_id": "TASK-279",
+        "reported_task_ref": "PIPEF-174",
+        "implementation_summary": "Added additive collect-report recovery metadata for owner-confirmed existing-report recovery overrides and focused tests for normal, stale, and recovery override behavior.",
+        "changed_files": [
+          "ai_project_ctl/pipeline/report_phase.py",
+          "tests/test_pipeline_report_phase.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 498.368392,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 498.368392,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "The broader prepare/execute/report test file still has one unrelated execute-phase adapter failure outside the touched collect-report path."
+        ],
+        "blockers": [],
+        "notes": [
+          "Normal collect-report artifacts remain unchanged unless a distinct execute-phase report is replaced through the recovery override.",
+          "Focused collect-report verification passed."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 949,
+          "remaining_tokens": 31051,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -10750,6 +10891,7 @@
     "TASK-275": "RPT-140",
     "TASK-276": "RPT-141",
     "TASK-277": "RPT-148",
-    "TASK-278": "RPT-150"
+    "TASK-278": "RPT-150",
+    "TASK-279": "RPT-152"
   }
 }

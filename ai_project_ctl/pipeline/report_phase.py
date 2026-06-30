@@ -172,6 +172,11 @@ def collect_report_phase(
             ),
         )
 
+    recovery = _recovery_metadata(
+        freshness,
+        session_id=selected_session_id,
+        task_id=task_id,
+    )
     phase = PhaseResult.passed(
         PHASE_NAME,
         reason=(
@@ -192,6 +197,7 @@ def collect_report_phase(
             "freshness": freshness,
             "freshness_basis": str(freshness.get("basis") or ""),
             "allow_existing_report": allow_existing_report,
+            **({"recovery": recovery} if recovery else {}),
         },
     )
     return _phase_command(
@@ -401,6 +407,39 @@ def _report_freshness(
             "Report or execute timestamp is not a timezone-aware ISO instant."
         )
     return check
+
+
+def _recovery_metadata(
+    freshness: Mapping[str, Any],
+    *,
+    session_id: str,
+    task_id: str,
+) -> dict[str, Any]:
+    if str(freshness.get("basis") or "") != "recovery_override":
+        return {}
+    if not bool(freshness.get("allow_existing_report")):
+        return {}
+
+    recovery_report_id = str(freshness.get("report_id") or "").strip()
+    replaced_execute_report_id = _first_text(
+        freshness.get("execute_report_id"),
+        freshness.get("execute_after_report_id"),
+    )
+    if (
+        not recovery_report_id
+        or not replaced_execute_report_id
+        or recovery_report_id == replaced_execute_report_id
+    ):
+        return {}
+
+    return {
+        "session_id": session_id,
+        "task_id": task_id,
+        "owner_confirmed": True,
+        "recovery_basis": "recovery_override",
+        "recovery_report_id": recovery_report_id,
+        "replaced_execute_report_id": replaced_execute_report_id,
+    }
 
 
 def _latest_execute_evidence(session: Mapping[str, Any]) -> dict[str, Any]:
