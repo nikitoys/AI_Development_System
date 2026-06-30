@@ -3,7 +3,7 @@
 
 # Project Tasks
 
-Revision: `1880`
+Revision: `1886`
 Current task: `TASK-277`
 
 ## Epic `EPIC-001`
@@ -4857,3 +4857,105 @@ Acceptance criteria:
 - Commit readiness still blocks governed-only changes when the selected task has no non-governed target artifact evidence.
 - python -m pytest tests/test_pipeline_runner.py -q passes.
 - python -m pytest tests/test_web_run_local_commit_e2e.py -q passes.
+
+### PIPEF-173 (TASK-278) — Show close preflight gate details
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_246ab52b65d7`, legacy `TASK-278`, aliases `TASK-278`, local `PIPEF` / `173`
+
+Make pipeline close failures expose the exact missing gate codes and report-id evidence instead of only the generic CLOSE_PREFLIGHT_INCOMPLETE message.
+
+Acceptance criteria:
+
+- A close blocked by missing phase evidence reports the specific missing gate code(s) in a user-visible result path.
+- A close blocked by report id mismatch reports observed report ids for execute, collect_report, verify, and review when available.
+- Existing close preflight pass and fail behavior remains unchanged except for clearer diagnostics.
+- Focused close preflight tests pass.
+- No protected project-control state or generated files are edited manually.
+
+### PIPEF-174 (TASK-279) — Record recovery report binding
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_cfad980fa985`, legacy `TASK-279`, aliases `TASK-279`, local `PIPEF` / `174`
+
+When collect-report uses an owner-confirmed recovery override, record explicit metadata that the recovery report replaces the execute-phase report for the same session and task.
+
+Acceptance criteria:
+
+- collect-report without allow_existing_report keeps the current artifact shape and freshness behavior.
+- collect-report with allow_existing_report records explicit recovery metadata when the latest report differs from execute report evidence.
+- Recovery metadata identifies the old execute report id and the new recovery report id.
+- Recovery metadata is tied to the current session id and task id.
+- Focused collect-report tests pass.
+
+### PIPEF-175 (TASK-280) — Accept confirmed recovery report chain
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_ef38939d15f7`, legacy `TASK-280`, aliases `TASK-280`, local `PIPEF` / `175`
+
+Allow close preflight to accept a verified owner-confirmed recovery report chain that intentionally replaces the original execute report for the same task.
+
+Acceptance criteria:
+
+- Close preflight passes when collect_report records owner-confirmed recovery metadata replacing the execute report for the same task.
+- Close preflight still blocks when report ids differ without valid recovery metadata.
+- Close preflight still blocks when recovery metadata references a different session or task.
+- Close preflight still enforces review skipped-by-policy evidence when Codex Review is disabled.
+- Focused close recovery tests pass.
+
+### PIPEF-176 (TASK-281) — Add governed report recovery command
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_812da6ac51d7`, legacy `TASK-281`, aliases `TASK-281`, local `PIPEF` / `176`
+
+Provide a governed CLI recovery command that creates a valid owner-confirmed recovery report without requiring manual JSON editing.
+
+Acceptance criteria:
+
+- A blocked report-gate session can produce an owner-confirmed recovery report through CLI without hand-written JSON.
+- The generated recovery report includes required token_usage fields and passes report schema validation.
+- The command records enough evidence for collect-report to identify the recovery report.
+- The command refuses recovery when the selected session or task identity is ambiguous.
+- Focused report recovery tests pass.
+
+### PIPEF-177 (TASK-282) — Update pipeline runner expectations
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_e01d6f2a50f4`, legacy `TASK-282`, aliases `TASK-282`, local `PIPEF` / `177`
+
+Bring tests/test_pipeline_runner.py in line with the current run-next phase-result model so stale expectations do not produce unrelated blocker noise.
+
+Acceptance criteria:
+
+- tests/test_pipeline_runner.py no longer fails because of stale run-next stop_code or step-shape expectations.
+- Updated tests assert the current phase_result and phase_status behavior.
+- Tests for real blockers and failures remain meaningful.
+- python -m pytest tests/test_pipeline_runner.py -q passes.
+- No production code files are edited.
+
+### PIPEF-178 (TASK-283) — Add recovery close regression
+
+Status: `planned`
+Priority: `1`
+Verification: `strict`
+Identity: uid `tsk_197d49c7601a`, legacy `TASK-283`, aliases `TASK-283`, local `PIPEF` / `178`
+
+Add an end-to-end regression covering owner recovery report submission followed by collect-report, verify, skipped review, close, and local commit readiness.
+
+Acceptance criteria:
+
+- The regression covers old execute report id plus new owner recovery report id for the same task.
+- The positive recovery scenario reaches close without CLOSE_PREFLIGHT_INCOMPLETE.
+- The negative accidental mismatch scenario still blocks with REPORT_EVIDENCE_MISMATCH.
+- The regression verifies skipped-review-by-policy evidence remains valid.
+- The focused recovery close tests pass.

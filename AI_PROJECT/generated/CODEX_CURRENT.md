@@ -3,7 +3,7 @@
 
 # Current Codex Task
 
-Revision: `1880`
+Revision: `1886`
 
 Task: `PIPEF-172 (TASK-277)` — **Allow governed close side effects in local commit readiness**
 Epic: `EPIC-009`
