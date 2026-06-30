@@ -3,23 +3,23 @@
 
 # Pipeline Status
 
-Revision: `1156`
-Current session: `PSESS-150`
+Revision: `1159`
+Current session: `PSESS-147`
 Sessions: `150`
 
 ## Current Session
 
-- ID: `PSESS-150`
+- ID: `PSESS-147`
 - Status: `blocked`
 - Policy: `supervised_executable_local_commit_1h_auto_change`
-- Current task: `TASK-276`
-- Current phase: `close`
+- Current task: `TASK-273`
+- Current phase: `verify`
 - Phase status: `blocked`
-- Blocked by: `COMMIT_READINESS_FAILED`
-- Next action: `Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit.`
+- Blocked by: `REPORT_CHANGED_AFTER_COLLECT`
+- Next action: `Rerun collect-report, then rerun verify.`
 - Current step: `execute`
-- Step status: `blocked`
-- Stop reason: `Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence.`
+- Step status: `passed`
+- Stop reason: `Latest report gate target differs from the collected report.`
 
 ## Sessions
 
@@ -171,7 +171,7 @@ Sessions: `150`
 | `PSESS-144` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-270` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit 8a594957c6afb823ea168c4c774cf7ae59c7f0ba was created. |
 | `PSESS-145` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-271` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit c2d5503991804320e16cd17e0c8f03d03eecd7b9 was created. |
 | `PSESS-146` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-272` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit 71a24db77532fb0d95e1af8062e7b66bfb03f8cf was created. |
-| `PSESS-147` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-273` | `verify` | `blocked` | CODEX_REPORT_BLOCKERS_PRESENT | Fix the structured report or task output, then rerun verify. | `execute` | Report gate failed: Report contains blocker(s): Making the regression pass requires code changes outside the allowed files for this task. |
+| `PSESS-147` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-273` | `verify` | `blocked` | REPORT_CHANGED_AFTER_COLLECT | Rerun collect-report, then rerun verify. | `execute` | Latest report gate target differs from the collected report. |
 | `PSESS-148` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-274` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
 | `PSESS-149` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-275` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
 | `PSESS-150` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-276` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
@@ -976,6 +976,9 @@ Sessions: `150`
 | `PSESS-147` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |
 | `PSESS-147` | 4 | `collect_report` | `passed` | Structured execution report collected for selected task (freshness_basis=report_id). | Run pipeline phase verify. | 0 | 0 | 1 |
 | `PSESS-147` | 5 | `verify` | `blocked` | Report gate failed: Report contains blocker(s): Making the regression pass requires code changes outside the allowed files for this task. | Fix the structured report or task output, then rerun verify. | 1 | 0 | 1 |
+| `PSESS-147` | 6 | `verify` | `blocked` | Report gate failed: Report contains blocker(s): Making the regression pass requires code changes outside the allowed files for this task. | Fix the structured report or task output, then rerun verify. | 1 | 0 | 1 |
+| `PSESS-147` | 7 | `verify` | `blocked` | Report gate failed: Report contains blocker(s): Making the regression pass requires code changes outside the allowed files for this task. | Fix the structured report or task output, then rerun verify. | 1 | 0 | 1 |
+| `PSESS-147` | 8 | `verify` | `blocked` | Latest report gate target differs from the collected report. | Rerun collect-report, then rerun verify. | 0 | 0 | 1 |
 | `PSESS-148` | 1 | `queue_preview` | `passed` | Next executable task is available. | Run pipeline run-next when ready. | 0 | 0 | 1 |
 | `PSESS-148` | 2 | `prepare` | `passed` | Task preparation rebuilt artifacts; Codex execution has not been started. | Run pipeline phase execute using AI_PROJECT/generated/CODEX_PROMPT.md (sha256 e8b437d3ab38ce4f0feecf361c789cf7370dd6ceaf31b47e586ec4699ad65195). | 0 | 0 | 1 |
 | `PSESS-148` | 3 | `execute` | `passed` | Codex execution adapter passed. (status=passed, code=CODEX_ADAPTER_LOCAL_COMMAND_PASSED, returncode=0) | Run pipeline phase collect-report. | 0 | 0 | 2 |

@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1865`
+Revision: `1869`
 
 ## Executable Now
 
@@ -543,8 +543,8 @@ _No tasks waiting only on dependencies._
   - `status_not_executable`: status is done
 - `PIPEF-167 (TASK-272)` [done] `EPIC-009` priority `1` — Verify clean worktree after Web Run
   - `status_not_executable`: status is done
-- `PIPEF-168 (TASK-273)` [blocked] `EPIC-009` priority `1` — Add no-checkpoint Web Run regression
-  - `status_not_executable`: status is blocked
+- `PIPEF-168 (TASK-273)` [in_progress] `EPIC-009` priority `1` — Add no-checkpoint Web Run regression
+  - `status_not_executable`: status is in_progress
 - `PIPEF-169 (TASK-274)` [done] `EPIC-009` priority `1` — Stop post-commit session completion writes
   - `status_not_executable`: status is done
 - `PIPEF-170 (TASK-275)` [done] `EPIC-009` priority `1` — Make committed Web action result read-only

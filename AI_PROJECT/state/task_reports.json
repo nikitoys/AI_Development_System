@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 141,
+  "revision": 142,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-29T18:50:47Z",
+  "updated_at": "2026-06-30T17:56:19Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -10026,6 +10026,43 @@
           "token_count_unavailable_reason": ""
         }
       }
+    },
+    {
+      "id": "RPT-142",
+      "task_id": "TASK-273",
+      "task_ref": "PIPEF-168",
+      "submitted_at": "2026-06-30T17:56:19Z",
+      "submitted_by": "human_owner",
+      "source_file": "/tmp/task-273-success-report.json",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-273",
+        "task_ref": "PIPEF-168",
+        "reported_task_id": "TASK-273",
+        "reported_task_ref": "",
+        "implementation_summary": "Verified the no-checkpoint Web Run regression after production post-commit bookkeeping fixes.",
+        "changed_files": [
+          "tests/test_web_run_local_commit_e2e.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "no_checkpoint_web_run_regression",
+            "command": "python -m pytest tests/test_web_run_local_commit_e2e.py -q",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "Regression passes after production post-commit bookkeeping fixes."
+          }
+        ],
+        "warnings": [],
+        "blockers": [],
+        "notes": [
+          "Previous report RPT-136 is stale because production fixes were completed after the regression task first ran."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {}
+      }
     }
   ],
   "latest_by_task": {
@@ -10144,7 +10181,7 @@
     "TASK-270": "RPT-130",
     "TASK-271": "RPT-132",
     "TASK-272": "RPT-134",
-    "TASK-273": "RPT-136",
+    "TASK-273": "RPT-142",
     "TASK-274": "RPT-138",
     "TASK-275": "RPT-140",
     "TASK-276": "RPT-141"
