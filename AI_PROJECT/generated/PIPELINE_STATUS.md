@@ -3,23 +3,9 @@
 
 # Pipeline Status
 
-Revision: `1170`
-Current session: `PSESS-151`
+Revision: `1171`
+Current session: `none`
 Sessions: `151`
-
-## Current Session
-
-- ID: `PSESS-151`
-- Status: `blocked`
-- Policy: `supervised_executable_local_commit_1h_auto_change`
-- Current task: `TASK-273`
-- Current phase: `close`
-- Phase status: `blocked`
-- Blocked by: `COMMIT_READINESS_FAILED`
-- Next action: `Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit.`
-- Current step: `execute`
-- Step status: `blocked`
-- Stop reason: `Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence.`
 
 ## Sessions
 
@@ -175,7 +161,7 @@ Sessions: `151`
 | `PSESS-148` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-274` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
 | `PSESS-149` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-275` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
 | `PSESS-150` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-276` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
-| `PSESS-151` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-273` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
+| `PSESS-151` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-273` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Recovered by manual local commit 71daee6 after COMMIT_READINESS_FAILED on governed close side effects |
 
 ## Phase History
 
