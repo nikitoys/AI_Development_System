@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 142,
+  "revision": 144,
   "created_at": "2026-06-19T13:05:16Z",
-  "updated_at": "2026-06-30T17:56:19Z",
+  "updated_at": "2026-06-30T18:13:46Z",
   "reports": [
     {
       "id": "RPT-001",
@@ -10063,6 +10063,144 @@
         "owner_decision_required": false,
         "token_usage": {}
       }
+    },
+    {
+      "id": "RPT-143",
+      "task_id": "TASK-273",
+      "task_ref": "PIPEF-168",
+      "submitted_at": "2026-06-30T18:13:46Z",
+      "submitted_by": "codex",
+      "source_file": "captured:stdout:sha256:a3eb02b83d47ee23a680ffc658503c8c44d7aaa848eb846c5345341d5d05a1d2",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-273",
+        "task_ref": "PIPEF-168",
+        "reported_task_id": "TASK-273",
+        "reported_task_ref": "PIPEF-168",
+        "implementation_summary": "Strengthened the Web Run local-commit E2E regression by explicitly asserting the first run's local commit hash is present and matches the close status commit hash.",
+        "changed_files": [],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 277.725967,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 277.725967,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Workspace had pre-existing dirty protected project-control files before this task; they were not edited manually."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused regression check passed with python -m pytest tests/test_web_run_local_commit_e2e.py -q."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 995,
+          "remaining_tokens": 31005,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
+    },
+    {
+      "id": "RPT-144",
+      "task_id": "TASK-273",
+      "task_ref": "PIPEF-168",
+      "submitted_at": "2026-06-30T18:13:46Z",
+      "submitted_by": "codex",
+      "source_file": "captured:execute-file-delta:RPT-143",
+      "report": {
+        "schema_version": 1,
+        "task_id": "TASK-273",
+        "task_ref": "PIPEF-168",
+        "reported_task_id": "TASK-273",
+        "reported_task_ref": "PIPEF-168",
+        "implementation_summary": "Strengthened the Web Run local-commit E2E regression by explicitly asserting the first run's local commit hash is present and matches the close status commit hash.",
+        "changed_files": [
+          "tests/test_web_run_local_commit_e2e.py"
+        ],
+        "generated_files": [],
+        "checks": [
+          {
+            "name": "codex_adapter",
+            "command": "codex exec --sandbox danger-full-access",
+            "result": "pass",
+            "duration_sec": 277.725967,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          },
+          {
+            "name": "token_budget_gate",
+            "command": "",
+            "result": "pass",
+            "duration_sec": null,
+            "blocking": true,
+            "details": "TOKEN_BUDGET_PASS within_token_budget"
+          },
+          {
+            "name": "codex_adapter_gate",
+            "command": "['codex', 'exec', '--sandbox', 'danger-full-access']",
+            "result": "pass",
+            "duration_sec": 277.725967,
+            "blocking": true,
+            "details": "CODEX_ADAPTER_LOCAL_COMMAND_PASSED local_command_completed"
+          }
+        ],
+        "warnings": [
+          "Workspace had pre-existing dirty protected project-control files before this task; they were not edited manually."
+        ],
+        "blockers": [],
+        "notes": [
+          "Focused regression check passed with python -m pytest tests/test_web_run_local_commit_e2e.py -q."
+        ],
+        "owner_decision_required": false,
+        "token_usage": {
+          "completion_tokens": 0,
+          "context_tokens": 0,
+          "max_context_tokens": 24000,
+          "min_remaining_tokens": 6000,
+          "model_context_limit": 32000,
+          "output_tokens": 0,
+          "prompt_tokens": 995,
+          "remaining_tokens": 31005,
+          "reserved_output_tokens": 0,
+          "total_tokens": 0,
+          "token_count_estimated": true,
+          "token_count_unavailable": false,
+          "token_count_strategy": "local_byte_estimate",
+          "token_count_unavailable_reason": ""
+        }
+      }
     }
   ],
   "latest_by_task": {
@@ -10181,7 +10319,7 @@
     "TASK-270": "RPT-130",
     "TASK-271": "RPT-132",
     "TASK-272": "RPT-134",
-    "TASK-273": "RPT-142",
+    "TASK-273": "RPT-144",
     "TASK-274": "RPT-138",
     "TASK-275": "RPT-140",
     "TASK-276": "RPT-141"

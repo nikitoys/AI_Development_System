@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "revision": 1872,
+  "revision": 1877,
   "current_task_id": null,
   "created_at": "2026-06-15T21:47:37Z",
-  "updated_at": "2026-06-30T18:08:24Z",
+  "updated_at": "2026-06-30T18:14:09Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -17603,7 +17603,7 @@
       "id": "TASK-273",
       "epic_id": "EPIC-009",
       "title": "Add no-checkpoint Web Run regression",
-      "status": "ready",
+      "status": "done",
       "summary": "Add an end-to-end regression proving that a successful Web Run leaves a clean worktree and the next Web Run does not request a checkpoint commit.",
       "description": "The owner workflow should be able to run one task, receive a task commit, and start the next task without checkpointing pipeline bookkeeping files.",
       "priority": 1,
@@ -17645,11 +17645,11 @@
         "This test should prove the fix that prevents checkpoint prompts after every successful task."
       ],
       "depends_on": [],
-      "approved_by": "",
-      "approved_at": "",
-      "approval_notes": "",
+      "approved_by": "human_owner",
+      "approved_at": "2026-06-30T18:14:09Z",
+      "approval_notes": "APPROVED by Human Owner for TASK-273 fresh rerun after production fixes",
       "created_at": "2026-06-29T13:42:10Z",
-      "updated_at": "2026-06-30T18:08:24Z",
+      "updated_at": "2026-06-30T18:14:09Z",
       "uid": "tsk_efef4d0e0938",
       "ref": "PIPEF-168",
       "legacy_id": "TASK-273",

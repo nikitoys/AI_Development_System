@@ -168,6 +168,8 @@ class WebRunLocalCommitSmokeTests(unittest.TestCase):
         self.assertEqual(close_status["task_status"], "done")
         self.assertEqual(close_status["commit_status"], "pass")
         self.assertTrue(close_status["commit_hash"])
+        self.assertTrue(local_commit["commit_hash"])
+        self.assertEqual(local_commit["commit_hash"], close_status["commit_hash"])
         self.assertEqual(local_commit["status"], "pass")
         self.assertEqual(local_commit["code"], "LOCAL_COMMIT_CREATED")
         self.assertEqual(readiness["status"], "pass")

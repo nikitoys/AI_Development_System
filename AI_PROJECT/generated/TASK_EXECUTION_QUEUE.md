@@ -3,7 +3,7 @@
 
 # Task Execution Queue
 
-Revision: `1872`
+Revision: `1877`
 
 ## Executable Now
 
@@ -17,7 +17,6 @@ Revision: `1872`
 - `PIPEF-126 (TASK-207)` [planned] `EPIC-009` priority `1` — Show effective policy summary
 - `PIPEF-127 (TASK-208)` [planned] `EPIC-009` priority `1` — Add Web run batch overrides
 - `PIPEF-128 (TASK-209)` [planned] `EPIC-009` priority `1` — Warn on incomplete Web run policy
-- `PIPEF-168 (TASK-273)` [ready] `EPIC-009` priority `1` — Add no-checkpoint Web Run regression
 - `PIPEF-162 (TASK-267)` [planned] `EPIC-009` priority `2` — Auto-size Web batch max steps
 - `PIPEF-163 (TASK-268)` [planned] `EPIC-009` priority `2` — Add Web batch run form
 - `PIPEF-164 (TASK-269)` [planned] `EPIC-009` priority `2` — Render batch run summary
@@ -543,6 +542,8 @@ _No tasks waiting only on dependencies._
 - `PIPEF-166 (TASK-271)` [done] `EPIC-009` priority `1` — Commit final pipeline close artifacts
   - `status_not_executable`: status is done
 - `PIPEF-167 (TASK-272)` [done] `EPIC-009` priority `1` — Verify clean worktree after Web Run
+  - `status_not_executable`: status is done
+- `PIPEF-168 (TASK-273)` [done] `EPIC-009` priority `1` — Add no-checkpoint Web Run regression
   - `status_not_executable`: status is done
 - `PIPEF-169 (TASK-274)` [done] `EPIC-009` priority `1` — Stop post-commit session completion writes
   - `status_not_executable`: status is done

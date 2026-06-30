@@ -3,9 +3,9 @@
 
 # Pipeline Audit
 
-Events: `1160`
-State revision: `1160`
-Current session: `PSESS-147`
+Events: `1170`
+State revision: `1170`
+Current session: `PSESS-151`
 
 ## Timeline
 
@@ -1171,6 +1171,16 @@ Current session: `PSESS-147`
 | `2026-06-30T17:55:17Z` | `step.result` | `pipeline.phase.verify` | `PSESS-147` | `` | `` | reports=RPT-136 |
 | `2026-06-30T17:56:24Z` | `step.result` | `pipeline.phase.verify` | `PSESS-147` | `` | `` | reports=RPT-142,RPT-136 |
 | `2026-06-30T18:08:16Z` | `stop` | `pipeline.session.stop` | `PSESS-147` | `` | `` | failed \| Stale regression session superseded by fresh TASK-273 rerun after production fixes |
+| `2026-06-30T18:08:49Z` | `session.create` | `pipeline.session.create` | `PSESS-151` | `` | `` | PSESS-151 |
+| `2026-06-30T18:08:52Z` | `step.result` | `pipeline.phase.queue_preview` | `PSESS-151` | `` | `` | PSESS-151 |
+| `2026-06-30T18:09:02Z` | `step.result` | `pipeline.phase.prepare` | `PSESS-151` | `` | `` | changes=CHG-087 |
+| `2026-06-30T18:09:06Z` | `step.result` | `pipeline.phase.execute` | `PSESS-151` | `` | `` | PSESS-151 |
+| `2026-06-30T18:13:47Z` | `step.result` | `pipeline.phase.execute` | `PSESS-151` | `` | `` | reports=RPT-144,RPT-142 |
+| `2026-06-30T18:13:50Z` | `step.result` | `pipeline.phase.collect_report` | `PSESS-151` | `` | `` | reports=RPT-144 |
+| `2026-06-30T18:13:53Z` | `step.result` | `pipeline.phase.verify` | `PSESS-151` | `` | `` | reports=RPT-144 |
+| `2026-06-30T18:13:56Z` | `step.result` | `pipeline.phase.review` | `PSESS-151` | `` | `` | reports=RPT-144 |
+| `2026-06-30T18:14:13Z` | `step.result` | `pipeline.phase.close` | `PSESS-151` | `` | `` | changes=CHG-087 \| reports=RPT-144 |
+| `2026-06-30T18:14:21Z` | `step.result` | `pipeline.phase.close` | `PSESS-151` | `` | `` | changes=CHG-087 \| reports=RPT-144 |
 
 ## Event Type Coverage
 

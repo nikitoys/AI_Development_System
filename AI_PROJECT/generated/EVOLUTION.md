@@ -3,13 +3,13 @@
 
 # AI Development System Evolution
 
-Revision: `2717`
+Revision: `2720`
 Changes: `90`
 
 ## Summary
 
-- `accepted`: 68
-- `approved`: 22
+- `accepted`: 69
+- `approved`: 21
 
 ## Changes
 
@@ -5394,7 +5394,7 @@ Linked tasks:
 
 ### CHG-087 — Add no-checkpoint Web Run regression
 
-Status: `approved`  
+Status: `accepted`  
 Type: `process`  
 Priority: `1`  
 Backward compatibility: `unknown`  
@@ -5414,6 +5414,9 @@ The owner workflow should be able to run one task, receive a task commit, and st
 
 Approved by: `human_owner` at `2026-06-29T14:44:28Z`  
 Approval notes: Auto-approved by Human Owner for selected UI run (pipeline session PSESS-147)  
+
+Accepted by: `human_owner` at `2026-06-30T18:14:11Z`  
+Acceptance notes: APPROVED by Human Owner for TASK-273 fresh rerun after production fixes; linked Change accepted after task TASK-273 close succeeded.  
 
 Affected files:
 

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "revision": 2717,
+  "revision": 2720,
   "created_at": "2026-06-16T15:08:23Z",
-  "updated_at": "2026-06-29T18:51:11Z",
+  "updated_at": "2026-06-30T18:14:11Z",
   "changes": [
     {
       "id": "CHG-001",
@@ -5081,7 +5081,7 @@
     {
       "id": "CHG-087",
       "title": "Add no-checkpoint Web Run regression",
-      "status": "approved",
+      "status": "accepted",
       "change_type": "process",
       "rationale": "The owner workflow should be able to run one task, receive a task commit, and start the next task without checkpointing pipeline bookkeeping files.",
       "problem": "Task PIPEF-168 requires an explicit Evolution Change Proposal before implementation: Add an end-to-end regression proving that a successful Web Run leaves a clean worktree and the next Web Run does not request a checkpoint commit.",
@@ -5123,14 +5123,14 @@
       "owner_approved_by": "human_owner",
       "owner_approved_at": "2026-06-29T14:44:28Z",
       "approval_notes": "Auto-approved by Human Owner for selected UI run (pipeline session PSESS-147)",
-      "accepted_by": "",
-      "accepted_at": "",
-      "acceptance_notes": "",
+      "accepted_by": "human_owner",
+      "accepted_at": "2026-06-30T18:14:11Z",
+      "acceptance_notes": "APPROVED by Human Owner for TASK-273 fresh rerun after production fixes; linked Change accepted after task TASK-273 close succeeded.",
       "notes": [],
       "priority": 1,
       "order": 87,
       "created_at": "2026-06-29T14:44:24Z",
-      "updated_at": "2026-06-29T14:44:28Z"
+      "updated_at": "2026-06-30T18:14:11Z"
     },
     {
       "id": "CHG-088",

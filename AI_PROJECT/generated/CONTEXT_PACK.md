@@ -12,7 +12,7 @@ Task ID: `TASK-273`
 Explicit query: `false`
 Limit: `8`
 Docs revision: `28`
-Tasks revision: `1872`
+Tasks revision: `1877`
 
 ## Query
 
@@ -23,7 +23,7 @@ TASK-273 Add no-checkpoint Web Run regression Add an end-to-end regression provi
 ## Task Boundary Snapshot
 
 Task: `TASK-273` - Add no-checkpoint Web Run regression
-Status: `ready`
+Status: `done`
 
 Scope:
 - Create or extend a Web Run local-commit regression test with two sequential planned smoke tasks.
