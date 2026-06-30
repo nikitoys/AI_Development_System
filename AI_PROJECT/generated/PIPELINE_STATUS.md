@@ -3,14 +3,14 @@
 
 # Pipeline Status
 
-Revision: `1159`
+Revision: `1160`
 Current session: `PSESS-147`
 Sessions: `150`
 
 ## Current Session
 
 - ID: `PSESS-147`
-- Status: `blocked`
+- Status: `failed`
 - Policy: `supervised_executable_local_commit_1h_auto_change`
 - Current task: `TASK-273`
 - Current phase: `verify`
@@ -18,8 +18,8 @@ Sessions: `150`
 - Blocked by: `REPORT_CHANGED_AFTER_COLLECT`
 - Next action: `Rerun collect-report, then rerun verify.`
 - Current step: `execute`
-- Step status: `passed`
-- Stop reason: `Latest report gate target differs from the collected report.`
+- Step status: `stopped`
+- Stop reason: `Stale regression session superseded by fresh TASK-273 rerun after production fixes`
 
 ## Sessions
 
@@ -171,7 +171,7 @@ Sessions: `150`
 | `PSESS-144` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-270` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit 8a594957c6afb823ea168c4c774cf7ae59c7f0ba was created. |
 | `PSESS-145` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-271` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit c2d5503991804320e16cd17e0c8f03d03eecd7b9 was created. |
 | `PSESS-146` | `completed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-272` | `close` | `passed` | none | Review the close artifacts and local commit hash, then select the next task. | `execute` | Close passed and local commit 71a24db77532fb0d95e1af8062e7b66bfb03f8cf was created. |
-| `PSESS-147` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-273` | `verify` | `blocked` | REPORT_CHANGED_AFTER_COLLECT | Rerun collect-report, then rerun verify. | `execute` | Latest report gate target differs from the collected report. |
+| `PSESS-147` | `failed` | `supervised_executable_local_commit_1h_auto_change` | `TASK-273` | `verify` | `blocked` | REPORT_CHANGED_AFTER_COLLECT | Rerun collect-report, then rerun verify. | `execute` | Stale regression session superseded by fresh TASK-273 rerun after production fixes |
 | `PSESS-148` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-274` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
 | `PSESS-149` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-275` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |
 | `PSESS-150` | `blocked` | `supervised_executable_local_commit_1h_auto_change` | `TASK-276` | `close` | `blocked` | COMMIT_READINESS_FAILED | Task is done, but local commit is blocked by commit readiness (COMMIT_UNRELATED_FILES). Resolve the local_commit.readiness blockers or gate diagnostics, then rerun pipeline close to create the local commit. | `execute` | Close completed, but local commit was blocked: Dirty files include paths that are not approved by report or session evidence. |

@@ -3,8 +3,8 @@
 
 # Pipeline Audit
 
-Events: `1159`
-State revision: `1159`
+Events: `1160`
+State revision: `1160`
 Current session: `PSESS-147`
 
 ## Timeline
@@ -1170,6 +1170,7 @@ Current session: `PSESS-147`
 | `2026-06-30T17:50:52Z` | `step.result` | `pipeline.phase.verify` | `PSESS-147` | `` | `` | reports=RPT-136 |
 | `2026-06-30T17:55:17Z` | `step.result` | `pipeline.phase.verify` | `PSESS-147` | `` | `` | reports=RPT-136 |
 | `2026-06-30T17:56:24Z` | `step.result` | `pipeline.phase.verify` | `PSESS-147` | `` | `` | reports=RPT-142,RPT-136 |
+| `2026-06-30T18:08:16Z` | `stop` | `pipeline.session.stop` | `PSESS-147` | `` | `` | failed \| Stale regression session superseded by fresh TASK-273 rerun after production fixes |
 
 ## Event Type Coverage
 
